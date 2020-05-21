@@ -51,7 +51,7 @@ public class AbsoluteOutputMacroExpander
 
     @Override
     Path sourcePathToArgPath(SourcePath path, SourcePathResolverAdapter resolver) {
-      return resolver.getAbsolutePath(path);
+      return resolver.getAbsolutePath(path).getPath();
     }
   }
 }

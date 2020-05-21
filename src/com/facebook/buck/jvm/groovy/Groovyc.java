@@ -16,13 +16,13 @@
 
 package com.facebook.buck.jvm.groovy;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -44,7 +44,7 @@ public class Groovyc implements Tool {
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
-    Path toolPath = resolver.getAbsolutePath(path.get());
+    AbsPath toolPath = resolver.getAbsolutePath(path.get());
 
     if (!external) {
       toolPath = toolPath.resolve(BIN_GROOVYC);

@@ -70,8 +70,8 @@ public class DexExoHelper {
   private ImmutableMap<String, Path> getRequiredDexFiles() throws IOException {
     ImmutableMultimap<String, Path> multimap =
         ExopackageInstaller.parseExopackageInfoMetadata(
-            pathResolver.getAbsolutePath(dexInfo.getMetadata()),
-            pathResolver.getAbsolutePath(dexInfo.getDirectory()),
+            pathResolver.getAbsolutePath(dexInfo.getMetadata()).getPath(),
+            pathResolver.getAbsolutePath(dexInfo.getDirectory()).getPath(),
             projectFilesystem);
     // Convert multimap to a map, because every key should have only one value.
     ImmutableMap.Builder<String, Path> builder = ImmutableMap.builder();

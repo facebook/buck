@@ -16,6 +16,7 @@
 
 package com.facebook.buck.infer;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -23,7 +24,6 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 import java.util.function.Supplier;
 
 /**
@@ -55,7 +55,7 @@ public class InferDistTool implements Tool {
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
-    Path pathToBinary = resolver.getAbsolutePath(path.get()).resolve(this.binary);
+    AbsPath pathToBinary = resolver.getAbsolutePath(path.get()).resolve(this.binary);
     return ImmutableList.of(pathToBinary.toString());
   }
 

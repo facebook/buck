@@ -88,7 +88,7 @@ public class ExopackageResourcesInstaller extends AbstractBuildRule {
             SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
             String packageName =
                 AdbHelper.tryToExtractPackageNameFromManifest(
-                    resolver.getAbsolutePath(manifestPath));
+                    resolver.getAbsolutePath(manifestPath).getPath());
             ImmutableSortedMap<String, ImmutableSortedSet<Path>> contents =
                 ExopackageDeviceDirectoryLister.deserializeDirectoryContentsForPackage(
                     getProjectFilesystem(),

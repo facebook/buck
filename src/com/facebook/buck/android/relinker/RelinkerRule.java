@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -237,7 +238,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
                 }
 
                 if (linker == null) {
-                  getProjectFilesystem().copyFile(getBaseLibPath(), getLibFilePath());
+                  getProjectFilesystem().copyFile(getBaseLibPath().getPath(), getLibFilePath());
                   buildableContext.recordArtifact(getLibFilePath());
                 } else {
                   writeVersionScript(processExecutor, symbolsNeeded);
@@ -275,7 +276,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
     return path.getParent().resolve(dirname);
   }
 
-  private Path getBaseLibPath() {
+  private AbsPath getBaseLibPath() {
     return pathResolver.getAbsolutePath(baseLibSourcePath);
   }
 
@@ -303,7 +304,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
 
   private void writeVersionScript(ProcessExecutor executor, ImmutableSet<String> symbolsNeeded)
       throws IOException, InterruptedException {
-    Symbols sym = getSymbols(executor, getBaseLibPath());
+    Symbols sym = getSymbols(executor, getBaseLibPath().getPath());
     Set<String> defined = Sets.difference(sym.all, sym.undefined);
     String versionScript = getVersionScript(symbolsNeeded, defined, symbolWhitelist);
 
@@ -333,7 +334,8 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
     ImmutableSet.Builder<String> symbolsNeeded = ImmutableSet.builder();
     for (SourcePath source : symbolsNeededPaths) {
       symbolsNeeded.addAll(
-          Files.readAllLines(pathResolver.getAbsolutePath(source), StandardCharsets.UTF_8));
+          Files.readAllLines(
+              pathResolver.getAbsolutePath(source).getPath(), StandardCharsets.UTF_8));
     }
     return symbolsNeeded.build();
   }

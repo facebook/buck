@@ -108,7 +108,10 @@ public class DexProducedFromJavaLibraryTest {
     assertThat(
         dxStep.classpathFiles,
         Matchers.hasItem(
-            context.getSourcePathResolver().getAbsolutePath(javaLibRule.getSourcePathToOutput())));
+            context
+                .getSourcePathResolver()
+                .getAbsolutePath(javaLibRule.getSourcePathToOutput())
+                .getPath()));
   }
 
   private void createFiles(ProjectFilesystem filesystem, String... paths) throws IOException {

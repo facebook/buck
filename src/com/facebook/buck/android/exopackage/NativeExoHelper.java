@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android.exopackage;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -131,13 +133,13 @@ public class NativeExoHelper {
 
   @VisibleForTesting
   public static ImmutableMultimap<String, Path> filterLibrariesForAbi(
-      Path nativeLibsDir,
+      AbsPath nativeLibsDir,
       ImmutableMultimap<String, Path> allLibraries,
       String abi,
       ImmutableSet<String> ignoreLibraries) {
     ImmutableMultimap.Builder<String, Path> filteredLibraries = ImmutableMultimap.builder();
     for (Map.Entry<String, Path> entry : allLibraries.entries()) {
-      Path relativePath = nativeLibsDir.relativize(entry.getValue());
+      RelPath relativePath = nativeLibsDir.relativize(entry.getValue());
       // relativePath is of the form libs/x86/foo.so, or assetLibs/x86/foo.so etc.
       Preconditions.checkState(relativePath.getNameCount() == 3);
       Preconditions.checkState(

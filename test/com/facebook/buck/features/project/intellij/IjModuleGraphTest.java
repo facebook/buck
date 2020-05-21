@@ -686,7 +686,7 @@ public class IjModuleGraphTest {
         new IjLibraryFactoryResolver() {
           @Override
           public Path getPath(SourcePath path) {
-            return sourcePathResolverAdapter.getAbsolutePath(path);
+            return sourcePathResolverAdapter.getAbsolutePath(path).getPath();
           }
 
           @Override

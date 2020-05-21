@@ -156,7 +156,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       // buck-out/gen/test-with-resources-2directory-2resources#test-main/testdata/level2
       Path outputResourcePath = output.getParent().resolve(sourcePathName);
       buildableContext.recordArtifact(outputResourcePath);
-      if (Files.isDirectory(resolver.getAbsolutePath(resource))) {
+      if (Files.isDirectory(resolver.getAbsolutePath(resource).getPath())) {
         steps.add(
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(

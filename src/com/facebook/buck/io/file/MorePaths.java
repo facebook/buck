@@ -269,10 +269,18 @@ public class MorePaths {
     return index == -1 ? "" : name.substring(index + 1);
   }
 
+  public static String getFileExtension(PathWrapper path) {
+    return getFileExtension(path.getPath());
+  }
+
   public static String getNameWithoutExtension(Path file) {
     String name = file.getFileName().toString();
     int index = name.lastIndexOf('.');
     return index == -1 ? name : name.substring(0, index);
+  }
+
+  public static String getNameWithoutExtension(PathWrapper file) {
+    return getNameWithoutExtension(file.getPath());
   }
 
   public static String stripPathPrefixAndExtension(Path fileName, String prefix) {

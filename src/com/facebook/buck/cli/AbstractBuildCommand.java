@@ -478,7 +478,7 @@ abstract class AbstractBuildCommand extends AbstractCommand {
         SourcePathResolverAdapter pathResolver =
             graphs.getActionGraphAndBuilder().getActionGraphBuilder().getSourcePathResolver();
 
-        Path outputAbsPath = pathResolver.getAbsolutePath(output);
+        AbsPath outputAbsPath = pathResolver.getAbsolutePath(output);
         if (projectFilesystem.isDirectory(outputAbsPath)) {
           if (projectFilesystem.isFile(outputPathForSingleBuildTarget)) {
             params
@@ -488,7 +488,7 @@ abstract class AbstractBuildCommand extends AbstractCommand {
             return ExitCode.BUILD_ERROR;
           }
           projectFilesystem.mkdirs(outputPathForSingleBuildTarget);
-          projectFilesystem.copyFolder(outputAbsPath, outputPathForSingleBuildTarget);
+          projectFilesystem.copyFolder(outputAbsPath.getPath(), outputPathForSingleBuildTarget);
         } else {
           Path outputPath;
           if (Files.isDirectory(outputPathForSingleBuildTarget)) {
@@ -498,7 +498,7 @@ abstract class AbstractBuildCommand extends AbstractCommand {
           } else {
             outputPath = outputPathForSingleBuildTarget;
           }
-          projectFilesystem.copyFile(outputAbsPath, outputPath);
+          projectFilesystem.copyFile(outputAbsPath.getPath(), outputPath);
         }
       }
     }

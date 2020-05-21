@@ -103,7 +103,8 @@ public class AndroidAppModularityVerification extends AbstractBuildRule {
                                     entry.getKey(),
                                     buildContext.getSourcePathResolver().getAbsolutePath(v))))
             .collect(
-                ImmutableListMultimap.toImmutableListMultimap(e -> e.getKey(), e -> e.getValue()));
+                ImmutableListMultimap.toImmutableListMultimap(
+                    AbstractMap.SimpleEntry::getKey, e -> e.getValue().getPath()));
 
     AndroidModuleConsistencyStep androidModuleConsistencyStep =
         AndroidModuleConsistencyStep.ensureModuleConsistency(

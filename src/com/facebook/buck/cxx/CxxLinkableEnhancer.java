@@ -548,7 +548,8 @@ public class CxxLinkableEnhancer {
     public void appendToCommandLine(Consumer<String> consumer, SourcePathResolverAdapter resolver) {
       for (FrameworkPath frameworkPath : frameworkPaths) {
         consumer.accept("-framework");
-        consumer.accept(frameworkPath.getName(resolver::getAbsolutePath));
+        consumer.accept(
+            frameworkPath.getName(sourcePath -> resolver.getAbsolutePath(sourcePath).getPath()));
       }
     }
   }
@@ -563,7 +564,9 @@ public class CxxLinkableEnhancer {
       for (FrameworkPath frameworkPath : frameworkPaths) {
         String libName =
             MorePaths.stripPathPrefixAndExtension(
-                frameworkPath.getFileName(resolver::getAbsolutePath), "lib");
+                frameworkPath.getFileName(
+                    sourcePath -> resolver.getAbsolutePath(sourcePath).getPath()),
+                "lib");
         // libraries set can contain path-qualified libraries, or just library
         // search paths.
         // Assume these end in '../lib' and filter out here.

@@ -54,14 +54,17 @@ public class ResourcesExoHelper {
     return resourcesPaths
         .filter(
             pathAndHash ->
-                projectFilesystem.exists(pathResolver.getAbsolutePath(pathAndHash.getHashPath())))
+                projectFilesystem.exists(
+                    pathResolver.getAbsolutePath(pathAndHash.getHashPath()).getPath()))
         .collect(
             ImmutableMap.toImmutableMap(
                 pathAndHash ->
                     projectFilesystem
                         .readFileIfItExists(pathResolver.getAbsolutePath(pathAndHash.getHashPath()))
                         .get(),
-                i -> projectFilesystem.resolve(pathResolver.getAbsolutePath(i.getPath()))));
+                i ->
+                    projectFilesystem.resolve(
+                        pathResolver.getAbsolutePath(i.getPath()).getPath())));
   }
 
   public ImmutableMap<Path, Path> getFilesToInstall() {

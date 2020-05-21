@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -35,6 +36,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Collection;
 import java.util.SortedSet;
@@ -124,9 +126,11 @@ public class AndroidManifest extends AbstractBuildRule {
     commands.add(
         new GenerateManifestStep(
             getProjectFilesystem(),
-            context.getSourcePathResolver().getAbsolutePath(skeletonFile),
+            context.getSourcePathResolver().getAbsolutePath(skeletonFile).getPath(),
             module,
-            context.getSourcePathResolver().getAllAbsolutePaths(manifestFiles),
+            context.getSourcePathResolver().getAllAbsolutePaths(manifestFiles).stream()
+                .map(AbsPath::getPath)
+                .collect(ImmutableSet.toImmutableSet()),
             context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()),
             getProjectFilesystem()
                 .resolve(

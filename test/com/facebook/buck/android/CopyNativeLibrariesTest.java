@@ -25,6 +25,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -55,7 +56,7 @@ public class CopyNativeLibrariesTest {
 
   @Test
   public void testCopyNativeLibraryCommandWithoutCpuFilter() {
-    Path source = filesystem.getPath("path", "to", "source");
+    AbsPath source = AbsPath.of(filesystem.getPath("path", "to", "source").toAbsolutePath());
     Path destination = filesystem.getPath("path", "to", "destination");
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         FakeBuildContext.NOOP_CONTEXT,
@@ -69,7 +70,7 @@ public class CopyNativeLibrariesTest {
 
   @Test
   public void testCopyNativeLibraryCommand() {
-    Path source = filesystem.getPath("path", "to", "source");
+    AbsPath source = AbsPath.of(filesystem.getPath("path", "to", "source").toAbsolutePath());
     Path destination = filesystem.getPath("path", "to", "destination");
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         FakeBuildContext.NOOP_CONTEXT,
@@ -89,7 +90,7 @@ public class CopyNativeLibrariesTest {
 
   @Test
   public void testCopyNativeLibraryCommandWithMultipleCpuFilters() {
-    Path source = filesystem.getPath("path", "to", "source");
+    AbsPath source = AbsPath.of(filesystem.getPath("path", "to", "source").toAbsolutePath());
     Path destination = filesystem.getPath("path", "to", "destination");
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         FakeBuildContext.NOOP_CONTEXT,
@@ -146,7 +147,7 @@ public class CopyNativeLibrariesTest {
   private void createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
       BuildContext context,
       ImmutableSet<TargetCpuType> cpuFilters,
-      Path sourceDir,
+      AbsPath sourceDir,
       Path destinationDir,
       ImmutableList<String> expectedCommandDescriptions) {
     // Invoke copyNativeLibrary to populate the steps.

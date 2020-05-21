@@ -17,6 +17,7 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -32,7 +33,6 @@ import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.net.URI;
-import java.nio.file.Path;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -68,7 +68,7 @@ public class HttpArchiveDescriptionTest {
             args);
   }
 
-  private Path getOutputPath(HttpArchive buildRule) {
+  private AbsPath getOutputPath(HttpArchive buildRule) {
     graphBuilder.computeIfAbsent(buildRule.getBuildTarget(), t -> buildRule);
     return graphBuilder.getSourcePathResolver().getAbsolutePath(buildRule.getSourcePathToOutput());
   }
@@ -89,7 +89,7 @@ public class HttpArchiveDescriptionTest {
             BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance("//foo/bar:baz"), "%s")
                 .resolve("baz")),
-        getOutputPath(buildRule));
+        getOutputPath(buildRule).getPath());
   }
 
   @Test
@@ -109,7 +109,7 @@ public class HttpArchiveDescriptionTest {
             BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance("//foo/bar:baz"), "%s")
                 .resolve("my_cool_exe")),
-        getOutputPath(buildRule));
+        getOutputPath(buildRule).getPath());
   }
 
   @Test

@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.resources.ResourcesZipBuilder;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -74,7 +75,7 @@ public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdParty
       ProjectFilesystem filesystem,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
-    ImmutableSet<Path> thirdPartyJars =
+    ImmutableSortedSet<AbsPath> thirdPartyJars =
         buildContext.getSourcePathResolver().getAllAbsolutePaths(pathsToThirdPartyJars);
     return ImmutableList.of(
         createMergedThirdPartyJarsStep(
@@ -82,12 +83,12 @@ public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdParty
   }
 
   private Step createMergedThirdPartyJarsStep(
-      ImmutableSet<Path> thirdPartyJars, Path absoluteMergedPath) {
+      ImmutableSet<AbsPath> thirdPartyJars, Path absoluteMergedPath) {
     return new AbstractExecutionStep("merging_third_party_jar_resources") {
       @Override
       public StepExecutionResult execute(ExecutionContext context) throws IOException {
         try (ResourcesZipBuilder builder = new ResourcesZipBuilder(absoluteMergedPath)) {
-          for (Path jar : thirdPartyJars) {
+          for (AbsPath jar : thirdPartyJars) {
             try (ZipFile base = new ZipFile(jar.toFile())) {
               for (ZipEntry inputEntry : Collections.list(base.entries())) {
                 if (inputEntry.isDirectory()) {

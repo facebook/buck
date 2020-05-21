@@ -18,6 +18,7 @@ package com.facebook.buck.features.dotnet;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -50,7 +51,7 @@ public class PrebuiltDotnetLibrary extends AbstractBuildRuleWithDeclaredAndExtra
 
     this.assembly = assembly;
 
-    Path resolvedPath = resolver.getAbsolutePath(assembly);
+    AbsPath resolvedPath = resolver.getAbsolutePath(assembly);
     this.output =
         BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s")
             .resolve(resolvedPath.getFileName());
@@ -72,7 +73,7 @@ public class PrebuiltDotnetLibrary extends AbstractBuildRuleWithDeclaredAndExtra
     steps.add(
         CopyStep.forFile(
             getProjectFilesystem(),
-            context.getSourcePathResolver().getAbsolutePath(assembly),
+            context.getSourcePathResolver().getAbsolutePath(assembly).getPath(),
             output));
 
     buildableContext.recordArtifact(output);

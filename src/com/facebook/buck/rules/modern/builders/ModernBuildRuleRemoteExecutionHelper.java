@@ -608,7 +608,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                     cellPathPrefix);
 
             for (SourcePath path : inputs.getPaths()) {
-              inputsAdder.addInput(pathResolver.getAbsolutePath(path));
+              inputsAdder.addInput(pathResolver.getAbsolutePath(path).getPath());
             }
 
             List<MerkleTreeNode> nodes = new ArrayList<>();

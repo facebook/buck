@@ -58,7 +58,7 @@ abstract class PythonModuleDirComponents implements PythonComponents {
 
   @Override
   public Resolved resolvePythonComponents(SourcePathResolverAdapter resolver) {
-    return new Resolved(resolver.getAbsolutePath(getDirectory()));
+    return new Resolved(resolver.getAbsolutePath(getDirectory()).getPath());
   }
 
   /**

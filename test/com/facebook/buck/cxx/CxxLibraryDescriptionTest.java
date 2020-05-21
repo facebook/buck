@@ -38,6 +38,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -384,7 +385,8 @@ public class CxxLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ruleBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     Archive rule = (Archive) ruleBuilder.build(graphBuilder, filesystem, targetGraph);
-    Path path = graphBuilder.getSourcePathResolver().getAbsolutePath(rule.getSourcePathToOutput());
+    AbsPath path =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(rule.getSourcePathToOutput());
     assertEquals(
         MorePaths.getNameWithoutExtension(path.getFileName()), "libtest_static_library_basename");
   }
@@ -758,7 +760,7 @@ public class CxxLibraryDescriptionTest {
     BuildRule binary = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(binary, instanceOf(CxxLink.class));
     SourcePath outputSourcePath = dep.getSourcePathToOutput();
-    Path absoluteLinkerScriptPath =
+    AbsPath absoluteLinkerScriptPath =
         graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(((CxxLink) binary).getArgs(), graphBuilder.getSourcePathResolver()),

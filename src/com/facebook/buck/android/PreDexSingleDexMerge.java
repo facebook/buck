@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.DefaultFieldDeps;
 import com.facebook.buck.core.rulekey.DefaultFieldInputs;
@@ -88,7 +89,7 @@ public class PreDexSingleDexMerge extends PreDexMerge {
     Path primaryDexPath = getPrimaryDexPath();
     buildableContext.recordArtifact(primaryDexPath);
 
-    Iterable<Path> filesToDex =
+    ImmutableSortedSet<AbsPath> filesToDex =
         context
             .getSourcePathResolver()
             .getAllAbsolutePaths(sourcePathsToDex.collect(Collectors.toList()));
@@ -99,7 +100,7 @@ public class PreDexSingleDexMerge extends PreDexMerge {
             getProjectFilesystem(),
             androidPlatformTarget,
             primaryDexPath,
-            filesToDex,
+            filesToDex.stream().map(AbsPath::getPath).collect(ImmutableList.toImmutableList()),
             DX_MERGE_OPTIONS,
             dexTool,
             withDownwardApi));

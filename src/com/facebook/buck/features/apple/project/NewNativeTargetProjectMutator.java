@@ -50,6 +50,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -875,14 +876,14 @@ class NewNativeTargetProjectMutator {
         SourcePath jsOutput = bundle.getSourcePathToOutput();
         SourcePath resOutput = bundle.getSourcePathToResources();
 
-        Path jsOutputPath = resolver.getSourcePathResolver().getAbsolutePath(jsOutput);
+        AbsPath jsOutputPath = resolver.getSourcePathResolver().getAbsolutePath(jsOutput);
         builder.add(
             CopyInXcode.of(
                 CopyInXcode.SourceType.FOLDER_CONTENTS,
                 cell.getFilesystem().relativize(jsOutputPath).getPath(),
                 CopyInXcode.DestinationBase.UNLOCALIZED_RESOURCES,
                 Paths.get("")));
-        Path resOutputPath = resolver.getSourcePathResolver().getAbsolutePath(resOutput);
+        AbsPath resOutputPath = resolver.getSourcePathResolver().getAbsolutePath(resOutput);
         builder.add(
             CopyInXcode.of(
                 CopyInXcode.SourceType.FOLDER_CONTENTS,

@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
@@ -822,7 +823,8 @@ public class TestRunning {
       // Traverse the file system from the parent directory of the java file until we hit the
       // parent of the src root directory.
       ImmutableSet<String> pathElements = defaultJavaPackageFinder.getPathElements();
-      Path directory = ruleFinder.getSourcePathResolver().getAbsolutePath(javaSrcPath).getParent();
+      AbsPath directory =
+          ruleFinder.getSourcePathResolver().getAbsolutePath(javaSrcPath).getParent();
       if (pathElements.isEmpty()) {
         continue;
       }

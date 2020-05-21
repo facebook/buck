@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -143,11 +144,10 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
 
       // Write compile command to argfile
       Path scratchDir = filesystem.resolve(outputPathResolver.getTempPath());
-      Path sourceInputPath =
-          filesystem.resolve(buildContext.getSourcePathResolver().getAbsolutePath(input));
+      AbsPath sourceInputPath = buildContext.getSourcePathResolver().getAbsolutePath(input);
       Path argFilePath =
           addWriteCommandToArgFileStep(
-              buildContext, filesystem, sourceInputPath, scratchDir, steps);
+              buildContext, filesystem, sourceInputPath.getPath(), scratchDir, steps);
 
       // Run diagnostic tool and create JSON output
       steps.add(
@@ -157,7 +157,7 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
               argFilePath,
               diagnosticTool,
               diagnosticName,
-              sourceInputPath,
+              sourceInputPath.getPath(),
               resolvedOutput,
               withDownwardApi));
 

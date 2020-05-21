@@ -166,7 +166,7 @@ public class AaptPackageResources extends AbstractBuildRule {
         steps,
         getProjectFilesystem(),
         getAndroidManifestXml(),
-        context.getSourcePathResolver().getAbsolutePath(manifest),
+        context.getSourcePathResolver().getAbsolutePath(manifest).getPath(),
         manifestEntries);
 
     steps.add(
@@ -206,7 +206,9 @@ public class AaptPackageResources extends AbstractBuildRule {
             rDotTxtDir.getPath(),
             pathToGeneratedProguardConfig.getPath(),
             dependencyResourceApks.stream()
-                .map(context.getSourcePathResolver()::getAbsolutePath)
+                .map(
+                    sourcePath ->
+                        context.getSourcePathResolver().getAbsolutePath(sourcePath).getPath())
                 .collect(ImmutableList.toImmutableList()),
             /*
              * In practice, it appears that if --no-crunch is used, resources will occasionally

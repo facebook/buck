@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
@@ -51,6 +52,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
@@ -146,22 +148,30 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       commands.add(
           SymlinkFileStep.of(
               getProjectFilesystem(),
-              context.getSourcePathResolver().getAbsolutePath(metaInfDirectory),
+              context.getSourcePathResolver().getAbsolutePath(metaInfDirectory).getPath(),
               stagingTarget));
 
       includePaths =
           ImmutableSortedSet.<Path>naturalOrder()
               .add(stagingRoot)
               .addAll(
-                  context.getSourcePathResolver().getAllAbsolutePaths(getTransitiveClasspaths()))
+                  context.getSourcePathResolver().getAllAbsolutePaths(getTransitiveClasspaths())
+                      .stream()
+                      .map(AbsPath::getPath)
+                      .collect(ImmutableList.toImmutableList()))
               .build();
     } else {
-      includePaths = context.getSourcePathResolver().getAllAbsolutePaths(getTransitiveClasspaths());
+      includePaths =
+          context.getSourcePathResolver().getAllAbsolutePaths(getTransitiveClasspaths()).stream()
+              .map(AbsPath::getPath)
+              .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
     }
 
     Path outputFile = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
     Path manifestPath =
-        manifestFile == null ? null : context.getSourcePathResolver().getAbsolutePath(manifestFile);
+        manifestFile == null
+            ? null
+            : context.getSourcePathResolver().getAbsolutePath(manifestFile).getPath();
     Step jar =
         new JarDirectoryStep(
             getProjectFilesystem(),

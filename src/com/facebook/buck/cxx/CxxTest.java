@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -303,19 +304,25 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // Extract the shared library link tree from the command and add it to required paths so that
     // external runners now to ship it remotely.
     BuildableSupport.deriveInputs(executable)
-        .map(buildContext.getSourcePathResolver()::getAbsolutePath)
+        .map(
+            sourcePath ->
+                buildContext.getSourcePathResolver().getAbsolutePath(sourcePath).getPath())
         .forEach(requiredPaths::add);
 
     // Extract any required paths from args/env.
     for (Arg arg : Iterables.concat(args, env.values())) {
       BuildableSupport.deriveInputs(arg)
-          .map(buildContext.getSourcePathResolver()::getAbsolutePath)
+          .map(
+              sourcePath ->
+                  buildContext.getSourcePathResolver().getAbsolutePath(sourcePath).getPath())
           .forEach(requiredPaths::add);
     }
 
     // Add resources to required paths.
     resources.stream()
-        .map(buildContext.getSourcePathResolver()::getAbsolutePath)
+        .map(
+            sourcePath ->
+                buildContext.getSourcePathResolver().getAbsolutePath(sourcePath).getPath())
         .forEach(requiredPaths::add);
 
     return ExternalTestRunnerTestSpec.builder()
@@ -330,9 +337,10 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .addAllAdditionalCoverageTargets(
-            buildContext
-                .getSourcePathResolver()
-                .getAllAbsolutePaths(getAdditionalCoverageTargets()))
+            buildContext.getSourcePathResolver().getAllAbsolutePaths(getAdditionalCoverageTargets())
+                .stream()
+                .map(AbsPath::getPath)
+                .collect(ImmutableList.toImmutableList()))
         .setRequiredPaths(requiredPaths)
         .build();
   }

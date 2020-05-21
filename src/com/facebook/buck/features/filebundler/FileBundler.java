@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.filebundler;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -25,6 +26,7 @@ import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.PatternsMatcher;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
@@ -70,11 +72,11 @@ public abstract class FileBundler {
       SourcePathResolverAdapter pathResolver,
       PatternsMatcher entriesToExclude) {
 
-    Map<Path, Path> relativeMap = pathResolver.createRelativeMap(basePath, toCopy);
+    ImmutableMap<Path, AbsPath> relativeMap = pathResolver.createRelativeMap(basePath, toCopy);
 
-    for (Map.Entry<Path, Path> pathEntry : relativeMap.entrySet()) {
+    for (Map.Entry<Path, AbsPath> pathEntry : relativeMap.entrySet()) {
       Path relativePath = pathEntry.getKey();
-      Path absolutePath = Objects.requireNonNull(pathEntry.getValue());
+      AbsPath absolutePath = Objects.requireNonNull(pathEntry.getValue());
       Path destination = destinationDir.resolve(relativePath);
 
       if (!entriesToExclude.isMatchesNone()) {
@@ -85,7 +87,12 @@ public abstract class FileBundler {
       }
 
       addCopySteps(
-          filesystem, buildCellRelativePathFactory, steps, relativePath, absolutePath, destination);
+          filesystem,
+          buildCellRelativePathFactory,
+          steps,
+          relativePath,
+          absolutePath.getPath(),
+          destination);
     }
   }
 

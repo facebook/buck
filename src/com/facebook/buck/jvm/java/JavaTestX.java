@@ -217,7 +217,9 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return builder
         .addAll(
             compiledTestsLibrary.getTransitiveClasspaths().stream()
-                .map(buildContext.getSourcePathResolver()::getAbsolutePath)
+                .map(
+                    sourcePath ->
+                        buildContext.getSourcePathResolver().getAbsolutePath(sourcePath).getPath())
                 .collect(ImmutableSet.toImmutableSet()))
         .build();
   }

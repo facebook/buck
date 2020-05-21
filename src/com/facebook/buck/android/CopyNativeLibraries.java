@@ -23,6 +23,7 @@ import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -196,7 +197,10 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
       steps.add(
           CopyStep.forFile(
               filesystem,
-              context.getSourcePathResolver().getAbsolutePath(strippedObject.getSourcePath()),
+              context
+                  .getSourcePathResolver()
+                  .getAbsolutePath(strippedObject.getSourcePath())
+                  .getPath(),
               destination));
     }
   }
@@ -289,7 +293,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
   static void copyNativeLibrary(
       BuildContext context,
       ProjectFilesystem filesystem,
-      Path sourceDir,
+      AbsPath sourceDir,
       Path destinationDir,
       ImmutableSet<TargetCpuType> cpuFilters,
       ImmutableList.Builder<Step> steps) {
@@ -297,13 +301,16 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
     if (cpuFilters.isEmpty()) {
       steps.add(
           CopyStep.forDirectory(
-              filesystem, sourceDir, destinationDir, CopyStep.DirectoryMode.CONTENTS_ONLY));
+              filesystem,
+              sourceDir.getPath(),
+              destinationDir,
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
     } else {
       for (TargetCpuType cpuType : cpuFilters) {
         Optional<String> abiDirectoryComponent = getAbiDirectoryComponent(cpuType);
         Preconditions.checkState(abiDirectoryComponent.isPresent());
 
-        Path libSourceDir = sourceDir.resolve(abiDirectoryComponent.get());
+        AbsPath libSourceDir = sourceDir.resolve(abiDirectoryComponent.get());
         Path libDestinationDir = destinationDir.resolve(abiDirectoryComponent.get());
 
         MkdirStep mkDirStep =
@@ -312,7 +319,10 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
                     context.getBuildCellRootPath(), filesystem, libDestinationDir));
         CopyStep copyStep =
             CopyStep.forDirectory(
-                filesystem, libSourceDir, libDestinationDir, CopyStep.DirectoryMode.CONTENTS_ONLY);
+                filesystem,
+                libSourceDir.getPath(),
+                libDestinationDir,
+                CopyStep.DirectoryMode.CONTENTS_ONLY);
         steps.add(
             new Step() {
               @Override
@@ -320,7 +330,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
                 // TODO(simons): Using a projectfilesystem here is almost definitely wrong.
                 // This is because each library may come from different build rules, which may be in
                 // different cells --- this check works by coincidence.
-                if (!filesystem.exists(libSourceDir)) {
+                if (!filesystem.exists(libSourceDir.getPath())) {
                   return StepExecutionResults.SUCCESS;
                 }
                 if (mkDirStep.execute(context).isSuccess()

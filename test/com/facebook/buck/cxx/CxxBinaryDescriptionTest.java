@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -76,7 +77,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
@@ -270,7 +270,7 @@ public class CxxBinaryDescriptionTest {
     BuildRule binary = builder.build(graphBuilder).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     SourcePath outputSourcePath = dep.getSourcePathToOutput();
-    Path absoluteLinkerScriptPath =
+    AbsPath absoluteLinkerScriptPath =
         graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(((CxxLink) binary).getArgs(), graphBuilder.getSourcePathResolver()),
@@ -301,7 +301,7 @@ public class CxxBinaryDescriptionTest {
     BuildRule binary = builder.build(graphBuilder).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     SourcePath outputSourcePath = dep.getSourcePathToOutput();
-    Path absoluteLinkerScriptPath =
+    AbsPath absoluteLinkerScriptPath =
         graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(((CxxLink) binary).getArgs(), graphBuilder.getSourcePathResolver()),
@@ -331,7 +331,7 @@ public class CxxBinaryDescriptionTest {
     BuildRule binary = builder.build(graphBuilder).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     SourcePath outputSourcePath = dep.getSourcePathToOutput();
-    Path absoluteLinkerScriptPath =
+    AbsPath absoluteLinkerScriptPath =
         graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(((CxxLink) binary).getArgs(), graphBuilder.getSourcePathResolver()),

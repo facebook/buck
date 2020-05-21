@@ -16,12 +16,12 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -45,7 +45,7 @@ public abstract class CxxRawHeaders extends CxxHeaders {
   }
 
   @Override
-  public Optional<Path> getResolvedIncludeRoot(SourcePathResolverAdapter resolver) {
+  public Optional<AbsPath> getResolvedIncludeRoot(SourcePathResolverAdapter resolver) {
     return Optional.empty();
   }
 

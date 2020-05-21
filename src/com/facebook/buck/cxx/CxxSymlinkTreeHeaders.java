@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rules.BuildRule;
@@ -74,7 +75,7 @@ public abstract class CxxSymlinkTreeHeaders extends CxxHeaders implements RuleKe
   public abstract Either<PathSourcePath, SourcePath> getIncludeRoot();
 
   @Override
-  public Optional<Path> getResolvedIncludeRoot(SourcePathResolverAdapter resolver) {
+  public Optional<AbsPath> getResolvedIncludeRoot(SourcePathResolverAdapter resolver) {
     return Optional.of(
         getIncludeRoot()
             .transform(

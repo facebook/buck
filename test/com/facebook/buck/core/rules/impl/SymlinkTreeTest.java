@@ -67,6 +67,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Before;
@@ -143,7 +144,11 @@ public class SymlinkTreeTest {
                     "link_tree",
                     projectFilesystem,
                     outputPath.getPath(),
-                    new SymlinkMapsPaths(pathResolver.getMappedPaths(links)),
+                    new SymlinkMapsPaths(
+                        pathResolver.getMappedPaths(links).entrySet().stream()
+                            .collect(
+                                ImmutableMap.toImmutableMap(
+                                    Map.Entry::getKey, e -> e.getValue().getPath()))),
                     (a, b) -> false))
             .build();
     ImmutableList<Step> actualBuildSteps =
@@ -197,8 +202,8 @@ public class SymlinkTreeTest {
     RuleKey key1 = ruleKeyFactory.build(symlinkTreeBuildRule);
 
     // Change the contents of the target of the link.
-    Path existingFile = pathResolver.getAbsolutePath(links.values().asList().get(0));
-    Files.write(existingFile, "something new".getBytes(StandardCharsets.UTF_8));
+    AbsPath existingFile = pathResolver.getAbsolutePath(links.values().asList().get(0));
+    Files.write(existingFile.getPath(), "something new".getBytes(StandardCharsets.UTF_8));
 
     // Re-calculate the rule key
     RuleKey key2 = ruleKeyFactory.build(symlinkTreeBuildRule);
@@ -228,9 +233,9 @@ public class SymlinkTreeTest {
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     RuleKey ruleKey1 = new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(genrule);
 
-    Path existingFile =
+    AbsPath existingFile =
         graphBuilder.getSourcePathResolver().getAbsolutePath(links.values().asList().get(0));
-    Files.write(existingFile, "something new".getBytes(StandardCharsets.UTF_8));
+    Files.write(existingFile.getPath(), "something new".getBytes(StandardCharsets.UTF_8));
     hashCache.invalidateAll();
 
     RuleKey ruleKey2 = new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(genrule);

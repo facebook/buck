@@ -32,6 +32,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -390,11 +391,9 @@ public class AdbHelper implements AndroidDevicesHelper {
       throws IOException {
 
     // Might need the package name and activities from the AndroidManifest.
-    Path pathToManifest =
+    AbsPath pathToManifest =
         pathResolver.getAbsolutePath(hasInstallableApk.getApkInfo().getManifestPath());
-    AndroidManifestReader reader =
-        DefaultAndroidManifestReader.forPath(
-            hasInstallableApk.getProjectFilesystem().resolve(pathToManifest));
+    AndroidManifestReader reader = DefaultAndroidManifestReader.forPath(pathToManifest.getPath());
 
     if (activity == null) {
       // Get list of activities that show up in the launcher.
@@ -464,8 +463,8 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   public static String tryToExtractPackageNameFromManifest(
       SourcePathResolverAdapter pathResolver, HasInstallableApk.ApkInfo apkInfo) {
-    Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
-    return tryToExtractPackageNameFromManifest(pathToManifest);
+    AbsPath pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
+    return tryToExtractPackageNameFromManifest(pathToManifest.getPath());
   }
 
   static String tryToExtractPackageNameFromManifest(Path pathToManifest) {

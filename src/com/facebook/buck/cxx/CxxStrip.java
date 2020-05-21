@@ -150,7 +150,7 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
     return ImmutableList.of(
         CopyStep.forFile(
             getProjectFilesystem(),
-            context.getSourcePathResolver().getAbsolutePath(unstrippedBinary),
+            context.getSourcePathResolver().getAbsolutePath(unstrippedBinary).getPath(),
             output),
         new StripSymbolsStep(
             output,

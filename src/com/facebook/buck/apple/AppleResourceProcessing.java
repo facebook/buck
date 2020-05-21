@@ -20,6 +20,7 @@ import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -146,9 +147,9 @@ public class AppleResourceProcessing {
       Optional<String> binaryName,
       boolean withDownwardApi) {
     for (SourcePath path : resources.getResourceVariantFiles()) {
-      Path variantFilePath = context.getSourcePathResolver().getAbsolutePath(path);
+      AbsPath variantFilePath = context.getSourcePathResolver().getAbsolutePath(path);
 
-      Path variantDirectory = variantFilePath.getParent();
+      AbsPath variantDirectory = variantFilePath.getParent();
       if (variantDirectory == null || !variantDirectory.toString().endsWith(".lproj")) {
         throw new HumanReadableException(
             "Variant files have to be in a directory with name ending in '.lproj', "
@@ -169,7 +170,7 @@ public class AppleResourceProcessing {
       Path destinationPath = bundleVariantDestinationPath.resolve(variantFilePath.getFileName());
       AppleResourceProcessing.addResourceProcessingSteps(
           context.getSourcePathResolver(),
-          variantFilePath,
+          variantFilePath.getPath(),
           destinationPath,
           stepsBuilder,
           ibtoolFlags,
@@ -201,11 +202,11 @@ public class AppleResourceProcessing {
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(), projectFilesystem, frameworksDestinationPath)));
       for (SourcePath framework : frameworks) {
-        Path srcPath = context.getSourcePathResolver().getAbsolutePath(framework);
+        AbsPath srcPath = context.getSourcePathResolver().getAbsolutePath(framework);
         stepsBuilder.add(
             CopyStep.forDirectory(
                 projectFilesystem,
-                srcPath,
+                srcPath.getPath(),
                 frameworksDestinationPath,
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
         codeSignOnCopyPathsBuilder.add(frameworksDestinationPath.resolve(srcPath.getFileName()));
@@ -386,7 +387,10 @@ public class AppleResourceProcessing {
       stepsBuilder.add(
           CopyStep.forDirectory(
               projectFilesystem,
-              context.getSourcePathResolver().getAbsolutePath(dirWithDestination.getSourcePath()),
+              context
+                  .getSourcePathResolver()
+                  .getAbsolutePath(dirWithDestination.getSourcePath())
+                  .getPath(),
               bundleDestinationPath,
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
     }
@@ -398,20 +402,23 @@ public class AppleResourceProcessing {
       stepsBuilder.add(
           CopyStep.forDirectory(
               projectFilesystem,
-              context.getSourcePathResolver().getAbsolutePath(dirWithDestination.getSourcePath()),
+              context
+                  .getSourcePathResolver()
+                  .getAbsolutePath(dirWithDestination.getSourcePath())
+                  .getPath(),
               bundleDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
 
     for (SourcePathWithAppleBundleDestination fileWithDestination : resources.getResourceFiles()) {
-      Path resolvedFilePath =
+      AbsPath resolvedFilePath =
           context.getSourcePathResolver().getAbsolutePath(fileWithDestination.getSourcePath());
       Path bundleDestinationPath =
           dirRoot.resolve(fileWithDestination.getDestination().getPath(destinations));
       Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());
       AppleResourceProcessing.addResourceProcessingSteps(
           context.getSourcePathResolver(),
-          resolvedFilePath,
+          resolvedFilePath.getPath(),
           destinationPath,
           stepsBuilder,
           ibtoolFlags,

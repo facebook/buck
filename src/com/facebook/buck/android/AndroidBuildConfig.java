@@ -176,7 +176,7 @@ public class AndroidBuildConfig extends AbstractBuildRuleWithDeclaredAndExtraDep
       ReadValuesStep readValuesStep =
           new ReadValuesStep(
               getProjectFilesystem(),
-              context.getSourcePathResolver().getAbsolutePath(valuesFile.get()));
+              context.getSourcePathResolver().getAbsolutePath(valuesFile.get()).getPath());
       steps.add(readValuesStep);
       totalFields = MoreSuppliers.memoize(() -> defaultValues.putAll(readValuesStep.get()));
     } else {

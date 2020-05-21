@@ -128,13 +128,14 @@ public class GenerateRDotJava extends AbstractBuildRule {
             buildContext.getSourcePathResolver(),
             resourceDeps,
             pathToRDotTxtFiles.stream()
-                .map(p -> pathResolver.getAbsolutePath(p))
+                .map(p -> pathResolver.getAbsolutePath(p).getPath())
                 .collect(ImmutableList.toImmutableList()),
             rDotJavaSrc.getPath(),
             bannedDuplicateResourceTypes,
-            duplicateResourceWhitelistPath.map(pathResolver::getAbsolutePath),
+            duplicateResourceWhitelistPath.map(
+                sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath()),
             pathToOverrideSymbolsFile.stream()
-                .map(p -> pathResolver.getAbsolutePath(p))
+                .map(p -> pathResolver.getAbsolutePath(p).getPath())
                 .collect(ImmutableList.toImmutableList()),
             resourceUnionPackage);
     steps.add(mergeStep);

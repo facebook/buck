@@ -18,6 +18,8 @@ package com.facebook.buck.core.sourcepath.resolver.impl;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -58,7 +60,7 @@ public class SourcePathResolverAdapterTest {
   public void delegatesToResolver() {
     // Only tests the methods that adds some sort of assertion in the adapter and doesn't test
     // one-liner delegating methods
-    EasyMock.expect(mockResolver.getAbsolutePath(mockSourcePath)).andReturn(getMockPaths(1, 50));
+    EasyMock.expect(mockResolver.getAbsolutePath(mockSourcePath)).andReturn(getMockAbsPaths(1, 50));
     EasyMock.expect(mockResolver.getRelativePath(mockSourcePath)).andReturn(getMockPaths(1, 90));
     EasyMock.expect(mockResolver.getIdeallyRelativePath(mockSourcePath))
         .andReturn(getMockPaths(1, -10));
@@ -67,10 +69,12 @@ public class SourcePathResolverAdapterTest {
     EasyMock.expect(
             mockResolver.getMappedPaths(
                 ImmutableMap.of("tee", mockSourcePath, "hee", mockSourcePath)))
-        .andReturn(ImmutableMap.of("tee", getMockPaths(1, 99), "hee", getMockPaths(1, 101)));
+        .andReturn(ImmutableMap.of("tee", getMockAbsPaths(1, 99), "hee", getMockAbsPaths(1, 101)));
     EasyMock.replay(mockResolver);
 
-    assertThat(testAdapter.getAbsolutePath(mockSourcePath), Matchers.contains(Paths.get("path50")));
+    assertThat(
+        testAdapter.getAbsolutePath(mockSourcePath).getPath().toString(),
+        Matchers.endsWith("path50"));
     assertThat(testAdapter.getRelativePath(mockSourcePath), Matchers.contains(Paths.get("path90")));
     assertThat(
         testAdapter.getIdeallyRelativePath(mockSourcePath),
@@ -80,13 +84,16 @@ public class SourcePathResolverAdapterTest {
         Matchers.contains(Paths.get("path100")));
     assertThat(
         testAdapter.getMappedPaths(ImmutableMap.of("tee", mockSourcePath, "hee", mockSourcePath)),
-        Matchers.equalTo(ImmutableMap.of("tee", Paths.get("path99"), "hee", Paths.get("path101"))));
+        Matchers.equalTo(
+            ImmutableMap.of(
+                "tee", RelPath.get("path99").toAbsolutePath(),
+                "hee", RelPath.get("path101").toAbsolutePath())));
   }
 
   @Test
   public void getAbsolutePathThrowsIfNotOneElement() {
     exception.expect(Matchers.instanceOf(NoSuchElementException.class));
-    EasyMock.expect(mockResolver.getAbsolutePath(mockSourcePath)).andReturn(getMockPaths(0, 50));
+    EasyMock.expect(mockResolver.getAbsolutePath(mockSourcePath)).andReturn(getMockAbsPaths(0, 50));
     EasyMock.replay(mockResolver);
     testAdapter.getAbsolutePath(mockSourcePath);
   }
@@ -124,13 +131,23 @@ public class SourcePathResolverAdapterTest {
   @Test
   public void getMappedPathsThrowsIfNotOneElement() {
     exception.expect(Matchers.instanceOf(IllegalArgumentException.class));
-    exception.expectMessage("expected one element but was: <path101, path102, path103>");
+    exception.expectMessage(
+        Matchers.matchesPattern("expected one element but was: <.*path101, .*path102, .*path103>"));
     EasyMock.expect(
             mockResolver.getMappedPaths(
                 ImmutableMap.of("tee", mockSourcePath, "hee", mockSourcePath)))
-        .andReturn(ImmutableMap.of("tee", getMockPaths(1, 99), "hee", getMockPaths(3, 101)));
+        .andReturn(ImmutableMap.of("tee", getMockAbsPaths(1, 99), "hee", getMockAbsPaths(3, 101)));
     EasyMock.replay(mockResolver);
     testAdapter.getMappedPaths(ImmutableMap.of("tee", mockSourcePath, "hee", mockSourcePath));
+  }
+
+  private static ImmutableSortedSet<AbsPath> getMockAbsPaths(int size, int startIndex) {
+    ImmutableSortedSet.Builder<AbsPath> builder =
+        ImmutableSortedSet.orderedBy(AbsPath.comparator());
+    for (int i = 0; i < size; i++) {
+      builder.add(RelPath.get("path" + startIndex++).toAbsolutePath());
+    }
+    return builder.build();
   }
 
   private static ImmutableSortedSet<Path> getMockPaths(int size, int startIndex) {

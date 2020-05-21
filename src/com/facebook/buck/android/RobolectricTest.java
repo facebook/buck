@@ -87,10 +87,14 @@ public class RobolectricTest extends JavaTest {
               ImmutableList.Builder<Path> builder = ImmutableList.builder();
               optionalDummyRDotJava.ifPresent(
                   dummyRDotJava ->
-                      builder.add(resolver.getAbsolutePath(dummyRDotJava.getSourcePathToOutput())));
+                      builder.add(
+                          resolver
+                              .getAbsolutePath(dummyRDotJava.getSourcePathToOutput())
+                              .getPath()));
               unitTestOptions.ifPresent(
                   options ->
-                      builder.add(resolver.getAbsolutePath(options.getSourcePathToOutput())));
+                      builder.add(
+                          resolver.getAbsolutePath(options.getSourcePathToOutput()).getPath()));
               return builder.build();
             }),
         labels,

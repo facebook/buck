@@ -139,7 +139,10 @@ public class SplitUberRDotJavaJar extends ModernBuildRule<SplitUberRDotJavaJar>
             .traverse(
                 new ClasspathTraversal(
                     ImmutableList.of(
-                        buildContext.getSourcePathResolver().getAbsolutePath(uberRDotJavaJar)),
+                        buildContext
+                            .getSourcePathResolver()
+                            .getAbsolutePath(uberRDotJavaJar)
+                            .getPath()),
                     filesystem) {
                   @Override
                   public void visit(FileLike fileLike) throws IOException {

@@ -444,7 +444,7 @@ public class JsLibraryDescription
                 pathSourcePath -> // for sub paths, replace the leading directory with the base path
                 transplantTo.resolve(
                         MorePaths.relativize(
-                            directoryOfBuildFile.getPath(),
+                            directoryOfBuildFile,
                             sourcePathResolverAdapter.getAbsolutePath(sourcePath))))
             .orElse(transplantTo); // build target output paths are replaced completely
 

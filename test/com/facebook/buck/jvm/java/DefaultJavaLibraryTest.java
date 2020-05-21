@@ -214,10 +214,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     return resolveClasspathPath(rule).toString();
   }
 
-  private Path resolveClasspathPath(BuildRule rule) {
-    return rule.getProjectFilesystem()
-        .resolve(
-            graphBuilder.getSourcePathResolver().getAbsolutePath(rule.getSourcePathToOutput()));
+  private AbsPath resolveClasspathPath(BuildRule rule) {
+    return graphBuilder.getSourcePathResolver().getAbsolutePath(rule.getSourcePathToOutput());
   }
 
   private void assertCorrectStandardJavacPluginParameters(
@@ -312,10 +310,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     BuildTarget target = validJavaLibrary.createTarget();
     BuildRule rule = validJavaLibrary.createRule(target);
-    Path classpath = resolveClasspathPath(rule);
+    AbsPath classpath = resolveClasspathPath(rule);
 
     ImmutableList<String> parameters =
-        scenario.buildAndGetCompileParameters(ImmutableSortedSet.of(classpath));
+        scenario.buildAndGetCompileParameters(ImmutableSortedSet.of(classpath.getPath()));
 
     assertHasClasspath(parameters, classpath.toString());
     assertEquals(
@@ -574,7 +572,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         ImmutableSet.of(
             graphBuilder
                 .getSourcePathResolver()
-                .getAbsolutePath(expectedRule.getSourcePathToOutput())),
+                .getAbsolutePath(expectedRule.getSourcePathToOutput())
+                .getPath()),
         javacStep.getClasspathEntries());
   }
 
@@ -1724,8 +1723,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
   private static ImmutableSet<AbsPath> resolve(
       ImmutableSet<SourcePath> paths, SourcePathResolverAdapter resolver) {
-    return paths.stream()
-        .map(sourcePath -> AbsPath.of(resolver.getAbsolutePath(sourcePath)))
-        .collect(ImmutableSet.toImmutableSet());
+    return paths.stream().map(resolver::getAbsolutePath).collect(ImmutableSet.toImmutableSet());
   }
 }

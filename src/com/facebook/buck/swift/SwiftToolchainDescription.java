@@ -65,16 +65,16 @@ public class SwiftToolchainDescription
         swiftc,
         swiftStdlibTool,
         args.getRuntimePathsForBundling().stream()
-            .map(pathResolver::getAbsolutePath)
+            .map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath())
             .collect(ImmutableList.toImmutableList()),
         args.getRuntimePathsForLinking().stream()
-            .map(pathResolver::getAbsolutePath)
+            .map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath())
             .collect(ImmutableList.toImmutableList()),
         args.getStaticRuntimePaths().stream()
-            .map(pathResolver::getAbsolutePath)
+            .map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath())
             .collect(ImmutableList.toImmutableList()),
         args.getRuntimeRunPaths().stream()
-            .map(pathResolver::getAbsolutePath)
+            .map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath())
             .collect(ImmutableList.toImmutableList()));
   }
 

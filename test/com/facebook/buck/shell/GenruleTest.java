@@ -30,6 +30,7 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
@@ -179,12 +180,12 @@ public class GenruleTest {
         pathResolver.getRelativePath(genrule.getSourcePathToOutput()));
 
     SourcePath outputSourcePath = genrule.getSourcePathToOutput();
-    Path manifestPath = graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
+    AbsPath manifestPath = graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertEquals(
         filesystem.resolve(
             BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
                 .resolve("AndroidManifest.xml")),
-        manifestPath);
+        manifestPath.getPath());
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(pathResolver)
             .withBuildCellRootPath(filesystem.getRootPath().getPath());

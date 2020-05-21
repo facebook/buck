@@ -114,7 +114,9 @@ public class LegacyRuleDescription
         ImmutableList<Path> toRead =
             depRules.stream()
                 .map(BuildRule::getSourcePathToOutput)
-                .map(sourcePath -> context1.getSourcePathResolver().getAbsolutePath(sourcePath))
+                .map(
+                    sourcePath ->
+                        context1.getSourcePathResolver().getAbsolutePath(sourcePath).getPath())
                 .collect(ImmutableList.toImmutableList());
 
         steps.add(

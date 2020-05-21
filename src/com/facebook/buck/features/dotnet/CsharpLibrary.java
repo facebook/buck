@@ -18,6 +18,7 @@ package com.facebook.buck.features.dotnet;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.DefaultFieldDeps;
@@ -43,6 +44,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -97,13 +99,14 @@ public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       BuildContext context, BuildableContext buildableContext) {
     ProjectFilesystem filesystem = getProjectFilesystem();
 
-    ImmutableSortedSet<Path> sourceFiles =
+    ImmutableSortedSet<AbsPath> sourceFiles =
         context.getSourcePathResolver().getAllAbsolutePaths(srcs);
 
     ImmutableListMultimap.Builder<Path, String> resolvedResources = ImmutableListMultimap.builder();
     for (Map.Entry<String, SourcePath> resource : resources.entrySet()) {
       resolvedResources.put(
-          context.getSourcePathResolver().getAbsolutePath(resource.getValue()), resource.getKey());
+          context.getSourcePathResolver().getAbsolutePath(resource.getValue()).getPath(),
+          resource.getKey());
     }
 
     ImmutableList<Either<Path, String>> references =
@@ -120,7 +123,9 @@ public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             context.getSourcePathResolver(),
             csharpCompiler,
             filesystem.resolve(output),
-            sourceFiles,
+            sourceFiles.stream()
+                .map(AbsPath::getPath)
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())),
             references,
             resolvedResources.build(),
             version,
@@ -149,13 +154,15 @@ public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
           resolved.add(
               Either.ofLeft(
-                  pathResolver.getAbsolutePath(dotnet.get().dll().asBound().getSourcePath())));
+                  pathResolver
+                      .getAbsolutePath(dotnet.get().dll().asBound().getSourcePath())
+                      .getPath()));
         } else {
           Preconditions.checkArgument(
               rule instanceof CsharpLibrary || rule instanceof PrebuiltDotnetLibrary);
 
           SourcePath outputPath = Objects.requireNonNull(rule.getSourcePathToOutput());
-          resolved.add(Either.ofLeft(pathResolver.getAbsolutePath(outputPath)));
+          resolved.add(Either.ofLeft(pathResolver.getAbsolutePath(outputPath).getPath()));
         }
 
       } else {

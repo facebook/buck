@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.ocaml;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -242,7 +243,7 @@ abstract class OcamlBuildContext implements AddsToRuleKey {
   public ImmutableList<String> getIncludeDirectories(boolean isBytecode, boolean excludeDeps) {
     ImmutableSet.Builder<String> includeDirs = ImmutableSet.builder();
     for (SourcePath mlFile : getMLInput()) {
-      Path parent = getSourcePathResolver().getAbsolutePath(mlFile).getParent();
+      AbsPath parent = getSourcePathResolver().getAbsolutePath(mlFile).getParent();
       if (parent != null) {
         includeDirs.add(parent.toString());
       }

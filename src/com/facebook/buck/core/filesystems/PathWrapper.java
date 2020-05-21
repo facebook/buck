@@ -80,4 +80,8 @@ public interface PathWrapper {
   default Path getFileName() {
     return getPath().getFileName();
   }
+
+  default Path getName(int index) {
+    return getPath().getName(index);
+  }
 }

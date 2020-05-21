@@ -563,8 +563,9 @@ public class InstallCommand extends BuildCommand {
     if (!appleDeviceController
         .installBundle(
             chosenDevice.getUdid(),
-            pathResolver.getAbsolutePath(
-                Objects.requireNonNull(appleBundle.getSourcePathToOutput())))
+            pathResolver
+                .getAbsolutePath(Objects.requireNonNull(appleBundle.getSourcePathToOutput()))
+                .getPath())
         .isPresent()) {
       params
           .getConsole()
@@ -663,7 +664,7 @@ public class InstallCommand extends BuildCommand {
                     appleBundle.getFullyQualifiedName(), helperTarget.get().getBaseName()));
         return FAILURE;
       }
-      helperPath = pathResolver.getAbsolutePath(buildRuleOutputPath);
+      helperPath = pathResolver.getAbsolutePath(buildRuleOutputPath).getPath();
     } else {
       Optional<Path> helperOverridePath = appleConfig.getAppleDeviceHelperAbsolutePath();
       if (helperOverridePath.isPresent()) {
@@ -734,8 +735,9 @@ public class InstallCommand extends BuildCommand {
 
     if (helper.installBundleOnDevice(
         selectedUdid,
-        pathResolver.getAbsolutePath(
-            Objects.requireNonNull(appleBundle.getSourcePathToOutput())))) {
+        pathResolver
+            .getAbsolutePath(Objects.requireNonNull(appleBundle.getSourcePathToOutput()))
+            .getPath())) {
       params
           .getConsole()
           .printSuccess(
@@ -855,8 +857,9 @@ public class InstallCommand extends BuildCommand {
     if (!appleDeviceController
         .installBundle(
             simulator.get().getUdid(),
-            pathResolver.getAbsolutePath(
-                Objects.requireNonNull(appleBundle.getSourcePathToOutput())))
+            pathResolver
+                .getAbsolutePath(Objects.requireNonNull(appleBundle.getSourcePathToOutput()))
+                .getPath())
         .isPresent()) {
       params
           .getConsole()
@@ -1064,8 +1067,9 @@ public class InstallCommand extends BuildCommand {
 
     if (!appleSimulatorController.installBundleInSimulator(
         appleSimulator.get().getUdid(),
-        pathResolver.getAbsolutePath(
-            Objects.requireNonNull(appleBundle.getSourcePathToOutput())))) {
+        pathResolver
+            .getAbsolutePath(Objects.requireNonNull(appleBundle.getSourcePathToOutput()))
+            .getPath())) {
       params
           .getConsole()
           .printBuildFailure(

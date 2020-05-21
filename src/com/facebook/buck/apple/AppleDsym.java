@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -150,7 +151,7 @@ public class AppleDsym extends AbstractBuildRule
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(dsymOutputPath);
 
-    Path unstrippedBinaryPath =
+    AbsPath unstrippedBinaryPath =
         context.getSourcePathResolver().getAbsolutePath(unstrippedBinarySourcePath);
     Path dwarfFileFolder = dsymOutputPath.resolve(DSYM_DWARF_FILE_FOLDER);
     return ImmutableList.of(
@@ -162,7 +163,7 @@ public class AppleDsym extends AbstractBuildRule
             getProjectFilesystem(),
             dsymutil.getEnvironment(context.getSourcePathResolver()),
             dsymutil.getCommandPrefix(context.getSourcePathResolver()),
-            unstrippedBinaryPath,
+            unstrippedBinaryPath.getPath(),
             dsymOutputPath,
             withDownwardApi),
         new MoveStep(

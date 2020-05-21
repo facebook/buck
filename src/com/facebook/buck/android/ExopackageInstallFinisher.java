@@ -106,7 +106,7 @@ public class ExopackageInstallFinisher extends AbstractBuildRule {
             ExopackageInfo exoInfo = apkInfo.getExopackageInfo().get();
             String packageName =
                 AdbHelper.tryToExtractPackageNameFromManifest(
-                    buildContext.getSourcePathResolver().getAbsolutePath(manifestPath));
+                    buildContext.getSourcePathResolver().getAbsolutePath(manifestPath).getPath());
             ImmutableSortedMap<String, ImmutableSortedSet<Path>> contents =
                 ExopackageDeviceDirectoryLister.deserializeDirectoryContentsForPackage(
                     getProjectFilesystem(),

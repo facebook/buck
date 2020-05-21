@@ -18,6 +18,7 @@ package com.facebook.buck.features.js;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -40,7 +41,6 @@ import com.facebook.buck.util.json.JsonBuilder.ObjectBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Optional;
 
 public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
@@ -116,7 +116,7 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
             "libraries",
             libraries.stream()
                 .map(sourcePathResolverAdapter::getAbsolutePath)
-                .map(Path::toString)
+                .map(AbsPath::toString)
                 .collect(JsonBuilder.toArrayOfStrings()))
         .addString("platform", JsUtil.getPlatformString(flavors))
         .addBoolean("release", flavors.contains(JsFlavors.RELEASE))

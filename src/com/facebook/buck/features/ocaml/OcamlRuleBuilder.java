@@ -518,13 +518,16 @@ public class OcamlRuleBuilder {
   }
 
   private static ImmutableMap<Path, ImmutableList<Path>> filterCurrentRuleInput(
-      Set<Path> mlInput, ImmutableMap<Path, ImmutableList<Path>> deps) {
+      Set<AbsPath> mlInput, ImmutableMap<Path, ImmutableList<Path>> deps) {
     ImmutableMap.Builder<Path, ImmutableList<Path>> builder = ImmutableMap.builder();
     for (ImmutableMap.Entry<Path, ImmutableList<Path>> entry : deps.entrySet()) {
-      if (mlInput.contains(entry.getKey())) {
+      Path key = entry.getKey();
+      if (key.isAbsolute() && mlInput.contains(AbsPath.of(key))) {
         builder.put(
-            entry.getKey(),
-            FluentIterable.from(entry.getValue()).filter(mlInput::contains).toList());
+            key,
+            FluentIterable.from(entry.getValue())
+                .filter(path -> path.isAbsolute() && mlInput.contains(AbsPath.of(path)))
+                .toList());
       }
     }
     return builder.build();

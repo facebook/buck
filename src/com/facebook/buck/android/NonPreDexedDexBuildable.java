@@ -23,6 +23,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -326,7 +327,10 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
                             v ->
                                 new AbstractMap.SimpleEntry<>(
                                     entry.getKey(),
-                                    buildContext.getSourcePathResolver().getAbsolutePath(v))))
+                                    buildContext
+                                        .getSourcePathResolver()
+                                        .getAbsolutePath(v)
+                                        .getPath())))
             .collect(
                 ImmutableListMultimap.toImmutableListMultimap(e -> e.getKey(), e -> e.getValue()));
 
@@ -427,7 +431,12 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
           addProguardCommands(
               classpathEntriesToDex,
               proguardConfigs.stream()
-                  .map(buildContext.getSourcePathResolver()::getAbsolutePath)
+                  .map(
+                      sourcePath ->
+                          buildContext
+                              .getSourcePathResolver()
+                              .getAbsolutePath(sourcePath)
+                              .getPath())
                   .collect(ImmutableSet.toImmutableSet()),
               skipProguard,
               steps,
@@ -574,11 +583,14 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     proguardConfigsBuilder.addAll(depsProguardConfigs);
     if (proguardConfig.isPresent()) {
       proguardConfigsBuilder.add(
-          buildContext.getSourcePathResolver().getAbsolutePath(proguardConfig.get()));
+          buildContext.getSourcePathResolver().getAbsolutePath(proguardConfig.get()).getPath());
     }
     for (SourcePath aaptGeneratedProguardConfigFile : proguardConfigs) {
       proguardConfigsBuilder.add(
-          buildContext.getSourcePathResolver().getAbsolutePath(aaptGeneratedProguardConfigFile));
+          buildContext
+              .getSourcePathResolver()
+              .getAbsolutePath(aaptGeneratedProguardConfigFile)
+              .getPath());
     }
 
     // Transform our input classpath to a set of output locations for each input classpath.
@@ -600,7 +612,10 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
         getProjectFilesystem(),
         proguardJarOverride.isPresent()
             ? Optional.of(
-                buildContext.getSourcePathResolver().getAbsolutePath(proguardJarOverride.get()))
+                buildContext
+                    .getSourcePathResolver()
+                    .getAbsolutePath(proguardJarOverride.get())
+                    .getPath())
             : Optional.empty(),
         proguardMaxHeapSize,
         proguardAgentPath,
@@ -609,9 +624,10 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
         optimizationPasses,
         proguardJvmArgs,
         inputOutputEntries,
-        buildContext
-            .getSourcePathResolver()
-            .getAllAbsolutePaths(additionalJarsForProguardAndDesugar),
+        buildContext.getSourcePathResolver()
+            .getAllAbsolutePaths(additionalJarsForProguardAndDesugar).stream()
+            .map(PathWrapper::getPath)
+            .collect(ImmutableSet.toImmutableSet()),
         getProguardConfigDir(),
         buildableContext,
         buildContext,
@@ -755,10 +771,18 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
               proguardMappingFile,
               skipProguard,
               dexSplitMode,
-              dexSplitMode.getPrimaryDexScenarioFile().map(resolver::getAbsolutePath),
-              dexSplitMode.getPrimaryDexClassesFile().map(resolver::getAbsolutePath),
-              dexSplitMode.getSecondaryDexHeadClassesFile().map(resolver::getAbsolutePath),
-              dexSplitMode.getSecondaryDexTailClassesFile().map(resolver::getAbsolutePath),
+              dexSplitMode
+                  .getPrimaryDexScenarioFile()
+                  .map(sourcePath -> resolver.getAbsolutePath(sourcePath).getPath()),
+              dexSplitMode
+                  .getPrimaryDexClassesFile()
+                  .map(sourcePath -> resolver.getAbsolutePath(sourcePath).getPath()),
+              dexSplitMode
+                  .getSecondaryDexHeadClassesFile()
+                  .map(sourcePath -> resolver.getAbsolutePath(sourcePath).getPath()),
+              dexSplitMode
+                  .getSecondaryDexTailClassesFile()
+                  .map(sourcePath -> resolver.getAbsolutePath(sourcePath).getPath()),
               additionalDexStoreToJarPathMap,
               apkModuleMap,
               rootAPKModule,
@@ -895,7 +919,9 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
             true,
             Optional.of(
                 additionalJarsForProguardAndDesugar.stream()
-                    .map(input -> buildContext.getSourcePathResolver().getAbsolutePath(input))
+                    .map(
+                        input ->
+                            buildContext.getSourcePathResolver().getAbsolutePath(input).getPath())
                     .collect(ImmutableSet.toImmutableSet())),
             getBuildTarget(),
             minSdkVersion,
@@ -907,8 +933,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
           new IntraDexReorderStep(
               buildContext,
               getProjectFilesystem(),
-              resolver.getAbsolutePath(dexReorderToolFile.get()),
-              resolver.getAbsolutePath(dexReorderDataDumpFile.get()),
+              resolver.getAbsolutePath(dexReorderToolFile.get()).getPath(),
+              resolver.getAbsolutePath(dexReorderDataDumpFile.get()).getPath(),
               getBuildTarget(),
               selectedPrimaryDexPath,
               primaryDexPath,

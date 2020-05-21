@@ -18,6 +18,8 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -203,7 +205,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
 
-    List<Path> requiredPaths = new ArrayList<>();
+    List<AbsPath> requiredPaths = new ArrayList<>();
 
     // Extract any required paths from args and env vars.
     for (Arg arg : Iterables.concat(args, getEnv().values())) {
@@ -225,7 +227,10 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
         .setEnv(Arg.stringify(env, buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
-        .setRequiredPaths(requiredPaths)
+        .setRequiredPaths(
+            requiredPaths.stream()
+                .map(PathWrapper::getPath)
+                .collect(ImmutableList.toImmutableList()))
         .build();
   }
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -28,7 +29,6 @@ import com.facebook.buck.util.Memoizer;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 
 /** Default implementation of {@link JavaClassHashesProvider} interface */
@@ -49,17 +49,17 @@ public class DefaultJavaClassHashesProvider implements JavaClassHashesProvider {
       ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolverAdapter) {
     return classNamesToHashesSupplier.get(
         () -> {
-          Path absolutePath =
+          AbsPath absolutePath =
               sourcePathResolverAdapter.getAbsolutePath(classNamesToHashesSourcePath);
           return readClassNamesToHashes(filesystem, absolutePath);
         });
   }
 
   private ImmutableSortedMap<String, HashCode> readClassNamesToHashes(
-      ProjectFilesystem filesystem, Path classHashesAbsolutePath) {
+      ProjectFilesystem filesystem, AbsPath classHashesAbsolutePath) {
     List<String> lines;
     try {
-      lines = filesystem.readLines(classHashesAbsolutePath);
+      lines = filesystem.readLines(classHashesAbsolutePath.getPath());
     } catch (IOException e) {
       throw new BuckUncheckedExecutionException(
           e, "I/O exception during reading from the path: %s", classHashesAbsolutePath);

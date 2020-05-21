@@ -119,7 +119,8 @@ class ExopackageSymlinkTreeStep implements Step {
     // Set up a scratch path where we can lay out a symlink tree
     RelPath exopackageSymlinkTreePath = getExopackageSymlinkTreePath(buildTarget, filesystem);
     String packageName =
-        AdbHelper.tryToExtractPackageNameFromManifest(pathResolver.getAbsolutePath(manifestPath));
+        AdbHelper.tryToExtractPackageNameFromManifest(
+            pathResolver.getAbsolutePath(manifestPath).getPath());
     try {
       filesystem.deleteRecursivelyIfExists(exopackageSymlinkTreePath);
       filesystem.mkdirs(exopackageSymlinkTreePath);

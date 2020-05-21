@@ -177,9 +177,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
       ProjectFilesystem inputFilesystem = compileRule.getProjectFilesystem();
 
       String fileToCompile =
-          inputFilesystem
-              .resolve(context.getSourcePathResolver().getAbsolutePath(inputSourcePath))
-              .toString();
+          context.getSourcePathResolver().getAbsolutePath(inputSourcePath).toString();
       ImmutableList<String> arguments = compileRule.getCommand(context);
       return ImmutableCxxCompilationDatabaseEntry.ofImpl(
           inputFilesystem.getRootPath().toString(), fileToCompile, arguments);

@@ -17,6 +17,7 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.exopackage.ExopackageInfo.NativeLibsInfo;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -67,7 +68,7 @@ public class ExopackageSymlinkTree {
     // Symlink the native so files
     if (exoInfo.getNativeLibsInfo().isPresent()) {
       NativeLibsInfo nativeLibsInfo = exoInfo.getNativeLibsInfo().get();
-      Path metadataPath = pathResolver.getAbsolutePath(nativeLibsInfo.getMetadata());
+      AbsPath metadataPath = pathResolver.getAbsolutePath(nativeLibsInfo.getMetadata());
       // We don't yet know which device is our installation target, so we need to link all abis
       // which were built for the device
       List<String> abis = new ArrayList<>(detectAbis(metadataPath, filesystem));
@@ -143,12 +144,12 @@ public class ExopackageSymlinkTree {
    *
    * @return a list of the ABI values that were found in the exopackage data for our app
    */
-  private static ImmutableList<String> detectAbis(Path metadataPath, ProjectFilesystem filesystem)
-      throws IOException {
+  private static ImmutableList<String> detectAbis(
+      AbsPath metadataPath, ProjectFilesystem filesystem) throws IOException {
     // Each shared-object referenced by the metadata is contained within a folder named with the abi
     // so we extract the set of parent folder names for all the objects.
     return ExopackageInstaller.parseExopackageInfoMetadata(
-            metadataPath, MorePaths.emptyOf(metadataPath), filesystem)
+            metadataPath.getPath(), MorePaths.emptyOf(metadataPath.getPath()), filesystem)
         .values().stream()
         .map(path -> path.getParent().getFileName().toString())
         .collect(ImmutableSet.toImmutableSet())

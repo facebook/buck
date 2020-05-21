@@ -31,7 +31,7 @@ public class DCompileStep extends ShellStep {
   private final ImmutableList<String> compiler;
   private final ImmutableList<String> flags;
   private final Path output;
-  private final ImmutableCollection<Path> inputs;
+  private final ImmutableCollection<AbsPath> inputs;
 
   public DCompileStep(
       AbsPath workingDirectory,
@@ -39,7 +39,7 @@ public class DCompileStep extends ShellStep {
       ImmutableList<String> compiler,
       ImmutableList<String> flags,
       Path output,
-      ImmutableCollection<Path> inputs,
+      ImmutableCollection<AbsPath> inputs,
       boolean withDownwardApi) {
     super(workingDirectory, withDownwardApi);
     this.environment = environment;
@@ -56,7 +56,7 @@ public class DCompileStep extends ShellStep {
         .addAll(flags)
         .add("-c")
         .add("-of" + output)
-        .addAll(inputs.stream().map(Object::toString).iterator())
+        .addAll(inputs.stream().map(AbsPath::toString).iterator())
         .build();
   }
 

@@ -19,6 +19,7 @@ package com.facebook.buck.features.haskell;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
@@ -551,11 +552,14 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(new MakeExecutableStep(getProjectFilesystem(), script));
 
     for (SourcePath s : extraScriptTemplates) {
-      Path templateAbsPath = resolver.getAbsolutePath(s);
+      AbsPath templateAbsPath = resolver.getAbsolutePath(s);
       Path extraScript = dir.resolve(templateAbsPath.getFileName());
       steps.add(
           new StringTemplateStep(
-              templateAbsPath, getProjectFilesystem(), extraScript, templateArgs.build()));
+              templateAbsPath.getPath(),
+              getProjectFilesystem(),
+              extraScript,
+              templateArgs.build()));
       steps.add(new MakeExecutableStep(getProjectFilesystem(), extraScript));
     }
 

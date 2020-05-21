@@ -22,6 +22,7 @@ import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UserFlavor;
@@ -105,13 +106,15 @@ public class AppleToolchainDescription
       dsymutil = new CommandTool.Builder(dsymutil).addArg("-num-threads=1").build();
     }
 
-    Path sdkPath = pathResolver.getAbsolutePath(args.getSdkPath());
-    Path platformPath = pathResolver.getAbsolutePath(args.getPlatformPath());
-    Optional<Path> developerPath = args.getDeveloperPath().map(pathResolver::getAbsolutePath);
+    AbsPath sdkPath = pathResolver.getAbsolutePath(args.getSdkPath());
+    AbsPath platformPath = pathResolver.getAbsolutePath(args.getPlatformPath());
+    Optional<Path> developerPath =
+        args.getDeveloperPath()
+            .map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath());
     AppleSdkPaths sdkPaths =
         AppleSdkPaths.builder()
-            .setSdkPath(sdkPath)
-            .setPlatformPath(platformPath)
+            .setSdkPath(sdkPath.getPath())
+            .setPlatformPath(platformPath.getPath())
             .setToolchainPaths(ImmutableList.of())
             .setDeveloperPath(developerPath)
             .build();
@@ -166,7 +169,8 @@ public class AppleToolchainDescription
             .setXcodeBuildVersion(args.getXcodeBuildVersion())
             .setAppleSdkPaths(sdkPaths)
             .setAppleSdk(sdk)
-            .setStubBinary(applePlatform.getStubBinaryPath().map(sdkPath::resolve))
+            .setStubBinary(
+                applePlatform.getStubBinaryPath().map(path -> sdkPath.resolve(path).getPath()))
             .build();
 
     return new AppleToolchainBuildRule(
@@ -188,13 +192,14 @@ public class AppleToolchainDescription
     CxxPlatform currentCxxPlatform = cxxToolchainRule.getPlatformWithFlavor(flavor);
     CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder().from(currentCxxPlatform);
 
-    Path sdkRootPath = pathResolver.getAbsolutePath(sdkRoot);
-    Path platformRootPath = pathResolver.getAbsolutePath(platformRoot);
-    Optional<Path> developerRootPath = developerRoot.map(pathResolver::getAbsolutePath);
+    AbsPath sdkRootPath = pathResolver.getAbsolutePath(sdkRoot);
+    AbsPath platformRootPath = pathResolver.getAbsolutePath(platformRoot);
+    Optional<Path> developerRootPath =
+        developerRoot.map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath());
 
     ImmutableBiMap.Builder<Path, String> sanitizerPathsBuilder = ImmutableBiMap.builder();
-    sanitizerPathsBuilder.put(sdkRootPath, "APPLE_SDKROOT");
-    sanitizerPathsBuilder.put(platformRootPath, "APPLE_PLATFORM_DIR");
+    sanitizerPathsBuilder.put(sdkRootPath.getPath(), "APPLE_SDKROOT");
+    sanitizerPathsBuilder.put(platformRootPath.getPath(), "APPLE_PLATFORM_DIR");
     developerRootPath.ifPresent(path -> sanitizerPathsBuilder.put(path, "APPLE_DEVELOPER_DIR"));
     DebugPathSanitizer compilerDebugPathSanitizer =
         new PrefixMapDebugPathSanitizer(

@@ -17,6 +17,7 @@
 package com.facebook.buck.features.apple.projectV2;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -100,7 +101,7 @@ public class Utils {
         TargetNodes.castArg(node, ExportFileDescriptionArg.class);
     if (!exportFileNode.isPresent()) {
       BuildRuleResolver resolver = actionGraphBuilder;
-      Path output = resolver.getSourcePathResolver().getAbsolutePath(buildTargetSourcePath);
+      AbsPath output = resolver.getSourcePathResolver().getAbsolutePath(buildTargetSourcePath);
       if (output == null) {
         throw new HumanReadableException(
             "The target '%s' does not have an output.", node.getBuildTarget());

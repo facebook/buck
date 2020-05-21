@@ -74,7 +74,7 @@ class ExtractPrebuiltPythonLibrary extends ModernBuildRule<ExtractPrebuiltPython
           .add(
               new UnzipStep(
                   filesystem,
-                  buildContext.getSourcePathResolver().getAbsolutePath(binarySrc),
+                  buildContext.getSourcePathResolver().getAbsolutePath(binarySrc).getPath(),
                   extractedOutput,
                   Optional.empty()))
           .add(new MovePythonWhlDataStep(filesystem, extractedOutput))

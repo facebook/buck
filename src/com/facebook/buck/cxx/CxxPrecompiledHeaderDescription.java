@@ -49,7 +49,7 @@ public class CxxPrecompiledHeaderDescription
         context.getProjectFilesystem(),
         ruleResolver.getAllRules(args.getDeps()),
         args.getSrc(),
-        ruleResolver.getSourcePathResolver().getAbsolutePath(args.getSrc()));
+        ruleResolver.getSourcePathResolver().getAbsolutePath(args.getSrc()).getPath());
   }
 
   @Override

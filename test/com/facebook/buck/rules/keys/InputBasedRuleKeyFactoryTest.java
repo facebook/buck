@@ -226,7 +226,9 @@ public class InputBasedRuleKeyFactoryTest {
     FakeFileHashCache hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                pathResolver.getAbsolutePath(Objects.requireNonNull(dep.getSourcePathToOutput())),
+                pathResolver
+                    .getAbsolutePath(Objects.requireNonNull(dep.getSourcePathToOutput()))
+                    .getPath(),
                 HashCode.fromInt(0)));
 
     RuleKey inputKey1 = new TestInputBasedRuleKeyFactory(hashCache, graphBuilder).build(rule);
@@ -235,7 +237,9 @@ public class InputBasedRuleKeyFactoryTest {
     hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                pathResolver.getAbsolutePath(Objects.requireNonNull(dep.getSourcePathToOutput())),
+                pathResolver
+                    .getAbsolutePath(Objects.requireNonNull(dep.getSourcePathToOutput()))
+                    .getPath(),
                 HashCode.fromInt(1)));
 
     RuleKey inputKey2 = new TestInputBasedRuleKeyFactory(hashCache, graphBuilder).build(rule);
@@ -268,7 +272,9 @@ public class InputBasedRuleKeyFactoryTest {
     FakeFileHashCache hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                pathResolver.getAbsolutePath(Objects.requireNonNull(dep.getSourcePathToOutput())),
+                pathResolver
+                    .getAbsolutePath(Objects.requireNonNull(dep.getSourcePathToOutput()))
+                    .getPath(),
                 HashCode.fromInt(0)));
 
     RuleKey inputKey1 = new TestInputBasedRuleKeyFactory(hashCache, graphBuilder).build(action);
@@ -277,7 +283,9 @@ public class InputBasedRuleKeyFactoryTest {
     hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                pathResolver.getAbsolutePath(Objects.requireNonNull(dep.getSourcePathToOutput())),
+                pathResolver
+                    .getAbsolutePath(Objects.requireNonNull(dep.getSourcePathToOutput()))
+                    .getPath(),
                 HashCode.fromInt(1)));
 
     RuleKey inputKey2 = new TestInputBasedRuleKeyFactory(hashCache, graphBuilder).build(action);
@@ -340,8 +348,9 @@ public class InputBasedRuleKeyFactoryTest {
     FakeFileHashCache hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                pathResolver.getAbsolutePath(
-                    Preconditions.checkNotNull(dep.getSourcePathToOutput())),
+                pathResolver
+                    .getAbsolutePath(Preconditions.checkNotNull(dep.getSourcePathToOutput()))
+                    .getPath(),
                 HashCode.fromInt(0)));
 
     RuleKey inputKey1 = new TestInputBasedRuleKeyFactory(hashCache, graphBuilder).build(rule);
@@ -350,8 +359,9 @@ public class InputBasedRuleKeyFactoryTest {
     hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                pathResolver.getAbsolutePath(
-                    Preconditions.checkNotNull(dep.getSourcePathToOutput())),
+                pathResolver
+                    .getAbsolutePath(Preconditions.checkNotNull(dep.getSourcePathToOutput()))
+                    .getPath(),
                 HashCode.fromInt(1)));
 
     RuleKey inputKey2 = new TestInputBasedRuleKeyFactory(hashCache, graphBuilder).build(rule);

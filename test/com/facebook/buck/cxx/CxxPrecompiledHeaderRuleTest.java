@@ -165,7 +165,7 @@ public class CxxPrecompiledHeaderRuleTest {
         new FakeProjectFilesystem(),
         deps,
         headerSourcePath,
-        pathResolver.getAbsolutePath(headerSourcePath));
+        pathResolver.getAbsolutePath(headerSourcePath).getPath());
   }
 
   public CxxSource newCxxSource(SourcePath path, ImmutableList<String> flags) {

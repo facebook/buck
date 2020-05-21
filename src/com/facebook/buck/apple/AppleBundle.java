@@ -439,8 +439,7 @@ public class AppleBundle extends AbstractBuildRule
 
     Path metadataPath = getMetadataPath();
 
-    AbsPath infoPlistInputPath =
-        AbsPath.of(context.getSourcePathResolver().getAbsolutePath(infoPlist));
+    AbsPath infoPlistInputPath = context.getSourcePathResolver().getAbsolutePath(infoPlist);
     RelPath infoPlistSubstitutionTempPath =
         BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.plist");
     Path infoPlistOutputPath = metadataPath.resolve("Info.plist");
@@ -729,7 +728,7 @@ public class AppleBundle extends AbstractBuildRule
 
     // Try to use the entitlements file specified in the bundle's binary first.
     entitlementsPlist =
-        entitlementsFile.map(p -> context.getSourcePathResolver().getAbsolutePath(p));
+        entitlementsFile.map(p -> context.getSourcePathResolver().getAbsolutePath(p).getPath());
 
     // Fall back to getting CODE_SIGN_ENTITLEMENTS from info_plist_substitutions.
     if (!entitlementsPlist.isPresent()) {
@@ -783,13 +782,13 @@ public class AppleBundle extends AbstractBuildRule
       ImmutableList.Builder<Step> stepsBuilder, BuildContext context) {
     Preconditions.checkArgument(hasBinary);
 
-    Path binaryOutputPath =
+    AbsPath binaryOutputPath =
         context
             .getSourcePathResolver()
             .getAbsolutePath(Objects.requireNonNull(binary.get().getSourcePathToOutput()));
 
     ImmutableMap.Builder<Path, Path> binariesBuilder = ImmutableMap.builder();
-    binariesBuilder.put(bundleBinaryPath, binaryOutputPath);
+    binariesBuilder.put(bundleBinaryPath, binaryOutputPath.getPath());
 
     for (BuildRule extraBinary : extraBinaries) {
       Path outputPath =
@@ -799,7 +798,7 @@ public class AppleBundle extends AbstractBuildRule
     }
 
     copyBinariesIntoBundle(stepsBuilder, context, binariesBuilder.build());
-    copyAnotherCopyOfWatchKitStub(stepsBuilder, context, binaryOutputPath);
+    copyAnotherCopyOfWatchKitStub(stepsBuilder, context, binaryOutputPath.getPath());
   }
 
   private Path getBundleBinaryPathForBuildRule(BuildRule buildRule) {
@@ -886,7 +885,8 @@ public class AppleBundle extends AbstractBuildRule
               getProjectFilesystem(),
               buildContext
                   .getSourcePathResolver()
-                  .getAbsolutePath(appleDsym.get().getSourcePathToOutput()),
+                  .getAbsolutePath(appleDsym.get().getSourcePathToOutput())
+                  .getPath(),
               bundleRoot.getParent(),
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
       appendDsymRenameStepToMatchBundleName(stepsBuilder, buildableContext, buildContext);
@@ -934,7 +934,7 @@ public class AppleBundle extends AbstractBuildRule
       ImmutableList.Builder<Step> stepsBuilder,
       ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder) {
     for (Map.Entry<SourcePath, String> entry : extensionBundlePaths.entrySet()) {
-      Path srcPath = context.getSourcePathResolver().getAbsolutePath(entry.getKey());
+      AbsPath srcPath = context.getSourcePathResolver().getAbsolutePath(entry.getKey());
       Path destPath = bundleRoot.resolve(entry.getValue());
       stepsBuilder.add(
           MkdirStep.of(
@@ -943,7 +943,7 @@ public class AppleBundle extends AbstractBuildRule
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
-              srcPath,
+              srcPath.getPath(),
               destPath,
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
       if (srcPath.toString().endsWith("." + FRAMEWORK_EXTENSION)) {

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
@@ -26,7 +27,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.HeaderPathNormalizer.Builder;
 import com.google.common.base.Preconditions;
-import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -63,7 +63,7 @@ abstract class CxxIncludes extends CxxHeaders {
   public void addToHeaderPathNormalizer(Builder builder) {}
 
   @Override
-  public Optional<Path> getResolvedIncludeRoot(SourcePathResolverAdapter resolver) {
+  public Optional<AbsPath> getResolvedIncludeRoot(SourcePathResolverAdapter resolver) {
     return Optional.of(
         resolver.getAbsolutePath(Preconditions.checkNotNull(getIncludeDir())).normalize());
   }

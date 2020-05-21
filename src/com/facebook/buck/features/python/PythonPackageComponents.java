@@ -86,7 +86,9 @@ public abstract class PythonPackageComponents implements AddsToRuleKey {
             Multimaps.transformValues(
                 getNativeLibraries(),
                 c -> Objects.requireNonNull(c).resolvePythonComponents(resolver)))
-        .setDefaultInitPy(getDefaultInitPy().map(resolver::getAbsolutePath))
+        .setDefaultInitPy(
+            getDefaultInitPy()
+                .map((SourcePath sourcePath) -> resolver.getAbsolutePath(sourcePath).getPath()))
         .setZipSafe(isZipSafe())
         .build();
   }

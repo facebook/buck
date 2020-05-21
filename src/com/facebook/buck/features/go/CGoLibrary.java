@@ -17,6 +17,7 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -260,7 +261,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                     .map(FileListableLinkerInputArg.class::cast)
                     .filter(
                         arg -> {
-                          Path pth = pathResolver.getAbsolutePath(arg.getPath());
+                          AbsPath pth = pathResolver.getAbsolutePath(arg.getPath());
                           String fileName = pth.getFileName().toString();
                           return pth.toString().contains("cgo-first-step")
                               && linkableObjectFiles.stream().anyMatch(x -> fileName.contains(x));

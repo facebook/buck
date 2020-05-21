@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.sourcepath.resolver;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -29,13 +30,13 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public interface SourcePathResolver {
-  <T> ImmutableMap<T, ImmutableSortedSet<Path>> getMappedPaths(Map<T, SourcePath> sourcePathMap);
+  <T> ImmutableMap<T, ImmutableSortedSet<AbsPath>> getMappedPaths(Map<T, SourcePath> sourcePathMap);
 
   ProjectFilesystem getFilesystem(SourcePath sourcePath);
 
-  ImmutableSortedSet<Path> getAbsolutePath(SourcePath sourcePath);
+  ImmutableSortedSet<AbsPath> getAbsolutePath(SourcePath sourcePath);
 
-  ImmutableSortedSet<Path> getAllAbsolutePaths(Collection<? extends SourcePath> sourcePaths);
+  ImmutableSortedSet<AbsPath> getAllAbsolutePaths(Collection<? extends SourcePath> sourcePaths);
 
   ImmutableSortedSet<Path> getRelativePath(SourcePath sourcePath);
 
@@ -66,5 +67,5 @@ public interface SourcePathResolver {
    * Creates a map where given source paths are resolved relatively to the given base path and
    * stored (as keys) with their absolute paths (as values).
    */
-  ImmutableMap<Path, Path> createRelativeMap(Path basePath, Iterable<SourcePath> sourcePaths);
+  ImmutableMap<Path, AbsPath> createRelativeMap(Path basePath, Iterable<SourcePath> sourcePaths);
 }

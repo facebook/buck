@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.sourcepath.resolver;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -42,8 +43,8 @@ public class SourcePathResolverAdapter {
     this.resolver = resolver;
   }
 
-  /** Returns the {@link Path} associated with the given {@link SourcePath}. */
-  public Path getAbsolutePath(SourcePath sourcePath) {
+  /** Returns the {@link AbsPath} associated with the given {@link SourcePath}. */
+  public AbsPath getAbsolutePath(SourcePath sourcePath) {
     return Iterables.getOnlyElement(resolver.getAbsolutePath(sourcePath));
   }
 
@@ -71,20 +72,23 @@ public class SourcePathResolverAdapter {
     return Iterables.getOnlyElement(resolver.getRelativePath(projectFilesystem, sourcePath));
   }
 
-  /** Returns the {@link Path} instances associated with the given {@link SourcePath} instances. */
-  public ImmutableSortedSet<Path> getAllAbsolutePaths(
+  /**
+   * Returns the {@link AbsPath} instances associated with the given {@link SourcePath} instances.
+   */
+  public ImmutableSortedSet<AbsPath> getAllAbsolutePaths(
       Collection<? extends SourcePath> sourcePaths) {
     return resolver.getAllAbsolutePaths(sourcePaths);
   }
 
   /**
-   * Returns a list of values and their associated {@link Path} instances by transforming the given
-   * {@link SourcePath} instances into {@link Path} instances.
+   * Returns a list of values and their associated {@link AbsPath} instances by transforming the
+   * given {@link SourcePath} instances into {@link AbsPath} instances.
    */
-  public <T> ImmutableMap<T, Path> getMappedPaths(Map<T, SourcePath> sourcePathMap) {
-    ImmutableMap<T, ImmutableSortedSet<Path>> mappedPaths = resolver.getMappedPaths(sourcePathMap);
-    ImmutableMap.Builder<T, Path> builder = new ImmutableMap.Builder<>();
-    for (Map.Entry<T, ImmutableSortedSet<Path>> entry : mappedPaths.entrySet()) {
+  public <T> ImmutableMap<T, AbsPath> getMappedPaths(Map<T, SourcePath> sourcePathMap) {
+    ImmutableMap<T, ImmutableSortedSet<AbsPath>> mappedPaths =
+        resolver.getMappedPaths(sourcePathMap);
+    ImmutableMap.Builder<T, AbsPath> builder = new ImmutableMap.Builder<>();
+    for (Map.Entry<T, ImmutableSortedSet<AbsPath>> entry : mappedPaths.entrySet()) {
       builder.put(entry.getKey(), Iterables.getOnlyElement(entry.getValue()));
     }
     return builder.build();
@@ -131,7 +135,7 @@ public class SourcePathResolverAdapter {
    * Returns a map where given {@link SourcePath} instances are resolved relatively to the given
    * base path and stored (as keys) with their absolute paths (as values).
    */
-  public ImmutableMap<Path, Path> createRelativeMap(
+  public ImmutableMap<Path, AbsPath> createRelativeMap(
       Path basePath, Iterable<SourcePath> sourcePaths) {
     return resolver.createRelativeMap(basePath, sourcePaths);
   }

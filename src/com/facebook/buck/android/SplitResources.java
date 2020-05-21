@@ -20,6 +20,7 @@ import com.facebook.buck.android.resources.ExoResourcesRewriter;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -156,8 +157,8 @@ public class SplitResources extends AbstractBuildRule {
   }
 
   private class SplitResourcesStep implements Step {
-    private Path absolutePathToAaptResources;
-    private Path absolutePathToOriginalRDotTxt;
+    private AbsPath absolutePathToAaptResources;
+    private AbsPath absolutePathToOriginalRDotTxt;
 
     public SplitResourcesStep(SourcePathResolverAdapter sourcePathResolverAdapter) {
       absolutePathToAaptResources = sourcePathResolverAdapter.getAbsolutePath(pathToAaptResources);
@@ -168,8 +169,8 @@ public class SplitResources extends AbstractBuildRule {
     @Override
     public StepExecutionResult execute(ExecutionContext context) throws IOException {
       ExoResourcesRewriter.rewrite(
-          absolutePathToAaptResources,
-          absolutePathToOriginalRDotTxt,
+          absolutePathToAaptResources.getPath(),
+          absolutePathToOriginalRDotTxt.getPath(),
           getProjectFilesystem().getPathForRelativePath(primaryResourcesOutputPath),
           getProjectFilesystem().getPathForRelativePath(getUnalignedExoPath()),
           getProjectFilesystem().getPathForRelativePath(rDotTxtOutputPath));

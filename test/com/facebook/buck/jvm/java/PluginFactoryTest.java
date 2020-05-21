@@ -22,8 +22,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavacPluginProperties.Type;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -43,8 +41,6 @@ public class PluginFactoryTest {
   }
 
   private boolean isPluginClassLoaderReused(boolean canReuseClasspath) {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-
     SourcePath controlClasspath = FakeSourcePath.of("some/path/to.jar");
     SourcePath variableClasspath = FakeSourcePath.of("some/path/to_other.jar");
 
@@ -78,9 +74,9 @@ public class PluginFactoryTest {
       ImmutableList<JavacPluginJsr199Fields> pluginGroups =
           ImmutableList.of(
               controlPluginGroup.getJavacPluginJsr199Fields(
-                  new TestActionGraphBuilder().getSourcePathResolver(), filesystem),
+                  new TestActionGraphBuilder().getSourcePathResolver()),
               variablePluginGroup.getJavacPluginJsr199Fields(
-                  new TestActionGraphBuilder().getSourcePathResolver(), filesystem));
+                  new TestActionGraphBuilder().getSourcePathResolver()));
       ClassLoader classLoader1 = factory1.getClassLoaderForProcessorGroups(pluginGroups);
       ClassLoader classLoader2 = factory2.getClassLoaderForProcessorGroups(pluginGroups);
       return classLoader1 == classLoader2;

@@ -154,7 +154,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
     builder.add(
         CopyStep.forDirectory(
             getProjectFilesystem(),
-            context.getSourcePathResolver().getAbsolutePath(frameworkPath),
+            context.getSourcePathResolver().getAbsolutePath(frameworkPath).getPath(),
             out,
             CopyStep.DirectoryMode.CONTENTS_ONLY));
 

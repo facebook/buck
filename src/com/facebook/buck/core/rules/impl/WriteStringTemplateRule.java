@@ -77,7 +77,7 @@ public class WriteStringTemplateRule extends AbstractBuildRuleWithDeclaredAndExt
                 context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
     steps.add(
         new StringTemplateStep(
-            context.getSourcePathResolver().getAbsolutePath(template),
+            context.getSourcePathResolver().getAbsolutePath(template).getPath(),
             getProjectFilesystem(),
             output,
             values));

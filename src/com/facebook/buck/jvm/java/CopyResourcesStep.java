@@ -144,7 +144,7 @@ public class CopyResourcesStep implements Step {
       allSteps.add(
           SymlinkFileStep.of(
               filesystem,
-              buildContext.getSourcePathResolver().getAbsolutePath(rawResource),
+              buildContext.getSourcePathResolver().getAbsolutePath(rawResource).getPath(),
               target));
     }
     return allSteps.build();

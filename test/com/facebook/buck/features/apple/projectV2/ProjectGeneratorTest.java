@@ -4857,7 +4857,7 @@ public class ProjectGeneratorTest {
     assertEquals(dependencyProxy.getContainerPortal(), project);
   }
 
-  private Path getAbsoluteOutputForNode(TargetNode<?> node, ImmutableSet<TargetNode<?>> nodes) {
+  private AbsPath getAbsoluteOutputForNode(TargetNode<?> node, ImmutableSet<TargetNode<?>> nodes) {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
     BuildRuleResolver ruleResolver = getActionGraphBuilderNodeFunction(targetGraph);
     SourcePath nodeOutput = ruleResolver.getRule(node.getBuildTarget()).getSourcePathToOutput();

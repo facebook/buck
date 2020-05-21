@@ -24,6 +24,8 @@ import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.NativeExoHelper;
 import com.facebook.buck.android.exopackage.PackageInfo;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -151,14 +153,14 @@ public class ExopackageInstallerTest {
 
   @Test
   public void testFilterLibrariesForAbi() {
-    Path libsDir = Paths.get("example");
+    AbsPath libsDir = RelPath.get("example").toAbsolutePath();
     ImmutableMultimap<String, Path> allLibs =
         ImmutableMultimap.of(
-            Strings.repeat("a", 40), libsDir.resolve("libs/armeabi-v7a/libmy1.so"),
-            Strings.repeat("b", 40), libsDir.resolve("libs/armeabi-v7a/libmy2.so"),
-            Strings.repeat("c", 40), libsDir.resolve("libs/armeabi/libmy2.so"),
-            Strings.repeat("d", 40), libsDir.resolve("libs/armeabi/libmy3.so"),
-            Strings.repeat("e", 40), libsDir.resolve("libs/x86/libmy1.so"));
+            Strings.repeat("a", 40), libsDir.resolve("libs/armeabi-v7a/libmy1.so").getPath(),
+            Strings.repeat("b", 40), libsDir.resolve("libs/armeabi-v7a/libmy2.so").getPath(),
+            Strings.repeat("c", 40), libsDir.resolve("libs/armeabi/libmy2.so").getPath(),
+            Strings.repeat("d", 40), libsDir.resolve("libs/armeabi/libmy3.so").getPath(),
+            Strings.repeat("e", 40), libsDir.resolve("libs/x86/libmy1.so").getPath());
 
     assertEquals(
         ImmutableSet.of(Strings.repeat("a", 40), Strings.repeat("b", 40)),

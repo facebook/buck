@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -78,17 +79,17 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ProjectFilesystem filesystem = getProjectFilesystem();
     SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
 
-    Path classAbiPath = sourcePathResolverAdapter.getAbsolutePath(correctAbi);
-    Path sourceAbiPath = sourcePathResolverAdapter.getAbsolutePath(experimentalAbi);
+    AbsPath classAbiPath = sourcePathResolverAdapter.getAbsolutePath(correctAbi);
+    AbsPath sourceAbiPath = sourcePathResolverAdapter.getAbsolutePath(experimentalAbi);
     buildableContext.recordArtifact(outputPath);
     return ImmutableList.of(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputPath.getParent())),
-        DiffAbisStep.of(classAbiPath, sourceAbiPath, verificationMode),
+        DiffAbisStep.of(classAbiPath.getPath(), sourceAbiPath.getPath(), verificationMode),
         // We use the "safe" ABI as our output to prevent ABI generation problems from potentially
         // cascading and resulting in confusing diff results in dependent rules
-        CopyStep.forFile(filesystem, classAbiPath, outputPath));
+        CopyStep.forFile(filesystem, classAbiPath.getPath(), outputPath));
   }
 
   @Nullable

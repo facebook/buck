@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -145,7 +146,7 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
                 .join(
                     sources.stream()
                         .map(context.getSourcePathResolver()::getAbsolutePath)
-                        .map(Path::toString)
+                        .map(AbsPath::toString)
                         .iterator()),
             sourcesListFilePath,
             /* can execute */ false));

@@ -89,7 +89,7 @@ public class ProjectSourcePathResolver {
         TargetNodes.castArg(node, ExportFileDescriptionArg.class);
     if (!exportFileNode.isPresent()) {
       BuildRuleResolver resolver = actionGraphBuilder;
-      Path output = resolver.getSourcePathResolver().getAbsolutePath(sourcePath);
+      AbsPath output = resolver.getSourcePathResolver().getAbsolutePath(sourcePath);
       if (output == null) {
         throw new HumanReadableException(
             "The target '%s' does not have an output.", node.getBuildTarget());

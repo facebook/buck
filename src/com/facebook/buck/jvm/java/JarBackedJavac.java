@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -25,7 +26,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Path;
 import javax.tools.JavaCompiler;
 
 public class JarBackedJavac extends Jsr199Javac {
@@ -66,7 +66,7 @@ public class JarBackedJavac extends Jsr199Javac {
     return compilerClassName;
   }
 
-  private static URL pathToUrl(Path p) {
+  private static URL pathToUrl(AbsPath p) {
     try {
       return p.toUri().toURL();
     } catch (MalformedURLException e) {

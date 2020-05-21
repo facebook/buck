@@ -21,6 +21,7 @@ import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -373,5 +374,12 @@ public class ExopackageInstaller {
       builder.put(parts.get(1), resolvePathAgainst.resolve(parts.get(0)));
     }
     return builder.build();
+  }
+
+  public static ImmutableMultimap<String, Path> parseExopackageInfoMetadata(
+      AbsPath metadataTxt, AbsPath resolvePathAgainst, ProjectFilesystem filesystem)
+      throws IOException {
+    return parseExopackageInfoMetadata(
+        metadataTxt.getPath(), resolvePathAgainst.getPath(), filesystem);
   }
 }

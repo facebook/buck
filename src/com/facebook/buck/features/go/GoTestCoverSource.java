@@ -18,6 +18,7 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -102,9 +103,9 @@ public class GoTestCoverSource extends AbstractBuildRule {
     SourcePathResolverAdapter pathResolver = ruleFinder.getSourcePathResolver();
     for (SourcePath path : srcs) {
       if (!isTestFile(pathResolver, buildTarget, path)) {
-        Path srcPath = pathResolver.getAbsolutePath(path);
+        AbsPath srcPath = pathResolver.getAbsolutePath(path);
 
-        variables.put(getVarName(srcPath), srcPath.getFileName());
+        variables.put(getVarName(srcPath.getPath()), srcPath.getFileName());
         coveredSources.put(
             path,
             ExplicitBuildTargetSourcePath.of(buildTarget, genDir.resolve(srcPath.getFileName())));
@@ -132,8 +133,8 @@ public class GoTestCoverSource extends AbstractBuildRule {
       steps.add(
           new GoTestCoverStep(
               getProjectFilesystem().getRootPath(),
-              context.getSourcePathResolver().getAbsolutePath(entry.getKey()),
-              genDir.resolve(context.getSourcePathResolver().getAbsolutePath(entry.getValue())),
+              context.getSourcePathResolver().getAbsolutePath(entry.getKey()).getPath(),
+              context.getSourcePathResolver().getAbsolutePath(entry.getValue()).getPath(),
               cover.getEnvironment(context.getSourcePathResolver()),
               cover.getCommandPrefix(context.getSourcePathResolver()),
               coverageMode,

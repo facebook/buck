@@ -161,7 +161,7 @@ public class Aapt2Link extends AbstractBuildRule {
         steps,
         getProjectFilesystem(),
         getFinalManifestPath(),
-        context.getSourcePathResolver().getAbsolutePath(manifest),
+        context.getSourcePathResolver().getAbsolutePath(manifest).getPath(),
         manifestEntries);
 
     // Need to reverse the order of the rules because aapt2 allows later resources

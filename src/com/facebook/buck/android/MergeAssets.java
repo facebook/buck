@@ -20,6 +20,7 @@ import com.facebook.buck.android.resources.ResourcesZipBuilder;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -121,7 +122,7 @@ public class MergeAssets extends AbstractBuildRule {
           public StepExecutionResult execute(ExecutionContext context) throws IOException {
             for (SourcePath sourcePath : assetsDirectories) {
               Path relativePath = pathResolver.getRelativePath(sourcePath);
-              Path absolutePath = pathResolver.getAbsolutePath(sourcePath);
+              AbsPath absolutePath = pathResolver.getAbsolutePath(sourcePath);
               ProjectFilesystem assetFilesystem = pathResolver.getFilesystem(sourcePath);
               assetFilesystem.walkFileTree(
                   relativePath,
@@ -133,7 +134,9 @@ public class MergeAssets extends AbstractBuildRule {
                           !Files.getFileExtension(file.toString()).equals("gz"),
                           "BUCK doesn't support adding .gz files to assets (%s).",
                           file);
-                      assets.put(absolutePath, absolutePath.relativize(file.normalize()));
+                      assets.put(
+                          absolutePath.getPath(),
+                          absolutePath.getPath().relativize(file.normalize()));
                       return super.visitFile(file, attrs);
                     }
                   });
@@ -144,7 +147,7 @@ public class MergeAssets extends AbstractBuildRule {
     steps.add(
         new MergeAssetsStep(
             getProjectFilesystem().getPathForRelativePath(getPathToMergedAssets()),
-            baseApk.map(pathResolver::getAbsolutePath),
+            baseApk.map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath()),
             assets));
     buildableContext.recordArtifact(getPathToMergedAssets().getPath());
     return steps.build();

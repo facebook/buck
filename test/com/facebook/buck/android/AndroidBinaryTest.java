@@ -25,6 +25,7 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -124,7 +125,9 @@ public class AndroidBinaryTest {
             packageableCollection.getClasspathEntriesToDex().stream()
                 .map(pathResolver::getRelativePath)
                 .collect(ImmutableSet.toImmutableSet()),
-            pathResolver.getAllAbsolutePaths(packageableCollection.getProguardConfigs()),
+            pathResolver.getAllAbsolutePaths(packageableCollection.getProguardConfigs()).stream()
+                .map(AbsPath::getPath)
+                .collect(ImmutableSet.toImmutableSet()),
             false,
             commands,
             buildableContext,

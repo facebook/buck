@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -37,7 +38,6 @@ import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 
@@ -68,7 +68,7 @@ class ProguardTextOutput extends AbstractBuildRule {
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext buildContext, BuildableContext buildableContext) {
     SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
-    Path configPath = resolver.getAbsolutePath(proguardConfigPath);
+    AbsPath configPath = resolver.getAbsolutePath(proguardConfigPath);
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
     builder.addAll(
         MakeCleanDirectoryStep.of(
@@ -77,7 +77,9 @@ class ProguardTextOutput extends AbstractBuildRule {
     for (String file : ImmutableList.of("configuration.txt", "mapping.txt")) {
       builder.add(
           CopyStep.forFile(
-              getProjectFilesystem(), configPath.resolve(file), getOutputPath().resolve(file)));
+              getProjectFilesystem(),
+              configPath.resolve(file).getPath(),
+              getOutputPath().resolve(file)));
     }
     buildableContext.recordArtifact(getOutputPath().getPath());
     return builder.build();

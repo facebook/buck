@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.python;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.impl.SymlinkMap;
 import com.facebook.buck.core.rules.impl.Symlinks;
@@ -77,16 +78,16 @@ public abstract class PythonMappedComponents implements PythonComponents {
    */
   public static class Resolved implements PythonComponents.Resolved {
 
-    private final ImmutableMap<Path, Path> resolved;
+    private final ImmutableMap<Path, AbsPath> resolved;
 
-    public Resolved(ImmutableMap<Path, Path> resolved) {
+    public Resolved(ImmutableMap<Path, AbsPath> resolved) {
       this.resolved = resolved;
     }
 
     @Override
     public void forEachPythonComponent(ComponentConsumer consumer) throws IOException {
-      for (Map.Entry<Path, Path> ent : resolved.entrySet()) {
-        consumer.accept(ent.getKey(), ent.getValue());
+      for (Map.Entry<Path, AbsPath> ent : resolved.entrySet()) {
+        consumer.accept(ent.getKey(), ent.getValue().getPath());
       }
     }
   }

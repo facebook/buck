@@ -227,10 +227,14 @@ public class PythonTestDescriptionTest {
             .getAllModules()
             .values(),
         Matchers.allOf(
-            Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(matchedSource)),
+            Matchers.hasItem(
+                graphBuilder.getSourcePathResolver().getAbsolutePath(matchedSource).getPath()),
             Matchers.not(
                 Matchers.hasItem(
-                    graphBuilder.getSourcePathResolver().getAbsolutePath(unmatchedSource)))));
+                    graphBuilder
+                        .getSourcePathResolver()
+                        .getAbsolutePath(unmatchedSource)
+                        .getPath()))));
   }
 
   @Test
@@ -260,10 +264,14 @@ public class PythonTestDescriptionTest {
             .getAllResources()
             .values(),
         Matchers.allOf(
-            Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(matchedSource)),
+            Matchers.hasItem(
+                graphBuilder.getSourcePathResolver().getAbsolutePath(matchedSource).getPath()),
             Matchers.not(
                 Matchers.hasItem(
-                    graphBuilder.getSourcePathResolver().getAbsolutePath(unmatchedSource)))));
+                    graphBuilder
+                        .getSourcePathResolver()
+                        .getAbsolutePath(unmatchedSource)
+                        .getPath()))));
   }
 
   @Test
@@ -462,10 +470,14 @@ public class PythonTestDescriptionTest {
             .getAllModules()
             .values(),
         Matchers.allOf(
-            Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(matchedSource)),
+            Matchers.hasItem(
+                graphBuilder.getSourcePathResolver().getAbsolutePath(matchedSource).getPath()),
             Matchers.not(
                 Matchers.hasItem(
-                    graphBuilder.getSourcePathResolver().getAbsolutePath(unmatchedSource)))));
+                    graphBuilder
+                        .getSourcePathResolver()
+                        .getAbsolutePath(unmatchedSource)
+                        .getPath()))));
   }
 
   @Test
@@ -499,10 +511,14 @@ public class PythonTestDescriptionTest {
             .getAllResources()
             .values(),
         Matchers.allOf(
-            Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(matchedSource)),
+            Matchers.hasItem(
+                graphBuilder.getSourcePathResolver().getAbsolutePath(matchedSource).getPath()),
             Matchers.not(
                 Matchers.hasItem(
-                    graphBuilder.getSourcePathResolver().getAbsolutePath(unmatchedSource)))));
+                    graphBuilder
+                        .getSourcePathResolver()
+                        .getAbsolutePath(unmatchedSource)
+                        .getPath()))));
   }
 
   @Test
@@ -571,9 +587,11 @@ public class PythonTestDescriptionTest {
             .getAllModules()
             .values(),
         Matchers.allOf(
-            Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libASrc)),
+            Matchers.hasItem(
+                graphBuilder.getSourcePathResolver().getAbsolutePath(libASrc).getPath()),
             Matchers.not(
-                Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libBSrc)))));
+                Matchers.hasItem(
+                    graphBuilder.getSourcePathResolver().getAbsolutePath(libBSrc).getPath()))));
   }
 
   @Test
@@ -628,9 +646,11 @@ public class PythonTestDescriptionTest {
             .getAllModules()
             .values(),
         Matchers.allOf(
-            Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libASrc)),
+            Matchers.hasItem(
+                graphBuilder.getSourcePathResolver().getAbsolutePath(libASrc).getPath()),
             Matchers.not(
-                Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libBSrc)))));
+                Matchers.hasItem(
+                    graphBuilder.getSourcePathResolver().getAbsolutePath(libBSrc).getPath()))));
   }
 
   @Test
@@ -652,7 +672,10 @@ public class PythonTestDescriptionTest {
     assertThat(
         spec.getRequiredPaths(),
         Matchers.hasItem(
-            graphBuilder.getSourcePathResolver().getAbsolutePath(binary.getSourcePathToOutput())));
+            graphBuilder
+                .getSourcePathResolver()
+                .getAbsolutePath(binary.getSourcePathToOutput())
+                .getPath()));
   }
 
   @Test
@@ -710,7 +733,8 @@ public class PythonTestDescriptionTest {
             graphBuilder
                 .getSourcePathResolver()
                 .getAbsolutePath(
-                    graphBuilder.requireRule(genrule.getBuildTarget()).getSourcePathToOutput())));
+                    graphBuilder.requireRule(genrule.getBuildTarget()).getSourcePathToOutput())
+                .getPath()));
   }
 
   @Test

@@ -24,6 +24,7 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
@@ -236,13 +237,14 @@ public class GoProjectCommandHelper {
     // copy files generated in current run
     for (BuildTargetSourcePath sourcePath : generatedPackages.keySet()) {
       Path desiredPath = vendorPath.resolve(generatedPackages.get(sourcePath));
-      Path generatedSrc =
+      AbsPath generatedSrc =
           result.getActionGraphBuilder().getSourcePathResolver().getAbsolutePath(sourcePath);
 
       if (projectFilesystem.isDirectory(generatedSrc)) {
-        projectFilesystem.copyFolder(generatedSrc, desiredPath);
+        projectFilesystem.copyFolder(generatedSrc.getPath(), desiredPath);
       } else {
-        projectFilesystem.copyFile(generatedSrc, desiredPath.resolve(generatedSrc.getFileName()));
+        projectFilesystem.copyFile(
+            generatedSrc.getPath(), desiredPath.resolve(generatedSrc.getFileName()));
       }
     }
   }

@@ -291,7 +291,7 @@ public abstract class JavacOptions implements AddsToRuleKey {
     if (!allPlugins.isEmpty()) {
       optionsConsumer.addOptionValue(
           "processorpath",
-          ResolvedJavacPluginProperties.getJoinedClasspath(pathResolver, filesystem, allPlugins));
+          ResolvedJavacPluginProperties.getJoinedClasspath(pathResolver, allPlugins));
     }
 
     // Add extra arguments.

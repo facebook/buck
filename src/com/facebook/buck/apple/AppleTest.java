@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -289,7 +290,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .setLabels(getLabels())
             .setContacts(getContacts());
 
-    Path resolvedTestBundleDirectory =
+    AbsPath resolvedTestBundleDirectory =
         buildContext
             .getSourcePathResolver()
             .getAbsolutePath(Objects.requireNonNull(testBundle.getSourcePathToOutput()));
@@ -324,7 +325,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .build();
 
     ImmutableSet.Builder<Path> requiredPathsBuilder = ImmutableSet.builder();
-    requiredPathsBuilder.add(resolvedTestBundleDirectory);
+    requiredPathsBuilder.add(resolvedTestBundleDirectory.getPath());
     if (testHostAppPath.isPresent()) {
       requiredPathsBuilder.add(testHostAppPath.get());
     }
@@ -348,13 +349,14 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       if (testHostAppPath.isPresent()) {
         if (uiTestTargetAppPath.isPresent()) {
           appTestPathsToTestHostAppPathsToTestTargetAppsBuilder.put(
-              resolvedTestBundleDirectory,
+              resolvedTestBundleDirectory.getPath(),
               ImmutableMap.of(testHostAppPath.get(), uiTestTargetAppPath.get()));
         } else {
-          appTestPathsToHostAppsBuilder.put(resolvedTestBundleDirectory, testHostAppPath.get());
+          appTestPathsToHostAppsBuilder.put(
+              resolvedTestBundleDirectory.getPath(), testHostAppPath.get());
         }
       } else {
-        logicTestPathsBuilder.add(resolvedTestBundleDirectory);
+        logicTestPathsBuilder.add(resolvedTestBundleDirectory.getPath());
       }
 
       xctoolStdoutReader = Optional.of(new AppleTestXctoolStdoutReader(testReportingCallback));
@@ -392,7 +394,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       XctoolRunTestsStep xctoolStep =
           new XctoolRunTestsStep(
               getProjectFilesystem(),
-              buildContext.getSourcePathResolver().getAbsolutePath(xctool.get()),
+              buildContext.getSourcePathResolver().getAbsolutePath(xctool.get()).getPath(),
               testEnvironmentOverrides,
               stutterTimeout,
               platformName,
@@ -478,7 +480,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               getProjectFilesystem(),
               ImmutableMap.copyOf(environment),
               xctest.getCommandPrefix(buildContext.getSourcePathResolver()),
-              resolvedTestBundleDirectory,
+              resolvedTestBundleDirectory.getPath(),
               resolvedTestOutputPath,
               xctestOutputReader,
               appleDeveloperDirectoryForTestsProvider,
@@ -497,11 +499,13 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     if (!bundle.isPresent()) {
       return Optional.empty();
     }
-    Path resolvedBundleDirectory =
+    AbsPath resolvedBundleDirectory =
         sourcePathResolverAdapter.getAbsolutePath(
             Objects.requireNonNull(bundle.get().getSourcePathToOutput()));
     return Optional.of(
-        resolvedBundleDirectory.resolve(bundle.get().getUnzippedOutputFilePathToBinary()));
+        resolvedBundleDirectory
+            .resolve(bundle.get().getUnzippedOutputFilePathToBinary())
+            .getPath());
   }
 
   @Override

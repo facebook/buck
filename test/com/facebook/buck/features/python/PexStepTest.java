@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
@@ -64,7 +65,8 @@ public class PexStepTest {
           .putModules(
               TARGET,
               new PythonMappedComponents.Resolved(
-                  ImmutableSortedMap.of(Paths.get("m"), Paths.get("/src/m"))))
+                  ImmutableSortedMap.of(
+                      Paths.get("m"), AbsPath.of(Paths.get("/src/m").toAbsolutePath()))))
           .putModules(
               TARGET,
               new PythonModuleDirComponents.Resolved(Paths.get("/tmp/dir1.whl").toAbsolutePath()))
@@ -74,11 +76,13 @@ public class PexStepTest {
           .putResources(
               TARGET,
               new PythonMappedComponents.Resolved(
-                  ImmutableSortedMap.of(Paths.get("r"), Paths.get("/src/r"))))
+                  ImmutableSortedMap.of(
+                      Paths.get("r"), AbsPath.of(Paths.get("/src/r").toAbsolutePath()))))
           .putNativeLibraries(
               TARGET,
               new PythonMappedComponents.Resolved(
-                  ImmutableSortedMap.of(Paths.get("n.so"), Paths.get("/src/n.so"))))
+                  ImmutableSortedMap.of(
+                      Paths.get("n.so"), AbsPath.of(Paths.get("/src/n.so").toAbsolutePath()))))
           .build();
   private final ImmutableSortedSet<String> PRELOAD_LIBRARIES = ImmutableSortedSet.of();
 
@@ -163,7 +167,8 @@ public class PexStepTest {
                     ImmutableMultimap.of(
                         TARGET,
                         new PythonMappedComponents.Resolved(
-                            ImmutableSortedMap.of(Paths.get("m"), Paths.get("/src/m"))),
+                            ImmutableSortedMap.of(
+                                Paths.get("m"), AbsPath.of(Paths.get("/src/m").toAbsolutePath()))),
                         TARGET,
                         new PythonModuleDirComponents.Resolved(realDir1),
                         TARGET,
@@ -178,7 +183,7 @@ public class PexStepTest {
     Assert.assertTrue(childFile.isAbsolute());
     assertThat(
         (Map<String, String>) args.get("modules"),
-        hasEntry(Paths.get("m").toString(), Paths.get("/src/m").toString()));
+        hasEntry(Paths.get("m").toString(), Paths.get("/src/m").toAbsolutePath().toString()));
     assertThat(
         (Map<String, String>) args.get("modules"),
         hasEntry(Paths.get("file1.py").toString(), file1.toString()));
@@ -190,10 +195,10 @@ public class PexStepTest {
         hasEntry(Paths.get("subdir", "file2.py").toString(), file2.toString()));
     assertThat(
         (Map<String, String>) args.get("resources"),
-        hasEntry(Paths.get("r").toString(), Paths.get("/src/r").toString()));
+        hasEntry(Paths.get("r").toString(), Paths.get("/src/r").toAbsolutePath().toString()));
     assertThat(
         (Map<String, String>) args.get("nativeLibraries"),
-        hasEntry(Paths.get("n.so").toString(), Paths.get("/src/n.so").toString()));
+        hasEntry(Paths.get("n.so").toString(), Paths.get("/src/n.so").toAbsolutePath().toString()));
     assertEquals(0, ((List<String>) args.get("prebuiltLibraries")).size());
   }
 

@@ -152,10 +152,10 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // created. That means it can't contain any absolute filepaths.
 
     ImmutableList.Builder<String> resourceStringsBuilder = new ImmutableList.Builder<String>();
-    ImmutableSortedSet<Path> resourcesPaths =
+    ImmutableSortedSet<AbsPath> resourcesPaths =
         context.getSourcePathResolver().getAllAbsolutePaths(resources);
 
-    for (Path resourcePath : resourcesPaths) {
+    for (AbsPath resourcePath : resourcesPaths) {
       // TODO(cjhopman) This is probably wrong. Shouldn't the resource appear under every cell
       // alias?
 
@@ -250,7 +250,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
               .collect(
                   ImmutableMap.toImmutableMap(
                       input -> getSymlinkPath(resolver, input),
-                      input -> resolver.getAbsolutePath(input))));
+                      input -> resolver.getAbsolutePath(input).getPath())));
     }
     return new AbstractExecutionStep(STEP_CATEGORY + "_link_conflicts") {
       @Override

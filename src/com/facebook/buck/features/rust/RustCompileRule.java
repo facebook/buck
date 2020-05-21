@@ -261,7 +261,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
                             }
                             return path;
                           },
-                          ent -> resolver.getAbsolutePath(ent.getKey())))));
+                          ent -> resolver.getAbsolutePath(ent.getKey()).getPath()))));
       steps.addAll(
           CxxPrepareForLinkStep.create(
               argFilePath.getPath(),

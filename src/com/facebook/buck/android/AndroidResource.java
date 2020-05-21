@@ -317,7 +317,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
               + "null. This should already be enforced by the constructor.");
       steps.add(
           new ExtractFromAndroidManifestStep(
-              context.getSourcePathResolver().getAbsolutePath(manifestFile),
+              context.getSourcePathResolver().getAbsolutePath(manifestFile).getPath(),
               getProjectFilesystem(),
               Objects.requireNonNull(pathToRDotJavaPackageFile)));
     } else {
@@ -331,7 +331,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     ImmutableSet<Path> pathsToSymbolsOfDeps =
         symbolsOfDeps.get().stream()
-            .map(context.getSourcePathResolver()::getAbsolutePath)
+            .map(
+                sourcePath -> context.getSourcePathResolver().getAbsolutePath(sourcePath).getPath())
             .collect(ImmutableSet.toImmutableSet());
     steps.add(
         new MiniAapt(

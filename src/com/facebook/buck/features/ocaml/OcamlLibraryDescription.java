@@ -175,7 +175,13 @@ public class OcamlLibraryDescription
                 context.getActionGraphBuilder(),
                 args.getLinkerFlags()),
             srcs.stream()
-                .map(context.getActionGraphBuilder().getSourcePathResolver()::getAbsolutePath)
+                .map(
+                    sourcePath ->
+                        context
+                            .getActionGraphBuilder()
+                            .getSourcePathResolver()
+                            .getAbsolutePath(sourcePath)
+                            .getPath())
                 .filter(OcamlUtil.ext(OcamlCompilables.OCAML_C))
                 .map(ocamlLibraryBuild.getOcamlContext()::getCOutput)
                 .map(input -> ExplicitBuildTargetSourcePath.of(compileBuildTarget, input))

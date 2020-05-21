@@ -17,6 +17,7 @@
 package com.facebook.buck.android.dalvik;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
 import com.facebook.buck.jvm.java.classes.DefaultClasspathTraverser;
@@ -58,6 +59,10 @@ public class EstimateDexWeightStep implements Step, Supplier<Integer> {
    */
   public EstimateDexWeightStep(ProjectFilesystem filesystem, Path pathToJarOrClassesDirectory) {
     this(filesystem, pathToJarOrClassesDirectory, DEFAULT_ESTIMATOR);
+  }
+
+  public EstimateDexWeightStep(ProjectFilesystem filesystem, AbsPath pathToJarOrClassesDirectory) {
+    this(filesystem, pathToJarOrClassesDirectory.getPath());
   }
 
   @VisibleForTesting

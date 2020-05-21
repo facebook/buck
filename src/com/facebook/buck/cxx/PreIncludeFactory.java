@@ -80,7 +80,9 @@ abstract class PreIncludeFactory {
                               getProjectFilesystem(),
                               ImmutableSortedSet.of(),
                               getPrefixHeader().get(),
-                              getPathResolver().getAbsolutePath(getPrefixHeader().get()))));
+                              getPathResolver()
+                                  .getAbsolutePath(getPrefixHeader().get())
+                                  .getPath())));
     }
 
     if (getPrecompiledHeader().isPresent()) {

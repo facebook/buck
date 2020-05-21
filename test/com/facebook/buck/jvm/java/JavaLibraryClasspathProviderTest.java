@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -38,7 +39,6 @@ import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.hamcrest.Matchers;
@@ -235,7 +235,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
         Matchers.containsInAnyOrder(a, d, c, e));
   }
 
-  private Path getFullOutput(BuildRule lib) {
+  private AbsPath getFullOutput(BuildRule lib) {
     return resolver.getAbsolutePath(lib.getSourcePathToOutput());
   }
 

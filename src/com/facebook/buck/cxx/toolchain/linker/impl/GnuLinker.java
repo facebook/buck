@@ -222,7 +222,7 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
                   try {
                     symbols.addAll(
                         Files.readAllLines(
-                            context.getSourcePathResolver().getAbsolutePath(path),
+                            context.getSourcePathResolver().getAbsolutePath(path).getPath(),
                             StandardCharsets.UTF_8));
                   } catch (IOException e) {
                     throw new RuntimeException(e);

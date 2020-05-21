@@ -68,7 +68,9 @@ public class SymlinkMap implements Symlinks {
 
   @Override
   public SymlinkPaths resolveSymlinkPaths(SourcePathResolverAdapter resolver) {
-    return new SymlinkMapsPaths(resolver.getMappedPaths(links));
+    return new SymlinkMapsPaths(
+        resolver.getMappedPaths(links).entrySet().stream()
+            .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, e -> e.getValue().getPath())));
   }
 
   // Despite the fact that we have `SourcePath`s in the link map, we don't actually them to be

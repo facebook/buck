@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -155,7 +156,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
    *     precompiled (see {@link #canPrecompile()}) this will correspond to {@link
    *     #getSourcePathToOutput()}, otherwise it'll be the input header file.
    */
-  public Path getIncludeFilePath(SourcePathResolverAdapter pathResolver) {
+  public AbsPath getIncludeFilePath(SourcePathResolverAdapter pathResolver) {
     return pathResolver.getAbsolutePath(getIncludeFileSourcePath());
   }
 

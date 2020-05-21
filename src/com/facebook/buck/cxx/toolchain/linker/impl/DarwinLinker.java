@@ -224,7 +224,8 @@ public class DarwinLinker extends DelegatingTool
       try {
         for (SourcePath path : symbolFiles) {
           symbols.addAll(
-              Files.readAllLines(pathResolver.getAbsolutePath(path), StandardCharsets.UTF_8));
+              Files.readAllLines(
+                  pathResolver.getAbsolutePath(path).getPath(), StandardCharsets.UTF_8));
         }
       } catch (IOException e) {
         throw new RuntimeException(e);

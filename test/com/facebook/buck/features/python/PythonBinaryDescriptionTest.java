@@ -950,9 +950,11 @@ public class PythonBinaryDescriptionTest {
             .getAllModules()
             .values(),
         Matchers.allOf(
-            Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libASrc)),
+            Matchers.hasItem(
+                graphBuilder.getSourcePathResolver().getAbsolutePath(libASrc).getPath()),
             Matchers.not(
-                Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libBSrc)))));
+                Matchers.hasItem(
+                    graphBuilder.getSourcePathResolver().getAbsolutePath(libBSrc).getPath()))));
   }
 
   @Test
@@ -1007,9 +1009,11 @@ public class PythonBinaryDescriptionTest {
             .getAllModules()
             .values(),
         Matchers.allOf(
-            Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libASrc)),
+            Matchers.hasItem(
+                graphBuilder.getSourcePathResolver().getAbsolutePath(libASrc).getPath()),
             Matchers.not(
-                Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libBSrc)))));
+                Matchers.hasItem(
+                    graphBuilder.getSourcePathResolver().getAbsolutePath(libBSrc).getPath()))));
   }
 
   @Test

@@ -84,11 +84,11 @@ public class AssembleDirectoriesTest {
     for (Step step : steps) {
       assertEquals(0, step.execute(context).getExitCode());
     }
-    Path outputFile =
+    AbsPath outputFile =
         graphBuilder
             .getSourcePathResolver()
             .getAbsolutePath(assembleDirectories.getSourcePathToOutput());
-    try (DirectoryStream<Path> dir = Files.newDirectoryStream(outputFile)) {
+    try (DirectoryStream<Path> dir = Files.newDirectoryStream(outputFile.getPath())) {
       assertEquals(4, Iterables.size(dir));
     }
   }

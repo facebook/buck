@@ -139,15 +139,16 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
 
   private static String tryToExtractInstrumentationTestRunnerFromManifest(
       SourcePathResolverAdapter pathResolver, HasInstallableApk.ApkInfo apkInfo) {
-    Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
+    AbsPath pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
 
-    if (!Files.isRegularFile(pathToManifest)) {
+    if (!Files.isRegularFile(pathToManifest.getPath())) {
       throw new HumanReadableException(
           "Manifest file %s does not exist, so could not extract package name.", pathToManifest);
     }
 
     try {
-      return DefaultAndroidManifestReader.forPath(pathToManifest).getInstrumentationTestRunner();
+      return DefaultAndroidManifestReader.forPath(pathToManifest.getPath())
+          .getInstrumentationTestRunner();
     } catch (IOException e) {
       throw new HumanReadableException("Could not extract package name from %s", pathToManifest);
     }
@@ -155,15 +156,15 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
 
   private static String tryToExtractTargetPackageFromManifest(
       SourcePathResolverAdapter pathResolver, HasInstallableApk.ApkInfo apkInfo) {
-    Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
+    AbsPath pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
 
-    if (!Files.isRegularFile(pathToManifest)) {
+    if (!Files.isRegularFile(pathToManifest.getPath())) {
       throw new HumanReadableException(
           "Manifest file %s does not exist, so could not extract package name.", pathToManifest);
     }
 
     try {
-      return DefaultAndroidManifestReader.forPath(pathToManifest).getTargetPackage();
+      return DefaultAndroidManifestReader.forPath(pathToManifest.getPath()).getTargetPackage();
     } catch (IOException e) {
       throw new HumanReadableException("Could not extract package name from %s", pathToManifest);
     }
@@ -434,10 +435,14 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
                 apkUnderTest ->
                     buildContext
                         .getSourcePathResolver()
-                        .getAbsolutePath(apkUnderTest.getApkInfo().getApkPath()));
+                        .getAbsolutePath(apkUnderTest.getApkInfo().getApkPath())
+                        .getPath());
     Optional<Path> instrumentationApkPath =
         Optional.of(
-            buildContext.getSourcePathResolver().getAbsolutePath(apk.getApkInfo().getApkPath()));
+            buildContext
+                .getSourcePathResolver()
+                .getAbsolutePath(apk.getApkInfo().getApkPath())
+                .getPath());
     InstrumentationStep step =
         getInstrumentationStep(
             buildContext.getSourcePathResolver(),

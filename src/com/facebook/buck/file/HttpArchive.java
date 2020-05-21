@@ -98,7 +98,8 @@ public class HttpArchive extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             getProjectFilesystem(),
             context
                 .getSourcePathResolver()
-                .getAbsolutePath(implicitHttpFile.getSourcePathToOutput()),
+                .getAbsolutePath(implicitHttpFile.getSourcePathToOutput())
+                .getPath(),
             output,
             stripPrefix,
             format,

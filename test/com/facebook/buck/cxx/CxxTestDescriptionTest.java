@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -258,7 +259,7 @@ public class CxxTestDescriptionTest {
                 CxxDescriptionEnhancer.createCxxLinkTarget(
                     test.getBuildTarget(), Optional.empty()));
     SourcePath outputSourcePath = dep.getSourcePathToOutput();
-    Path absoluteLinkerScriptPath =
+    AbsPath absoluteLinkerScriptPath =
         graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(binary.getArgs(), graphBuilder.getSourcePathResolver()),
@@ -290,7 +291,7 @@ public class CxxTestDescriptionTest {
                     test.getBuildTarget(), Optional.empty()));
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     SourcePath outputSourcePath = dep.getSourcePathToOutput();
-    Path absoluteLinkerScriptPath =
+    AbsPath absoluteLinkerScriptPath =
         graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(binary.getArgs(), graphBuilder.getSourcePathResolver()),
@@ -326,7 +327,7 @@ public class CxxTestDescriptionTest {
                 CxxDescriptionEnhancer.createCxxLinkTarget(
                     test.getBuildTarget(), Optional.empty()));
     SourcePath outputSourcePath = dep.getSourcePathToOutput();
-    Path absoluteLinkerScriptPath =
+    AbsPath absoluteLinkerScriptPath =
         graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(binary.getArgs(), graphBuilder.getSourcePathResolver()),
@@ -361,7 +362,7 @@ public class CxxTestDescriptionTest {
                 CxxDescriptionEnhancer.createCxxLinkTarget(
                     test.getBuildTarget(), Optional.empty()));
     SourcePath outputSourcePath = dep.getSourcePathToOutput();
-    Path absoluteLinkerScriptPath =
+    AbsPath absoluteLinkerScriptPath =
         graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(binary.getArgs(), graphBuilder.getSourcePathResolver()),
@@ -433,7 +434,8 @@ public class CxxTestDescriptionTest {
           hasItem(
               graphBuilder
                   .getSourcePathResolver()
-                  .getAbsolutePath(cxxTest.getBinary().getSourcePathToOutput())));
+                  .getAbsolutePath(cxxTest.getBinary().getSourcePathToOutput())
+                  .getPath()));
     }
   }
 
@@ -504,7 +506,8 @@ public class CxxTestDescriptionTest {
               graphBuilder
                   .getSourcePathResolver()
                   .getAbsolutePath(
-                      graphBuilder.requireRule(genrule.getBuildTarget()).getSourcePathToOutput())));
+                      graphBuilder.requireRule(genrule.getBuildTarget()).getSourcePathToOutput())
+                  .getPath()));
     }
   }
 
@@ -541,7 +544,8 @@ public class CxxTestDescriptionTest {
               graphBuilder
                   .getSourcePathResolver()
                   .getAbsolutePath(
-                      graphBuilder.requireRule(genrule.getBuildTarget()).getSourcePathToOutput())));
+                      graphBuilder.requireRule(genrule.getBuildTarget()).getSourcePathToOutput())
+                  .getPath()));
     }
   }
 

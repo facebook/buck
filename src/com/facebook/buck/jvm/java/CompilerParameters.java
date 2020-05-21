@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -27,6 +28,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Comparator;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -92,7 +94,9 @@ public abstract class CompilerParameters {
         Collection<SourcePath> compileTimeClasspathSourcePaths,
         SourcePathResolverAdapter resolver) {
       ImmutableSortedSet<Path> compileTimeClasspathPaths =
-          resolver.getAllAbsolutePaths(compileTimeClasspathSourcePaths);
+          resolver.getAllAbsolutePaths(compileTimeClasspathSourcePaths).stream()
+              .map(PathWrapper::getPath)
+              .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
       return this.setClasspathEntries(compileTimeClasspathPaths);
     }
   }

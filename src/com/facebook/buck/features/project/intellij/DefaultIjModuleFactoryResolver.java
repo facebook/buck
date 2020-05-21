@@ -100,7 +100,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
               + targetNode.getBuildTarget()
               + " did not specify manifest or manifest_skeleton");
     }
-    return sourcePathResolver.getAbsolutePath(manifestSourcePath.get());
+    return sourcePathResolver.getAbsolutePath(manifestSourcePath.get()).getPath();
   }
 
   @Override

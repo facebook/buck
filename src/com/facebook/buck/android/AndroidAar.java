@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -42,6 +43,7 @@ import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -116,8 +118,8 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             getProjectFilesystem(),
             context
                 .getSourcePathResolver()
-                .getAbsolutePath(
-                    Objects.requireNonNull(androidResource.getPathToTextSymbolsFile())),
+                .getAbsolutePath(Objects.requireNonNull(androidResource.getPathToTextSymbolsFile()))
+                .getPath(),
             temp.resolve("R.txt")));
 
     // put res/ and assets/ into tmp folder
@@ -141,7 +143,11 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             JarParameters.builder()
                 .setJarPath(temp.resolve("classes.jar"))
                 .setEntriesToJar(
-                    context.getSourcePathResolver().getAllAbsolutePaths(classpathsToIncludeInJar))
+                    context.getSourcePathResolver().getAllAbsolutePaths(classpathsToIncludeInJar)
+                        .stream()
+                        .map(AbsPath::getPath)
+                        .collect(
+                            ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())))
                 .setMergeManifests(true)
                 .build()));
 

@@ -96,7 +96,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         new UnzipStep(
             getProjectFilesystem(),
-            context.getSourcePathResolver().getAbsolutePath(aarFile),
+            context.getSourcePathResolver().getAbsolutePath(aarFile).getPath(),
             unpackDirectory.getPath(),
             Optional.empty()));
 

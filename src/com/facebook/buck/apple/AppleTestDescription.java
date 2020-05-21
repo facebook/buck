@@ -668,7 +668,8 @@ public class AppleTestDescription
                                 .getSourcePathResolver()
                                 .getAbsolutePath(
                                     Objects.requireNonNull(
-                                        xctoolZipBuildRule.getSourcePathToOutput())),
+                                        xctoolZipBuildRule.getSourcePathToOutput()))
+                                .getPath(),
                             outputDirectory.getPath(),
                             Optional.empty()))
                     .build();

@@ -100,7 +100,7 @@ public class StripLinkable extends ModernBuildRule<StripLinkable.Impl> {
               stripTool.getEnvironment(sourcePathResolverAdapter),
               stripTool.getCommandPrefix(sourcePathResolverAdapter),
               ImmutableList.of("--strip-unneeded"),
-              AbsPath.of(sourcePathResolverAdapter.getAbsolutePath(sourcePathToStrip)),
+              sourcePathResolverAdapter.getAbsolutePath(sourcePathToStrip),
               AbsPath.of(filesystem.resolve(destination)),
               withDownwardApi));
     }

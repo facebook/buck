@@ -25,6 +25,7 @@ import com.facebook.buck.android.dalvik.EstimateDexWeightStep;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -209,7 +210,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
 
       Path pathToDex = outputPathResolver.resolvePath(outputDex);
       if (hasClassesToDx) {
-        Path pathToOutputFile = sourcePathResolverAdapter.getAbsolutePath(javaLibrarySourcePath);
+        AbsPath pathToOutputFile = sourcePathResolverAdapter.getAbsolutePath(javaLibrarySourcePath);
         EstimateDexWeightStep estimate = new EstimateDexWeightStep(filesystem, pathToOutputFile);
         steps.add(estimate);
         weightEstimate = estimate;
@@ -230,7 +231,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
                 filesystem,
                 androidPlatformTarget,
                 pathToDex,
-                Collections.singleton(pathToOutputFile),
+                Collections.singleton(pathToOutputFile.getPath()),
                 options,
                 Optional.empty(),
                 dexTool,
@@ -300,7 +301,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         Collection<SourcePath> sourcePaths, SourcePathResolverAdapter sourcePathResolverAdapter) {
       return sourcePaths.stream()
           .filter(Objects::nonNull)
-          .map(sourcePathResolverAdapter::getAbsolutePath)
+          .map(sourcePath -> sourcePathResolverAdapter.getAbsolutePath(sourcePath).getPath())
           .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
     }
   }

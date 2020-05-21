@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.python;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.impl.SymlinkDir;
 import com.facebook.buck.core.rules.impl.Symlinks;
@@ -96,17 +97,17 @@ abstract class PrebuiltPythonLibraryComponents implements PythonComponents {
 
   @Override
   public Resolved resolvePythonComponents(SourcePathResolverAdapter resolver) {
-    Path directory = resolver.getAbsolutePath(getDirectory());
+    AbsPath directory = resolver.getAbsolutePath(getDirectory());
     Type type = getType();
     return (consumer) ->
         Files.walkFileTree(
-            directory,
+            directory.getPath(),
             new SimpleFileVisitor<Path>() {
               @Override
               public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                   throws IOException {
                 if (accept(type, file)) {
-                  consumer.accept(directory.relativize(file), file);
+                  consumer.accept(directory.relativize(file).getPath(), file);
                 }
                 return super.visitFile(file, attrs);
               }

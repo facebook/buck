@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.config.BuildBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
@@ -41,7 +42,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
@@ -200,7 +200,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
       }
       SourcePath sourcePathToOutput = node.getSourcePathToOutput();
       if (sourcePathToOutput != null) {
-        Path outputPath =
+        AbsPath outputPath =
             actionGraphBuilder.getSourcePathResolver().getAbsolutePath(sourcePathToOutput);
         json.writeStringField("outputPath", outputPath.toString());
       }

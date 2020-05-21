@@ -17,6 +17,7 @@
 package com.facebook.buck.features.js;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -151,7 +152,7 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
               "dependencyLibraryFilePaths",
               libraryDependencies.stream()
                   .map(resolver::getAbsolutePath)
-                  .map(Path::toString)
+                  .map(AbsPath::toString)
                   .collect(JsonBuilder.toArrayOfStrings()))
           .addString(
               "aggregatedSourceFilesFilePath",
@@ -249,7 +250,7 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
               "sourceFilePaths",
               sources.stream()
                   .map(resolver::getAbsolutePath)
-                  .map(Path::toString)
+                  .map(AbsPath::toString)
                   .collect(JsonBuilder.toArrayOfStrings()));
     }
   }

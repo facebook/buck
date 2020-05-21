@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.core;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -93,11 +94,11 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
     static JarContents load(SourcePathResolverAdapter resolver, SourcePath jarSourcePath)
         throws IOException {
       ImmutableSortedSet<SourcePath> contents;
-      Path jarAbsolutePath = resolver.getAbsolutePath(jarSourcePath);
-      if (Files.isDirectory(jarAbsolutePath)) {
+      AbsPath jarAbsolutePath = resolver.getAbsolutePath(jarSourcePath);
+      if (Files.isDirectory(jarAbsolutePath.getPath())) {
         BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) jarSourcePath;
         contents =
-            Files.walk(jarAbsolutePath)
+            Files.walk(jarAbsolutePath.getPath())
                 .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
                 .map(
                     path ->
@@ -106,7 +107,7 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
       } else {
         SourcePath nonNullJarSourcePath = Assertions.assertNotNull(jarSourcePath);
         contents =
-            Unzip.getZipMembers(jarAbsolutePath).stream()
+            Unzip.getZipMembers(jarAbsolutePath.getPath()).stream()
                 .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
                 .map(path -> ArchiveMemberSourcePath.of(nonNullJarSourcePath, path))
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));

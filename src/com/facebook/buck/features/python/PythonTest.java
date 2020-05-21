@@ -19,6 +19,8 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -282,7 +284,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     Tool executable = binary.getExecutableCommand(OutputLabel.defaultLabel());
 
-    List<Path> requiredPaths = new ArrayList<>();
+    List<AbsPath> requiredPaths = new ArrayList<>();
 
     // Extract the in-place components link tree from the command and add it to required paths so
     // that external runners now to ship it remotely.
@@ -307,10 +309,14 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .addAllAdditionalCoverageTargets(
-            buildContext
-                .getSourcePathResolver()
-                .getAllAbsolutePaths(getAdditionalCoverageTargets()))
-        .setRequiredPaths(requiredPaths)
+            buildContext.getSourcePathResolver().getAllAbsolutePaths(getAdditionalCoverageTargets())
+                .stream()
+                .map(PathWrapper::getPath)
+                .collect(ImmutableList.toImmutableList()))
+        .setRequiredPaths(
+            requiredPaths.stream()
+                .map(PathWrapper::getPath)
+                .collect(ImmutableList.toImmutableList()))
         .build();
   }
 

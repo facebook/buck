@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.OutputLabel;
@@ -39,7 +40,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.net.URI;
-import java.nio.file.Path;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -123,7 +123,7 @@ public class RemoteFileDescriptionTest {
         Iterables.getOnlyElement(
             BuildableSupport.deriveInputs(executableCommand)
                 .collect(ImmutableList.toImmutableList()));
-    Path absolutePath = graphBuilder.getSourcePathResolver().getAbsolutePath(input);
+    AbsPath absolutePath = graphBuilder.getSourcePathResolver().getAbsolutePath(input);
     assertEquals("kale", absolutePath.getFileName().toString());
     assertEquals(
         ImmutableList.of(absolutePath.toString()),

@@ -205,7 +205,7 @@ public class OcamlBuildStep implements Step {
     CxxPreprocessorInput cxxPreprocessorInput = ocamlContext.getCxxPreprocessorInput();
 
     for (SourcePath cSrc : ocamlContext.getCInput()) {
-      Path outputPath = ocamlContext.getCOutput(getResolver().getAbsolutePath(cSrc));
+      Path outputPath = ocamlContext.getCOutput(getResolver().getAbsolutePath(cSrc).getPath());
       linkerInputs.add(outputPath);
       Step compileStep =
           new OcamlCCompileStep(
@@ -426,8 +426,8 @@ public class OcamlBuildStep implements Step {
               getResolver(),
               new OcamlYaccStep.Args(
                   ocamlContext.getYaccCompiler().get(),
-                  getResolver().getAbsolutePath(output),
-                  getResolver().getAbsolutePath(yaccSource)));
+                  getResolver().getAbsolutePath(output).getPath(),
+                  getResolver().getAbsolutePath(yaccSource).getPath()));
       StepExecutionResult yaccExecutionResult = yaccStep.execute(context);
       if (!yaccExecutionResult.isSuccess()) {
         return yaccExecutionResult;
@@ -441,8 +441,8 @@ public class OcamlBuildStep implements Step {
               getResolver(),
               new OcamlLexStep.Args(
                   ocamlContext.getLexCompiler().get(),
-                  getResolver().getAbsolutePath(output),
-                  getResolver().getAbsolutePath(lexSource)),
+                  getResolver().getAbsolutePath(output).getPath(),
+                  getResolver().getAbsolutePath(lexSource).getPath()),
               withDownwardApi);
       StepExecutionResult lexExecutionResult = lexStep.execute(context);
       if (!lexExecutionResult.isSuccess()) {
@@ -453,13 +453,14 @@ public class OcamlBuildStep implements Step {
   }
 
   private ImmutableList<Path> sortDependency(
-      String depOutput, ImmutableSet<Path> mlInput) { // NOPMD doesn't understand method reference
+      String depOutput,
+      ImmutableSet<AbsPath> mlInput) { // NOPMD doesn't understand method reference
     OcamlDependencyGraphGenerator graphGenerator = new OcamlDependencyGraphGenerator();
     return FluentIterable.from(graphGenerator.generate(depOutput))
         .transform(Paths::get)
         // The output of generate needs to be filtered as .cmo dependencies
         // are generated as both .ml and .re files.
-        .filter(mlInput::contains)
+        .filter(path -> path.isAbsolute() && mlInput.contains(AbsPath.of(path)))
         .toList();
   }
 

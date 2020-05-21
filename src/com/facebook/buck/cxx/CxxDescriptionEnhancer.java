@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -102,6 +103,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -731,7 +733,9 @@ public class CxxDescriptionEnhancer {
     public Path apply(FrameworkPath input) {
       String pathAsString =
           FrameworkPath.getUnexpandedSearchPath(
-                  resolver::getAbsolutePath, Functions.identity(), input)
+                  sourcePath -> resolver.getAbsolutePath(sourcePath).getPath(),
+                  Functions.identity(),
+                  input)
               .toString();
       return Paths.get(translateMacrosFn.apply(pathAsString));
     }
@@ -1638,9 +1642,10 @@ public class CxxDescriptionEnhancer {
                         compilationDatabases.get().getSourcePaths())),
             ImmutableSortedSet::of,
             ImmutableSortedSet.of()),
-        graphBuilder
-            .getSourcePathResolver()
-            .getAllAbsolutePaths(compilationDatabases.get().getSourcePaths()),
+        graphBuilder.getSourcePathResolver()
+            .getAllAbsolutePaths(compilationDatabases.get().getSourcePaths()).stream()
+            .map(AbsPath::getPath)
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())),
         "compilation-database-concatenate",
         "Concatenate compilation databases",
         "uber-compilation-database",

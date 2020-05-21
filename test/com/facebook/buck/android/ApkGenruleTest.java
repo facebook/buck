@@ -155,7 +155,10 @@ public class ApkGenruleTest {
                 .resolve("sign_fb4a.apk"));
     assertEquals(
         expectedApkOutput,
-        graphBuilder.getSourcePathResolver().getAbsolutePath(apkGenrule.getSourcePathToOutput()));
+        graphBuilder
+            .getSourcePathResolver()
+            .getAbsolutePath(apkGenrule.getSourcePathToOutput())
+            .getPath());
     assertEquals(
         "The apk that this rule is modifying must have the apk in its deps.",
         ImmutableSet.of(apkTarget.toString()),

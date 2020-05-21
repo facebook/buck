@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -216,17 +217,17 @@ public abstract class UnusedDependenciesFinder implements Step {
       SourcePathResolverAdapter sourcePathResolverAdapter) {
     final @Nullable SourcePath dependencyOutput = dependency.fullJarSourcePath;
     if (dependencyOutput != null) {
-      final Path dependencyOutputPath = sourcePathResolverAdapter.getAbsolutePath(dependencyOutput);
-      if (usedJars.contains(dependencyOutputPath)) {
+      AbsPath dependencyOutputPath = sourcePathResolverAdapter.getAbsolutePath(dependencyOutput);
+      if (usedJars.contains(dependencyOutputPath.getPath())) {
         return true;
       }
     }
 
     final @Nullable SourcePath dependencyAbiOutput = dependency.abiSourcePath;
     if (dependencyAbiOutput != null) {
-      final Path dependencyAbiOutputPath =
+      AbsPath dependencyAbiOutputPath =
           sourcePathResolverAdapter.getAbsolutePath(dependencyAbiOutput);
-      return usedJars.contains(dependencyAbiOutputPath);
+      return usedJars.contains(dependencyAbiOutputPath.getPath());
     }
 
     return false;

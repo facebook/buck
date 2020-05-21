@@ -43,7 +43,7 @@ class CompiledClassFileFinder {
     Path outputPath;
     SourcePath outputSourcePath = rule.getSourcePathToOutput();
     if (outputSourcePath != null) {
-      outputPath = pathResolver.getAbsolutePath(outputSourcePath);
+      outputPath = pathResolver.getAbsolutePath(outputSourcePath).getPath();
     } else {
       outputPath = null;
     }
@@ -86,7 +86,7 @@ class CompiledClassFileFinder {
     try {
       JavaPaths.getExpandedSourcePaths(
               sources.stream()
-                  .map(resolver::getAbsolutePath)
+                  .map(sourcePath -> resolver.getAbsolutePath(sourcePath).getPath())
                   .collect(ImmutableList.toImmutableList()))
           .stream()
           .map(MorePaths::getNameWithoutExtension)

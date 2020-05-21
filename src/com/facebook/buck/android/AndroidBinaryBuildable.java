@@ -24,6 +24,7 @@ import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -263,26 +264,26 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     SourcePathResolverAdapter resolver = context.getSourcePathResolver();
     Path signedApkPath = getSignedApkPath();
-    Path pathToKeystore = resolver.getAbsolutePath(keystorePath);
+    AbsPath pathToKeystore = resolver.getAbsolutePath(keystorePath);
     Supplier<KeystoreProperties> keystoreProperties =
         getKeystorePropertiesSupplier(resolver, pathToKeystore);
 
     ImmutableSet<Path> thirdPartyJars =
         resourceFilesInfo.pathsToThirdPartyJars.stream()
-            .map(resolver::getAbsolutePath)
+            .map(sourcePath -> resolver.getAbsolutePath(sourcePath).getPath())
             .collect(ImmutableSet.toImmutableSet());
     if (isApk) {
       steps.add(
           new ApkBuilderStep(
               getProjectFilesystem(),
-              pathResolver.getAbsolutePath(resourceFilesInfo.resourcesApkPath),
+              pathResolver.getAbsolutePath(resourceFilesInfo.resourcesApkPath).getPath(),
               getSignedApkPath(),
               pathResolver.getRelativePath(dexFilesInfo.primaryDexPath),
               allAssetDirectories,
               nativeLibraryDirectoriesBuilder.build(),
               zipFiles.build(),
               thirdPartyJars,
-              pathToKeystore,
+              pathToKeystore.getPath(),
               keystoreProperties,
               false,
               javaRuntimeLauncher.getCommandPrefix(pathResolver)));
@@ -317,20 +318,21 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       }
 
       baseModuleInfo
-          .setResourceApk(pathResolver.getAbsolutePath(resourceFilesInfo.resourcesApkPath))
+          .setResourceApk(
+              pathResolver.getAbsolutePath(resourceFilesInfo.resourcesApkPath).getPath())
           .addDexFile(pathResolver.getRelativePath(dexFilesInfo.primaryDexPath))
           .setJarFilesThatMayContainResources(thirdPartyJars)
           .setZipFiles(zipFiles.build());
 
       modulesInfo.add(baseModuleInfo.build());
 
-      Optional<Path> bundleConfigPath = bundleConfigFilePath.map(pathResolver::getAbsolutePath);
+      Optional<AbsPath> bundleConfigPath = bundleConfigFilePath.map(pathResolver::getAbsolutePath);
 
       steps.add(
           new AabBuilderStep(
               getProjectFilesystem(),
               getSignedApkPath(),
-              bundleConfigPath,
+              bundleConfigPath.map(AbsPath::getPath),
               buildTarget,
               false,
               modulesInfo.build()));
@@ -586,7 +588,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     steps.add(
         new UnzipStep(
             getProjectFilesystem(),
-            context.getSourcePathResolver().getAbsolutePath(resourcePath),
+            context.getSourcePathResolver().getAbsolutePath(resourcePath).getPath(),
             unpackDirectory,
             Optional.empty()));
 
@@ -729,13 +731,13 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   }
 
   private Supplier<KeystoreProperties> getKeystorePropertiesSupplier(
-      SourcePathResolverAdapter resolver, Path pathToKeystore) {
+      SourcePathResolverAdapter resolver, AbsPath pathToKeystore) {
     return MoreSuppliers.memoize(
         () -> {
           try {
             return KeystoreProperties.createFromPropertiesFile(
-                pathToKeystore,
-                resolver.getAbsolutePath(keystorePropertiesPath),
+                pathToKeystore.getPath(),
+                resolver.getAbsolutePath(keystorePropertiesPath).getPath(),
                 getProjectFilesystem());
           } catch (IOException e) {
             throw new RuntimeException();

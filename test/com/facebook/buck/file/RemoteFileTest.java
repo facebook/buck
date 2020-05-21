@@ -30,6 +30,7 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -51,7 +52,6 @@ import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -104,14 +104,14 @@ public class RemoteFileTest {
   public void shouldSaveToFinalLocationAfterSha1IsVerified() throws Exception {
     String value = "I like cake";
     HashCode hashCode = Hashing.sha1().hashBytes(value.getBytes(UTF_8));
-    Path output = runTheMagic(null, value, hashCode);
+    AbsPath output = runTheMagic(null, value, hashCode);
 
     assertThat(output, exists());
   }
 
   @Test
   public void shouldNotSaveToFinalLocationUntilAfterSha1IsVerified() throws Exception {
-    Path output = runTheMagic(null, "eat more cheese", Hashing.sha1().hashLong(42));
+    AbsPath output = runTheMagic(null, "eat more cheese", Hashing.sha1().hashLong(42));
 
     assertThat(output, not(exists()));
   }
@@ -120,7 +120,7 @@ public class RemoteFileTest {
   public void shouldNotSaveFileToFinalLocationIfTheDownloadFails() throws Exception {
     String value = "I also like cake";
     HashCode hashCode = Hashing.sha1().hashBytes(value.getBytes(UTF_8));
-    Path output = runTheMagic(new ExplodingDownloader(), value, hashCode);
+    AbsPath output = runTheMagic(new ExplodingDownloader(), value, hashCode);
 
     assertThat(output, not(exists()));
   }
@@ -130,7 +130,7 @@ public class RemoteFileTest {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
     String value = "I like cake";
     HashCode hashCode = Hashing.sha1().hashBytes(value.getBytes(UTF_8));
-    Path output = runTheMagic(null, value, hashCode, RemoteFile.Type.DATA);
+    AbsPath output = runTheMagic(null, value, hashCode, RemoteFile.Type.DATA);
 
     assertThat(output, exists());
     assertThat(output, not(isExecutable()));
@@ -141,7 +141,7 @@ public class RemoteFileTest {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
     String value = "I like cake";
     HashCode hashCode = Hashing.sha1().hashBytes(value.getBytes(UTF_8));
-    Path output = runTheMagic(null, value, hashCode, RemoteFile.Type.EXECUTABLE);
+    AbsPath output = runTheMagic(null, value, hashCode, RemoteFile.Type.EXECUTABLE);
 
     assertThat(output, exists());
     assertThat(output, isExecutable());
@@ -479,19 +479,19 @@ public class RemoteFileTest {
       0x00,
     };
     HashCode hashCode = Hashing.sha1().hashBytes(archiveContent);
-    Path output = runTheMagic(archiveContent, hashCode, RemoteFile.Type.EXPLODED_ZIP);
+    AbsPath output = runTheMagic(archiveContent, hashCode, RemoteFile.Type.EXPLODED_ZIP);
 
     assertThat(output, exists());
-    Path filePath = output.resolve("hello").resolve("hello.txt");
+    AbsPath filePath = output.resolve("hello").resolve("hello.txt");
     assertThat(filePath, exists());
     assertThat(filePath, hasContent("hello\n".getBytes(UTF_8)));
   }
 
-  private static Matcher<Path> exists() {
-    return new BaseMatcher<Path>() {
+  private static Matcher<AbsPath> exists() {
+    return new BaseMatcher<AbsPath>() {
       @Override
       public boolean matches(Object o) {
-        return Files.exists((Path) o);
+        return Files.exists(((AbsPath) o).getPath());
       }
 
       @Override
@@ -501,11 +501,11 @@ public class RemoteFileTest {
     };
   }
 
-  private static Matcher<Path> isExecutable() {
-    return new BaseMatcher<Path>() {
+  private static Matcher<AbsPath> isExecutable() {
+    return new BaseMatcher<AbsPath>() {
       @Override
       public boolean matches(Object o) {
-        return Files.isExecutable((Path) o);
+        return Files.isExecutable(((AbsPath) o).getPath());
       }
 
       @Override
@@ -515,12 +515,12 @@ public class RemoteFileTest {
     };
   }
 
-  private static Matcher<Path> hasContent(byte[] content) {
-    return new BaseMatcher<Path>() {
+  private static Matcher<AbsPath> hasContent(byte[] content) {
+    return new BaseMatcher<AbsPath>() {
       @Override
       public boolean matches(Object o) {
         try {
-          return Arrays.equals(Files.readAllBytes((Path) o), content);
+          return Arrays.equals(Files.readAllBytes(((AbsPath) o).getPath()), content);
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
@@ -533,12 +533,12 @@ public class RemoteFileTest {
     };
   }
 
-  private Path runTheMagic(
+  private AbsPath runTheMagic(
       @Nullable Downloader downloader, String contentsOfFile, HashCode hashCode) throws Exception {
     return runTheMagic(downloader, contentsOfFile, hashCode, RemoteFile.Type.DATA);
   }
 
-  private Path runTheMagic(
+  private AbsPath runTheMagic(
       @Nullable Downloader downloader,
       String contentsOfFile,
       HashCode hashCode,
@@ -547,7 +547,7 @@ public class RemoteFileTest {
     return runTheMagic(downloader, contentsOfFile.getBytes(UTF_8), hashCode, type);
   }
 
-  private Path runTheMagic(byte[] contentsOfFile, HashCode hashCode, RemoteFile.Type type)
+  private AbsPath runTheMagic(byte[] contentsOfFile, HashCode hashCode, RemoteFile.Type type)
       throws Exception {
 
     Downloader downloader =
@@ -559,7 +559,7 @@ public class RemoteFileTest {
     return runTheMagic(downloader, contentsOfFile, hashCode, type);
   }
 
-  private Path runTheMagic(
+  private AbsPath runTheMagic(
       @Nullable Downloader downloader,
       byte[] contentsOfFile,
       HashCode hashCode,

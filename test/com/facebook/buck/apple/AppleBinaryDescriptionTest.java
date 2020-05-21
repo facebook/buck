@@ -20,6 +20,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -34,7 +35,6 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -58,7 +58,7 @@ public class AppleBinaryDescriptionTest {
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
 
     SourcePath outputSourcePath = dep.getSourcePathToOutput();
-    Path absoluteLinkerScriptPath =
+    AbsPath absoluteLinkerScriptPath =
         graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(((CxxLink) binary).getArgs(), graphBuilder.getSourcePathResolver()),

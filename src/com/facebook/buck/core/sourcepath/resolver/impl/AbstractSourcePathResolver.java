@@ -17,6 +17,7 @@
 package com.facebook.buck.core.sourcepath.resolver.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -39,7 +40,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -66,9 +66,9 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
       BuildTargetSourcePath sourcePath);
 
   @Override
-  public <T> ImmutableMap<T, ImmutableSortedSet<Path>> getMappedPaths(
+  public <T> ImmutableMap<T, ImmutableSortedSet<AbsPath>> getMappedPaths(
       Map<T, SourcePath> sourcePathMap) {
-    ImmutableMap.Builder<T, ImmutableSortedSet<Path>> paths = ImmutableMap.builder();
+    ImmutableMap.Builder<T, ImmutableSortedSet<AbsPath>> paths = ImmutableMap.builder();
     for (ImmutableMap.Entry<T, SourcePath> entry : sourcePathMap.entrySet()) {
       paths.put(entry.getKey(), getAbsolutePath(entry.getValue()));
     }
@@ -91,21 +91,24 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
   }
 
   /**
-   * @return the {@link Path} instances for this {@code sourcePath}, resolved using its associated
-   *     {@link ProjectFilesystem}.
+   * @return the {@link AbsPath} instances for this {@code sourcePath}, resolved using its
+   *     associated {@link ProjectFilesystem}.
    */
   @Override
-  public ImmutableSortedSet<Path> getAbsolutePath(SourcePath sourcePath) {
+  public ImmutableSortedSet<AbsPath> getAbsolutePath(SourcePath sourcePath) {
     ImmutableSortedSet<Path> paths = getPathPrivateImpl(sourcePath);
-    ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<AbsPath> builder =
+        ImmutableSortedSet.orderedBy(AbsPath.comparator());
     for (Path path : paths) {
       if (path.isAbsolute()) {
-        builder.add(path);
+        builder.add(AbsPath.of(path));
       } else if (sourcePath instanceof BuildTargetSourcePath) {
         builder.add(
-            getBuildTargetSourcePathFilesystem((BuildTargetSourcePath) sourcePath).resolve(path));
+            AbsPath.of(
+                getBuildTargetSourcePathFilesystem((BuildTargetSourcePath) sourcePath)
+                    .resolve(path)));
       } else if (sourcePath instanceof PathSourcePath) {
-        builder.add(((PathSourcePath) sourcePath).getFilesystem().resolve(path));
+        builder.add(AbsPath.of(((PathSourcePath) sourcePath).getFilesystem().resolve(path)));
       } else {
         throw new UnsupportedOperationException(sourcePath.getClass() + " is not supported here!");
       }
@@ -114,11 +117,11 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
   }
 
   @Override
-  public ImmutableSortedSet<Path> getAllAbsolutePaths(
+  public ImmutableSortedSet<AbsPath> getAllAbsolutePaths(
       Collection<? extends SourcePath> sourcePaths) {
     return sourcePaths.stream()
         .flatMap(sourcePath -> getAbsolutePath(sourcePath).stream())
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+        .collect(ImmutableSortedSet.toImmutableSortedSet(AbsPath.comparator()));
   }
 
   /**
@@ -248,7 +251,7 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
   }
 
   @Override
-  public ImmutableMap<Path, Path> createRelativeMap(
+  public ImmutableMap<Path, AbsPath> createRelativeMap(
       Path basePath, Iterable<SourcePath> sourcePaths) {
     // The goal here is pretty simple.
     // 1. For a PathSourcePath (an explicit file reference in a BUCK file) that is a
@@ -265,15 +268,15 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
     // TODO(cjhopman): We should remove 1a because we shouldn't allow specifying directories in
     // srcs.
 
-    Map<Path, Path> relativePathMap = new LinkedHashMap<>();
+    Map<Path, AbsPath> relativePathMap = new LinkedHashMap<>();
 
     for (SourcePath sourcePath : sourcePaths) {
       ProjectFilesystem filesystem = getFilesystem(sourcePath);
-      ImmutableSortedSet<Path> absolutePaths =
+      ImmutableSortedSet<AbsPath> absolutePaths =
           getAbsolutePath(sourcePath).stream()
-              .map(Path::normalize)
-              .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
-      for (Path absolutePath : absolutePaths) {
+              .map(AbsPath::normalize)
+              .collect(ImmutableSortedSet.toImmutableSortedSet(AbsPath.comparator()));
+      for (AbsPath absolutePath : absolutePaths) {
         try {
           if (sourcePath instanceof PathSourcePath) {
             addPathToRelativePathMap(
@@ -281,12 +284,12 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
                 relativePathMap,
                 basePath,
                 absolutePath,
-                basePath.relativize(absolutePath));
+                basePath.relativize(absolutePath.getPath()));
           } else {
             addPathToRelativePathMap(
                 filesystem,
                 relativePathMap,
-                absolutePath.getParent(),
+                absolutePath.getPath().getParent(),
                 absolutePath,
                 absolutePath.getFileName());
           }
@@ -302,17 +305,17 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
 
   private static void addPathToRelativePathMap(
       ProjectFilesystem filesystem,
-      Map<Path, Path> relativePathMap,
+      Map<Path, AbsPath> relativePathMap,
       Path basePath,
-      Path absolutePath,
+      AbsPath absolutePath,
       Path relativePath)
       throws IOException {
-    if (Files.isDirectory(absolutePath)) {
-      ImmutableSet<Path> files = filesystem.getFilesUnderPath(absolutePath);
+    if (Files.isDirectory(absolutePath.getPath())) {
+      ImmutableSet<Path> files = filesystem.getFilesUnderPath(absolutePath.getPath());
       for (Path file : files) {
-        Path absoluteFilePath = filesystem.resolve(file).normalize();
+        AbsPath absoluteFilePath = AbsPath.of(filesystem.resolve(file).normalize());
         addToRelativePathMap(
-            relativePathMap, basePath.relativize(absoluteFilePath), absoluteFilePath);
+            relativePathMap, basePath.relativize(absoluteFilePath.getPath()), absoluteFilePath);
       }
     } else {
       addToRelativePathMap(relativePathMap, relativePath, absolutePath);
@@ -320,7 +323,7 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
   }
 
   private static void addToRelativePathMap(
-      Map<Path, Path> relativePathMap, Path pathRelativeToBaseDir, Path absoluteFilePath) {
+      Map<Path, AbsPath> relativePathMap, Path pathRelativeToBaseDir, AbsPath absoluteFilePath) {
     relativePathMap.compute(
         pathRelativeToBaseDir,
         (ignored, current) -> {

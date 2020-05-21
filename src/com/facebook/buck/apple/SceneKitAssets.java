@@ -20,6 +20,7 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -96,7 +97,7 @@ public class SceneKitAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)));
     for (SourcePath inputPath : sceneKitAssetsPaths) {
-      Path absoluteInputPath = context.getSourcePathResolver().getAbsolutePath(inputPath);
+      AbsPath absoluteInputPath = context.getSourcePathResolver().getAbsolutePath(inputPath);
 
       if (copySceneKitAssets.isPresent()) {
         stepsBuilder.add(
@@ -134,7 +135,7 @@ public class SceneKitAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         stepsBuilder.add(
             CopyStep.forDirectory(
                 getProjectFilesystem(),
-                absoluteInputPath,
+                absoluteInputPath.getPath(),
                 outputDir,
                 CopyStep.DirectoryMode.CONTENTS_ONLY));
       }

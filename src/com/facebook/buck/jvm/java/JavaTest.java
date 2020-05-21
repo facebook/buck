@@ -604,11 +604,14 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
     unbundledResourcesRoot.ifPresent(
         sourcePath ->
-            builder.add(buildContext.getSourcePathResolver().getAbsolutePath(sourcePath)));
+            builder.add(
+                buildContext.getSourcePathResolver().getAbsolutePath(sourcePath).getPath()));
     return builder
         .addAll(
             compiledTestsLibrary.getTransitiveClasspaths().stream()
-                .map(buildContext.getSourcePathResolver()::getAbsolutePath)
+                .map(
+                    sourcePath ->
+                        buildContext.getSourcePathResolver().getAbsolutePath(sourcePath).getPath())
                 .collect(ImmutableSet.toImmutableSet()))
         .addAll(
             additionalClasspathEntriesProvider

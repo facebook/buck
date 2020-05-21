@@ -18,6 +18,7 @@ package com.facebook.buck.features.js;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UserFlavor;
@@ -44,7 +45,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Optional;
 
 public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implements JsBundleOutputs {
@@ -166,7 +166,7 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
             "libraries",
             libraries.stream()
                 .map(sourcePathResolverAdapter::getAbsolutePath)
-                .map(Path::toString)
+                .map(AbsPath::toString)
                 .collect(JsonBuilder.toArrayOfStrings()))
         .addString("platform", JsUtil.getPlatformString(flavors))
         .addString(

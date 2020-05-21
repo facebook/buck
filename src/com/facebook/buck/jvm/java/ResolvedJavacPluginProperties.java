@@ -16,12 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.EmptyMemoizerDeserialization;
 import com.facebook.buck.util.Memoizer;
 import com.google.common.collect.ImmutableList;
@@ -63,13 +63,12 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
   }
 
   /** Get the classpath for the plugin. */
-  public URL[] getClasspath(SourcePathResolverAdapter resolver, ProjectFilesystem filesystem) {
+  public URL[] getClasspath(SourcePathResolverAdapter resolver) {
     return classpathSupplier.get(
         () ->
             inner.getClasspathEntries().stream()
                 .map(resolver::getAbsolutePath)
-                .map(filesystem::resolve)
-                .map(Path::toUri)
+                .map(AbsPath::toUri)
                 .map(
                     uri -> {
                       try {
@@ -91,20 +90,18 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
   }
 
   /** Get the javac plugin fields. */
-  public JavacPluginJsr199Fields getJavacPluginJsr199Fields(
-      SourcePathResolverAdapter resolver, ProjectFilesystem filesystem) {
+  public JavacPluginJsr199Fields getJavacPluginJsr199Fields(SourcePathResolverAdapter resolver) {
     return ImmutableJavacPluginJsr199Fields.ofImpl(
         getCanReuseClassLoader(),
         getProcessorNames(),
-        ImmutableList.copyOf(getClasspath(resolver, filesystem)));
+        ImmutableList.copyOf(getClasspath(resolver)));
   }
 
   public static String getJoinedClasspath(
       SourcePathResolverAdapter resolver,
-      ProjectFilesystem filesystem,
       ImmutableList<ResolvedJavacPluginProperties> resolvedProperties) {
     return resolvedProperties.stream()
-        .map(properties -> properties.getClasspath(resolver, filesystem))
+        .map(properties -> properties.getClasspath(resolver))
         .flatMap(Arrays::stream)
         .distinct()
         .map(

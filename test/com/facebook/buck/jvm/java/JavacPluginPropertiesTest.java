@@ -189,7 +189,7 @@ public class JavacPluginPropertiesTest {
     resource.ifPresent(
         pathSourcePath ->
             builder.put(
-                graphBuilder.getSourcePathResolver().getAbsolutePath(pathSourcePath),
+                graphBuilder.getSourcePathResolver().getAbsolutePath(pathSourcePath).getPath(),
                 HashCode.fromInt(resourceName.get().hashCode())));
     FakeFileHashCache hashCache = new FakeFileHashCache(builder.build());
 

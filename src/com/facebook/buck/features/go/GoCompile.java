@@ -18,6 +18,7 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -290,7 +291,10 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               packer.getCommandPrefix(resolver),
               GoPackStep.Operation.APPEND,
               asmOutputs
-                  .addAll(extraAsmOutputs.stream().map(x -> resolver.getAbsolutePath(x)).iterator())
+                  .addAll(
+                      extraAsmOutputs.stream()
+                          .map(x -> resolver.getAbsolutePath(x).getPath())
+                          .iterator())
                   .build(),
               filteredAsmSrcs,
               output.getPath(),
@@ -303,15 +307,15 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   static List<Path> getSourceFiles(ImmutableSet<SourcePath> srcPaths, BuildContext context) {
     List<Path> srcFiles = new ArrayList<>();
     for (SourcePath path : srcPaths) {
-      Path srcPath = context.getSourcePathResolver().getAbsolutePath(path);
-      if (Files.isDirectory(srcPath)) {
-        try (Stream<Path> sourcePaths = Files.list(srcPath)) {
+      AbsPath srcPath = context.getSourcePathResolver().getAbsolutePath(path);
+      if (Files.isDirectory(srcPath.getPath())) {
+        try (Stream<Path> sourcePaths = Files.list(srcPath.getPath())) {
           srcFiles.addAll(sourcePaths.filter(Files::isRegularFile).collect(Collectors.toList()));
         } catch (IOException e) {
           throw new RuntimeException("An error occur when listing the files under " + srcPath, e);
         }
       } else {
-        srcFiles.add(srcPath);
+        srcFiles.add(srcPath.getPath());
       }
     }
     return srcFiles;

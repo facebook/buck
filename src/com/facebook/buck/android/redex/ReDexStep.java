@@ -106,7 +106,9 @@ public class ReDexStep extends ShellStep {
             inputApkPath,
             outputApkPath,
             keystorePropertiesSupplier,
-            redexOptions.getRedexConfig().map(resolver::getAbsolutePath),
+            redexOptions
+                .getRedexConfig()
+                .map(sourcePath -> resolver.getAbsolutePath(sourcePath).getPath()),
             redexOptions.getRedexExtraArgs(),
             proguardConfigDir.resolve("mapping.txt"),
             proguardConfigDir.resolve("command-line.txt"),

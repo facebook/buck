@@ -60,6 +60,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -130,7 +131,11 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
                     "cxx_header",
                     projectFilesystem,
                     symlinkTreeRoot.getPath(),
-                    new SymlinkMapsPaths(resolver.getMappedPaths(links)),
+                    new SymlinkMapsPaths(
+                        resolver.getMappedPaths(links).entrySet().stream()
+                            .collect(
+                                ImmutableMap.toImmutableMap(
+                                    Map.Entry::getKey, e -> e.getValue().getPath()))),
                     (fs, p) -> false))
             .add(
                 new HeaderMapStep(
@@ -199,8 +204,8 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     RuleKey key1 = ruleKeyFactory.build(symlinkTreeBuildRule);
 
     // Change the contents of the target of the link.
-    Path existingFile = resolver.getAbsolutePath(links.values().asList().get(0));
-    Files.write(existingFile, "something new".getBytes(StandardCharsets.UTF_8));
+    AbsPath existingFile = resolver.getAbsolutePath(links.values().asList().get(0));
+    Files.write(existingFile.getPath(), "something new".getBytes(StandardCharsets.UTF_8));
     hashCache.invalidateAll();
     ruleKeyFactory = new TestDefaultRuleKeyFactory(hashLoader, graphBuilder);
 
@@ -224,8 +229,8 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     RuleKey key1 = ruleKeyFactory.build(symlinkTreeBuildRule);
 
     // Change the contents of the target of the link.
-    Path existingFile = resolver.getAbsolutePath(links.values().asList().get(0));
-    Files.write(existingFile, "something new".getBytes(StandardCharsets.UTF_8));
+    AbsPath existingFile = resolver.getAbsolutePath(links.values().asList().get(0));
+    Files.write(existingFile.getPath(), "something new".getBytes(StandardCharsets.UTF_8));
     ruleKeyFactory =
         new TestInputBasedRuleKeyFactory(
             FakeFileHashCache.createFromStrings(ImmutableMap.of()), graphBuilder);

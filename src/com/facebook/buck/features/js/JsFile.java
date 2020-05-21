@@ -17,6 +17,7 @@
 package com.facebook.buck.features.js;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -183,7 +184,7 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
     @Override
     ObjectBuilder getJobArgs(
         SourcePathResolverAdapter sourcePathResolverAdapter, String outputPath) {
-      Path srcPath = sourcePathResolverAdapter.getAbsolutePath(src);
+      AbsPath srcPath = sourcePathResolverAdapter.getAbsolutePath(src);
       return JsonBuilder.object()
           .addString("command", "transform")
           .addString("outputFilePath", outputPath)

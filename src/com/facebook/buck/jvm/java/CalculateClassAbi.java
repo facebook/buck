@@ -112,7 +112,7 @@ public class CalculateClassAbi extends ModernBuildRule<CalculateClassAbi.Impl>
       return ImmutableList.of(
           new CalculateClassAbiStep(
               filesystem,
-              buildContext.getSourcePathResolver().getAbsolutePath(binaryJar),
+              buildContext.getSourcePathResolver().getAbsolutePath(binaryJar).getPath(),
               outputPathResolver.resolvePath(output),
               compatibilityMode));
     }

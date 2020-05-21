@@ -224,7 +224,8 @@ public class JsBundleDescriptionTest {
                               scenario
                                   .graphBuilder
                                   .getSourcePathResolver()
-                                  .getAbsolutePath(referencedSource),
+                                  .getAbsolutePath(referencedSource)
+                                  .getPath(),
                               refHash)),
                       scenario.graphBuilder)
                   .build(bundle);

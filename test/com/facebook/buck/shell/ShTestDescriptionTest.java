@@ -137,7 +137,8 @@ public class ShTestDescriptionTest {
             graphBuilder
                 .getSourcePathResolver()
                 .getAbsolutePath(
-                    graphBuilder.requireRule(genrule.getBuildTarget()).getSourcePathToOutput())));
+                    graphBuilder.requireRule(genrule.getBuildTarget()).getSourcePathToOutput())
+                .getPath()));
   }
 
   @Test
@@ -168,7 +169,8 @@ public class ShTestDescriptionTest {
             graphBuilder
                 .getSourcePathResolver()
                 .getAbsolutePath(
-                    graphBuilder.requireRule(genrule.getBuildTarget()).getSourcePathToOutput())));
+                    graphBuilder.requireRule(genrule.getBuildTarget()).getSourcePathToOutput())
+                .getPath()));
   }
 
   @Test

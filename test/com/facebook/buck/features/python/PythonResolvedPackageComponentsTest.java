@@ -20,6 +20,7 @@ import static org.hamcrest.junit.MatcherAssume.assumeThat;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.util.environment.Platform;
@@ -60,10 +61,12 @@ public class PythonResolvedPackageComponentsTest {
         ImmutablePythonResolvedPackageComponents.builder()
             .putModules(
                 BuildTargetFactory.newInstance("//:target1"),
-                new PythonMappedComponents.Resolved(ImmutableMap.of(Paths.get("foo"), foo1)))
+                new PythonMappedComponents.Resolved(
+                    ImmutableMap.of(Paths.get("foo"), AbsPath.of(foo1))))
             .putModules(
                 BuildTargetFactory.newInstance("//:target2"),
-                new PythonMappedComponents.Resolved(ImmutableMap.of(Paths.get("foo"), foo2)))
+                new PythonMappedComponents.Resolved(
+                    ImmutableMap.of(Paths.get("foo"), AbsPath.of(foo2))))
             .build();
     components.forEachModule((dst, src) -> {});
   }
@@ -75,11 +78,13 @@ public class PythonResolvedPackageComponentsTest {
             .putModules(
                 BuildTargetFactory.newInstance("//:target1"),
                 new PythonMappedComponents.Resolved(
-                    ImmutableMap.of(Paths.get("foo"), Paths.get(("target/foo")))))
+                    ImmutableMap.of(
+                        Paths.get("foo"), AbsPath.of(Paths.get("target/foo").toAbsolutePath()))))
             .putModules(
                 BuildTargetFactory.newInstance("//:target2"),
                 new PythonMappedComponents.Resolved(
-                    ImmutableMap.of(Paths.get("foo"), Paths.get(("target/foo")))))
+                    ImmutableMap.of(
+                        Paths.get("foo"), AbsPath.of(Paths.get("target/foo").toAbsolutePath()))))
             .build();
     // Use an ImmutableMap to verify we don't propagate duplicate entries for the duplicate module.
     ImmutableMap.Builder<Path, Path> builder = ImmutableMap.builder();
@@ -97,16 +102,18 @@ public class PythonResolvedPackageComponentsTest {
                 target1,
                 new PythonMappedComponents.Resolved(
                     ImmutableMap.of(
-                        Paths.get("foo/src.py"), Paths.get("target1/src.py"),
-                        Paths.get("src.py"), Paths.get("target1/src.py"))))
+                        Paths.get("foo/src.py"),
+                            AbsPath.of(Paths.get("target1/src.py").toAbsolutePath()),
+                        Paths.get("src.py"),
+                            AbsPath.of(Paths.get("target1/src.py").toAbsolutePath()))))
             .putModules(
                 target2,
                 new PythonMappedComponents.Resolved(
                     ImmutableMap.of(
                         Paths.get("bar/src.py"),
-                        Paths.get("target2/src.py"),
+                        AbsPath.of(Paths.get("target2/src.py").toAbsolutePath()),
                         Paths.get("bar/__init__.py"),
-                        Paths.get("target2/__init__.py"))))
+                        AbsPath.of(Paths.get("target2/__init__.py").toAbsolutePath()))))
             .setDefaultInitPy(Paths.get("default/__init__.py"))
             .build();
     Map<Path, Path> modules = new HashMap<>();

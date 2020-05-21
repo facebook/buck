@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -473,7 +474,12 @@ public class JarBuildStepsFactory
                     .setEntriesToJar(
                         ImmutableSortedSet.of(compilerParameters.getOutputPaths().getClassesDir()))
                     .setManifestFile(
-                        manifestFile.map(context.getSourcePathResolver()::getAbsolutePath))
+                        manifestFile.map(
+                            (SourcePath sourcePath) ->
+                                context
+                                    .getSourcePathResolver()
+                                    .getAbsolutePath(sourcePath)
+                                    .getPath()))
                     .setJarPath(output)
                     .setRemoveEntryPredicate(classesToRemoveFromJar)
                     .build());
@@ -527,10 +533,11 @@ public class JarBuildStepsFactory
     for (JavaDependencyInfo depInfo : dependencyInfos.infos) {
       SourcePath sourcePath = depInfo.compileTimeJar;
       BuildRule rule = ruleFinder.getRule(sourcePath).get();
-      Path path = pathResolver.getAbsolutePath(sourcePath);
+      AbsPath path = pathResolver.getAbsolutePath(sourcePath);
       if (rule instanceof HasJavaAbi && ((HasJavaAbi) rule).getAbiJar().isPresent()) {
         BuildTarget buildTarget = ((HasJavaAbi) rule).getAbiJar().get();
-        pathToSourcePathMapBuilder.put(path, DefaultBuildTargetSourcePath.of(buildTarget));
+        pathToSourcePathMapBuilder.put(
+            path.getPath(), DefaultBuildTargetSourcePath.of(buildTarget));
       }
     }
     return pathToSourcePathMapBuilder.build();

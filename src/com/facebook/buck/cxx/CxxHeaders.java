@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -63,14 +64,16 @@ public abstract class CxxHeaders implements AddsToRuleKey, HasCustomDepsLogic {
    * @return the path to add to the preprocessor search path to find the includes. This defaults to
    *     the root, but can be overridden to use an alternate path.
    */
-  public Optional<Path> getResolvedIncludeRoot(SourcePathResolverAdapter resolver) {
+  public Optional<AbsPath> getResolvedIncludeRoot(SourcePathResolverAdapter resolver) {
     return Optional.of(resolver.getAbsolutePath(Objects.requireNonNull(getRoot())));
   }
 
   private static Path resolveSourcePathAndShorten(
       SourcePathResolverAdapter resolver, SourcePath path, Optional<PathShortener> pathShortener) {
-    Path resolvedPath = resolver.getAbsolutePath(path);
-    return pathShortener.isPresent() ? pathShortener.get().shorten(resolvedPath) : resolvedPath;
+    AbsPath resolvedPath = resolver.getAbsolutePath(path);
+    return pathShortener.isPresent()
+        ? pathShortener.get().shorten(resolvedPath.getPath())
+        : resolvedPath.getPath();
   }
 
   /**
@@ -103,8 +106,8 @@ public abstract class CxxHeaders implements AddsToRuleKey, HasCustomDepsLogic {
                   roots.put(
                       cxxHeaders.getIncludeType(),
                       pathMinimizer
-                          .map(min -> min.shorten(resolvedPath))
-                          .orElse(resolvedPath)
+                          .map(min -> min.shorten(resolvedPath.getPath()))
+                          .orElse(resolvedPath.getPath())
                           .toString()));
     }
 

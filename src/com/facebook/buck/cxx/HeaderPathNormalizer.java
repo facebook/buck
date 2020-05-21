@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
@@ -81,7 +82,8 @@ class HeaderPathNormalizer {
     return Optional.of(
         pathResolver
             .getAbsolutePath(result.get().getValue())
-            .resolve(result.get().getKey().relativize(unnormalizedPath)));
+            .resolve(result.get().getKey().relativize(unnormalizedPath))
+            .getPath());
   }
 
   /** @return the {@link SourcePath} which corresponds to the given absolute path. */
@@ -132,9 +134,9 @@ class HeaderPathNormalizer {
     public Builder addSymlinkTree(SourcePath root, ImmutableMap<Path, SourcePath> headerMap) {
 
       // Add the headers from the symlink tree.
-      Path rootPath = pathResolver.getAbsolutePath(root);
+      AbsPath rootPath = pathResolver.getAbsolutePath(root);
       for (Map.Entry<Path, SourcePath> entry : headerMap.entrySet()) {
-        addHeader(entry.getValue(), rootPath.resolve(entry.getKey()));
+        addHeader(entry.getValue(), rootPath.resolve(entry.getKey()).getPath());
       }
 
       // If the headers behind the symlink tree match their real paths, other than a different
@@ -164,16 +166,16 @@ class HeaderPathNormalizer {
     }
 
     public Builder addHeader(SourcePath sourcePath, Path... unnormalizedPaths) {
-      Path absolutePath = MorePaths.normalize(pathResolver.getAbsolutePath(sourcePath));
+      AbsPath absolutePath = MorePaths.normalize(pathResolver.getAbsolutePath(sourcePath));
 
       // Map the relative path of the header path to the header, as we serialize the source path
       // using it's relative path.
-      put(headers, absolutePath, sourcePath);
+      put(headers, absolutePath.getPath(), sourcePath);
 
       // Add a normalization mapping for the absolute path.
       // We need it for prefix headers and in some rare cases, regular headers will also end up
       // with an absolute path in the depfile for a reason we ignore.
-      put(normalized, absolutePath, sourcePath);
+      put(normalized, absolutePath.getPath(), sourcePath);
 
       // Add a normalization mapping for any unnormalized paths passed in.
       for (Path unnormalizedPath : unnormalizedPaths) {

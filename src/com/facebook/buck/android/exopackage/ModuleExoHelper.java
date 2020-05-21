@@ -17,6 +17,7 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.exopackage.ExopackageInfo.DexInfo;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -77,13 +78,13 @@ public class ModuleExoHelper {
   public ImmutableMap<Path, String> getMetadataToInstall() throws IOException {
     Builder<Path, String> builder = ImmutableMap.builder();
     for (DexInfo info : dexInfoForModules) {
-      Path metadataFile = pathResolver.getAbsolutePath(info.getMetadata());
-      if (!Files.exists(metadataFile)) {
+      AbsPath metadataFile = pathResolver.getAbsolutePath(info.getMetadata());
+      if (!Files.exists(metadataFile.getPath())) {
         continue;
       }
       Path dirname = metadataFile.getParent().getFileName();
       String onDeviceName = String.format("%s.metadata", dirname);
-      String metadataContents = new String(Files.readAllBytes(metadataFile));
+      String metadataContents = new String(Files.readAllBytes(metadataFile.getPath()));
       builder.put(MODULAR_DEX_DIR.resolve(onDeviceName), metadataContents);
     }
     // Top level metadata.txt containing the list of jars
@@ -108,8 +109,8 @@ public class ModuleExoHelper {
   private ImmutableMap<String, Path> getRequiredDexFiles() throws IOException {
     ImmutableMap.Builder<String, Path> builder = ImmutableMap.builder();
     for (DexInfo dexInfo : dexInfoForModules) {
-      Path metadataFile = pathResolver.getAbsolutePath(dexInfo.getMetadata());
-      if (!Files.exists(metadataFile)) {
+      AbsPath metadataFile = pathResolver.getAbsolutePath(dexInfo.getMetadata());
+      if (!Files.exists(metadataFile.getPath())) {
         continue;
       }
       ImmutableMultimap<String, Path> multimap =

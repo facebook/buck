@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -44,7 +45,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -106,7 +106,7 @@ public class LocationMacroExpanderTest {
     String transformedString = coerceAndStringify(originalCmd, javaRule);
 
     // Verify that the correct cmd was created.
-    Path absolutePath =
+    AbsPath absolutePath =
         graphBuilder.getSourcePathResolver().getAbsolutePath(javaRule.getSourcePathToOutput());
     String expectedCmd = String.format("%s %s $OUT", absolutePath, absolutePath);
 

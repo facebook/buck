@@ -127,7 +127,7 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return RichStream.from(rules)
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
-        .map(pathResolver::getAbsolutePath)
+        .map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath())
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 

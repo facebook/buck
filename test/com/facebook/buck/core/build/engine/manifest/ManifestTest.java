@@ -84,7 +84,7 @@ public class ManifestTest {
     SourcePath input = FakeSourcePath.of("input.h");
     HashCode hashCode = HashCode.fromInt(20);
     FileHashLoader fileHashLoader =
-        new FakeFileHashCache(ImmutableMap.of(RESOLVER.getAbsolutePath(input), hashCode));
+        new FakeFileHashCache(ImmutableMap.of(RESOLVER.getAbsolutePath(input).getPath(), hashCode));
     manifest.addEntry(
         fileHashLoader, key, RESOLVER, ImmutableSet.of(input), ImmutableSet.of(input));
     assertThat(
@@ -140,9 +140,9 @@ public class ManifestTest {
     FileHashLoader fileHashLoader =
         new FakeFileHashCache(
             ImmutableMap.of(
-                RESOLVER.getAbsolutePath(input1),
+                RESOLVER.getAbsolutePath(input1).getPath(),
                 hashCode1,
-                RESOLVER.getAbsolutePath(input2),
+                RESOLVER.getAbsolutePath(input2).getPath(),
                 hashCode2));
 
     Manifest manifest1 = new Manifest(new RuleKey("cc"));
@@ -183,7 +183,7 @@ public class ManifestTest {
             ImmutableMap.of(
                 key, ImmutableMap.of(RESOLVER.getRelativePath(input).toString(), hashCode)));
     FileHashLoader fileHashLoader =
-        new FakeFileHashCache(ImmutableMap.of(RESOLVER.getAbsolutePath(input), hashCode));
+        new FakeFileHashCache(ImmutableMap.of(RESOLVER.getAbsolutePath(input).getPath(), hashCode));
     assertThat(
         manifest.lookup(fileHashLoader, RESOLVER, ImmutableSet.of(input)),
         Matchers.equalTo(Optional.of(key)));
@@ -206,9 +206,9 @@ public class ManifestTest {
     FileHashLoader fileHashLoader =
         new FakeFileHashCache(
             ImmutableMap.of(
-                RESOLVER.getAbsolutePath(input1),
+                RESOLVER.getAbsolutePath(input1).getPath(),
                 hashCode1,
-                RESOLVER.getAbsolutePath(input2),
+                RESOLVER.getAbsolutePath(input2).getPath(),
                 hashCode2));
 
     Manifest manifest1 =
@@ -250,7 +250,7 @@ public class ManifestTest {
                 ImmutableMap.of(RESOLVER.getRelativePath(input).toString(), HashCode.fromInt(1))));
     FileHashLoader fileHashLoader =
         new FakeFileHashCache(
-            ImmutableMap.of(RESOLVER.getAbsolutePath(input), HashCode.fromInt(2)));
+            ImmutableMap.of(RESOLVER.getAbsolutePath(input).getPath(), HashCode.fromInt(2)));
     assertThat(
         manifest.lookup(fileHashLoader, RESOLVER, ImmutableSet.of(input)),
         Matchers.equalTo(Optional.empty()));
@@ -287,7 +287,7 @@ public class ManifestTest {
                 ImmutableMap.of(RESOLVER.getRelativePath(input).toString(), HashCode.fromInt(2))));
     FileHashLoader fileHashLoader =
         new FakeFileHashCache(
-            ImmutableMap.of(RESOLVER.getAbsolutePath(input), HashCode.fromInt(2)));
+            ImmutableMap.of(RESOLVER.getAbsolutePath(input).getPath(), HashCode.fromInt(2)));
     assertThat(
         manifest.lookup(fileHashLoader, RESOLVER, ImmutableSet.of(input)),
         Matchers.equalTo(Optional.of(key2)));

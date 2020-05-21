@@ -4710,7 +4710,7 @@ public class ProjectGenerator {
         TargetNodes.castArg(node, ExportFileDescriptionArg.class);
     if (!exportFileNode.isPresent()) {
       BuildRuleResolver resolver = actionGraphBuilderForNode.apply(node);
-      Path output = resolver.getSourcePathResolver().getAbsolutePath(sourcePath);
+      AbsPath output = resolver.getSourcePathResolver().getAbsolutePath(sourcePath);
       if (output == null) {
         throw new HumanReadableException(
             "The target '%s' does not have an output.", node.getBuildTarget());

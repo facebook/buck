@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
@@ -537,7 +538,7 @@ public class GenruleBuildable implements Buildable {
       Map<Path, Path> links) {
     srcs.forEach(
         (name, src) -> {
-          Path absolutePath = pathResolver.getAbsolutePath(src);
+          AbsPath absolutePath = pathResolver.getAbsolutePath(src);
           RelPath target = filesystem.relativize(absolutePath);
           links.put(filesystem.getPath(name), target.getPath());
         });
@@ -559,8 +560,8 @@ public class GenruleBuildable implements Buildable {
         .forEach(
             src -> {
               Path relativePath = pathResolver.getRelativePath(src);
-              Path absolutePath = pathResolver.getAbsolutePath(src);
-              Path canonicalPath = absolutePath.normalize();
+              AbsPath absolutePath = pathResolver.getAbsolutePath(src);
+              AbsPath canonicalPath = absolutePath.normalize();
 
               // By the time we get this far, all source paths (the keys in the map) have
               // been converted

@@ -176,7 +176,8 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
       Path ideallyRelativePath = resolver.getIdeallyRelativePath(sourcePath);
       if (ideallyRelativePath.isAbsolute()) {
         return setPath(
-            resolver.getAbsolutePath(sourcePath), resolver.getIdeallyRelativePath(sourcePath));
+            resolver.getAbsolutePath(sourcePath).getPath(),
+            resolver.getIdeallyRelativePath(sourcePath));
       } else {
         return setPath(resolver.getFilesystem(sourcePath), ideallyRelativePath);
       }

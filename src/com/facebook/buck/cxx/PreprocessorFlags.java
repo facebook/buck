@@ -124,7 +124,7 @@ public abstract class PreprocessorFlags implements AddsToRuleKey {
           StringArg.from(
               preprocessor.prefixOrPCHArgs(
                   pch.isPrecompiled(),
-                  shortener.shorten(resolver.getAbsolutePath(pch.getHeader())))));
+                  shortener.shorten(resolver.getAbsolutePath(pch.getHeader()).getPath()))));
     }
     return builder.build();
   }

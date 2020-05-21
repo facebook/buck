@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -27,7 +28,6 @@ import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -87,7 +87,7 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
       consumer.accept(
           queriedOutputs.stream()
               .map(pathResolver::getAbsolutePath)
-              .map(Path::toString)
+              .map(AbsPath::toString)
               .sorted()
               .collect(Collectors.joining(" ")));
     }

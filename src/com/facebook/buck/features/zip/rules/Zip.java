@@ -17,6 +17,7 @@
 package com.facebook.buck.features.zip.rules;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
 import com.facebook.buck.core.model.OutputLabel;
@@ -36,6 +37,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildable {
@@ -74,7 +76,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
     Path outputPath = outputPathResolver.resolvePath(this.output);
 
     SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
-    ImmutableMap<Path, Path> entryPathToAbsolutePathMap =
+    ImmutableMap<Path, AbsPath> entryPathToAbsolutePathMap =
         sourcePathResolverAdapter.createRelativeMap(
             filesystem.resolve(
                 getBuildTarget()
@@ -86,9 +88,11 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
         new CopyToZipStep(
             filesystem,
             outputPath,
-            entryPathToAbsolutePathMap,
+            entryPathToAbsolutePathMap.entrySet().stream()
+                .collect(
+                    ImmutableMap.toImmutableMap(Map.Entry::getKey, e -> e.getValue().getPath())),
             zipSources.stream()
-                .map(sourcePathResolverAdapter::getAbsolutePath)
+                .map(sourcePath -> sourcePathResolverAdapter.getAbsolutePath(sourcePath).getPath())
                 .collect(ImmutableList.toImmutableList()),
             entriesToExclude,
             onDuplicateEntry));

@@ -17,6 +17,7 @@
 package com.facebook.buck.zip;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -56,5 +57,9 @@ public abstract class ZipScrubberStep implements Step {
 
   public static ZipScrubberStep of(Path zipAbsolutePath) {
     return ImmutableZipScrubberStep.ofImpl(zipAbsolutePath);
+  }
+
+  public static ZipScrubberStep of(AbsPath zipAbsolutePath) {
+    return of(zipAbsolutePath.getPath());
   }
 }

@@ -164,11 +164,12 @@ public class ExportFile extends AbstractBuildRule
         builder.add(
             CopyStep.forDirectory(
                 getProjectFilesystem(),
-                resolver.getAbsolutePath(src),
+                resolver.getAbsolutePath(src).getPath(),
                 out,
                 CopyStep.DirectoryMode.CONTENTS_ONLY));
       } else {
-        builder.add(CopyStep.forFile(getProjectFilesystem(), resolver.getAbsolutePath(src), out));
+        builder.add(
+            CopyStep.forFile(getProjectFilesystem(), resolver.getAbsolutePath(src).getPath(), out));
       }
       buildableContext.recordArtifact(out);
     }

@@ -60,6 +60,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -130,7 +131,11 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                     "cxx_header",
                     projectFilesystem,
                     symlinkTreeRoot.getPath(),
-                    new SymlinkMapsPaths(resolver.getMappedPaths(links)),
+                    new SymlinkMapsPaths(
+                        resolver.getMappedPaths(links).entrySet().stream()
+                            .collect(
+                                ImmutableMap.toImmutableMap(
+                                    Map.Entry::getKey, e -> e.getValue().getPath()))),
                     (fs, p) -> false))
             .add(
                 new ModuleMapStep(

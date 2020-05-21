@@ -18,6 +18,7 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -103,10 +104,10 @@ public class CGoGenImport extends AbstractBuildRule {
 
     // Read the package name from given source file and use it as source of
     // truth (other files should have the same package name).
-    Path srcFile = pathResolver.getAbsolutePath(sourceWithPackageName);
+    AbsPath srcFile = pathResolver.getAbsolutePath(sourceWithPackageName);
     GoListStep listStep =
         new GoListStep(
-            srcFile.getParent(),
+            srcFile.getPath().getParent(),
             Optional.of(srcFile.getFileName()),
             platform,
             Collections.singletonList(ListType.Name),
@@ -119,7 +120,7 @@ public class CGoGenImport extends AbstractBuildRule {
             cgo.getCommandPrefix(pathResolver),
             platform,
             MoreSuppliers.memoize(listStep::getRawOutput),
-            pathResolver.getAbsolutePath(cgoBin),
+            pathResolver.getAbsolutePath(cgoBin).getPath(),
             outputFile,
             withDownwardApi));
 

@@ -226,7 +226,7 @@ public class IsolationChecker {
       if (value instanceof BuildTargetSourcePath) {
         return ImmutableList.of();
       }
-      return ImmutableList.of(pathResolver.getAbsolutePath(value));
+      return ImmutableList.of(pathResolver.getAbsolutePath(value).getPath());
     }
 
     @Override
@@ -333,7 +333,7 @@ public class IsolationChecker {
         return ImmutableList.of();
       }
       ImmutableList.Builder<Path> builder = ImmutableList.builder();
-      handlePath(pathResolver.getAbsolutePath(value), builder::add);
+      handlePath(pathResolver.getAbsolutePath(value).getPath(), builder::add);
       return builder.build();
     }
 

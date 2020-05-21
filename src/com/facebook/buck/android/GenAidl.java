@@ -135,7 +135,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             getProjectFilesystem(),
             toolchainProvider,
             target.getTargetConfiguration(),
-            context.getSourcePathResolver().getAbsolutePath(aidlFilePath),
+            context.getSourcePathResolver().getAbsolutePath(aidlFilePath).getPath(),
             ImmutableSet.of(importPath),
             outputDirectory.getPath(),
             withDownwardApi);

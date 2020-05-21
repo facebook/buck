@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -94,7 +95,7 @@ public class CxxDiagnosticAggregationRule
                 try (JsonGenerator jsonGen = ObjectMappers.createGenerator(outputStream)) {
                   jsonGen.writeStartArray();
                   for (SourcePath extractionRuleInput : inputs) {
-                    Path ruleOutputPath =
+                    AbsPath ruleOutputPath =
                         buildContext.getSourcePathResolver().getAbsolutePath(extractionRuleInput);
                     Optional<String> ruleJSON = filesystem.readFileIfItExists(ruleOutputPath);
                     if (!ruleJSON.isPresent()) {

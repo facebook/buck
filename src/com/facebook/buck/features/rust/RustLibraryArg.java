@@ -16,13 +16,13 @@
 
 package com.facebook.buck.features.rust;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -55,7 +55,7 @@ public abstract class RustLibraryArg implements Arg, HasSourcePath {
   public void appendToCommandLine(
       Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
     // Use absolute path to make sure cross-cell references work.
-    Path path = pathResolver.getAbsolutePath(getRlib());
+    AbsPath path = pathResolver.getAbsolutePath(getRlib());
     // NOTE: each of these logical args must be put on the command line as a single parameter
     // (otherwise dedup might just remove one piece of it)
     if (getDirect()) {

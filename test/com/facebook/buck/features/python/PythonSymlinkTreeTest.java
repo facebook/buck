@@ -65,6 +65,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.stream.Stream;
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.ExpectedException;
@@ -151,7 +152,12 @@ public class PythonSymlinkTreeTest {
                     projectFilesystem,
                     outputPath,
                     new SymlinkPackPaths(
-                        ImmutableList.of(new SymlinkMapsPaths(pathResolver.getMappedPaths(links)))),
+                        ImmutableList.of(
+                            new SymlinkMapsPaths(
+                                pathResolver.getMappedPaths(links).entrySet().stream()
+                                    .collect(
+                                        ImmutableMap.toImmutableMap(
+                                            Map.Entry::getKey, e -> e.getValue().getPath()))))),
                     (fs, existingTarget) -> false))
             .build();
     ImmutableList<Step> actualBuildSteps =
@@ -311,7 +317,10 @@ public class PythonSymlinkTreeTest {
     }
     assertTrue(
         Files.isSameFile(
-            pathResolver.getAbsolutePath(exportFile1.getSourcePathToOutput()).resolve("file1"),
+            pathResolver
+                .getAbsolutePath(exportFile1.getSourcePathToOutput())
+                .resolve("file1")
+                .getPath(),
             projectFilesystem.resolve(outputPath.resolve("file1"))));
   }
 

@@ -62,7 +62,8 @@ public class WriteFileHashCode extends ModernBuildRule<WriteFileHashCode> implem
           public StepExecutionResult execute(ExecutionContext context) throws IOException {
             filesystem.writeContentsToPath(
                 filesystem
-                    .computeSha1(buildContext.getSourcePathResolver().getAbsolutePath(inputPath))
+                    .computeSha1(
+                        buildContext.getSourcePathResolver().getAbsolutePath(inputPath).getPath())
                     .getHash(),
                 outputPathResolver.resolvePath(outputPath));
             return StepExecutionResults.SUCCESS;

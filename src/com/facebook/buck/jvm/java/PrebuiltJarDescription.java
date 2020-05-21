@@ -147,7 +147,7 @@ public class PrebuiltJarDescription
         steps.add(
             CopyStep.forFile(
                 getProjectFilesystem(),
-                context.getSourcePathResolver().getAbsolutePath(source),
+                context.getSourcePathResolver().getAbsolutePath(source).getPath(),
                 output.getPath()));
 
         return steps.build();

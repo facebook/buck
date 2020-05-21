@@ -21,6 +21,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -514,11 +515,11 @@ public class MiniAapt implements Step {
   void processXmlFilesForIds(
       ProjectFilesystemView filesystemView, ImmutableSet.Builder<RDotTxtEntry> references)
       throws IOException, XPathExpressionException, ResourceParseException {
-    Path absoluteResDir = resolver.getAbsolutePath(resDirectory);
+    AbsPath absoluteResDir = resolver.getAbsolutePath(resDirectory);
     Path relativeResDir = resolver.getRelativePath(resDirectory);
     for (Path path :
         filesystemView.getFilesUnderPath(
-            absoluteResDir,
+            absoluteResDir.getPath(),
             input -> input.toString().endsWith(".xml"),
             EnumSet.of(FileVisitOption.FOLLOW_LINKS))) {
       String dirname = relativeResDir.relativize(path).getName(0).toString();
