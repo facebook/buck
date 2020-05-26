@@ -110,11 +110,12 @@ def buck_module(
         visibility = ["PUBLIC"],
     )
 
-    native.filegroup(
-        name = name + "_resources",
-        srcs = module_resources,
-        visibility = ["PUBLIC"],
-    )
+    if module_resources:
+        native.filegroup(
+            name = name + "_resources",
+            srcs = module_resources,
+            visibility = ["PUBLIC"],
+        )
 
 def get_module_binary(module):
     """ Returns target for module's binary """
