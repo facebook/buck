@@ -155,6 +155,14 @@ public class ElfSectionHeader {
     SHT_REL(9),
     SHT_SHLIB(10),
     SHT_DYNSYM(11),
+    SHT_RELR(19),
+
+    // Android compressed relocations
+    SHT_ANDROID_REL(0x60000001),
+    SHT_ANDROID_RELA(0x60000002),
+
+    // Android-scoped RELR
+    SHT_ANDROID_RELR(0x6fffff00),
 
     // GNU-specific types.
     SHT_GNU_VERNEED(0x6ffffffe),
