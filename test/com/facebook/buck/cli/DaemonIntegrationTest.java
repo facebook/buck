@@ -33,12 +33,11 @@ import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.testutil.integration.EnvironmentSanitizer;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.Threads;
-import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -104,29 +103,6 @@ public class DaemonIntegrationTest {
     secondThread.get();
   }
 
-  /**
-   * Verifies that a client timeout will be detected by a Nailgun NGInputStream reading from a
-   * blocking heartbeat stream.
-   */
-  @Test(expected = InterruptedException.class)
-  public void whenClientTimeoutDetectedThenMainThreadIsInterrupted()
-      throws InterruptedException, IOException {
-    long timeoutMillis = 100;
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
-    workspace.setUp();
-
-    // Build an NGContext connected to an NGInputStream reading from a stream that will timeout.
-    Thread.currentThread().setName("Test");
-    try (TestContext context =
-        new TestContext(EnvVariablesProvider.getSystemEnv(), timeoutMillis)) {
-      Thread thread = Thread.currentThread();
-      context.addClientListener(reason -> Threads.interruptThread(thread));
-      Thread.sleep(1000);
-      fail("Should have been interrupted.");
-    }
-  }
-
   @Test
   public void whenConcurrentReadOnlyCommandExecutedThenReadOnlyCommandSucceeds()
       throws IOException, InterruptedException, ExecutionException {
@@ -165,7 +141,6 @@ public class DaemonIntegrationTest {
   private Runnable createRunnableCommand(ExitCode expectedExitCode, String... args) {
     return () -> {
       try {
-        ImmutableMap<String, String> env = EnvVariablesProvider.getSystemEnv();
         BackgroundTaskManager manager = TestBackgroundTaskManager.of();
         TestContext context = new TestContext();
         MainForTests main =
@@ -174,7 +149,7 @@ public class DaemonIntegrationTest {
                 new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
                 tmp.getRoot().getPath(),
                 tmp.getRoot().getPath().toAbsolutePath().toString(),
-                env,
+                EnvironmentSanitizer.getSanitizedEnvForTests(ImmutableMap.of()),
                 DaemonMode.DAEMON);
 
         MainRunner mainRunner =

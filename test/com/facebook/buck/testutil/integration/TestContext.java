@@ -16,31 +16,24 @@
 
 package com.facebook.buck.testutil.integration;
 
-import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.nailgun.NGClientDisconnectReason;
 import com.facebook.nailgun.NGClientListener;
 import com.facebook.nailgun.NGContext;
 import com.google.common.collect.ImmutableMap;
 import java.io.Closeable;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /** NGContext test double. */
 public class TestContext extends NGContext implements Closeable {
 
   private final Properties properties;
   private final Set<NGClientListener> listeners;
-  private Optional<ScheduledExecutorService> clientDisconnectService = Optional.empty();
 
   /** Simulates client that never disconnects, with normal system environment. */
   public TestContext() {
@@ -49,35 +42,17 @@ public class TestContext extends NGContext implements Closeable {
 
   /** Simulates client that never disconnects, with given environment. */
   public TestContext(ImmutableMap<String, String> environment) {
-    this(environment, createNoOpStream(), 0);
-  }
-
-  /** Simulates client that disconnects after timeout, with given environment. */
-  public TestContext(ImmutableMap<String, String> environment, long timeoutMillis) {
-    this(environment, createNoOpStream(), timeoutMillis);
-  }
-
-  /** Simulates client connected to given stream, with given environment and disconnect timeout */
-  public TestContext(
-      ImmutableMap<String, String> environment, InputStream clientStream, long timeoutMillis) {
 
     ImmutableMap<String, String> sanitizedEnv =
         EnvironmentSanitizer.getSanitizedEnvForTests(environment);
 
-    in = new DataInputStream(clientStream);
-    out = new CapturingPrintStream();
-    err = new CapturingPrintStream();
+    in = createNoOpInStream();
+    out = createNoOpOutStream();
     properties = new Properties();
     for (Map.Entry<String, String> entry : sanitizedEnv.entrySet()) {
       properties.setProperty(entry.getKey(), entry.getValue());
     }
     listeners = new HashSet<>();
-    if (timeoutMillis > 0) {
-      clientDisconnectService = Optional.of(Executors.newSingleThreadScheduledExecutor());
-      clientDisconnectService
-          .get()
-          .schedule(this::notifyListeners, timeoutMillis, TimeUnit.MILLISECONDS);
-    }
   }
 
   @Override
@@ -100,15 +75,11 @@ public class TestContext extends NGContext implements Closeable {
     listeners.clear();
   }
 
-  private void notifyListeners() {
-    listeners.forEach(listener -> listener.clientDisconnected(NGClientDisconnectReason.HEARTBEAT));
-  }
-
   @Override
   public void exit(int exitCode) {}
 
   /** @return an InputStream which does nothing */
-  public static InputStream createNoOpStream() {
+  public static InputStream createNoOpInStream() {
     return new InputStream() {
       @Override
       public int read() {
@@ -117,12 +88,18 @@ public class TestContext extends NGContext implements Closeable {
     };
   }
 
+  /** @return an InputStream which does nothing */
+  public static PrintStream createNoOpOutStream() {
+    return new PrintStream(
+        new OutputStream() {
+          @Override
+          public void write(int b) {}
+        });
+  }
+
   @Override
   public void close() throws IOException {
     in.close();
     out.close();
-    err.close();
-
-    clientDisconnectService.ifPresent(ExecutorService::shutdownNow);
   }
 }

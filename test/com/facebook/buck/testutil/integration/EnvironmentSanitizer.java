@@ -29,7 +29,7 @@ public class EnvironmentSanitizer {
 
   private EnvironmentSanitizer() {}
 
-  static ImmutableMap<String, String> getSanitizedEnvForTests(
+  public static ImmutableMap<String, String> getSanitizedEnvForTests(
       ImmutableMap<String, String> environmentOverrides) {
     // Construct a limited view of the parent environment for the child.
     // TODO(#5754812): we should eventually get tests working without requiring these be set.
