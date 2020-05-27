@@ -1,0 +1,20 @@
+python_library(
+    name = "pytest_srcs",
+    srcs = glob(["**/*.py"]),
+    base_module = "",
+    visibility = [
+        "//third-party/py/pytest:pytest",
+    ],
+    deps = [
+        "//third-party/py/pytest/dependencies:attrs-19.3.0",
+        "//third-party/py/pytest/dependencies:colorama-0.4.3",
+        "//third-party/py/pytest/dependencies:importlib_metadata-1.6.0",
+        "//third-party/py/pytest/dependencies:more_itertools-8.3.0",
+        "//third-party/py/pytest/dependencies:packaging-20.4",
+        "//third-party/py/pytest/dependencies:pluggy-1.8.1",
+        "//third-party/py/pytest/dependencies:py-1.8.1",
+        "//third-party/py/pytest/dependencies:pyparsing-2.4.7",
+        "//third-party/py/pytest/dependencies:wcwidth-0.1.9",
+        "//third-party/py/pytest/dependencies:zipp-3.1.0",
+    ],
+)

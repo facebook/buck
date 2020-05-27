@@ -1,0 +1,7 @@
+python_library(
+    name = "pytest",
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/py/pytest/src:pytest_srcs",
+    ],
+)

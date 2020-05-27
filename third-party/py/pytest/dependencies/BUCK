@@ -1,0 +1,59 @@
+prebuilt_python_library(
+    name = "py-1.8.1",
+    binary_src = "py-1.8.1-py2.py3-none-any.whl",
+    visibility = ["//third-party/py/pytest/..."],
+)
+
+prebuilt_python_library(
+    name = "colorama-0.4.3",
+    binary_src = "colorama-0.4.3-py2.py3-none-any.whl",
+    visibility = ["//third-party/py/pytest/..."],
+)
+
+prebuilt_python_library(
+    name = "attrs-19.3.0",
+    binary_src = "attrs-19.3.0-py2.py3-none-any.whl",
+    visibility = ["//third-party/py/pytest/..."],
+)
+
+prebuilt_python_library(
+    name = "pluggy-1.8.1",
+    binary_src = "pluggy-0.13.1-py2.py3-none-any.whl",
+    visibility = ["//third-party/py/pytest/..."],
+)
+
+prebuilt_python_library(
+    name = "importlib_metadata-1.6.0",
+    binary_src = "importlib_metadata-1.6.0-py2.py3-none-any.whl",
+    visibility = ["//third-party/py/pytest/..."],
+)
+
+prebuilt_python_library(
+    name = "zipp-3.1.0",
+    binary_src = "zipp-3.1.0-py3-none-any.whl",
+    visibility = ["//third-party/py/pytest/..."],
+)
+
+prebuilt_python_library(
+    name = "more_itertools-8.3.0",
+    binary_src = "more_itertools-8.3.0-py3-none-any.whl",
+    visibility = ["//third-party/py/pytest/..."],
+)
+
+prebuilt_python_library(
+    name = "packaging-20.4",
+    binary_src = "packaging-20.4-py2.py3-none-any.whl",
+    visibility = ["//third-party/py/pytest/..."],
+)
+
+prebuilt_python_library(
+    name = "pyparsing-2.4.7",
+    binary_src = "py-1.8.1-py2.py3-none-any.whl",
+    visibility = ["//third-party/py/pytest/..."],
+)
+
+prebuilt_python_library(
+    name = "wcwidth-0.1.9",
+    binary_src = "wcwidth-0.1.9-py2.py3-none-any.whl",
+    visibility = ["//third-party/py/pytest/..."],
+)
