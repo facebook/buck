@@ -35,17 +35,24 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.EnvironmentSanitizer;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.nailgun.NGClientListener;
+import com.facebook.nailgun.NGContext;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.ByteArrayInputStream;
+import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -141,6 +148,7 @@ public class DaemonIntegrationTest {
   private Runnable createRunnableCommand(ExitCode expectedExitCode, String... args) {
     return () -> {
       try {
+        // TODO we should get rid of this and just use the ProjectWorkspace or use EndToEndTest
         BackgroundTaskManager manager = TestBackgroundTaskManager.of();
         TestContext context = new TestContext();
         MainForTests main =
@@ -465,5 +473,67 @@ public class DaemonIntegrationTest {
     primary.runBuckCommand("build", ":rule").assertSuccess();
     Files.write(secondary.getPath("included_by_primary.py"), new byte[] {});
     primary.runBuckCommand("build", ":rule").assertExitCode(null, ExitCode.PARSE_ERROR);
+  }
+
+  /** NGContext test double. */
+  private static class TestContext extends NGContext implements Closeable {
+
+    private final Properties properties;
+    private final Set<NGClientListener> listeners;
+
+    /** Simulates client that never disconnects, with normal system environment. */
+    public TestContext() {
+      this(ImmutableMap.of());
+    }
+
+    /** Simulates client that never disconnects, with given environment. */
+    public TestContext(ImmutableMap<String, String> environment) {
+
+      ImmutableMap<String, String> sanitizedEnv =
+          EnvironmentSanitizer.getSanitizedEnvForTests(environment);
+
+      properties = new Properties();
+      for (Map.Entry<String, String> entry : sanitizedEnv.entrySet()) {
+        properties.setProperty(entry.getKey(), entry.getValue());
+      }
+      listeners = new HashSet<>();
+      in =
+          new InputStream() {
+            @Override
+            public int read() {
+              return -1;
+            }
+          };
+    }
+
+    @Override
+    public Properties getEnv() {
+      return properties;
+    }
+
+    @Override
+    public void addClientListener(NGClientListener listener) {
+      listeners.add(listener);
+    }
+
+    @Override
+    public void removeClientListener(NGClientListener listener) {
+      listeners.remove(listener);
+    }
+
+    @Override
+    public void removeAllClientListeners() {
+      listeners.clear();
+    }
+
+    @Override
+    public void exit(int exitCode) {}
+
+    @Override
+    public void close() throws IOException {
+      in.close();
+      out.close();
+      err.close();
+    }
   }
 }
