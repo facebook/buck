@@ -70,6 +70,7 @@ class TestStatus(object):
     EXPECTED_FAILURE = "SUCCESS"
     UNEXPECTED_SUCCESS = "FAILURE"
     SKIPPED = "ASSUMPTION_VIOLATION"
+    EXCLUDED = "EXCLUDED"
 
 
 class PathMatcher(object):
