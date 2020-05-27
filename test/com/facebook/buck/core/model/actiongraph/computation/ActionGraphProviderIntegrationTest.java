@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.cli.TestWithBuckd;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.trace.ChromeTraceParser;
 import com.google.common.collect.ImmutableSet;
@@ -57,58 +56,47 @@ public class ActionGraphProviderIntegrationTest {
   @Test
   public void specifyingSkipActionGraphCacheDoesNotInvalidateTheActionGraphCache()
       throws IOException {
-    try (TestContext context = new TestContext()) {
-      workspace
-          .runBuckCommand(context, "build", "//:pretend_this_is_an_expensive_rule")
-          .assertSuccess();
-      assertEquals(
-          "Should be a fresh daemon, so the ActionGraph cache should be empty.",
-          ActionGraphCacheStatus.MISS_CACHE_EMPTY,
-          getActionGraphCacheStatus());
+    workspace.runBuckCommand("build", "//:pretend_this_is_an_expensive_rule").assertSuccess();
+    assertEquals(
+        "Should be a fresh daemon, so the ActionGraph cache should be empty.",
+        ActionGraphCacheStatus.MISS_CACHE_EMPTY,
+        getActionGraphCacheStatus());
 
-      workspace
-          .runBuckCommand(context, "build", "//:pretend_this_is_an_expensive_rule")
-          .assertSuccess();
-      assertEquals(
-          "Rebuilding the rule should hit the cache.",
-          ActionGraphCacheStatus.HIT,
-          getActionGraphCacheStatus());
+    workspace.runBuckCommand("build", "//:pretend_this_is_an_expensive_rule").assertSuccess();
+    assertEquals(
+        "Rebuilding the rule should hit the cache.",
+        ActionGraphCacheStatus.HIT,
+        getActionGraphCacheStatus());
 
-      workspace.runBuckCommand(context, "build", "//:pretend_this_is_a_cheap_rule").assertSuccess();
-      assertEquals(
-          "Building a different rule as a non-oneoff should invalidate the cache.",
-          ActionGraphCacheStatus.MISS_TARGET_GRAPH_MISMATCH,
-          getActionGraphCacheStatus());
+    workspace.runBuckCommand("build", "//:pretend_this_is_a_cheap_rule").assertSuccess();
+    assertEquals(
+        "Building a different rule as a non-oneoff should invalidate the cache.",
+        ActionGraphCacheStatus.MISS_TARGET_GRAPH_MISMATCH,
+        getActionGraphCacheStatus());
 
-      workspace
-          .runBuckCommand(context, "build", "//:pretend_this_is_an_expensive_rule")
-          .assertSuccess();
-      assertEquals(
-          "Building a different rule as a non-oneoff should invalidate the cache again.",
-          ActionGraphCacheStatus.MISS_TARGET_GRAPH_MISMATCH,
-          getActionGraphCacheStatus());
+    workspace.runBuckCommand("build", "//:pretend_this_is_an_expensive_rule").assertSuccess();
+    assertEquals(
+        "Building a different rule as a non-oneoff should invalidate the cache again.",
+        ActionGraphCacheStatus.MISS_TARGET_GRAPH_MISMATCH,
+        getActionGraphCacheStatus());
 
-      workspace
-          .runBuckCommand(
-              context,
-              "build",
-              "--config",
-              "client.skip-action-graph-cache=true",
-              "//:pretend_this_is_a_cheap_rule")
-          .assertSuccess();
-      assertEquals(
-          "Building a different rule as a oneoff will still be a mismatch.",
-          ActionGraphCacheStatus.MISS_TARGET_GRAPH_MISMATCH,
-          getActionGraphCacheStatus());
+    workspace
+        .runBuckCommand(
+            "build",
+            "--config",
+            "client.skip-action-graph-cache=true",
+            "//:pretend_this_is_a_cheap_rule")
+        .assertSuccess();
+    assertEquals(
+        "Building a different rule as a oneoff will still be a mismatch.",
+        ActionGraphCacheStatus.MISS_TARGET_GRAPH_MISMATCH,
+        getActionGraphCacheStatus());
 
-      workspace
-          .runBuckCommand(context, "build", "//:pretend_this_is_an_expensive_rule")
-          .assertSuccess();
-      assertEquals(
-          "The ActionGraph for the expensive rule should still be in cache.",
-          ActionGraphCacheStatus.HIT,
-          getActionGraphCacheStatus());
-    }
+    workspace.runBuckCommand("build", "//:pretend_this_is_an_expensive_rule").assertSuccess();
+    assertEquals(
+        "The ActionGraph for the expensive rule should still be in cache.",
+        ActionGraphCacheStatus.HIT,
+        getActionGraphCacheStatus());
   }
 
   @SuppressWarnings("unchecked")

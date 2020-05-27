@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.BinaryPropertyListParser;
 import com.dd.plist.NSDictionary;
@@ -83,11 +82,9 @@ import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.trace.ChromeTraceParser;
 import com.facebook.buck.util.trace.ChromeTraceParser.ChromeTraceEventMatcher;
-import com.facebook.nailgun.NGContext;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
@@ -479,25 +476,6 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
   public ProcessResult runBuckCommand(Path repoRoot, String... args) {
     return runBuckCommandWithEnvironmentOverrides(repoRoot, ImmutableMap.of(), args);
-  }
-
-  public ProcessResult runBuckCommand(NGContext context, String... args) {
-    return runBuckCommandWithContext(destPath, context, args);
-  }
-
-  public ProcessResult runBuckCommand(Path repoRoot, NGContext context, String... args) {
-    assumeTrue(
-        "watchman must exist to run buckd",
-        new ExecutableFinder(Platform.detect())
-            .getOptionalExecutable(Paths.get("watchman"), EnvVariablesProvider.getSystemEnv())
-            .isPresent());
-
-    return runBuckCommandWithContext(repoRoot, context, args);
-  }
-
-  public ProcessResult runBuckCommandWithContext(Path repoRoot, NGContext context, String... args) {
-    return runBuckCommandWithEnvironmentOverrides(
-        repoRoot, ImmutableMap.<String, String>copyOf((Map) context.getEnv()), args);
   }
 
   public ProcessResult runBuckCommandWithEnvironmentOverrides(
