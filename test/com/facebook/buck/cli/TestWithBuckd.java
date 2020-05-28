@@ -52,7 +52,7 @@ public class TestWithBuckd extends ExternalResource {
     // Create an empty watchman config file.
     Files.write(
         temporaryPaths.newFile(".watchmanconfig").getPath(),
-        "{}\n".getBytes(StandardCharsets.UTF_8));
+        "{\"ignore_dirs\":[\"buck-out\",\".buckd\"]}".getBytes(StandardCharsets.UTF_8));
     WatchmanFactory watchmanFactory = new WatchmanFactory();
     Watchman watchman =
         watchmanFactory.build(
