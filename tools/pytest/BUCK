@@ -1,0 +1,8 @@
+python_library(
+    name = "pytest_runner",
+    srcs = ["pytest_runner.py"],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/py/pytest:pytest",
+    ],
+)
