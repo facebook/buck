@@ -496,7 +496,7 @@ public class ConfiguredQueryCommandIntegrationTest {
             "//bin:ios-bin",
             "--output-attribute",
             "buck.type");
-    assertOutputMatchesExactly("{}", result);
+    assertOutputMatchesExactly("{ }\n", result);
   }
 
   @Test
