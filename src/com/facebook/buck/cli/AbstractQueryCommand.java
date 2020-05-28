@@ -17,10 +17,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.query.EvaluatingQueryEnvironment;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryNormalizer;
-import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
@@ -55,7 +55,9 @@ import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.FileOptionHandler;
 
 /** Provides base functionality for query commands. */
-public abstract class AbstractQueryCommand extends AbstractCommand {
+public abstract class AbstractQueryCommand<
+        NODE_TYPE, ENV_TYPE extends EvaluatingQueryEnvironment<NODE_TYPE>>
+    extends AbstractCommand {
   private static final Logger LOG = Logger.get(AbstractQueryCommand.class);
 
   /** Enum with values for `--output-format` CLI parameter */
@@ -135,21 +137,18 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   }
 
   protected abstract void printSingleQueryOutput(
-      CommandRunnerParams params,
-      ConfiguredQueryEnvironment env,
-      Set<QueryTarget> queryResult,
-      PrintStream printStream)
+      CommandRunnerParams params, ENV_TYPE env, Set<NODE_TYPE> queryResult, PrintStream printStream)
       throws QueryException, IOException;
 
   protected abstract void printMultipleQueryOutput(
       CommandRunnerParams params,
-      ConfiguredQueryEnvironment env,
-      Multimap<String, QueryTarget> queryResultMap,
+      ENV_TYPE env,
+      Multimap<String, NODE_TYPE> queryResultMap,
       PrintStream printStream)
       throws QueryException, IOException;
 
   @VisibleForTesting
-  void formatAndRunQuery(CommandRunnerParams params, ConfiguredQueryEnvironment env)
+  void formatAndRunQuery(CommandRunnerParams params, ENV_TYPE env)
       throws IOException, InterruptedException, QueryException {
 
     String queryFormat = arguments.get(0);
@@ -178,7 +177,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
    */
   void runMultipleQuery(
       CommandRunnerParams params,
-      ConfiguredQueryEnvironment env,
+      ENV_TYPE env,
       String queryFormat,
       List<String> inputsFormattedAsBuildTargets)
       throws IOException, InterruptedException, QueryException {
@@ -195,7 +194,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     Set<String> targetLiterals = new LinkedHashSet<>();
     for (String input : inputsFormattedAsBuildTargets) {
       String query = queryFormat.replace("%s", input);
-      QueryExpression<QueryTarget> expr = QueryExpression.parse(query, env.getQueryParserEnv());
+      QueryExpression<NODE_TYPE> expr = QueryExpression.parse(query, env.getQueryParserEnv());
       expr.collectTargetPatterns(targetLiterals);
     }
     env.preloadTargetPatterns(targetLiterals);
@@ -203,10 +202,10 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     LOG.debug("Finished preloading target patterns. Executing queries.");
 
     // Now execute the query on the arguments one-by-one.
-    LinkedHashMultimap<String, QueryTarget> queryResultMap = LinkedHashMultimap.create();
+    LinkedHashMultimap<String, NODE_TYPE> queryResultMap = LinkedHashMultimap.create();
     for (String input : inputsFormattedAsBuildTargets) {
       String query = queryFormat.replace("%s", input);
-      Set<QueryTarget> queryResult = env.evaluateQuery(query);
+      Set<NODE_TYPE> queryResult = env.evaluateQuery(query);
       queryResultMap.putAll(input, queryResult);
     }
 
@@ -218,12 +217,11 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     }
   }
 
-  private void runSingleQuery(
-      CommandRunnerParams params, ConfiguredQueryEnvironment env, String query)
+  private void runSingleQuery(CommandRunnerParams params, ENV_TYPE env, String query)
       throws IOException, InterruptedException, QueryException {
     LOG.debug("Evaluating single query");
 
-    Set<QueryTarget> queryResult = env.evaluateQuery(query);
+    Set<NODE_TYPE> queryResult = env.evaluateQuery(query);
 
     LOG.debug("Printing out %d targets", queryResult.size());
 

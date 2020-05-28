@@ -72,7 +72,7 @@ import org.kohsuke.args4j.Option;
  * the long run users who want to query the configured target graph should use `buck cquery`, though
  * at time of writing that command isn't production ready.
  */
-public class QueryCommand extends AbstractQueryCommand {
+public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQueryEnvironment> {
 
   private PerBuildState perBuildState;
 

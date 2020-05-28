@@ -61,7 +61,8 @@ import java.util.function.Supplier;
 import org.kohsuke.args4j.Option;
 
 /** Buck subcommand which facilitates querying information about the configured target graph. */
-public class ConfiguredQueryCommand extends AbstractQueryCommand {
+public class ConfiguredQueryCommand
+    extends AbstractQueryCommand<QueryTarget, ConfiguredQueryEnvironment> {
 
   private PerBuildState perBuildState;
   private TargetUniverse targetUniverse;
