@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -87,6 +88,7 @@ class SchemeGenerator {
   private final XCScheme.LaunchAction.LaunchStyle launchStyle;
   private final Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>>
       environmentVariables;
+  private final Optional<ImmutableMap<SchemeActionType, PBXTarget>> expandVariablesBasedOn;
   private Optional<
           ImmutableMap<
               SchemeActionType, ImmutableMap<XCScheme.AdditionalActions, ImmutableList<String>>>>
@@ -107,6 +109,7 @@ class SchemeGenerator {
       ImmutableMap<SchemeActionType, String> actionConfigNames,
       ImmutableMap<PBXTarget, Path> targetToProjectPathMap,
       Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>> environmentVariables,
+      Optional<ImmutableMap<SchemeActionType, PBXTarget>> expandVariablesBasedOn,
       Optional<
               ImmutableMap<
                   SchemeActionType,
@@ -131,6 +134,7 @@ class SchemeGenerator {
     this.actionConfigNames = actionConfigNames;
     this.targetToProjectPathMap = targetToProjectPathMap;
     this.environmentVariables = environmentVariables;
+    this.expandVariablesBasedOn = expandVariablesBasedOn;
     this.additionalSchemeActions = additionalSchemeActions;
     this.notificationPayloadFile = notificationPayloadFile;
 
@@ -236,14 +240,20 @@ class SchemeGenerator {
     }
 
     ImmutableMap<SchemeActionType, ImmutableMap<String, String>> envVariables = ImmutableMap.of();
+    Map<SchemeActionType, XCScheme.BuildableReference> envVariablesBasedOn = ImmutableMap.of();
     if (environmentVariables.isPresent()) {
       envVariables = environmentVariables.get();
+      if (expandVariablesBasedOn.isPresent()) {
+        envVariablesBasedOn = expandVariablesBasedOn.get().entrySet().stream()
+          .collect(Collectors.toMap(Map.Entry::getKey, e -> buildTargetToBuildableReferenceMap.get(e.getValue())));
+      }
     }
 
     XCScheme.TestAction testAction =
         new XCScheme.TestAction(
             Objects.requireNonNull(actionConfigNames.get(SchemeActionType.TEST)),
             Optional.ofNullable(envVariables.get(SchemeActionType.TEST)),
+            Optional.ofNullable(envVariablesBasedOn.get(SchemeActionType.TEST)),
             additionalCommandsForSchemeAction(
                 SchemeActionType.TEST, AdditionalActions.PRE_SCHEME_ACTIONS, primaryBuildReference),
             additionalCommandsForSchemeAction(
@@ -276,6 +286,7 @@ class SchemeGenerator {
                     watchInterface,
                     launchStyle,
                     Optional.ofNullable(envVariables.get(SchemeActionType.LAUNCH)),
+                    Optional.ofNullable(envVariablesBasedOn.get(SchemeActionType.LAUNCH)),
                     additionalCommandsForSchemeAction(
                         SchemeActionType.LAUNCH,
                         AdditionalActions.PRE_SCHEME_ACTIONS,
@@ -292,6 +303,7 @@ class SchemeGenerator {
                     primaryBuildableReference,
                     Objects.requireNonNull(actionConfigNames.get(SchemeActionType.PROFILE)),
                     Optional.ofNullable(envVariables.get(SchemeActionType.PROFILE)),
+                    Optional.ofNullable(envVariablesBasedOn.get(SchemeActionType.PROFILE)),
                     additionalCommandsForSchemeAction(
                         SchemeActionType.PROFILE,
                         AdditionalActions.PRE_SCHEME_ACTIONS,
@@ -387,6 +399,14 @@ class SchemeGenerator {
     return rootElement;
   }
 
+  public static Element serializeExpandVariablesBasedOn(
+    Document doc, XCScheme.BuildableReference reference) {
+    Element referenceElement = serializeBuildableReference(doc, reference);
+    Element rootElement = doc.createElement("MacroExpansion");
+    rootElement.appendChild(referenceElement);
+    return rootElement;
+  }
+
   public static Element serializeBuildAction(Document doc, XCScheme.BuildAction buildAction) {
     Element buildActionElem = doc.createElement("BuildAction");
     serializePrePostActions(doc, buildAction, buildActionElem);
@@ -442,6 +462,12 @@ class SchemeGenerator {
     }
 
     if (testAction.getEnvironmentVariables().isPresent()) {
+      if (testAction.getExpandVariablesBasedOn().isPresent()) {
+        Element expandBasedOnElement =
+          serializeExpandVariablesBasedOn(doc, testAction.getExpandVariablesBasedOn().get());
+        testActionElem.appendChild(expandBasedOnElement);
+      }
+
       // disable the default override that makes Test use Launch's environment variables
       testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
       Element environmentVariablesElement =
@@ -514,6 +540,12 @@ class SchemeGenerator {
         "launchStyle", launchStyle == XCScheme.LaunchAction.LaunchStyle.AUTO ? "0" : "1");
 
     if (launchAction.getEnvironmentVariables().isPresent()) {
+      if (launchAction.getExpandVariablesBasedOn().isPresent()) {
+        Element expandBasedOnElement =
+          serializeExpandVariablesBasedOn(doc, launchAction.getExpandVariablesBasedOn().get());
+        launchActionElem.appendChild(expandBasedOnElement);
+      }
+
       Element environmentVariablesElement =
           serializeEnvironmentVariables(doc, launchAction.getEnvironmentVariables().get());
       launchActionElem.appendChild(environmentVariablesElement);
@@ -536,6 +568,12 @@ class SchemeGenerator {
     productRunnableElem.appendChild(refElem);
 
     if (profileAction.getEnvironmentVariables().isPresent()) {
+      if (profileAction.getExpandVariablesBasedOn().isPresent()) {
+        Element expandBasedOnElement =
+          serializeExpandVariablesBasedOn(doc, profileAction.getExpandVariablesBasedOn().get());
+        profileActionElem.appendChild(expandBasedOnElement);
+      }
+
       // disable the default override that makes Profile use Launch's environment variables
       profileActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
       Element environmentVariablesElement =

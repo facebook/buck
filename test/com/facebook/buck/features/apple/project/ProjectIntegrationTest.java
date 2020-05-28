@@ -627,6 +627,19 @@ public class ProjectIntegrationTest {
     workspace.verify();
   }
 
+  @Test
+  public void testBuckProjectGeneratedSchemeWithEnvVariablesAndExpandSetting() throws IOException {
+    ProjectWorkspace workspace =
+      TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_generated_scheme_with_env_variables_and_expand_setting", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project", "//Apps:workspace");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
+
   private void runXcodebuild(ProjectWorkspace workspace, String workspacePath, String schemeName)
       throws IOException, InterruptedException {
     ProcessExecutor.Result processResult =

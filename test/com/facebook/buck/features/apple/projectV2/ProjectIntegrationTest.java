@@ -515,6 +515,21 @@ public class ProjectIntegrationTest {
   //    workspace.verify();
   //  }
 
+  @Test
+  public void testBuckProjectGeneratedSchemeWithEnvVariablesAndExpandSetting()
+      throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+      createWorkspace(this, "project_generated_scheme_with_env_variables_and_expand_setting");
+
+    ProcessResult result = workspace.runBuckCommand("project", "//Apps:workspace");
+    result.assertSuccess();
+
+    runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
+  }
+
   private void runXcodebuild(ProjectWorkspace workspace, String workspacePath, String schemeName)
       throws IOException, InterruptedException {
     ProcessExecutor.Result processResult =
