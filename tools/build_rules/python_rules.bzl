@@ -28,3 +28,34 @@ def interpreter_override_args():
         return ["--python-shebang", "/usr/bin/env " + val]
     else:
         return []
+
+def pytest_test(name, srcs = (), deps = (), main_module = "tools.pytest.pytest_runner", package_style = "inplace", **kwargs):
+    """A pytest test"""
+
+    if native.host_info().os.is_windows:
+        return
+
+    # pytest discovery requires specific file names (https://fburl.com/65on3lox)
+    # Tests will be ignored if file names do not match these
+    for src in srcs:
+        final_path = src.split("/")[-1].strip()
+
+        # src is a file
+        if not (final_path.startswith("test_") or final_path.endswith("_test.py")):
+            fail("src files must be named `test_*.py` or `*_test.py` for pytest: {}".format(src))
+
+    deps = ["//tools/pytest:pytest_runner"]
+    deps.extend(deps)
+
+    if package_style != "inplace":
+        # pytest execution requires the original source files and doesn't work with zip imports
+        fail("package_style is not allowed to be configured for pytests")
+
+    native.python_test(
+        name = name,
+        srcs = srcs,
+        deps = deps,
+        main_module = main_module,
+        package_style = package_style,
+        **kwargs
+    )

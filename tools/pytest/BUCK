@@ -1,3 +1,5 @@
+load("//tools/build_rules:python_rules.bzl", "pytest_test")
+
 python_library(
     name = "pytest_runner",
     srcs = ["pytest_runner.py"],
@@ -5,4 +7,10 @@ python_library(
     deps = [
         "//third-party/py/pytest:pytest",
     ],
+)
+
+# this runs some pytest with the above pytest_runner as verification of the runner and the pytest macros
+pytest_test(
+    name = "pytest",
+    srcs = glob(["*_test.py"]),
 )
