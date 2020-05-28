@@ -10,6 +10,7 @@ java_library(
     exported_deps = [
         "//src/com/facebook/buck/core/artifact:artifact",
         "//src/com/facebook/buck/core/rules/actions:actions",
+        "//src/com/facebook/buck/downwardapi/processexecutor:processexecutor",
         "//src/com/facebook/buck/step:step",
     ],
 )

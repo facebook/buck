@@ -47,6 +47,9 @@ import java.nio.file.Path;
  * exercising that logic, rather than boilerplate
  */
 public class TestActionExecutionRunner {
+
+  private static final boolean WITH_DOWNWARD_API = false;
+
   private final ProjectFilesystem projectFilesystem;
   private final ActionRegistryForTests actionFactory;
   private final ProjectFilesystemFactory projectFilesystemFactory;
@@ -85,7 +88,8 @@ public class TestActionExecutionRunner {
       throws ActionCreationException, IOException {
 
     ActionExecutionStep step =
-        new ActionExecutionStep(action, new ArtifactFilesystem(projectFilesystem));
+        new ActionExecutionStep(
+            action, new ArtifactFilesystem(projectFilesystem), WITH_DOWNWARD_API);
     BuckEventBus testEventBus = BuckEventBusForTests.newInstance();
     BuckEventBusForTests.CapturingConsoleEventListener consoleEventListener =
         new BuckEventBusForTests.CapturingConsoleEventListener();

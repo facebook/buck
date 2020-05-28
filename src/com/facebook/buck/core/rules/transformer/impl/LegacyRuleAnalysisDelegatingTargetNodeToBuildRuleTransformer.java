@@ -56,11 +56,15 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
 
   protected final RuleAnalysisGraph ruleAnalysisComputation;
   protected final TargetNodeToBuildRuleTransformer delegate;
+  private final boolean withDownwardApi;
 
   public LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer(
-      RuleAnalysisGraph ruleAnalysisComputation, TargetNodeToBuildRuleTransformer delegate) {
+      RuleAnalysisGraph ruleAnalysisComputation,
+      TargetNodeToBuildRuleTransformer delegate,
+      boolean withDownwardApi) {
     this.ruleAnalysisComputation = ruleAnalysisComputation;
     this.delegate = delegate;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -103,7 +107,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
                       correspondingAction,
                       graphBuilder,
                       targetNode.getFilesystem(),
-                      providerInfos))
+                      providerInfos,
+                      withDownwardApi))
           .orElseGet(
               () ->
                   providerInfos
@@ -116,7 +121,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
                                   correspondingAction,
                                   graphBuilder,
                                   targetNode.getFilesystem(),
-                                  providerInfos))
+                                  providerInfos,
+                                  withDownwardApi))
                       .orElseGet(
                           () ->
                               new RuleAnalysisLegacyBuildRuleView(
@@ -125,7 +131,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
                                   correspondingAction,
                                   graphBuilder,
                                   targetNode.getFilesystem(),
-                                  providerInfos)));
+                                  providerInfos,
+                                  withDownwardApi)));
     }
 
     return delegate.transform(

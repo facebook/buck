@@ -21,9 +21,12 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.ProcessExecutor;
 import java.io.IOException;
 
 /**
@@ -34,20 +37,30 @@ import java.io.IOException;
 public class ActionExecutionStep implements Step {
   private final Action action;
   private final ArtifactFilesystem artifactFilesystem;
+  private final boolean withDownwardApi;
 
-  public ActionExecutionStep(Action action, ArtifactFilesystem artifactFilesystem) {
+  public ActionExecutionStep(
+      Action action, ArtifactFilesystem artifactFilesystem, boolean withDownwardApi) {
     this.action = action;
     this.artifactFilesystem = artifactFilesystem;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
 
+    BuckEventBus buckEventBus = context.getBuckEventBus();
+    ProcessExecutor processExecutor = context.getProcessExecutor();
+    if (withDownwardApi) {
+      processExecutor =
+          processExecutor.withDownwardAPI(DownwardApiProcessExecutor.FACTORY, buckEventBus);
+    }
+
     ActionExecutionContext executionContext =
         ActionExecutionContext.of(
-            context.getBuckEventBus(),
+            buckEventBus,
             artifactFilesystem,
-            context.getProcessExecutor(),
+            processExecutor,
             context.getEnvironment(),
             context.getBuildCellRootPath());
 

@@ -67,6 +67,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
   private BuildRuleResolver ruleResolver;
   private final ProviderInfoCollection providerInfoCollection;
   private final Supplier<ImmutableSet<OutputLabel>> outputLabels;
+  private final boolean withDownwardApi;
 
   /**
    * @param type the type of this {@link BuildRule}
@@ -75,6 +76,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
    * @param ruleResolver the current {@link BuildRuleResolver} to query dependent rules
    * @param projectFilesystem the filesystem
    * @param providerInfoCollection the providers returned by this build target
+   * @param withDownwardApi whether downward API is enabled for Rule Analysis
    */
   public RuleAnalysisLegacyBuildRuleView(
       String type,
@@ -82,12 +84,14 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
       Optional<Action> action, // TODO change this to iterable once we allow multiple outputs
       BuildRuleResolver ruleResolver,
       ProjectFilesystem projectFilesystem,
-      ProviderInfoCollection providerInfoCollection) {
+      ProviderInfoCollection providerInfoCollection,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.type = type;
     this.action = action;
     this.ruleResolver = ruleResolver;
     this.providerInfoCollection = providerInfoCollection;
+    this.withDownwardApi = withDownwardApi;
     this.buildDepsSupplier = MoreSuppliers.memoize(this::getBuildDepsSupplier);
     this.outputLabels = MoreSuppliers.memoize(this::getOutputLabelsSupplier);
   }
@@ -133,7 +137,8 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
               .getResolvedPath());
     }
     return ImmutableList.of(
-        new ActionExecutionStep(action.get(), new ArtifactFilesystem(getProjectFilesystem())));
+        new ActionExecutionStep(
+            action.get(), new ArtifactFilesystem(getProjectFilesystem()), withDownwardApi));
   }
 
   @Nullable

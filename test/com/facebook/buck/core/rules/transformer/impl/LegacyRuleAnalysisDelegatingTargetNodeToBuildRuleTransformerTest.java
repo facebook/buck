@@ -84,6 +84,8 @@ import org.junit.Test;
 
 public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
 
+  private static final boolean WITH_DOWNWARD_API = false;
+
   private final ProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
 
   private static class FakeRuleRuleDescription<T extends BuildRuleArg>
@@ -160,7 +162,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
 
     LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer transformer =
         new LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer(
-            ruleAnalysisComputation, delegate);
+            ruleAnalysisComputation, delegate, WITH_DOWNWARD_API);
 
     assertSame(
         rule,
@@ -265,7 +267,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
 
     LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer transformer =
         new LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer(
-            ruleAnalysisComputation, delegate);
+            ruleAnalysisComputation, delegate, WITH_DOWNWARD_API);
     BuildRule rule =
         transformer.transform(
             toolchainProvider,
@@ -355,7 +357,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
 
     LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer transformer =
         new LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer(
-            ruleAnalysisComputation, delegate);
+            ruleAnalysisComputation, delegate, WITH_DOWNWARD_API);
     BuildRule rule =
         transformer.transform(
             toolchainProvider,
@@ -455,7 +457,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
 
     LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer transformer =
         new LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer(
-            ruleAnalysisComputation, delegate2);
+            ruleAnalysisComputation, delegate2, WITH_DOWNWARD_API);
     BuildRule fakeRule =
         transformer.transform(
             toolchainProvider,

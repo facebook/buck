@@ -68,6 +68,7 @@ public class RuleAnalysisLegacyTestBuildRuleView extends RuleAnalysisLegacyBinar
    * @param ruleResolver the current {@link BuildRuleResolver} to query dependent rules
    * @param projectFilesystem the filesystem
    * @param providerInfoCollection the providers returned by this build target
+   * @param withDownwardApi whether downward API is enabled for Rule Analysis
    * @throws IllegalStateException if {@code providerInfoCollection} does not contain an instance of
    *     both {@link RunInfo} and {@link TestInfo}
    */
@@ -77,8 +78,16 @@ public class RuleAnalysisLegacyTestBuildRuleView extends RuleAnalysisLegacyBinar
       Optional<Action> action,
       BuildRuleResolver ruleResolver,
       ProjectFilesystem projectFilesystem,
-      ProviderInfoCollection providerInfoCollection) {
-    super(type, buildTarget, action, ruleResolver, projectFilesystem, providerInfoCollection);
+      ProviderInfoCollection providerInfoCollection,
+      boolean withDownwardApi) {
+    super(
+        type,
+        buildTarget,
+        action,
+        ruleResolver,
+        projectFilesystem,
+        providerInfoCollection,
+        withDownwardApi);
     this.runInfo =
         providerInfoCollection
             .get(RunInfo.PROVIDER)

@@ -21,10 +21,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.TestCellBuilder;
-import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
@@ -71,8 +69,9 @@ import org.junit.Test;
 
 public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
 
+  private static final boolean WITH_DOWNWARD_API = false;
+
   private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-  private final CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
   private final CellProvider cellProvider = new TestCellBuilder().build().getCellProvider();
   private final BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
 
@@ -99,7 +98,8 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
                   fail("should not call RuleAnalysisComputation");
                   return FakeRuleAnalysisResultImpl.of(
                       target, TestProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
-                }));
+                }),
+            WITH_DOWNWARD_API);
 
     assertSame(expectedRule, builder.requireRule(target));
     assertTrue(delegateCalled.get());
@@ -191,7 +191,8 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
                       target,
                       TestProviderInfoCollectionImpl.builder().build(),
                       ImmutableMap.of(actionAnalysisData.getKey().getID(), actionAnalysisData));
-                }));
+                }),
+            WITH_DOWNWARD_API);
 
     BuildRule rule = builder.requireRule(target);
     assertTrue(delegateActionGraphBuilderCalled.get());
@@ -223,7 +224,8 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
                 key -> {
                   delegateRuleAnalysisComputationCalled.set(true);
                   return ruleAnalysisResult;
-                }));
+                }),
+            WITH_DOWNWARD_API);
 
     assertSame(ruleAnalysisResult, builder.get(RuleAnalysisKey.of(target)));
     assertTrue(delegateRuleAnalysisComputationCalled.get());

@@ -133,4 +133,9 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
   public boolean isEnabledForTests() {
     return getDelegate().getBooleanValue(SECTION, "tests_enabled", false);
   }
+
+  @Value.Lazy
+  public boolean isEnabledForRuleAnalysis() {
+    return getDelegate().getBooleanValue(SECTION, "rule_analysis_enabled", false);
+  }
 }

@@ -61,6 +61,9 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class ActionExecutionStepTest {
+
+  private static final boolean WITH_DOWNWARD_API = false;
+
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
@@ -97,7 +100,8 @@ public class ActionExecutionStepTest {
             actionFunction);
 
     ActionExecutionStep step =
-        new ActionExecutionStep(action, new ArtifactFilesystem(projectFilesystem));
+        new ActionExecutionStep(
+            action, new ArtifactFilesystem(projectFilesystem), WITH_DOWNWARD_API);
     BuckEventBus testEventBus = BuckEventBusForTests.newInstance();
     BuckEventBusForTests.CapturingConsoleEventListener consoleEventListener =
         new CapturingConsoleEventListener();
@@ -140,7 +144,8 @@ public class ActionExecutionStepTest {
             (srcs, inputs, outputs, ctx) -> result);
 
     ActionExecutionStep step =
-        new ActionExecutionStep(action, new ArtifactFilesystem(projectFilesystem));
+        new ActionExecutionStep(
+            action, new ArtifactFilesystem(projectFilesystem), WITH_DOWNWARD_API);
 
     RelPath packagePath = BuildPaths.getGenDir(projectFilesystem, buildTarget);
 
@@ -179,7 +184,8 @@ public class ActionExecutionStepTest {
             (srcs, inputs, outputs, ctx) -> result);
 
     ActionExecutionStep step =
-        new ActionExecutionStep(action, new ArtifactFilesystem(projectFilesystem));
+        new ActionExecutionStep(
+            action, new ArtifactFilesystem(projectFilesystem), WITH_DOWNWARD_API);
 
     Path expectedPath = BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve(output);
 

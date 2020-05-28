@@ -88,6 +88,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class RuleAnalysisLegacyBuildRuleViewTest {
+
+  private static final boolean WITH_DOWNWARD_API = false;
+
   @Rule public final ExpectedException exception = ExpectedException.none();
 
   private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -407,7 +410,8 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
         action,
         actionGraphBuilder,
         projectFilesystem,
-        providerInfoCollection);
+        providerInfoCollection,
+        WITH_DOWNWARD_API);
   }
 
   /** Helper for holding inputs required to create {@link Action} instances for tests. */

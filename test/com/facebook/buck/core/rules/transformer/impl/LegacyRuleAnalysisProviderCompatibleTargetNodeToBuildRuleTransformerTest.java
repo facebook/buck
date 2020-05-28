@@ -84,6 +84,8 @@ import org.junit.Test;
 
 public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransformerTest {
 
+  private static final boolean WITH_DOWNWARD_API = false;
+
   private final ProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
 
   @Test
@@ -132,7 +134,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
 
     LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransformer transformer =
         new LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransformer(
-            ruleAnalysisComputation, delegate);
+            ruleAnalysisComputation, delegate, WITH_DOWNWARD_API);
 
     assertSame(
         rule,
@@ -237,7 +239,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
 
     LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer transformer =
         new LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer(
-            ruleAnalysisComputation, delegate);
+            ruleAnalysisComputation, delegate, WITH_DOWNWARD_API);
     BuildRule rule =
         transformer.transform(
             toolchainProvider,

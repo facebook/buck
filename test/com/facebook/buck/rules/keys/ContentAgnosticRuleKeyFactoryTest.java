@@ -49,6 +49,8 @@ import org.junit.Test;
 
 public class ContentAgnosticRuleKeyFactoryTest {
 
+  private static final boolean WITH_DOWNWARD_API = false;
+
   @Test
   public void ruleKeyDoesNotChangeWhenFileContentsChange() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -149,7 +151,8 @@ public class ContentAgnosticRuleKeyFactoryTest {
             Optional.of(action),
             graphBuilder,
             fileSystem,
-            LegacyProviderInfoCollectionImpl.of());
+            LegacyProviderInfoCollectionImpl.of(),
+            WITH_DOWNWARD_API);
 
     return new ContentAgnosticRuleKeyFactory(fieldLoader, graphBuilder, Optional.empty())
         .build(rule);

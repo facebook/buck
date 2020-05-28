@@ -18,9 +18,11 @@ package com.facebook.buck.core.model.actiongraph.computation;
 
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.rules.analysis.config.RuleAnalysisComputationMode;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -178,7 +180,8 @@ public class ActionGraphProviderBuilder {
             ruleAnalysisComputationMode,
             eventBus,
             incrementalActionGraphExperimentGroups,
-            depsAwareExecutorSupplier),
+            depsAwareExecutorSupplier,
+            DownwardApiConfig.of(FakeBuckConfig.empty())),
         actionGraphCache,
         ruleKeyConfiguration,
         checkActionGraphs,

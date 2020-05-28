@@ -57,8 +57,10 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
     extends LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer {
 
   public LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransformer(
-      RuleAnalysisGraph ruleAnalysisComputation, TargetNodeToBuildRuleTransformer delegate) {
-    super(ruleAnalysisComputation, delegate);
+      RuleAnalysisGraph ruleAnalysisComputation,
+      TargetNodeToBuildRuleTransformer delegate,
+      boolean withDownwardApi) {
+    super(ruleAnalysisComputation, delegate, withDownwardApi);
   }
 
   @Override

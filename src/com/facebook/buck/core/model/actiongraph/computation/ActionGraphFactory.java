@@ -38,6 +38,7 @@ import com.facebook.buck.core.rules.analysis.impl.RuleAnalysisGraphImpl;
 import com.facebook.buck.core.rules.resolver.impl.RuleAnalysisCompatibleDelegatingActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.rules.transformer.impl.LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
@@ -63,7 +64,8 @@ public class ActionGraphFactory {
         buckConfig.getView(RuleAnalysisConfig.class).getComputationMode(),
         eventBus,
         actionGraphConfig.getIncrementalActionGraphExperimentGroups(),
-        depsAwareExecutor);
+        depsAwareExecutor,
+        buckConfig.getView(DownwardApiConfig.class));
   }
 
   private final ActionGraphFactoryDelegate delegate;
@@ -72,18 +74,21 @@ public class ActionGraphFactory {
   private final Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups;
   private final CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
       depsAwareExecutor;
+  private final DownwardApiConfig downwardApiConfig;
 
   ActionGraphFactory(
       ActionGraphFactoryDelegate delegate,
       RuleAnalysisComputationMode ruleAnalysisComputationMode,
       BuckEventBus eventBus,
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups,
-      CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor) {
+      CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor,
+      DownwardApiConfig downwardApiConfig) {
     this.delegate = delegate;
     this.ruleAnalysisComputationMode = ruleAnalysisComputationMode;
     this.eventBus = eventBus;
     this.incrementalActionGraphExperimentGroups = incrementalActionGraphExperimentGroups;
     this.depsAwareExecutor = depsAwareExecutor;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   public ActionGraphAndBuilder createActionGraph(
@@ -109,6 +114,8 @@ public class ActionGraphFactory {
       listener = graphBuilder -> {};
     }
 
+    boolean withDownwardApi = downwardApiConfig.isEnabledForRuleAnalysis();
+
     ActionGraphBuilderDecorator graphBuilderDecorator;
     eventBus.post(
         new ExperimentEvent(
@@ -121,7 +128,7 @@ public class ActionGraphFactory {
                 RuleAnalysisGraphImpl.of(
                     targetGraph, depsAwareExecutor.get(), ruleAnalysisCache, eventBus);
             return new RuleAnalysisCompatibleDelegatingActionGraphBuilder(
-                transformer, builderConstructor, ruleAnalysisComputation);
+                transformer, builderConstructor, ruleAnalysisComputation, withDownwardApi);
           };
     } else if (ruleAnalysisComputationMode == RuleAnalysisComputationMode.PROVIDER_COMPATIBLE) {
       graphBuilderDecorator =
@@ -141,7 +148,7 @@ public class ActionGraphFactory {
 
             return builderConstructor.apply(
                 new LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransformer(
-                    ruleAnalysisGraph, transformer));
+                    ruleAnalysisGraph, transformer, withDownwardApi));
           };
     } else {
       graphBuilderDecorator = builderConstructor -> builderConstructor.apply(transformer);

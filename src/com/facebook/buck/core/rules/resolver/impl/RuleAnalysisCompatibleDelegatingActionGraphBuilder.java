@@ -50,11 +50,12 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilder extends Abstract
   public RuleAnalysisCompatibleDelegatingActionGraphBuilder(
       TargetNodeToBuildRuleTransformer buildRuleGenerator,
       Function<TargetNodeToBuildRuleTransformer, ActionGraphBuilder> delegateBuilderConstructor,
-      RuleAnalysisGraph delegateRuleAnalysisComputation) {
+      RuleAnalysisGraph delegateRuleAnalysisComputation,
+      boolean withDownwardApi) {
     delegateActionGraphBuilder =
         delegateBuilderConstructor.apply(
             new LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer(
-                this, buildRuleGenerator));
+                this, buildRuleGenerator, withDownwardApi));
     this.delegateRuleAnalysisComputation = delegateRuleAnalysisComputation;
   }
 
