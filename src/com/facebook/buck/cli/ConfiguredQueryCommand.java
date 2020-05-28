@@ -88,30 +88,14 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
 
     try (CommandThreadManager pool =
             new CommandThreadManager("CQuery", getConcurrencyLimit(params.getBuckConfig()));
-        PerBuildState parserState =
-            new PerBuildStateFactory(
-                    params.getTypeCoercerFactory(),
-                    new DefaultConstructorArgMarshaller(),
-                    params.getKnownRuleTypesProvider(),
-                    new ParserPythonInterpreterProvider(
-                        params.getCells().getRootCell().getBuckConfig(),
-                        params.getExecutableFinder()),
-                    params.getWatchman(),
-                    params.getBuckEventBus(),
-                    params.getUnconfiguredBuildTargetFactory(),
-                    params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
-                .create(
-                    createParsingContext(params.getCells(), pool.getListeningExecutorService())
-                        .withSpeculativeParsing(SpeculativeParsing.ENABLED),
-                    params.getParser().getPermState())) {
+        PerBuildState parserState = createPerBuildState(params, pool)) {
       perBuildState = parserState;
-      ParsingContext parsingContext =
-          createParsingContext(params.getCells(), pool.getListeningExecutorService());
       targetUniverse =
           PrecomputedTargetUniverse.createFromRootTargets(
-              rootTargetsForUniverse(), params, parserState, parsingContext);
+              rootTargetsForUniverse(), params, perBuildState);
       ConfiguredQueryEnvironment env =
-          ConfiguredQueryEnvironment.from(params, targetUniverse, parsingContext);
+          ConfiguredQueryEnvironment.from(
+              params, targetUniverse, perBuildState.getParsingContext());
       formatAndRunQuery(params, env);
     } catch (QueryException e) {
       throw new HumanReadableException(e);
@@ -190,6 +174,26 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
           "Multiqueries (those using `%s`) do not support printing with the given output format: "
               + outputFormat.toString());
     }
+  }
+
+  private PerBuildState createPerBuildState(CommandRunnerParams params, CommandThreadManager pool) {
+    ParsingContext parsingContext =
+        createParsingContext(params.getCells(), pool.getListeningExecutorService())
+            .withSpeculativeParsing(SpeculativeParsing.ENABLED);
+
+    PerBuildStateFactory factory =
+        new PerBuildStateFactory(
+            params.getTypeCoercerFactory(),
+            new DefaultConstructorArgMarshaller(),
+            params.getKnownRuleTypesProvider(),
+            new ParserPythonInterpreterProvider(
+                params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
+            params.getWatchman(),
+            params.getBuckEventBus(),
+            params.getUnconfiguredBuildTargetFactory(),
+            params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE));
+
+    return factory.create(parsingContext, params.getParser().getPermState());
   }
 
   // TODO: This API is too stringly typed. It's easy for users to provide strings here which will

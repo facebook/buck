@@ -81,10 +81,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
 
   /** Creates a `PrecomputedTargetUniverse` by parsing the transitive closure of `targets`. */
   public static PrecomputedTargetUniverse createFromRootTargets(
-      List<String> targets,
-      CommandRunnerParams params,
-      PerBuildState perBuildState,
-      ParsingContext parsingContext)
+      List<String> targets, CommandRunnerParams params, PerBuildState perBuildState)
       throws QueryException {
 
     LOG.debug("Creating universe from %d roots", targets.size());
@@ -109,7 +106,9 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
     ImmutableSet<BuildTarget> rootTargets;
     try {
       rootTargets =
-          parser.resolveTargetSpecs(parsingContext, universeSpecs, params.getTargetConfiguration())
+          parser
+              .resolveTargetSpecs(
+                  perBuildState.getParsingContext(), universeSpecs, params.getTargetConfiguration())
               .stream()
               .flatMap(ImmutableSet::stream)
               .collect(ImmutableSet.toImmutableSet());

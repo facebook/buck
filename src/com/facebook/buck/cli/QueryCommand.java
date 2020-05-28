@@ -175,7 +175,7 @@ public class QueryCommand extends AbstractQueryCommand {
           ConfiguredQueryEnvironment.from(
               params,
               LegacyQueryUniverse.from(params, parserState),
-              createParsingContext(params.getCells(), pool.getListeningExecutorService()));
+              perBuildState.getParsingContext());
       formatAndRunQuery(params, env);
     } catch (QueryException e) {
       throw new HumanReadableException(e);

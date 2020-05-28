@@ -125,7 +125,7 @@ public class PerBuildState implements AutoCloseable {
     return buildFileRawNodeParsePipeline.getFileJob(cell, buildFile);
   }
 
-  ParsingContext getParsingContext() {
+  public ParsingContext getParsingContext() {
     return parsingContext;
   }
 
