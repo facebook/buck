@@ -46,6 +46,7 @@ import com.facebook.buck.query.AttrRegexFilterFunction;
 import com.facebook.buck.query.BuildFileFunction;
 import com.facebook.buck.query.ConfigFunction;
 import com.facebook.buck.query.DepsFunction;
+import com.facebook.buck.query.EvaluatingQueryEnvironment;
 import com.facebook.buck.query.FilterFunction;
 import com.facebook.buck.query.InputsFunction;
 import com.facebook.buck.query.KindFunction;
@@ -85,7 +86,7 @@ import java.util.function.Predicate;
  *
  * <p>The query language is documented at docs/command/query.soy
  */
-public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget> {
+public class ConfiguredQueryEnvironment implements EvaluatingQueryEnvironment<QueryTarget> {
 
   private final TargetUniverse targetUniverse;
   private final Cell rootCell;
@@ -174,6 +175,7 @@ public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget>
     return targetUniverse;
   }
 
+  @Override
   public void preloadTargetPatterns(Iterable<String> patterns)
       throws QueryException, InterruptedException {
     try {
@@ -186,22 +188,13 @@ public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget>
     }
   }
 
-  /**
-   * Evaluate the specified query expression in this environment.
-   *
-   * @return the resulting set of targets.
-   * @throws QueryException if the evaluation failed.
-   */
+  @Override
   public Set<QueryTarget> evaluateQuery(QueryExpression<QueryTarget> expr)
       throws QueryException, InterruptedException {
     Set<String> targetLiterals = new HashSet<>();
     expr.collectTargetPatterns(targetLiterals);
     preloadTargetPatterns(targetLiterals);
     return new NoopQueryEvaluator<QueryTarget>().eval(expr, this);
-  }
-
-  public Set<QueryTarget> evaluateQuery(String query) throws QueryException, InterruptedException {
-    return evaluateQuery(QueryExpression.parse(query, this.getQueryParserEnv()));
   }
 
   private QueryBuildTarget getOrCreateQueryBuildTarget(BuildTarget buildTarget) {
