@@ -33,6 +33,7 @@ import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserMessages;
@@ -51,7 +52,6 @@ import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.util.concurrent.Futures;
@@ -74,8 +74,17 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
 
   private static final Logger LOG = Logger.get(PrecomputedTargetUniverse.class);
 
-  private final DirectedAcyclicGraph<TargetNode<?>> graph;
-  private final ImmutableMap<BuildTarget, TargetNode<?>> targetToNodeIndex;
+  // Really a `MutableDirectedGraph`, but we don't hold a reference to it as that class to avoid the
+  // mutation temptation. Ideally we would store this as a `DirectedAcyclicGraph` but for extremely
+  // large graphs the "isAcyclic" calculation is expensive. We are already sure the graph is acyclic
+  // though because of `AcyclicDepthFirstPostOrderTraversalWithPayload`, which we use to create the
+  // universe and which throws a `CycleException` if the graph has a cycle. By virtue of finishing
+  // that traversal we can be sure that the graph is acyclic.
+  private final TraversableGraph<TargetNode<?>> graph;
+  // Ideally we would hold on to this as an `ImmutableMap` but doing so requires copying data we
+  // already have and that can get expensive fast. This should not be mutated - if there was an
+  // immutable interface I could use here I would use it.
+  private final Map<BuildTarget, TargetNode<?>> targetToNodeIndex;
   private final ImmutableSetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex;
   private final BuildFileDescendantsIndex descendantsIndex;
 
@@ -203,15 +212,15 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
     LOG.debug("Finished creating universe with final total of %d nodes", graph.getNodeCount());
 
     return new PrecomputedTargetUniverse(
-        new DirectedAcyclicGraph<>(graph),
-        ImmutableMap.copyOf(targetToNodeIndex),
+        graph,
+        targetToNodeIndex,
         pathToBuildTargetIndex,
         BuildFileDescendantsIndex.createFromLeafPaths(pathToBuildTargetIndex.keySet()));
   }
 
   private PrecomputedTargetUniverse(
-      DirectedAcyclicGraph<TargetNode<?>> graph,
-      ImmutableMap<BuildTarget, TargetNode<?>> targetToNodeIndex,
+      TraversableGraph<TargetNode<?>> graph,
+      Map<BuildTarget, TargetNode<?>> targetToNodeIndex,
       ImmutableSetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex,
       BuildFileDescendantsIndex descendantsIndex) {
     this.graph = graph;
@@ -222,7 +231,11 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
 
   @Override
   public DirectedAcyclicGraph<TargetNode<?>> getTargetGraph() {
-    return graph;
+    // See the comment on the instance variable declaration for why this is safe to do.
+    MutableDirectedGraph<TargetNode<?>> mutableGraph = (MutableDirectedGraph<TargetNode<?>>) graph;
+    // NOTE: This constructor has the side effect of enforcing that the graph is acyclic. That can
+    // get expensive for large graphs.
+    return new DirectedAcyclicGraph<>(mutableGraph);
   }
 
   @Override
