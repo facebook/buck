@@ -17,53 +17,48 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.resources.ExoResourcesRewriter;
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.rules.impl.AbstractBuildRule;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
+import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.DefaultOutputPathResolver;
+import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.SortedSet;
-import javax.annotation.Nullable;
+import java.nio.file.Paths;
 
-public class SplitResources extends AbstractBuildRule {
-  @AddToRuleKey(stringify = true)
-  private final Path exoResourcesOutputPath;
-
-  @AddToRuleKey(stringify = true)
-  private final Path primaryResourcesOutputPath;
-
-  @AddToRuleKey(stringify = true)
-  private final Path rDotTxtOutputPath;
-
-  @AddToRuleKey private final SourcePath pathToAaptResources;
-  @AddToRuleKey private final SourcePath pathToOriginalRDotTxt;
-
-  @AddToRuleKey private final Tool zipalignTool;
-
-  private final SourcePathRuleFinder ruleFinder;
-  @AddToRuleKey private final boolean withDownwardApi;
+/**
+ * Implementation for the graph enhancement bit of exo-for-resources.
+ *
+ * <p>SplitResources has three outputs:
+ *
+ * <ul>
+ *   <li>Primary resources zip
+ *   <li>Exo resources zip
+ *   <li>R.txt
+ * </ul>
+ *
+ * These are copies from aapt's outputs. The exo resources zip gets zipaligned.
+ */
+public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
+  private static final String EXO_RESOURCES_APK_FILE_NAME = "exo-resources.apk";
+  private static final String PRIMARY_RESOURCES_APK_FILE_NAME = "primary-resources.apk";
+  private static final String R_TXT_FILE_NAME = "R.txt";
 
   public SplitResources(
       BuildTarget buildTarget,
@@ -73,97 +68,61 @@ public class SplitResources extends AbstractBuildRule {
       SourcePath pathToOriginalRDotTxt,
       Tool zipalignTool,
       boolean withDownwardApi) {
-    super(buildTarget, projectFilesystem);
-    this.ruleFinder = ruleFinder;
-    this.pathToAaptResources = pathToAaptResources;
-    this.pathToOriginalRDotTxt = pathToOriginalRDotTxt;
-    this.withDownwardApi = withDownwardApi;
-    this.exoResourcesOutputPath = getOutputDirectory().resolve("exo-resources.apk");
-    this.primaryResourcesOutputPath = getOutputDirectory().resolve("primary-resources.apk");
-    this.rDotTxtOutputPath = getOutputDirectory().resolve("R.txt");
-    this.zipalignTool = zipalignTool;
+    super(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
+        new SplitResources.Impl(
+            buildTarget,
+            zipalignTool,
+            pathToAaptResources,
+            pathToOriginalRDotTxt,
+            Paths.get(EXO_RESOURCES_APK_FILE_NAME),
+            Paths.get(PRIMARY_RESOURCES_APK_FILE_NAME),
+            Paths.get(R_TXT_FILE_NAME),
+            withDownwardApi));
   }
 
-  private RelPath getOutputDirectory() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
+  SourcePath getPathToRDotTxt() {
+    return getSourcePath(getBuildable().getPathToRDotTxt());
   }
 
-  @Override
-  public SortedSet<BuildRule> getBuildDeps() {
-    return BuildableSupport.deriveDeps(this, ruleFinder)
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+  SourcePath getPathToPrimaryResources() {
+    return getSourcePath(getBuildable().getPathToPrimaryResources());
   }
 
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-    buildableContext.recordArtifact(getOutputDirectory().getPath());
-
-    return ImmutableList.<Step>builder()
-        .addAll(
-            MakeCleanDirectoryStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), getOutputDirectory())))
-        .addAll(
-            MakeCleanDirectoryStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), getScratchDirectory())))
-        .add(new SplitResourcesStep(context.getSourcePathResolver()))
-        .add(
-            new ZipalignStep(
-                getProjectFilesystem().getRootPath(),
-                getUnalignedExoPath(),
-                exoResourcesOutputPath,
-                zipalignTool,
-                context.getSourcePathResolver(),
-                withDownwardApi))
-        .build();
+  SourcePath getPathToExoResources() {
+    return getSourcePath(getBuildable().getPathToExoResources());
   }
 
-  private Path getUnalignedExoPath() {
-    return getScratchDirectory().resolve("exo-resources.unaligned.zip");
-  }
+  private static class SplitResourcesStep implements Step {
+    private final Path absolutePathToAaptResources;
+    private final Path absolutePathToOriginalRDotTxt;
+    private final Path relativePathToPrimaryResourceOutputPath;
+    private final Path relativePathToUnalignedExoPath;
+    private final Path relativePathTorDotTxtOutputPath;
 
-  @Nullable
-  @Override
-  public SourcePath getSourcePathToOutput() {
-    return null;
-  }
-
-  public SourcePath getPathToRDotTxt() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), rDotTxtOutputPath);
-  }
-
-  public SourcePath getPathToPrimaryResources() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), primaryResourcesOutputPath);
-  }
-
-  public SourcePath getPathToExoResources() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), exoResourcesOutputPath);
-  }
-
-  public RelPath getScratchDirectory() {
-    return BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
-  }
-
-  private class SplitResourcesStep implements Step {
-    private AbsPath absolutePathToAaptResources;
-    private AbsPath absolutePathToOriginalRDotTxt;
-
-    public SplitResourcesStep(SourcePathResolverAdapter sourcePathResolverAdapter) {
-      absolutePathToAaptResources = sourcePathResolverAdapter.getAbsolutePath(pathToAaptResources);
-      absolutePathToOriginalRDotTxt =
-          sourcePathResolverAdapter.getAbsolutePath(pathToOriginalRDotTxt);
+    public SplitResourcesStep(
+        Path absolutePathToAaptResources,
+        Path absolutePathToOriginalRDotTxt,
+        Path relativePathToPrimaryResourceOutputPath,
+        Path relativePathToUnalignedExoPath,
+        Path relativePathTorDotTxtOutputPath) {
+      this.absolutePathToAaptResources = absolutePathToAaptResources;
+      this.absolutePathToOriginalRDotTxt = absolutePathToOriginalRDotTxt;
+      this.relativePathToPrimaryResourceOutputPath = relativePathToPrimaryResourceOutputPath;
+      this.relativePathToUnalignedExoPath = relativePathToUnalignedExoPath;
+      this.relativePathTorDotTxtOutputPath = relativePathTorDotTxtOutputPath;
     }
 
     @Override
     public StepExecutionResult execute(ExecutionContext context) throws IOException {
       ExoResourcesRewriter.rewrite(
-          absolutePathToAaptResources.getPath(),
-          absolutePathToOriginalRDotTxt.getPath(),
-          getProjectFilesystem().getPathForRelativePath(primaryResourcesOutputPath),
-          getProjectFilesystem().getPathForRelativePath(getUnalignedExoPath()),
-          getProjectFilesystem().getPathForRelativePath(rDotTxtOutputPath));
+          absolutePathToAaptResources,
+          absolutePathToOriginalRDotTxt,
+          relativePathToPrimaryResourceOutputPath,
+          relativePathToUnalignedExoPath,
+          relativePathTorDotTxtOutputPath);
       return StepExecutionResults.SUCCESS;
     }
 
@@ -176,6 +135,96 @@ public class SplitResources extends AbstractBuildRule {
     public String getDescription(ExecutionContext context) {
       return String.format(
           "split_exo_resources %s %s", absolutePathToAaptResources, absolutePathToOriginalRDotTxt);
+    }
+  }
+
+  /** Buildable implementation for {@link com.facebook.buck.android.SplitResources}. */
+  static class Impl implements Buildable {
+
+    private static final String EXO_RESOURCES_UNALIGNED_ZIP_NAME = "exo-resources.unaligned.zip";
+
+    @AddToRuleKey private final BuildTarget buildTarget;
+    @AddToRuleKey private final Tool zipalignTool;
+    @AddToRuleKey private final SourcePath pathToAaptResources;
+    @AddToRuleKey private final SourcePath pathToOriginalRDotTxt;
+
+    @AddToRuleKey private final OutputPath exoResourcesOutputPath;
+    @AddToRuleKey private final OutputPath primaryResourcesOutputPath;
+    @AddToRuleKey private final OutputPath rDotTxtOutputPath;
+
+    @AddToRuleKey private final boolean withDownwardApi;
+
+    Impl(
+        BuildTarget buildTarget,
+        Tool zipalignTool,
+        SourcePath pathToAaptResources,
+        SourcePath pathToOriginalRDotTxt,
+        Path exoResourcesOutputPath,
+        Path primaryResourcesOutputPath,
+        Path rDotTxtOutputPath,
+        boolean withDownwardApi) {
+      this.buildTarget = buildTarget;
+      this.exoResourcesOutputPath = new OutputPath(exoResourcesOutputPath);
+      this.primaryResourcesOutputPath = new OutputPath(primaryResourcesOutputPath);
+      this.rDotTxtOutputPath = new OutputPath(rDotTxtOutputPath);
+      this.pathToAaptResources = pathToAaptResources;
+      this.pathToOriginalRDotTxt = pathToOriginalRDotTxt;
+      this.zipalignTool = zipalignTool;
+      this.withDownwardApi = withDownwardApi;
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext buildContext,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        BuildCellRelativePathFactory buildCellPathFactory) {
+      SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
+      return ImmutableList.<Step>builder()
+          .addAll(
+              MakeCleanDirectoryStep.of(
+                  BuildCellRelativePath.fromCellRelativePath(
+                      buildContext.getBuildCellRootPath(),
+                      filesystem,
+                      getScratchDirectory(filesystem))))
+          .add(
+              new SplitResourcesStep(
+                  sourcePathResolverAdapter.getAbsolutePath(pathToAaptResources).getPath(),
+                  sourcePathResolverAdapter.getAbsolutePath(pathToOriginalRDotTxt).getPath(),
+                  filesystem.getPathForRelativePath(
+                      outputPathResolver.resolvePath(primaryResourcesOutputPath)),
+                  filesystem.getPathForRelativePath(getUnalignedExoPath(filesystem)),
+                  filesystem.getPathForRelativePath(
+                      outputPathResolver.resolvePath(rDotTxtOutputPath))))
+          .add(
+              new ZipalignStep(
+                  filesystem.getRootPath(),
+                  getUnalignedExoPath(filesystem),
+                  outputPathResolver.resolvePath(exoResourcesOutputPath),
+                  zipalignTool,
+                  buildContext.getSourcePathResolver(),
+                  withDownwardApi))
+          .build();
+    }
+
+    private Path getScratchDirectory(ProjectFilesystem filesystem) {
+      return new DefaultOutputPathResolver(filesystem, buildTarget).getTempPath();
+    }
+
+    private Path getUnalignedExoPath(ProjectFilesystem filesystem) {
+      return getScratchDirectory(filesystem).resolve(EXO_RESOURCES_UNALIGNED_ZIP_NAME);
+    }
+
+    private OutputPath getPathToExoResources() {
+      return exoResourcesOutputPath;
+    }
+
+    private OutputPath getPathToRDotTxt() {
+      return rDotTxtOutputPath;
+    }
+
+    private OutputPath getPathToPrimaryResources() {
+      return primaryResourcesOutputPath;
     }
   }
 }
