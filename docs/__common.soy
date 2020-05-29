@@ -61,8 +61,8 @@
 <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns#">
 <script>
   var loc = new String(window.location);
-  if (loc.indexOf('facebook.github.io/buck') != -1) {lb}
-    window.location.replace(loc.replace('facebook.github.io/buck', 'buck.build'));
+  if (loc.indexOf('facebookexperimental.github.io/buck-dev') != -1) {lb}
+    window.location.replace(loc.replace('facebookexperimental.github.io/buck-dev', 'buck.build'));
   {rb}
 </script>
 <!-- Facebook Pixel Code -->
@@ -154,7 +154,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
         A high-performance build tool
       </h1>
       <a class='button' href='{ROOT}setup/getting_started.html'>Getting Started</a>&nbsp;
-      <a class='button' href='https://github.com/facebook/buck'>GitHub</a>
+      <a class='button' href='https://github.com/facebookexperimental/buck-dev'>GitHub</a>
     </hgroup>
     <aside>
       <img id="super_console_sample"
@@ -1158,7 +1158,7 @@ docsearch({
  */
 {template .installationInstructions}
 {literal}<pre>
-git clone https://github.com/facebook/buck.git
+git clone https://github.com/facebookexperimental/buck-dev.git
 cd buck
 ant{/literal}
 {if $withAlias and not $isWindows}

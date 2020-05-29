@@ -53,6 +53,7 @@ done
 
 DOCS_DIR=$(dirname "$0")
 BUCK_DIR=$(realpath "$DOCS_DIR/..")
+DOCS_DIR=$(realpath "$DOCS_DIR")
 
 IS_GIT=
 [[ -d "$BUCK_DIR/.git" ]] && IS_GIT=1
@@ -89,7 +90,7 @@ echo "Documentation working directory is ${STATIC_FILES_DIR}"
 # Create a clean checkout of the gh-pages branch with no data:
 if [ -z "$1" ]
 then
-  git clone git@github.com:facebook/buck.git "$STATIC_FILES_DIR"
+  git clone git@github.com:facebookexperimental/buck-dev.git "$STATIC_FILES_DIR"
 else
   cp -r "$1" "$STATIC_FILES_DIR"
 fi
@@ -113,7 +114,7 @@ git commit -m "Updated HTML documentation."
 # Push the new version of the docs to GitHub:
 set +e
 echo Actual push commented out to avoid overriding github/master docs by accident
-echo git push origin gh-pages --force
+git push origin gh-pages --force
 EXIT_CODE=$?
 set -e
 
@@ -121,6 +122,6 @@ set -e
 # so inform the user of the failure.
 if [ $EXIT_CODE -ne 0 ]; then
   echo "WARNING: 'git push origin gh-pages failed'. "
-  echo "Try going to https://github.com/facebook/buck/branches"
+  echo "Try going to https://github.com/facebookexperimental/buck-dev/branches"
   echo "and re-running this script."
 fi

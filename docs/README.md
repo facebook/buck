@@ -26,7 +26,7 @@ changes is clear.
 Publishing Documentation
 ========================
 
-This documentation is hosted publicly at <http://facebook.github.com/buck/>
+This documentation is hosted publicly at <http://facebookexperimental.github.com/buck-dev/>
 using [GitHub Pages](http://pages.github.com/).
 Therefore, to publish this documentation, you must commit it on the
 `gh-pages` branch of the GitHub repository by running:

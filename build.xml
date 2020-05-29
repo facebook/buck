@@ -296,7 +296,7 @@
 
   <target name="clean" description="remove all generated files" depends="clear-successful-build,antout.check" if="dir.exists">
     <delete includeEmptyDirs="true" >
-      <fileset dir="${build.dir}" includes="**/*" defaultexcludes="no"/>
+      <fileset dir="${build.dir}" includes="**/*" excludes=".Spotlight-V100,.Trashes" defaultexcludes="no"/>
     </delete>
   </target>
 

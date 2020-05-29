@@ -18,6 +18,7 @@ set -e
 
 DOCS_DIR=$(dirname "$0")
 BUCK_DIR=$(realpath "$DOCS_DIR/..")
+DOCS_DIR=$(realpath "$DOCS_DIR")
 
 # Always run this script from the root of the Buck project directory.
 cd "$BUCK_DIR"

@@ -22,6 +22,7 @@
 
 DOCS_DIR=$(dirname "$0")
 BUCK_DIR=$(realpath "$DOCS_DIR/..")
+DOCS_DIR=$(realpath "$DOCS_DIR")
 
 cd "$BUCK_DIR" || exit
 ant clean
