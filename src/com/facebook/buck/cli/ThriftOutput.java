@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
+import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraphEdge;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraphNode;
 import com.facebook.buck.slb.ThriftProtocol;
@@ -33,12 +33,12 @@ import java.util.function.Predicate;
 /** Class responsible for serialization of DirectedAcyclicGraph into Thrift output format */
 public class ThriftOutput<T> {
 
-  private final DirectedAcyclicGraph<T> graph;
+  private final TraversableGraph<T> graph;
   private final Predicate<T> filterPredicate;
   private Function<T, String> nodeToNameMappingFunction;
   private final Function<T, ImmutableSortedMap<String, Object>> nodeToAttributesFunction;
 
-  public static <T> ThriftOutput.Builder<T> builder(DirectedAcyclicGraph<T> graph) {
+  public static <T> ThriftOutput.Builder<T> builder(TraversableGraph<T> graph) {
     return new ThriftOutput.Builder<>(graph);
   }
 
@@ -49,12 +49,12 @@ public class ThriftOutput<T> {
    */
   public static class Builder<T> {
 
-    private final DirectedAcyclicGraph<T> graph;
+    private final TraversableGraph<T> graph;
     private Predicate<T> filterPredicate;
     private Function<T, String> nodeToNameMappingFunction;
     private Function<T, ImmutableSortedMap<String, Object>> nodeToAttributesFunction;
 
-    private Builder(DirectedAcyclicGraph<T> graph) {
+    private Builder(TraversableGraph<T> graph) {
       this.graph = graph;
       this.filterPredicate = ignore -> true; // always true predicate
       this.nodeToNameMappingFunction = Objects::toString;
@@ -109,8 +109,7 @@ public class ThriftOutput<T> {
     com.facebook.buck.query.thrift.DirectedAcyclicGraph thriftDag =
         new com.facebook.buck.query.thrift.DirectedAcyclicGraph();
 
-    ImmutableSet<T> nodes =
-        Optional.ofNullable(graph.getNodes()).orElseGet(() -> ImmutableSet.of());
+    Iterable<T> nodes = Optional.ofNullable(graph.getNodes()).orElseGet(() -> ImmutableSet.of());
     for (T node : nodes) {
       if (!filterPredicate.test(node)) {
         continue;
@@ -125,7 +124,7 @@ public class ThriftOutput<T> {
                   fromNode.putToNodeAttributes(attrName, String.valueOf(attrValue)));
       thriftDag.addToNodes(fromNode);
 
-      ImmutableSet<T> outgoingNodes =
+      Iterable<T> outgoingNodes =
           Optional.ofNullable(graph.getOutgoingNodesFor(node)).orElseGet(() -> ImmutableSet.of());
       for (T outgoingNode : outgoingNodes) {
         if (!filterPredicate.test(outgoingNode)) {

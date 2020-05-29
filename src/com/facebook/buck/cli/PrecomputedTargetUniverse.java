@@ -30,7 +30,6 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
 import com.facebook.buck.core.util.graph.CycleException;
-import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TraversableGraph;
@@ -229,13 +228,16 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
     this.descendantsIndex = descendantsIndex;
   }
 
+  /**
+   * The target graph representing this universe.
+   *
+   * <p>NOTE: Due to an implementation detail (the use of {@code
+   * AcyclicDepthFirstPostOrderTraversalWithPayload} when creating the graph) this is guaranteed to
+   * be acyclic.
+   */
   @Override
-  public DirectedAcyclicGraph<TargetNode<?>> getTargetGraph() {
-    // See the comment on the instance variable declaration for why this is safe to do.
-    MutableDirectedGraph<TargetNode<?>> mutableGraph = (MutableDirectedGraph<TargetNode<?>>) graph;
-    // NOTE: This constructor has the side effect of enforcing that the graph is acyclic. That can
-    // get expensive for large graphs.
-    return new DirectedAcyclicGraph<>(mutableGraph);
+  public TraversableGraph<TargetNode<?>> getTargetGraph() {
+    return graph;
   }
 
   @Override

@@ -24,10 +24,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * A set of target nodes with the same unconfigured build target.
@@ -74,9 +74,9 @@ public class MergedTargetNode implements Comparable<MergedTargetNode> {
 
   /** Group targets by unflavored target. */
   public static ImmutableMap<UnflavoredBuildTarget, MergedTargetNode> group(
-      Collection<TargetNode<?>> targetNodes) {
+      Iterable<TargetNode<?>> targetNodes) {
     Map<UnflavoredBuildTarget, List<TargetNode<?>>> collect =
-        targetNodes.stream()
+        StreamSupport.stream(targetNodes.spliterator(), false)
             .collect(Collectors.groupingBy(t -> t.getBuildTarget().getUnflavoredBuildTarget()));
     ImmutableMap.Builder<UnflavoredBuildTarget, MergedTargetNode> builder = ImmutableMap.builder();
     for (Map.Entry<UnflavoredBuildTarget, List<TargetNode<?>>> entry : collect.entrySet()) {

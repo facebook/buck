@@ -29,9 +29,9 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
 import com.facebook.buck.core.util.graph.CycleException;
-import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.ParsingContext;
@@ -99,9 +99,16 @@ public class LegacyQueryUniverse implements TargetUniverse {
     return parserState;
   }
 
+  /**
+   * The target graph representing this universe.
+   *
+   * <p>NOTE: Due to an implementation detail (the use of {@code
+   * AcyclicDepthFirstPostOrderTraversalWithPayload} when creating the graph) this is guaranteed to
+   * be acyclic.
+   */
   @Override
-  public DirectedAcyclicGraph<TargetNode<?>> getTargetGraph() {
-    return new DirectedAcyclicGraph<>(graph);
+  public TraversableGraph<TargetNode<?>> getTargetGraph() {
+    return graph;
   }
 
   @Override

@@ -19,9 +19,9 @@ package com.facebook.buck.core.model.targetgraph;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import java.util.Map;
 
 /**
  * Target graph version where node is a set of all nodes with the same {@link
@@ -46,7 +46,7 @@ public class MergedTargetGraph extends DirectedAcyclicGraph<MergedTargetNode> {
   }
 
   /** Group nodes by {@link UnflavoredBuildTarget}. */
-  public static MergedTargetGraph merge(DirectedAcyclicGraph<TargetNode<?>> targetGraph) {
+  public static MergedTargetGraph merge(TraversableGraph<TargetNode<?>> targetGraph) {
     ImmutableMap<UnflavoredBuildTarget, MergedTargetNode> index =
         MergedTargetNode.group(targetGraph.getNodes());
 
@@ -56,20 +56,20 @@ public class MergedTargetGraph extends DirectedAcyclicGraph<MergedTargetNode> {
       graph.addNode(node);
     }
 
-    for (Map.Entry<TargetNode<?>, TargetNode<?>> edge : targetGraph.getOutgoingEdges().entries()) {
-      TargetNode<?> source = edge.getKey();
-      TargetNode<?> sink = edge.getValue();
-      MergedTargetNode mergedSource =
-          Preconditions.checkNotNull(
-              index.get(source.getBuildTarget().getUnflavoredBuildTarget()),
-              "node must exist in index: %s",
-              source.getBuildTarget().getUnflavoredBuildTarget());
-      MergedTargetNode mergedSink =
-          Preconditions.checkNotNull(
-              index.get(sink.getBuildTarget().getUnflavoredBuildTarget()),
-              "node must exist in index: %s",
-              sink.getBuildTarget().getUnflavoredBuildTarget());
-      graph.addEdge(mergedSource, mergedSink);
+    for (TargetNode<?> source : targetGraph.getNodes()) {
+      for (TargetNode<?> sink : targetGraph.getOutgoingNodesFor(source)) {
+        MergedTargetNode mergedSource =
+            Preconditions.checkNotNull(
+                index.get(source.getBuildTarget().getUnflavoredBuildTarget()),
+                "node must exist in index: %s",
+                source.getBuildTarget().getUnflavoredBuildTarget());
+        MergedTargetNode mergedSink =
+            Preconditions.checkNotNull(
+                index.get(sink.getBuildTarget().getUnflavoredBuildTarget()),
+                "node must exist in index: %s",
+                sink.getBuildTarget().getUnflavoredBuildTarget());
+        graph.addEdge(mergedSource, mergedSink);
+      }
     }
 
     return new MergedTargetGraph(graph, index);

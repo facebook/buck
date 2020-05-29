@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstThrowingTraversal;
-import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
+import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.facebook.buck.util.Escaper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -35,7 +35,7 @@ public class Dot<T> {
 
   private static final Pattern VALID_ID_PATTERN = Pattern.compile("[a-zA-Z\200-\377_0-9]+");
 
-  private final DirectedAcyclicGraph<T> graph;
+  private final TraversableGraph<T> graph;
   private final String graphName;
   private final Function<T, String> nodeToName;
   private final Function<T, String> nodeToTypeName;
@@ -60,7 +60,7 @@ public class Dot<T> {
         }.build();
   }
 
-  public static <T> Builder<T> builder(DirectedAcyclicGraph<T> graph, String graphName) {
+  public static <T> Builder<T> builder(TraversableGraph<T> graph, String graphName) {
     return new Builder<>(graph, graphName);
   }
 
@@ -71,7 +71,7 @@ public class Dot<T> {
    */
   public static class Builder<T> {
 
-    private final DirectedAcyclicGraph<T> graph;
+    private final TraversableGraph<T> graph;
     private final String graphName;
     private boolean compactMode;
     private Function<T, String> nodeToName;
@@ -80,7 +80,7 @@ public class Dot<T> {
     private OutputOrder outputOrder;
     private Predicate<T> shouldContainNode;
 
-    private Builder(DirectedAcyclicGraph<T> graph, String graphName) {
+    private Builder(TraversableGraph<T> graph, String graphName) {
       this.graph = graph;
       this.graphName = graphName;
       nodeToName = Object::toString;

@@ -60,10 +60,6 @@ public class DirectedAcyclicGraph<T> implements TraversableGraph<T> {
     return nodes;
   }
 
-  public ImmutableSetMultimap<T, T> getOutgoingEdges() {
-    return outgoingEdges;
-  }
-
   @Override
   public boolean equals(Object other) {
     if (!(other instanceof DirectedAcyclicGraph)) {

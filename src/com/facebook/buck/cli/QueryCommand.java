@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.targetgraph.MergedTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
@@ -396,9 +395,8 @@ public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQu
       Set<QueryBuildTarget> queryResult,
       PrintStream printStream)
       throws IOException, QueryException {
-
-    DirectedAcyclicGraph<TargetNode<?>> targetGraph = env.getTargetUniverse().getTargetGraph();
-    MergedTargetGraph mergedTargetGraph = MergedTargetGraph.merge(targetGraph);
+    MergedTargetGraph mergedTargetGraph =
+        MergedTargetGraph.merge(env.getTargetUniverse().getTargetGraph());
 
     ImmutableSet<TargetNode<?>> nodesFromQueryTargets = env.getNodesFromQueryTargets(queryResult);
     ImmutableSet<UnflavoredBuildTarget> targetsFromQueryTargets =
