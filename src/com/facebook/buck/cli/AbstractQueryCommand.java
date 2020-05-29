@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.query.EvaluatingQueryEnvironment;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
@@ -25,6 +26,7 @@ import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.PatternsMatcher;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
@@ -197,21 +199,29 @@ public abstract class AbstractQueryCommand<
       QueryExpression<NODE_TYPE> expr = QueryExpression.parse(query, env.getQueryParserEnv());
       expr.collectTargetPatterns(targetLiterals);
     }
-    env.preloadTargetPatterns(targetLiterals);
+
+    try (Scope ignored = LeafEvents.scope(params.getBuckEventBus(), "preloading_target_patterns")) {
+      env.preloadTargetPatterns(targetLiterals);
+    }
 
     LOG.debug("Finished preloading target patterns. Executing queries.");
 
     // Now execute the query on the arguments one-by-one.
     LinkedHashMultimap<String, NODE_TYPE> queryResultMap = LinkedHashMultimap.create();
-    for (String input : inputsFormattedAsBuildTargets) {
-      String query = queryFormat.replace("%s", input);
-      Set<NODE_TYPE> queryResult = env.evaluateQuery(query);
-      queryResultMap.putAll(input, queryResult);
+
+    try (Scope ignored =
+        LeafEvents.scope(params.getBuckEventBus(), "evaluating_multiple_queries")) {
+      for (String input : inputsFormattedAsBuildTargets) {
+        String query = queryFormat.replace("%s", input);
+        Set<NODE_TYPE> queryResult = env.evaluateQuery(query);
+        queryResultMap.putAll(input, queryResult);
+      }
     }
 
     LOG.debug("Printing out %d targets", queryResultMap.size());
 
-    try (CloseableWrapper<PrintStream> printStreamWrapper = getPrintStreamWrapper(params)) {
+    try (Scope ignored = LeafEvents.scope(params.getBuckEventBus(), "printing_multi_query_output");
+        CloseableWrapper<PrintStream> printStreamWrapper = getPrintStreamWrapper(params)) {
       PrintStream printStream = printStreamWrapper.get();
       printMultipleQueryOutput(params, env, queryResultMap, printStream);
     }
@@ -221,11 +231,16 @@ public abstract class AbstractQueryCommand<
       throws IOException, InterruptedException, QueryException {
     LOG.debug("Evaluating single query");
 
-    Set<NODE_TYPE> queryResult = env.evaluateQuery(query);
+    Set<NODE_TYPE> queryResult;
+    try (Scope ignored = LeafEvents.scope(params.getBuckEventBus(), "evaluating_single_query")) {
+      queryResult = env.evaluateQuery(query);
+    }
 
     LOG.debug("Printing out %d targets", queryResult.size());
 
-    try (CloseableWrapper<PrintStream> printStreamWrapper = getPrintStreamWrapper(params)) {
+    try (Scope ignored =
+            LeafEvents.scope(params.getBuckEventBus(), "printing_single_query_output");
+        CloseableWrapper<PrintStream> printStreamWrapper = getPrintStreamWrapper(params)) {
       PrintStream printStream = printStreamWrapper.get();
       printSingleQueryOutput(params, env, queryResult, printStream);
     }

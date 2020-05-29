@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
@@ -41,6 +42,7 @@ import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.PatternsMatcher;
+import com.facebook.buck.util.Scope;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
@@ -91,9 +93,14 @@ public class ConfiguredQueryCommand
             new CommandThreadManager("CQuery", getConcurrencyLimit(params.getBuckConfig()));
         PerBuildState parserState = createPerBuildState(params, pool)) {
       perBuildState = parserState;
-      targetUniverse =
-          PrecomputedTargetUniverse.createFromRootTargets(
-              rootTargetsForUniverse(), params, perBuildState);
+
+      try (Scope ignored =
+          LeafEvents.scope(params.getBuckEventBus(), "creating_precomputed_universe")) {
+        targetUniverse =
+            PrecomputedTargetUniverse.createFromRootTargets(
+                rootTargetsForUniverse(), params, perBuildState);
+      }
+
       ConfiguredQueryEnvironment env =
           ConfiguredQueryEnvironment.from(
               params, targetUniverse, perBuildState.getParsingContext());
