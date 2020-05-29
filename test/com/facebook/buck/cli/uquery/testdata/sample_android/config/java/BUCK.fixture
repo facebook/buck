@@ -1,0 +1,27 @@
+constraint_setting(
+    name = "version-constraint",
+)
+
+constraint_value(
+    name = "version-value-8",
+    constraint_setting = ":version-constraint",
+    visibility = ["PUBLIC"],
+)
+
+constraint_value(
+    name = "version-value-11",
+    constraint_setting = ":version-constraint",
+    visibility = ["PUBLIC"],
+)
+
+config_setting(
+    name = "version-8",
+    constraint_values = [":version-value-8"],
+    visibility = ["PUBLIC"],
+)
+
+config_setting(
+    name = "version-11",
+    constraint_values = [":version-value-11"],
+    visibility = ["PUBLIC"],
+)

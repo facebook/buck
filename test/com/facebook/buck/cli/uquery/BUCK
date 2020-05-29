@@ -1,0 +1,20 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "uquery",
+    srcs = glob(["*Test.java"]),
+    labels = ["long_running"],
+    resources = glob(
+        ["testdata/**"],
+    ),
+    deps = [
+        "//src-gen:thrift",
+        "//src/com/facebook/buck/features/python:python",
+        "//src/com/facebook/buck/io/file:file",
+        "//test/com/facebook/buck/cli:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//test/com/facebook/buck/util:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

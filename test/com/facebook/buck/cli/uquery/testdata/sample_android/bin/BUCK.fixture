@@ -1,0 +1,47 @@
+keystore(
+    name = "keystore-debug",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+    visibility = ["PUBLIC"],
+)
+
+keystore(
+    name = "keystore-prod",
+    properties = "prod.keystore.properties",
+    store = "prod.keystore",
+    visibility = ["PUBLIC"],
+)
+
+android_binary(
+    name = "foo-bin",
+    compatible_with = [
+        "//config/mode:dev",
+        "//config/mode:opt",
+    ],
+    default_target_platform = "//config/platform:java8-dev",
+    keystore = select({
+        "//config/mode:dev": ":keystore-debug",
+        "//config/mode:opt": ":keystore-prod",
+    }),
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//lib:foo",
+    ],
+)
+
+android_binary(
+    name = "bar-bin",
+    compatible_with = [
+        "//config/mode:dev",
+        "//config/mode:opt",
+    ],
+    default_target_platform = "//config/platform:java11-dev",
+    keystore = select({
+        "//config/mode:dev": ":keystore-debug",
+        "//config/mode:opt": ":keystore-prod",
+    }),
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//lib:bar",
+    ],
+)

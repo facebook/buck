@@ -1,0 +1,27 @@
+constraint_setting(
+    name = "mode-constraint",
+)
+
+constraint_value(
+    name = "mode-value-dev",
+    constraint_setting = ":mode-constraint",
+    visibility = ["PUBLIC"],
+)
+
+constraint_value(
+    name = "mode-value-opt",
+    constraint_setting = ":mode-constraint",
+    visibility = ["PUBLIC"],
+)
+
+config_setting(
+    name = "dev",
+    constraint_values = [":mode-value-dev"],
+    visibility = ["PUBLIC"],
+)
+
+config_setting(
+    name = "opt",
+    constraint_values = [":mode-value-opt"],
+    visibility = ["PUBLIC"],
+)

@@ -1,0 +1,35 @@
+platform(
+    name = "java8-dev",
+    constraint_values = [
+        "//config/java:version-value-8",
+        "//config/mode:mode-value-dev",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+platform(
+    name = "java8-opt",
+    constraint_values = [
+        "//config/java:version-value-8",
+        "//config/mode:mode-value-opt",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+platform(
+    name = "java11-dev",
+    constraint_values = [
+        "//config/java:version-value-11",
+        "//config/mode:mode-value-dev",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+platform(
+    name = "java11-opt",
+    constraint_values = [
+        "//config/java:version-value-11",
+        "//config/mode:mode-value-opt",
+    ],
+    visibility = ["PUBLIC"],
+)

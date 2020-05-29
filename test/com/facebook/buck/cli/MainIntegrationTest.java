@@ -112,6 +112,7 @@ public class MainIntegrationTest {
         "  targets        prints the list of buildable targets",
         "  test           builds and runs the tests for the specified target",
         "  uninstall      uninstalls an APK",
+        "  uquery         provides facilities to query information about the unconfigured target graph",
         "  verify-caches  Verify contents of internal Buck in-memory caches.",
         "",
         "Options:",

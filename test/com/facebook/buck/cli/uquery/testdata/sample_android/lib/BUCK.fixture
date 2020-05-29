@@ -1,0 +1,36 @@
+android_library(
+    name = "foo",
+    srcs = ["Foo.java"],
+    default_target_platform = "//config/platform:java8-dev",
+    deps = [":bar"] + select({
+        "//config/mode:dev": [":devtools"],
+        "DEFAULT": [],
+    }),
+)
+
+android_library(
+    name = "bar",
+    srcs = ["Bar.java"],
+    default_target_platform = "//config/platform:java8-dev",
+    extra_arguments = select({
+        "//config/mode:opt": ["-Aoptimizations.enabled=true"],
+        "DEFAULT": [],
+    }),
+    deps = select({
+        "//config/mode:dev": [":devtools"],
+        "DEFAULT": [],
+    }),
+)
+
+android_library(
+    name = "devtools",
+    srcs = select({
+        "//config/java:version-11": ["DevtoolsEleven.java"],
+        "//config/java:version-8": ["DevtoolsEight.java"],
+    }),
+    compatible_with = [
+        "//config/mode:dev",
+    ],
+    default_target_platform = "//config/platform:java8-dev",
+    deps = [],
+)
