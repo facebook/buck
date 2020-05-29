@@ -302,9 +302,14 @@ public abstract class DefaultJavaLibraryRules {
     if (args != null) {
       result = args.getAbiGenerationMode().orElse(null);
     }
-    if (result == null) {
-      result = Objects.requireNonNull(getConfiguredCompilerFactory()).getAbiGenerationMode();
+
+    // Respect user input if provided
+    if (result != null) {
+      return result;
     }
+
+    // Infer ABI generation mode based on properties of build target
+    result = Objects.requireNonNull(getConfiguredCompilerFactory()).getAbiGenerationMode();
 
     if (result == AbiGenerationMode.CLASS) {
       return result;
