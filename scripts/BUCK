@@ -29,3 +29,25 @@ python_test(
         ":diff_rulekeys_lib",
     ],
 )
+
+python_binary(
+    name = "diff_buck_out",
+    main_module = "diff_buck_out",
+    deps = [
+        ":diff_buck_out_lib",
+    ],
+)
+
+python_library(
+    name = "diff_buck_out_lib",
+    srcs = [
+        "diff_buck_out.py",
+    ],
+    base_module = "",
+    visibility = [
+        "//scripts/...",
+    ],
+    deps = [
+        "//third-party/py/argparse:argparse",
+    ],
+)
