@@ -30,40 +30,22 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegatePair;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
-import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.MoreSuppliers;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.hash.Hashing;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.nio.channels.Channels;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream;
-import java.nio.file.DirectoryStream.Filter;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystemLoopException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -71,15 +53,10 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
-import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
-import java.util.ArrayDeque;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
@@ -89,38 +66,24 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-import javax.annotation.Nullable;
 
 /** An injectable service for interacting with the filesystem relative to the project root. */
 public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
 
+  private final AbsPath projectRoot;
+
   private final Path edenMagicPathElement;
 
-  private final AbsPath projectRoot;
   private final BuckPaths buckPaths;
-
-  private final ImmutableSet<PathMatcher> blackListedPaths;
-  private final ImmutableSet<PathMatcher> blackListedDirectories;
-
   /** Supplier that returns an absolute path that is guaranteed to exist. */
   private final Supplier<Path> tmpDir;
 
+  private final ImmutableSet<PathMatcher> ignoredPaths;
+  private final ImmutableSet<PathMatcher> ignoredDirectories;
+
   private ProjectFilesystemDelegate delegate;
   private final ProjectFilesystemDelegatePair delegatePair;
-  @Nullable private final WindowsFS winFSInstance;
-
-  // Defaults to false, and so paths should be valid.
-  @VisibleForTesting protected boolean ignoreValidityOfPaths;
-
-  /**
-   * For testing purposes, subclasses might want to skip some of the verification done by the
-   * constructor on its arguments.
-   */
-  protected boolean shouldVerifyConstructorArguments() {
-    return true;
-  }
 
   /** This function should be only used in tests, because it ignores hashes-in-path buckconfig. */
   @VisibleForTesting
@@ -128,96 +91,91 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
       CanonicalCellName cellName,
       AbsPath root,
       ProjectFilesystemDelegate delegate,
-      @Nullable WindowsFS winFSInstance,
       boolean buckOutIncludeTargetConfigHash) {
     this(
         root,
         ImmutableSet.of(),
         BuckPaths.createDefaultBuckPaths(cellName, root.getPath(), buckOutIncludeTargetConfigHash),
         delegate,
-        new ProjectFilesystemDelegatePair(delegate, delegate),
-        winFSInstance);
+        new ProjectFilesystemDelegatePair(delegate, delegate));
   }
 
   public DefaultProjectFilesystem(
       AbsPath root,
-      ImmutableSet<PathMatcher> blackListedPaths,
+      ImmutableSet<PathMatcher> ignoredPaths,
       BuckPaths buckPaths,
-      ProjectFilesystemDelegate delegate,
-      @Nullable WindowsFS winFSInstance) {
+      ProjectFilesystemDelegate delegate) {
     this(
         root,
-        blackListedPaths,
+        ignoredPaths,
         buckPaths,
         delegate,
-        new ProjectFilesystemDelegatePair(delegate, delegate),
-        winFSInstance);
+        new ProjectFilesystemDelegatePair(delegate, delegate));
   }
 
-  public DefaultProjectFilesystem(
+  DefaultProjectFilesystem(
       AbsPath root,
-      ImmutableSet<PathMatcher> blackListedPaths,
+      ImmutableSet<PathMatcher> ignoredPaths,
       BuckPaths buckPaths,
       ProjectFilesystemDelegate delegate,
-      ProjectFilesystemDelegatePair delegatePair,
-      @Nullable WindowsFS winFSInstance) {
-
+      ProjectFilesystemDelegatePair delegatePair) {
+    this.projectRoot = MorePaths.normalize(root);
     if (shouldVerifyConstructorArguments()) {
       Preconditions.checkArgument(
-          Files.isDirectory(root.getPath()), "%s must be a directory", root);
+          Files.isDirectory(projectRoot.getPath()), "%s must be a directory", projectRoot);
     }
-
-    this.projectRoot = MorePaths.normalize(root);
     this.delegate = delegate;
     this.delegatePair = delegatePair;
-    this.ignoreValidityOfPaths = false;
-    this.blackListedPaths =
-        FluentIterable.from(blackListedPaths)
+    this.buckPaths = buckPaths;
+
+    String cacheDirString = buckPaths.getCacheDir().toString();
+    Path buckOutPath = buckPaths.getBuckOut().getPath();
+    Path rootPath = root.getPath();
+    Path trashDir = buckPaths.getTrashDir();
+
+    this.ignoredPaths =
+        FluentIterable.from(ignoredPaths)
             .append(
                 FluentIterable.from(
                         // "Path" is Iterable, so avoid adding each segment.
                         // We use the default value here because that's what we've always done.
                         MorePaths.filterForSubpaths(
                             ImmutableSet.of(
-                                getCacheDir(
-                                    root.getPath(),
-                                    Optional.of(buckPaths.getCacheDir().toString()),
-                                    buckPaths)),
-                            root.getPath()))
-                    .append(ImmutableSet.of(buckPaths.getTrashDir()))
+                                getCacheDir(rootPath, Optional.of(cacheDirString), buckPaths)),
+                            rootPath))
+                    .append(ImmutableSet.of(trashDir))
                     .transform(basePath -> RecursiveFileMatcher.of(RelPath.of(basePath))))
             .toSet();
-    this.buckPaths = buckPaths;
 
-    this.blackListedDirectories =
-        FluentIterable.from(this.blackListedPaths)
+    this.ignoredDirectories =
+        FluentIterable.from(this.ignoredPaths)
             .filter(RecursiveFileMatcher.class)
             .transform(
                 matcher -> {
-                  RelPath path = matcher.getPath();
+                  Path path = matcher.getPath().getPath();
                   ImmutableSet<Path> filtered =
-                      MorePaths.filterForSubpaths(ImmutableSet.of(path.getPath()), root.getPath());
+                      MorePaths.filterForSubpaths(ImmutableSet.of(path), rootPath);
                   if (filtered.isEmpty()) {
-                    return path.getPath();
+                    return path;
                   }
                   return Iterables.getOnlyElement(filtered);
                 })
             // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but
             // we really don't end up ignoring it in reality (see extractIgnorePaths).
-            .append(ImmutableSet.of(buckPaths.getBuckOut().getPath()))
-            .transform((Path basePath) -> RecursiveFileMatcher.of(RelPath.of(basePath)))
+            .append(ImmutableSet.of(buckOutPath))
+            .transform(basePath -> RecursiveFileMatcher.of(RelPath.of(basePath)))
             .transform(matcher -> (PathMatcher) matcher)
             .append(
                 // RecursiveFileMatcher instances are handled separately above because they all
                 // must be relative to the project root, but all other matchers are not relative
                 // to the root and do not require any special treatment.
                 Iterables.filter(
-                    this.blackListedPaths, matcher -> !(matcher instanceof RecursiveFileMatcher)))
+                    this.ignoredPaths, matcher -> !(matcher instanceof RecursiveFileMatcher)))
             .toSet();
     this.tmpDir =
         MoreSuppliers.memoize(
             () -> {
-              Path relativeTmpDir = DefaultProjectFilesystem.this.buckPaths.getTmpDir();
+              Path relativeTmpDir = buckPaths.getTmpDir();
               try {
                 mkdirs(relativeTmpDir);
               } catch (IOException e) {
@@ -225,15 +183,10 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
               }
               return relativeTmpDir;
             });
-
-    this.winFSInstance = winFSInstance;
-    if (Platform.detect() == Platform.WINDOWS) {
-      Objects.requireNonNull(this.winFSInstance);
-    }
-    this.edenMagicPathElement = this.getPath(".eden");
+    this.edenMagicPathElement = getPath(".eden");
   }
 
-  public static Path getCacheDir(Path root, Optional<String> value, BuckPaths buckPaths) {
+  static Path getCacheDir(Path root, Optional<String> value, BuckPaths buckPaths) {
     String cacheDir = value.orElse(root.resolve(buckPaths.getCacheDir()).toString());
     Path toReturn = root.getFileSystem().getPath(cacheDir);
     toReturn = MorePaths.expandHomeDir(toReturn);
@@ -246,6 +199,18 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
       return toReturn;
     }
     return Iterables.getOnlyElement(filtered);
+  }
+
+  protected boolean shouldIgnoreValidityOfPaths() {
+    return false;
+  }
+
+  /**
+   * For testing purposes, subclasses might want to skip some of the verification done by the
+   * constructor on its arguments.
+   */
+  protected boolean shouldVerifyConstructorArguments() {
+    return true;
   }
 
   @Override
@@ -290,7 +255,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   }
 
   @Override
-  public ImmutableMap<String, ? extends Object> getDelegateDetails() {
+  public ImmutableMap<String, ?> getDelegateDetails() {
     return delegate.getDetailsForLogging();
   }
 
@@ -299,39 +264,39 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
    */
   @Override
   public Path resolve(Path path) {
-    return MorePaths.normalize(getPathForRelativePath(path).toAbsolutePath());
+    return ProjectFilesystemUtils.resolveToAbsolute(projectRoot, path);
   }
 
   @Override
   public AbsPath resolve(String path) {
-    return MorePaths.normalize(getRootPath().resolve(path));
+    return ProjectFilesystemUtils.resolveToAbsolute(projectRoot, path);
   }
 
   /** Construct a relative path between the project root and a given path. */
   @Override
   public RelPath relativize(Path path) {
-    return projectRoot.relativize(path);
+    return ProjectFilesystemUtils.relativize(projectRoot, path);
   }
 
   @Override
-  public ImmutableSet<PathMatcher> getBlacklistedPaths() {
-    return blackListedPaths;
+  public ImmutableSet<PathMatcher> getIgnoredPaths() {
+    return ignoredPaths;
   }
 
   /** @return A {@link ImmutableSet} of {@link PathMatcher} objects to have buck ignore. */
   @Override
-  public ImmutableSet<PathMatcher> getIgnorePaths() {
-    return blackListedDirectories;
+  public ImmutableSet<PathMatcher> getIgnoredDirectories() {
+    return ignoredDirectories;
   }
 
   @Override
   public Path getPathForRelativePath(Path pathRelativeToProjectRoot) {
-    return delegate.getPathForRelativePath(pathRelativeToProjectRoot).getPath();
+    return ProjectFilesystemUtils.getPathForRelativePath(projectRoot, pathRelativeToProjectRoot);
   }
 
   @Override
   public AbsPath getPathForRelativePath(String pathRelativeToProjectRoot) {
-    return projectRoot.resolve(pathRelativeToProjectRoot);
+    return ProjectFilesystemUtils.getPathForRelativePath(projectRoot, pathRelativeToProjectRoot);
   }
 
   /**
@@ -342,54 +307,18 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
    */
   @Override
   public Optional<Path> getPathRelativeToProjectRoot(Path path) {
-    path = MorePaths.normalize(path);
-    if (path.isAbsolute()) {
-      AbsPath pathAbs = AbsPath.of(path);
-      AbsPath configuredBuckOut =
-          MorePaths.normalize(projectRoot.resolve(buckPaths.getConfiguredBuckOut()));
-      // If the path is in the configured buck-out, it's also part of the filesystem.
-      if (pathAbs.startsWith(configuredBuckOut) || pathAbs.startsWith(projectRoot)) {
-        return Optional.of(MorePaths.relativize(projectRoot.getPath(), path));
-      } else {
-        return Optional.empty();
-      }
-    } else {
-      return Optional.of(path);
-    }
-  }
-
-  /**
-   * As {@link #getPathForRelativePath(java.nio.file.Path)}, but with the added twist that the
-   * existence of the path is checked before returning.
-   */
-  @Override
-  public Path getPathForRelativeExistingPath(Path pathRelativeToProjectRoot) {
-    Path file = getPathForRelativePath(pathRelativeToProjectRoot);
-
-    if (ignoreValidityOfPaths) {
-      return file;
-    }
-
-    if (exists(file)) {
-      return file;
-    }
-
-    throw new RuntimeException(
-        String.format("Not an ordinary file: '%s'.", pathRelativeToProjectRoot));
+    return ProjectFilesystemUtils.getPathRelativeToProjectRoot(
+        projectRoot, buckPaths.getConfiguredBuckOut(), path);
   }
 
   @Override
   public boolean exists(Path pathRelativeToProjectRoot, LinkOption... options) {
-    return Files.exists(resolve(pathRelativeToProjectRoot), options);
+    return ProjectFilesystemUtils.exists(projectRoot, pathRelativeToProjectRoot, options);
   }
 
   @Override
   public long getFileSize(Path pathRelativeToProjectRoot) throws IOException {
-    Path path = getPathForRelativePath(pathRelativeToProjectRoot);
-    if (!Files.isRegularFile(path)) {
-      throw new IOException("Cannot get size of " + path + " because it is not an ordinary file.");
-    }
-    return Files.size(path);
+    return ProjectFilesystemUtils.getFileSize(projectRoot, pathRelativeToProjectRoot);
   }
 
   /**
@@ -402,7 +331,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
    */
   @Override
   public boolean deleteFileAtPathIfExists(Path pathRelativeToProjectRoot) throws IOException {
-    return Files.deleteIfExists(getPathForRelativePath(pathRelativeToProjectRoot));
+    return ProjectFilesystemUtils.deleteFileAtPathIfExists(projectRoot, pathRelativeToProjectRoot);
   }
 
   /**
@@ -412,62 +341,23 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
    */
   @Override
   public void deleteFileAtPath(Path pathRelativeToProjectRoot) throws IOException {
-    Files.delete(getPathForRelativePath(pathRelativeToProjectRoot));
+    ProjectFilesystemUtils.deleteFileAtPath(projectRoot, pathRelativeToProjectRoot);
   }
 
   @Override
   public Properties readPropertiesFile(Path propertiesFile) throws IOException {
-    Properties properties = new Properties();
-    if (exists(propertiesFile)) {
-      try (BufferedReader reader =
-          new BufferedReader(
-              new InputStreamReader(newFileInputStream(propertiesFile), StandardCharsets.UTF_8))) {
-        properties.load(reader);
-      }
-      return properties;
-    } else {
-      throw new FileNotFoundException(propertiesFile.toString());
-    }
+    return ProjectFilesystemUtils.readPropertiesFile(projectRoot, propertiesFile);
   }
 
   /** Checks whether there is a normal file at the specified path. */
   @Override
   public boolean isFile(Path pathRelativeToProjectRoot, LinkOption... options) {
-    return Files.isRegularFile(getPathForRelativePath(pathRelativeToProjectRoot), options);
+    return ProjectFilesystemUtils.isFile(projectRoot, pathRelativeToProjectRoot, options);
   }
 
   @Override
   public boolean isHidden(Path pathRelativeToProjectRoot) throws IOException {
-    return Files.isHidden(getPathForRelativePath(pathRelativeToProjectRoot));
-  }
-
-  /**
-   * Similar to {@link #walkFileTree(Path, FileVisitor)} except this takes in a path relative to the
-   * project root.
-   */
-  @Override
-  public void walkRelativeFileTree(Path pathRelativeToProjectRoot, FileVisitor<Path> fileVisitor)
-      throws IOException {
-    walkRelativeFileTree(pathRelativeToProjectRoot, fileVisitor, true);
-  }
-
-  @Override
-  public void walkRelativeFileTree(
-      Path pathRelativeToProjectRoot, FileVisitor<Path> fileVisitor, boolean skipIgnored)
-      throws IOException {
-    walkRelativeFileTree(
-        pathRelativeToProjectRoot,
-        EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-        fileVisitor,
-        skipIgnored);
-  }
-
-  private void walkRelativeFileTree(
-      Path pathRelativeToProjectRoot,
-      EnumSet<FileVisitOption> visitOptions,
-      FileVisitor<Path> fileVisitor)
-      throws IOException {
-    walkRelativeFileTree(pathRelativeToProjectRoot, visitOptions, fileVisitor, true);
+    return ProjectFilesystemUtils.isHidden(projectRoot, pathRelativeToProjectRoot);
   }
 
   /** Walks a project-root relative file tree with a visitor and visit options. */
@@ -478,22 +368,14 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
       FileVisitor<Path> fileVisitor,
       boolean skipIgnored)
       throws IOException {
-    walkRelativeFileTree(
+    ProjectFilesystemUtils.walkRelativeFileTree(
+        projectRoot,
+        edenMagicPathElement,
         pathRelativeToProjectRoot,
         visitOptions,
         fileVisitor,
-        skipIgnored ? input -> !isIgnored(relativize(input)) : input -> true);
-  }
-
-  void walkRelativeFileTree(
-      Path pathRelativeToProjectRoot,
-      EnumSet<FileVisitOption> visitOptions,
-      FileVisitor<Path> fileVisitor,
-      DirectoryStream.Filter<? super Path> ignoreFilter)
-      throws IOException {
-    Path rootPath = getPathForRelativePath(pathRelativeToProjectRoot);
-    walkFileTreeWithPathMapping(
-        rootPath, visitOptions, fileVisitor, ignoreFilter, path -> relativize(path).getPath());
+        skipIgnored,
+        getIgnoredPaths());
   }
 
   void walkFileTreeWithPathMapping(
@@ -537,26 +419,42 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
     walkFileTree(root, visitOptions, pathMappingVisitor, ignoreFilter);
   }
 
-  /** Allows {@link Files#walkFileTree} to be faked in tests. */
-  @Override
-  public void walkFileTree(Path root, FileVisitor<Path> fileVisitor) throws IOException {
-    walkFileTree(root, EnumSet.noneOf(FileVisitOption.class), fileVisitor);
-  }
-
   @Override
   public void walkFileTree(Path root, Set<FileVisitOption> options, FileVisitor<Path> fileVisitor)
-      throws IOException {
-    walkFileTree(root, options, fileVisitor, true);
-  }
-
-  private void walkFileTree(
-      Path root, Set<FileVisitOption> options, FileVisitor<Path> fileVisitor, boolean skipIgnored)
       throws IOException {
     walkFileTree(
         root,
         options,
         fileVisitor,
-        skipIgnored ? input -> !isIgnored(relativize(input)) : input -> true);
+        ProjectFilesystemUtils.getIgnoreFilter(projectRoot, true, getIgnoredPaths()));
+  }
+
+  /**
+   * Similar to {@link #walkFileTree(Path, FileVisitor)} except this takes in a path relative to the
+   * project root.
+   */
+  @Override
+  public void walkRelativeFileTree(Path pathRelativeToProjectRoot, FileVisitor<Path> fileVisitor)
+      throws IOException {
+    walkRelativeFileTree(
+        pathRelativeToProjectRoot, EnumSet.of(FileVisitOption.FOLLOW_LINKS), fileVisitor, true);
+  }
+
+  @Override
+  public void walkRelativeFileTree(
+      Path pathRelativeToProjectRoot, FileVisitor<Path> fileVisitor, boolean skipIgnored)
+      throws IOException {
+    walkRelativeFileTree(
+        pathRelativeToProjectRoot,
+        EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+        fileVisitor,
+        skipIgnored);
+  }
+
+  /** Allows {@link Files#walkFileTree} to be faked in tests. */
+  @Override
+  public void walkFileTree(Path root, FileVisitor<Path> fileVisitor) throws IOException {
+    walkFileTree(root, EnumSet.noneOf(FileVisitOption.class), fileVisitor);
   }
 
   void walkFileTree(
@@ -565,8 +463,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
       FileVisitor<Path> fileVisitor,
       DirectoryStream.Filter<? super Path> ignoreFilter)
       throws IOException {
-    root = getPathForRelativePath(root);
-    new FileTreeWalker(root, options, fileVisitor, ignoreFilter).walk();
+    ProjectFilesystemUtils.walkFileTree(projectRoot, root, options, fileVisitor, ignoreFilter);
   }
 
   @Override
@@ -599,31 +496,26 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
             }
             return FileVisitResult.CONTINUE;
           }
-        });
+        },
+        true);
     return paths.build();
+  }
+
+  @Override
+  public ImmutableCollection<Path> getDirectoryContents(Path pathToUse) throws IOException {
+    return ProjectFilesystemUtils.getDirectoryContents(projectRoot, getIgnoredPaths(), pathToUse);
   }
 
   /** Allows {@link Files#isDirectory} to be faked in tests. */
   @Override
   public boolean isDirectory(Path child, LinkOption... linkOptions) {
-    return MorePaths.isDirectory(getPathForRelativePath(child), linkOptions);
+    return ProjectFilesystemUtils.isDirectory(projectRoot, child, linkOptions);
   }
 
   /** Allows {@link Files#isExecutable} to be faked in tests. */
   @Override
   public boolean isExecutable(Path child) {
-    return Files.isExecutable(resolve(child));
-  }
-
-  @Override
-  public ImmutableCollection<Path> getDirectoryContents(Path pathToUse) throws IOException {
-    Path path = getPathForRelativePath(pathToUse);
-    try (DirectoryStream<Path> stream = getDirectoryContentsStream(path)) {
-      return FluentIterable.from(stream)
-          .filter(input -> !isIgnored(relativize(input)))
-          .transform(absolutePath -> MorePaths.relativize(projectRoot.getPath(), absolutePath))
-          .toSortedList(Comparator.naturalOrder());
-    }
+    return ProjectFilesystemUtils.isExecutable(projectRoot, child);
   }
 
   /** @return returns sorted absolute paths of everything under the given directory */
@@ -633,7 +525,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
 
   @VisibleForTesting
   protected PathListing.PathModifiedTimeFetcher getLastModifiedTimeFetcher() {
-    return path -> DefaultProjectFilesystem.this.getLastModifiedTime(path);
+    return this::getLastModifiedTime;
   }
 
   /**
@@ -644,22 +536,20 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   @Override
   public ImmutableSortedSet<Path> getMtimeSortedMatchingDirectoryContents(
       Path pathRelativeToProjectRoot, String globPattern) throws IOException {
-    Path path = getPathForRelativePath(pathRelativeToProjectRoot);
-    return PathListing.listMatchingPaths(path, globPattern, getLastModifiedTimeFetcher());
+    return ProjectFilesystemUtils.getMtimeSortedMatchingDirectoryContents(
+        projectRoot, pathRelativeToProjectRoot, globPattern);
   }
 
   @Override
   public FileTime getLastModifiedTime(Path pathRelativeToProjectRoot) throws IOException {
-    Path path = getPathForRelativePath(pathRelativeToProjectRoot);
-    return Files.getLastModifiedTime(path);
+    return ProjectFilesystemUtils.getLastModifiedTime(projectRoot, pathRelativeToProjectRoot);
   }
 
   /** Sets the last modified time for the given path. */
   @Override
   public Path setLastModifiedTime(Path pathRelativeToProjectRoot, FileTime time)
       throws IOException {
-    Path path = getPathForRelativePath(pathRelativeToProjectRoot);
-    return Files.setLastModifiedTime(path, time);
+    return ProjectFilesystemUtils.setLastModifiedTime(projectRoot, pathRelativeToProjectRoot, time);
   }
 
   /**
@@ -668,42 +558,33 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
    */
   @Override
   public void deleteRecursivelyIfExists(Path pathRelativeToProjectRoot) throws IOException {
-    MostFiles.deleteRecursivelyIfExists(resolve(pathRelativeToProjectRoot));
+    ProjectFilesystemUtils.deleteRecursivelyIfExists(projectRoot, pathRelativeToProjectRoot);
   }
 
   /**
    * Resolves the relative path against the project root and then calls {@link
-   * Files#createDirectories(java.nio.file.Path, java.nio.file.attribute.FileAttribute[])}
+   * Files#createDirectories(Path, FileAttribute[])}
    */
   @Override
   public void mkdirs(Path pathRelativeToProjectRoot) throws IOException {
-    Path resolved = resolve(pathRelativeToProjectRoot);
-    try {
-      Files.createDirectories(resolved);
-    } catch (FileAlreadyExistsException e) {
-      // Don't complain if the file is a symlink that points to a valid directory.
-      // This check is done only on exception as it's a rare case, and lstat is not free.
-      if (!Files.isDirectory(resolved)) {
-        throw e;
-      }
-    }
+    ProjectFilesystemUtils.mkdirs(projectRoot, pathRelativeToProjectRoot);
   }
 
   /** Creates a new file relative to the project root. */
   @Override
   public Path createNewFile(Path pathRelativeToProjectRoot) throws IOException {
-    Path path = getPathForRelativePath(pathRelativeToProjectRoot);
-    return Files.createFile(path);
+    return ProjectFilesystemUtils.createNewFile(projectRoot, pathRelativeToProjectRoot);
   }
 
   /**
    * // @deprecated Prefer operating on {@code Path}s directly, replaced by {@link
-   * #createParentDirs(java.nio.file.Path)}.
+   * #createParentDirs(Path)}.
    */
   @Override
   public void createParentDirs(String pathRelativeToProjectRoot) throws IOException {
-    AbsPath file = getPathForRelativePath(pathRelativeToProjectRoot);
-    mkdirs(file.getParent());
+    AbsPath file =
+        ProjectFilesystemUtils.getPathForRelativePath(projectRoot, pathRelativeToProjectRoot);
+    mkdirs(file.getParent().getPath());
   }
 
   /**
@@ -712,7 +593,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
    */
   @Override
   public void createParentDirs(Path pathRelativeToProjectRoot) throws IOException {
-    Path file = resolve(pathRelativeToProjectRoot);
+    Path file = ProjectFilesystemUtils.resolveToAbsolute(projectRoot, pathRelativeToProjectRoot);
     Path directory = file.getParent();
     mkdirs(directory);
   }
@@ -726,74 +607,56 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   public void writeLinesToPath(
       Iterable<String> lines, Path pathRelativeToProjectRoot, FileAttribute<?>... attrs)
       throws IOException {
-    try (Writer writer =
-        new BufferedWriter(
-            new OutputStreamWriter(
-                newFileOutputStream(pathRelativeToProjectRoot, attrs), StandardCharsets.UTF_8))) {
-      for (String line : lines) {
-        writer.write(line);
-        writer.write('\n');
-      }
-    }
+    ProjectFilesystemUtils.writeLinesToPath(projectRoot, lines, pathRelativeToProjectRoot, attrs);
   }
 
   @Override
   public void writeContentsToPath(
       String contents, Path pathRelativeToProjectRoot, FileAttribute<?>... attrs)
       throws IOException {
-    writeBytesToPath(contents.getBytes(StandardCharsets.UTF_8), pathRelativeToProjectRoot, attrs);
+    ProjectFilesystemUtils.writeContentsToPath(
+        projectRoot, contents, pathRelativeToProjectRoot, attrs);
   }
 
   @Override
   public void writeBytesToPath(
       byte[] bytes, Path pathRelativeToProjectRoot, FileAttribute<?>... attrs) throws IOException {
-    // No need to buffer writes when writing a single piece of data.
-    try (OutputStream outputStream =
-        newUnbufferedFileOutputStream(pathRelativeToProjectRoot, /* append */ false, attrs)) {
-      outputStream.write(bytes);
-    }
+    ProjectFilesystemUtils.writeBytesToPath(projectRoot, bytes, pathRelativeToProjectRoot, attrs);
   }
 
   @Override
   public OutputStream newFileOutputStream(Path pathRelativeToProjectRoot, FileAttribute<?>... attrs)
       throws IOException {
-    return newFileOutputStream(pathRelativeToProjectRoot, /* append */ false, attrs);
+    return ProjectFilesystemUtils.newFileOutputStream(
+        projectRoot, pathRelativeToProjectRoot, attrs);
   }
 
   @Override
   public OutputStream newFileOutputStream(
       Path pathRelativeToProjectRoot, boolean append, FileAttribute<?>... attrs)
       throws IOException {
-    return new BufferedOutputStream(
-        newUnbufferedFileOutputStream(pathRelativeToProjectRoot, append, attrs));
+    return ProjectFilesystemUtils.newFileOutputStream(
+        projectRoot, pathRelativeToProjectRoot, append, attrs);
   }
 
   @Override
   public OutputStream newUnbufferedFileOutputStream(
       Path pathRelativeToProjectRoot, boolean append, FileAttribute<?>... attrs)
       throws IOException {
-    return Channels.newOutputStream(
-        Files.newByteChannel(
-            getPathForRelativePath(pathRelativeToProjectRoot),
-            append
-                ? ImmutableSet.of(StandardOpenOption.CREATE, StandardOpenOption.APPEND)
-                : ImmutableSet.of(
-                    StandardOpenOption.CREATE,
-                    StandardOpenOption.TRUNCATE_EXISTING,
-                    StandardOpenOption.WRITE),
-            attrs));
+    return ProjectFilesystemUtils.newUnbufferedFileOutputStream(
+        projectRoot, pathRelativeToProjectRoot, append, attrs);
   }
 
   @Override
   public <A extends BasicFileAttributes> A readAttributes(
       Path pathRelativeToProjectRoot, Class<A> type, LinkOption... options) throws IOException {
-    return Files.readAttributes(getPathForRelativePath(pathRelativeToProjectRoot), type, options);
+    return ProjectFilesystemUtils.readAttributes(
+        projectRoot, pathRelativeToProjectRoot, type, options);
   }
 
   @Override
   public InputStream newFileInputStream(Path pathRelativeToProjectRoot) throws IOException {
-    return new BufferedInputStream(
-        Files.newInputStream(getPathForRelativePath(pathRelativeToProjectRoot)));
+    return ProjectFilesystemUtils.newFileInputStream(projectRoot, pathRelativeToProjectRoot);
   }
 
   /** @param inputStream Source of the bytes. This method does not close this stream. */
@@ -801,36 +664,19 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   public void copyToPath(
       InputStream inputStream, Path pathRelativeToProjectRoot, CopyOption... options)
       throws IOException {
-    Files.copy(inputStream, getPathForRelativePath(pathRelativeToProjectRoot), options);
+    ProjectFilesystemUtils.copyToPath(projectRoot, inputStream, pathRelativeToProjectRoot, options);
   }
 
   /** Copies a file to an output stream. */
   @Override
   public void copyToOutputStream(Path pathRelativeToProjectRoot, OutputStream out)
       throws IOException {
-    Files.copy(getPathForRelativePath(pathRelativeToProjectRoot), out);
+    ProjectFilesystemUtils.copyToOutputStream(projectRoot, pathRelativeToProjectRoot, out);
   }
 
   @Override
   public Optional<String> readFileIfItExists(Path pathRelativeToProjectRoot) {
-    Path fileToRead = getPathForRelativePath(pathRelativeToProjectRoot);
-    return readFileIfItExists(fileToRead, pathRelativeToProjectRoot.toString());
-  }
-
-  private Optional<String> readFileIfItExists(Path fileToRead, String pathRelativeToProjectRoot) {
-    if (Files.isRegularFile(fileToRead)) {
-      String contents;
-      try {
-        contents = new String(Files.readAllBytes(fileToRead), StandardCharsets.UTF_8);
-      } catch (IOException e) {
-        // Alternatively, we could return Optional.empty(), though something seems suspicious if we
-        // have already verified that fileToRead is a file and then we cannot read it.
-        throw new RuntimeException("Error reading " + pathRelativeToProjectRoot, e);
-      }
-      return Optional.of(contents);
-    } else {
-      return Optional.empty();
-    }
+    return ProjectFilesystemUtils.readFileIfItExists(projectRoot, pathRelativeToProjectRoot);
   }
 
   /**
@@ -839,11 +685,11 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
    * returned. Otherwise, an {@link Optional} with the first line of the file will be returned.
    *
    * <p>// @deprecated PRefero operation on {@code Path}s directly, replaced by {@link
-   * #readFirstLine(java.nio.file.Path)}
+   * #readFirstLine(Path)}
    */
   @Override
   public Optional<String> readFirstLine(String pathRelativeToProjectRoot) {
-    return readFirstLine(getPath(pathRelativeToProjectRoot));
+    return ProjectFilesystemUtils.readFirstLine(projectRoot, pathRelativeToProjectRoot);
   }
 
   /**
@@ -853,8 +699,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
    */
   @Override
   public Optional<String> readFirstLine(Path pathRelativeToProjectRoot) {
-    Path file = getPathForRelativePath(pathRelativeToProjectRoot);
-    return readFirstLineFromFile(file);
+    return ProjectFilesystemUtils.readFirstLine(projectRoot, pathRelativeToProjectRoot);
   }
 
   /**
@@ -864,30 +709,21 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
    */
   @Override
   public Optional<String> readFirstLineFromFile(Path file) {
-    try {
-      try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
-        return Optional.ofNullable(reader.readLine());
-      }
-    } catch (IOException e) {
-      // Because the file is not even guaranteed to exist, swallow the IOException.
-      return Optional.empty();
-    }
+    return ProjectFilesystemUtils.readFirstLineFromFile(file);
   }
 
   @Override
   public List<String> readLines(Path pathRelativeToProjectRoot) throws IOException {
-    Path file = getPathForRelativePath(pathRelativeToProjectRoot);
-    return Files.readAllLines(file, StandardCharsets.UTF_8);
+    return ProjectFilesystemUtils.readLines(projectRoot, pathRelativeToProjectRoot);
   }
 
   /**
    * // @deprecated Prefer operation on {@code Path}s directly, replaced by {@link
-   * Files#newInputStream(java.nio.file.Path, java.nio.file.OpenOption...)}.
+   * Files#newInputStream(Path, java.nio.file.OpenOption...)}.
    */
   @Override
   public InputStream getInputStreamForRelativePath(Path path) throws IOException {
-    Path file = getPathForRelativePath(path);
-    return Files.newInputStream(file);
+    return ProjectFilesystemUtils.getInputStreamForRelativePath(projectRoot, path);
   }
 
   @Override
@@ -903,88 +739,32 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
 
   @Override
   public void copy(Path source, Path target, CopySourceMode sourceMode) throws IOException {
-    source = getPathForRelativePath(source);
-    switch (sourceMode) {
-      case FILE:
-        Files.copy(resolve(source), resolve(target), StandardCopyOption.REPLACE_EXISTING);
-        break;
-      case DIRECTORY_CONTENTS_ONLY:
-        MostFiles.copyRecursively(resolve(source), resolve(target));
-        break;
-      case DIRECTORY_AND_CONTENTS:
-        MostFiles.copyRecursively(resolve(source), resolve(target.resolve(source.getFileName())));
-        break;
-    }
+    ProjectFilesystemUtils.copy(projectRoot, source, target, sourceMode);
   }
 
   @Override
   public void move(Path source, Path target, CopyOption... options) throws IOException {
-    Files.move(resolve(source), resolve(target), options);
+    ProjectFilesystemUtils.move(projectRoot, source, target, options);
   }
 
   @Override
   public void mergeChildren(Path source, Path target, CopyOption... options) throws IOException {
-    Path resolvedSource = resolve(source);
-    Path resolvedTarget = resolve(target);
-    walkFileTree(
-        resolvedSource,
-        new FileVisitor<Path>() {
-          @Override
-          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-              throws IOException {
-            Path relative = resolvedSource.relativize(dir);
-            Path destDir = resolvedTarget.resolve(relative);
-            if (!Files.exists(destDir)) {
-              // Short circuit any copying
-              Files.move(dir, destDir, options);
-              return FileVisitResult.SKIP_SUBTREE;
-            }
-            return FileVisitResult.CONTINUE;
-          }
-
-          @Override
-          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-              throws IOException {
-            if (!attrs.isDirectory()) {
-              Path relative = resolvedSource.relativize(file);
-              Files.move(file, resolvedTarget.resolve(relative), options);
-            }
-            return FileVisitResult.CONTINUE;
-          }
-
-          @Override
-          public FileVisitResult visitFileFailed(Path file, IOException exc) {
-            return FileVisitResult.CONTINUE;
-          }
-
-          @Override
-          public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-            if (!dir.equals(resolvedSource)) {
-              Files.deleteIfExists(dir);
-            }
-            return FileVisitResult.CONTINUE;
-          }
-        });
+    ProjectFilesystemUtils.mergeChildren(projectRoot, getIgnoredPaths(), source, target, options);
   }
 
   @Override
   public void copyFolder(Path source, Path target) throws IOException {
-    copy(source, target, CopySourceMode.DIRECTORY_CONTENTS_ONLY);
+    ProjectFilesystemUtils.copyFolder(projectRoot, source, target);
   }
 
   @Override
   public void copyFile(Path source, Path target) throws IOException {
-    copy(source, target, CopySourceMode.FILE);
+    ProjectFilesystemUtils.copyFile(projectRoot, source, target);
   }
 
   @Override
   public void createSymLink(Path symLink, Path realFile, boolean force) throws IOException {
-    symLink = resolve(symLink);
-    if (force) {
-      MostFiles.deleteRecursivelyIfExists(symLink);
-    }
-
-    MorePaths.createSymLink(winFSInstance, symLink, realFile);
+    ProjectFilesystemUtils.createSymLink(projectRoot, symLink, realFile, force);
   }
 
   /**
@@ -993,32 +773,24 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
    */
   @Override
   public Set<PosixFilePermission> getPosixFilePermissions(Path path) throws IOException {
-    Path resolvedPath = getPathForRelativePath(path);
-    if (Files.getFileAttributeView(resolvedPath, PosixFileAttributeView.class) != null) {
-      return Files.getPosixFilePermissions(resolvedPath);
-    } else {
-      return ImmutableSet.of();
-    }
+    return ProjectFilesystemUtils.getPosixFilePermissions(projectRoot, path);
   }
 
   /** Returns true if the file under {@code path} exists and is a symbolic link, false otherwise. */
   @Override
   public boolean isSymLink(Path path) {
-    return Files.isSymbolicLink(resolve(path));
+    return ProjectFilesystemUtils.isSymLink(projectRoot, path);
   }
 
   /** Returns the target of the specified symbolic link. */
   @Override
   public Path readSymLink(Path path) throws IOException {
-    return Files.readSymbolicLink(getPathForRelativePath(path));
+    return ProjectFilesystemUtils.readSymLink(projectRoot, path);
   }
 
   @Override
   public Manifest getJarManifest(Path path) throws IOException {
-    Path absolutePath = getPathForRelativePath(path);
-    try (JarFile jarFile = new JarFile(absolutePath.toFile())) {
-      return jarFile.getManifest();
-    }
+    return ProjectFilesystemUtils.getJarManifest(projectRoot, path);
   }
 
   @Override
@@ -1059,24 +831,23 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
     }
 
     DefaultProjectFilesystem that = (DefaultProjectFilesystem) other;
-
     if (!Objects.equals(projectRoot, that.projectRoot)) {
       return false;
     }
 
-    return Objects.equals(blackListedPaths, that.blackListedPaths);
+    return Objects.equals(ignoredPaths, that.ignoredPaths);
   }
 
   @Override
   public String toString() {
     return String.format(
-        "%s (projectRoot=%s, hash(blackListedPaths)=%s)",
-        super.toString(), projectRoot, blackListedPaths.hashCode());
+        "%s (projectRoot=%s, hash(ignoredPaths)=%s)",
+        super.toString(), projectRoot, ignoredPaths.hashCode());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(projectRoot, blackListedPaths);
+    return Objects.hash(projectRoot, ignoredPaths);
   }
 
   @Override
@@ -1090,12 +861,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
    */
   @Override
   public boolean isIgnored(RelPath path) {
-    for (PathMatcher blackListedPath : blackListedPaths) {
-      if (blackListedPath.matches(path.getPath())) {
-        return true;
-      }
-    }
-    return false;
+    return ProjectFilesystemUtils.isIgnored(path, getIgnoredPaths());
   }
 
   /**
@@ -1116,173 +882,34 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   @Override
   public Path createTempFile(
       Path directory, String prefix, String suffix, FileAttribute<?>... attrs) throws IOException {
-    Path tmp = Files.createTempFile(resolve(directory), prefix, suffix, attrs);
-    return getPathRelativeToProjectRoot(tmp).orElse(tmp);
+    return ProjectFilesystemUtils.createTempFile(
+        projectRoot, getBuckPaths().getConfiguredBuckOut(), directory, prefix, suffix, attrs);
   }
 
   @Override
   public void touch(Path fileToTouch) throws IOException {
-    if (exists(fileToTouch)) {
-      setLastModifiedTime(fileToTouch, FileTime.fromMillis(System.currentTimeMillis()));
-    } else {
-      createNewFile(fileToTouch);
-    }
+    ProjectFilesystemUtils.touch(projectRoot, fileToTouch);
   }
 
   /**
    * Converts a path string (or sequence of strings) to a Path with the same VFS as this instance.
-   *
-   * @see FileSystem#getPath(String, String...)
    */
   @Override
   public Path getPath(String first, String... rest) {
-    return getRootPath().getFileSystem().getPath(first, rest);
+    return ProjectFilesystemUtils.getPath(projectRoot, first, rest);
   }
 
   /**
-   * FileTreeWalker is used to walk files similar to Files.walkFileTree.
-   *
-   * <p>It has two major differences from walkFileTree. 1. It ignores files and directories ignored
-   * by this ProjectFilesystem. 2. The walk is in a deterministic order.
-   *
-   * <p>And it has two minor differences. 1. It doesn't accept a depth limit. 2. It doesn't handle
-   * the presence of a security manager the same way.
+   * As {@link #getPathForRelativePath(Path)}, but with the added twist that the existence of the
+   * path is checked before returning.
    */
-  private class FileTreeWalker {
-    private final FileVisitor<Path> visitor;
-    private final Path root;
-    private final boolean followLinks;
-    private final ArrayDeque<DirWalkState> state;
-    private final Filter<? super Path> ignoreFilter;
-
-    FileTreeWalker(
-        Path root,
-        Set<FileVisitOption> options,
-        FileVisitor<Path> pathFileVisitor,
-        DirectoryStream.Filter<? super Path> ignoreFilter) {
-      this.followLinks = options.contains(FileVisitOption.FOLLOW_LINKS);
-      this.visitor = pathFileVisitor;
-      this.root = root;
-      this.state = new ArrayDeque<>();
-      this.ignoreFilter = ignoreFilter;
+  @Override
+  public Path getPathForRelativeExistingPath(Path pathRelativeToProjectRoot) {
+    if (shouldIgnoreValidityOfPaths()) {
+      return ProjectFilesystemUtils.getPathForRelativePath(projectRoot, pathRelativeToProjectRoot);
     }
 
-    private ImmutableList<Path> getContents(Path root) throws IOException {
-      try (DirectoryStream<Path> stream = Files.newDirectoryStream(root, ignoreFilter)) {
-        return FluentIterable.from(stream).toSortedList(Comparator.naturalOrder());
-      }
-    }
-
-    private class DirWalkState {
-      final Path dir;
-      final BasicFileAttributes attrs;
-      final boolean isRootSentinel;
-      UnmodifiableIterator<Path> iter;
-      @Nullable IOException ioe = null;
-
-      DirWalkState(Path directory, BasicFileAttributes attributes, boolean isRootSentinel) {
-        this.dir = directory;
-        this.attrs = attributes;
-        if (isRootSentinel) {
-          this.iter = ImmutableList.of(root).iterator();
-        } else {
-          try {
-            this.iter = getContents(directory).iterator();
-          } catch (IOException e) {
-            this.iter = ImmutableList.<Path>of().iterator();
-            this.ioe = e;
-          }
-        }
-        this.isRootSentinel = isRootSentinel;
-      }
-    }
-
-    private void walk() throws IOException {
-      state.add(new DirWalkState(root, getAttributes(root), true));
-
-      while (true) {
-        FileVisitResult result;
-        if (state.getLast().iter.hasNext()) {
-          result = visitPath(state.getLast().iter.next());
-        } else {
-          DirWalkState dirState = state.removeLast();
-          if (dirState.isRootSentinel) {
-            return;
-          }
-          result = visitor.postVisitDirectory(dirState.dir, dirState.ioe);
-        }
-        Objects.requireNonNull(result, "FileVisitor returned a null FileVisitResult.");
-        if (result == FileVisitResult.SKIP_SIBLINGS) {
-          state.getLast().iter = ImmutableList.<Path>of().iterator();
-        } else if (result == FileVisitResult.TERMINATE) {
-          return;
-        }
-      }
-    }
-
-    private FileVisitResult visitPath(Path p) throws IOException {
-      BasicFileAttributes attrs;
-      try {
-        attrs = getAttributes(p);
-        ensureNoLoops(p, attrs);
-      } catch (IOException ioe) {
-        return visitor.visitFileFailed(p, ioe);
-      }
-
-      if (attrs.isDirectory()) {
-        FileVisitResult result = visitor.preVisitDirectory(p, attrs);
-        if (result == FileVisitResult.CONTINUE) {
-          state.add(new DirWalkState(p, attrs, false));
-        }
-        return result;
-      } else {
-        return visitor.visitFile(p, attrs);
-      }
-    }
-
-    private void ensureNoLoops(Path p, BasicFileAttributes attrs) throws FileSystemLoopException {
-      if (!followLinks) {
-        return;
-      }
-      if (!attrs.isDirectory()) {
-        return;
-      }
-      if (willLoop(p, attrs)) {
-        throw new FileSystemLoopException(p.toString());
-      }
-    }
-
-    private boolean willLoop(Path p, BasicFileAttributes attrs) {
-      try {
-        Object thisKey = attrs.fileKey();
-        for (DirWalkState s : state) {
-          if (s.isRootSentinel) {
-            continue;
-          }
-          Object thatKey = s.attrs.fileKey();
-          if (thisKey != null && thatKey != null) {
-            if (thisKey.equals(thatKey)) {
-              return true;
-            }
-          } else if (Files.isSameFile(p, s.dir)) {
-            return true;
-          }
-        }
-      } catch (IOException e) {
-        return true;
-      }
-      return false;
-    }
-
-    private BasicFileAttributes getAttributes(Path root) throws IOException {
-      if (!followLinks) {
-        return Files.readAttributes(root, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
-      }
-      try {
-        return Files.readAttributes(root, BasicFileAttributes.class);
-      } catch (IOException e) {
-        return Files.readAttributes(root, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
-      }
-    }
+    return ProjectFilesystemUtils.getPathForRelativeExistingPath(
+        projectRoot, pathRelativeToProjectRoot);
   }
 }

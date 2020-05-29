@@ -1896,7 +1896,7 @@ public final class MainRunner {
                     watchman,
                     buckGlobalState.getFileEventBus(),
                     ImmutableSet.<PathMatcher>builder()
-                        .addAll(filesystem.getIgnorePaths())
+                        .addAll(filesystem.getIgnoredDirectories())
                         .addAll(DEFAULT_IGNORE_GLOBS)
                         .build(),
                     buckGlobalState.getWatchmanCursor(),

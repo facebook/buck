@@ -133,7 +133,7 @@ public class ResolverIntegrationTest {
                         .getPythonInterpreterPath()
                         .toString())
                 .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
-                .setIgnorePaths(filesystem.getIgnorePaths())
+                .setIgnorePaths(filesystem.getIgnoredDirectories())
                 .setBuildFileName(parserConfig.getBuildFileName())
                 .setDefaultIncludes(parserConfig.getDefaultIncludes())
                 .setDescriptions(descriptions)

@@ -59,9 +59,10 @@ abstract class CellImpl implements Cell {
   @Value.Derived
   public ProjectFilesystemView getFilesystemViewForSourceFiles() {
     ProjectFilesystem filesystem = getFilesystem();
+    ImmutableSet<PathMatcher> ignoredPaths = filesystem.getIgnoredPaths();
     ImmutableSet.Builder<PathMatcher> ignores =
-        ImmutableSet.builderWithExpectedSize(filesystem.getBlacklistedPaths().size() + 1);
-    ignores.addAll(filesystem.getBlacklistedPaths());
+        ImmutableSet.builderWithExpectedSize(ignoredPaths.size() + 1);
+    ignores.addAll(ignoredPaths);
     ignores.add(RecursiveFileMatcher.of(filesystem.getBuckPaths().getBuckOut()));
     for (AbsPath subCellRoots : getKnownRootsOfAllCells()) {
       if (!subCellRoots.equals(getRoot())) {

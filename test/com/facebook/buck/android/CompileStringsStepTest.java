@@ -26,7 +26,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -473,7 +472,6 @@ public class CompileStringsStepTest {
           CanonicalCellName.rootCell(),
           root,
           new DefaultProjectFilesystemDelegate(root.getPath()),
-          DefaultProjectFilesystemFactory.getWindowsFSInstance(),
           TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
     }
 

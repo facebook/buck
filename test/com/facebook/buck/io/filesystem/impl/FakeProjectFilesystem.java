@@ -34,7 +34,6 @@ import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -87,6 +86,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
 // TODO(natthu): Implement methods that throw UnsupportedOperationException.
@@ -207,6 +208,9 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
   private final Set<Path> directories;
   private final Clock clock;
 
+  // Generally, tests don't care whether files exist.
+  private boolean ignoreValidityOfPaths = true;
+
   /**
    * @return A project filesystem in a temp directory that will be deleted recursively on jvm exit.
    */
@@ -254,7 +258,6 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
         CanonicalCellName.rootCell(),
         root,
         new DefaultProjectFilesystemDelegate(root.getPath()),
-        DefaultProjectFilesystemFactory.getWindowsFSInstance(),
         TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST) {
       @Override
       public Path resolve(Path path) {
@@ -272,8 +275,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
         ImmutableSet.of(),
         BuckPaths.createDefaultBuckPaths(
             CanonicalCellName.rootCell(), root.getPath(), buckOutIncludeTargetConfigHash),
-        new DefaultProjectFilesystemDelegate(root.getPath()),
-        DefaultProjectFilesystemFactory.getWindowsFSInstance());
+        new DefaultProjectFilesystemDelegate(root.getPath()));
   }
 
   public FakeProjectFilesystem() {
@@ -312,7 +314,6 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
         cellName,
         root,
         new DefaultProjectFilesystemDelegate(root.getPath()),
-        DefaultProjectFilesystemFactory.getWindowsFSInstance(),
         TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
     // We use LinkedHashMap to preserve insertion order, so the
     // behavior of this test is consistent across versions. (It also lets
@@ -337,9 +338,6 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
       }
     }
     this.clock = Objects.requireNonNull(clock);
-
-    // Generally, tests don't care whether files exist.
-    ignoreValidityOfPaths = true;
   }
 
   @Override
@@ -350,6 +348,11 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
   @Override
   protected boolean shouldVerifyConstructorArguments() {
     return false;
+  }
+
+  @Override
+  protected boolean shouldIgnoreValidityOfPaths() {
+    return ignoreValidityOfPaths;
   }
 
   public FakeProjectFilesystem setIgnoreValidityOfPaths(boolean shouldIgnore) {
@@ -457,9 +460,10 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     Preconditions.checkState(isDirectory(pathRelativeToProjectRoot));
     try (DirectoryStream<Path> directoryStream =
         getDirectoryContentsStream(resolve(pathRelativeToProjectRoot))) {
-      return FluentIterable.from(directoryStream)
-          .transform(absolutePath -> relativize(absolutePath).getPath())
-          .toSortedList(Comparator.naturalOrder());
+      return StreamSupport.stream(directoryStream.spliterator(), false)
+          .map(absolutePath -> relativize(absolutePath).getPath())
+          .sorted(Comparator.naturalOrder())
+          .collect(ImmutableList.toImmutableList());
     }
   }
 
@@ -469,9 +473,8 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     Preconditions.checkState(isDirectory(relativize(absolutePath)));
     return new DirectoryStream<Path>() {
 
-      private final FluentIterable<Path> iterable =
-          FluentIterable.from(fileContents.keySet())
-              .append(directories)
+      private final Stream<Path> iterable =
+          Stream.concat(fileContents.keySet().stream(), directories.stream())
               .filter(
                   input -> {
                     if (input.equals(Paths.get(""))
@@ -481,7 +484,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
                     return MorePaths.getParentOrEmpty(input)
                         .equals(relativize(absolutePath).getPath());
                   })
-              .transform(FakeProjectFilesystem.this::resolve);
+              .map(FakeProjectFilesystem.this::resolve);
 
       @Override
       public void close() {}

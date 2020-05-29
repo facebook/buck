@@ -139,7 +139,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setPythonInterpreter(pythonInterpreterProvider.getOrFail())
             .setPythonModuleSearchPath(pythonModuleSearchPath)
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
-            .setIgnorePaths(cell.getFilesystem().getIgnorePaths())
+            .setIgnorePaths(cell.getFilesystem().getIgnoredDirectories())
             .setBuildFileName(cell.getBuckConfigView(ParserConfig.class).getBuildFileName())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())

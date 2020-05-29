@@ -27,10 +27,8 @@ import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegatePair;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
-import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.config.Config;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -40,7 +38,6 @@ import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 
 public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory {
 
@@ -48,16 +45,6 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
 
   // A non-exhaustive list of characters that might indicate that we're about to deal with a glob.
   private static final Pattern GLOB_CHARS = Pattern.compile("[*?{\\[]");
-
-  @Nullable
-  private static final WindowsFS winFSInstance =
-      Platform.detect() == Platform.WINDOWS ? new WindowsFS() : null;
-
-  /** @return the WindowsFS singleton. */
-  @Nullable
-  public static WindowsFS getWindowsFSInstance() {
-    return winFSInstance;
-  }
 
   @Override
   public DefaultProjectFilesystem createProjectFilesystem(
@@ -80,8 +67,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
         extractIgnorePaths(root.getPath(), config, buckPaths, embeddedCellBuckOutInfo),
         buckPaths,
         delegatePair.getGeneralDelegate(),
-        delegatePair,
-        getWindowsFSInstance());
+        delegatePair);
   }
 
   @Override
@@ -179,7 +165,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     if (configuredBuckOut.isPresent()) {
       String value = configuredBuckOut.get();
       if (value.startsWith(BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME)
-          && buckOut != BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME) {
+          && !buckOut.equals(BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME)) {
         value = value.replace(BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME, buckOut);
       }
 

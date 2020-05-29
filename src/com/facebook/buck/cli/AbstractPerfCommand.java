@@ -228,8 +228,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
    * Creates a {@link StackedFileHashCache} similar to a real command but that uses our hash-faking
    * delegate.
    */
-  protected StackedFileHashCache createStackedFileHashCache(CommandRunnerParams params)
-      throws InterruptedException {
+  protected StackedFileHashCache createStackedFileHashCache(CommandRunnerParams params) {
     FileHashCacheMode cacheMode =
         params
             .getCells()
@@ -318,7 +317,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
 
     return new DefaultProjectFilesystem(
         realFilesystem.getRootPath(),
-        realFilesystem.getBlacklistedPaths(),
+        realFilesystem.getIgnoredPaths(),
         realFilesystem.getBuckPaths(),
         new ProjectFilesystemDelegate() {
           @Override
@@ -339,8 +338,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
           public ImmutableMap<String, ?> getDetailsForLogging() {
             return ImmutableMap.of();
           }
-        },
-        DefaultProjectFilesystemFactory.getWindowsFSInstance());
+        });
   }
 
   @Override

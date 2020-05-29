@@ -610,7 +610,7 @@ public class DefaultProjectFilesystemTest {
     AbsPath rootPath = tmp.getRoot();
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(rootPath, config);
     ImmutableSet<Path> ignorePaths =
-        FluentIterable.from(filesystem.getIgnorePaths())
+        FluentIterable.from(filesystem.getIgnoredDirectories())
             .filter(RecursiveFileMatcher.class)
             .transform(recursiveFileMatcher -> recursiveFileMatcher.getPath().getPath())
             .toSet();
@@ -638,7 +638,8 @@ public class DefaultProjectFilesystemTest {
     AbsPath rootPath = tmp.getRoot();
     ImmutableSet<Path> ignorePaths =
         FluentIterable.from(
-                TestProjectFilesystems.createProjectFilesystem(rootPath, config).getIgnorePaths())
+                TestProjectFilesystems.createProjectFilesystem(rootPath, config)
+                    .getIgnoredDirectories())
             .filter(RecursiveFileMatcher.class)
             .transform(recursiveFileMatcher -> recursiveFileMatcher.getPath().getPath())
             .toSet();

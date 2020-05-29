@@ -51,6 +51,10 @@ import javax.annotation.Nullable;
  */
 public class MorePaths {
 
+  private static final boolean IS_WINDOWS = Platform.detect() == Platform.WINDOWS;
+
+  @Nullable public static final WindowsFS WIN_FS_INSTANCE = IS_WINDOWS ? new WindowsFS() : null;
+
   /** Utility class: do not instantiate. */
   private MorePaths() {}
 
@@ -59,7 +63,7 @@ public class MorePaths {
   }
 
   public static String pathWithPlatformSeparators(Path path) {
-    if (Platform.detect() == Platform.WINDOWS) {
+    if (IS_WINDOWS) {
       return PathFormatter.pathWithWindowsSeparators(path);
     } else {
       return PathFormatter.pathWithUnixSeparators(path);
@@ -453,7 +457,7 @@ public class MorePaths {
   public static void createSymLink(@Nullable WindowsFS winFS, Path symLink, Path target)
       throws IOException {
     try {
-      if (Platform.detect() == Platform.WINDOWS) {
+      if (IS_WINDOWS) {
         Objects.requireNonNull(winFS);
         target = MorePaths.normalize(symLink.getParent().resolve(target));
         winFS.createSymbolicLink(symLink, target, isDirectory(target));

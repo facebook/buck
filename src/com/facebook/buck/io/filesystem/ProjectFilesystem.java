@@ -34,6 +34,7 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
@@ -69,7 +70,7 @@ public interface ProjectFilesystem {
    *     keys of this map are unique in namespace of the things a logger may want to log. Values
    *     must be {@link String}, {@code int}, or {@code boolean}.
    */
-  ImmutableMap<String, ? extends Object> getDelegateDetails();
+  ImmutableMap<String, ?> getDelegateDetails();
 
   /**
    * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.
@@ -100,10 +101,10 @@ public interface ProjectFilesystem {
   }
 
   /** @return a set of {@link PathMatcher} objects ignored by {@link #isIgnored(RelPath)} */
-  ImmutableSet<PathMatcher> getBlacklistedPaths();
+  ImmutableSet<PathMatcher> getIgnoredPaths();
 
   /** @return A {@link ImmutableSet} of {@link PathMatcher} objects to have buck ignore. */
-  ImmutableSet<PathMatcher> getIgnorePaths();
+  ImmutableSet<PathMatcher> getIgnoredDirectories();
 
   Path getPathForRelativePath(Path pathRelativeToProjectRoot);
 
@@ -122,8 +123,8 @@ public interface ProjectFilesystem {
   Optional<Path> getPathRelativeToProjectRoot(Path path);
 
   /**
-   * As {@link #getPathForRelativePath(java.nio.file.Path)}, but with the added twist that the
-   * existence of the path is checked before returning.
+   * As {@link #getPathForRelativePath(Path)}, but with the added twist that the existence of the
+   * path is checked before returning.
    */
   Path getPathForRelativeExistingPath(Path pathRelativeToProjectRoot);
 
@@ -294,13 +295,13 @@ public interface ProjectFilesystem {
 
   /**
    * Resolves the relative path against the project root and then calls {@link
-   * Files#createDirectories(java.nio.file.Path, java.nio.file.attribute.FileAttribute[])}
+   * Files#createDirectories(Path, FileAttribute[])}
    */
   void mkdirs(Path pathRelativeToProjectRoot) throws IOException;
 
   /**
    * Resolves the relative path against the project root and then calls {@link
-   * Files#createDirectories(java.nio.file.Path, java.nio.file.attribute.FileAttribute[])}
+   * Files#createDirectories(Path, FileAttribute[])}
    */
   default void mkdirs(PathWrapper pathRelativeToProjectRoot) throws IOException {
     mkdirs(pathRelativeToProjectRoot.getPath());
@@ -311,7 +312,7 @@ public interface ProjectFilesystem {
 
   /**
    * // @deprecated Prefer operating on {@code Path}s directly, replaced by {@link
-   * #createParentDirs(java.nio.file.Path)}.
+   * #createParentDirs(Path)}.
    */
   void createParentDirs(String pathRelativeToProjectRoot) throws IOException;
 
@@ -395,7 +396,7 @@ public interface ProjectFilesystem {
    * returned. Otherwise, an {@link Optional} with the first line of the file will be returned.
    *
    * <p>// @deprecated PRefero operation on {@code Path}s directly, replaced by {@link
-   * #readFirstLine(java.nio.file.Path)}
+   * #readFirstLine(Path)}
    */
   Optional<String> readFirstLine(String pathRelativeToProjectRoot);
 
@@ -417,7 +418,7 @@ public interface ProjectFilesystem {
 
   /**
    * // @deprecated Prefer operation on {@code Path}s directly, replaced by {@link
-   * Files#newInputStream(java.nio.file.Path, java.nio.file.OpenOption...)}.
+   * Files#newInputStream(Path, OpenOption...)}.
    */
   InputStream getInputStreamForRelativePath(Path path) throws IOException;
 

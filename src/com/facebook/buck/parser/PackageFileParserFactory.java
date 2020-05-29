@@ -80,7 +80,7 @@ public class PackageFileParserFactory implements FileParserFactory<PackageFileMa
             .setPythonInterpreter(pythonInterpreterProvider.getOrFail())
             .setPythonModuleSearchPath(pythonModuleSearchPath)
             .setAllowEmptyGlobs(false)
-            .setIgnorePaths(cell.getFilesystem().getIgnorePaths())
+            .setIgnorePaths(cell.getFilesystem().getIgnoredDirectories())
             .setBuildFileName(FileKind.PACKAGE.toString())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(ImmutableList.of())

@@ -356,7 +356,7 @@ public class DefaultFileHashCacheTest {
   public void thatBuckOutCacheUsesCorrectDelegate()
       throws NoSuchFieldException, IllegalAccessException {
     // TODO: add way to spoof that we're running on an eden filesystem so we can assert that
-    // initially the filesystme contains an EdenProjectFilesystemDelegate, but that the
+    // initially the filesystem contains an EdenProjectFilesystemDelegate, but that the
     // FileHashCache created with createBuckOutFileHashCache instead has a Filesystem with a
     // DefaultProjectFilesystemDelegate
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
