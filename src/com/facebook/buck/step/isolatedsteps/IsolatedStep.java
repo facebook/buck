@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.step;
+package com.facebook.buck.step.isolatedsteps;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import java.io.IOException;
 
 /**
- * Isolated step - build rule's step that is isolated from the buck internal data structures as an
+ * Isolated step - build rule's step that is isolated from the buck core data structures as an
  * action graph. For example doesn't contain any references to a {@link
  * com.facebook.buck.core.sourcepath.SourcePath}, {@link com.facebook.buck.rules.modern.OutputPath}
  * and cell related objects.

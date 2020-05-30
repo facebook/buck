@@ -1,0 +1,16 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+)
+
+java_immutables_library(
+    name = "isolatedsteps",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/build/execution/context:context",
+        "//src/com/facebook/buck/step:step",
+    ],
+)
