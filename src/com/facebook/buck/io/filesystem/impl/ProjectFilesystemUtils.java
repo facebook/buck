@@ -85,8 +85,9 @@ public class ProjectFilesystemUtils {
    * relative to the root of this view.
    */
   public static ImmutableCollection<Path> getDirectoryContents(
-      AbsPath root, ImmutableCollection<PathMatcher> ignores, Path pathToUse) throws IOException {
-    Path path = getPathForRelativePath(root, pathToUse);
+      AbsPath root, ImmutableCollection<PathMatcher> ignores, Path pathRelativeToProjectRoot)
+      throws IOException {
+    Path path = getPathForRelativePath(root, pathRelativeToProjectRoot);
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
       return FluentIterable.from(stream)
           .filter(input -> !isIgnored(relativize(root, input), ignores))
@@ -102,13 +103,17 @@ public class ProjectFilesystemUtils {
 
   /** Get absolute path that is resolved against the root path. */
   public static AbsPath getAbsPathForRelativePath(AbsPath root, Path pathRelativeToProjectRoot) {
+    AbsPath result;
     // We often create {@link Path} instances using
     // {@link java.nio.file.Paths#get(String, String...)}, but there's no guarantee that the
     // underlying {@link FileSystem} is the default one.
     if (pathRelativeToProjectRoot.getFileSystem().equals(root.getFileSystem())) {
-      return root.resolve(pathRelativeToProjectRoot);
+      result = root.resolve(pathRelativeToProjectRoot);
+    } else {
+      result = root.resolve(pathRelativeToProjectRoot.toString());
     }
-    return root.resolve(pathRelativeToProjectRoot.toString());
+
+    return MorePaths.normalize(result);
   }
 
   /** Construct a relative path between the project root and a given path. */
@@ -124,27 +129,17 @@ public class ProjectFilesystemUtils {
     return ignores.stream().anyMatch(pathMatcher -> pathMatcher.matches(path.getPath()));
   }
 
-  /** @return the specified {@code path} resolved against {@code root} to an absolute path. */
-  public static Path resolveToAbsolute(AbsPath root, Path path) {
-    return MorePaths.normalize(getPathForRelativePath(root, path).toAbsolutePath());
-  }
-
-  /** @return the specified {@code path} resolved against {@code root} to an absolute path. */
-  public static AbsPath resolveToAbsolute(AbsPath root, String path) {
-    return MorePaths.normalize(root.resolve(path));
-  }
-
   /**
    * @return the absolute path of {@code pathRelativeToProjectRoot} resolved against {@code root}.
    */
   public static AbsPath getPathForRelativePath(AbsPath root, String pathRelativeToProjectRoot) {
-    return root.resolve(pathRelativeToProjectRoot);
+    return MorePaths.normalize(root.resolve(pathRelativeToProjectRoot));
   }
 
   /** Tests whether a file exists. */
   public static boolean exists(
       AbsPath root, Path pathRelativeToProjectRoot, LinkOption... options) {
-    return Files.exists(resolveToAbsolute(root, pathRelativeToProjectRoot), options);
+    return Files.exists(getPathForRelativePath(root, pathRelativeToProjectRoot), options);
   }
 
   /** Returns file size. */
@@ -215,13 +210,15 @@ public class ProjectFilesystemUtils {
   }
 
   /** Allows {@link Files#isDirectory} to be faked in tests. */
-  public static boolean isDirectory(AbsPath root, Path child, LinkOption... linkOptions) {
-    return MorePaths.isDirectory(getPathForRelativePath(root, child), linkOptions);
+  public static boolean isDirectory(
+      AbsPath root, Path pathRelativeToProjectRoot, LinkOption... linkOptions) {
+    return MorePaths.isDirectory(
+        getPathForRelativePath(root, pathRelativeToProjectRoot), linkOptions);
   }
 
   /** Allows {@link Files#isExecutable} to be faked in tests. */
-  public static boolean isExecutable(AbsPath root, Path child) {
-    return Files.isExecutable(resolveToAbsolute(root, child));
+  public static boolean isExecutable(AbsPath root, Path pathRelativeToProjectRoot) {
+    return Files.isExecutable(getPathForRelativePath(root, pathRelativeToProjectRoot));
   }
 
   /** Returns a file's last modified time. */
@@ -255,7 +252,7 @@ public class ProjectFilesystemUtils {
    */
   public static void deleteRecursivelyIfExists(AbsPath root, Path pathRelativeToProjectRoot)
       throws IOException {
-    MostFiles.deleteRecursivelyIfExists(resolveToAbsolute(root, pathRelativeToProjectRoot));
+    MostFiles.deleteRecursivelyIfExists(getPathForRelativePath(root, pathRelativeToProjectRoot));
   }
 
   /**
@@ -263,7 +260,7 @@ public class ProjectFilesystemUtils {
    * Files#createDirectories(Path, FileAttribute[])}
    */
   public static void mkdirs(AbsPath root, Path pathRelativeToProjectRoot) throws IOException {
-    Path resolved = resolveToAbsolute(root, pathRelativeToProjectRoot);
+    Path resolved = getPathForRelativePath(root, pathRelativeToProjectRoot);
     try {
       Files.createDirectories(resolved);
     } catch (FileAlreadyExistsException e) {
@@ -455,30 +452,30 @@ public class ProjectFilesystemUtils {
    * // @deprecated Prefer operation on {@code Path}s directly, replaced by {@link
    * Files#newInputStream(Path, java.nio.file.OpenOption...)}.
    */
-  public static InputStream getInputStreamForRelativePath(AbsPath root, Path path)
-      throws IOException {
-    Path file = getPathForRelativePath(root, path);
+  public static InputStream getInputStreamForRelativePath(
+      AbsPath root, Path pathRelativeToProjectRoot) throws IOException {
+    Path file = getPathForRelativePath(root, pathRelativeToProjectRoot);
     return Files.newInputStream(file);
   }
 
   /** Copies a file. */
   public static void copy(AbsPath root, Path source, Path target, CopySourceMode sourceMode)
       throws IOException {
-    source = getPathForRelativePath(root, source);
     switch (sourceMode) {
       case FILE:
         Files.copy(
-            resolveToAbsolute(root, source),
-            resolveToAbsolute(root, target),
+            getPathForRelativePath(root, source),
+            getPathForRelativePath(root, target),
             StandardCopyOption.REPLACE_EXISTING);
         break;
       case DIRECTORY_CONTENTS_ONLY:
-        MostFiles.copyRecursively(resolveToAbsolute(root, source), resolveToAbsolute(root, target));
+        MostFiles.copyRecursively(
+            getPathForRelativePath(root, source), getPathForRelativePath(root, target));
         break;
       case DIRECTORY_AND_CONTENTS:
         MostFiles.copyRecursively(
-            resolveToAbsolute(root, source),
-            resolveToAbsolute(root, target.resolve(source.getFileName())));
+            getPathForRelativePath(root, source),
+            getPathForRelativePath(root, target.resolve(source.getFileName())));
         break;
     }
   }
@@ -486,7 +483,7 @@ public class ProjectFilesystemUtils {
   /** Moves a file. */
   public static void move(AbsPath root, Path source, Path target, CopyOption... options)
       throws IOException {
-    Files.move(resolveToAbsolute(root, source), resolveToAbsolute(root, target), options);
+    Files.move(getPathForRelativePath(root, source), getPathForRelativePath(root, target), options);
   }
 
   /** Copies a folder. */
@@ -502,7 +499,7 @@ public class ProjectFilesystemUtils {
   /** Creates a symlink. */
   public static void createSymLink(AbsPath root, Path symLink, Path realFile, boolean force)
       throws IOException {
-    symLink = resolveToAbsolute(root, symLink);
+    symLink = getPathForRelativePath(root, symLink);
     if (force) {
       MostFiles.deleteRecursivelyIfExists(symLink);
     }
@@ -513,9 +510,9 @@ public class ProjectFilesystemUtils {
    * Returns the set of POSIX file permissions, or the empty set if the underlying file system does
    * not support POSIX file attributes.
    */
-  public static Set<PosixFilePermission> getPosixFilePermissions(AbsPath root, Path path)
-      throws IOException {
-    Path resolvedPath = getPathForRelativePath(root, path);
+  public static Set<PosixFilePermission> getPosixFilePermissions(
+      AbsPath root, Path pathRelativeToProjectRoot) throws IOException {
+    Path resolvedPath = getPathForRelativePath(root, pathRelativeToProjectRoot);
     if (Files.getFileAttributeView(resolvedPath, PosixFileAttributeView.class) != null) {
       return Files.getPosixFilePermissions(resolvedPath);
     } else {
@@ -524,13 +521,13 @@ public class ProjectFilesystemUtils {
   }
 
   /** Returns true if the file under {@code path} exists and is a symbolic link, false otherwise. */
-  public static boolean isSymLink(AbsPath root, Path path) {
-    return Files.isSymbolicLink(resolveToAbsolute(root, path));
+  public static boolean isSymLink(AbsPath root, Path pathRelativeToProjectRoot) {
+    return Files.isSymbolicLink(getPathForRelativePath(root, pathRelativeToProjectRoot));
   }
 
   /** Returns the target of the specified symbolic link. */
-  public static Path readSymLink(AbsPath root, Path path) throws IOException {
-    return Files.readSymbolicLink(getPathForRelativePath(root, path));
+  public static Path readSymLink(AbsPath root, Path pathRelativeToProjectRoot) throws IOException {
+    return Files.readSymbolicLink(getPathForRelativePath(root, pathRelativeToProjectRoot));
   }
 
   /** Returns Jar Manifest. */
@@ -551,7 +548,7 @@ public class ProjectFilesystemUtils {
       String suffix,
       FileAttribute<?>... attrs)
       throws IOException {
-    Path tmp = Files.createTempFile(resolveToAbsolute(root, directory), prefix, suffix, attrs);
+    Path tmp = Files.createTempFile(getPathForRelativePath(root, directory), prefix, suffix, attrs);
     return getPathRelativeToProjectRoot(root, buckOut, tmp).orElse(tmp);
   }
 
@@ -565,18 +562,18 @@ public class ProjectFilesystemUtils {
    */
   public static Optional<Path> getPathRelativeToProjectRoot(
       AbsPath root, RelPath buckOut, Path path) {
-    Path normilizedPath = MorePaths.normalize(path);
-    if (normilizedPath.isAbsolute()) {
-      AbsPath pathAbs = AbsPath.of(normilizedPath);
+    Path normalizedPath = MorePaths.normalize(path);
+    if (normalizedPath.isAbsolute()) {
+      AbsPath pathAbs = AbsPath.of(normalizedPath);
       AbsPath configuredBuckOut = MorePaths.normalize(root.resolve(buckOut));
       // If the path is in the configured buck-out, it's also part of the filesystem.
       if (pathAbs.startsWith(configuredBuckOut) || pathAbs.startsWith(root)) {
-        return Optional.of(MorePaths.relativize(root.getPath(), normilizedPath));
+        return Optional.of(MorePaths.relativize(root.getPath(), normalizedPath));
       } else {
         return Optional.empty();
       }
     } else {
-      return Optional.of(normilizedPath);
+      return Optional.of(normalizedPath);
     }
   }
 
@@ -610,8 +607,8 @@ public class ProjectFilesystemUtils {
       Path target,
       CopyOption... options)
       throws IOException {
-    Path resolvedSource = resolveToAbsolute(projectRoot, source);
-    Path resolvedTarget = resolveToAbsolute(projectRoot, target);
+    Path resolvedSource = getPathForRelativePath(projectRoot, source);
+    Path resolvedTarget = getPathForRelativePath(projectRoot, target);
     FileVisitor<Path> fileVisitor =
         new FileVisitor<Path>() {
           @Override
@@ -666,11 +663,8 @@ public class ProjectFilesystemUtils {
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,
       FileVisitor<Path> fileVisitor,
-      boolean skipIgnored,
-      ImmutableCollection<PathMatcher> ignores)
+      DirectoryStream.Filter<? super Path> ignoreFilter)
       throws IOException {
-    DirectoryStream.Filter<? super Path> ignoreFilter =
-        getIgnoreFilter(projectRoot, skipIgnored, ignores);
     Path rootPath = getPathForRelativePath(projectRoot, pathRelativeToProjectRoot);
     Function<Path, Path> pathMapper = path -> relativize(projectRoot, path).getPath();
     FileVisitor<Path> pathMappingVisitor =

@@ -264,12 +264,12 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
    */
   @Override
   public Path resolve(Path path) {
-    return ProjectFilesystemUtils.resolveToAbsolute(projectRoot, path);
+    return ProjectFilesystemUtils.getPathForRelativePath(projectRoot, path);
   }
 
   @Override
   public AbsPath resolve(String path) {
-    return ProjectFilesystemUtils.resolveToAbsolute(projectRoot, path);
+    return ProjectFilesystemUtils.getPathForRelativePath(projectRoot, path);
   }
 
   /** Construct a relative path between the project root and a given path. */
@@ -368,14 +368,15 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
       FileVisitor<Path> fileVisitor,
       boolean skipIgnored)
       throws IOException {
+    DirectoryStream.Filter<? super Path> ignoreFilter =
+        ProjectFilesystemUtils.getIgnoreFilter(projectRoot, skipIgnored, getIgnoredPaths());
     ProjectFilesystemUtils.walkRelativeFileTree(
         projectRoot,
         edenMagicPathElement,
         pathRelativeToProjectRoot,
         visitOptions,
         fileVisitor,
-        skipIgnored,
-        getIgnoredPaths());
+        ignoreFilter);
   }
 
   void walkFileTreeWithPathMapping(
@@ -593,8 +594,9 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
    */
   @Override
   public void createParentDirs(Path pathRelativeToProjectRoot) throws IOException {
-    Path file = ProjectFilesystemUtils.resolveToAbsolute(projectRoot, pathRelativeToProjectRoot);
-    Path directory = file.getParent();
+    Path directory =
+        ProjectFilesystemUtils.getPathForRelativePath(projectRoot, pathRelativeToProjectRoot)
+            .getParent();
     mkdirs(directory);
   }
 
