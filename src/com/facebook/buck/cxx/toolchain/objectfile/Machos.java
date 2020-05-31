@@ -78,17 +78,18 @@ public class Machos {
   }
 
   static boolean isMacho(FileChannel file) throws IOException {
-    try (ByteBufferUnmapper unmapper =
-        ByteBufferUnmapper.createUnsafe(
-            file.map(FileChannel.MapMode.READ_ONLY, 0, MH_MAGIC.length))) {
-      ByteBuffer map = unmapper.getByteBuffer();
-
-      byte[] magic = ObjectFileScrubbers.getBytes(map, MH_MAGIC.length);
-      return Arrays.equals(MH_MAGIC, magic)
-          || Arrays.equals(MH_CIGAM, magic)
-          || Arrays.equals(MH_MAGIC_64, magic)
-          || Arrays.equals(MH_CIGAM_64, magic);
+    if (file.size() < MH_MAGIC.length) {
+      return false;
     }
+
+    byte[] magic = new byte[MH_MAGIC.length];
+    ByteBuffer buffer = ByteBuffer.wrap(magic);
+    file.read(buffer, 0);
+
+    return Arrays.equals(MH_MAGIC, magic)
+        || Arrays.equals(MH_CIGAM, magic)
+        || Arrays.equals(MH_MAGIC_64, magic)
+        || Arrays.equals(MH_CIGAM_64, magic);
   }
 
   /**
