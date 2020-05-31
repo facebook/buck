@@ -100,7 +100,8 @@ public class Machos {
     }
   }
 
-  static boolean isMacho(FileChannel file) throws IOException {
+  /** Returns true if the given file is a Mach-O file. */
+  public static boolean isMacho(FileChannel file) throws IOException {
     if (file.size() < MH_MAGIC.length) {
       return false;
     }
