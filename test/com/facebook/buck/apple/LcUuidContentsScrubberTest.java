@@ -24,12 +24,16 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.cxx.toolchain.objectfile.LcUuidContentsScrubber;
+import com.facebook.buck.cxx.toolchain.objectfile.Machos;
+import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
@@ -89,6 +93,34 @@ public class LcUuidContentsScrubberTest {
     }
 
     return Optional.empty();
+  }
+
+  @Test
+  public void testUuidGetter() throws IOException, InterruptedException, Machos.MachoException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    AbsPath srcDylibPath = getHelloLibDylibPath();
+    Optional<String> maybeUuidFromDwarfdump = getUuidOf(srcDylibPath);
+    assertTrue(maybeUuidFromDwarfdump.isPresent());
+    assertEquals(maybeUuidFromDwarfdump.get(), LIB_HELLO_DYLIB_UUID);
+
+    String cleanUuidFromDwarfdump = maybeUuidFromDwarfdump.get().replace("-", "");
+
+    try (FileChannel file = FileChannel.open(srcDylibPath.getPath(), StandardOpenOption.READ)) {
+
+      try (ByteBufferUnmapper unmapper =
+          ByteBufferUnmapper.createUnsafe(
+              file.map(FileChannel.MapMode.READ_ONLY, 0, file.size()))) {
+        ByteBuffer fileBuffer = unmapper.getByteBuffer();
+
+        Optional<byte[]> maybeUuid = Machos.getUuidIfPresent(fileBuffer);
+        assertTrue(maybeUuid.isPresent());
+
+        String hex = ObjectFileScrubbers.bytesToHex(maybeUuid.get(), false);
+        assertEquals(hex, cleanUuidFromDwarfdump);
+      }
+    }
   }
 
   @Test

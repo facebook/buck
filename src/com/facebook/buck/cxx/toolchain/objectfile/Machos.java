@@ -62,6 +62,29 @@ public class Machos {
 
   private Machos() {}
 
+  /**
+   * Returns the UUID of the Mach-O file, if present. If it's not a Mach-O file, it throws a {@link
+   * MachoException}. This method does not preserve the position of {@param fileBuffer}.
+   */
+  public static Optional<byte[]> getUuidIfPresent(ByteBuffer fileBuffer) throws MachoException {
+    fileBuffer.position(0);
+    MachoHeader header = getHeader(fileBuffer);
+
+    for (int i = 0; i < header.getCommandsCount(); i++) {
+      int commandType = ObjectFileScrubbers.getLittleEndianInt(fileBuffer);
+      int commandTotalSize = ObjectFileScrubbers.getLittleEndianInt(fileBuffer);
+      int commandTypeAndSizeByteLength = 4 /* command */ + 4 /* command size */;
+      int payloadLength = (commandTotalSize - commandTypeAndSizeByteLength);
+      byte[] payload = ObjectFileScrubbers.getBytes(fileBuffer, payloadLength);
+
+      if (LC_UUID == commandType) {
+        return Optional.of(payload);
+      }
+    }
+
+    return Optional.empty();
+  }
+
   static void setUuidIfPresent(ByteBuffer map, byte[] uuid) throws MachoException {
     int commandsCount = getHeader(map).getCommandsCount();
 

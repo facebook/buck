@@ -36,6 +36,34 @@ import org.junit.Test;
 
 public class ObjectFileScrubbersTest {
   @Test
+  public void testHexConversion() {
+    ImmutableMap<Byte, String> expectedOutput =
+        ImmutableMap.of(
+            new Byte((byte) 0x00), "00",
+            new Byte((byte) 0x7F), "7F",
+            new Byte((byte) 0x80), "80",
+            new Byte((byte) 0xAB), "AB",
+            new Byte((byte) 0xFF), "FF");
+
+    for (Map.Entry<Byte, String> entry : expectedOutput.entrySet()) {
+      byte inputByte = entry.getKey().byteValue();
+      String expectedHexString = entry.getValue();
+      String actualHexString = ObjectFileScrubbers.bytesToHex(new byte[] {inputByte}, false);
+      assertThat(actualHexString, equalTo(expectedHexString));
+    }
+  }
+
+  @Test
+  public void testHexConversionUpperLowerCases() {
+    String uppercaseHex =
+        ObjectFileScrubbers.bytesToHex(new byte[] {(byte) 0xAB, (byte) 0xCD, (byte) 0xEF}, false);
+    String lowercaseHex =
+        ObjectFileScrubbers.bytesToHex(new byte[] {(byte) 0xAB, (byte) 0xCD, (byte) 0xEF}, true);
+    assertThat(uppercaseHex, equalTo("ABCDEF"));
+    assertThat(lowercaseHex, equalTo("abcdef"));
+  }
+
+  @Test
   public void testPutLittleEndianLongPositive() {
     long value = 0x123456789ABCDEF0L;
     byte[] buffer = new byte[8];

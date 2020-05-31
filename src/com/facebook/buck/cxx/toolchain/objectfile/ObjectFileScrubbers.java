@@ -25,6 +25,7 @@ import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.google.common.primitives.Shorts;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
@@ -137,6 +138,11 @@ public class ObjectFileScrubbers {
     byte[] bytes = new byte[len];
     buffer.get(bytes);
     return bytes;
+  }
+
+  /** Converts bytes to a hex string. */
+  public static String bytesToHex(byte[] bytes, boolean lowercase) {
+    return String.format((lowercase ? "%02x" : "%02X"), new BigInteger(1, bytes));
   }
 
   public static long getDecimalStringAsLong(ByteBuffer buffer, int len) {
