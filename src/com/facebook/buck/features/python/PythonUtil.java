@@ -74,6 +74,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class PythonUtil {
@@ -298,6 +299,47 @@ public class PythonUtil {
     return PathFormatter.pathWithUnixSeparators(name).replace('/', '.');
   }
 
+  static void forEachDependency(
+      ActionGraphBuilder graphBuilder,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
+      Iterable<?> roots,
+      Consumer<PythonPackagable> packagableConsumer,
+      Consumer<CxxPythonExtension> extensionConsumer,
+      Consumer<NativeLinkableGroup> nativeLinkableConsumer) {
+
+    // Walk all our transitive deps to build our complete package that we'll
+    // turn into an executable.
+    new AbstractBreadthFirstTraversal<Object>(roots) {
+      private final ImmutableList<BuildRule> empty = ImmutableList.of();
+
+      @Override
+      public Iterable<?> visit(Object node) {
+        Iterable<?> deps = empty;
+
+        if (node instanceof CxxPythonExtension) {
+          CxxPythonExtension extension = (CxxPythonExtension) node;
+          extensionConsumer.accept(extension);
+          List<BuildRule> cxxpydeps = new ArrayList<>();
+          for (BuildRule dep :
+              extension.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder)) {
+            if (dep instanceof PythonPackagable) {
+              cxxpydeps.add(dep);
+            }
+          }
+          deps = cxxpydeps;
+        } else if (node instanceof PythonPackagable) {
+          PythonPackagable packagable = (PythonPackagable) node;
+          packagableConsumer.accept(packagable);
+          return packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
+        } else if (node instanceof NativeLinkableGroup) {
+          nativeLinkableConsumer.accept((NativeLinkableGroup) node);
+        }
+        return deps;
+      }
+    }.start();
+  }
+
   static PythonPackageComponents getAllComponents(
       CellPathResolver cellPathResolver,
       BuildTarget buildTarget,
@@ -323,30 +365,12 @@ public class PythonUtil {
 
     // Walk all our transitive deps to build our complete package that we'll
     // turn into an executable.
-    new AbstractBreadthFirstTraversal<Object>(
-        Iterables.concat(ImmutableList.of(binary), graphBuilder.getAllRules(preloadDeps))) {
-      private final ImmutableList<BuildRule> empty = ImmutableList.of();
-
-      @Override
-      public Iterable<?> visit(Object node) {
-        Iterable<?> deps = empty;
-
-        if (node instanceof CxxPythonExtension) {
-          CxxPythonExtension extension = (CxxPythonExtension) node;
-          NativeLinkTarget target =
-              extension.getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder, false);
-          extensions.put(target.getBuildTarget(), extension);
-          omnibusRoots.addIncludedRoot(target);
-          List<BuildRule> cxxpydeps = new ArrayList<>();
-          for (BuildRule dep :
-              extension.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder)) {
-            if (dep instanceof PythonPackagable) {
-              cxxpydeps.add(dep);
-            }
-          }
-          deps = cxxpydeps;
-        } else if (node instanceof PythonPackagable) {
-          PythonPackagable packagable = (PythonPackagable) node;
+    forEachDependency(
+        graphBuilder,
+        pythonPlatform,
+        cxxPlatform,
+        Iterables.concat(ImmutableList.of(binary), graphBuilder.getAllRules(preloadDeps)),
+        (PythonPackagable packagable) -> {
           packagable
               .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
               .ifPresent(modules -> allComponents.putModules(packagable.getBuildTarget(), modules));
@@ -361,11 +385,11 @@ public class PythonUtil {
               .ifPresent(
                   resources -> allComponents.putResources(packagable.getBuildTarget(), resources));
           allComponents.addZipSafe(packagable.isPythonZipSafe());
-          Iterable<BuildRule> packagableDeps =
-              packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
           if (nativeLinkStrategy == NativeLinkStrategy.MERGED
               && packagable.doesPythonPackageDisallowOmnibus(
                   pythonPlatform, cxxPlatform, graphBuilder)) {
+            Iterable<BuildRule> packagableDeps =
+                packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
             for (BuildRule dep : packagableDeps) {
               if (dep instanceof NativeLinkableGroup) {
                 NativeLinkable linkable =
@@ -375,16 +399,18 @@ public class PythonUtil {
               }
             }
           }
-          deps = packagableDeps;
-        } else if (node instanceof NativeLinkableGroup) {
-          NativeLinkable linkable =
-              ((NativeLinkableGroup) node).getNativeLinkable(cxxPlatform, graphBuilder);
+        },
+        extension -> {
+          NativeLinkTarget target =
+              extension.getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder, false);
+          extensions.put(target.getBuildTarget(), extension);
+          omnibusRoots.addIncludedRoot(target);
+        },
+        linkableGroup -> {
+          NativeLinkable linkable = linkableGroup.getNativeLinkable(cxxPlatform, graphBuilder);
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
           omnibusRoots.addPotentialRoot(linkable, false);
-        }
-        return deps;
-      }
-    }.start();
+        });
 
     // For the merged strategy, build up the lists of included native linkable roots, and the
     // excluded native linkable roots.
