@@ -285,7 +285,13 @@ public class PythonTestDescription
 
     ImmutableMap<Path, SourcePath> srcs =
         PythonUtil.parseModules(
-            buildTarget, graphBuilder, pythonPlatform, cxxPlatform, selectedVersions, args);
+            buildTarget,
+            graphBuilder,
+            pythonPlatform,
+            cxxPlatform,
+            selectedVersions,
+            pythonBuckConfig.getSrcExtCheckStyle(),
+            args);
 
     ImmutableMap<Path, SourcePath> resources =
         PythonUtil.parseResources(

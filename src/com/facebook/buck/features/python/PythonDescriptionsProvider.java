@@ -42,7 +42,7 @@ public class PythonDescriptionsProvider implements DescriptionProvider {
     return Arrays.asList(
         pythonBinaryDescription,
         new PrebuiltPythonLibraryDescription(toolchainProvider),
-        new PythonLibraryDescription(toolchainProvider),
+        new PythonLibraryDescription(toolchainProvider, pyConfig),
         new PythonTestDescription(
             toolchainProvider, pythonBinaryDescription, pyConfig, cxxBuckConfig),
         new PythonTestRunnerDescription(),
