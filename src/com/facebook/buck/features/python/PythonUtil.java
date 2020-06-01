@@ -52,6 +52,7 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacroExpander;
 import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
 import com.facebook.buck.util.MoreMaps;
+import com.facebook.buck.util.function.TriConsumer;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.CaseFormat;
@@ -73,7 +74,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -105,6 +105,30 @@ public class PythonUtil {
     return isNativeExt(ext) || isSourceExt(ext);
   }
 
+  public static void checkSrcExt(
+      PythonBuckConfig.SrcExtCheckStyle srcExtCheckStyle,
+      ActionGraphBuilder graphBuilder,
+      String parameter,
+      Path name,
+      SourcePath path) {
+    switch (srcExtCheckStyle) {
+      case NONE:
+        break;
+      case GENERATED:
+        if (!graphBuilder.getRule(path).isPresent()) {
+          break;
+        }
+        // $FALL-THROUGH$
+      case ALL:
+        String ext = MorePaths.getFileExtension(name);
+        // TODO(agallagher): Ideally, we wouldn't pass `.pyi` files via `srcs`.
+        if (!isSourceExt(ext) && !ext.equals("pyi")) {
+          throw new HumanReadableException(
+              "parameter `%s`: invalid source extension for %s", parameter, name);
+        }
+    }
+  }
+
   /**
    * @return the merged list of all items for the given platform, from the given platform-agnostic
    *     and platform-specific params.
@@ -124,7 +148,7 @@ public class PythonUtil {
         .toImmutableList();
   }
 
-  public static void forEachModule(
+  private static void forEachModule(
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
       PythonPlatform pythonPlatform,
@@ -135,7 +159,7 @@ public class PythonUtil {
       PatternMatchedCollection<SourceSortedSet> platformItems,
       Optional<VersionMatchedCollection<SourceSortedSet>> versionItems,
       Optional<ImmutableMap<BuildTarget, Version>> versions,
-      BiConsumer<Path, SourcePath> consumer) {
+      TriConsumer<String, Path, SourcePath> consumer) {
     forEachModuleParam(
         target,
         graphBuilder,
@@ -166,14 +190,14 @@ public class PythonUtil {
         consumer);
   }
 
-  public static void forEachSrc(
+  private static void forEachSrc(
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> versions,
       PythonLibraryDescription.CoreArg args,
-      BiConsumer<Path, SourcePath> consumer) {
+      TriConsumer<String, Path, SourcePath> consumer) {
     forEachModule(
         target,
         graphBuilder,
@@ -203,7 +227,7 @@ public class PythonUtil {
         cxxPlatform,
         versions,
         args,
-        (name, src) -> {
+        (parameter, name, src) -> {
           if (isSourceExt(MorePaths.getFileExtension(name))) {
             builder.put(name, src);
           }
@@ -217,9 +241,20 @@ public class PythonUtil {
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> versions,
+      PythonBuckConfig.SrcExtCheckStyle srcExtCheckStyle,
       PythonLibraryDescription.CoreArg args) {
     ImmutableSortedMap.Builder<Path, SourcePath> builder = ImmutableSortedMap.naturalOrder();
-    forEachSrc(target, graphBuilder, pythonPlatform, cxxPlatform, versions, args, builder::put);
+    forEachSrc(
+        target,
+        graphBuilder,
+        pythonPlatform,
+        cxxPlatform,
+        versions,
+        args,
+        (parameter, name, src) -> {
+          checkSrcExt(srcExtCheckStyle, graphBuilder, parameter, name, src);
+          builder.put(name, src);
+        });
     return builder.build();
   }
 
@@ -242,7 +277,7 @@ public class PythonUtil {
         args.getPlatformResources(),
         args.getVersionedResources(),
         versions,
-        builder::put);
+        (parameter, name, src) -> builder.put(name, src));
     return builder.build();
   }
 
@@ -253,7 +288,7 @@ public class PythonUtil {
       String parameter,
       Path baseModule,
       Iterable<SourceSortedSet> inputs,
-      BiConsumer<Path, SourcePath> consumer) {
+      TriConsumer<String, Path, SourcePath> consumer) {
 
     for (SourceSortedSet input : inputs) {
       ImmutableMap<String, SourcePath> namesAndSourcePaths =
@@ -275,6 +310,7 @@ public class PythonUtil {
               });
       for (ImmutableMap.Entry<String, SourcePath> entry : namesAndSourcePaths.entrySet()) {
         consumer.accept(
+            parameter,
             baseModule.resolve(entry.getKey()),
             CxxGenruleDescription.fixupSourcePath(
                 actionGraphBuilder, cxxPlatform, entry.getValue()));

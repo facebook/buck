@@ -4461,6 +4461,27 @@ python -c "import platform; print( platform.python_version() )"
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'python' /}
+  {param name: 'check_srcs_ext' /}
+  {param example_value: 'all' /}
+  {param description}
+    Whether and how to check for correct extensions for sources passed to the various
+    parameters for specifying Python sources (e.g. <code>srcs</code>).  Valid values are:
+    <ul>
+        <li>
+          <code>all</code>: require that all Python sources have `.py` extensions.
+        </li>
+        <li>
+          <code>generated</code>: require that only generated Python sources have `.py` extensions.
+        </li>
+        <li>
+          <code>none</code> (default): don't require that Python sources have `.py` extensions.
+        </li>
+    </ul>
+  {/param}
+{/call}
+
 
 {call buckconfig.section}
   {param name: 'repositories' /}

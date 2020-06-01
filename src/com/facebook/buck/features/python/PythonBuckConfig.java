@@ -147,6 +147,22 @@ public class PythonBuckConfig {
     return delegate.getPathSourcePath(pythonPath);
   }
 
+  /** How to verify extensions (e.g. `.py`) for sources passed to the various `srcs` parameters. */
+  public enum SrcExtCheckStyle {
+    /** Check that all Python sources have valid source extensions. */
+    ALL,
+    /** Check that all generated Python sources have valid source extensions. */
+    GENERATED,
+    /** Don't check source extensions. */
+    NONE,
+  }
+
+  public SrcExtCheckStyle getSrcExtCheckStyle() {
+    return delegate
+        .getEnum(SECTION, "check_srcs_ext", SrcExtCheckStyle.class)
+        .orElse(SrcExtCheckStyle.NONE);
+  }
+
   public enum PackageStyle implements FlavorConvertible {
     STANDALONE(InternalFlavor.of("standalone")) {
       @Override

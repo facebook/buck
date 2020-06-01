@@ -67,6 +67,7 @@ public class PythonLibraryDescription
 
   private final DownwardApiConfig downwardApiConfig;
   private final ToolchainProvider toolchainProvider;
+  private final PythonBuckConfig pythonBuckConfig;
 
   private static final FlavorDomain<MetadataType> METADATA_TYPE =
       FlavorDomain.from("Python Metadata Type", MetadataType.class);
@@ -75,9 +76,12 @@ public class PythonLibraryDescription
       FlavorDomain.from("Python Library Type", LibraryType.class);
 
   public PythonLibraryDescription(
-      DownwardApiConfig downwardApiConfig, ToolchainProvider toolchainProvider) {
+      DownwardApiConfig downwardApiConfig,
+      ToolchainProvider toolchainProvider,
+      PythonBuckConfig pythonBuckConfig) {
     this.downwardApiConfig = downwardApiConfig;
     this.toolchainProvider = toolchainProvider;
+    this.pythonBuckConfig = pythonBuckConfig;
   }
 
   @Override
@@ -219,6 +223,7 @@ public class PythonLibraryDescription
                       .getValue()
                       .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
                   selectedVersions,
+                  pythonBuckConfig.getSrcExtCheckStyle(),
                   args);
           return Optional.of(
                   components.isEmpty()

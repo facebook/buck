@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.python;
 
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
@@ -53,7 +54,8 @@ public class PythonLibraryBuilder
                     CxxPlatformsProvider.DEFAULT_NAME,
                     CxxPlatformsProvider.of(
                         CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, cxxPlatforms))
-                .build()),
+                .build(),
+            new PythonBuckConfig(FakeBuckConfig.empty())),
         target);
   }
 

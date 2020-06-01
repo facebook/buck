@@ -323,10 +323,13 @@ public class PythonBinaryDescription
           graphBuilder.getSourcePathResolver().getSourcePathName(buildTarget, args.getMain().get());
       Path main = baseModule.resolve(mainName);
       mainModule = PythonUtil.toModuleName(buildTarget, main.toString());
+      SourcePath mainSrc = args.getMain().get();
+      PythonUtil.checkSrcExt(
+          pythonBuckConfig.getSrcExtCheckStyle(), graphBuilder, "main", main, mainSrc);
       modules =
           Optional.of(
               PythonMappedComponents.of(
-                  ImmutableSortedMap.of(baseModule.resolve(mainName), args.getMain().get())));
+                  ImmutableSortedMap.of(baseModule.resolve(mainName), mainSrc)));
     } else {
       mainModule = args.getMainModule().get();
       modules = Optional.empty();
