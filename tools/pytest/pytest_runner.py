@@ -313,13 +313,13 @@ class PytestMainProgram(__test_main__.MainProgram):
             skipped = testcase.find("skipped")
             out = self._parse_captured(testcase.find("system-out"))
             err = self._parse_captured(testcase.find("system-err"))
-            if error:
+            if error is not None:
                 status = __test_main__.TestStatus.ABORTED
                 message = self._get_message(error)
-            elif failure:
+            elif failure is not None:
                 status = __test_main__.TestStatus.FAILED
                 message = self._get_message(failure)
-            elif skipped:
+            elif skipped is not None:
                 status = __test_main__.TestStatus.SKIPPED
                 message = self._get_message(skipped)
             else:
