@@ -205,7 +205,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     if (useAapt2LocaleFiltering) {
       if (aaptMode != AaptMode.AAPT2) {
         throw new HumanReadableException(
-            "use_aapt2_locale_filtering=True is incompatible with aapt_mode=" + aaptMode);
+            "aapt2_locale_filtering=True is incompatible with aapt_mode=" + aaptMode);
       }
       needsToFilterForLocales = false;
     }
