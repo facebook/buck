@@ -25,7 +25,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
@@ -36,7 +35,6 @@ import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -181,12 +179,6 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
         BuildCellRelativePathFactory buildCellPathFactory) {
       SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
       return ImmutableList.<Step>builder()
-          .addAll(
-              MakeCleanDirectoryStep.of(
-                  BuildCellRelativePath.fromCellRelativePath(
-                      buildContext.getBuildCellRootPath(),
-                      filesystem,
-                      getScratchDirectory(filesystem))))
           .add(
               new SplitResourcesStep(
                   sourcePathResolverAdapter.getAbsolutePath(pathToAaptResources).getPath(),
