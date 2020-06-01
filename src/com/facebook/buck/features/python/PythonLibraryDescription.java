@@ -46,6 +46,7 @@ import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
+import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
@@ -104,6 +105,43 @@ public class PythonLibraryDescription
     return PythonLibraryDescriptionArg.class;
   }
 
+  private PythonPlatform getPythonPlatform(
+      BuildTarget target, PythonLibraryDescription.AbstractPythonLibraryDescriptionArg args) {
+    FlavorDomain<PythonPlatform> pythonPlatforms =
+        toolchainProvider
+            .getByName(
+                PythonPlatformsProvider.DEFAULT_NAME,
+                target.getTargetConfiguration(),
+                PythonPlatformsProvider.class)
+            .getPythonPlatforms();
+    return pythonPlatforms
+        .getValue(target)
+        .orElseGet(
+            () ->
+                pythonPlatforms.getValue(
+                    args.getPlatform()
+                        .<Flavor>map(InternalFlavor::of)
+                        .orElseThrow(IllegalArgumentException::new)));
+  }
+
+  private UnresolvedCxxPlatform getCxxPlatform(
+      BuildTarget target, PythonLibraryDescription.AbstractPythonLibraryDescriptionArg args) {
+    CxxPlatformsProvider cxxPlatformsProvider =
+        toolchainProvider.getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            target.getTargetConfiguration(),
+            CxxPlatformsProvider.class);
+    FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
+        cxxPlatformsProvider.getUnresolvedCxxPlatforms();
+    return cxxPlatforms
+        .getValue(target)
+        .orElseGet(
+            () ->
+                args.getCxxPlatform()
+                    .map(cxxPlatforms::getValue)
+                    .orElseThrow(IllegalArgumentException::new));
+  }
+
   @Override
   public BuildRule createBuildRule(
       BuildRuleCreationContextWithTargetGraph context,
@@ -114,32 +152,17 @@ public class PythonLibraryDescription
     Optional<Map.Entry<Flavor, LibraryType>> optionalType =
         LIBRARY_TYPE.getFlavorAndValue(buildTarget);
     if (optionalType.isPresent()) {
-      Map.Entry<Flavor, PythonPlatform> pythonPlatform =
-          getPythonPlatforms(buildTarget.getTargetConfiguration())
-              .getFlavorAndValue(buildTarget)
-              .orElseThrow(IllegalArgumentException::new);
-      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
-          toolchainProvider
-              .getByName(
-                  CxxPlatformsProvider.DEFAULT_NAME,
-                  buildTarget.getTargetConfiguration(),
-                  CxxPlatformsProvider.class)
-              .getUnresolvedCxxPlatforms();
-      Map.Entry<Flavor, UnresolvedCxxPlatform> cxxPlatform =
-          cxxPlatforms.getFlavorAndValue(buildTarget).orElseThrow(IllegalArgumentException::new);
+      PythonPlatform pythonPlatform = getPythonPlatform(buildTarget, args);
+      UnresolvedCxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
       CxxPlatform resolvedCxxPlatform =
-          cxxPlatform
-              .getValue()
-              .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
+          cxxPlatform.resolve(
+              context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
       BuildTarget baseTarget =
           buildTarget.withoutFlavors(
-              optionalType.get().getKey(), pythonPlatform.getKey(), cxxPlatform.getKey());
+              optionalType.get().getKey(), pythonPlatform.getFlavor(), cxxPlatform.getFlavor());
       Optional<PythonMappedComponents> sources =
           getSources(
-              context.getActionGraphBuilder(),
-              baseTarget,
-              pythonPlatform.getValue(),
-              resolvedCxxPlatform);
+              context.getActionGraphBuilder(), baseTarget, pythonPlatform, resolvedCxxPlatform);
 
       switch (optionalType.get().getValue()) {
         case COMPILE:
@@ -147,7 +170,7 @@ public class PythonLibraryDescription
               buildTarget,
               context.getProjectFilesystem(),
               context.getActionGraphBuilder(),
-              pythonPlatform.getValue().getEnvironment(),
+              pythonPlatform.getEnvironment(),
               sources.orElseThrow(
                   () ->
                       new HumanReadableException(
@@ -160,13 +183,13 @@ public class PythonLibraryDescription
                 buildTarget,
                 context.getProjectFilesystem(),
                 context.getActionGraphBuilder(),
-                pythonPlatform.getValue(),
+                pythonPlatform,
                 resolvedCxxPlatform,
                 sources.orElseGet(() -> PythonMappedComponents.of(ImmutableSortedMap.of())),
                 getPackageDeps(
                     context.getActionGraphBuilder(),
                     baseTarget,
-                    pythonPlatform.getValue(),
+                    pythonPlatform,
                     resolvedCxxPlatform));
           }
       }
@@ -434,5 +457,9 @@ public class PythonLibraryDescription
   }
 
   @RuleArg
-  interface AbstractPythonLibraryDescriptionArg extends CoreArg {}
+  interface AbstractPythonLibraryDescriptionArg extends CoreArg, HasVersionUniverse {
+    Optional<String> getPlatform();
+
+    Optional<Flavor> getCxxPlatform();
+  }
 }
