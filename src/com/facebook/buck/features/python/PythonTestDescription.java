@@ -27,7 +27,9 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -90,7 +92,8 @@ import java.util.function.Function;
 public class PythonTestDescription
     implements DescriptionWithTargetGraph<PythonTestDescriptionArg>,
         ImplicitDepsInferringDescription<PythonTestDescription.AbstractPythonTestDescriptionArg>,
-        VersionRoot<PythonTestDescriptionArg> {
+        VersionRoot<PythonTestDescriptionArg>,
+        Flavored {
 
   public static final Flavor BINARY_FLAVOR = InternalFlavor.of("binary");
   private static final String DEFAULT_TEST_MAIN_NAME = "__test_main__.py";
@@ -114,6 +117,12 @@ public class PythonTestDescription
   @Override
   public Class<PythonTestDescriptionArg> getConstructorArgType() {
     return PythonTestDescriptionArg.class;
+  }
+
+  @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return Optional.of(ImmutableSet.of(PythonBinaryDescription.PACKAGE_STYLE));
   }
 
   @VisibleForTesting
@@ -162,7 +171,6 @@ public class PythonTestDescription
       ImmutableSet<String> testModules) {
 
     // Modify the build rule params to change the target, type, and remove all deps.
-    buildTarget.assertUnflavored();
     BuildTarget newBuildTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("test_module"));
 
     String contents = getTestModulesListContents(testModules);
@@ -236,6 +244,13 @@ public class PythonTestDescription
             baseTarget.withFlavors(InternalFlavor.of("python-test-main")),
             target -> new PythonTestMainRule(target, filesystem));
     return Objects.requireNonNull(testMainRule.getSourcePathToOutput());
+  }
+
+  private PythonBuckConfig.PackageStyle getPackageStyle(
+      BuildTarget target, AbstractPythonTestDescriptionArg args) {
+    return PythonBinaryDescription.PACKAGE_STYLE
+        .getValue(target)
+        .orElse(args.getPackageStyle().orElse(pythonBuckConfig.getPackageStyle()));
   }
 
   @Override
@@ -360,7 +375,6 @@ public class PythonTestDescription
             args.getCompile().orElse(false));
 
     // Build the PEX using a python binary rule with the minimum dependencies.
-    buildTarget.assertUnflavored();
     PythonBinary binary =
         binaryDescription.createPackageRule(
             cellRoots,
@@ -374,7 +388,7 @@ public class PythonTestDescription
             args.getExtension(),
             allComponents,
             args.getBuildArgs(),
-            args.getPackageStyle().orElse(pythonBuckConfig.getPackageStyle()),
+            getPackageStyle(buildTarget, args),
             PythonUtil.getPreloadNames(graphBuilder, cxxPlatform, args.getPreloadDeps()));
     graphBuilder.addToIndex(binary);
 
@@ -499,8 +513,7 @@ public class PythonTestDescription
         getCxxPlatform(buildTarget, constructorArg)
             .getLinkerParseTimeDeps(buildTarget.getTargetConfiguration()));
 
-    if (constructorArg.getPackageStyle().orElse(pythonBuckConfig.getPackageStyle())
-        == PythonBuckConfig.PackageStyle.STANDALONE) {
+    if (getPackageStyle(buildTarget, constructorArg) == PythonBuckConfig.PackageStyle.STANDALONE) {
       Optionals.addIfPresent(
           pythonBuckConfig.getPexTarget(buildTarget.getTargetConfiguration()), extraDepsBuilder);
       Optionals.addIfPresent(

@@ -66,6 +66,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.stream.RichStream;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -626,6 +627,25 @@ public class PythonTestDescriptionTest {
             Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libASrc)),
             Matchers.not(
                 Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libBSrc)))));
+  }
+
+  @Test
+  public void packageStyleFlavor() {
+    for (Pair<PythonBuckConfig.PackageStyle, ? extends Class<?>> style :
+        ImmutableList.of(
+            new Pair<>(PythonBuckConfig.PackageStyle.INPLACE, PythonInPlaceBinary.class),
+            new Pair<>(PythonBuckConfig.PackageStyle.STANDALONE, PythonPackagedBinary.class))) {
+      PythonTestBuilder pythonTestBuilder =
+          PythonTestBuilder.create(BuildTargetFactory.newInstance("//:bin"))
+              .setPackageStyle(style.getFirst());
+      TargetGraph targetGraph = TargetGraphFactory.newInstance(pythonTestBuilder.build());
+      ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+      PythonTest pythonTest =
+          (PythonTest)
+              graphBuilder.requireRule(
+                  pythonTestBuilder.getTarget().withAppendedFlavors(style.getFirst().getFlavor()));
+      assertThat(pythonTest.getBinary(), Matchers.instanceOf(style.getSecond()));
+    }
   }
 
   private RuleKey calculateRuleKey(BuildRuleResolver ruleResolver, BuildRule rule) {

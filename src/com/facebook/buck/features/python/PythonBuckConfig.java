@@ -19,6 +19,7 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -146,16 +147,27 @@ public class PythonBuckConfig {
     return delegate.getPathSourcePath(pythonPath);
   }
 
-  public enum PackageStyle {
-    STANDALONE {
+  public enum PackageStyle implements FlavorConvertible {
+    STANDALONE(InternalFlavor.of("standalone")) {
       @Override
       public boolean isInPlace() {
         return false;
       }
     },
-    INPLACE,
-    INPLACE_LITE,
+    INPLACE(InternalFlavor.of("inplace")),
+    INPLACE_LITE(InternalFlavor.of("inplace-lite")),
     ;
+
+    private final Flavor flavor;
+
+    PackageStyle(Flavor flavor) {
+      this.flavor = flavor;
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
 
     public boolean isInPlace() {
       return true;
