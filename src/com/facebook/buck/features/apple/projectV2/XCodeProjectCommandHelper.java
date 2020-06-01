@@ -126,6 +126,7 @@ public class XCodeProjectCommandHelper {
   private final boolean withTests;
   private final boolean withoutTests;
   private final boolean withoutDependenciesTests;
+  private final boolean shouldMergeTargets;
   private final boolean createProjectSchemes;
   private final boolean dryRun;
   private final boolean readOnly;
@@ -162,6 +163,7 @@ public class XCodeProjectCommandHelper {
       boolean withTests,
       boolean withoutTests,
       boolean withoutDependenciesTests,
+      boolean shouldMergeTargets,
       String focus,
       boolean createProjectSchemes,
       boolean dryRun,
@@ -192,6 +194,7 @@ public class XCodeProjectCommandHelper {
     this.withTests = withTests;
     this.withoutTests = withoutTests;
     this.withoutDependenciesTests = withoutDependenciesTests;
+    this.shouldMergeTargets = shouldMergeTargets;
     this.createProjectSchemes = createProjectSchemes;
     this.dryRun = dryRun;
     this.readOnly = readOnly;
@@ -388,6 +391,7 @@ public class XCodeProjectCommandHelper {
             .setShouldGenerateReadOnlyFiles(readOnly)
             .setShouldIncludeTests(isWithTests(buckConfig))
             .setShouldIncludeDependenciesTests(isWithDependenciesTests(buckConfig))
+            .setShouldMergeTargets(shouldMergeTargets)
             .setShouldAddLinkedLibrariesAsFlags(appleConfig.shouldAddLinkedLibrariesAsFlags())
             .setShouldForceLoadLinkWholeLibraries(
                 appleConfig.shouldAddLinkerFlagsForLinkWholeLibraries())

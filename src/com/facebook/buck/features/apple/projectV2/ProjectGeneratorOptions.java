@@ -70,6 +70,12 @@ public interface ProjectGeneratorOptions {
     return true;
   }
 
+  /** Exposes sources of dependencies in the project */
+  @Value.Default
+  default boolean shouldMergeTargets() {
+    return false;
+  }
+
   static Builder builder() {
     return new Builder();
   }

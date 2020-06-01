@@ -46,6 +46,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -90,6 +91,7 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.shell.AbstractGenruleDescription;
+import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.stream.RichStream;
@@ -1079,6 +1081,15 @@ public class XcodeNativeTargetGenerator {
     return new Pair<>(sdkWithoutVersion, arch);
   }
 
+  private Path getBuckBuildFilePath(BuildTarget buildTarget) {
+    // Assume the BUCK file path is at the the base path of this target
+    return buildTarget
+        .getCellRelativeBasePath()
+        .getPath()
+        .toPath(projectFilesystem.getFileSystem())
+        .resolve(buildFileName);
+  }
+
   private ImmutableList<BuildTarget> generateBinaryTarget(
       ImmutableXCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
@@ -1272,14 +1283,7 @@ public class XcodeNativeTargetGenerator {
       swiftDepsSettingsBuilder.put("ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
     }
 
-    // Assume the BUCK file path is at the the base path of this target
-    Path buckFilePath =
-        buildTarget
-            .getCellRelativeBasePath()
-            .getPath()
-            .toPath(projectFilesystem.getFileSystem())
-            .resolve(buildFileName);
-    xcodeNativeTargetAttributesBuilder.setBuckFilePath(Optional.of(buckFilePath));
+    xcodeNativeTargetAttributesBuilder.addBuckFilePaths(getBuckBuildFilePath(buildTarget));
 
     Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
         TargetNodes.castArg(targetNode, AppleNativeTargetDescriptionArg.class);
@@ -1567,6 +1571,297 @@ public class XcodeNativeTargetGenerator {
     }
 
     return dependencies.build();
+  }
+
+  /**
+   * Generates a merged native target containing source files from the dependencies of a target
+   * node.
+   *
+   * @param targetNode The node to generate
+   * @return A result with all of the data aggregated for this node.
+   * @throws IOException
+   */
+  public Optional<Result> generateMergedTargetDependencies(TargetNode<?> targetNode)
+      throws IOException {
+
+    if (targetNode.getBuildTarget().isFlavored()) {
+      return Optional.empty();
+    }
+
+    Optional<TargetNode<CommonArg>> rootTargetNodeOptional =
+        getAppleNativeNodeOfType(
+            targetGraph,
+            targetNode,
+            ImmutableSet.of(AppleLibraryDescription.class, CxxLibraryDescription.class),
+            ImmutableSet.of(
+                AppleBundleExtension.APP,
+                AppleBundleExtension.XCTEST,
+                AppleBundleExtension.FRAMEWORK));
+    if (rootTargetNodeOptional.isPresent() == false) {
+      return Optional.empty();
+    }
+
+    TargetNode<CommonArg> rootTargetNode = rootTargetNodeOptional.get();
+    BuildTarget rootTargetNodeBuildTarget = rootTargetNode.getBuildTarget();
+    if (rootTargetNodeBuildTarget.isFlavored()) {
+      return Optional.empty();
+    }
+    String dummyTargetShortName =
+        targetNode.getBuildTarget().getShortName() + "-MergedDependencies";
+    BuildTarget dummyTarget = rootTargetNodeBuildTarget.withShortName(dummyTargetShortName);
+    TargetNode<CommonArg> dummyTargetNode = rootTargetNode.withBuildTarget(dummyTarget);
+
+    ImmutableXCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder =
+        ImmutableXCodeNativeTargetAttributes.builder()
+            .setAppleConfig(appleConfig)
+            .setTarget(dummyTarget)
+            .setProduct(
+                Optional.of(
+                    new XcodeProductMetadata(
+                        ProductTypes.STATIC_LIBRARY,
+                        dummyTargetShortName,
+                        getHalideOutputPath(dummyTargetNode.getFilesystem(), dummyTarget))));
+
+    ImmutableSortedSet.Builder<SourceWithFlags> sourcesWithFlagsBuilder =
+        ImmutableSortedSet.naturalOrder();
+    ImmutableSet.Builder<SourcePath> headersBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<SourcePath> exportedHeadersBuilder = ImmutableSet.builder();
+    ImmutableList.Builder<Pair<Pattern, Iterable<SourcePath>>> platformHeadersIterableBuilder =
+        ImmutableList.builder();
+    ImmutableSet.Builder<SourcePath> extraXcodeSourcesBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<SourcePath> extraXcodeFilesBuilder = ImmutableSet.builder();
+    HashMap<String, ImmutableSet<String>> platformSourcesMap = new HashMap<>();
+    Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
+    Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
+    Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
+    ImmutableSet.Builder<String> targetConfigNamesBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
+
+    ImmutableSet<TargetNode<?>> recursiveBuildDependencies =
+        recursivelyGetBuildDependencies(targetNode);
+    recursiveBuildDependencies.stream()
+        .forEach(
+            depTargetNode -> {
+              ConstructorArg constructorArg = depTargetNode.getConstructorArg();
+              if (constructorArg instanceof CommonArg) {
+                addDepFilesToNativeTarget(
+                    depTargetNode.cast(CommonArg.class),
+                    headersBuilder,
+                    exportedHeadersBuilder,
+                    platformHeadersIterableBuilder,
+                    sourcesWithFlagsBuilder,
+                    extraXcodeSourcesBuilder,
+                    extraXcodeFilesBuilder,
+                    platformSourcesMap);
+              } else if (constructorArg instanceof GenruleDescriptionArg) {
+                GenruleDescriptionArg genruleDescriptionArg =
+                    (GenruleDescriptionArg) constructorArg;
+                xcodeNativeTargetAttributesBuilder.addAllGenruleFiles(
+                    genruleDescriptionArg.getSrcs().getPaths());
+              }
+              xcodeNativeTargetAttributesBuilder.addBuckFilePaths(
+                  getBuckBuildFilePath(depTargetNode.getBuildTarget()));
+            });
+
+    platformSourcesMap.keySet().stream()
+        .forEach(
+            key -> extraSettingsBuilder.put(key, String.join(" ", platformSourcesMap.get(key))));
+
+    HeaderSearchPathAttributes headerSearchPathAttributes =
+        headerSearchPaths.getHeaderSearchPathAttributes(rootTargetNode);
+
+    addDefaultSettingsAndExtraSettingsForNode(
+        dummyTargetNode,
+        defaultSettingsBuilder,
+        extraSettingsBuilder,
+        appendConfigsBuilder,
+        headerSearchPathAttributes);
+
+    ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
+
+    ImmutableSortedSet<SourceWithFlags> sourcesWithFlags = sourcesWithFlagsBuilder.build();
+    ImmutableSet<SourcePath> exportedHeaders = exportedHeadersBuilder.build();
+    ImmutableSet<SourcePath> headers = headersBuilder.build();
+    ImmutableSet<SourcePath> extraXcodeSources = extraXcodeSourcesBuilder.build();
+    ImmutableSet<SourcePath> extraXcodeFiles = extraXcodeFilesBuilder.build();
+
+    xcodeNativeTargetAttributesBuilder
+        .addAllPublicHeaders(exportedHeaders)
+        .addAllPrivateHeaders(headers)
+        .addAllSourcesWithFlags(sourcesWithFlags)
+        .addAllExtraXcodeSources(extraXcodeSources)
+        .addAllExtraXcodeFiles(extraXcodeFiles);
+
+    BuildConfiguration.writeBuildConfigurationsForTarget(
+        rootTargetNode,
+        dummyTarget,
+        defaultCxxPlatform,
+        defaultPathResolver,
+        xcodeNativeTargetAttributesBuilder,
+        extraSettingsBuilder.build(),
+        defaultSettingsBuilder.build(),
+        appendedConfig,
+        projectFilesystem,
+        options.shouldGenerateReadOnlyFiles(),
+        targetConfigNamesBuilder,
+        xcconfigPathsBuilder);
+
+    XCodeNativeTargetAttributes nativeTargetAttributes = xcodeNativeTargetAttributesBuilder.build();
+
+    Result result =
+        new Result(
+            dummyTargetNode,
+            nativeTargetAttributes,
+            ImmutableList.of(),
+            ImmutableSet.of(),
+            xcconfigPathsBuilder.build(),
+            targetConfigNamesBuilder.build(),
+            Optional.of(headerSearchPathAttributes));
+
+    return Optional.of(result);
+  }
+
+  private Map<TargetNode<?>, ImmutableSet<TargetNode<?>>> recursiveBuildDependenciesCache =
+      new HashMap<>();
+
+  private ImmutableSet<TargetNode<?>> recursivelyGetBuildDependencies(TargetNode<?> targetNode) {
+    if (recursiveBuildDependenciesCache.containsKey(targetNode)) {
+      return recursiveBuildDependenciesCache.get(targetNode);
+    }
+    ImmutableSet.Builder<TargetNode<?>> buildDependenciesBuilder = ImmutableSet.builder();
+    targetNode.getBuildDeps().forEach(t -> buildDependenciesBuilder.add(targetGraph.get(t)));
+    targetNode
+        .getTotalDeps()
+        .forEach(
+            t ->
+                buildDependenciesBuilder.addAll(
+                    recursivelyGetBuildDependencies(targetGraph.get(t))));
+    ImmutableSet<TargetNode<?>> recursiveBuildDependencies = buildDependenciesBuilder.build();
+    recursiveBuildDependenciesCache.put(targetNode, recursiveBuildDependencies);
+    return recursiveBuildDependencies;
+  }
+
+  private void addDefaultSettingsAndExtraSettingsForNode(
+      TargetNode<? extends ConstructorArg> targetNode,
+      Builder<String, String> defaultSettingsBuilder,
+      Builder<String, String> extraSettingsBuilder,
+      Builder<String, String> appendConfigsBuilder,
+      HeaderSearchPathAttributes headerSearchPathAttributes) {
+
+    BuildTarget buildTarget = targetNode.getBuildTarget();
+
+    // XCConfigs treat '//' as comments and must be escaped.
+    extraSettingsBuilder.put(
+        BUILD_TARGET,
+        buildTarget
+            .getCellRelativeName()
+            .replaceAll(BuildTargetLanguageConstants.ROOT_SYMBOL, "\\\\/\\\\/"));
+
+    // -- configurations
+    extraSettingsBuilder
+        .put("TARGET_NAME", getProductNameForBuildTargetNode(targetNode))
+        .put("SRCROOT", pathRelativizer.outputPathToBuildTargetPath(buildTarget).toString());
+
+    defaultSettingsBuilder.put(PRODUCT_NAME, getProductName(targetNode));
+
+    // We use BUILT_PRODUCTS_DIR as the root for the everything being built. Target-
+    // specific output is placed within CONFIGURATION_BUILD_DIR, inside BUILT_PRODUCTS_DIR.
+    // That allows Copy Files build phases to reference files in the CONFIGURATION_BUILD_DIR
+    // of other targets by using paths relative to the target-independent BUILT_PRODUCTS_DIR.
+    defaultSettingsBuilder.put(
+        "BUILT_PRODUCTS_DIR",
+        // $EFFECTIVE_PLATFORM_NAME starts with a dash, so this expands to something like:
+        // $SYMROOT/Debug-iphonesimulator
+        Joiner.on('/').join("$SYMROOT", "$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"));
+    defaultSettingsBuilder.put("CONFIGURATION_BUILD_DIR", "$BUILT_PRODUCTS_DIR");
+    defaultSettingsBuilder.put("EXECUTABLE_PREFIX", "lib");
+
+    appendConfigsBuilder.put(
+        "HEADER_SEARCH_PATHS",
+        Joiner.on(' ')
+            .join(
+                Iterables.concat(
+                    headerSearchPathAttributes.recursiveHeaderSearchPaths(),
+                    headerSearchPathAttributes.recursivePublicSystemIncludeDirectories(),
+                    headerSearchPathAttributes.recursivePublicIncludeDirectories(),
+                    headerSearchPathAttributes.includeDirectories())));
+  }
+
+  private void addDepFilesToNativeTarget(
+      TargetNode<? extends CommonArg> targetNode,
+      ImmutableSet.Builder<SourcePath> headersBuilder,
+      ImmutableSet.Builder<SourcePath> exportedHeadersBuilder,
+      ImmutableList.Builder<Pair<Pattern, Iterable<SourcePath>>> platformHeadersIterableBuilder,
+      ImmutableSortedSet.Builder<SourceWithFlags> sourcesWithFlagsBuilder,
+      ImmutableSet.Builder<SourcePath> extraXcodeSourcesBuilder,
+      ImmutableSet.Builder<SourcePath> extraXcodeFilesBuilder,
+      Map<String, ImmutableSet<String>> platformSourcesMap) {
+    CommonArg arg = targetNode.getConstructorArg();
+
+    // Both exported headers and exported platform headers will be put into the symlink tree
+    // exported platform headers will be excluded and then included by platform
+    exportedHeadersBuilder.addAll(getHeaderSourcePaths(arg.getExportedHeaders()));
+    PatternMatchedCollection<SourceSortedSet> exportedPlatformHeaders =
+        arg.getExportedPlatformHeaders();
+    for (SourceSortedSet headersSet : exportedPlatformHeaders.getValues()) {
+      exportedHeadersBuilder.addAll(getHeaderSourcePaths(headersSet));
+    }
+
+    headersBuilder.addAll(getHeaderSourcePaths(arg.getHeaders()));
+    for (SourceSortedSet headersSet : arg.getPlatformHeaders().getValues()) {
+      headersBuilder.addAll(getHeaderSourcePaths(headersSet));
+    }
+
+    ImmutableList<Pair<Pattern, SourceSortedSet>> platformHeaders =
+        arg.getPlatformHeaders().getPatternsAndValues();
+    for (Pair<Pattern, SourceSortedSet> platformHeader : platformHeaders) {
+      platformHeadersIterableBuilder.add(
+          new Pair<>(platformHeader.getFirst(), getHeaderSourcePaths(platformHeader.getSecond())));
+    }
+
+    ImmutableList<Pair<Pattern, SourceSortedSet>> exportedPlatformHeadersPatternsAndValues =
+        exportedPlatformHeaders.getPatternsAndValues();
+    for (Pair<Pattern, SourceSortedSet> exportedPlatformHeader :
+        exportedPlatformHeadersPatternsAndValues) {
+      platformHeadersIterableBuilder.add(
+          new Pair<>(
+              exportedPlatformHeader.getFirst(),
+              getHeaderSourcePaths(exportedPlatformHeader.getSecond())));
+    }
+
+    ImmutableList<Pair<Pattern, Iterable<SourcePath>>> platformHeadersIterable =
+        platformHeadersIterableBuilder.build();
+    ImmutableList<Pair<Pattern, ImmutableSortedSet<SourceWithFlags>>> platformSources =
+        arg.getPlatformSrcs().getPatternsAndValues();
+    ImmutableMap<String, ImmutableSortedSet<String>> platformExcludedSourcesMapping =
+        XcodeNativeTargetGenerator.gatherExcludedSources(
+            appleCxxFlavors,
+            platformSources,
+            platformHeadersIterable,
+            sourceRoot,
+            defaultPathResolver);
+    for (Map.Entry<String, ImmutableSortedSet<String>> platformExcludedSources :
+        platformExcludedSourcesMapping.entrySet()) {
+      ImmutableSortedSet<String> platformExcludedSourcesValue = platformExcludedSources.getValue();
+      if (platformExcludedSourcesValue.size() > 0) {
+        String key = platformExcludedSources.getKey();
+        ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+        if (platformSourcesMap.containsKey(key)) {
+          builder.addAll(platformSourcesMap.get(key));
+        }
+        builder.addAll(platformExcludedSourcesValue);
+        platformSourcesMap.put(key, builder.build());
+      }
+    }
+
+    ImmutableSortedSet<SourceWithFlags> nonPlatformSrcs = arg.getSrcs();
+    sourcesWithFlagsBuilder.addAll(nonPlatformSrcs);
+    for (Pair<Pattern, ImmutableSortedSet<SourceWithFlags>> platformSource : platformSources) {
+      sourcesWithFlagsBuilder.addAll(platformSource.getSecond());
+    }
+
+    extraXcodeSourcesBuilder.addAll(arg.getExtraXcodeSources());
+    extraXcodeFilesBuilder.addAll(arg.getExtraXcodeFiles());
   }
 
   /** Generate a mapping from libraries to the framework bundles that include them. */

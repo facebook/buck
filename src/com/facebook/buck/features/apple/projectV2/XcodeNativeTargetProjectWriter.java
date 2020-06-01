@@ -287,10 +287,9 @@ class XcodeNativeTargetProjectWriter {
       projectFileWriter.writeSourcePath(bridgingHeader.get());
     }
 
-    Optional<Path> buckFilePath = targetAttributes.buckFilePath();
-    if (buckFilePath.isPresent()) {
+    for (Path buckFilePath : targetAttributes.buckFilePaths()) {
       PBXFileReference buckFileReference =
-          projectFileWriter.writeFilePath(buckFilePath.get(), Optional.empty()).getFileReference();
+          projectFileWriter.writeFilePath(buckFilePath, Optional.empty()).getFileReference();
       buckFileReference.setExplicitFileType(Optional.of("text.script.python"));
     }
 

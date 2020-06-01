@@ -100,7 +100,10 @@ abstract class XCodeNativeTargetAttributes {
 
   public abstract Optional<SourcePath> bridgingHeader();
 
-  public abstract Optional<Path> buckFilePath();
+  @Value.Default
+  public ImmutableSet<Path> buckFilePaths() {
+    return ImmutableSet.of();
+  }
 
   @Value.Default
   public ImmutableSet<AppleResourceDescriptionArg> directResources() {

@@ -83,6 +83,11 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
   @Option(name = "--experimental", usage = "Generate an experimental Xcode workspace.")
   private boolean experimental = false;
 
+  @Option(
+      name = "--should-merge-targets",
+      usage = "Exposes deep dependency sources for build targets.")
+  private boolean shouldMergeTargets = false;
+
   protected Mode getOutputMode() {
     if (this.showFullOutput) {
       return Mode.FULL;
@@ -180,6 +185,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
                   projectGeneratorParameters.isWithTests(),
                   projectGeneratorParameters.isWithoutTests(),
                   projectGeneratorParameters.isWithoutDependenciesTests(),
+                  shouldMergeTargets,
                   modulesToFocusOn,
                   getProjectSchemes(params.getBuckConfig()),
                   projectGeneratorParameters.isDryRun(),

@@ -220,9 +220,7 @@ public class XcodeNativeTargetProjectWriterTest {
   @Test
   public void buckFileAddedInCorrectGroup() throws NoSuchBuildTargetException {
     XCodeNativeTargetAttributes targetAttributes =
-        builderWithCommonDefaults()
-            .setBuckFilePath(Optional.of(Paths.get("MyApp/MyLib/BUCK")))
-            .build();
+        builderWithCommonDefaults().addBuckFilePaths(Paths.get("MyApp/MyLib/BUCK")).build();
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
