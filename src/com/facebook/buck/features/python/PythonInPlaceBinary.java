@@ -160,7 +160,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
               .add("PYTHON_INTERPRETER_FLAGS", pythonPlatform.getInplaceBinaryInterpreterFlags());
 
       // Only add platform-specific values when the binary includes native libraries.
-      if (components.getNativeLibraries().isEmpty()) {
+      if (components.getNativeLibraries().getComponents().isEmpty()) {
         st.add("NATIVE_LIBS_ENV_VAR", "None");
         st.add("NATIVE_LIBS_DIR", "None");
       } else {

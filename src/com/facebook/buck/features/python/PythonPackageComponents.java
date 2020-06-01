@@ -30,11 +30,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.step.fs.SymlinkPaths;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.MultimapBuilder;
-import com.google.common.collect.Multimaps;
-import java.util.Objects;
+import com.google.common.collect.Streams;
 import java.util.Optional;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -45,15 +41,15 @@ public abstract class PythonPackageComponents implements AddsToRuleKey {
 
   // Python modules as map of their module name to location of the source.
   @AddToRuleKey
-  public abstract ImmutableListMultimap<BuildTarget, PythonComponents> getModules();
+  public abstract PythonComponentsGroup getModules();
 
   // Resources to include in the package.
   @AddToRuleKey
-  public abstract ImmutableListMultimap<BuildTarget, PythonComponents> getResources();
+  public abstract PythonComponentsGroup getResources();
 
   // Native libraries to include in the package.
   @AddToRuleKey
-  public abstract ImmutableListMultimap<BuildTarget, PythonComponents> getNativeLibraries();
+  public abstract PythonComponentsGroup getNativeLibraries();
 
   @AddToRuleKey
   public abstract Optional<SourcePath> getDefaultInitPy();
@@ -76,16 +72,9 @@ public abstract class PythonPackageComponents implements AddsToRuleKey {
 
   public PythonResolvedPackageComponents resolve(SourcePathResolverAdapter resolver) {
     return ImmutablePythonResolvedPackageComponents.builder()
-        .putAllModules(
-            Multimaps.transformValues(
-                getModules(), c -> Objects.requireNonNull(c).resolvePythonComponents(resolver)))
-        .putAllResources(
-            Multimaps.transformValues(
-                getResources(), c -> Objects.requireNonNull(c).resolvePythonComponents(resolver)))
-        .putAllNativeLibraries(
-            Multimaps.transformValues(
-                getNativeLibraries(),
-                c -> Objects.requireNonNull(c).resolvePythonComponents(resolver)))
+        .setModules(getModules().resolve(resolver))
+        .setResources(getResources().resolve(resolver))
+        .setNativeLibraries(getNativeLibraries().resolve(resolver))
         .setDefaultInitPy(
             getDefaultInitPy()
                 .map((SourcePath sourcePath) -> resolver.getAbsolutePath(sourcePath).getPath()))
@@ -97,15 +86,15 @@ public abstract class PythonPackageComponents implements AddsToRuleKey {
     return new SymlinkPack(
         ImmutableList.<Symlinks>builder()
             .addAll(
-                getModules().values().stream()
+                Streams.stream(getModules().values())
                     .map(PythonComponents::asSymlinks)
                     .collect(ImmutableList.toImmutableList()))
             .addAll(
-                getResources().values().stream()
+                Streams.stream(getResources().values())
                     .map(PythonComponents::asSymlinks)
                     .collect(ImmutableList.toImmutableList()))
             .addAll(
-                getNativeLibraries().values().stream()
+                Streams.stream(getNativeLibraries().values())
                     .map(PythonComponents::asSymlinks)
                     .collect(ImmutableList.toImmutableList()))
             .build()) {
@@ -142,26 +131,24 @@ public abstract class PythonPackageComponents implements AddsToRuleKey {
    */
   public static class Builder {
 
-    private final ListMultimap<BuildTarget, PythonComponents> modules =
-        MultimapBuilder.treeKeys().arrayListValues().build();
-    private final ListMultimap<BuildTarget, PythonComponents> resources =
-        MultimapBuilder.treeKeys().arrayListValues().build();
-    private final ListMultimap<BuildTarget, PythonComponents> nativeLibraries =
-        MultimapBuilder.treeKeys().arrayListValues().build();
+    private final PythonComponentsGroup.Builder modules = new PythonComponentsGroup.Builder();
+    private final PythonComponentsGroup.Builder resources = new PythonComponentsGroup.Builder();
+    private final PythonComponentsGroup.Builder nativeLibraries =
+        new PythonComponentsGroup.Builder();
     private Optional<Boolean> zipSafe = Optional.empty();
 
     public Builder putModules(BuildTarget owner, PythonComponents components) {
-      modules.put(owner, components);
+      modules.putComponent(owner, components);
       return this;
     }
 
     public Builder putResources(BuildTarget owner, PythonComponents components) {
-      resources.put(owner, components);
+      resources.putComponent(owner, components);
       return this;
     }
 
     public Builder putNativeLibraries(BuildTarget owner, PythonComponents components) {
-      nativeLibraries.put(owner, components);
+      nativeLibraries.putComponent(owner, components);
       return this;
     }
 
@@ -175,7 +162,7 @@ public abstract class PythonPackageComponents implements AddsToRuleKey {
 
     public PythonPackageComponents build() {
       return ImmutablePythonPackageComponents.ofImpl(
-          modules, resources, nativeLibraries, Optional.empty(), zipSafe);
+          modules.build(), resources.build(), nativeLibraries.build(), Optional.empty(), zipSafe);
     }
   }
 }

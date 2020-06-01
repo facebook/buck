@@ -548,7 +548,8 @@ public class PythonBinaryDescriptionTest {
     extensionBuilder.build(graphBuilder, filesystem, targetGraph);
     PythonBinary binary = binaryBuilder.build(graphBuilder, filesystem, targetGraph);
 
-    assertThat(binary.getComponents().getNativeLibraries().entries(), Matchers.empty());
+    assertThat(
+        binary.getComponents().getNativeLibraries().getComponents().keySet(), Matchers.empty());
     assertThat(
         Iterables.transform(
             binary
