@@ -33,12 +33,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class PythonResolvedPackageComponentsTest {
+public class PythonResolvedComponentsGroupTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -56,34 +57,36 @@ public class PythonResolvedPackageComponentsTest {
     Path foo2 = fileSystem.getPath("/target2/foo");
     Files.createDirectories(foo2.getParent());
     Files.write(foo2, "something else".getBytes(Charsets.UTF_8));
-    PythonResolvedPackageComponents components =
-        ImmutablePythonResolvedPackageComponents.builder()
-            .putModules(
+    PythonResolvedComponentsGroup components =
+        ImmutablePythonResolvedComponentsGroup.builder()
+            .putComponents(
                 BuildTargetFactory.newInstance("//:target1"),
-                new PythonMappedComponents.Resolved(ImmutableMap.of(Paths.get("foo"), foo1)))
-            .putModules(
+                new PythonMappedComponents.Resolved(
+                    ImmutableMap.of(Paths.get("foo"), foo1)))
+            .putComponents(
                 BuildTargetFactory.newInstance("//:target2"),
                 new PythonMappedComponents.Resolved(ImmutableMap.of(Paths.get("foo"), foo2)))
             .build();
-    components.forEachModule((dst, src) -> {});
+    components.forEachModule(Optional.empty(), (dst, src) -> {});
   }
 
   @Test
   public void testDuplicateIdenticalSourcesInComponentsIsOk() throws IOException {
-    PythonResolvedPackageComponents components =
-        ImmutablePythonResolvedPackageComponents.builder()
-            .putModules(
+    PythonResolvedComponentsGroup components =
+        ImmutablePythonResolvedComponentsGroup.builder()
+            .putComponents(
                 BuildTargetFactory.newInstance("//:target1"),
                 new PythonMappedComponents.Resolved(
-                    ImmutableMap.of(Paths.get("foo"), Paths.get(("target/foo")))))
-            .putModules(
+                    ImmutableMap.of(
+                        Paths.get("foo"), Paths.get("target/foo"))))
+            .putComponents(
                 BuildTargetFactory.newInstance("//:target2"),
                 new PythonMappedComponents.Resolved(
                     ImmutableMap.of(Paths.get("foo"), Paths.get(("target/foo")))))
             .build();
     // Use an ImmutableMap to verify we don't propagate duplicate entries for the duplicate module.
     ImmutableMap.Builder<Path, Path> builder = ImmutableMap.builder();
-    components.forEachModule(builder::put);
+    components.forEachModule(Optional.empty(), builder::put);
     builder.build();
   }
 
@@ -91,15 +94,15 @@ public class PythonResolvedPackageComponentsTest {
   public void defaultInitPy() throws IOException {
     BuildTarget target1 = BuildTargetFactory.newInstance("//:target1");
     BuildTarget target2 = BuildTargetFactory.newInstance("//:target2");
-    PythonResolvedPackageComponents components =
-        ImmutablePythonResolvedPackageComponents.builder()
-            .putModules(
+    PythonResolvedComponentsGroup components =
+        ImmutablePythonResolvedComponentsGroup.builder()
+            .putComponents(
                 target1,
                 new PythonMappedComponents.Resolved(
                     ImmutableMap.of(
                         Paths.get("foo/src.py"), Paths.get("target1/src.py"),
                         Paths.get("src.py"), Paths.get("target1/src.py"))))
-            .putModules(
+            .putComponents(
                 target2,
                 new PythonMappedComponents.Resolved(
                     ImmutableMap.of(
@@ -107,10 +110,9 @@ public class PythonResolvedPackageComponentsTest {
                         Paths.get("target2/src.py"),
                         Paths.get("bar/__init__.py"),
                         Paths.get("target2/__init__.py"))))
-            .setDefaultInitPy(Paths.get("default/__init__.py"))
             .build();
     Map<Path, Path> modules = new HashMap<>();
-    components.forEachModule(modules::put);
+    components.forEachModule(Optional.of(Paths.get("default/__init__.py")), modules::put);
     assertThat(modules.keySet(), Matchers.hasItem(Paths.get("foo/__init__.py")));
   }
 }
