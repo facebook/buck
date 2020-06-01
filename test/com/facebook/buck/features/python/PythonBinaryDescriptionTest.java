@@ -1038,6 +1038,31 @@ public class PythonBinaryDescriptionTest {
     }
   }
 
+  @Test
+  public void sourceDb() {
+    PythonLibraryBuilder libraryBuilder =
+        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setSrcs(
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("lib.py"))));
+    PythonBinaryBuilder ruleBuilder =
+        PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:rule"))
+            .setDeps(ImmutableSortedSet.of(libraryBuilder.getTarget()))
+            .setMain(FakeSourcePath.of("rule.py"));
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(ruleBuilder.build(), libraryBuilder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    BuildRule db =
+        graphBuilder.requireRule(
+            ruleBuilder
+                .getTarget()
+                .withAppendedFlavors(
+                    PythonTestUtils.PYTHON_PLATFORM.getFlavor(),
+                    CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                    PythonLibraryDescription.LibraryType.SOURCE_DB.getFlavor()));
+    assertThat(db, Matchers.instanceOf(PythonSourceDatabase.class));
+  }
+
   private RuleKey calculateRuleKey(BuildRuleResolver ruleResolver, BuildRule rule) {
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(

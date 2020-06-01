@@ -632,4 +632,15 @@ public class PythonBinaryIntegrationTest {
             Matchers.matchesRegex("foo/bar/(__pycache__/)?mod(.cpython-3[0-9])?.pyc"),
             Matchers.matchesRegex("(__pycache__/)?main(.cpython-3[0-9])?.pyc")));
   }
+
+  @Test
+  public void sourceDb() throws Exception {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_source_db", tmp);
+    workspace.setUp();
+    assertThat(
+        PythonSourceDatabaseEntry.parse(workspace.buildAndReturnOutput("//:bin#source-db")),
+        equalTo(
+            ImmutablePythonSourceDatabaseEntry.ofImpl(
+                ImmutableMap.of("bin.py", "bin.py"), ImmutableMap.of("foo.py", "foo.py"))));
+  }
 }

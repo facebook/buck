@@ -1,0 +1,34 @@
+python_library(
+    name = "foo",
+    srcs = [
+        "foo.py",
+    ],
+)
+
+python_library(
+    name = "bar",
+    srcs = [
+        "bar.py",
+    ],
+    deps = [
+        ":foo",
+    ],
+)
+
+python_binary(
+    name = "bin",
+    main = "bin.py",
+    deps = [
+        ":foo",
+    ],
+)
+
+python_test(
+    name = "test",
+    srcs = [
+        "test.py",
+    ],
+    deps = [
+        ":foo",
+    ],
+)

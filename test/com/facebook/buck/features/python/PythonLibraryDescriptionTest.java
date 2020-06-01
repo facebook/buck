@@ -400,4 +400,31 @@ public class PythonLibraryDescriptionTest {
         Iterables.transform(nativeLibs, Object::toString),
         Matchers.containsInAnyOrder("libdep.so", "libcxx.so"));
   }
+
+  @Test
+  public void sourceDb() {
+    PythonLibraryBuilder libraryBuilder =
+        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setSrcs(
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("lib.py"))));
+    PythonLibraryBuilder ruleBuilder =
+        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setDeps(ImmutableSortedSet.of(libraryBuilder.getTarget()))
+            .setSrcs(
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("rule.py"))));
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(ruleBuilder.build(), libraryBuilder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    BuildRule db =
+        graphBuilder.requireRule(
+            ruleBuilder
+                .getTarget()
+                .withAppendedFlavors(
+                    PythonTestUtils.PYTHON_PLATFORM.getFlavor(),
+                    CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                    PythonLibraryDescription.LibraryType.SOURCE_DB.getFlavor()));
+    assertThat(db, Matchers.instanceOf(PythonSourceDatabase.class));
+  }
 }

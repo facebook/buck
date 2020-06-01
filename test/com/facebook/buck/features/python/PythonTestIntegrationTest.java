@@ -51,11 +51,13 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -372,5 +374,15 @@ public class PythonTestIntegrationTest {
   public void queryTargets() {
     ProcessResult result = workspace.runBuckCommand("test", "//query_targets:t");
     result.assertSuccess();
+  }
+
+  @Test
+  public void sourceDb() throws Exception {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_source_db", tmp);
+    workspace.setUp();
+    PythonSourceDatabaseEntry entry =
+        PythonSourceDatabaseEntry.parse(workspace.buildAndReturnOutput("//:test#source-db"));
+    assertThat(entry.getSources().keySet(), Matchers.hasItem("test.py"));
+    assertThat(entry.getDependencies(), equalTo(ImmutableMap.of("foo.py", "foo.py")));
   }
 }

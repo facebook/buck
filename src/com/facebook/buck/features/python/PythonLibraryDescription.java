@@ -127,28 +127,49 @@ public class PythonLibraryDescription
               .getUnresolvedCxxPlatforms();
       Map.Entry<Flavor, UnresolvedCxxPlatform> cxxPlatform =
           cxxPlatforms.getFlavorAndValue(buildTarget).orElseThrow(IllegalArgumentException::new);
+      CxxPlatform resolvedCxxPlatform =
+          cxxPlatform
+              .getValue()
+              .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
       BuildTarget baseTarget =
           buildTarget.withoutFlavors(
               optionalType.get().getKey(), pythonPlatform.getKey(), cxxPlatform.getKey());
-      return PythonCompileRule.from(
-          buildTarget,
-          context.getProjectFilesystem(),
-          context.getActionGraphBuilder(),
-          pythonPlatform.getValue().getEnvironment(),
+      Optional<PythonMappedComponents> sources =
           getSources(
-                  baseTarget,
-                  pythonPlatform.getValue(),
-                  cxxPlatform
-                      .getValue()
-                      .resolve(
-                          context.getActionGraphBuilder(), buildTarget.getTargetConfiguration()),
-                  context.getActionGraphBuilder())
-              .orElseThrow(
+              context.getActionGraphBuilder(),
+              baseTarget,
+              pythonPlatform.getValue(),
+              resolvedCxxPlatform);
+
+      switch (optionalType.get().getValue()) {
+        case COMPILE:
+          return PythonCompileRule.from(
+              buildTarget,
+              context.getProjectFilesystem(),
+              context.getActionGraphBuilder(),
+              pythonPlatform.getValue().getEnvironment(),
+              sources.orElseThrow(
                   () ->
                       new HumanReadableException(
                           "%s: rule has no sources to compile", buildTarget)),
-          false,
-          downwardApiConfig.isEnabledForPython());
+              false,
+              downwardApiConfig.isEnabledForPython());
+        case SOURCE_DB:
+          {
+            return PythonSourceDatabase.from(
+                buildTarget,
+                context.getProjectFilesystem(),
+                context.getActionGraphBuilder(),
+                pythonPlatform.getValue(),
+                resolvedCxxPlatform,
+                sources.orElseGet(() -> PythonMappedComponents.of(ImmutableSortedMap.of())),
+                getPackageDeps(
+                    context.getActionGraphBuilder(),
+                    baseTarget,
+                    pythonPlatform.getValue(),
+                    resolvedCxxPlatform));
+          }
+      }
     }
 
     return new PythonLibrary(
@@ -159,20 +180,51 @@ public class PythonLibraryDescription
         args.isExcludeDepsFromMergedLinking());
   }
 
-  @SuppressWarnings("unchecked")
-  private Optional<PythonMappedComponents> getSources(
+  private <T> T getMetadata(
+      ActionGraphBuilder graphBuilder,
       BuildTarget baseTarget,
-      PythonPlatform pythonPlatform,
-      CxxPlatform cxxPlatform,
-      ActionGraphBuilder graphBuilder) {
+      MetadataType type,
+      Class<T> clazz,
+      Flavor... flavors) {
     return graphBuilder
         .requireMetadata(
             baseTarget.withAppendedFlavors(
-                MetadataType.SOURCES.getFlavor(),
-                pythonPlatform.getFlavor(),
-                cxxPlatform.getFlavor()),
-            Optional.class)
+                ImmutableSet.<Flavor>builder()
+                    .add(type.getFlavor())
+                    .addAll(ImmutableList.copyOf(flavors))
+                    .build()),
+            clazz)
         .orElseThrow(IllegalStateException::new);
+  }
+
+  @SuppressWarnings("unchecked")
+  private ImmutableSortedSet<BuildRule> getPackageDeps(
+      ActionGraphBuilder graphBuilder,
+      BuildTarget baseTarget,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform) {
+    return getMetadata(
+        graphBuilder,
+        baseTarget,
+        MetadataType.PACKAGE_DEPS,
+        ImmutableSortedSet.class,
+        pythonPlatform.getFlavor(),
+        cxxPlatform.getFlavor());
+  }
+
+  @SuppressWarnings("unchecked")
+  private Optional<PythonMappedComponents> getSources(
+      ActionGraphBuilder graphBuilder,
+      BuildTarget baseTarget,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform) {
+    return getMetadata(
+        graphBuilder,
+        baseTarget,
+        MetadataType.SOURCES,
+        Optional.class,
+        pythonPlatform.getFlavor(),
+        cxxPlatform.getFlavor());
   }
 
   @Override
@@ -306,6 +358,7 @@ public class PythonLibraryDescription
   enum LibraryType implements FlavorConvertible {
     /** Compile the sources in this library into bytecode. */
     COMPILE(InternalFlavor.of("compile")),
+    SOURCE_DB(InternalFlavor.of("source-db")),
     ;
 
     private final Flavor flavor;

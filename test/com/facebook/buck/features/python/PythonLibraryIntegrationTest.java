@@ -133,4 +133,16 @@ public class PythonLibraryIntegrationTest {
             .collect(Collectors.toList()),
         Matchers.hasSize(1));
   }
+
+  @Test
+  public void sourceDb() throws Exception {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_source_db", tmp);
+    workspace.setUp();
+    assertThat(
+        PythonSourceDatabaseEntry.parse(
+            workspace.buildAndReturnOutput("//:bar#source-db,default,py-default")),
+        Matchers.equalTo(
+            ImmutablePythonSourceDatabaseEntry.ofImpl(
+                ImmutableMap.of("bar.py", "bar.py"), ImmutableMap.of("foo.py", "foo.py"))));
+  }
 }
