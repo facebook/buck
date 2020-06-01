@@ -125,6 +125,25 @@ public class PythonUtil {
     }
   }
 
+  /**
+   * @return the merged list of all items for the given platform, from the given platform-agnostic
+   *     and platform-specific params.
+   */
+  public static <T, C extends Collection<T>> ImmutableList<T> getParamForPlatform(
+    PythonPlatform pythonPlatform,
+    CxxPlatform cxxPlatform,
+    C param,
+    PatternMatchedCollection<C> platformParam) {
+    return RichStream.from(param)
+      .concat(
+        platformParam.getMatchingValues(pythonPlatform.getFlavor().toString()).stream()
+          .flatMap(Collection::stream))
+      .concat(
+        platformParam.getMatchingValues(cxxPlatform.getFlavor().toString()).stream()
+          .flatMap(Collection::stream))
+      .toImmutableList();
+  }
+
   public static ImmutableList<BuildTarget> getDeps(
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,

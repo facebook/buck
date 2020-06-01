@@ -26,6 +26,7 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -98,6 +99,27 @@ public class PythonTestDescription
   public static final Flavor BINARY_FLAVOR = InternalFlavor.of("binary");
   private static final String DEFAULT_TEST_MAIN_NAME = "__test_main__.py";
 
+  static FlavorDomain<TestType> TEST_TYPE = FlavorDomain.from("Binary Type", TestType.class);
+
+  /** Ways of building this binary. */
+  enum TestType implements FlavorConvertible {
+    /** Compile the sources in this library into bytecode. */
+    TEST(InternalFlavor.of("test")),
+    SOURCE_DB(InternalFlavor.of("source-db")),
+    ;
+
+    private final Flavor flavor;
+
+    TestType(Flavor flavor) {
+      this.flavor = flavor;
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
+  }
+
   private final ToolchainProvider toolchainProvider;
   private final PythonBinaryDescription binaryDescription;
   private final PythonBuckConfig pythonBuckConfig;
@@ -122,7 +144,7 @@ public class PythonTestDescription
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
       TargetConfiguration toolchainTargetConfiguration) {
-    return Optional.of(ImmutableSet.of(PythonBinaryDescription.PACKAGE_STYLE));
+    return Optional.of(ImmutableSet.of(PythonBinaryDescription.PACKAGE_STYLE, TEST_TYPE));
   }
 
   @VisibleForTesting
@@ -345,34 +367,49 @@ public class PythonTestDescription
             .map(graphBuilder::getRule)
             .collect(ImmutableList.toImmutableList());
 
-    // Build up the list of everything going into the python test.
-    PythonPackagable root =
-        ImmutablePythonBinaryPackagable.of(
-            buildTarget,
-            projectFilesystem,
-            deps,
-            Optional.of(PythonMappedComponents.of(modules)),
-            Optional.of(PythonMappedComponents.of(ImmutableSortedMap.copyOf(resources))),
-            args.getZipSafe());
+    switch (TEST_TYPE.getValue(buildTarget).orElse(TestType.TEST)) {
+      case SOURCE_DB:
+        {
+          return PythonSourceDatabase.from(
+              buildTarget,
+              context.getProjectFilesystem(),
+              context.getActionGraphBuilder(),
+              pythonPlatform,
+              cxxPlatform,
+              PythonMappedComponents.of(modules),
+              deps);
+        }
+      case TEST:
+        {
 
-    CellPathResolver cellRoots = context.getCellPathResolver();
-    StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.of(
-            buildTarget,
-            cellRoots.getCellNameResolver(),
-            graphBuilder,
-            PythonUtil.macroExpanders(context.getTargetGraph()));
-    PythonPackageComponents allComponents =
-        PythonUtil.getAllComponents(
-            cellRoots,
-            buildTarget,
-            projectFilesystem,
-            params,
-            graphBuilder,
-            root,
-            pythonPlatform,
-            cxxBuckConfig,
-            cxxPlatform,
+          // Build up the list of everything going into the python test.
+          PythonPackagable root =
+              ImmutablePythonBinaryPackagable.of(
+                  buildTarget,
+                  projectFilesystem,
+                  deps,
+                  Optional.of(PythonMappedComponents.of(modules)),
+                  Optional.of(PythonMappedComponents.of(ImmutableSortedMap.copyOf(resources))),
+                  args.getZipSafe());
+
+          CellPathResolver cellRoots = context.getCellPathResolver();
+          StringWithMacrosConverter macrosConverter =
+              StringWithMacrosConverter.of(
+                  buildTarget,
+                  cellRoots.getCellNameResolver(),
+                  graphBuilder,
+                  PythonUtil.macroExpanders(context.getTargetGraph()));
+          PythonPackageComponents allComponents =
+              PythonUtil.getAllComponents(
+                  cellRoots,
+                  buildTarget,
+                  projectFilesystem,
+                  params,
+                  graphBuilder,
+                  root,
+                  pythonPlatform,
+                  cxxBuckConfig,
+                  cxxPlatform,
             args.getLinkerFlags().stream()
                 .map(macrosConverter::convert)
                 .collect(ImmutableList.toImmutableList()),
@@ -380,118 +417,125 @@ public class PythonTestDescription
             args.getPreloadDeps(),
             args.getCompile().orElse(false));
 
-    // Build the PEX using a python binary rule with the minimum dependencies.
-    PythonBinary binary =
-        binaryDescription.createPackageRule(
-            cellRoots,
-            buildTarget.withAppendedFlavors(BINARY_FLAVOR),
-            projectFilesystem,
-            params,
-            graphBuilder,
-            pythonPlatform,
-            cxxPlatform,
-            mainModule,
-            args.getExtension(),
-            allComponents,
-            args.getBuildArgs(),
-            getPackageStyle(buildTarget, args),
-            PythonUtil.getPreloadNames(graphBuilder, cxxPlatform, args.getPreloadDeps()));
-    graphBuilder.addToIndex(binary);
+          // Build the PEX using a python binary rule with the minimum dependencies.
+          PythonBinary binary =
+              binaryDescription.createPackageRule(
+                  cellRoots,
+                  buildTarget.withAppendedFlavors(BINARY_FLAVOR),
+                  projectFilesystem,
+                  params,
+                  graphBuilder,
+                  pythonPlatform,
+                  cxxPlatform,
+                  mainModule,
+                  args.getExtension(),
+                  allComponents,
+                  args.getBuildArgs(),
+                  getPackageStyle(buildTarget, args),
+                  PythonUtil.getPreloadNames(graphBuilder, cxxPlatform, args.getPreloadDeps()));
+          graphBuilder.addToIndex(binary);
 
-    if (testRunner.isPresent()) {
-      Preconditions.checkState(
-          args.getSpecs().isPresent(), "Specs must be present when runner is present.");
-      return PythonTestX.from(
-          buildTarget,
-          projectFilesystem,
-          params,
-          binary,
-          args.getLabels(),
-          args.getContacts(),
-          TestRunnerSpecCoercer.coerce(args.getSpecs().get(), macrosConverter));
-    }
-
-    ImmutableList.Builder<Pair<Float, ImmutableSet<Path>>> neededCoverageBuilder =
-        ImmutableList.builder();
-    for (NeededCoverageSpec coverageSpec : args.getNeededCoverage()) {
-      BuildRule buildRule = graphBuilder.getRule(coverageSpec.getBuildTarget());
-      if (deps.contains(buildRule) && buildRule instanceof PythonLibrary) {
-        PythonLibrary pythonLibrary = (PythonLibrary) buildRule;
-        ImmutableSortedSet<Path> paths;
-        if (coverageSpec.getPathName().isPresent()) {
-          Path path =
-              coverageSpec
-                  .getBuildTarget()
-                  .getCellRelativeBasePath()
-                  .getPath()
-                  .toPath(projectFilesystem.getFileSystem())
-                  .resolve(coverageSpec.getPathName().get());
-          if (!pythonLibrary
-              .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
-              .map(PythonMappedComponents::getComponents)
-              .map(Map::keySet)
-              .orElseGet(ImmutableSet::of)
-              .contains(path)) {
-            throw new HumanReadableException(
-                "%s: path %s specified in needed_coverage not found in target %s",
-                buildTarget, path, buildRule.getBuildTarget());
+          if (testRunner.isPresent()) {
+            Preconditions.checkState(
+                args.getSpecs().isPresent(), "Specs must be present when runner is present.");
+            return PythonTestX.from(
+                buildTarget,
+                projectFilesystem,
+                params,
+                binary,
+                args.getLabels(),
+                args.getContacts(),
+                TestRunnerSpecCoercer.coerce(args.getSpecs().get(), macrosConverter));
           }
-          paths = ImmutableSortedSet.of(path);
-        } else {
-          paths =
-              pythonLibrary
-                  .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
-                  .map(PythonMappedComponents::getComponents)
-                  .map(ImmutableSortedMap::keySet)
-                  .orElseGet(ImmutableSortedSet::of);
+
+          ImmutableList.Builder<Pair<Float, ImmutableSet<Path>>> neededCoverageBuilder =
+              ImmutableList.builder();
+          for (NeededCoverageSpec coverageSpec : args.getNeededCoverage()) {
+            BuildRule buildRule = graphBuilder.getRule(coverageSpec.getBuildTarget());
+            if (deps.contains(buildRule) && buildRule instanceof PythonLibrary) {
+              PythonLibrary pythonLibrary = (PythonLibrary) buildRule;
+              ImmutableSortedSet<Path> paths;
+              if (coverageSpec.getPathName().isPresent()) {
+                Path path =
+                    coverageSpec
+                        .getBuildTarget()
+                        .getCellRelativeBasePath()
+                        .getPath()
+                        .toPath(projectFilesystem.getFileSystem())
+                        .resolve(coverageSpec.getPathName().get());
+                if (!pythonLibrary
+                    .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
+                    .map(PythonMappedComponents::getComponents)
+                    .map(Map::keySet)
+                    .orElseGet(ImmutableSet::of)
+                    .contains(path)) {
+                  throw new HumanReadableException(
+                      "%s: path %s specified in needed_coverage not found in target %s",
+                      buildTarget, path, buildRule.getBuildTarget());
+                }
+                paths = ImmutableSortedSet.of(path);
+              } else {
+                paths =
+                    pythonLibrary
+                        .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
+                        .map(PythonMappedComponents::getComponents)
+                        .map(ImmutableSortedMap::keySet)
+                        .orElseGet(ImmutableSortedSet::of);
+              }
+              neededCoverageBuilder.add(
+                  new Pair<>(coverageSpec.getNeededCoverageRatioPercentage() / 100.f, paths));
+            } else {
+              throw new HumanReadableException(
+                  "%s: needed_coverage requires a python library dependency. Found %s instead",
+                  buildTarget, buildRule);
+            }
+          }
+
+          Function<BuildRuleResolver, ImmutableMap<String, Arg>> testEnv =
+              (ruleResolverInner) ->
+                  ImmutableMap.copyOf(
+                      Maps.transformValues(args.getEnv(), macrosConverter::convert));
+
+          // Additional CXX Targets used to generate CXX coverage.
+          ImmutableSet<UnflavoredBuildTarget> additionalCoverageTargets =
+              RichStream.from(args.getAdditionalCoverageTargets())
+                  .map(BuildTarget::getUnflavoredBuildTarget)
+                  .collect(ImmutableSet.toImmutableSet());
+          ImmutableSortedSet<SourcePath> additionalCoverageSourcePaths =
+              additionalCoverageTargets.isEmpty()
+                  ? ImmutableSortedSet.of()
+                  : binary
+                      .getRuntimeDeps(graphBuilder)
+                      .filter(
+                          target ->
+                              additionalCoverageTargets.contains(target.getUnflavoredBuildTarget()))
+                      .map(DefaultBuildTargetSourcePath::of)
+                      .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+
+          // Generate and return the python test rule, which depends on the python binary rule
+          // above.
+          return PythonTest.from(
+              buildTarget,
+              projectFilesystem,
+              params,
+              graphBuilder,
+              testEnv,
+              binary,
+              args.getLabels(),
+              neededCoverageBuilder.build(),
+              additionalCoverageSourcePaths,
+              args.getTestRuleTimeoutMs()
+                  .map(Optional::of)
+                  .orElse(
+                      cxxBuckConfig
+                          .getDelegate()
+                          .getView(TestBuckConfig.class)
+                          .getDefaultTestRuleTimeoutMs()),
+              args.getContacts());
         }
-        neededCoverageBuilder.add(
-            new Pair<>(coverageSpec.getNeededCoverageRatioPercentage() / 100.f, paths));
-      } else {
-        throw new HumanReadableException(
-            "%s: needed_coverage requires a python library dependency. Found %s instead",
-            buildTarget, buildRule);
-      }
+      default:
+        throw new IllegalStateException();
     }
-
-    Function<BuildRuleResolver, ImmutableMap<String, Arg>> testEnv =
-        (ruleResolverInner) ->
-            ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert));
-
-    // Additional CXX Targets used to generate CXX coverage.
-    ImmutableSet<UnflavoredBuildTarget> additionalCoverageTargets =
-        RichStream.from(args.getAdditionalCoverageTargets())
-            .map(BuildTarget::getUnflavoredBuildTarget)
-            .collect(ImmutableSet.toImmutableSet());
-    ImmutableSortedSet<SourcePath> additionalCoverageSourcePaths =
-        additionalCoverageTargets.isEmpty()
-            ? ImmutableSortedSet.of()
-            : binary
-                .getRuntimeDeps(graphBuilder)
-                .filter(
-                    target -> additionalCoverageTargets.contains(target.getUnflavoredBuildTarget()))
-                .map(DefaultBuildTargetSourcePath::of)
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-
-    // Generate and return the python test rule, which depends on the python binary rule above.
-    return PythonTest.from(
-        buildTarget,
-        projectFilesystem,
-        params,
-        graphBuilder,
-        testEnv,
-        binary,
-        args.getLabels(),
-        neededCoverageBuilder.build(),
-        additionalCoverageSourcePaths,
-        args.getTestRuleTimeoutMs()
-            .map(Optional::of)
-            .orElse(
-                cxxBuckConfig
-                    .getDelegate()
-                    .getView(TestBuckConfig.class)
-                    .getDefaultTestRuleTimeoutMs()),
-        args.getContacts());
   }
 
   private Optional<PythonTestRunner> maybeGetTestRunner(

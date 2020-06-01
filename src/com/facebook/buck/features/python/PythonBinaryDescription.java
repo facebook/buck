@@ -25,12 +25,14 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
@@ -89,6 +91,27 @@ public class PythonBinaryDescription
   static FlavorDomain<PythonBuckConfig.PackageStyle> PACKAGE_STYLE =
       FlavorDomain.from("Package Style", PythonBuckConfig.PackageStyle.class);
 
+  static FlavorDomain<BinaryType> BINARY_TYPE = FlavorDomain.from("Binary Type", BinaryType.class);
+
+  /** Ways of building this binary. */
+  enum BinaryType implements FlavorConvertible {
+    /** Compile the sources in this library into bytecode. */
+    EXECUTABLE(InternalFlavor.of("binary")),
+    SOURCE_DB(InternalFlavor.of("source-db")),
+    ;
+
+    private final Flavor flavor;
+
+    BinaryType(Flavor flavor) {
+      this.flavor = flavor;
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
+  }
+
   public PythonBinaryDescription(
       ToolchainProvider toolchainProvider,
       PythonBuckConfig pythonBuckConfig,
@@ -110,7 +133,7 @@ public class PythonBinaryDescription
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
       TargetConfiguration toolchainTargetConfiguration) {
-    return Optional.of(ImmutableSet.of(PACKAGE_STYLE));
+    return Optional.of(ImmutableSet.of(PACKAGE_STYLE, BINARY_TYPE));
   }
 
   public static SourcePath createEmptyInitModule(
@@ -289,7 +312,7 @@ public class PythonBinaryDescription
   }
 
   @Override
-  public PythonBinary createBuildRule(
+  public BuildRule createBuildRule(
       BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
@@ -349,12 +372,31 @@ public class PythonBinaryDescription
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
-    // Build up the list of all components going into the python binary.
-    PythonPackagable root =
-        ImmutablePythonBinaryPackagable.of(
-            buildTarget,
-            projectFilesystem,
-            PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
+    switch (BINARY_TYPE.getValue(buildTarget).orElse(BinaryType.EXECUTABLE)) {
+      case SOURCE_DB:
+        {
+          return PythonSourceDatabase.from(
+              buildTarget,
+              context.getProjectFilesystem(),
+              context.getActionGraphBuilder(),
+              pythonPlatform,
+              cxxPlatform,
+              modules.orElseGet(() -> PythonMappedComponents.of(ImmutableSortedMap.of())),
+              PythonUtil.getParamForPlatform(
+                      pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
+                  .stream()
+                  .map(graphBuilder::getRule)
+                  .collect(ImmutableList.toImmutableList()));
+        }
+      case EXECUTABLE:
+        {
+
+          // Build up the list of all components going into the python binary.
+          PythonPackagable root =
+              ImmutablePythonBinaryPackagable.of(
+                  buildTarget,
+                  projectFilesystem,
+                  PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
                 .stream()
                 .map(graphBuilder::getRule)
                 .collect(ImmutableList.toImmutableList()),
@@ -362,24 +404,24 @@ public class PythonBinaryDescription
             Optional.empty(),
             args.getZipSafe());
 
-    CellPathResolver cellRoots = context.getCellPathResolver();
-    StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.of(
-            buildTarget,
-            cellRoots.getCellNameResolver(),
-            graphBuilder,
-            PythonUtil.macroExpanders(context.getTargetGraph()));
-    PythonPackageComponents allPackageComponents =
-        PythonUtil.getAllComponents(
-            cellRoots,
-            buildTarget,
-            projectFilesystem,
-            params,
-            graphBuilder,
-            root,
-            pythonPlatform,
-            cxxBuckConfig,
-            cxxPlatform,
+          CellPathResolver cellRoots = context.getCellPathResolver();
+          StringWithMacrosConverter macrosConverter =
+              StringWithMacrosConverter.of(
+                  buildTarget,
+                  cellRoots.getCellNameResolver(),
+                  graphBuilder,
+                  PythonUtil.macroExpanders(context.getTargetGraph()));
+          PythonPackageComponents allPackageComponents =
+              PythonUtil.getAllComponents(
+                  cellRoots,
+                  buildTarget,
+                  projectFilesystem,
+                  params,
+                  graphBuilder,
+                  root,
+                  pythonPlatform,
+                  cxxBuckConfig,
+                  cxxPlatform,
             args.getLinkerFlags().stream()
                 .map(macrosConverter::convert)
                 .collect(ImmutableList.toImmutableList()),
@@ -399,7 +441,10 @@ public class PythonBinaryDescription
         allPackageComponents,
         args.getBuildArgs(),
         getPackageStyle(buildTarget, args),
-        PythonUtil.getPreloadNames(graphBuilder, cxxPlatform, args.getPreloadDeps()));
+        PythonUtil.getPreloadNames(graphBuilder, cxxPlatform, args.getPreloadDeps()));}
+      default:
+        throw new IllegalStateException();
+    }
   }
 
   @Override
