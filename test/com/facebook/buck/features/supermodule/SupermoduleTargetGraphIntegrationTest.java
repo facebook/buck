@@ -16,13 +16,22 @@
 
 package com.facebook.buck.features.supermodule;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Map;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -31,12 +40,101 @@ public class SupermoduleTargetGraphIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private ProjectWorkspace workspace;
 
-  @Test
-  public void jsonOutputForDepGraphIsCorrect() throws IOException {
+  @Before
+  public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "graph-validation", tmp);
     workspace.setUp();
+  }
 
-    workspace.runBuckBuild("//Apps/TestApp:TestAppSupermoduleGraph").assertSuccess();
+  private void validateAttributeMap(JsonNode actual, Map<String, ?> expected) throws IOException {
+    JsonNode expectedReread =
+        ObjectMappers.READER.readTree(ObjectMappers.WRITER.writeValueAsString(expected));
+    assertEquals(expectedReread, actual);
+  }
+
+  @Test
+  public void jsonOutputForDepGraphIsCorrect() throws IOException {
+    Path targetGraphJson = workspace.buildAndReturnOutput("//Apps/TestApp:TestAppSupermoduleGraph");
+    JsonNode targetGraph =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(targetGraphJson));
+    assertEquals(
+        Sets.newHashSet(targetGraph.fieldNames()),
+        ImmutableSet.of("//Apps/Libs:A", "//Apps/Libs:B", "//Apps/Libs:C", "//Apps/Libs:Root"));
+
+    validateAttributeMap(
+        targetGraph.get("//Apps/Libs:A"),
+        ImmutableMap.of(
+            "name",
+            "A",
+            "deps",
+            ImmutableSet.of("//Apps/Libs:C"),
+            "labels",
+            ImmutableSet.of("A_label")));
+    validateAttributeMap(
+        targetGraph.get("//Apps/Libs:B"),
+        ImmutableMap.of(
+            "name",
+            "B",
+            "deps",
+            ImmutableSet.of("//Apps/Libs:C"),
+            "labels",
+            ImmutableSet.of("B_label")));
+    validateAttributeMap(
+        targetGraph.get("//Apps/Libs:C"),
+        ImmutableMap.of(
+            "name", "C", "deps", ImmutableSet.of(), "labels", ImmutableSet.of("C_label")));
+    validateAttributeMap(
+        targetGraph.get("//Apps/Libs:Root"),
+        ImmutableMap.of(
+            "name",
+            "Root",
+            "deps",
+            ImmutableSet.of("//Apps/Libs:A", "//Apps/Libs:B"),
+            "labels",
+            ImmutableSet.of("Root_label")));
+  }
+
+  @Test
+  public void jsonOutputFiltersOutLabels() throws IOException {
+    Path targetGraphJson =
+        workspace.buildAndReturnOutput("//Apps/TestApp:TestAppSupermoduleGraphWithLabelPattern");
+    JsonNode targetGraph =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(targetGraphJson));
+    assertEquals(
+        Sets.newHashSet(targetGraph.fieldNames()),
+        ImmutableSet.of("//Apps/Libs:A", "//Apps/Libs:B", "//Apps/Libs:C", "//Apps/Libs:Root"));
+
+    validateAttributeMap(
+        targetGraph.get("//Apps/Libs:A"),
+        ImmutableMap.of(
+            "name",
+            "A",
+            "deps",
+            ImmutableSet.of("//Apps/Libs:C"),
+            "labels",
+            ImmutableSet.of("A_label")));
+    validateAttributeMap(
+        targetGraph.get("//Apps/Libs:B"),
+        ImmutableMap.of(
+            "name",
+            "B",
+            "deps",
+            ImmutableSet.of("//Apps/Libs:C"),
+            "labels",
+            ImmutableSet.of("B_label")));
+    validateAttributeMap(
+        targetGraph.get("//Apps/Libs:C"),
+        ImmutableMap.of(
+            "name", "C", "deps", ImmutableSet.of(), "labels", ImmutableSet.of("C_label")));
+    validateAttributeMap(
+        targetGraph.get("//Apps/Libs:Root"),
+        ImmutableMap.of(
+            "name",
+            "Root",
+            "deps",
+            ImmutableSet.of("//Apps/Libs:A", "//Apps/Libs:B"),
+            "labels",
+            ImmutableSet.of()));
   }
 }

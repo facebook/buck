@@ -1,3 +1,14 @@
 supermodule_target_graph(
     name = "TestAppSupermoduleGraph",
+    deps = [
+        "//Apps/Libs:Root",
+    ],
+)
+
+supermodule_target_graph(
+    name = "TestAppSupermoduleGraphWithLabelPattern",
+    label_pattern = "(A|B|C)_label",
+    deps = [
+        "//Apps/Libs:Root",
+    ],
 )

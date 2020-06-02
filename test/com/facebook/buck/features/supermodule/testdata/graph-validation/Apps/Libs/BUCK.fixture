@@ -1,6 +1,7 @@
 apple_library(
     name = "Root",
     visibility = ["//Apps/..."],
+    labels = ["Root_label"],
     deps = [
         ":A",
         ":B",
@@ -15,6 +16,7 @@ apple_library(
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
     visibility = ["//Apps/..."],
+    labels = ["A_label"],
     deps = [
         ":C",
     ],
@@ -28,6 +30,7 @@ apple_library(
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
     visibility = ["//Apps/..."],
+    labels = ["B_label"],
     deps = [
         ":C",
     ],
@@ -41,4 +44,5 @@ apple_library(
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
     visibility = ["//Apps/..."],
+    labels = ["C_label"],
 )

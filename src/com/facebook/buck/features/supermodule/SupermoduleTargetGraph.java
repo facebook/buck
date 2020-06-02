@@ -31,21 +31,29 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
+import java.nio.file.Path;
 
 /** Rule that outputs a json representation of the target graph with deps and labels. */
 public class SupermoduleTargetGraph extends ModernBuildRule<SupermoduleTargetGraph>
     implements HasOutputName, Buildable {
   @AddToRuleKey private final OutputPath output;
 
+  /** Map from targets to a map of attribute values (specifically name, labels, and deps) */
+  @AddToRuleKey private final ImmutableSortedMap<BuildTarget, TargetInfo> targetGraphMap;
+
   public SupermoduleTargetGraph(
       SourcePathRuleFinder ruleFinder,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      OutputPath output) {
+      OutputPath output,
+      ImmutableSortedMap<BuildTarget, TargetInfo> targetGraphMap) {
     super(buildTarget, projectFilesystem, ruleFinder, SupermoduleTargetGraph.class);
 
     this.output = output;
+    this.targetGraphMap = targetGraphMap;
   }
 
   @Override
@@ -54,12 +62,15 @@ public class SupermoduleTargetGraph extends ModernBuildRule<SupermoduleTargetGra
       ProjectFilesystem filesystem,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
-    return ImmutableList.of();
+    Path outputPath = outputPathResolver.resolvePath(output);
+    return ImmutableList.of(
+        MkdirStep.of(buildCellPathFactory.from(outputPath.getParent())),
+        new GenerateSupermoduleTargetGraphJsonStep(filesystem, outputPath, targetGraphMap));
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return null;
+    return getSourcePath(getBuildable().output);
   }
 
   @Override
