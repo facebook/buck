@@ -25,7 +25,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public interface CellPathResolver {
+/** Resolves cell to path related mappings */
+public interface CellPathResolver extends CellPathExtractor {
 
   /** Cell name resolver works in context of some cell. This function returns current cell. */
   default CanonicalCellName getCurrentCellName() {
@@ -43,19 +44,6 @@ public interface CellPathResolver {
    * name/path resolvers.
    */
   NewCellPathResolver getNewCellPathResolver();
-
-  /**
-   * @param cellName name of cell, Optional.empty() for root cell.
-   * @return Absolute path to the physical location of the cell, or {@code Optional.empty()} if the
-   *     cell name cannot be resolved.
-   */
-  Optional<AbsPath> getCellPath(CanonicalCellName cellName);
-
-  /**
-   * @return Absolute path to the physical location of the cell that contains the provided target
-   * @throws AssertionError if cell is not known
-   */
-  AbsPath getCellPathOrThrow(CanonicalCellName cellName);
 
   /** Resolve a cell-relative path to an absolute path. */
   AbsPath resolveCellRelativePath(CellRelativePath cellRelativePath);
