@@ -168,16 +168,6 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
                           "Node %s should have been discovered by `discoverNewTargetsConcurrently`.",
                           target));
 
-          // If a node has been added to the graph it means it and all of its children have been
-          // visited by an acyclic traversal and added to the graph. From this it follows that there
-          // are no outgoing edges from the graph (as it had been "fully" explored before) back out
-          // to the set of nodes we're currently exploring. Based on that:
-          //  - we can't have a cycle involving the "old" nodes,
-          //  - there are no new edges or nodes to be discovered by descending into the "old" nodes,
-          // making this node safe to skip.
-          if (graph.getNodes().contains(node)) {
-            return new Pair<>(node, ImmutableSet.<BuildTarget>of().iterator());
-          }
           return new Pair<>(node, node.getParseDeps().iterator());
         };
 
