@@ -220,6 +220,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
 
   @Override
   public void close() {
+    packagePipeline.close();
     perfEventScope.close();
     shuttingDown.set(true);
 
