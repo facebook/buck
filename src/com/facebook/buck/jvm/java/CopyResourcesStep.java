@@ -32,6 +32,7 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -158,5 +159,14 @@ public class CopyResourcesStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return String.format("%s of %s", getShortName(), target);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("target", target)
+        .add("parameters", parameters)
+        .add("outputDirectory", outputDirectory)
+        .toString();
   }
 }

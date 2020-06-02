@@ -25,6 +25,7 @@ import com.facebook.buck.jvm.java.classes.FileLikes;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -171,5 +172,13 @@ public class AccumulateClassNamesStep implements Step {
     }
 
     return ImmutableSortedMap.copyOf(classNames, Ordering.natural());
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("pathToJarOrClassesDirectory", pathToJarOrClassesDirectory)
+        .add("whereClassNamesShouldBeWritten", whereClassNamesShouldBeWritten)
+        .toString();
   }
 }

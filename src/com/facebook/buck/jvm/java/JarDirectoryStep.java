@@ -22,6 +22,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.zip.JarBuilder;
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -87,5 +88,10 @@ public class JarDirectoryStep implements Step {
             .setShouldHashEntries(parameters.getHashEntries())
             .setRemoveEntryPredicate(parameters.getRemoveEntryPredicate())
             .createJarFile(filesystem.resolve(parameters.getJarPath())));
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("parameters", parameters).toString();
   }
 }

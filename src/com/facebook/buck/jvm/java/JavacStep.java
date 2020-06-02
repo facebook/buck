@@ -30,6 +30,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -221,5 +222,13 @@ public class JavacStep implements Step {
   @VisibleForTesting
   ImmutableSortedSet<Path> getSrcs() {
     return pipeline.getCompilerParameters().getSourceFilePaths();
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("invokingRule", invokingRule)
+        .add("ownsPipelineObject", ownsPipelineObject)
+        .toString();
   }
 }
