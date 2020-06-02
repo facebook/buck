@@ -1,0 +1,21 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+)
+
+java_immutables_library(
+    name = "android_steps",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/android/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/build/execution/context:context",
+        "//src/com/facebook/buck/core/filesystems:filesystems",
+        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
+        "//src/com/facebook/buck/core/toolchain/tool:tool",
+        "//src/com/facebook/buck/shell:steps",
+        "//src/com/facebook/buck/step:step",
+        "//third-party/java/guava:guava",
+    ],
+)

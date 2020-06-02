@@ -235,6 +235,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/step/isolatedsteps/android:android_steps",
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/config:config",
         "//src/com/facebook/buck/test/result/type:type",
