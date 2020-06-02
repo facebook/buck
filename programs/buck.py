@@ -178,6 +178,8 @@ def main(argv, reporter):
     #       problems, and is not a generally useful feature for users.
     if "BUCK_BUILD_ID" in os.environ and "BUCK_ROOT_BUILD_ID" not in os.environ:
         build_id = os.environ["BUCK_BUILD_ID"]
+    elif "BUCK_WRAPPER_UUID" in os.environ:
+        build_id = os.environ["BUCK_WRAPPER_UUID"]
     else:
         build_id = str(uuid.uuid4())
     if "BUCK_ROOT_BUILD_ID" not in os.environ:

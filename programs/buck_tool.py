@@ -493,6 +493,7 @@ class BuckTool(object):
             except CalledProcessError:
                 # If the call to tput fails, we use the default.
                 pass
+        env.pop("BUCK_WRAPPER_UUID", None)
         return env
 
     def _handle_isolation_args(self, args):
