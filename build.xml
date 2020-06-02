@@ -653,6 +653,7 @@
                                         build-module-ocaml,
                                         build-module-python,
                                         build-module-rust,
+                                        build-module-supermodule,
                                         build-module-xcode,
                                         build-module-ziprules
                                        "/>
@@ -796,6 +797,14 @@
     <build-buck-module-jar module-name="rust">
       <module-javac-params>
         <include name="com/facebook/buck/features/rust/**/*.java" />
+      </module-javac-params>
+    </build-buck-module-jar>
+  </target>
+
+  <target name="build-module-supermodule" depends="compile">
+    <build-buck-module-jar module-name="supermodule">
+      <module-javac-params>
+        <include name="com/facebook/buck/features/supermodule/**/*.java"/>
       </module-javac-params>
     </build-buck-module-jar>
   </target>

@@ -1,0 +1,25 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "supermodule",
+    with_test_data = True,
+    deps = [
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
+        "//src/com/facebook/buck/features/filebundler:filebundler",
+        "//src/com/facebook/buck/features/supermodule:supermodule",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/rules/modern:modern",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/zip/collect:collect",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/step:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/commons-compress:commons-compress",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)
