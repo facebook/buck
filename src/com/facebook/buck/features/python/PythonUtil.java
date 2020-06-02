@@ -74,6 +74,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -167,7 +168,7 @@ public class PythonUtil {
         parameter,
         baseModule,
         ImmutableList.of(items),
-        consumer);
+        (name, src) -> consumer.accept(parameter, name, src));
     forEachModuleParam(
         target,
         graphBuilder,
@@ -177,7 +178,7 @@ public class PythonUtil {
         Iterables.concat(
             platformItems.getMatchingValues(pythonPlatform.getFlavor().toString()),
             platformItems.getMatchingValues(cxxPlatform.getFlavor().toString())),
-        consumer);
+        (name, src) -> consumer.accept(parameter, name, src));
     forEachModuleParam(
         target,
         graphBuilder,
@@ -187,7 +188,7 @@ public class PythonUtil {
         versions.isPresent() && versionItems.isPresent()
             ? versionItems.get().getMatchingValues(versions.get())
             : ImmutableList.of(),
-        consumer);
+        (name, src) -> consumer.accept(parameter, name, src));
   }
 
   private static void forEachSrc(
@@ -288,7 +289,7 @@ public class PythonUtil {
       String parameter,
       Path baseModule,
       Iterable<SourceSortedSet> inputs,
-      TriConsumer<String, Path, SourcePath> consumer) {
+      BiConsumer<Path, SourcePath> consumer) {
 
     for (SourceSortedSet input : inputs) {
       ImmutableMap<String, SourcePath> namesAndSourcePaths =
@@ -310,7 +311,6 @@ public class PythonUtil {
               });
       for (ImmutableMap.Entry<String, SourcePath> entry : namesAndSourcePaths.entrySet()) {
         consumer.accept(
-            parameter,
             baseModule.resolve(entry.getKey()),
             CxxGenruleDescription.fixupSourcePath(
                 actionGraphBuilder, cxxPlatform, entry.getValue()));

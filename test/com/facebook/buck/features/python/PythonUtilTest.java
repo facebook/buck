@@ -59,7 +59,7 @@ public class PythonUtilTest {
         ImmutableList.of(
             SourceSortedSet.ofNamedSources(
                 ImmutableSortedMap.of("hello.py", FakeSourcePath.of("goodbye.py")))),
-        (parameter, name, src) -> srcsBuilder.put(name, src));
+        srcsBuilder::put);
     ImmutableMap<Path, SourcePath> srcs = srcsBuilder.build();
     assertEquals(
         ImmutableMap.<Path, SourcePath>of(

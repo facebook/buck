@@ -116,4 +116,9 @@ public class PythonLibraryBuilder
     getArgForPopulating().setExcludeDepsFromMergedLinking(excludeDepsFromOmnibus);
     return this;
   }
+
+  public PythonLibraryBuilder setTypeStubs(SourceSortedSet typeStubs) {
+    getArgForPopulating().setTypeStubs(typeStubs);
+    return this;
+  }
 }

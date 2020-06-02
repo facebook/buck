@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -40,7 +41,9 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.RmStep;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -83,7 +86,7 @@ public class PythonSourceDatabase extends ModernBuildRule<PythonSourceDatabase.I
         firstOrderDeps,
         packagable ->
             packagable
-                .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
+                .getPythonModulesForTyping(pythonPlatform, cxxPlatform, graphBuilder)
                 .ifPresent(modules -> builder.putComponent(packagable.getBuildTarget(), modules)),
         extension -> {},
         linkable -> {});
@@ -101,6 +104,30 @@ public class PythonSourceDatabase extends ModernBuildRule<PythonSourceDatabase.I
             BuildableSupport.deriveDeps(sources, buildRuleResolver),
             BuildableSupport.deriveDeps(dependencies, buildRuleResolver))
         .map(BuildRule::getBuildTarget);
+  }
+
+  @VisibleForTesting
+  PythonSourceDatabaseEntry getSourceDatabaseForTesting(SourcePathResolverAdapter resolver)
+      throws IOException {
+    ImmutableMap.Builder<String, String> sourcesBuilder = ImmutableMap.builder();
+    sources
+        .resolvePythonComponents(resolver)
+        .forEachPythonComponent(
+            (dst, src) ->
+                sourcesBuilder.put(
+                    dst.toString(),
+                    getProjectFilesystem().getRootPath().relativize(src).toString()));
+    ImmutableMap.Builder<String, String> dependenciesBuilder = ImmutableMap.builder();
+    dependencies
+        .resolve(resolver)
+        .forEachModule(
+            Optional.empty(),
+            (dst, src) ->
+                dependenciesBuilder.put(
+                    dst.toString(),
+                    getProjectFilesystem().getRootPath().relativize(src).toString()));
+    return ImmutablePythonSourceDatabaseEntry.ofImpl(
+        sourcesBuilder.build(), dependenciesBuilder.build());
   }
 
   static class Impl implements Buildable {

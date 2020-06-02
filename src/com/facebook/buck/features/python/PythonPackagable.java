@@ -76,6 +76,18 @@ public interface PythonPackagable extends HasBuildTarget {
   }
 
   /**
+   * Python modules (i.e. sources, bytecode, or native extensions) associated with this rule to use
+   * for type checking dependent rules.
+   *
+   * @return a map of modules, where the key is the module in {@link Path} form (including
+   *     extension).
+   */
+  default Optional<? extends PythonComponents> getPythonModulesForTyping(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return getPythonModules(pythonPlatform, cxxPlatform, graphBuilder);
+  }
+
+  /**
    * @return whether the modules in this rule can be imported/run transparently from a Zip file
    *     (e.g. via zipimport). This is almost always the case, but in rare situations (e.g.
    *     execution expects to find packaged files in disk) rules can opt-out.

@@ -18,9 +18,11 @@ package com.facebook.buck.features.python;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -42,6 +44,7 @@ import com.facebook.buck.cxx.CxxGenruleBuilder;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -60,6 +63,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -426,5 +430,147 @@ public class PythonLibraryDescriptionTest {
                     CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
                     PythonLibraryDescription.LibraryType.SOURCE_DB.getFlavor()));
     assertThat(db, Matchers.instanceOf(PythonSourceDatabase.class));
+  }
+
+  @Test
+  public void sourceDbWithTypeStub() throws Exception {
+    PythonLibraryBuilder libBuilder =
+        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setSrcs(
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("lib.py"))))
+            .setTypeStubs(
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("lib.pyi"))));
+    PythonLibraryBuilder lib2Builder =
+        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib2"))
+            .setBaseModule("foo")
+            .setSrcs(
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("lib.py"))))
+            .setTypeStubs(
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("lib.pyi"))));
+    PythonLibraryBuilder ruleBuilder =
+        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setDeps(ImmutableSortedSet.of(libBuilder.getTarget(), lib2Builder.getTarget()))
+            .setSrcs(
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("rule.py"))));
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            ruleBuilder.build(), libBuilder.build(), lib2Builder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    PythonSourceDatabase db =
+        (PythonSourceDatabase)
+            graphBuilder.requireRule(
+                ruleBuilder
+                    .getTarget()
+                    .withAppendedFlavors(
+                        PythonTestUtils.PYTHON_PLATFORM.getFlavor(),
+                        CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                        PythonLibraryDescription.LibraryType.SOURCE_DB.getFlavor()));
+    assertThat(
+        db.getSourceDatabaseForTesting(graphBuilder.getSourcePathResolver()),
+        Matchers.equalTo(
+            ImmutablePythonSourceDatabaseEntry.ofImpl(
+                ImmutableMap.of("rule.py", "rule.py"),
+                ImmutableMap.of(
+                    "lib.pyi",
+                    "lib.pyi",
+                    MorePaths.pathWithPlatformSeparators("foo/lib.pyi"),
+                    "lib.pyi"))));
+  }
+
+  @Test
+  public void modulesForTyping() {
+    PythonLibraryBuilder builder =
+        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setSrcs(
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(
+                        FakeSourcePath.of("lib1.py"), FakeSourcePath.of("lib2.py"))))
+            .setTypeStubs(
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("lib1.pyi"))));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    PythonLibrary library =
+        (PythonLibrary)
+            graphBuilder.requireRule(
+                builder
+                    .getTarget()
+                    .withAppendedFlavors(
+                        PythonTestUtils.PYTHON_PLATFORM.getFlavor(),
+                        CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()));
+    assertThat(
+        library.getPythonModulesForTyping(
+            PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
+        Matchers.equalTo(
+            Optional.of(
+                PythonMappedComponents.of(
+                    ImmutableSortedMap.of(
+                        Paths.get("lib1.pyi"),
+                        FakeSourcePath.of("lib1.pyi"),
+                        Paths.get("lib2.py"),
+                        FakeSourcePath.of("lib2.py"))))));
+  }
+
+  @Test
+  public void modulesForTypingBadSuffix() {
+    PythonLibraryBuilder builder =
+        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setSrcs(
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("lib.py"))))
+            .setTypeStubs(
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("lib.ext"))));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    PythonLibrary library =
+        (PythonLibrary)
+            graphBuilder.requireRule(
+                builder
+                    .getTarget()
+                    .withAppendedFlavors(
+                        PythonTestUtils.PYTHON_PLATFORM.getFlavor(),
+                        CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()));
+    try {
+      library.getPythonModulesForTyping(
+          PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+      fail("should fail");
+    } catch (UncheckedExecutionException e) {
+      assertThat(e.getCause().getCause(), Matchers.instanceOf(HumanReadableException.class));
+      assertThat(e.getCause().getCause().getMessage(), Matchers.containsString("suffix"));
+    }
+  }
+
+  @Test
+  public void modulesForTypingNoCorrespondingModuleInSrcs() {
+    PythonLibraryBuilder builder =
+        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setTypeStubs(
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("lib.pyi"))));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    PythonLibrary library =
+        (PythonLibrary)
+            graphBuilder.requireRule(
+                builder
+                    .getTarget()
+                    .withAppendedFlavors(
+                        PythonTestUtils.PYTHON_PLATFORM.getFlavor(),
+                        CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()));
+    try {
+      library.getPythonModulesForTyping(
+          PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+      fail("should fail");
+    } catch (UncheckedExecutionException e) {
+      assertThat(e.getCause().getCause(), Matchers.instanceOf(HumanReadableException.class));
+      assertThat(
+          e.getCause().getCause().getMessage(), Matchers.containsString("must have corresponding"));
+    }
   }
 }

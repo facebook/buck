@@ -113,6 +113,18 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  @SuppressWarnings("unchecked")
+  public Optional<? extends PythonComponents> getPythonModulesForTyping(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return getMetadata(
+        pythonPlatform,
+        cxxPlatform,
+        graphBuilder,
+        PythonLibraryDescription.MetadataType.MODULES_FOR_TYPING,
+        Optional.class);
+  }
+
+  @Override
   public Optional<PythonComponents> getPythonBytecode(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return getPythonSources(pythonPlatform, cxxPlatform, graphBuilder)

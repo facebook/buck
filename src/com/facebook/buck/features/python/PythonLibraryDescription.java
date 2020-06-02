@@ -43,6 +43,7 @@ import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
@@ -57,6 +58,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import org.immutables.value.Value;
 
 /** Python library rule description */
@@ -221,6 +223,21 @@ public class PythonLibraryDescription
   }
 
   @SuppressWarnings("unchecked")
+  private Optional<PythonMappedComponents> getModules(
+      ActionGraphBuilder graphBuilder,
+      BuildTarget baseTarget,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform) {
+    return getMetadata(
+        graphBuilder,
+        baseTarget,
+        MetadataType.MODULES,
+        Optional.class,
+        pythonPlatform.getFlavor(),
+        cxxPlatform.getFlavor());
+  }
+
+  @SuppressWarnings("unchecked")
   private ImmutableSortedSet<BuildRule> getPackageDeps(
       ActionGraphBuilder graphBuilder,
       BuildTarget baseTarget,
@@ -284,7 +301,7 @@ public class PythonLibraryDescription
             .orElseThrow(IllegalArgumentException::new);
     Map.Entry<Flavor, UnresolvedCxxPlatform> cxxPlatform =
         cxxPlatforms.getFlavorAndValue(baseTarget).orElseThrow(IllegalArgumentException::new);
-    baseTarget = buildTarget.withoutFlavors(pythonPlatform.getKey(), cxxPlatform.getKey());
+    baseTarget = baseTarget.withoutFlavors(pythonPlatform.getKey(), cxxPlatform.getKey());
 
     switch (type.getValue()) {
       case MODULES:
@@ -345,6 +362,51 @@ public class PythonLibraryDescription
               .map(metadataClass::cast);
         }
 
+      case MODULES_FOR_TYPING:
+        {
+          CxxPlatform resolvedCxxPlatform =
+              cxxPlatform.getValue().resolve(graphBuilder, buildTarget.getTargetConfiguration());
+
+          // Initialize modules used for typing from the `srcs` parameter.
+          Map<Path, SourcePath> modulesForTyping =
+              new TreeMap<>(
+                  getModules(
+                          graphBuilder, baseTarget, pythonPlatform.getValue(), resolvedCxxPlatform)
+                      .map(PythonMappedComponents::getComponents)
+                      .orElseGet(ImmutableSortedMap::of));
+
+          // Add in overrides from `type_stubs`.
+          PythonUtil.forEachModuleParam(
+              buildTarget,
+              graphBuilder,
+              cxxPlatform.getValue().resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+              "type_stubs",
+              PythonUtil.getBasePath(buildTarget, args.getBaseModule()),
+              ImmutableList.of(args.getTypeStubs()),
+              (name, src) -> {
+                if (!MorePaths.getFileExtension(name).equals("pyi")) {
+                  throw new HumanReadableException("type stubs must have `.pyi` suffix");
+                }
+                String pyFilename = MorePaths.getNameWithoutExtension(name) + ".py";
+                Path pyName =
+                    name.getParent() == null
+                        ? name.getFileSystem().getPath(pyFilename)
+                        : name.getParent().resolve(pyFilename);
+                if (modulesForTyping.remove(pyName) == null) {
+                  throw new HumanReadableException(
+                      "type stubs must have corresponding `.py` in `srcs`");
+                }
+                modulesForTyping.put(name, src);
+              });
+
+          return Optional.of(
+                  modulesForTyping.isEmpty()
+                      ? Optional.empty()
+                      : Optional.of(
+                          PythonMappedComponents.of(ImmutableSortedMap.copyOf(modulesForTyping))))
+              .map(metadataClass::cast);
+        }
+
       case PACKAGE_DEPS:
         {
           ImmutableList<BuildTarget> depTargets =
@@ -400,6 +462,7 @@ public class PythonLibraryDescription
     RESOURCES(InternalFlavor.of("resources")),
     MODULES(InternalFlavor.of("modules")),
     SOURCES(InternalFlavor.of("sources")),
+    MODULES_FOR_TYPING(InternalFlavor.of("modules-for-typing")),
     PACKAGE_DEPS(InternalFlavor.of("package-deps")),
     ;
 
@@ -461,5 +524,10 @@ public class PythonLibraryDescription
     Optional<String> getPlatform();
 
     Optional<Flavor> getCxxPlatform();
+
+    @Value.Default
+    default SourceSortedSet getTypeStubs() {
+      return SourceSortedSet.EMPTY;
+    }
   }
 }
