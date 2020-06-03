@@ -1142,7 +1142,7 @@ jobs:
           name: Run Homebrew Release
           command: |
             VERSION=${CIRCLE_TAG:1}
-./tools/release/publish_release.py --no-build-chocolatey --no-build-deb --github-token ${GITHUB_TOKEN} --use-existing-release --version ${VERSION} --output-dir artifacts
+            ./tools/release/publish_release.py --no-build-chocolatey --no-build-deb --github-token ${GITHUB_TOKEN} --use-existing-release --version ${VERSION} --output-dir artifacts
 
 workflows:
   version: 2.1
