@@ -1931,6 +1931,20 @@ $ buck --config client.id=tool-making-this-buck-invocation build buck
 
 {call buckconfig.entry}
   {param section: 'client' /}
+  {param name: 'session_id' /}
+  {param description}
+  If tools that call Buck have a notion of a session ID they can optionally
+  supply buck Buck with that information too via{sp}
+  <code>--config client.session_id=&lt;abc-123></code> to aid auditing of all buck
+  invocations for a specific session.
+  <p>
+  Note that the value of <code>client.session_id</code> is not factored into a build
+  rule's cache key. It is purely for auditing purposes.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'client' /}
   {param name: 'skip-action-graph-cache' /}
   {param description}
   When Buck is run as a daemon, it caches the last Action Graph it used for a

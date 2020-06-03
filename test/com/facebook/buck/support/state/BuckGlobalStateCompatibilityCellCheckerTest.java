@@ -86,7 +86,7 @@ public class BuckGlobalStateCompatibilityCellCheckerTest {
             .setSections(
                 ImmutableMap.of(
                     "cxx", ImmutableMap.of("cc", "/some_location/gcc"),
-                    "client", ImmutableMap.of("id", "clientid")))
+                    "client", ImmutableMap.of("id", "clientid", "session_id", "client_sessionid")))
             .build();
 
     assertNotEquals(buckConfigWithEmptyValue, buckConfigWithRealValue);
