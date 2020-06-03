@@ -457,6 +457,7 @@ def main():
         deb_file, homebrew_file, chocolatey_file = build(
             args, output_dir, release, github_token, homebrew_dir
         )
+''' # Temporarily disable publish for CircleCI publish automation. 
         publish(
             args,
             release,
@@ -467,7 +468,7 @@ def main():
             homebrew_dir,
             chocolatey_file,
         )
-
+'''
     except ReleaseException as e:
         logging.error(str(e))
     finally:
