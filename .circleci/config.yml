@@ -1130,6 +1130,20 @@ jobs:
       #      bin\buck test --all --test-selectors=:windows_failures.txt --test-selectors=:windows_cxx_support.txt
       #    shell: cmd.exe
 
+  macos_publish_release:
+    environment:
+      <<: *macos_environment
+    working_directory: "/Users/distiller/buck"
+    macos:
+      xcode: "11.3.1"
+    steps:
+      - checkout
+      - run:
+          name: Run Homebrew Release
+          command: |
+            VERSION=${CIRCLE_TAG:1}
+./tools/release/publish_release.py --no-build-chocolatey --no-build-deb --github-token ${GITHUB_TOKEN} --use-existing-release --version ${VERSION} --output-dir artifacts
+
 workflows:
   version: 2.1
   linux_jobs:
@@ -1160,3 +1174,12 @@ workflows:
   windows_jobs:
     jobs:
       - windows_build_test
+
+  publish_jobs:
+    jobs:
+      - macos_publish_release
+          filters:
+            tags:
+              only: /^v20.*/
+            branches:
+              ignore: /.*/
