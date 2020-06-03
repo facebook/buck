@@ -1177,7 +1177,7 @@ workflows:
 
   publish_jobs:
     jobs:
-      - macos_publish_release
+      - macos_publish_release:
           filters:
             tags:
               only: /^v20.*/
