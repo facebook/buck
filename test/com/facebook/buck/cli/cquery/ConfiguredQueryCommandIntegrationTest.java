@@ -98,7 +98,7 @@ public class ConfiguredQueryCommandIntegrationTest {
             "//bin:ios-bin,//bin:mac-bin",
             "--output-format",
             "dot");
-    assertOutputMatchesFileContentsExactly("stdout-basic-dot-printing", result, workspace);
+    assertOutputMatchesFileContents("stdout-basic-dot-printing", result, workspace);
   }
 
   @Test
@@ -117,8 +117,7 @@ public class ConfiguredQueryCommandIntegrationTest {
             "dot",
             "--output-attribute",
             "srcs");
-    assertOutputMatchesFileContentsExactly(
-        "stdout-basic-dot-attribute-printing", result, workspace);
+    assertOutputMatchesFileContents("stdout-basic-dot-attribute-printing", result, workspace);
   }
 
   @Test
@@ -130,7 +129,7 @@ public class ConfiguredQueryCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "cquery",
-            "//lib/...",
+            "//lib:maconly",
             "--target-universe",
             "//bin:ios-bin,//bin:mac-bin",
             "--output-format",
@@ -147,7 +146,7 @@ public class ConfiguredQueryCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "cquery",
-            "//lib/...",
+            "//lib:maconly",
             "--target-universe",
             "//bin:ios-bin,//bin:mac-bin",
             "--output-format",

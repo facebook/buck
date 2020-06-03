@@ -21,6 +21,7 @@ import static com.facebook.buck.cli.ThriftOutputUtils.nodesToStringList;
 import static com.facebook.buck.cli.ThriftOutputUtils.parseThriftDag;
 import static com.facebook.buck.testutil.OutputHelper.parseJSON;
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContents;
+import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContentsExactly;
 import static com.facebook.buck.util.MoreStringsForTests.containsIgnoringPlatformNewlines;
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
 import static com.facebook.buck.util.MoreStringsForTests.normalizeNewlines;
@@ -733,12 +734,7 @@ public class QueryCommandIntegrationTest {
             "query",
             dotParams,
             "allpaths(deps(//example:one, 1), set(//example:five //example:six))");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(
-            equalToIgnoringPlatformNewlines(
-                workspace.getFileContents("stdout-allpaths-deps-one-to-five-six.dot"))));
+    assertOutputMatchesFileContents("stdout-allpaths-deps-one-to-five-six.dot", result, workspace);
   }
 
   @Parameters(method = "getDotParams")
@@ -755,12 +751,7 @@ public class QueryCommandIntegrationTest {
             "allpaths(deps(//example:one, 1), %Ss)",
             "//example:five",
             "//example:six");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(
-            equalToIgnoringPlatformNewlines(
-                workspace.getFileContents("stdout-allpaths-deps-one-to-five-six.dot"))));
+    assertOutputMatchesFileContents("stdout-allpaths-deps-one-to-five-six.dot", result, workspace);
   }
 
   @Parameters(method = "getDotParams")
@@ -771,16 +762,10 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("query", dotParams, "deps(//example:one)");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-deps-one.dot"))));
+    assertOutputMatchesFileContents("stdout-deps-one.dot", result, workspace);
 
     result = workspace.runBuckCommand("query", "--output-format", "dot_bfs", "deps(//example:one)");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-bfs-deps-one.dot"))));
+    assertOutputMatchesFileContentsExactly("stdout-bfs-deps-one.dot", result, workspace);
   }
 
   @Parameters(method = "getDotParams")
@@ -793,12 +778,7 @@ public class QueryCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "query", dotParams, "deps(//example:one)", "--output-attributes", "name", "buck.type");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(
-            equalToIgnoringPlatformNewlines(
-                workspace.getFileContents("stdout-deps-one-with-attributes.dot"))));
+    assertOutputMatchesFileContents("stdout-deps-one-with-attributes.dot", result, workspace);
   }
 
   static class ParserProfileFinder extends SimpleFileVisitor<Path> {

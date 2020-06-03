@@ -294,7 +294,7 @@ public class ConfiguredQueryCommand
       PrintStream printStream)
       throws IOException {
     printDotGraph(
-        queryResult, attributesByResultOptional, Dot.OutputOrder.SORTED, false, printStream);
+        queryResult, attributesByResultOptional, Dot.OutputOrder.UNDEFINED, false, printStream);
   }
 
   private void printDotCompactOutput(
@@ -304,7 +304,7 @@ public class ConfiguredQueryCommand
       PrintStream printStream)
       throws IOException {
     printDotGraph(
-        queryResult, attributesByResultOptional, Dot.OutputOrder.SORTED, true, printStream);
+        queryResult, attributesByResultOptional, Dot.OutputOrder.UNDEFINED, true, printStream);
   }
 
   private void printDotBfsOutput(

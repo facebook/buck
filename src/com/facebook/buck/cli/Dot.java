@@ -208,6 +208,27 @@ public class Dot<T> {
           }
           break;
         }
+      case UNDEFINED:
+        {
+          for (T node : graph.getNodes()) {
+            if (shouldContainNode.test(node)) {
+              output.append(
+                  printNode(
+                      node,
+                      Dot.this::getNodeId,
+                      nodeToName,
+                      nodeToTypeName,
+                      nodeToAttributes,
+                      compactMode));
+              for (T dep : graph.getOutgoingNodesFor(node)) {
+                if (shouldContainNode.test(dep)) {
+                  output.append(printEdge(node, dep, nodeToName, Dot.this::getNodeId, compactMode));
+                }
+              }
+            }
+          }
+          break;
+        }
     }
 
     output.append("}");
@@ -293,5 +314,8 @@ public class Dot<T> {
 
     /** Generate the dot output in the sorted natural order of the nodes. */
     SORTED,
+
+    /** Generate the output in non-deterministic order (for when ordering is unimportant) */
+    UNDEFINED,
   }
 }

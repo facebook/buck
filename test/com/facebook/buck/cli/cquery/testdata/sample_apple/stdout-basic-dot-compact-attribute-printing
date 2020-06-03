@@ -1,10 +1,3 @@
 digraph result_graph {
-  1 [style=filled,color="#D6D3F5",label="//lib:bar (//config/platform:ios)",buck_srcs="[bar-ios.m, bar-all.m]"];
-  2 [style=filled,color="#D6D3F5",label="//lib:bar (//config/platform:macos)",buck_srcs="[bar-all.m]"];
-  3 [style=filled,color="#D6D3F5",label="//lib:foo (//config/platform:ios)",buck_srcs="[foo-ios.m]"];
-  3 -> 1;
-  4 [style=filled,color="#D6D3F5",label="//lib:foo (//config/platform:macos)",buck_srcs="[foo-macos.m]"];
-  4 -> 2;
-  4 -> 5;
-  5 [style=filled,color="#D6D3F5",label="//lib:maconly (//config/platform:macos)",buck_srcs="[maconly.m]"];
+  1 [style=filled,color="#D6D3F5",label="//lib:maconly (//config/platform:macos)",buck_srcs="[maconly.m]"];
 }

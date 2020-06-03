@@ -196,7 +196,7 @@ public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQu
             params,
             env,
             asQueryBuildTargets(queryResult),
-            Dot.OutputOrder.SORTED,
+            Dot.OutputOrder.UNDEFINED,
             printStream,
             outputFormat == OutputFormat.DOT_COMPACT);
         break;

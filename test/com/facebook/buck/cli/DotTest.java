@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.Dot.OutputOrder;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
@@ -93,6 +94,10 @@ public class DotTest {
 
   @Test
   public void testGenerateCompactDotOutput() throws IOException {
+    // UNDEFINED output order causes a unique problem with dot compact mode, since the node id's
+    // might be completely different and therefore you get different edges than you expect.
+    assumeTrue(outputOrder != Dot.OutputOrder.UNDEFINED);
+
     MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
     mutableGraph.addEdge("A", "B");
     mutableGraph.addEdge("B", "C");
