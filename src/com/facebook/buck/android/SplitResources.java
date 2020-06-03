@@ -16,9 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.resources.ExoResourcesRewriter;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -33,11 +31,9 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.android.SplitResourcesStep;
 import com.facebook.buck.step.isolatedsteps.android.ZipalignStep;
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -92,49 +88,6 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
 
   SourcePath getPathToExoResources() {
     return getSourcePath(getBuildable().getPathToExoResources());
-  }
-
-  private static class SplitResourcesStep implements Step {
-    private final Path absolutePathToAaptResources;
-    private final Path absolutePathToOriginalRDotTxt;
-    private final Path relativePathToPrimaryResourceOutputPath;
-    private final Path relativePathToUnalignedExoPath;
-    private final Path relativePathTorDotTxtOutputPath;
-
-    public SplitResourcesStep(
-        Path absolutePathToAaptResources,
-        Path absolutePathToOriginalRDotTxt,
-        Path relativePathToPrimaryResourceOutputPath,
-        Path relativePathToUnalignedExoPath,
-        Path relativePathTorDotTxtOutputPath) {
-      this.absolutePathToAaptResources = absolutePathToAaptResources;
-      this.absolutePathToOriginalRDotTxt = absolutePathToOriginalRDotTxt;
-      this.relativePathToPrimaryResourceOutputPath = relativePathToPrimaryResourceOutputPath;
-      this.relativePathToUnalignedExoPath = relativePathToUnalignedExoPath;
-      this.relativePathTorDotTxtOutputPath = relativePathTorDotTxtOutputPath;
-    }
-
-    @Override
-    public StepExecutionResult execute(ExecutionContext context) throws IOException {
-      ExoResourcesRewriter.rewrite(
-          absolutePathToAaptResources,
-          absolutePathToOriginalRDotTxt,
-          relativePathToPrimaryResourceOutputPath,
-          relativePathToUnalignedExoPath,
-          relativePathTorDotTxtOutputPath);
-      return StepExecutionResults.SUCCESS;
-    }
-
-    @Override
-    public String getShortName() {
-      return "splitting_exo_resources";
-    }
-
-    @Override
-    public String getDescription(ExecutionContext context) {
-      return String.format(
-          "split_exo_resources %s %s", absolutePathToAaptResources, absolutePathToOriginalRDotTxt);
-    }
   }
 
   /** Buildable implementation for {@link com.facebook.buck.android.SplitResources}. */

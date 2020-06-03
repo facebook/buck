@@ -10,6 +10,7 @@ java_immutables_library(
         "//src/com/facebook/buck/android/...",
     ],
     deps = [
+        "//src/com/facebook/buck/android/resources:resources",
         "//src/com/facebook/buck/core/build/execution/context:context",
         "//src/com/facebook/buck/core/filesystems:filesystems",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
