@@ -1156,6 +1156,32 @@ jobs:
             VERSION=${CIRCLE_TAG:1}
             python3 ./tools/release/publish_release.py --no-build-chocolatey --no-chocolatey-publish --no-build-deb --github-token ${GITHUB_TOKEN} --use-existing-release --version ${VERSION} --output-dir artifacts
 
+  linux_publish_release:
+    environment:
+      <<: *linux_environment
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          name: Upgrade pip
+          command: python3 -m pip install --upgrade pip
+      - run:
+          name: pip install requests
+          command: python3 -m pip install requests
+      - run:
+          name: pip install python-dateutil
+          command: python3 -m pip install python-dateutil
+      - run:
+          name: pip install python-magic-bin
+          command: python3 -m pip install python-magic-bin
+      - run:
+          name: Run Homebrew Release
+          command: |
+            VERSION=${CIRCLE_TAG:1}
+            python3 ./tools/release/publish_release.py --no-build-chocolatey --no-chocolatey-publish --no-build-homebrew --github-token ${GITHUB_TOKEN} --use-existing-release --version ${VERSION} --output-dir artifacts
+
 workflows:
   version: 2.1
   linux_jobs:
