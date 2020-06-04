@@ -16,13 +16,16 @@
 
 package com.facebook.buck.skylark.function;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.nio.charset.StandardCharsets;
 import javax.annotation.Nullable;
@@ -90,5 +93,29 @@ public abstract class AbstractSkylarkFunctions {
       parameters = {@Param(name = "value", type = String.class, named = true)})
   public String sha256(String value) {
     return Hashing.sha256().hashString(value, StandardCharsets.UTF_8).toString();
+  }
+
+  @SkylarkCallable(
+      name = "load_symbols",
+      doc = "Loads symbols into the current build context.",
+      parameters = {@Param(name = "symbols", type = Dict.class, named = true)},
+      useStarlarkThread = true)
+  public void loadSymbols(Dict<?, ?> symbols /* <String, Any> */, StarlarkThread env) {
+    Module mod = env.getGlobals();
+    for (Object keyObj : symbols) {
+      if (keyObj instanceof String) {
+        String key = (String) keyObj;
+        if (key.startsWith("_")) {
+          throw new HumanReadableException(
+              "Tried to load private symbol `%s`. load_symbols() can only be used to load public (non `_`-prefixed) symbols",
+              key);
+        }
+        try {
+          mod.put(key, symbols.get(keyObj));
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    }
   }
 }
