@@ -16,11 +16,13 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.DefaultCellNameResolverProvider;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.impl.ConfigurationPlatformResolver;
@@ -51,6 +53,7 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -101,6 +104,22 @@ public class PerBuildStateFactory {
         return PathsCheckerFactory.createNoopPathsChecker();
       default:
         throw new IllegalStateException("Unexpected path check method: " + pathsCheckMethod);
+    }
+  }
+
+  private static PackageBoundaryChecker getPackageBoundaryChecker(
+      ParserConfig.PackageBoundaryCheckMethod packageBoundaryCheckMethod,
+      Watchman watchman,
+      LoadingCache<Cell, BuildFileTree> buildFileTree) {
+    switch (packageBoundaryCheckMethod) {
+      case FILESYSTEM:
+        return new ThrowingPackageBoundaryChecker(buildFileTree);
+      case WATCHMAN:
+        return new WatchmanGlobberPackageBoundaryChecker(
+            watchman, new ThrowingPackageBoundaryChecker(buildFileTree));
+      default:
+        throw new IllegalStateException(
+            "Unexpected package boundary check method: " + packageBoundaryCheckMethod);
     }
   }
 
@@ -211,7 +230,10 @@ public class PerBuildStateFactory {
                 typeCoercerFactory));
 
     PackageBoundaryChecker packageBoundaryChecker =
-        new ThrowingPackageBoundaryChecker(daemonicParserState.getBuildFileTrees());
+        getPackageBoundaryChecker(
+            parserConfig.getPackageBoundaryCheckMethod(),
+            watchman,
+            daemonicParserState.getBuildFileTrees());
 
     ParserTargetNodeFromUnconfiguredTargetNodeFactory nonResolvingRawTargetNodeToTargetNodeFactory =
         new UnconfiguredTargetNodeToTargetNodeFactory(

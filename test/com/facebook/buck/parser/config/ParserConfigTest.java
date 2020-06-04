@@ -105,6 +105,22 @@ public class ParserConfigTest {
   }
 
   @Test
+  public void testGetPackageBoundaryCheckMethod() throws IOException {
+    ParserConfig config;
+    config = getDefaultConfig();
+    assertEquals(
+        config.getPackageBoundaryCheckMethod(), ParserConfig.PackageBoundaryCheckMethod.FILESYSTEM);
+
+    config = parseConfig("[project]\npackage_boundary_check_method = filesystem");
+    assertEquals(
+        config.getPackageBoundaryCheckMethod(), ParserConfig.PackageBoundaryCheckMethod.FILESYSTEM);
+
+    config = parseConfig("[project]\npackage_boundary_check_method = watchman");
+    assertEquals(
+        config.getPackageBoundaryCheckMethod(), ParserConfig.PackageBoundaryCheckMethod.WATCHMAN);
+  }
+
+  @Test
   public void testGetWatchCells() throws IOException {
     assertTrue("watch_cells defaults to true", getDefaultConfig().getWatchCells());
 

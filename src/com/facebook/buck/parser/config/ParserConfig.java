@@ -94,6 +94,12 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
     NONE,
   }
 
+  /** Control how to check the package boundary */
+  public enum PackageBoundaryCheckMethod {
+    FILESYSTEM,
+    WATCHMAN,
+  }
+
   /** Controls whether default flavors should be applied to unflavored targets. */
   public enum ApplyDefaultFlavorsMode {
     DISABLED,
@@ -145,6 +151,13 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public boolean getEnforceBuckPackageBoundary() {
     return getDelegate().getBooleanValue("project", "check_package_boundary", true);
+  }
+
+  @Value.Lazy
+  public PackageBoundaryCheckMethod getPackageBoundaryCheckMethod() {
+    return getDelegate()
+        .getEnum("project", "package_boundary_check_method", PackageBoundaryCheckMethod.class)
+        .orElse(PackageBoundaryCheckMethod.FILESYSTEM);
   }
 
   /** A list of absolute paths under which buck package boundary checks should not be performed. */
