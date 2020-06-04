@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx.toolchain.objectfile;
 
-import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -53,7 +52,7 @@ public class MachoExportTrieReader {
 
     for (int i = 0; i < numberOfChildren; ++i) {
       byteBuffer.position(nextChildEdgePosition);
-      byte[] prefix = readCString(byteBuffer);
+      byte[] prefix = ObjectFileScrubbers.readCString(byteBuffer);
       int childOffset = (int) ULEB128.read(byteBuffer);
 
       nextChildEdgePosition = byteBuffer.position();
@@ -78,7 +77,7 @@ public class MachoExportTrieReader {
     info.flags = ULEB128.read(byteBuffer);
     if ((info.flags & MachoExportTrieNode.EXPORT_SYMBOL_FLAGS_REEXPORT) != 0) {
       info.other = ULEB128.read(byteBuffer);
-      info.importedName = Optional.of(readCString(byteBuffer));
+      info.importedName = Optional.of(ObjectFileScrubbers.readCString(byteBuffer));
     } else {
       info.address = ULEB128.read(byteBuffer);
       if ((info.flags & MachoExportTrieNode.EXPORT_SYMBOL_FLAGS_STUB_AND_RESOLVER) != 0) {
@@ -87,19 +86,5 @@ public class MachoExportTrieReader {
     }
 
     return info;
-  }
-
-  // Prefer dealing with C-style strings as byte[] as we do not require string operations
-  private static byte[] readCString(ByteBuffer byteBuffer) {
-    ByteArrayOutputStream cStringBuffer = new ByteArrayOutputStream();
-    while (true) {
-      byte currentByte = byteBuffer.get();
-      cStringBuffer.write(currentByte);
-      if (currentByte == 0x0) {
-        break;
-      }
-    }
-
-    return cStringBuffer.toByteArray();
   }
 }

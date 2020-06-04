@@ -36,6 +36,22 @@ import org.junit.Test;
 
 public class ObjectFileScrubbersTest {
   @Test
+  public void testEmptyCString() {
+    byte[] emptyCString = new byte[] {0};
+    ByteBuffer emptyStringBuffer = ByteBuffer.wrap(emptyCString);
+    byte[] cString = ObjectFileScrubbers.readCString(emptyStringBuffer);
+    assertThat(emptyCString, equalTo(cString));
+  }
+
+  @Test
+  public void testNonEmptyCString() {
+    byte[] testCString = new byte[] {(byte) 't', (byte) 'e', (byte) 's', (byte) 't', 0};
+    ByteBuffer emptyStringBuffer = ByteBuffer.wrap(testCString);
+    byte[] cString = ObjectFileScrubbers.readCString(emptyStringBuffer);
+    assertThat(testCString, equalTo(cString));
+  }
+
+  @Test
   public void testHexConversion() {
     ImmutableMap<Byte, String> expectedOutput =
         ImmutableMap.of(

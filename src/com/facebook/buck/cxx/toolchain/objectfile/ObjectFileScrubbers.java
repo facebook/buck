@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.google.common.primitives.Shorts;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.BufferUnderflowException;
@@ -265,5 +266,22 @@ public class ObjectFileScrubbers {
     if (!expression) {
       throw new FileContentsScrubber.ScrubException(msg);
     }
+  }
+
+  /**
+   * Exposing C-style strings as byte[] is more efficient (no charset decoding, etc). This is useful
+   * when String operations are not required.
+   */
+  public static byte[] readCString(ByteBuffer byteBuffer) {
+    ByteArrayOutputStream cStringBuffer = new ByteArrayOutputStream();
+    while (true) {
+      byte currentByte = byteBuffer.get();
+      cStringBuffer.write(currentByte);
+      if (currentByte == 0x0) {
+        break;
+      }
+    }
+
+    return cStringBuffer.toByteArray();
   }
 }
