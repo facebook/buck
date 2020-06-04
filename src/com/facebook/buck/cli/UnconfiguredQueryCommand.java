@@ -16,8 +16,16 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.ParsingContext;
+import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.PerBuildStateFactory;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryTarget;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.Multimap;
@@ -26,9 +34,9 @@ import java.io.PrintStream;
 import java.util.Set;
 
 /** Buck subcommand which facilitates querying information about the unconfigured target graph. */
-// TODO(srice): The types on AbstractQueryCommand are clearly wrong, but they are a placeholder
+// TODO(srice): Do we really want to use QueryTarget here, since QueryBuildTarget is configured?
 public class UnconfiguredQueryCommand
-    extends AbstractQueryCommand<QueryTarget, ConfiguredQueryEnvironment> {
+    extends AbstractQueryCommand<QueryTarget, UnconfiguredQueryEnvironment> {
 
   @Override
   public String getShortDescription() {
@@ -36,18 +44,33 @@ public class UnconfiguredQueryCommand
   }
 
   @Override
+  @SuppressWarnings({"unused", "PMD.UnconditionalIfStatement"})
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     if (arguments.isEmpty()) {
       throw new CommandLineException("must specify at least the query expression");
     }
 
-    throw new RuntimeException("uquery is not yet implemented and should not be used");
+    // Trick the compiler into thinking we might actually use the code below. This also gives us
+    // a quick one-line change to make if we want to test things out.
+    if (true) {
+      throw new HumanReadableException("uquery is not yet implemented and should not be used");
+    }
+
+    try (CommandThreadManager pool =
+            new CommandThreadManager("UQuery", getConcurrencyLimit(params.getBuckConfig()));
+        PerBuildState perBuildState = createPerBuildState(params, pool)) {
+      UnconfiguredQueryEnvironment env = UnconfiguredQueryEnvironment.from(params);
+      formatAndRunQuery(params, env);
+    } catch (QueryException e) {
+      throw new HumanReadableException(e);
+    }
+    return ExitCode.SUCCESS;
   }
 
   @Override
   protected void printSingleQueryOutput(
       CommandRunnerParams params,
-      ConfiguredQueryEnvironment env,
+      UnconfiguredQueryEnvironment env,
       Set<QueryTarget> queryResult,
       PrintStream printStream)
       throws QueryException, IOException {
@@ -57,10 +80,30 @@ public class UnconfiguredQueryCommand
   @Override
   protected void printMultipleQueryOutput(
       CommandRunnerParams params,
-      ConfiguredQueryEnvironment env,
+      UnconfiguredQueryEnvironment env,
       Multimap<String, QueryTarget> queryResultMap,
       PrintStream printStream)
       throws QueryException, IOException {
     throw new IllegalStateException("This method is impossible to reach since uquery is NYI");
+  }
+
+  private PerBuildState createPerBuildState(CommandRunnerParams params, CommandThreadManager pool) {
+    ParsingContext parsingContext =
+        createParsingContext(params.getCells(), pool.getListeningExecutorService())
+            .withSpeculativeParsing(SpeculativeParsing.ENABLED);
+
+    PerBuildStateFactory factory =
+        new PerBuildStateFactory(
+            params.getTypeCoercerFactory(),
+            new DefaultConstructorArgMarshaller(),
+            params.getKnownRuleTypesProvider(),
+            new ParserPythonInterpreterProvider(
+                params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
+            params.getWatchman(),
+            params.getBuckEventBus(),
+            params.getUnconfiguredBuildTargetFactory(),
+            params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE));
+
+    return factory.create(parsingContext, params.getParser().getPermState());
   }
 }
