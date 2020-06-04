@@ -45,6 +45,8 @@ import com.facebook.buck.query.AttrFilterFunction;
 import com.facebook.buck.query.AttrRegexFilterFunction;
 import com.facebook.buck.query.BuildFileFunction;
 import com.facebook.buck.query.ConfigFunction;
+import com.facebook.buck.query.ConfiguredQueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryTarget;
 import com.facebook.buck.query.DepsFunction;
 import com.facebook.buck.query.EvaluatingQueryEnvironment;
 import com.facebook.buck.query.FilterFunction;
@@ -53,12 +55,10 @@ import com.facebook.buck.query.KindFunction;
 import com.facebook.buck.query.LabelsFunction;
 import com.facebook.buck.query.NoopQueryEvaluator;
 import com.facebook.buck.query.OwnerFunction;
-import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryFileTarget;
-import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.query.RdepsFunction;
 import com.facebook.buck.query.TestsOfFunction;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -86,7 +86,8 @@ import java.util.function.Predicate;
  *
  * <p>The query language is documented at docs/command/query.soy
  */
-public class ConfiguredQueryEnvironment implements EvaluatingQueryEnvironment<QueryTarget> {
+public class ConfiguredQueryEnvironment
+    implements EvaluatingQueryEnvironment<ConfiguredQueryTarget> {
 
   private final TargetUniverse targetUniverse;
   private final Cell rootCell;
@@ -94,11 +95,12 @@ public class ConfiguredQueryEnvironment implements EvaluatingQueryEnvironment<Qu
   private final TargetConfigurationFactory targetConfigurationFactory;
   private final TargetPatternEvaluator targetPatternEvaluator;
   private final BuckEventBus eventBus;
-  private final QueryEnvironment.TargetEvaluator<QueryTarget> queryTargetEvaluator;
+  private final QueryEnvironment.TargetEvaluator<ConfiguredQueryTarget> queryTargetEvaluator;
   private final TypeCoercerFactory typeCoercerFactory;
 
   private final ImmutableMap<Cell, BuildFileTree> buildFileTrees;
-  private final Map<BuildTarget, QueryBuildTarget> buildTargetToQueryTarget = new HashMap<>();
+  private final Map<BuildTarget, ConfiguredQueryBuildTarget> buildTargetToQueryTarget =
+      new HashMap<>();
 
   @VisibleForTesting
   protected ConfiguredQueryEnvironment(
@@ -189,68 +191,70 @@ public class ConfiguredQueryEnvironment implements EvaluatingQueryEnvironment<Qu
   }
 
   @Override
-  public Set<QueryTarget> evaluateQuery(QueryExpression<QueryTarget> expr)
+  public Set<ConfiguredQueryTarget> evaluateQuery(QueryExpression<ConfiguredQueryTarget> expr)
       throws QueryException, InterruptedException {
     Set<String> targetLiterals = new HashSet<>();
     expr.collectTargetPatterns(targetLiterals);
     preloadTargetPatterns(targetLiterals);
-    return new NoopQueryEvaluator<QueryTarget>().eval(expr, this);
+    return new NoopQueryEvaluator<ConfiguredQueryTarget>().eval(expr, this);
   }
 
-  private QueryBuildTarget getOrCreateQueryBuildTarget(BuildTarget buildTarget) {
-    return buildTargetToQueryTarget.computeIfAbsent(buildTarget, QueryBuildTarget::of);
+  private ConfiguredQueryBuildTarget getOrCreateQueryBuildTarget(BuildTarget buildTarget) {
+    return buildTargetToQueryTarget.computeIfAbsent(buildTarget, ConfiguredQueryBuildTarget::of);
   }
 
-  public ImmutableSet<QueryBuildTarget> getTargetsFromTargetNodes(
+  public ImmutableSet<ConfiguredQueryBuildTarget> getTargetsFromTargetNodes(
       Iterable<TargetNode<?>> targetNodes) {
-    ImmutableSet.Builder<QueryBuildTarget> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<ConfiguredQueryBuildTarget> builder = ImmutableSet.builder();
     for (TargetNode<?> targetNode : targetNodes) {
       builder.add(getOrCreateQueryBuildTarget(targetNode.getBuildTarget()));
     }
     return builder.build();
   }
 
-  public ImmutableSet<QueryBuildTarget> getTargetsFromBuildTargets(
+  public ImmutableSet<ConfiguredQueryBuildTarget> getTargetsFromBuildTargets(
       Iterable<BuildTarget> buildTargets) {
-    ImmutableSet.Builder<QueryBuildTarget> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<ConfiguredQueryBuildTarget> builder = ImmutableSet.builder();
     for (BuildTarget buildTarget : buildTargets) {
       builder.add(getOrCreateQueryBuildTarget(buildTarget));
     }
     return builder.build();
   }
 
-  public ImmutableSet<TargetNode<?>> getNodesFromQueryTargets(Collection<QueryBuildTarget> input)
-      throws QueryException {
+  public ImmutableSet<TargetNode<?>> getNodesFromQueryTargets(
+      Collection<ConfiguredQueryBuildTarget> input) throws QueryException {
     ImmutableSet.Builder<TargetNode<?>> builder =
         ImmutableSet.builderWithExpectedSize(input.size());
-    for (QueryBuildTarget target : input) {
+    for (ConfiguredQueryBuildTarget target : input) {
       targetUniverse.getNode(target.getBuildTarget()).ifPresent(builder::add);
     }
     return builder.build();
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) throws QueryException {
+  public ImmutableSet<ConfiguredQueryTarget> getFwdDeps(Iterable<ConfiguredQueryTarget> targets)
+      throws QueryException {
     return allBuildTargets(targets).stream()
-        .map(QueryBuildTarget::getBuildTarget)
+        .map(ConfiguredQueryBuildTarget::getBuildTarget)
         .flatMap(target -> targetUniverse.getAllTargetsFromOutgoingEdgesOf(target).stream())
         .map(this::getOrCreateQueryBuildTarget)
         .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
-  public Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets) throws QueryException {
+  public Set<ConfiguredQueryTarget> getReverseDeps(Iterable<ConfiguredQueryTarget> targets)
+      throws QueryException {
     return allBuildTargets(targets).stream()
-        .map(QueryBuildTarget::getBuildTarget)
+        .map(ConfiguredQueryBuildTarget::getBuildTarget)
         .flatMap(target -> targetUniverse.getAllTargetsFromIncomingEdgesOf(target).stream())
         .map(this::getOrCreateQueryBuildTarget)
         .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
-  public Set<QueryTarget> getInputs(QueryTarget target) throws QueryException {
+  public Set<ConfiguredQueryTarget> getInputs(ConfiguredQueryTarget target) throws QueryException {
     // TODO: Give an error message if this cast fails.
-    QueryBuildTarget queryBuildTarget = (QueryBuildTarget) target;
+    ConfiguredQueryBuildTarget queryBuildTarget = (ConfiguredQueryBuildTarget) target;
     Optional<TargetNode<?>> maybeNode = targetUniverse.getNode(queryBuildTarget.getBuildTarget());
     if (!maybeNode.isPresent()) {
       return ImmutableSet.of();
@@ -272,11 +276,11 @@ public class ConfiguredQueryEnvironment implements EvaluatingQueryEnvironment<Qu
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets)
-      throws QueryException {
+  public ImmutableSet<ConfiguredQueryTarget> getTransitiveClosure(
+      Set<ConfiguredQueryTarget> targets) throws QueryException {
     ImmutableSet<BuildTarget> buildTargets =
         allBuildTargets(targets).stream()
-            .map(QueryBuildTarget::getBuildTarget)
+            .map(ConfiguredQueryBuildTarget::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet());
     ImmutableSet<BuildTarget> transitiveClosure = targetUniverse.getTransitiveClosure(buildTargets);
     return transitiveClosure.stream()
@@ -285,20 +289,21 @@ public class ConfiguredQueryEnvironment implements EvaluatingQueryEnvironment<Qu
   }
 
   @Override
-  public void buildTransitiveClosure(Set<QueryTarget> targets) throws QueryException {
+  public void buildTransitiveClosure(Set<ConfiguredQueryTarget> targets) throws QueryException {
     // Filter QueryTargets that are build targets and not yet present in the build target graph.
     ImmutableSet<BuildTarget> buildTargets =
         targets.stream()
-            .filter(target -> target instanceof QueryBuildTarget)
-            .map(target -> ((QueryBuildTarget) target).getBuildTarget())
+            .filter(target -> target instanceof ConfiguredQueryBuildTarget)
+            .map(target -> ((ConfiguredQueryBuildTarget) target).getBuildTarget())
             .collect(ImmutableSet.toImmutableSet());
 
     targetUniverse.buildTransitiveClosure(buildTargets);
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target) throws QueryException {
-    BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+  public ImmutableSet<ConfiguredQueryTarget> getTestsForTarget(ConfiguredQueryTarget target)
+      throws QueryException {
+    BuildTarget buildTarget = ((ConfiguredQueryBuildTarget) target).getBuildTarget();
     Optional<TargetNode<?>> maybeNode = targetUniverse.getNode(buildTarget);
     if (!maybeNode.isPresent()) {
       return ImmutableSet.of();
@@ -311,25 +316,27 @@ public class ConfiguredQueryEnvironment implements EvaluatingQueryEnvironment<Qu
         .collect(ImmutableSet.toImmutableSet());
   }
 
-  // TODO: This should be moved closer to QueryTarget itself, not a helper on BuckQueryEnvironment.
-  private ImmutableSet<QueryBuildTarget> allBuildTargets(Iterable<QueryTarget> targets) {
-    ImmutableSet.Builder<QueryBuildTarget> builder = ImmutableSet.builder();
-    for (QueryTarget target : targets) {
-      if (target instanceof QueryBuildTarget) {
-        builder.add((QueryBuildTarget) target);
+  // TODO: This should be moved closer to ConfiguredQueryTarget itself, not a helper on
+  // BuckQueryEnvironment.
+  private ImmutableSet<ConfiguredQueryBuildTarget> allBuildTargets(
+      Iterable<ConfiguredQueryTarget> targets) {
+    ImmutableSet.Builder<ConfiguredQueryBuildTarget> builder = ImmutableSet.builder();
+    for (ConfiguredQueryTarget target : targets) {
+      if (target instanceof ConfiguredQueryBuildTarget) {
+        builder.add((ConfiguredQueryBuildTarget) target);
       }
     }
     return builder.build();
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets) {
+  public ImmutableSet<ConfiguredQueryTarget> getBuildFiles(Set<ConfiguredQueryTarget> targets) {
     ProjectFilesystem cellFilesystem = rootCell.getFilesystem();
     AbsPath rootPath = cellFilesystem.getRootPath();
 
-    ImmutableSet.Builder<QueryTarget> builder =
+    ImmutableSet.Builder<ConfiguredQueryTarget> builder =
         ImmutableSet.builderWithExpectedSize(targets.size());
-    for (QueryBuildTarget target : allBuildTargets(targets)) {
+    for (ConfiguredQueryBuildTarget target : allBuildTargets(targets)) {
       BuildTarget buildTarget = target.getBuildTarget();
       Cell cell = rootCell.getCell(buildTarget.getCell());
       BuildFileTree buildFileTree = Objects.requireNonNull(buildFileTrees.get(cell));
@@ -352,7 +359,7 @@ public class ConfiguredQueryEnvironment implements EvaluatingQueryEnvironment<Qu
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files) {
+  public ImmutableSet<ConfiguredQueryTarget> getFileOwners(ImmutableList<String> files) {
     OwnersReport report = ownersReportBuilder.build(buildFileTrees, files);
     report
         .getInputsWithNoOwners()
@@ -367,16 +374,17 @@ public class ConfiguredQueryEnvironment implements EvaluatingQueryEnvironment<Qu
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getConfiguredTargets(
-      Set<QueryTarget> targets, Optional<String> configurationName) throws QueryException {
+  public ImmutableSet<ConfiguredQueryTarget> getConfiguredTargets(
+      Set<ConfiguredQueryTarget> targets, Optional<String> configurationName)
+      throws QueryException {
     ImmutableSet.Builder<BuildTarget> builder = ImmutableSet.builder();
     Optional<TargetConfiguration> explicitlyRequestedConfiguration =
         configurationName.map(targetConfigurationFactory::create);
-    for (QueryTarget target : targets) {
-      if (!(target instanceof QueryBuildTarget)) {
+    for (ConfiguredQueryTarget target : targets) {
+      if (!(target instanceof ConfiguredQueryBuildTarget)) {
         continue;
       }
-      BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+      BuildTarget buildTarget = ((ConfiguredQueryBuildTarget) target).getBuildTarget();
       // Ideally we would use some form of `orElse` here but that doesn't play well with Throwables
       TargetConfiguration configuration =
           explicitlyRequestedConfiguration.isPresent()
@@ -415,8 +423,8 @@ public class ConfiguredQueryEnvironment implements EvaluatingQueryEnvironment<Qu
   }
 
   @Override
-  public String getTargetKind(QueryTarget target) throws QueryException {
-    BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+  public String getTargetKind(ConfiguredQueryTarget target) throws QueryException {
+    BuildTarget buildTarget = ((ConfiguredQueryBuildTarget) target).getBuildTarget();
     return targetUniverse
         .getNode(buildTarget)
         .orElseThrow(() -> new QueryException("Unable to find node for " + buildTarget))
@@ -425,9 +433,9 @@ public class ConfiguredQueryEnvironment implements EvaluatingQueryEnvironment<Qu
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, ParamName attribute)
-      throws QueryException {
-    BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+  public ImmutableSet<ConfiguredQueryTarget> getTargetsInAttribute(
+      ConfiguredQueryTarget target, ParamName attribute) throws QueryException {
+    BuildTarget buildTarget = ((ConfiguredQueryBuildTarget) target).getBuildTarget();
     TargetNode<?> node =
         targetUniverse
             .getNode(buildTarget)
@@ -438,8 +446,9 @@ public class ConfiguredQueryEnvironment implements EvaluatingQueryEnvironment<Qu
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
-      QueryTarget target, ParamName attribute, Predicate<Object> predicate) throws QueryException {
-    BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+      ConfiguredQueryTarget target, ParamName attribute, Predicate<Object> predicate)
+      throws QueryException {
+    BuildTarget buildTarget = ((ConfiguredQueryBuildTarget) target).getBuildTarget();
     TargetNode<?> node =
         targetUniverse
             .getNode(buildTarget)
@@ -469,16 +478,17 @@ public class ConfiguredQueryEnvironment implements EvaluatingQueryEnvironment<Qu
   }
 
   @Override
-  public Iterable<QueryFunction<QueryTarget>> getFunctions() {
+  public Iterable<QueryFunction<ConfiguredQueryTarget>> getFunctions() {
     return defaultFunctions();
   }
 
   @Override
-  public QueryEnvironment.TargetEvaluator<QueryTarget> getTargetEvaluator() {
+  public QueryEnvironment.TargetEvaluator<ConfiguredQueryTarget> getTargetEvaluator() {
     return queryTargetEvaluator;
   }
 
-  private static class TargetEvaluator implements QueryEnvironment.TargetEvaluator<QueryTarget> {
+  private static class TargetEvaluator
+      implements QueryEnvironment.TargetEvaluator<ConfiguredQueryTarget> {
     private final TargetPatternEvaluator evaluator;
 
     private TargetEvaluator(TargetPatternEvaluator evaluator) {
@@ -486,7 +496,7 @@ public class ConfiguredQueryEnvironment implements EvaluatingQueryEnvironment<Qu
     }
 
     @Override
-    public ImmutableSet<QueryTarget> evaluateTarget(String target) throws QueryException {
+    public ImmutableSet<ConfiguredQueryTarget> evaluateTarget(String target) throws QueryException {
       try {
         return ImmutableSet.copyOf(
             Iterables.concat(evaluator.resolveTargetPatterns(ImmutableList.of(target)).values()));

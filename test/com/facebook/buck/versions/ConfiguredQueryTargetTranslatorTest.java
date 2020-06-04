@@ -34,7 +34,7 @@ import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class QueryTargetTranslatorTest {
+public class ConfiguredQueryTargetTranslatorTest {
 
   private static final CellPathResolver CELL_PATH_RESOLVER =
       TestCellPathResolver.get(new FakeProjectFilesystem());

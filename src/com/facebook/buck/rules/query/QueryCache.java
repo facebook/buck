@@ -18,11 +18,11 @@ package com.facebook.buck.rules.query;
 
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.query.CachingQueryEvaluator;
+import com.facebook.buck.query.ConfiguredQueryTarget;
 import com.facebook.buck.query.QueryEvaluator;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryParserEnv;
-import com.facebook.buck.query.QueryTarget;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -32,13 +32,13 @@ import java.util.concurrent.ExecutionException;
 
 /** Cache that evaluates and stores the result of a dependency {@link Query}. */
 public class QueryCache {
-  private final LoadingCache<TargetGraph, CachingQueryEvaluator<QueryTarget>> evaluators;
+  private final LoadingCache<TargetGraph, CachingQueryEvaluator<ConfiguredQueryTarget>> evaluators;
 
   public QueryCache() {
     evaluators = CacheBuilder.newBuilder().build(CacheLoader.from(CachingQueryEvaluator::new));
   }
 
-  QueryEvaluator<QueryTarget> getQueryEvaluator(TargetGraph targetGraph) {
+  QueryEvaluator<ConfiguredQueryTarget> getQueryEvaluator(TargetGraph targetGraph) {
     try {
       return evaluators.get(targetGraph);
     } catch (ExecutionException e) {
@@ -47,9 +47,9 @@ public class QueryCache {
   }
 
   @VisibleForTesting
-  boolean isPresent(TargetGraph targetGraph, QueryParserEnv<QueryTarget> env, Query query)
+  boolean isPresent(TargetGraph targetGraph, QueryParserEnv<ConfiguredQueryTarget> env, Query query)
       throws QueryException {
-    CachingQueryEvaluator<QueryTarget> evaluator = evaluators.getIfPresent(targetGraph);
+    CachingQueryEvaluator<ConfiguredQueryTarget> evaluator = evaluators.getIfPresent(targetGraph);
     return Objects.nonNull(evaluator)
         && evaluator.isPresent(QueryExpression.parse(query.getQuery(), env));
   }

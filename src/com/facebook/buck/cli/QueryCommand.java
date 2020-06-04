@@ -30,10 +30,10 @@ import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryFileTarget;
-import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.facebook.buck.rules.param.SpecialAttr;
@@ -71,7 +71,8 @@ import org.kohsuke.args4j.Option;
  * the long run users who want to query the configured target graph should use `buck cquery`, though
  * at time of writing that command isn't production ready.
  */
-public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQueryEnvironment> {
+public class QueryCommand
+    extends AbstractQueryCommand<ConfiguredQueryTarget, ConfiguredQueryEnvironment> {
 
   private PerBuildState perBuildState;
 
@@ -186,7 +187,7 @@ public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQu
   protected void printSingleQueryOutput(
       CommandRunnerParams params,
       ConfiguredQueryEnvironment env,
-      Set<QueryTarget> queryResult,
+      Set<ConfiguredQueryTarget> queryResult,
       PrintStream printStream)
       throws QueryException, IOException {
     switch (outputFormat) {
@@ -233,7 +234,7 @@ public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQu
   protected void printMultipleQueryOutput(
       CommandRunnerParams params,
       ConfiguredQueryEnvironment env,
-      Multimap<String, QueryTarget> queryResultMap,
+      Multimap<String, ConfiguredQueryTarget> queryResultMap,
       PrintStream printStream)
       throws QueryException, IOException {
     ImmutableSet<String> attributesFilter = outputAttributes();
@@ -253,22 +254,27 @@ public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQu
     }
   }
 
-  /** @return set as {@link QueryBuildTarget}s or throw {@link IllegalArgumentException} */
+  /**
+   * @return set as {@link ConfiguredQueryBuildTarget}s or throw {@link IllegalArgumentException}
+   */
   @SuppressWarnings("unchecked")
-  public Set<QueryBuildTarget> asQueryBuildTargets(Set<? extends QueryTarget> set) {
-    // It is probably rare that there is a QueryTarget that is not a QueryBuildTarget.
-    boolean hasInvalidItem = set.stream().anyMatch(item -> !(item instanceof QueryBuildTarget));
+  public Set<ConfiguredQueryBuildTarget> asQueryBuildTargets(
+      Set<? extends ConfiguredQueryTarget> set) {
+    // It is probably rare that there is a ConfiguredQueryTarget that is not a
+    // ConfiguredQueryBuildTarget.
+    boolean hasInvalidItem =
+        set.stream().anyMatch(item -> !(item instanceof ConfiguredQueryBuildTarget));
     if (hasInvalidItem) {
       throw new IllegalArgumentException(
-          String.format("%s has elements that are not QueryBuildTarget", set));
+          String.format("%s has elements that are not ConfiguredQueryBuildTarget", set));
     }
-    return (Set<QueryBuildTarget>) set;
+    return (Set<ConfiguredQueryBuildTarget>) set;
   }
 
   private void printJsonOutput(
       CommandRunnerParams params,
       ConfiguredQueryEnvironment env,
-      Set<QueryTarget> queryResult,
+      Set<ConfiguredQueryTarget> queryResult,
       PrintStream printStream)
       throws IOException, QueryException {
     if (shouldOutputAttributes()) {
@@ -281,7 +287,7 @@ public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQu
   private void printListOutput(
       CommandRunnerParams params,
       ConfiguredQueryEnvironment env,
-      Set<QueryTarget> queryResult,
+      Set<ConfiguredQueryTarget> queryResult,
       PrintStream printStream)
       throws QueryException, IOException {
     if (shouldOutputAttributes()) {
@@ -298,8 +304,9 @@ public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQu
    * @param printStream print stream for output
    */
   private void printList(
-      Multimap<String, QueryTarget> targetsAndDependencies, PrintStream printStream) {
-    ImmutableSortedSet.copyOf(QueryTarget::compare, targetsAndDependencies.values()).stream()
+      Multimap<String, ConfiguredQueryTarget> targetsAndDependencies, PrintStream printStream) {
+    ImmutableSortedSet.copyOf(ConfiguredQueryTarget::compare, targetsAndDependencies.values())
+        .stream()
         .map(this::toPresentationForm)
         .forEach(printStream::println);
   }
@@ -310,7 +317,7 @@ public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQu
    * @param targets set of query result
    * @param printStream print stream for output
    */
-  private void printList(Set<QueryTarget> targets, PrintStream printStream) {
+  private void printList(Set<ConfiguredQueryTarget> targets, PrintStream printStream) {
     targets.stream().map(this::toPresentationForm).forEach(printStream::println);
   }
 
@@ -321,7 +328,8 @@ public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQu
    * @param printStream print stream for output
    * @throws IOException in case of IO exception during json writing operation
    */
-  private void printJson(Multimap<String, QueryTarget> targetsAndResults, PrintStream printStream)
+  private void printJson(
+      Multimap<String, ConfiguredQueryTarget> targetsAndResults, PrintStream printStream)
       throws IOException {
     Multimap<String, String> targetsAndResultsNames =
         Multimaps.transformValues(
@@ -336,7 +344,8 @@ public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQu
    * @param printStream print stream for output
    * @throws IOException in case of IO exception during json writing operation
    */
-  private void printJson(Set<QueryTarget> targets, PrintStream printStream) throws IOException {
+  private void printJson(Set<ConfiguredQueryTarget> targets, PrintStream printStream)
+      throws IOException {
     Set<String> targetsNames =
         targets.stream()
             .peek(Objects::requireNonNull)
@@ -349,7 +358,7 @@ public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQu
   private void printDotOutput(
       CommandRunnerParams params,
       ConfiguredQueryEnvironment env,
-      Set<QueryBuildTarget> queryResult,
+      Set<ConfiguredQueryBuildTarget> queryResult,
       Dot.OutputOrder outputOrder,
       PrintStream printStream,
       boolean compactMode)
@@ -392,7 +401,7 @@ public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQu
   private void printThriftOutput(
       CommandRunnerParams params,
       ConfiguredQueryEnvironment env,
-      Set<QueryBuildTarget> queryResult,
+      Set<ConfiguredQueryBuildTarget> queryResult,
       PrintStream printStream)
       throws IOException, QueryException {
     MergedTargetGraph mergedTargetGraph =
@@ -421,7 +430,7 @@ public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQu
   private void collectAndPrintAttributesAsJson(
       CommandRunnerParams params,
       ConfiguredQueryEnvironment env,
-      Set<QueryTarget> queryResult,
+      Set<ConfiguredQueryTarget> queryResult,
       ImmutableSet<String> attributes,
       PrintStream printStream)
       throws QueryException, IOException {
@@ -434,7 +443,7 @@ public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQu
       collectAttributes(
           CommandRunnerParams params,
           ConfiguredQueryEnvironment env,
-          Set<QueryTarget> queryResult,
+          Set<ConfiguredQueryTarget> queryResult,
           ImmutableSet<String> attributes)
           throws QueryException {
     ImmutableList<TargetNode<?>> nodes = queryResultToTargetNodes(env, queryResult);
@@ -468,14 +477,15 @@ public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQu
   }
 
   private ImmutableList<TargetNode<?>> queryResultToTargetNodes(
-      ConfiguredQueryEnvironment env, Collection<QueryTarget> queryResult) throws QueryException {
+      ConfiguredQueryEnvironment env, Collection<ConfiguredQueryTarget> queryResult)
+      throws QueryException {
     ImmutableList.Builder<TargetNode<?>> builder = ImmutableList.builder();
-    for (QueryTarget target : queryResult) {
-      if (!(target instanceof QueryBuildTarget)) {
+    for (ConfiguredQueryTarget target : queryResult) {
+      if (!(target instanceof ConfiguredQueryBuildTarget)) {
         continue;
       }
 
-      QueryBuildTarget queryBuildTarget = (QueryBuildTarget) target;
+      ConfiguredQueryBuildTarget queryBuildTarget = (ConfiguredQueryBuildTarget) target;
       env.getTargetUniverse().getNode(queryBuildTarget.getBuildTarget()).ifPresent(builder::add);
     }
     return builder.build();
@@ -516,24 +526,36 @@ public class QueryCommand extends AbstractQueryCommand<QueryTarget, ConfiguredQu
     return result.build();
   }
 
+  private String toPresentationForm(ConfiguredQueryTarget target) {
+    if (target instanceof ConfiguredQueryBuildTarget) {
+      return toPresentationForm((ConfiguredQueryBuildTarget) target);
+    } else if (target instanceof QueryFileTarget) {
+      return toPresentationForm((QueryFileTarget) target);
+    } else {
+      throw new IllegalStateException(
+          "Unable to determine ConfiguredQueryTarget subclass - " + target.getClass());
+    }
+  }
+
+  private String toPresentationForm(QueryFileTarget queryFileTarget) {
+    SourcePath path = queryFileTarget.getPath();
+    if (path instanceof PathSourcePath) {
+      PathSourcePath psp = (PathSourcePath) path;
+      return psp.getRelativePath().toString();
+    } else {
+      return path.toString();
+    }
+  }
+
+  private String toPresentationForm(ConfiguredQueryBuildTarget queryBuildTarget) {
+    return toPresentationForm(queryBuildTarget.getBuildTarget().getUnflavoredBuildTarget());
+  }
+
   private String toPresentationForm(MergedTargetNode node) {
     return toPresentationForm(node.getBuildTarget());
   }
 
   private String toPresentationForm(UnflavoredBuildTarget unflavoredBuildTarget) {
     return unflavoredBuildTarget.getFullyQualifiedName();
-  }
-
-  private String toPresentationForm(QueryTarget target) {
-    if (target instanceof QueryFileTarget) {
-      QueryFileTarget fileTarget = (QueryFileTarget) target;
-      SourcePath path = fileTarget.getPath();
-      if (path instanceof PathSourcePath) {
-        PathSourcePath psp = (PathSourcePath) path;
-        return psp.getRelativePath().toString();
-      }
-    }
-
-    return target.toString();
   }
 }

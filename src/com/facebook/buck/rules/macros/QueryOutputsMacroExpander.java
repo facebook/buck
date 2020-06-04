@@ -24,7 +24,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryBuildTarget;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -63,8 +63,9 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
         precomputedWork.results.stream()
             .map(
                 queryTarget -> {
-                  Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-                  return graphBuilder.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+                  Preconditions.checkState(queryTarget instanceof ConfiguredQueryBuildTarget);
+                  return graphBuilder.getRule(
+                      ((ConfiguredQueryBuildTarget) queryTarget).getBuildTarget());
                 })
             .map(BuildRule::getSourcePathToOutput)
             .filter(Objects::nonNull)

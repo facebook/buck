@@ -24,9 +24,9 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryTarget;
 import com.facebook.buck.query.QueryFileTarget;
-import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.param.ParamName;
@@ -40,19 +40,20 @@ public class QueryTargetAccessor {
   private QueryTargetAccessor() {}
 
   /** Get targets in attribute. */
-  public static <T extends ConstructorArg> ImmutableSet<QueryTarget> getTargetsInAttribute(
-      TypeCoercerFactory typeCoercerFactory,
-      TargetNode<T> node,
-      ParamName attribute,
-      CellNameResolver cellPathResolver) {
+  public static <T extends ConstructorArg>
+      ImmutableSet<ConfiguredQueryTarget> getTargetsInAttribute(
+          TypeCoercerFactory typeCoercerFactory,
+          TargetNode<T> node,
+          ParamName attribute,
+          CellNameResolver cellPathResolver) {
     ParamInfo<?> info =
         typeCoercerFactory.paramInfos(node.getConstructorArg()).getByName(attribute);
     if (info == null) {
       // Ignore if the field does not exist in this rule.
       return ImmutableSet.of();
     }
-    ImmutableSet.Builder<QueryTarget> builder =
-        new ImmutableSortedSet.Builder<>(QueryTarget::compare);
+    ImmutableSet.Builder<ConfiguredQueryTarget> builder =
+        new ImmutableSortedSet.Builder<>(ConfiguredQueryTarget::compare);
     info.traverse(
         cellPathResolver,
         value -> {
@@ -68,11 +69,11 @@ public class QueryTargetAccessor {
     return builder.build();
   }
 
-  public static QueryTarget extractSourcePath(SourcePath sourcePath) {
+  public static ConfiguredQueryTarget extractSourcePath(SourcePath sourcePath) {
     if (sourcePath instanceof PathSourcePath) {
       return QueryFileTarget.of(sourcePath);
     } else if (sourcePath instanceof BuildTargetSourcePath) {
-      return QueryBuildTarget.of(((BuildTargetSourcePath) sourcePath).getTarget());
+      return ConfiguredQueryBuildTarget.of(((BuildTargetSourcePath) sourcePath).getTarget());
     }
     throw new HumanReadableException("Unsupported source path type: %s", sourcePath.getClass());
   }
@@ -102,7 +103,8 @@ public class QueryTargetAccessor {
     return builder.build();
   }
 
-  public static QueryTarget extractBuildTargetContainer(BuildTarget buildTargetContainer) {
-    return QueryBuildTarget.of(buildTargetContainer);
+  public static ConfiguredQueryTarget extractBuildTargetContainer(
+      BuildTarget buildTargetContainer) {
+    return ConfiguredQueryBuildTarget.of(buildTargetContainer);
   }
 }

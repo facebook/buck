@@ -29,14 +29,14 @@ import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
-import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryTarget;
 import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryNormalizer;
 import com.facebook.buck.query.QueryParserEnv;
-import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.facebook.buck.util.CommandLineException;
@@ -64,7 +64,7 @@ import org.kohsuke.args4j.Option;
 
 /** Buck subcommand which facilitates querying information about the configured target graph. */
 public class ConfiguredQueryCommand
-    extends AbstractQueryCommand<QueryTarget, ConfiguredQueryEnvironment> {
+    extends AbstractQueryCommand<ConfiguredQueryTarget, ConfiguredQueryEnvironment> {
 
   private PerBuildState perBuildState;
   private TargetUniverse targetUniverse;
@@ -115,7 +115,7 @@ public class ConfiguredQueryCommand
   protected void printSingleQueryOutput(
       CommandRunnerParams params,
       ConfiguredQueryEnvironment env,
-      Set<QueryTarget> queryResult,
+      Set<ConfiguredQueryTarget> queryResult,
       PrintStream printStream)
       throws QueryException, IOException {
     // For the most part we print in exactly the format the user asks for, BUT we don't support
@@ -125,7 +125,7 @@ public class ConfiguredQueryCommand
             ? OutputFormat.JSON
             : outputFormat;
 
-    Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+    Optional<ImmutableMap<ConfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
         attributesByResult = collectAttributes(params, env, queryResult);
 
     switch (trueOutputFormat) {
@@ -163,14 +163,15 @@ public class ConfiguredQueryCommand
   protected void printMultipleQueryOutput(
       CommandRunnerParams params,
       ConfiguredQueryEnvironment env,
-      Multimap<String, QueryTarget> queryResultMap,
+      Multimap<String, ConfiguredQueryTarget> queryResultMap,
       PrintStream printStream)
       throws QueryException, IOException {
     if (shouldOutputAttributes()) {
       // NOTE: This is what the old `buck query` did. If you provide a multiquery and ask Buck to
       // output attributes we just combine all the query results together and print it like it was
       // all one query. Does it make sense? Maybe.
-      ImmutableSet<QueryTarget> combinedResults = ImmutableSet.copyOf(queryResultMap.values());
+      ImmutableSet<ConfiguredQueryTarget> combinedResults =
+          ImmutableSet.copyOf(queryResultMap.values());
       printJsonOutput(
           combinedResults, collectAttributes(params, env, combinedResults), printStream);
     } else if (outputFormat == OutputFormat.LIST) {
@@ -238,8 +239,8 @@ public class ConfiguredQueryCommand
   }
 
   private void printListOutput(
-      Set<QueryTarget> queryResult,
-      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+      Set<ConfiguredQueryTarget> queryResult,
+      Optional<ImmutableMap<ConfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
           attributesByResultOptional,
       PrintStream printStream) {
     Preconditions.checkState(
@@ -249,21 +250,21 @@ public class ConfiguredQueryCommand
   }
 
   private void printListOutput(
-      Multimap<String, QueryTarget> queryResultMap, PrintStream printStream) {
+      Multimap<String, ConfiguredQueryTarget> queryResultMap, PrintStream printStream) {
     queryResultMap.values().stream().map(this::toPresentationForm).forEach(printStream::println);
   }
 
   private void printJsonOutput(
-      Set<QueryTarget> queryResult,
-      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+      Set<ConfiguredQueryTarget> queryResult,
+      Optional<ImmutableMap<ConfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
           attributesByResultOptional,
       PrintStream printStream)
       throws IOException {
 
     Object printableObject;
     if (attributesByResultOptional.isPresent()) {
-      ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>> attributesByResult =
-          attributesByResultOptional.get();
+      ImmutableMap<ConfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>
+          attributesByResult = attributesByResultOptional.get();
       printableObject =
           queryResult.stream()
               .collect(
@@ -280,7 +281,8 @@ public class ConfiguredQueryCommand
   }
 
   private void printJsonOutput(
-      Multimap<String, QueryTarget> queryResultMap, PrintStream printStream) throws IOException {
+      Multimap<String, ConfiguredQueryTarget> queryResultMap, PrintStream printStream)
+      throws IOException {
     Multimap<String, String> targetsAndResultsNames =
         Multimaps.transformValues(
             queryResultMap, input -> toPresentationForm(Objects.requireNonNull(input)));
@@ -288,8 +290,8 @@ public class ConfiguredQueryCommand
   }
 
   private void printDotOutput(
-      Set<QueryTarget> queryResult,
-      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+      Set<ConfiguredQueryTarget> queryResult,
+      Optional<ImmutableMap<ConfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
           attributesByResultOptional,
       PrintStream printStream)
       throws IOException {
@@ -298,8 +300,8 @@ public class ConfiguredQueryCommand
   }
 
   private void printDotCompactOutput(
-      Set<QueryTarget> queryResult,
-      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+      Set<ConfiguredQueryTarget> queryResult,
+      Optional<ImmutableMap<ConfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
           attributesByResultOptional,
       PrintStream printStream)
       throws IOException {
@@ -308,8 +310,8 @@ public class ConfiguredQueryCommand
   }
 
   private void printDotBfsOutput(
-      Set<QueryTarget> queryResult,
-      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+      Set<ConfiguredQueryTarget> queryResult,
+      Optional<ImmutableMap<ConfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
           attributesByResultOptional,
       PrintStream printStream)
       throws IOException {
@@ -317,8 +319,8 @@ public class ConfiguredQueryCommand
   }
 
   private void printDotBfsCompactOutput(
-      Set<QueryTarget> queryResult,
-      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+      Set<ConfiguredQueryTarget> queryResult,
+      Optional<ImmutableMap<ConfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
           attributesByResultOptional,
       PrintStream printStream)
       throws IOException {
@@ -326,16 +328,17 @@ public class ConfiguredQueryCommand
   }
 
   private void printThriftOutput(
-      Set<QueryTarget> queryResult,
-      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+      Set<ConfiguredQueryTarget> queryResult,
+      Optional<ImmutableMap<ConfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
           attributesByResultOptional,
       PrintStream printStream)
       throws IOException {
-    ImmutableMap<BuildTarget, QueryTarget> resultByBuildTarget =
+    ImmutableMap<BuildTarget, ConfiguredQueryTarget> resultByBuildTarget =
         queryResult.stream()
-            .filter(t -> t instanceof QueryBuildTarget)
+            .filter(t -> t instanceof ConfiguredQueryBuildTarget)
             .collect(
-                ImmutableMap.toImmutableMap(t -> ((QueryBuildTarget) t).getBuildTarget(), t -> t));
+                ImmutableMap.toImmutableMap(
+                    t -> ((ConfiguredQueryBuildTarget) t).getBuildTarget(), t -> t));
 
     ThriftOutput.Builder<TargetNode<?>> thriftBuilder =
         ThriftOutput.builder(targetUniverse.getTargetGraph())
@@ -352,18 +355,19 @@ public class ConfiguredQueryCommand
   }
 
   private void printDotGraph(
-      Set<QueryTarget> queryResult,
-      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+      Set<ConfiguredQueryTarget> queryResult,
+      Optional<ImmutableMap<ConfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
           attributesByResultOptional,
       Dot.OutputOrder outputOrder,
       boolean compactMode,
       PrintStream printStream)
       throws IOException {
-    ImmutableMap<BuildTarget, QueryTarget> resultByBuildTarget =
+    ImmutableMap<BuildTarget, ConfiguredQueryTarget> resultByBuildTarget =
         queryResult.stream()
-            .filter(t -> t instanceof QueryBuildTarget)
+            .filter(t -> t instanceof ConfiguredQueryBuildTarget)
             .collect(
-                ImmutableMap.toImmutableMap(t -> ((QueryBuildTarget) t).getBuildTarget(), t -> t));
+                ImmutableMap.toImmutableMap(
+                    t -> ((ConfiguredQueryBuildTarget) t).getBuildTarget(), t -> t));
 
     Dot.Builder<TargetNode<?>> dotBuilder =
         Dot.builder(targetUniverse.getTargetGraph(), "result_graph")
@@ -382,20 +386,21 @@ public class ConfiguredQueryCommand
     dotBuilder.build().writeOutput(printStream);
   }
 
-  private Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+  private Optional<
+          ImmutableMap<ConfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
       collectAttributes(
           CommandRunnerParams params,
           ConfiguredQueryEnvironment env,
-          Set<QueryTarget> queryResult) {
+          Set<ConfiguredQueryTarget> queryResult) {
     if (!shouldOutputAttributes()) {
       return Optional.empty();
     }
 
     PatternsMatcher matcher = new PatternsMatcher(outputAttributes());
-    ImmutableMap.Builder<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>> result =
-        ImmutableMap.builder();
+    ImmutableMap.Builder<ConfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>
+        result = ImmutableMap.builder();
 
-    for (QueryTarget target : queryResult) {
+    for (ConfiguredQueryTarget target : queryResult) {
       nodeForQueryTarget(env, target)
           .flatMap(node -> getAllAttributes(params, node))
           .map(attrs -> getMatchingAttributes(matcher, attrs))
@@ -409,11 +414,11 @@ public class ConfiguredQueryCommand
   }
 
   private Optional<TargetNode<?>> nodeForQueryTarget(
-      ConfiguredQueryEnvironment env, QueryTarget target) {
-    if (!(target instanceof QueryBuildTarget)) {
+      ConfiguredQueryEnvironment env, ConfiguredQueryTarget target) {
+    if (!(target instanceof ConfiguredQueryBuildTarget)) {
       return Optional.empty();
     }
-    QueryBuildTarget queryBuildTarget = (QueryBuildTarget) target;
+    ConfiguredQueryBuildTarget queryBuildTarget = (ConfiguredQueryBuildTarget) target;
     return env.getTargetUniverse().getNode(queryBuildTarget.getBuildTarget());
   }
 
@@ -438,18 +443,19 @@ public class ConfiguredQueryCommand
     return Optional.of(ImmutableMap.copyOf(rawAttributes));
   }
 
-  private String toPresentationForm(QueryTarget target) {
+  private String toPresentationForm(ConfiguredQueryTarget target) {
     if (target instanceof QueryFileTarget) {
       return toPresentationForm((QueryFileTarget) target);
-    } else if (target instanceof QueryBuildTarget) {
-      return toPresentationForm((QueryBuildTarget) target);
+    } else if (target instanceof ConfiguredQueryBuildTarget) {
+      return toPresentationForm((ConfiguredQueryBuildTarget) target);
     } else {
       throw new IllegalStateException(
-          String.format("Unknown QueryTarget implementation - %s", target.getClass().toString()));
+          String.format(
+              "Unknown ConfiguredQueryTarget implementation - %s", target.getClass().toString()));
     }
   }
 
-  private String toPresentationForm(QueryBuildTarget queryBuildTarget) {
+  private String toPresentationForm(ConfiguredQueryBuildTarget queryBuildTarget) {
     return toPresentationForm(queryBuildTarget.getBuildTarget());
   }
 

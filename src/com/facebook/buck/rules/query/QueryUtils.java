@@ -26,12 +26,12 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryTarget;
 import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryParserEnv;
-import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Threads;
 import com.google.common.base.Preconditions;
@@ -186,12 +186,13 @@ public final class QueryUtils {
             declaredDeps,
             target.getTargetConfiguration());
     try {
-      QueryExpression<QueryTarget> parsedExp =
+      QueryExpression<ConfiguredQueryTarget> parsedExp =
           QueryExpression.parse(query.getQuery(), env.getQueryParserEnv());
-      Set<QueryTarget> queryTargets = cache.getQueryEvaluator(targetGraph).eval(parsedExp, env);
-      return queryTargets.stream()
-          .filter(queryTarget -> queryTarget instanceof QueryBuildTarget)
-          .map(queryTarget -> ((QueryBuildTarget) queryTarget).getBuildTarget())
+      Set<ConfiguredQueryTarget> configuredQueryTargets =
+          cache.getQueryEvaluator(targetGraph).eval(parsedExp, env);
+      return configuredQueryTargets.stream()
+          .filter(queryTarget -> queryTarget instanceof ConfiguredQueryBuildTarget)
+          .map(queryTarget -> ((ConfiguredQueryBuildTarget) queryTarget).getBuildTarget())
           .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     } catch (QueryException e) {
       if (e.getCause() instanceof InterruptedException) {
@@ -205,7 +206,7 @@ public final class QueryUtils {
       CellNameResolver cellNameResolver, BaseName targetBaseName, Query query)
       throws QueryException {
 
-    QueryEnvironment.TargetEvaluator<QueryTarget> targetEvaluator =
+    QueryEnvironment.TargetEvaluator<ConfiguredQueryTarget> targetEvaluator =
         new GraphEnhancementQueryEnvironment.TargetEvaluator(
             cellNameResolver,
             UNCONFIGURED_BUILD_TARGET_FACTORY,
@@ -213,14 +214,14 @@ public final class QueryUtils {
             ImmutableSet.of(),
             query.getTargetConfiguration());
 
-    QueryParserEnv<QueryTarget> env =
+    QueryParserEnv<ConfiguredQueryTarget> env =
         QueryParserEnv.of(GraphEnhancementQueryEnvironment.QUERY_FUNCTIONS, targetEvaluator);
-    QueryExpression<QueryTarget> parsedExp = QueryExpression.parse(query.getQuery(), env);
+    QueryExpression<ConfiguredQueryTarget> parsedExp = QueryExpression.parse(query.getQuery(), env);
     return parsedExp.getTargets(targetEvaluator).stream()
         .map(
             queryTarget -> {
-              Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-              return ((QueryBuildTarget) queryTarget).getBuildTarget();
+              Preconditions.checkState(queryTarget instanceof ConfiguredQueryBuildTarget);
+              return ((ConfiguredQueryBuildTarget) queryTarget).getBuildTarget();
             });
   }
 

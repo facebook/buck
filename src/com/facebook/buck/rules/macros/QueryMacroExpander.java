@@ -23,10 +23,10 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.query.ConfiguredQueryTarget;
 import com.facebook.buck.query.NoopQueryEvaluator;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
-import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
@@ -50,7 +50,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
     this.targetGraph = targetGraph;
   }
 
-  Stream<QueryTarget> resolveQuery(
+  Stream<ConfiguredQueryTarget> resolveQuery(
       BuildTarget target,
       CellNameResolver cellNames,
       ActionGraphBuilder graphBuilder,
@@ -67,10 +67,11 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
             ImmutableSet.of(),
             target.getTargetConfiguration());
     try {
-      QueryExpression<QueryTarget> parsedExp =
+      QueryExpression<ConfiguredQueryTarget> parsedExp =
           QueryExpression.parse(queryExpression, env.getQueryParserEnv());
-      Set<QueryTarget> queryTargets = new NoopQueryEvaluator<QueryTarget>().eval(parsedExp, env);
-      return queryTargets.stream();
+      Set<ConfiguredQueryTarget> configuredQueryTargets =
+          new NoopQueryEvaluator<ConfiguredQueryTarget>().eval(parsedExp, env);
+      return configuredQueryTargets.stream();
     } catch (QueryException e) {
       throw new MacroException("Error parsing/executing query from macro", e);
     }
@@ -85,9 +86,9 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
   }
 
   protected static final class QueryResults {
-    ImmutableList<QueryTarget> results;
+    ImmutableList<ConfiguredQueryTarget> results;
 
-    public QueryResults(Stream<QueryTarget> results) {
+    public QueryResults(Stream<ConfiguredQueryTarget> results) {
       this.results = results.collect(ImmutableList.toImmutableList());
     }
   }

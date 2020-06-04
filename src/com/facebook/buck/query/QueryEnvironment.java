@@ -47,11 +47,11 @@ import javax.annotation.Nullable;
  *
  * @param <NODE_TYPE> The primary type of "node" in the graph over which a {@code buck query} is run
  *     in this environment. Although all objects returned by {@link QueryEnvironment} implement
- *     {@link QueryTarget}, which is a marker interface for all possible "nodes" in the graph being
- *     queried, <em>most</em> methods return objects that correspond to build rules. As such, {@code
- *     NODE_TYPE} specifies the type used to represent build rules in this environment. Methods that
- *     return objects of type {@code NODE_TYPE} therefore provide stronger guarantees than those
- *     that only guarantee {@link QueryTarget} as the return type.
+ *     {@link ConfiguredQueryTarget}, which is a marker interface for all possible "nodes" in the
+ *     graph being queried, <em>most</em> methods return objects that correspond to build rules. As
+ *     such, {@code NODE_TYPE} specifies the type used to represent build rules in this environment.
+ *     Methods that return objects of type {@code NODE_TYPE} therefore provide stronger guarantees
+ *     than those that only guarantee {@link ConfiguredQueryTarget} as the return type.
  */
 public interface QueryEnvironment<NODE_TYPE> {
 
@@ -194,8 +194,8 @@ public interface QueryEnvironment<NODE_TYPE> {
   }
 
   /**
-   * A procedure for evaluating a target literal to {@link QueryTarget}. This evaluation can either
-   * happen immediately at parse time or be delayed until evalution of the entire query.
+   * A procedure for evaluating a target literal to {@link ConfiguredQueryTarget}. This evaluation
+   * can either happen immediately at parse time or be delayed until evalution of the entire query.
    */
   interface TargetEvaluator<ENV_NODE_TYPE> {
     /** Returns the set of target nodes for the specified target pattern, in 'buck build' syntax. */

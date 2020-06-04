@@ -29,9 +29,9 @@ import java.util.function.Predicate;
 import org.junit.Test;
 
 public class AttrFilterFunctionTest {
-  private QueryEnvironment<QueryTarget> queryEnvironment;
-  private final QueryBuildTarget onlyTarget =
-      QueryBuildTarget.of(BuildTargetFactory.newInstance("//x:y"));
+  private QueryEnvironment<ConfiguredQueryTarget> queryEnvironment;
+  private final ConfiguredQueryBuildTarget onlyTarget =
+      ConfiguredQueryBuildTarget.of(BuildTargetFactory.newInstance("//x:y"));
 
   @Test
   public void singleValue() throws QueryException {
@@ -67,15 +67,17 @@ public class AttrFilterFunctionTest {
     assertQuery("attrfilter('a', 'e', //x:y)", ImmutableSet.of());
   }
 
-  private void assertQuery(String query, Set<QueryBuildTarget> expected) throws QueryException {
-    QueryExpression<QueryTarget> queryExpr =
+  private void assertQuery(String query, Set<ConfiguredQueryBuildTarget> expected)
+      throws QueryException {
+    QueryExpression<ConfiguredQueryTarget> queryExpr =
         QueryParser.parse(query, queryEnvironment.getQueryParserEnv());
 
-    Set<QueryTarget> result = queryExpr.eval(new NoopQueryEvaluator<>(), queryEnvironment);
+    Set<ConfiguredQueryTarget> result =
+        queryExpr.eval(new NoopQueryEvaluator<>(), queryEnvironment);
     assertEquals(expected, result);
   }
 
-  private class TestQueryEnvironment extends BaseTestQueryEnvironment<QueryTarget> {
+  private class TestQueryEnvironment extends BaseTestQueryEnvironment<ConfiguredQueryTarget> {
     private final ParamName attributeName;
     private final Object attributeValue;
 
@@ -85,7 +87,7 @@ public class AttrFilterFunctionTest {
     }
 
     @Override
-    public Iterable<QueryFunction<QueryTarget>> getFunctions() {
+    public Iterable<QueryFunction<ConfiguredQueryTarget>> getFunctions() {
       return ImmutableList.of(new AttrFilterFunction<>());
     }
 
@@ -93,7 +95,7 @@ public class AttrFilterFunctionTest {
     public TargetEvaluator getTargetEvaluator() {
       return new TargetEvaluator() {
         @Override
-        public Set<QueryTarget> evaluateTarget(String target) {
+        public Set<ConfiguredQueryTarget> evaluateTarget(String target) {
           if (target.equals(onlyTarget.toString())) {
             return Collections.singleton(onlyTarget);
           }
@@ -109,7 +111,7 @@ public class AttrFilterFunctionTest {
 
     @Override
     public Set<Object> filterAttributeContents(
-        QueryTarget target, ParamName attribute, Predicate<Object> predicate) {
+        ConfiguredQueryTarget target, ParamName attribute, Predicate<Object> predicate) {
 
       if (target == onlyTarget && attribute.equals(this.attributeName)) {
         if (predicate.test(attributeValue)) {

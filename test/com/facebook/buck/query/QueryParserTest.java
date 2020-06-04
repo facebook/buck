@@ -33,11 +33,11 @@ import org.junit.rules.ExpectedException;
 
 public class QueryParserTest {
 
-  private static final ImmutableList<QueryEnvironment.QueryFunction<QueryBuildTarget>>
+  private static final ImmutableList<QueryEnvironment.QueryFunction<ConfiguredQueryBuildTarget>>
       QUERY_FUNCTIONS =
           ImmutableList.of(new DepsFunction<>(), new RdepsFunction<>(), new TestsOfFunction<>());
 
-  private QueryParserEnv<QueryBuildTarget> queryEnvironment;
+  private QueryParserEnv<ConfiguredQueryBuildTarget> queryEnvironment;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
@@ -45,15 +45,17 @@ public class QueryParserTest {
 
   @Before
   public void makeEnvironment() {
-    QueryEnvironment.TargetEvaluator<QueryBuildTarget> targetEvaluator = new TestTargetEvaluator();
+    QueryEnvironment.TargetEvaluator<ConfiguredQueryBuildTarget> targetEvaluator =
+        new TestTargetEvaluator();
     queryEnvironment = QueryParserEnv.of(QUERY_FUNCTIONS, targetEvaluator);
   }
 
   @Test
   public void testDeps() throws Exception {
-    ImmutableList<Argument<QueryBuildTarget>> args =
+    ImmutableList<Argument<ConfiguredQueryBuildTarget>> args =
         ImmutableList.of(Argument.of(TargetLiteral.of("//foo:bar")));
-    QueryExpression<QueryBuildTarget> expected = new FunctionExpression(new DepsFunction(), args);
+    QueryExpression<ConfiguredQueryBuildTarget> expected =
+        new FunctionExpression(new DepsFunction(), args);
 
     String query = "deps('//foo:bar')";
     QueryExpression result = QueryParser.parse(query, queryEnvironment);
@@ -62,16 +64,16 @@ public class QueryParserTest {
 
   @Test
   public void testTestsOfDepsSet() throws Exception {
-    ImmutableList<TargetLiteral<QueryBuildTarget>> args =
+    ImmutableList<TargetLiteral<ConfiguredQueryBuildTarget>> args =
         ImmutableList.of(TargetLiteral.of("//foo:bar"), TargetLiteral.of("//other:lib"));
-    QueryExpression<QueryBuildTarget> depsExpr =
+    QueryExpression<ConfiguredQueryBuildTarget> depsExpr =
         new FunctionExpression(
             new DepsFunction(), ImmutableList.of(Argument.of(SetExpression.of(args))));
-    QueryExpression<QueryBuildTarget> testsofExpr =
+    QueryExpression<ConfiguredQueryBuildTarget> testsofExpr =
         new FunctionExpression<>(new TestsOfFunction(), ImmutableList.of(Argument.of(depsExpr)));
 
     String query = "testsof(deps(set('//foo:bar' //other:lib)))";
-    QueryExpression<QueryBuildTarget> result = QueryParser.parse(query, queryEnvironment);
+    QueryExpression<ConfiguredQueryBuildTarget> result = QueryParser.parse(query, queryEnvironment);
     assertThat(result, is(equalTo(testsofExpr)));
   }
 
@@ -124,7 +126,7 @@ public class QueryParserTest {
   private static class TestTargetEvaluator implements TargetEvaluator {
 
     @Override
-    public ImmutableSet<QueryTarget> evaluateTarget(String target) {
+    public ImmutableSet<ConfiguredQueryTarget> evaluateTarget(String target) {
       throw new UnsupportedOperationException();
     }
 

@@ -22,7 +22,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryBuildTarget;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -59,9 +59,10 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMa
         precomputedQueryResults.results.stream()
             .map(
                 queryTarget -> {
-                  Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
+                  Preconditions.checkState(queryTarget instanceof ConfiguredQueryBuildTarget);
                   BuildRule rule =
-                      graphBuilder.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+                      graphBuilder.getRule(
+                          ((ConfiguredQueryBuildTarget) queryTarget).getBuildTarget());
                   return rule.getBuildTarget();
                 })
             .sorted()

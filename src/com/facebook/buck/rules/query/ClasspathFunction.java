@@ -17,11 +17,11 @@
 package com.facebook.buck.rules.query;
 
 import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.query.ConfiguredQueryTarget;
 import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEvaluator;
 import com.facebook.buck.query.QueryException;
-import com.facebook.buck.query.QueryTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -37,7 +37,7 @@ import java.util.function.Consumer;
  *
  * <pre>       | CLASSPATH '(' expr ',' INTEGER ')'</pre>
  */
-public class ClasspathFunction implements QueryEnvironment.QueryFunction<QueryTarget> {
+public class ClasspathFunction implements QueryEnvironment.QueryFunction<ConfiguredQueryTarget> {
   @Override
   public String getName() {
     return "classpath";
@@ -59,22 +59,22 @@ public class ClasspathFunction implements QueryEnvironment.QueryFunction<QueryTa
    *     or you will get a runtime {@link ClassCastException}.
    */
   @Override
-  public ImmutableSet<QueryTarget> eval(
-      QueryEvaluator<QueryTarget> evaluator,
-      QueryEnvironment<QueryTarget> graphEnhancementQueryEnvironment,
-      ImmutableList<Argument<QueryTarget>> args)
+  public ImmutableSet<ConfiguredQueryTarget> eval(
+      QueryEvaluator<ConfiguredQueryTarget> evaluator,
+      QueryEnvironment<ConfiguredQueryTarget> graphEnhancementQueryEnvironment,
+      ImmutableList<Argument<ConfiguredQueryTarget>> args)
       throws QueryException {
     GraphEnhancementQueryEnvironment env =
         (GraphEnhancementQueryEnvironment) graphEnhancementQueryEnvironment;
-    Set<QueryTarget> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
+    Set<ConfiguredQueryTarget> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
 
     int depthBound = args.size() >= 2 ? args.get(1).getInteger() : Integer.MAX_VALUE;
-    Set<QueryTarget> result = new LinkedHashSet<>(argumentSet);
-    Set<QueryTarget> current = argumentSet;
+    Set<ConfiguredQueryTarget> result = new LinkedHashSet<>(argumentSet);
+    Set<ConfiguredQueryTarget> current = argumentSet;
 
     for (int i = 0; i < depthBound; i++) {
-      Set<QueryTarget> next = new LinkedHashSet<>();
-      Consumer<? super QueryTarget> consumer =
+      Set<ConfiguredQueryTarget> next = new LinkedHashSet<>();
+      Consumer<? super ConfiguredQueryTarget> consumer =
           queryTarget -> {
             boolean added = result.add(queryTarget);
             if (added) {
@@ -88,6 +88,6 @@ public class ClasspathFunction implements QueryEnvironment.QueryFunction<QueryTa
       current = next;
     }
     return env.restrictToInstancesOf(result, HasClasspathEntries.class)
-        .collect(ImmutableSortedSet.toImmutableSortedSet(QueryTarget::compare));
+        .collect(ImmutableSortedSet.toImmutableSortedSet(ConfiguredQueryTarget::compare));
   }
 }

@@ -23,8 +23,8 @@ import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.query.ConfiguredQueryTarget;
 import com.facebook.buck.query.QueryException;
-import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
@@ -34,9 +34,9 @@ import java.io.PrintStream;
 import java.util.Set;
 
 /** Buck subcommand which facilitates querying information about the unconfigured target graph. */
-// TODO(srice): Do we really want to use QueryTarget here, since QueryBuildTarget is configured?
+// TODO(srice): We shouldn't be using ConfiguredQueryTarget here.
 public class UnconfiguredQueryCommand
-    extends AbstractQueryCommand<QueryTarget, UnconfiguredQueryEnvironment> {
+    extends AbstractQueryCommand<ConfiguredQueryTarget, UnconfiguredQueryEnvironment> {
 
   @Override
   public String getShortDescription() {
@@ -71,7 +71,7 @@ public class UnconfiguredQueryCommand
   protected void printSingleQueryOutput(
       CommandRunnerParams params,
       UnconfiguredQueryEnvironment env,
-      Set<QueryTarget> queryResult,
+      Set<ConfiguredQueryTarget> queryResult,
       PrintStream printStream)
       throws QueryException, IOException {
     throw new IllegalStateException("This method is impossible to reach since uquery is NYI");
@@ -81,7 +81,7 @@ public class UnconfiguredQueryCommand
   protected void printMultipleQueryOutput(
       CommandRunnerParams params,
       UnconfiguredQueryEnvironment env,
-      Multimap<String, QueryTarget> queryResultMap,
+      Multimap<String, ConfiguredQueryTarget> queryResultMap,
       PrintStream printStream)
       throws QueryException, IOException {
     throw new IllegalStateException("This method is impossible to reach since uquery is NYI");

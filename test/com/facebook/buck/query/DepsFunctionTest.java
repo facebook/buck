@@ -65,7 +65,8 @@ public class DepsFunctionTest {
     assertThat(
         result,
         Matchers.containsInAnyOrder(
-            QueryBuildTarget.of(a.getBuildTarget()), QueryBuildTarget.of(b.getBuildTarget())));
+            ConfiguredQueryBuildTarget.of(a.getBuildTarget()),
+            ConfiguredQueryBuildTarget.of(b.getBuildTarget())));
   }
 
   @Test
@@ -86,7 +87,7 @@ public class DepsFunctionTest {
         new FunctionExpression(
             new FilterFunction(), ImmutableList.of(Argument.of("//foo.*"), FIRST_ORDER_DEPS));
     assertThat(
-        (Iterable<QueryBuildTarget>)
+        (Iterable<ConfiguredQueryBuildTarget>)
             DEPS_FUNCTION.eval(
                 new NoopQueryEvaluator(),
                 queryEnvironment,
@@ -95,11 +96,11 @@ public class DepsFunctionTest {
                         TargetLiteral.of(a.getBuildTarget().getFullyQualifiedName())),
                     DEPTH,
                     QueryEnvironment.Argument.of(expression))),
-        Matchers.contains(QueryBuildTarget.of(a.getBuildTarget())));
+        Matchers.contains(ConfiguredQueryBuildTarget.of(a.getBuildTarget())));
   }
 
-  private QueryEnvironment<QueryBuildTarget> makeFakeQueryEnvironment(TargetGraph targetGraph)
-      throws Exception {
+  private QueryEnvironment<ConfiguredQueryBuildTarget> makeFakeQueryEnvironment(
+      TargetGraph targetGraph) throws Exception {
     QueryEnvironment env = createNiceMock(QueryEnvironment.class);
 
     expect(env.getTargetEvaluator())
@@ -107,7 +108,8 @@ public class DepsFunctionTest {
             new QueryEnvironment.TargetEvaluator() {
               @Override
               public Set evaluateTarget(String target) {
-                return ImmutableSet.of(QueryBuildTarget.of(BuildTargetFactory.newInstance(target)));
+                return ImmutableSet.of(
+                    ConfiguredQueryBuildTarget.of(BuildTargetFactory.newInstance(target)));
               }
 
               @Override
@@ -116,17 +118,17 @@ public class DepsFunctionTest {
               }
             });
 
-    Capture<Iterable<QueryBuildTarget>> targetsCapture = Capture.newInstance();
+    Capture<Iterable<ConfiguredQueryBuildTarget>> targetsCapture = Capture.newInstance();
     expect(env.getFwdDeps(EasyMock.capture(targetsCapture)))
         .andStubAnswer(
             () ->
                 RichStream.from(targetsCapture.getValue())
-                    .map(QueryBuildTarget.class::cast)
-                    .map(QueryBuildTarget::getBuildTarget)
+                    .map(ConfiguredQueryBuildTarget.class::cast)
+                    .map(ConfiguredQueryBuildTarget::getBuildTarget)
                     .map(targetGraph::get)
                     .flatMap(n -> targetGraph.getOutgoingNodesFor(n).stream())
                     .map(TargetNode::getBuildTarget)
-                    .map(QueryBuildTarget::of)
+                    .map(ConfiguredQueryBuildTarget::of)
                     .toImmutableSet());
 
     replay(env);

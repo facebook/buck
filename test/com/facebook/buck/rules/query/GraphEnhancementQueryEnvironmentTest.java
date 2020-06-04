@@ -35,8 +35,8 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
-import com.facebook.buck.query.QueryBuildTarget;
-import com.facebook.buck.query.QueryTarget;
+import com.facebook.buck.query.ConfiguredQueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryTarget;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableList;
@@ -101,12 +101,14 @@ public class GraphEnhancementQueryEnvironmentTest {
     assertThat(
         envWithoutDeps.getTargetEvaluator().evaluateTarget("//another/target:target"),
         Matchers.contains(
-            QueryBuildTarget.of(BuildTargetFactory.newInstance("//another/target:target"))));
+            ConfiguredQueryBuildTarget.of(
+                BuildTargetFactory.newInstance("//another/target:target"))));
     // Check that the returned path is relative to the contextual path
     assertThat(
         envWithoutDeps.getTargetEvaluator().evaluateTarget(":relative_name"),
         Matchers.contains(
-            QueryBuildTarget.of(BuildTargetFactory.newInstance("//foo/bar:relative_name"))));
+            ConfiguredQueryBuildTarget.of(
+                BuildTargetFactory.newInstance("//foo/bar:relative_name"))));
   }
 
   @Test
@@ -129,7 +131,8 @@ public class GraphEnhancementQueryEnvironmentTest {
     // Check that the macro resolves
     assertThat(
         env.getTargetEvaluator().evaluateTarget("$declared_deps"),
-        Matchers.hasItems(QueryBuildTarget.of(dep1), QueryBuildTarget.of(dep2)));
+        Matchers.hasItems(
+            ConfiguredQueryBuildTarget.of(dep1), ConfiguredQueryBuildTarget.of(dep2)));
   }
 
   private GraphEnhancementQueryEnvironment buildQueryEnvironmentWithGraph() {
@@ -170,8 +173,8 @@ public class GraphEnhancementQueryEnvironmentTest {
         UnconfiguredTargetConfiguration.INSTANCE);
   }
 
-  private static QueryBuildTarget getQueryTarget(String target) {
-    return QueryBuildTarget.of(BuildTargetFactory.newInstance(target));
+  private static ConfiguredQueryBuildTarget getQueryTarget(String target) {
+    return ConfiguredQueryBuildTarget.of(BuildTargetFactory.newInstance(target));
   }
 
   @Test
@@ -216,7 +219,7 @@ public class GraphEnhancementQueryEnvironmentTest {
   @Test
   public void getClasspath() {
     GraphEnhancementQueryEnvironment env = buildQueryEnvironmentWithGraph();
-    ImmutableSet<QueryTarget> classpath =
+    ImmutableSet<ConfiguredQueryTarget> classpath =
         env.getFirstOrderClasspath(ImmutableSet.of(getQueryTarget("//:lib")))
             .collect(ImmutableSet.toImmutableSet());
     assertThat(classpath, Matchers.hasItems(getQueryTarget("//:sublib")));

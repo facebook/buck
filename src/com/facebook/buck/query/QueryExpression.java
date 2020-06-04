@@ -48,9 +48,9 @@ import java.util.Set;
  *
  * <p>This package consists of two basic class hierarchies. The first, {@code QueryExpression}, is
  * the set of different query expressions in the language, and the {@link #eval} method of each
- * defines the semantics. The result of evaluating a query is set of Buck {@code QueryTarget}s (a
- * file or build target). The set may be interpreted as either a set or as nodes of a DAG, depending
- * on the context.
+ * defines the semantics. The result of evaluating a query is set of Buck {@code
+ * ConfiguredQueryTarget}s (a file or build target). The set may be interpreted as either a set or
+ * as nodes of a DAG, depending on the context.
  *
  * @param <NODE_TYPE> Type of the node in the {@link QueryEnvironment} this expression should be
  *     evaluated in the context of.

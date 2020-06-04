@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryBuildTarget;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.stream.RichStream;
@@ -73,8 +73,9 @@ public class QueryTargetsAndOutputsMacroExpander
         precomputedWork.results.stream()
             .map(
                 queryTarget -> {
-                  Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-                  return graphBuilder.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+                  Preconditions.checkState(queryTarget instanceof ConfiguredQueryBuildTarget);
+                  return graphBuilder.getRule(
+                      ((ConfiguredQueryBuildTarget) queryTarget).getBuildTarget());
                 })
             .filter(rule -> rule.getSourcePathToOutput() != null)
             .sorted()

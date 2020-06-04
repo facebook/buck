@@ -21,19 +21,20 @@ package com.facebook.buck.query;
  * would be more accurate to represent it as an algebraic data type:
  *
  * <pre>
- * sealed class QueryTarget {
- *   data class BuildQueryTarget(val buildTarget: BuildTarget) : QueryTarget()
- *   data class QueryFileTarget(val path: SourcePath) : QueryTarget()
+ * sealed class ConfiguredQueryTarget {
+ *   data class BuildQueryTarget(val buildTarget: BuildTarget) : ConfiguredQueryTarget()
+ *   data class QueryFileTarget(val path: SourcePath) : ConfiguredQueryTarget()
  * }
  * </pre>
  *
  * <p>Implementors of this class <strong>MUST</strong> provide their own implementation of {@link
- * Object#toString()} so that {@link #compare(QueryTarget, QueryTarget)} works as expected.
+ * Object#toString()} so that {@link #compare(ConfiguredQueryTarget, ConfiguredQueryTarget)} works
+ * as expected.
  */
-public interface QueryTarget {
+public interface ConfiguredQueryTarget {
 
-  /** Compare {@link QueryTarget}s by their {@link Object#toString()} methods. */
-  static int compare(QueryTarget a, QueryTarget b) {
+  /** Compare {@link ConfiguredQueryTarget}s by their {@link Object#toString()} methods. */
+  static int compare(ConfiguredQueryTarget a, ConfiguredQueryTarget b) {
     if (a == b) {
       return 0;
     }

@@ -22,8 +22,10 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -36,8 +38,9 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.macros.Macro;
-import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
+import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.testutil.HashMapWithStats;
@@ -55,23 +58,25 @@ import org.junit.Test;
  * Tests for the query macro. See {@link com.facebook.buck.shell.GenruleDescriptionIntegrationTest}
  * for some less contrived integration tests.
  */
-public class QueryTargetsMacroExpanderTest {
+public class ConfiguredQueryTargetsAndOutputsMacroExpanderTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private QueryTargetsMacroExpander expander;
   private ProjectFilesystem filesystem;
   private ActionGraphBuilder graphBuilder;
   private CellNameResolver cellNameResolver;
+  private TypeCoercer<?, StringWithMacros> coercer;
   private BuildRule rule;
-  private HashMapWithStats<Macro, Object> cache;
   private StringWithMacrosConverter converter;
+  private HashMapWithStats<Macro, Object> cache;
 
   @Before
   public void setUp() {
     cache = new HashMapWithStats<>();
-    expander = new QueryTargetsMacroExpander(TargetGraph.EMPTY);
     filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
     cellNameResolver = TestCellBuilder.createCellRoots(filesystem).getCellNameResolver();
+    coercer =
+        new DefaultTypeCoercerFactory().typeCoercerForType(TypeToken.of(StringWithMacros.class));
+
     TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//exciting:dep"), filesystem)
@@ -95,7 +100,7 @@ public class QueryTargetsMacroExpanderTest {
             ruleNode.getBuildTarget(),
             cellNameResolver,
             graphBuilder,
-            ImmutableList.of(expander),
+            ImmutableList.of(new QueryTargetsAndOutputsMacroExpander(targetGraph)),
             Optional.empty(),
             cache);
   }
@@ -103,34 +108,75 @@ public class QueryTargetsMacroExpanderTest {
   @Test
   public void classpathFunction() throws Exception {
     assertExpandsTo(
-        "$(query_targets 'classpath(//exciting:target)')",
+        "$(query_targets_and_outputs 'classpath(//exciting:target)')",
         rule,
-        "//exciting:dep //exciting:target");
+        String.format(
+            "%s %s %s %s",
+            "//exciting:dep",
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:dep"), "lib__%s__output", "dep.jar"),
+            "//exciting:target",
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:target"),
+                "lib__%s__output",
+                "target.jar")));
   }
 
   @Test
   public void literals() throws Exception {
     assertExpandsTo(
-        "$(query_targets 'set(//exciting:target //exciting:dep)')",
+        "$(query_targets_and_outputs 'set(//exciting:target //exciting:dep)')",
         rule,
-        "//exciting:dep //exciting:target");
+        String.format(
+            "%s %s %s %s",
+            "//exciting:dep",
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:dep"), "lib__%s__output", "dep.jar"),
+            "//exciting:target",
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:target"),
+                "lib__%s__output",
+                "target.jar")));
+  }
+
+  @Test
+  public void addsSeparator() throws Exception {
+    assertExpandsTo(
+        "$(query_targets_and_outputs \" test \" 'set(//exciting:target //exciting:dep)')",
+        rule,
+        String.format(
+            "%s test %s test %s test %s",
+            "//exciting:dep",
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:dep"), "lib__%s__output", "dep.jar"),
+            "//exciting:target",
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:target"),
+                "lib__%s__output",
+                "target.jar")));
   }
 
   @Test
   public void canUseCacheOfPrecomputedWork() throws Exception {
-    assertExpandsTo(
-        "$(query_targets 'classpath(//exciting:target)')",
-        rule,
-        "//exciting:dep //exciting:target");
+    coerceAndStringify("$(query_targets_and_outputs 'classpath(//exciting:target)')", rule);
     // Cache should be populated at this point
     assertThat(cache.values(), Matchers.hasSize(1));
     assertEquals(1, cache.numPuts());
 
     int getsSoFar = cache.numGets();
     assertExpandsTo(
-        "$(query_targets 'classpath(//exciting:target)')",
+        "$(query_targets_and_outputs 'classpath(//exciting:target)')",
         rule,
-        "//exciting:dep //exciting:target");
+        String.format(
+            "%s %s %s %s",
+            "//exciting:dep",
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:dep"), "lib__%s__output", "dep.jar"),
+            "//exciting:target",
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:target"),
+                "lib__%s__output",
+                "target.jar")));
     // No new cache entry should have appeared
     assertThat(cache.values(), Matchers.hasSize(1));
     assertEquals(1, cache.numPuts());
@@ -138,23 +184,28 @@ public class QueryTargetsMacroExpanderTest {
     assertEquals(getsSoFar + 1, cache.numGets());
   }
 
-  private void assertExpandsTo(String input, BuildRule rule, String expected) throws Exception {
+  private String coerceAndStringify(String input, BuildRule rule) throws CoerceFailedException {
+    StringWithMacros stringWithMacros =
+        coercer.coerceBoth(
+            cellNameResolver,
+            filesystem,
+            rule.getBuildTarget().getCellRelativeBasePath().getPath(),
+            UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            input);
+    Arg arg = converter.convert(stringWithMacros);
+    return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
+  }
+
+  private void assertExpandsTo(String input, BuildRule rule, String expected)
+      throws CoerceFailedException {
     String results = coerceAndStringify(input, rule);
     assertEquals(expected, results);
   }
 
-  private String coerceAndStringify(String input, BuildRule rule) throws CoerceFailedException {
-    StringWithMacros stringWithMacros =
-        new DefaultTypeCoercerFactory()
-            .typeCoercerForType(TypeToken.of(StringWithMacros.class))
-            .coerceBoth(
-                cellNameResolver,
-                filesystem,
-                rule.getBuildTarget().getCellRelativeBasePath().getPath(),
-                UnconfiguredTargetConfiguration.INSTANCE,
-                UnconfiguredTargetConfiguration.INSTANCE,
-                input);
-    Arg arg = converter.convert(stringWithMacros);
-    return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
+  private String absolutify(BuildTarget buildTarget, String format, String last) {
+    return filesystem
+        .resolve(BuildTargetPaths.getGenPath(filesystem, buildTarget, format).resolve(last))
+        .toString();
   }
 }

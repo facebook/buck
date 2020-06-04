@@ -51,9 +51,9 @@ import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.temporarytargetuniquenesschecker.TemporaryUnconfiguredTargetToTargetUniquenessChecker;
-import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryTarget;
 import com.facebook.buck.query.QueryException;
-import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -95,8 +95,8 @@ public class ConfiguredQueryEnvironmentTest {
   private BuckEventBus eventBus;
   private CapturingConsoleEventListener capturingConsoleEventListener;
 
-  private QueryTarget createQueryBuildTarget(String baseName, String shortName) {
-    return QueryBuildTarget.of(BuildTargetFactory.newInstance(baseName, shortName));
+  private ConfiguredQueryTarget createQueryBuildTarget(String baseName, String shortName) {
+    return ConfiguredQueryBuildTarget.of(BuildTargetFactory.newInstance(baseName, shortName));
   }
 
   @Before
@@ -182,19 +182,19 @@ public class ConfiguredQueryEnvironmentTest {
 
   @Test
   public void testResolveSingleTargets() throws QueryException {
-    Set<QueryTarget> targets;
-    ImmutableSet<QueryTarget> expectedTargets;
+    Set<ConfiguredQueryTarget> targets;
+    ImmutableSet<ConfiguredQueryTarget> expectedTargets;
 
     targets = buckQueryEnvironment.getTargetEvaluator().evaluateTarget("//example:six");
     expectedTargets =
-        new ImmutableSortedSet.Builder<>(QueryTarget::compare)
+        new ImmutableSortedSet.Builder<>(ConfiguredQueryTarget::compare)
             .add(createQueryBuildTarget("//example", "six"))
             .build();
     assertThat(targets, is(equalTo(expectedTargets)));
 
     targets = buckQueryEnvironment.getTargetEvaluator().evaluateTarget("//example/app:seven");
     expectedTargets =
-        new ImmutableSortedSet.Builder<>(QueryTarget::compare)
+        new ImmutableSortedSet.Builder<>(ConfiguredQueryTarget::compare)
             .add(createQueryBuildTarget("//example/app", "seven"))
             .build();
     assertThat(targets, is(equalTo(expectedTargets)));
@@ -202,8 +202,8 @@ public class ConfiguredQueryEnvironmentTest {
 
   @Test
   public void testResolveTargetPattern() throws QueryException {
-    ImmutableSet<QueryTarget> expectedTargets =
-        new ImmutableSortedSet.Builder<>(QueryTarget::compare)
+    ImmutableSet<ConfiguredQueryTarget> expectedTargets =
+        new ImmutableSortedSet.Builder<>(ConfiguredQueryTarget::compare)
             .add(
                 createQueryBuildTarget("//example", "one"),
                 createQueryBuildTarget("//example", "two"),

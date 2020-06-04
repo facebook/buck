@@ -24,7 +24,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryBuildTarget;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.Escaper;
@@ -57,9 +57,10 @@ public class QueryPathsMacroExpander extends QueryMacroExpander<QueryPathsMacro>
             .map(
                 queryTarget -> {
                   // What we do depends on the input.
-                  if (QueryBuildTarget.class.isAssignableFrom(queryTarget.getClass())) {
+                  if (ConfiguredQueryBuildTarget.class.isAssignableFrom(queryTarget.getClass())) {
                     BuildRule rule =
-                        graphBuilder.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+                        graphBuilder.getRule(
+                            ((ConfiguredQueryBuildTarget) queryTarget).getBuildTarget());
                     return Optional.ofNullable(rule.getSourcePathToOutput()).orElse(null);
                   } else if (QueryFileTarget.class.isAssignableFrom(queryTarget.getClass())) {
                     return ((QueryFileTarget) queryTarget).getPath();

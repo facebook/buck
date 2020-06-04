@@ -36,11 +36,11 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryBuildTarget;
+import com.facebook.buck.query.ConfiguredQueryTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryParserEnv;
-import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableSet;
@@ -134,7 +134,7 @@ public class QueryCacheTest {
             ImmutableSet.of(),
             UnconfiguredTargetConfiguration.INSTANCE);
 
-    QueryParserEnv<QueryTarget> queryParserEnv = env.getQueryParserEnv();
+    QueryParserEnv<ConfiguredQueryTarget> queryParserEnv = env.getQueryParserEnv();
 
     QueryCache cache = new QueryCache();
 
@@ -150,10 +150,10 @@ public class QueryCacheTest {
             .getQueryEvaluator(targetGraph)
             .eval(QueryExpression.parse(q1.getQuery(), queryParserEnv), env),
         Matchers.containsInAnyOrder(
-            QueryBuildTarget.of(targetA),
-            QueryBuildTarget.of(targetB),
-            QueryBuildTarget.of(targetC),
-            QueryBuildTarget.of(targetD)));
+            ConfiguredQueryBuildTarget.of(targetA),
+            ConfiguredQueryBuildTarget.of(targetB),
+            ConfiguredQueryBuildTarget.of(targetC),
+            ConfiguredQueryBuildTarget.of(targetD)));
 
     assertTrue(cache.isPresent(targetGraph, queryParserEnv, q1));
     assertTrue(cache.isPresent(targetGraph, queryParserEnv, q2));
@@ -218,8 +218,8 @@ public class QueryCacheTest {
             bar.getDeclaredDeps(),
             UnconfiguredTargetConfiguration.INSTANCE);
 
-    QueryParserEnv<QueryTarget> fooParserEnv = fooEnv.getQueryParserEnv();
-    QueryParserEnv<QueryTarget> barParserEnv = barEnv.getQueryParserEnv();
+    QueryParserEnv<ConfiguredQueryTarget> fooParserEnv = fooEnv.getQueryParserEnv();
+    QueryParserEnv<ConfiguredQueryTarget> barParserEnv = barEnv.getQueryParserEnv();
 
     QueryCache cache = new QueryCache();
 
@@ -230,7 +230,7 @@ public class QueryCacheTest {
         cache
             .getQueryEvaluator(targetGraph)
             .eval(QueryExpression.parse(declared.getQuery(), fooParserEnv), fooEnv),
-        Matchers.contains(QueryBuildTarget.of(targetA)));
+        Matchers.contains(ConfiguredQueryBuildTarget.of(targetA)));
 
     assertTrue(cache.isPresent(targetGraph, fooParserEnv, declared));
     assertFalse(cache.isPresent(targetGraph, barParserEnv, declared));
@@ -239,7 +239,7 @@ public class QueryCacheTest {
         cache
             .getQueryEvaluator(targetGraph)
             .eval(QueryExpression.parse(declared.getQuery(), barParserEnv), barEnv),
-        Matchers.contains(QueryBuildTarget.of(targetB)));
+        Matchers.contains(ConfiguredQueryBuildTarget.of(targetB)));
 
     assertTrue(cache.isPresent(targetGraph, fooParserEnv, declared));
     assertTrue(cache.isPresent(targetGraph, barParserEnv, declared));

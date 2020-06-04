@@ -35,10 +35,10 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
-public class QueryTargetCollectorTest {
+public class ConfiguredQueryTargetCollectorTest {
   private static final Path ROOT = Paths.get("/fake/cell/root").toAbsolutePath();
   private static final String baseName = "//app";
-  private final QueryEnvironment<QueryTarget> env =
+  private final QueryEnvironment<ConfiguredQueryTarget> env =
       new GraphEnhancementQueryEnvironment(
           Optional.empty(),
           Optional.empty(),
@@ -48,7 +48,7 @@ public class QueryTargetCollectorTest {
           BaseName.of(baseName),
           ImmutableSet.of(),
           UnconfiguredTargetConfiguration.INSTANCE);
-  private QueryTargetCollector<QueryTarget> collector;
+  private QueryTargetCollector<ConfiguredQueryTarget> collector;
 
   @Before
   public void setUp() {
@@ -63,7 +63,7 @@ public class QueryTargetCollectorTest {
 
   @Test
   public void targetSet() {
-    ImmutableSet<QueryTarget> targets =
+    ImmutableSet<ConfiguredQueryTarget> targets =
         ImmutableSet.of(target("foo"), target("bar"), target("baz"));
     TargetSetExpression.of(targets).traverse(collector);
     assertThat(collector.getTargets(), Matchers.equalTo(targets));
@@ -71,7 +71,7 @@ public class QueryTargetCollectorTest {
 
   @Test
   public void emptySet() {
-    SetExpression.of(ImmutableList.<TargetLiteral<QueryTarget>>of()).traverse(collector);
+    SetExpression.of(ImmutableList.<TargetLiteral<ConfiguredQueryTarget>>of()).traverse(collector);
     assertThat(collector.getTargets(), Matchers.empty());
   }
 
@@ -84,11 +84,11 @@ public class QueryTargetCollectorTest {
   @Test
   @SuppressWarnings("unchecked")
   public void complexExpression() {
-    ImmutableList<Argument<QueryBuildTarget>> args =
+    ImmutableList<Argument<ConfiguredQueryBuildTarget>> args =
         ImmutableList.of(
-            (Argument<QueryBuildTarget>)
+            (Argument<ConfiguredQueryBuildTarget>)
                 Argument.of(SetExpression.of(ImmutableList.of(literal("foo"), literal("bar")))),
-            (Argument<QueryBuildTarget>) Argument.of(2));
+            (Argument<ConfiguredQueryBuildTarget>) Argument.of(2));
     BinaryOperatorExpression.of(
             BinaryOperatorExpression.Operator.UNION,
             ImmutableList.of(
@@ -104,7 +104,7 @@ public class QueryTargetCollectorTest {
     return TargetLiteral.of(baseName + ":" + shortName);
   }
 
-  private static QueryTarget target(String shortName) {
-    return QueryBuildTarget.of(BuildTargetFactory.newInstance(baseName, shortName));
+  private static ConfiguredQueryTarget target(String shortName) {
+    return ConfiguredQueryBuildTarget.of(BuildTargetFactory.newInstance(baseName, shortName));
   }
 }

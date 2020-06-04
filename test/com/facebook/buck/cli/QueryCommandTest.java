@@ -41,8 +41,8 @@ import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.query.ConfiguredQueryTarget;
 import com.facebook.buck.query.QueryException;
-import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -176,7 +176,7 @@ public class QueryCommandTest {
     }
 
     @Override
-    public ImmutableSet<QueryTarget> evaluateQuery(String query) {
+    public ImmutableSet<ConfiguredQueryTarget> evaluateQuery(String query) {
       Assert.assertTrue(expectedExpressions.contains(query));
       ++callsCount;
       return ImmutableSet.of();

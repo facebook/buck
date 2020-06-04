@@ -19,23 +19,23 @@ package com.facebook.buck.query;
 import com.facebook.buck.core.model.BuildTarget;
 import javax.annotation.Nullable;
 
-/** Implementation of {@link QueryTarget} that wraps a {@link BuildTarget}. */
-public final class QueryBuildTarget implements QueryTarget {
+/** Implementation of {@link ConfiguredQueryTarget} that wraps a {@link BuildTarget}. */
+public final class ConfiguredQueryBuildTarget implements ConfiguredQueryTarget {
 
   private final BuildTarget buildTarget;
 
-  private QueryBuildTarget(BuildTarget buildTarget) {
+  private ConfiguredQueryBuildTarget(BuildTarget buildTarget) {
     this.buildTarget = buildTarget;
   }
 
   /**
-   * Construct a new immutable {@code QueryBuildTarget} instance.
+   * Construct a new immutable {@code ConfiguredQueryBuildTarget} instance.
    *
    * @param buildTarget The value for the {@code buildTarget} attribute
-   * @return An immutable QueryBuildTarget instance
+   * @return An immutable ConfiguredQueryBuildTarget instance
    */
-  public static QueryBuildTarget of(BuildTarget buildTarget) {
-    return new QueryBuildTarget(buildTarget);
+  public static ConfiguredQueryBuildTarget of(BuildTarget buildTarget) {
+    return new ConfiguredQueryBuildTarget(buildTarget);
   }
 
   /** @return The value of the {@code buildTarget} attribute */
@@ -50,11 +50,11 @@ public final class QueryBuildTarget implements QueryTarget {
 
   @Override
   public boolean equals(@Nullable Object other) {
-    if (!(other instanceof QueryBuildTarget)) {
+    if (!(other instanceof ConfiguredQueryBuildTarget)) {
       return false;
     }
 
-    QueryBuildTarget that = (QueryBuildTarget) other;
+    ConfiguredQueryBuildTarget that = (ConfiguredQueryBuildTarget) other;
     return buildTarget.equals((that.buildTarget));
   }
 
