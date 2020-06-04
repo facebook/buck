@@ -433,7 +433,7 @@ public class TestCommand extends BuildCommand {
           BuckRunSpec.of(
               commandWithArgs,
               environmentVariables,
-              rootPath,
+              Optional.of(rootPath),
               /* is_fix_script */ false,
               /* print_command */ false);
       Files.write(Paths.get(commandArgsFile), ObjectMappers.WRITER.writeValueAsBytes(runSpec));

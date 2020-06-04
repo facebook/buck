@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 /**
@@ -50,7 +51,7 @@ public abstract class BuckRunSpec {
 
   /** The PWD where the command should be run from */
   @JsonProperty
-  public abstract Path getCwd();
+  public abstract Optional<Path> getCwd();
 
   /**
    * Whether the program is a 'fix' script or not
@@ -67,7 +68,7 @@ public abstract class BuckRunSpec {
   public static BuckRunSpec of(
       ImmutableList<String> argv,
       ImmutableMap<String, String> envp,
-      Path cwd,
+      Optional<Path> cwd,
       boolean isFixScript,
       boolean printCommand) {
     return ImmutableBuckRunSpec.ofImpl(argv, envp, cwd, isFixScript, printCommand);

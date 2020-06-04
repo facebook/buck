@@ -17,6 +17,7 @@
 package com.facebook.buck.support.fix;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.environment.Platform;
@@ -26,6 +27,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Test;
 
 public class BuckRunSpecTest {
@@ -41,7 +43,7 @@ public class BuckRunSpecTest {
         ImmutableBuckRunSpec.of(
             ImmutableList.of("foo", "bar"),
             ImmutableMap.of("FOO", "BAR"),
-            Paths.get("cwd/goes/here"),
+            Optional.of(Paths.get("cwd/goes/here")),
             true,
             true);
 
@@ -58,5 +60,21 @@ public class BuckRunSpecTest {
     assertEquals(expectedCwd, readData.get("cwd").asText());
     assertTrue(readData.get("is_fix_script").asBoolean());
     assertTrue(readData.get("print_command").asBoolean());
+  }
+
+  @Test
+  public void serializesWithoutCwd() throws IOException {
+    BuckRunSpec spec =
+        ImmutableBuckRunSpec.of(
+            ImmutableList.of("foo", "bar"),
+            ImmutableMap.of("FOO", "BAR"),
+            Optional.empty(),
+            true,
+            true);
+
+    String jsonString = ObjectMappers.WRITER.writeValueAsString(spec);
+
+    JsonNode readData = ObjectMappers.READER.readTree(jsonString);
+    assertNull(readData.get("cwd"));
   }
 }

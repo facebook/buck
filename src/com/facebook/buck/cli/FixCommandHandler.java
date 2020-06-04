@@ -187,7 +187,7 @@ public class FixCommandHandler {
             fixConfig.getFixScript().get(), repositoryRoot.getPath(), fixPath);
 
     BuckRunSpec runSpec =
-        BuckRunSpec.of(fixScript, environment, repositoryRoot.getPath(), true, false);
+        BuckRunSpec.of(fixScript, environment, Optional.of(repositoryRoot.getPath()), true, false);
 
     // If the fix command was invoked automatically, make sure to tell users how they can
     // run buck fix on this specific build id manually with the `buck fix` command

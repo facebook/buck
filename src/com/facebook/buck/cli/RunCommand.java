@@ -45,6 +45,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -185,13 +186,7 @@ public final class RunCommand extends AbstractCommand {
               .putAll(params.getEnvironment())
               .putAll(executable.getEnvironment(resolver))
               .build();
-      BuckRunSpec cmd =
-          BuckRunSpec.of(
-              argv,
-              envp,
-              params.getCells().getRootCell().getFilesystem().getRootPath().getPath(),
-              false,
-              printCommand);
+      BuckRunSpec cmd = BuckRunSpec.of(argv, envp, Optional.empty(), false, printCommand);
       Files.write(Paths.get(commandArgsFile), ObjectMappers.WRITER.writeValueAsBytes(cmd));
       return ExitCode.SUCCESS;
     }

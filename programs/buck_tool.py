@@ -218,7 +218,7 @@ class ExecuteProcess(ExitCodeCallable):
         self._path = path
         self._argv = argv
         self._envp = envp
-        self._cwd = cwd
+        self._cwd = cwd.encode("utf8")
 
     def __call__(self):
         if self.exit_code != ExitCode.SUCCESS:
@@ -227,6 +227,11 @@ class ExecuteProcess(ExitCodeCallable):
         # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
         if os.name != "nt":
             signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
+            # We need to change to the expected working directory before we
+            # call os.execvpe(). The exec* call execs the other binary. No
+            # Python code will run afterwards.
+            os.chdir(self._cwd)
             os.execvpe(self._path, self._argv, self._envp)
         else:
 
@@ -263,7 +268,7 @@ class ExecuteFixScript(ExitCodeCallable):
         self._path = path
         self._argv = argv
         self._envp = envp
-        self._cwd = cwd
+        self._cwd = cwd.encode("utf8")
 
     @contextlib.contextmanager
     def _disable_signal_handlers(self):
@@ -690,10 +695,10 @@ class BuckTool(object):
                 envp = {
                     k.encode("utf8"): v.encode("utf8") for k, v in cmd["envp"].items()
                 }
-                cwd = cmd["cwd"].encode("utf8")
+                cwd = cmd.get("cwd") or os.getcwd()
                 if cmd["print_command"]:
                     return PrintExecution(
-                        exit_code, cmd["path"], cmd["argv"], cmd["envp"], cmd["cwd"]
+                        exit_code, cmd["path"], cmd["argv"], cmd["envp"], cwd
                     )
                 elif cmd["is_fix_script"]:
                     return ExecuteFixScript(exit_code, path, argv, envp, cwd)
