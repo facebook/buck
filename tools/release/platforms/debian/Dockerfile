@@ -16,8 +16,8 @@ RUN apt-get install -y --no-install-recommends curl ca-certificates \
       equivs && \
       apt-get clean
 
-# Create docker needs the old name python, create a symlink to python3
-RUN python_path=`which python3`;ln -s ${python_path} ${python_path%3}
+# docker needs the old name python, create a symlink to python3
+RUN python_path=`which python3`;ln -f -s ${python_path} ${python_path%3}
 
 RUN git clone --branch v${version} --depth 1 https://github.com/${repository}.git src
 
