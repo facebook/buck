@@ -464,7 +464,7 @@ public class AppleBundle extends AbstractBuildRule
             infoPlistInputPath,
             infoPlistSubstitutionTempPath.getPath(),
             InfoPlistSubstitution.createVariableExpansionFunction(
-                withDefaults(
+                InfoPlistSubstitution.variableExpansionWithDefaults(
                     infoPlistSubstitutions,
                     ImmutableMap.of(
                         "EXECUTABLE_NAME", binaryName,
@@ -740,7 +740,7 @@ public class AppleBundle extends AbstractBuildRule
           InfoPlistSubstitution.getVariableExpansionForPlatform(
               CODE_SIGN_ENTITLEMENTS,
               platform.getName(),
-              withDefaults(
+              InfoPlistSubstitution.variableExpansionWithDefaults(
                   infoPlistSubstitutions,
                   ImmutableMap.of(
                       "SOURCE_ROOT", srcRoot.toString(),
@@ -946,18 +946,6 @@ public class AppleBundle extends AbstractBuildRule
         codeSignOnCopyPathsBuilder.add(destPath.resolve(srcPath.getFileName()));
       }
     }
-  }
-
-  public static ImmutableMap<String, String> withDefaults(
-      ImmutableMap<String, String> map, ImmutableMap<String, String> defaults) {
-    ImmutableMap.Builder<String, String> builder =
-        ImmutableMap.<String, String>builder().putAll(map);
-    for (ImmutableMap.Entry<String, String> entry : defaults.entrySet()) {
-      if (!map.containsKey(entry.getKey())) {
-        builder = builder.put(entry.getKey(), entry.getValue());
-      }
-    }
-    return builder.build();
   }
 
   private boolean needsLSRequiresIPhoneOSInfoPlistKeyOnMac() {

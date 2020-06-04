@@ -2216,7 +2216,7 @@ public class XcodeNativeTargetGenerator {
       String entitlementsPlistPath =
           InfoPlistSubstitution.replaceVariablesInString(
               "$(" + AppleBundle.CODE_SIGN_ENTITLEMENTS + ")",
-              AppleBundle.withDefaults(
+              InfoPlistSubstitution.variableExpansionWithDefaults(
                   infoPlistSubstitutions,
                   ImmutableMap.of(
                       "SOURCE_ROOT", targetPath,

@@ -164,4 +164,21 @@ public class InfoPlistSubstitutionTest {
                 "FOO[sdk=iphonesimulator]", "BARiphonesimulator")),
         equalTo(Optional.of("BAR")));
   }
+
+  @Test
+  public void testVariableExpansionWithDefaults() {
+    ImmutableMap<String, String> expansion = ImmutableMap.of("FOO", "foo", "BAR", "bar");
+    {
+      ImmutableMap<String, String> defaults = ImmutableMap.of("BAR", "foo");
+      assertThat(
+          InfoPlistSubstitution.variableExpansionWithDefaults(expansion, defaults),
+          equalTo(expansion));
+    }
+    {
+      ImmutableMap<String, String> defaults = ImmutableMap.of("FOOBAR", "foobar");
+      assertThat(
+          InfoPlistSubstitution.variableExpansionWithDefaults(expansion, defaults),
+          equalTo(ImmutableMap.of("FOO", "foo", "BAR", "bar", "FOOBAR", "foobar")));
+    }
+  }
 }

@@ -167,4 +167,23 @@ public class InfoPlistSubstitution {
     ImmutableMap<String, String> variablesToExpandCopy = ImmutableMap.copyOf(variablesToExpand);
     return input -> replaceVariablesInString(input, variablesToExpandCopy);
   }
+
+  /**
+   * Adds default values to variable expansion mapping
+   *
+   * @param map Original variable expansion mapping
+   * @param defaults Default values
+   * @return Expansion mapping that contains original mapping with added default values
+   */
+  public static ImmutableMap<String, String> variableExpansionWithDefaults(
+      ImmutableMap<String, String> map, ImmutableMap<String, String> defaults) {
+    ImmutableMap.Builder<String, String> builder =
+        ImmutableMap.<String, String>builder().putAll(map);
+    for (ImmutableMap.Entry<String, String> entry : defaults.entrySet()) {
+      if (!map.containsKey(entry.getKey())) {
+        builder = builder.put(entry.getKey(), entry.getValue());
+      }
+    }
+    return builder.build();
+  }
 }
