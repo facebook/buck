@@ -578,9 +578,10 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   }
 
   /**
-   * // @deprecated Prefer operating on {@code Path}s directly, replaced by {@link
-   * #createParentDirs(Path)}.
+   * @deprecated Prefer operating on {@code Path}s directly, replaced by {@link
+   *     #createParentDirs(Path)}.
    */
+  @Deprecated
   @Override
   public void createParentDirs(String pathRelativeToProjectRoot) throws IOException {
     AbsPath file =
@@ -686,7 +687,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
    * not exist, is empty, or encounters an error while being read, {@link Optional#empty()} is
    * returned. Otherwise, an {@link Optional} with the first line of the file will be returned.
    *
-   * <p>// @deprecated PRefero operation on {@code Path}s directly, replaced by {@link
+   * <p>@deprecated PRefero operation on {@code Path}s directly, replaced by {@link
    * #readFirstLine(Path)}
    */
   @Override
@@ -720,9 +721,10 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   }
 
   /**
-   * // @deprecated Prefer operation on {@code Path}s directly, replaced by {@link
-   * Files#newInputStream(Path, java.nio.file.OpenOption...)}.
+   * @deprecated Prefer operation on {@code Path}s directly, replaced by {@link
+   *     Files#newInputStream(Path, java.nio.file.OpenOption...)}.
    */
+  @Deprecated
   @Override
   public InputStream getInputStreamForRelativePath(Path path) throws IOException {
     return ProjectFilesystemUtils.getInputStreamForRelativePath(projectRoot, path);

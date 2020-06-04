@@ -311,9 +311,10 @@ public interface ProjectFilesystem {
   Path createNewFile(Path pathRelativeToProjectRoot) throws IOException;
 
   /**
-   * // @deprecated Prefer operating on {@code Path}s directly, replaced by {@link
-   * #createParentDirs(Path)}.
+   * @deprecated Prefer operating on {@code Path}s directly, replaced by {@link
+   *     #createParentDirs(Path)}.
    */
+  @Deprecated
   void createParentDirs(String pathRelativeToProjectRoot) throws IOException;
 
   /**
@@ -395,7 +396,7 @@ public interface ProjectFilesystem {
    * not exist, is empty, or encounters an error while being read, {@link Optional#empty()} is
    * returned. Otherwise, an {@link Optional} with the first line of the file will be returned.
    *
-   * <p>// @deprecated PRefero operation on {@code Path}s directly, replaced by {@link
+   * <p>@deprecated PRefero operation on {@code Path}s directly, replaced by {@link
    * #readFirstLine(Path)}
    */
   Optional<String> readFirstLine(String pathRelativeToProjectRoot);
@@ -417,9 +418,10 @@ public interface ProjectFilesystem {
   List<String> readLines(Path pathRelativeToProjectRoot) throws IOException;
 
   /**
-   * // @deprecated Prefer operation on {@code Path}s directly, replaced by {@link
-   * Files#newInputStream(Path, OpenOption...)}.
+   * @deprecated Prefer operation on {@code Path}s directly, replaced by {@link
+   *     Files#newInputStream(Path, OpenOption...)}.
    */
+  @Deprecated
   InputStream getInputStreamForRelativePath(Path path) throws IOException;
 
   Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException;

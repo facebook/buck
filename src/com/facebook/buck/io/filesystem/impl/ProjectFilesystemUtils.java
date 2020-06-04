@@ -256,6 +256,27 @@ public class ProjectFilesystemUtils {
   }
 
   /**
+   * @deprecated Prefer operating on {@code Path}s directly, replaced by {@link
+   *     #createParentDirs(AbsPath, Path)}.
+   */
+  @Deprecated
+  public static void createParentDirs(AbsPath root, String pathRelativeToProjectRoot)
+      throws IOException {
+    AbsPath path = getPathForRelativePath(root, pathRelativeToProjectRoot);
+    mkdirs(root, path.getParent().getPath());
+  }
+
+  /**
+   * @param pathRelativeToProjectRoot Must identify a file, not a directory. (Unfortunately, we have
+   *     no way to assert this because the path is not expected to exist yet.)
+   */
+  public static void createParentDirs(AbsPath root, Path pathRelativeToProjectRoot)
+      throws IOException {
+    Path path = getPathForRelativePath(root, pathRelativeToProjectRoot);
+    mkdirs(root, path.getParent());
+  }
+
+  /**
    * Resolves the relative path against the project root and then calls {@link
    * Files#createDirectories(Path, FileAttribute[])}
    */
@@ -401,7 +422,7 @@ public class ProjectFilesystemUtils {
    * not exist, is empty, or encounters an error while being read, {@link Optional#empty()} is
    * returned. Otherwise, an {@link Optional} with the first line of the file will be returned.
    *
-   * <p>// @deprecated PRefero operation on {@code Path}s directly, replaced by {@link
+   * <p>@deprecated PRefero operation on {@code Path}s directly, replaced by {@link
    * #readFirstLine(AbsPath, Path)}
    */
   public static Optional<String> readFirstLine(AbsPath root, String pathRelativeToProjectRoot) {
@@ -449,9 +470,10 @@ public class ProjectFilesystemUtils {
   }
 
   /**
-   * // @deprecated Prefer operation on {@code Path}s directly, replaced by {@link
-   * Files#newInputStream(Path, java.nio.file.OpenOption...)}.
+   * @deprecated Prefer operation on {@code Path}s directly, replaced by {@link
+   *     Files#newInputStream(Path, java.nio.file.OpenOption...)}.
    */
+  @Deprecated
   public static InputStream getInputStreamForRelativePath(
       AbsPath root, Path pathRelativeToProjectRoot) throws IOException {
     Path file = getPathForRelativePath(root, pathRelativeToProjectRoot);

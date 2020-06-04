@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -37,13 +37,10 @@ import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.PipelinedBuildable;
 import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
-import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -128,11 +125,14 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
             ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
             buildTarget,
             outputPathResolver.resolvePath(pathToClassHashesOutputPath));
+
+    ImmutableList<IsolatedStep> isolatedSteps = getIsolatedSteps(outputPathResolver, filesystem);
+
     ImmutableList.Builder<Step> steps =
-        ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + 1);
+        ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + 1 + isolatedSteps.size());
     steps.addAll(factoryBuildSteps);
     maybeAddUnusedDependenciesStep(filesystem, buildContext, steps);
-    addMakeMissingOutputsStep(filesystem, outputPathResolver, steps);
+    steps.addAll(isolatedSteps);
     return steps.build();
   }
 
@@ -150,38 +150,39 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
             ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
             state,
             outputPathResolver.resolvePath(pathToClassHashesOutputPath));
-    ImmutableList.Builder<Step> stepsBuilder =
-        ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + 1);
-    stepsBuilder.addAll(factoryBuildSteps);
-    maybeAddUnusedDependenciesStep(filesystem, buildContext, stepsBuilder);
-    addMakeMissingOutputsStep(filesystem, outputPathResolver, stepsBuilder);
-    return stepsBuilder.build();
+
+    ImmutableList<IsolatedStep> isolatedSteps = getIsolatedSteps(outputPathResolver, filesystem);
+
+    ImmutableList.Builder<Step> steps =
+        ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + 1 + isolatedSteps.size());
+    steps.addAll(factoryBuildSteps);
+    maybeAddUnusedDependenciesStep(filesystem, buildContext, steps);
+    steps.addAll(isolatedSteps);
+    return steps.build();
   }
 
-  public void addMakeMissingOutputsStep(
-      ProjectFilesystem filesystem,
-      OutputPathResolver outputPathResolver,
-      ImmutableList.Builder<Step> steps) {
-    steps.add(
-        new AbstractExecutionStep("make_missing_outputs") {
-          @Override
-          public StepExecutionResult execute(ExecutionContext context) throws IOException {
-            Path rootOutput = outputPathResolver.resolvePath(rootOutputPath);
-            if (!filesystem.exists(rootOutput)) {
-              filesystem.mkdirs(rootOutput);
-            }
-            Path pathToClassHashes = outputPathResolver.resolvePath(pathToClassHashesOutputPath);
-            if (!filesystem.exists(pathToClassHashes)) {
-              filesystem.createParentDirs(pathToClassHashes);
-              filesystem.touch(pathToClassHashes);
-            }
-            Path annotationsPath = outputPathResolver.resolvePath(annotationsOutputPath);
-            if (!filesystem.exists(annotationsPath)) {
-              filesystem.mkdirs(annotationsPath);
-            }
-            return StepExecutionResults.SUCCESS;
-          }
-        });
+  private ImmutableList<IsolatedStep> getIsolatedSteps(
+      OutputPathResolver outputPathResolver, ProjectFilesystem filesystem) {
+
+    ImmutableList.Builder<IsolatedStep> steps = ImmutableList.builderWithExpectedSize(1);
+    steps.add(getMakeMissingOutputsStep(outputPathResolver, filesystem));
+    return steps.build();
+  }
+
+  private IsolatedStep getMakeMissingOutputsStep(
+      OutputPathResolver outputPathResolver, ProjectFilesystem filesystem) {
+    AbsPath projectRoot = filesystem.getRootPath();
+
+    Path rootOutput = outputPathResolver.resolvePath(rootOutputPath).toAbsolutePath();
+    Path pathToClassHashes =
+        outputPathResolver.resolvePath(pathToClassHashesOutputPath).toAbsolutePath();
+    Path annotationsPath = outputPathResolver.resolvePath(annotationsOutputPath).toAbsolutePath();
+
+    return new MakeMissingOutputsStep(
+        projectRoot,
+        projectRoot.relativize(rootOutput),
+        projectRoot.relativize(pathToClassHashes),
+        projectRoot.relativize(annotationsPath));
   }
 
   public boolean useDependencyFileRuleKeys() {
