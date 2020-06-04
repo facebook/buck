@@ -170,6 +170,8 @@ public class AppleBundle extends AbstractBuildRule
   @AddToRuleKey private final boolean sliceAppPackageSwiftRuntime;
   @AddToRuleKey private final boolean sliceAppBundleSwiftRuntime;
 
+  @AddToRuleKey private final Optional<SourcePath> maybeAssetCatalogPlist;
+
   private final Optional<AppleAssetCatalog> assetCatalog;
   private final Optional<CoreDataModel> coreDataModel;
   private final Optional<SceneKitAssets> sceneKitAssets;
@@ -312,6 +314,7 @@ public class AppleBundle extends AbstractBuildRule
 
     this.sliceAppPackageSwiftRuntime = sliceAppPackageSwiftRuntime;
     this.sliceAppBundleSwiftRuntime = sliceAppBundleSwiftRuntime;
+    this.maybeAssetCatalogPlist = assetCatalog.map(AppleAssetCatalog::getSourcePathToPlist);
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -469,7 +472,9 @@ public class AppleBundle extends AbstractBuildRule
         new PlistProcessStep(
             getProjectFilesystem(),
             infoPlistSubstitutionTempPath.getPath(),
-            assetCatalog.map(appleAssetCatalog -> appleAssetCatalog.getOutputPlist().getPath()),
+            maybeAssetCatalogPlist.map(
+                assetCatalogPlist ->
+                    context.getSourcePathResolver().getRelativePath(assetCatalogPlist)),
             infoPlistOutputPath,
             getInfoPlistAdditionalKeys(),
             getInfoPlistOverrideKeys(),

@@ -21,7 +21,6 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.PathWrapper;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -31,11 +30,15 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.modern.DefaultOutputPathResolver;
+import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -71,7 +74,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
   @AddToRuleKey(stringify = true)
   private final Path outputDir;
 
-  private final RelPath outputPlist;
+  @AddToRuleKey private final OutputPath plistOutputPath;
 
   @AddToRuleKey private final Optional<String> appIcon;
 
@@ -82,6 +85,8 @@ public class AppleAssetCatalog extends AbstractBuildRule {
   private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
 
   @AddToRuleKey private final boolean withDownwardApi;
+
+  private OutputPathResolver outputPathResolver;
 
   private static final ImmutableSet<String> TYPES_REQUIRING_CONTENTS_JSON =
       ImmutableSet.of(
@@ -121,12 +126,21 @@ public class AppleAssetCatalog extends AbstractBuildRule {
     this.outputDir =
         BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s")
             .resolve(bundleName + BUNDLE_DIRECTORY_EXTENSION);
-    this.outputPlist =
-        BuildTargetPaths.getScratchPath(getProjectFilesystem(), buildTarget, "%s-output.plist");
+    this.plistOutputPath = new OutputPath("AssetCatalog.plist");
     this.appIcon = appIcon;
     this.launchImage = launchImage;
     this.compilationOptions = compilationOptions;
     this.buildDepsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
+    this.outputPathResolver =
+        new DefaultOutputPathResolver(getProjectFilesystem(), getBuildTarget());
+  }
+
+  public SourcePath getSourcePathToPlist() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getResolvedPlistPath());
+  }
+
+  private Path getResolvedPlistPath() {
+    return outputPathResolver.resolvePath(plistOutputPath);
   }
 
   @Override
@@ -138,10 +152,14 @@ public class AppleAssetCatalog extends AbstractBuildRule {
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)));
+
+    Path resolvedPlistPath = getResolvedPlistPath();
     stepsBuilder.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), outputPlist.getParent())));
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                resolvedPlistPath.getParent())));
     ImmutableSortedSet<AbsPath> absoluteAssetCatalogDirs =
         context.getSourcePathResolver().getAllAbsolutePaths(assetCatalogDirs);
     stepsBuilder.add(
@@ -155,14 +173,14 @@ public class AppleAssetCatalog extends AbstractBuildRule {
                 .map(PathWrapper::getPath)
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())),
             getProjectFilesystem().resolve(outputDir),
-            getProjectFilesystem().resolve(outputPlist).getPath(),
+            getProjectFilesystem().resolve(resolvedPlistPath),
             appIcon,
             launchImage,
             compilationOptions,
             withDownwardApi));
 
     buildableContext.recordArtifact(getOutputDir());
-    buildableContext.recordArtifact(outputPlist.getPath());
+    buildableContext.recordArtifact(resolvedPlistPath);
     return stepsBuilder.build();
   }
 
@@ -174,10 +192,6 @@ public class AppleAssetCatalog extends AbstractBuildRule {
 
   public Path getOutputDir() {
     return outputDir;
-  }
-
-  public RelPath getOutputPlist() {
-    return outputPlist;
   }
 
   public static void validateAssetCatalogs(

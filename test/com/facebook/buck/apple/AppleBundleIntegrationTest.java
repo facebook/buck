@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -31,6 +32,7 @@ import static org.junit.Assume.assumeTrue;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSNumber;
+import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
@@ -58,7 +60,9 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -909,7 +913,8 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void appleAssetCatalogsAreIncludedInBundle() throws IOException {
+  public void appleAssetCatalogsAreIncludedInBundleAndInfoPlistContainsAssetsData()
+      throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_asset_catalogs_are_included_in_bundle", tmp);
@@ -925,6 +930,13 @@ public class AppleBundleIntegrationTest {
     workspace.verify(RelPath.get("DemoApp_output.expected"), outputPath);
     Path appPath = outputPath.resolve(target.getShortName() + ".app");
     assertTrue(Files.exists(workspace.getPath(appPath.resolve("Assets.car"))));
+
+    Path plistPath = workspace.getPath(appPath.resolve("Info.plist"));
+    InputStream in = new FileInputStream(plistPath.toFile());
+    NSObject launchImages =
+        AppleInfoPlistParsing.getPropertyValueFromPlistStream(
+            Paths.get("Test"), in, "UILaunchImages");
+    assertNotNull(launchImages);
   }
 
   @Test
