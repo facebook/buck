@@ -268,20 +268,29 @@ public class ObjectFileScrubbers {
     }
   }
 
-  /**
-   * Exposing C-style strings as byte[] is more efficient (no charset decoding, etc). This is useful
-   * when String operations are not required.
-   */
-  public static byte[] readCString(ByteBuffer byteBuffer) {
+  private static ByteArrayOutputStream readCString(
+      ByteBuffer byteBuffer, boolean includeNullTerminator) {
     ByteArrayOutputStream cStringBuffer = new ByteArrayOutputStream();
     while (true) {
       byte currentByte = byteBuffer.get();
-      cStringBuffer.write(currentByte);
+      if (currentByte != 0x0 || includeNullTerminator) {
+        cStringBuffer.write(currentByte);
+      }
+
       if (currentByte == 0x0) {
         break;
       }
     }
 
+    return cStringBuffer;
+  }
+
+  /**
+   * Exposing C-style strings as byte[] is more efficient (no charset decoding, etc). This is useful
+   * when String operations are not required.
+   */
+  public static byte[] readCString(ByteBuffer byteBuffer) {
+    ByteArrayOutputStream cStringBuffer = readCString(byteBuffer, true);
     return cStringBuffer.toByteArray();
   }
 }
