@@ -680,6 +680,17 @@ public class ParserIntegrationTest {
 
   @Test
   @Parameters(method = "syntaxes")
+  public void sha256(Syntax syntax) throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sha256", temporaryFolder);
+    workspace.setUp();
+    workspace
+        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax=" + syntax)
+        .assertSuccess();
+  }
+
+  @Test
+  @Parameters(method = "syntaxes")
   public void notJustList(Syntax syntax) throws Exception {
     // Check that parsers accept any sequence, not just list when parameter is list.
     ProjectWorkspace workspace =

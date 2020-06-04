@@ -18,6 +18,7 @@ import abc
 import collections
 import contextlib
 import functools
+import hashlib
 import imp
 import inspect
 import json
@@ -765,6 +766,15 @@ def rule_exists(name, build_env=None):
         build_env, BuildFileContext
     ), "Cannot use `rule_exists()` at the top-level of an included file."
     return name in build_env.rules
+
+
+@provide_as_native_rule
+def sha256(val, build_env=None):
+    """
+    Computes a sha256 digest for a string. Returns the hex representation of the digest.
+    """
+    assert isinstance(val, str), "sha256() works only with string arguments"
+    return hashlib.sha256(val).hexdigest()
 
 
 class UserDefinedRule(object):

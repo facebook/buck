@@ -18,11 +18,13 @@ package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.Hashing;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
+import java.nio.charset.StandardCharsets;
 import javax.annotation.Nullable;
 
 /**
@@ -80,5 +82,13 @@ public abstract class AbstractSkylarkFunctions {
 
     configContext.recordReadConfigurationOption(section, field, value);
     return value != null ? value : defaultValue;
+  }
+
+  @SkylarkCallable(
+      name = "sha256",
+      doc = "Computes a sha256 digest for a string. Returns the hex representation of the digest.",
+      parameters = {@Param(name = "value", type = String.class, named = true)})
+  public String sha256(String value) {
+    return Hashing.sha256().hashString(value, StandardCharsets.UTF_8).toString();
   }
 }
