@@ -54,9 +54,18 @@ public abstract class PythonResolvedComponentsGroup {
       return true;
     }
 
-    final long totalSize = Files.size(a);
+    long totalSize = Files.size(a);
     if (totalSize != Files.size(b)) {
       return false;
+    }
+
+    // Python bytecode has issues with non-deterministic (e.g. https://bugs.python.org/issue34722),
+    // so relax the check in this case to only cover the first 16 bytes, which, as of 3.7, will
+    // cover the embedded source hash (https://www.python.org/dev/peps/pep-0552/#specification) and
+    // so should be at least enough to catch non-benign cases of duplication.
+    if (MorePaths.getFileExtension(a).equals("pyc")
+        && MorePaths.getFileExtension(b).equals("pyc")) {
+      totalSize = Long.min(16, totalSize);
     }
 
     try (InputStream ia = Files.newInputStream(a);
