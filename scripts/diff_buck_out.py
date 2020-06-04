@@ -22,6 +22,7 @@ import argparse
 import hashlib
 import os
 
+
 hash_cache = {}
 
 parser = argparse.ArgumentParser(description="Recursively diff two directories")
@@ -125,24 +126,8 @@ def print_h1(text):
     print("")
 
 
-def compare_dirs(dirOne, dirTwo, description):
-    hashes_by_path = {}
-
-    file_hashes_dir_one = compute_file_hashes(dirOne)
-    file_hashes_dir_two = compute_file_hashes(dirTwo)
-
-    process_hashes(file_hashes_dir_one, hashes_by_path)
-    process_hashes(file_hashes_dir_two, hashes_by_path)
-
-    matching_paths = []
-    mismatching_paths = []
-
-    for path in hashes_by_path:
-        count = len(hashes_by_path[path])
-        if count == 1:
-            mismatching_paths.append(path)
-        elif count == 2:
-            matching_paths.append(path)
+def print_hash_calculations(dirOne, dirTwo, description):
+    matching_paths, mismatching_paths, hashes_by_path = compare_dirs(dirOne, dirTwo)
 
     ################################################################
     # Display all the files that only appeared in one ./buck-out
@@ -187,6 +172,35 @@ def compare_dirs(dirOne, dirTwo, description):
     print_files_for_each_extension(paths_different_hash_by_extension, "mismatching")
 
     print_h1(str(paths_same_hash) + " files with matching hashes in " + description)
+
+
+def compare_dirs(dirOne, dirTwo):
+    ################################################################
+    # Compares two dirs and returns the number of matching
+    # and mismatching paths the two have, matching paths are
+    # relative paths of the dirs that match, hashes_by_path
+    # is a dictonary with paths as keys and lists of file hashes
+    # as values
+    ################################################################
+    hashes_by_path = {}
+
+    file_hashes_dir_one = compute_file_hashes(dirOne)
+    file_hashes_dir_two = compute_file_hashes(dirTwo)
+
+    process_hashes(file_hashes_dir_one, hashes_by_path)
+    process_hashes(file_hashes_dir_two, hashes_by_path)
+
+    matching_paths = []
+    mismatching_paths = []
+
+    for path in hashes_by_path:
+        count = len(hashes_by_path[path])
+        if count == 1:
+            mismatching_paths.append(path)
+        elif count == 2:
+            matching_paths.append(path)
+
+    return len(matching_paths), len(mismatching_paths), hashes_by_path
 
 
 ################################################################
