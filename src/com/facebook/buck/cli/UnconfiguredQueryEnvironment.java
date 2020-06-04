@@ -22,7 +22,6 @@ import com.facebook.buck.query.AllPathsFunction;
 import com.facebook.buck.query.AttrFilterFunction;
 import com.facebook.buck.query.AttrRegexFilterFunction;
 import com.facebook.buck.query.BuildFileFunction;
-import com.facebook.buck.query.ConfiguredQueryTarget;
 import com.facebook.buck.query.DepsFunction;
 import com.facebook.buck.query.EvaluatingQueryEnvironment;
 import com.facebook.buck.query.FilterFunction;
@@ -36,6 +35,7 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.RdepsFunction;
 import com.facebook.buck.query.TestsOfFunction;
+import com.facebook.buck.query.UnconfiguredQueryTarget;
 import com.facebook.buck.rules.param.ParamName;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -47,7 +47,7 @@ import java.util.function.Predicate;
 /** QueryEnvironment implementation that operates over the unconfigured target graph. */
 @SuppressWarnings("unused")
 public class UnconfiguredQueryEnvironment
-    implements EvaluatingQueryEnvironment<ConfiguredQueryTarget> {
+    implements EvaluatingQueryEnvironment<UnconfiguredQueryTarget> {
 
   private final Parser parser;
   private final Cell rootCell;
@@ -62,12 +62,12 @@ public class UnconfiguredQueryEnvironment
   }
 
   @Override
-  public Set<ConfiguredQueryTarget> evaluateQuery(QueryExpression<ConfiguredQueryTarget> expr)
+  public Set<UnconfiguredQueryTarget> evaluateQuery(QueryExpression<UnconfiguredQueryTarget> expr)
       throws QueryException, InterruptedException {
     Set<String> targetLiterals = new HashSet<>();
     expr.collectTargetPatterns(targetLiterals);
     preloadTargetPatterns(targetLiterals);
-    return new NoopQueryEvaluator<ConfiguredQueryTarget>().eval(expr, this);
+    return new NoopQueryEvaluator<UnconfiguredQueryTarget>().eval(expr, this);
   }
 
   @Override
@@ -77,7 +77,7 @@ public class UnconfiguredQueryEnvironment
   }
 
   @Override
-  public Iterable<QueryFunction<ConfiguredQueryTarget>> getFunctions() {
+  public Iterable<QueryFunction<UnconfiguredQueryTarget>> getFunctions() {
     return ImmutableList.of(
         new AllPathsFunction<>(),
         new AttrFilterFunction<>(),
@@ -96,76 +96,77 @@ public class UnconfiguredQueryEnvironment
   }
 
   @Override
-  public ImmutableSet<ConfiguredQueryTarget> getTransitiveClosure(
-      Set<ConfiguredQueryTarget> targets) {
+  public ImmutableSet<UnconfiguredQueryTarget> getTransitiveClosure(
+      Set<UnconfiguredQueryTarget> targets) {
     throw new RuntimeException("Not yet implemented");
   }
 
   @Override
-  public void buildTransitiveClosure(Set<ConfiguredQueryTarget> targets) throws QueryException {
+  public void buildTransitiveClosure(Set<UnconfiguredQueryTarget> targets) throws QueryException {
     throw new RuntimeException("Not yet implemented");
   }
 
   @Override
-  public QueryEnvironment.TargetEvaluator<ConfiguredQueryTarget> getTargetEvaluator() {
+  public QueryEnvironment.TargetEvaluator<UnconfiguredQueryTarget> getTargetEvaluator() {
     throw new RuntimeException("Not yet implemented");
   }
 
   @Override
-  public ImmutableSet<ConfiguredQueryTarget> getFwdDeps(Iterable<ConfiguredQueryTarget> targets)
+  public ImmutableSet<UnconfiguredQueryTarget> getFwdDeps(Iterable<UnconfiguredQueryTarget> targets)
       throws QueryException {
     throw new RuntimeException("Not yet implemented");
   }
 
   @Override
-  public Set<ConfiguredQueryTarget> getReverseDeps(Iterable<ConfiguredQueryTarget> targets)
+  public Set<UnconfiguredQueryTarget> getReverseDeps(Iterable<UnconfiguredQueryTarget> targets)
       throws QueryException {
     throw new RuntimeException("Not yet implemented");
   }
 
   @Override
-  public Set<ConfiguredQueryTarget> getInputs(ConfiguredQueryTarget target) throws QueryException {
-    throw new RuntimeException("Not yet implemented");
-  }
-
-  @Override
-  public ImmutableSet<ConfiguredQueryTarget> getTestsForTarget(ConfiguredQueryTarget target)
+  public Set<UnconfiguredQueryTarget> getInputs(UnconfiguredQueryTarget target)
       throws QueryException {
     throw new RuntimeException("Not yet implemented");
   }
 
   @Override
-  public ImmutableSet<ConfiguredQueryTarget> getBuildFiles(Set<ConfiguredQueryTarget> targets) {
+  public ImmutableSet<UnconfiguredQueryTarget> getTestsForTarget(UnconfiguredQueryTarget target)
+      throws QueryException {
     throw new RuntimeException("Not yet implemented");
   }
 
   @Override
-  public ImmutableSet<ConfiguredQueryTarget> getFileOwners(ImmutableList<String> files) {
+  public ImmutableSet<UnconfiguredQueryTarget> getBuildFiles(Set<UnconfiguredQueryTarget> targets) {
     throw new RuntimeException("Not yet implemented");
   }
 
   @Override
-  public ImmutableSet<ConfiguredQueryTarget> getConfiguredTargets(
-      Set<ConfiguredQueryTarget> targets, Optional<String> configurationName)
+  public ImmutableSet<UnconfiguredQueryTarget> getFileOwners(ImmutableList<String> files) {
+    throw new RuntimeException("Not yet implemented");
+  }
+
+  @Override
+  public ImmutableSet<UnconfiguredQueryTarget> getConfiguredTargets(
+      Set<UnconfiguredQueryTarget> targets, Optional<String> configurationName)
       throws QueryException {
     throw new UnsupportedOperationException(
         "Calls to `getConfiguredTargets` are not valid for UnconfiguredQueryEnvironment");
   }
 
   @Override
-  public String getTargetKind(ConfiguredQueryTarget target) throws QueryException {
+  public String getTargetKind(UnconfiguredQueryTarget target) throws QueryException {
     throw new RuntimeException("Not yet implemented");
   }
 
   @Override
-  public ImmutableSet<ConfiguredQueryTarget> getTargetsInAttribute(
-      ConfiguredQueryTarget target, ParamName attribute) throws QueryException {
+  public ImmutableSet<UnconfiguredQueryTarget> getTargetsInAttribute(
+      UnconfiguredQueryTarget target, ParamName attribute) throws QueryException {
     throw new RuntimeException("Not yet implemented");
   }
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
-      ConfiguredQueryTarget target, ParamName attribute, Predicate<Object> predicate)
+      UnconfiguredQueryTarget target, ParamName attribute, Predicate<Object> predicate)
       throws QueryException {
     throw new RuntimeException("Not yet implemented");
   }

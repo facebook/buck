@@ -19,8 +19,11 @@ package com.facebook.buck.query;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import javax.annotation.Nullable;
 
-/** Implementation of {@link ConfiguredQueryTarget} that wraps a {@link SourcePath}. */
-public final class QueryFileTarget implements ConfiguredQueryTarget {
+/**
+ * Implementation of {@link ConfiguredQueryTarget} and {@link UnconfiguredQueryTarget} that wraps a
+ * {@link SourcePath}.
+ */
+public final class QueryFileTarget implements ConfiguredQueryTarget, UnconfiguredQueryTarget {
 
   private final SourcePath path;
 
