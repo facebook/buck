@@ -23,10 +23,14 @@ import com.google.common.hash.Hashing;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
+import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Module;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
+import com.google.devtools.build.lib.syntax.Tuple;
 import java.nio.charset.StandardCharsets;
 import javax.annotation.Nullable;
 
@@ -117,5 +121,40 @@ public abstract class AbstractSkylarkFunctions {
         }
       }
     }
+  }
+
+  @SkylarkCallable(
+      name = "partial",
+      doc =
+          "new function with partial application of the given arguments and keywords. "
+              + "Roughly equivalent to functools.partial.",
+      parameters = {@Param(name = "func", type = BaseFunction.class)},
+      extraPositionals = @Param(name = "args"),
+      extraKeywords = @Param(name = "kwargs"))
+  public BaseFunction partial(BaseFunction func, Tuple<Object> args, Dict<String, Object> kwargs) {
+    return new BaseFunction() {
+      @Override
+      public Object call(
+          StarlarkThread thread,
+          Location loc,
+          Tuple<Object> inner_args,
+          Dict<String, Object> inner_kwargs)
+          throws EvalException, InterruptedException {
+        // Sadly, neither Dict.plus() nor MethodLibrary.dict() are accessible.
+        Dict<String, Object> merged_args = Dict.copyOf(thread.mutability(), kwargs);
+        merged_args.update(inner_kwargs, Dict.empty(), thread);
+        return Starlark.call(thread, func, loc, Tuple.concat(args, inner_args), merged_args);
+      }
+
+      @Override
+      public String getName() {
+        return "<partial>";
+      }
+
+      @Override
+      public FunctionSignature getSignature() {
+        return FunctionSignature.ANY;
+      }
+    };
   }
 }

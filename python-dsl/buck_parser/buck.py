@@ -651,6 +651,30 @@ def _get_package_name(func_name, build_env=None):
 
 
 @provide_for_build
+def partial(func, *args, **keywords):
+    """new function with partial application of the given arguments and keywords.
+
+    Roughly equivalent to functools.partial."""
+
+    # The @provide_for_build framework is going to give us a build_env arg :/. We
+    # just need to hope that nobody wants to use that and bind it.
+    keywords = keywords.copy()
+    keywords.pop("build_env")
+
+    # functools documentation defines `partial()` to be "roughly equivalent"
+    # to this formulation.
+    def newfunc(*fargs, **fkeywords):
+        newkeywords = keywords.copy()
+        newkeywords.update(fkeywords)
+        return func(*(args + fargs), **newkeywords)
+
+    newfunc.func = func
+    newfunc.args = args
+    newfunc.keywords = keywords
+    return newfunc
+
+
+@provide_for_build
 def get_base_path(build_env=None):
     """Get the base path to the build file that was initially evaluated.
 
@@ -1581,7 +1605,6 @@ class BuildFileProcessor(object):
                 "Tried to load private symbol `%s`. load_symbols() can only be used to load public (non `_`-prefixed) symbols"
                 % name
             )
-
             frame.f_globals[name] = value
 
     def _load(self, is_implicit_include, name, *symbols, **symbol_kwargs):
