@@ -42,7 +42,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 class PackagePipeline implements AutoCloseable {
   private static final String PACKAGE_FILE_NAME = "PACKAGE";
-  private static final Logger LOG = Logger.get(UnconfiguredTargetNodePipeline.class);
+  private static final Logger LOG = Logger.get(PackagePipeline.class);
 
   private final ListeningExecutorService executorService;
   private final BuckEventBus eventBus;
