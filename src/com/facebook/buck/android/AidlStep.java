@@ -90,7 +90,7 @@ public class AidlStep extends ShellStep {
     args.add("-o" + filesystem.resolve(destinationDirectory));
 
     // aidl includes this path in the generated file and so it must not be absolute.
-    args.add(MorePaths.relativize(workingDirectory, aidlFilePath).toString());
+    args.add(MorePaths.relativize(getWorkingDirectory(), aidlFilePath).toString());
 
     return args.build();
   }

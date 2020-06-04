@@ -65,7 +65,7 @@ public class GoAssembleStep extends ShellStep {
       ImmutableList.Builder<String> commandBuilder =
           ImmutableList.<String>builder()
               .addAll(asmCommandPrefix)
-              .add("-trimpath", workingDirectory.toString())
+              .add("-trimpath", getWorkingDirectory().toString())
               .addAll(flags)
               .add("-D", "GOOS_" + platform.getGoOs().getEnvVarValue())
               .add("-D", "GOARCH_" + platform.getGoArch().getEnvVarValue())

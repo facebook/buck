@@ -291,7 +291,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
                 cmd.add("--color=always");
               }
 
-              remapSrcPaths.addRemapOption(cmd, workingDirectory.toString(), scratchDir + "/");
+              remapSrcPaths.addRemapOption(cmd, getWorkingDirectory().toString(), scratchDir + "/");
 
               // Generate a target-unique string to distinguish distinct crates with the same
               // name.

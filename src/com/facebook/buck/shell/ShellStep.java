@@ -58,10 +58,10 @@ public abstract class ShellStep implements Step {
   @Nullable private ImmutableList<String> shellCommandArgs;
 
   /**
-   * If specified, working directory will be different from build cell root. This should be relative
-   * to the build cell root.
+   * The working directory where this shell step will execute its command. If relative, the path is
+   * relative to the build cell root.
    */
-  protected final Path workingDirectory;
+  private final Path workingDirectory;
 
   private final boolean withDownwardApi;
 
@@ -340,5 +340,9 @@ public abstract class ShellStep implements Step {
 
   protected boolean isWithDownwardApi() {
     return withDownwardApi;
+  }
+
+  protected Path getWorkingDirectory() {
+    return workingDirectory;
   }
 }

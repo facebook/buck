@@ -95,7 +95,7 @@ public class GoCompileStep extends ShellStep {
               .addAll(compilerCommandPrefix)
               .add("-p", packageName.toString())
               .add("-pack")
-              .add("-trimpath", workingDirectory.toString())
+              .add("-trimpath", getWorkingDirectory().toString())
               .add("-nolocalimports")
               .addAll(flags)
               .add("-buildid=")
@@ -127,7 +127,7 @@ public class GoCompileStep extends ShellStep {
 
       return commandBuilder.build();
     } else {
-      LOG.warn("No source files found in " + workingDirectory);
+      LOG.warn("No source files found in " + getWorkingDirectory());
       return ImmutableList.of();
     }
   }

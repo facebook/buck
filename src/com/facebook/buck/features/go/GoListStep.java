@@ -118,7 +118,7 @@ public class GoListStep extends ShellStep {
   public Set<Path> getSourceFiles() {
     String stdout = getStdout();
     return Arrays.stream(stdout.trim().split(":"))
-        .map(workingDirectory::resolve)
+        .map(getWorkingDirectory()::resolve)
         .collect(Collectors.toSet());
   }
 }
