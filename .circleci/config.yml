@@ -1115,6 +1115,11 @@ jobs:
           command: choco install adoptopenjdk8
           shell: cmd.exe
       - run:
+          # on Windows, python3 is installed as python but buck expect the name python3
+          name: Create symlink to python
+          command: $pythonpath=(Split-Path((Get-Command python).Path)); cmd /c mklink ${pythonpath}\python3.exe ${pythonpath}\python.exe
+          shell: powershell.exe
+      - run:
           name: Ant build
           command: cd %BUCKROOT% && refreshenv && ant
           shell: cmd.exe
@@ -1216,6 +1221,12 @@ workflows:
   publish_jobs:
     jobs:
       - macos_publish_release:
+          filters:
+            tags:
+              only: /^v20.*/
+            branches:
+              ignore: /.*/
+      - linux_publish_release:
           filters:
             tags:
               only: /^v20.*/
