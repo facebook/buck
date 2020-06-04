@@ -1115,6 +1115,11 @@ jobs:
           command: choco install adoptopenjdk8
           shell: cmd.exe
       - run:
+          # on Windows, python3 is installed as python but buck expect the name python3
+          name: Create symlink to python
+          command: $pythonpath=(Split-Path((Get-Command python).Path)); cmd /c mklink ${pythonpath}\python3.exe ${pythonpath}\python.exe
+          shell: powershell.exe
+      - run:
           name: Ant build
           command: cd %BUCKROOT% && refreshenv && ant
           shell: cmd.exe
@@ -1156,6 +1161,32 @@ jobs:
             VERSION=${CIRCLE_TAG:1}
             python3 ./tools/release/publish_release.py --no-build-chocolatey --no-chocolatey-publish --no-build-deb --github-token ${GITHUB_TOKEN} --use-existing-release --version ${VERSION} --output-dir artifacts
 
+  linux_publish_release:
+    environment:
+      <<: *linux_environment
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          name: Upgrade pip
+          command: python3 -m pip install --upgrade pip
+      - run:
+          name: pip install requests
+          command: python3 -m pip install requests
+      - run:
+          name: pip install python-dateutil
+          command: python3 -m pip install python-dateutil
+      - run:
+          name: pip install python-magic-bin
+          command: python3 -m pip install python-magic
+      - run:
+          name: Run linux release
+          command: |
+            VERSION=${CIRCLE_TAG:1}
+            python3 ./tools/release/publish_release.py --no-build-chocolatey --no-chocolatey-publish --no-build-homebrew --github-token ${GITHUB_TOKEN} --use-existing-release --version ${VERSION} --output-dir artifacts
+
 workflows:
   version: 2.1
   linux_jobs:
@@ -1190,6 +1221,12 @@ workflows:
   publish_jobs:
     jobs:
       - macos_publish_release:
+          filters:
+            tags:
+              only: /^v20.*/
+            branches:
+              ignore: /.*/
+      - linux_publish_release:
           filters:
             tags:
               only: /^v20.*/
