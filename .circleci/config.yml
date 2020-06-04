@@ -1175,9 +1175,9 @@ jobs:
           command: python3 -m pip install python-dateutil
       - run:
           name: pip install python-magic-bin
-          command: python3 -m pip install python-magic-bin
+          command: python3 -m pip install python-magic
       - run:
-          name: Run Homebrew Release
+          name: Run linux release
           command: |
             VERSION=${CIRCLE_TAG:1}
             python3 ./tools/release/publish_release.py --no-build-chocolatey --no-chocolatey-publish --no-build-homebrew --github-token ${GITHUB_TOKEN} --use-existing-release --version ${VERSION} --output-dir artifacts
