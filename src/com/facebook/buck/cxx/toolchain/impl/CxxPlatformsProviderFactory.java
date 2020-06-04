@@ -32,6 +32,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsSupplier;
 import com.facebook.buck.cxx.toolchain.ProviderBackedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.ProviderBasedUnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.util.environment.Platform;
@@ -224,7 +225,8 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
     UnresolvedCxxPlatform hostFlavoredPlatform =
         Objects.requireNonNull(cxxOverridePlatformsMap.get(hostFlavor));
     UnresolvedCxxPlatform hostCxxPlatform;
-    if (!cxxBuckConfig.getShouldRemapHostPlatform()) {
+    if (!cxxBuckConfig.getShouldRemapHostPlatform()
+        && !(hostFlavoredPlatform instanceof ProviderBasedUnresolvedCxxPlatform)) {
       hostCxxPlatform = hostFlavoredPlatform.withFlavor(DefaultCxxPlatforms.FLAVOR);
     } else {
       hostCxxPlatform = hostFlavoredPlatform;
