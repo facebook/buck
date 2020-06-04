@@ -62,7 +62,7 @@
 <script>
   var loc = new String(window.location);
   if (loc.indexOf('facebookexperimental.github.io/buck-dev') != -1) {lb}
-    window.location.replace(loc.replace('facebookexperimental.github.io/buck-dev', 'buck.build'));
+    window.location.replace(loc.replace('facebookexperimental.github.io/buck-dev', 'dev.buck.build'));
   {rb}
 </script>
 <!-- Facebook Pixel Code -->
@@ -143,7 +143,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
       </li>
         <li><a href='{ROOT}setup/getting_started.html'>Docs</a>
         <li><a href='https://github.com/facebook/buck/issues'>Issues</a>
-        <li><a href='https://github.com/facebook/buck'>GitHub</a>
+        <li><a href='https://github.com/facebook/buck/tree/dev'>GitHub</a>
       </ul>
 	</nav></header>
 
@@ -154,7 +154,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
         A high-performance build tool
       </h1>
       <a class='button' href='{ROOT}setup/getting_started.html'>Getting Started</a>&nbsp;
-      <a class='button' href='https://github.com/facebookexperimental/buck-dev'>GitHub</a>
+      <a class='button' href='https://github.com/facebook/buck/tree/dev'>GitHub</a>
     </hgroup>
     <aside>
       <img id="super_console_sample"
@@ -1158,7 +1158,7 @@ docsearch({
  */
 {template .installationInstructions}
 {literal}<pre>
-git clone https://github.com/facebookexperimental/buck-dev.git
+git clone -b dev https://github.com/facebook/buck.git
 cd buck
 ant{/literal}
 {if $withAlias and not $isWindows}
