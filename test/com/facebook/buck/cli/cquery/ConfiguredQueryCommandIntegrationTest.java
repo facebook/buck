@@ -41,6 +41,11 @@ public class ConfiguredQueryCommandIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
+  /**
+   * =============================================================================================
+   * ====================================== Output Formats =======================================
+   * =============================================================================================
+   */
   @Test
   public void basicTargetPrinting() throws IOException {
     ProjectWorkspace workspace =
@@ -352,21 +357,11 @@ public class ConfiguredQueryCommandIntegrationTest {
         "stdout-basic-multi-query-attribute-printing.json", result, workspace);
   }
 
-  @Test
-  public void configFunctionConfiguresTargetForSpecificPlatform() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "cquery",
-            "config(//lib:foo, //config/platform:tvos)",
-            "--target-universe",
-            "//bin:ios-bin,//bin:tvos-bin");
-    assertOutputMatches("//lib:foo (//config/platform:tvos)", result);
-  }
-
+  /**
+   * =============================================================================================
+   * =============================== General cquery functionality ================================
+   * =============================================================================================
+   */
   @Test
   public void implicitTargetUniverseForRdeps() throws IOException {
     ProjectWorkspace workspace =
@@ -391,19 +386,6 @@ public class ConfiguredQueryCommandIntegrationTest {
     assertOutputMatches(
         "//lib:bar (//config/platform:ios)\n//lib:bar (//config/platform:tvos)\n//lib:foo (//config/platform:ios)",
         result);
-  }
-
-  @Test
-  public void configFunctionConfiguresTargetForDefaultTargetPlatformIfNoSecondArgumentGiven()
-      throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "cquery", "config(//lib:bar)", "--target-universe", "//bin:ios-bin,//bin:tvos-bin");
-    assertOutputMatches("//lib:bar (//config/platform:tvos)", result);
   }
 
   @Test
@@ -440,33 +422,6 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
-  public void ownerFunctionReturnsOwnerOfFileInAllConfigurationsInUniverse() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "cquery", "owner(lib/bar-all.m)", "--target-universe", "//bin:ios-bin,//bin:tvos-bin");
-    assertOutputMatches(
-        "//lib:bar (//config/platform:ios)\n//lib:bar (//config/platform:tvos)", result);
-  }
-
-  @Test
-  public void ownerForFileWithOwnerThatsOutsideTargetUniverseReturnsNothing() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
-    workspace.setUp();
-
-    // Even though `lib/maconly.m` is unconditionally included as a source of `//lib:maconly`, that
-    // target is outside the target universe and therefore the query should return no results.
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "cquery", "owner(lib/maconly.m)", "--target-universe", "//bin:tvos-bin");
-    assertOutputMatches("", result);
-  }
-
-  @Test
   public void multipleLinesPrintedForOneTargetInMulitpleConfigurations() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
@@ -479,38 +434,6 @@ public class ConfiguredQueryCommandIntegrationTest {
         "stdout-multiple-lines-printed-for-one-target-in-multiple-configurations",
         result,
         workspace);
-  }
-
-  @Test
-  public void configFunctionReturnsNothingWhenNodeNotInUniverse() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "cquery",
-            "config(//lib:foo, //config/platform:tvos)",
-            "--target-universe",
-            "//bin:ios-bin",
-            "--output-attribute",
-            "buck.type");
-    assertOutputMatchesExactly("{ }\n", result);
-  }
-
-  @Test
-  public void testsofFunctionReturnsNothingWhenNodeNotInUniverse() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
-    workspace.setUp();
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "cquery",
-            "testsof(//libraries/apple:DatabaseKit)",
-            "--target-universe",
-            "//libraries/...");
-
-    assertOutputMatchesExactly("", result);
   }
 
   @Test
@@ -573,29 +496,11 @@ public class ConfiguredQueryCommandIntegrationTest {
         "stdout-root-recursive-target-spec-prints-every-target", result, workspace);
   }
 
-  @Test
-  public void depsFunctionReturnsDependenciesForConfiguredTargets() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "cquery", "deps(//lib:foo)", "--target-universe", "//bin:mac-bin,//bin:tvos-bin");
-    assertOutputMatchesFileContents(
-        "stdout-deps-function-returns-dependencies-for-configured-targets", result, workspace);
-  }
-
-  @Test
-  public void inputsFunctionReturnsRelativePathForSuppliedTarget() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
-    workspace.setUp();
-
-    ProcessResult result = workspace.runBuckCommand("cquery", "inputs(//lib:foo)");
-    assertOutputMatches(MorePaths.pathWithPlatformSeparators("lib/foo-ios.m"), result);
-  }
-
+  /**
+   * =============================================================================================
+   * ================================== Function specific tests ==================================
+   * =============================================================================================
+   */
   @Test
   public void allpathsFunctionReturnsSubgraphBetweenTwoNodes() throws IOException {
     ProjectWorkspace workspace =
@@ -650,6 +555,64 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void configFunctionConfiguresTargetForSpecificPlatform() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "config(//lib:foo, //config/platform:tvos)",
+            "--target-universe",
+            "//bin:ios-bin,//bin:tvos-bin");
+    assertOutputMatches("//lib:foo (//config/platform:tvos)", result);
+  }
+
+  @Test
+  public void configFunctionConfiguresTargetForDefaultTargetPlatformIfNoSecondArgumentGiven()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery", "config(//lib:bar)", "--target-universe", "//bin:ios-bin,//bin:tvos-bin");
+    assertOutputMatches("//lib:bar (//config/platform:tvos)", result);
+  }
+
+  @Test
+  public void configFunctionReturnsNothingWhenNodeNotInUniverse() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "config(//lib:foo, //config/platform:tvos)",
+            "--target-universe",
+            "//bin:ios-bin",
+            "--output-attribute",
+            "buck.type");
+    assertOutputMatchesExactly("{ }\n", result);
+  }
+
+  @Test
+  public void depsFunctionReturnsDependenciesForConfiguredTargets() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery", "deps(//lib:foo)", "--target-universe", "//bin:mac-bin,//bin:tvos-bin");
+    assertOutputMatchesFileContents(
+        "stdout-deps-function-returns-dependencies-for-configured-targets", result, workspace);
+  }
+
+  @Test
   public void filterFunctionReturnsTargetsWhoseNamesMatchRegularExpressions() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
@@ -665,6 +628,16 @@ public class ConfiguredQueryCommandIntegrationTest {
         "stdout-filter-function-returns-targets-whose-names-match-regular-expression",
         result,
         workspace);
+  }
+
+  @Test
+  public void inputsFunctionReturnsRelativePathForSuppliedTarget() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("cquery", "inputs(//lib:foo)");
+    assertOutputMatches(MorePaths.pathWithPlatformSeparators("lib/foo-ios.m"), result);
   }
 
   @Test
@@ -688,6 +661,48 @@ public class ConfiguredQueryCommandIntegrationTest {
 
     assertOutputMatches(
         MorePaths.pathWithPlatformSeparators("libraries/apple/LanguageUtilities.h"), result);
+  }
+
+  @Test
+  public void ownerFunctionReturnsOwnerOfFileInAllConfigurationsInUniverse() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery", "owner(lib/bar-all.m)", "--target-universe", "//bin:ios-bin,//bin:tvos-bin");
+    assertOutputMatches(
+        "//lib:bar (//config/platform:ios)\n//lib:bar (//config/platform:tvos)", result);
+  }
+
+  @Test
+  public void ownerForFileWithOwnerThatsOutsideTargetUniverseReturnsNothing() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    // Even though `lib/maconly.m` is unconditionally included as a source of `//lib:maconly`, that
+    // target is outside the target universe and therefore the query should return no results.
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery", "owner(lib/maconly.m)", "--target-universe", "//bin:tvos-bin");
+    assertOutputMatches("", result);
+  }
+
+  @Test
+  public void testsofFunctionReturnsNothingWhenNodeNotInUniverse() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "testsof(//libraries/apple:DatabaseKit)",
+            "--target-universe",
+            "//libraries/...");
+
+    assertOutputMatchesExactly("", result);
   }
 
   @Test
