@@ -37,8 +37,10 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.toolchain.StripStyle;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.stream.RichStream;
@@ -73,12 +75,15 @@ public class PrebuiltAppleFrameworkDescription
     FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformsFlavorDomain =
         AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
             toolchainProvider, toolchainTargetConfiguration);
+    // This logic needs to exist for both cxx and apple flavors
+    FlavorDomain<UnresolvedCxxPlatform> cxxPlatformFlavorDomain =
+        getCxxPlatformsProvider(toolchainTargetConfiguration).getUnresolvedCxxPlatforms();
     return RichStream.from(flavors)
         .allMatch(
             flavor ->
                 declaredPlatforms.contains(flavor)
                     || appleCxxPlatformsFlavorDomain.getFlavors().contains(flavor)
-                    || appleCxxPlatformsFlavorDomain.getFlavors().contains(flavor)
+                    || cxxPlatformFlavorDomain.getFlavors().contains(flavor)
                     || AppleDebugFormat.FLAVOR_DOMAIN.getFlavors().contains(flavor)
                     || AppleDescriptions.INCLUDE_FRAMEWORKS.getFlavors().contains(flavor)
                     || StripStyle.FLAVOR_DOMAIN.getFlavors().contains(flavor));
@@ -91,6 +96,7 @@ public class PrebuiltAppleFrameworkDescription
         ImmutableSet.of(
             AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
                 toolchainProvider, toolchainTargetConfiguration),
+            getCxxPlatformsProvider(toolchainTargetConfiguration).getUnresolvedCxxPlatforms(),
             AppleDebugFormat.FLAVOR_DOMAIN,
             AppleDescriptions.INCLUDE_FRAMEWORKS,
             StripStyle.FLAVOR_DOMAIN));
@@ -137,6 +143,14 @@ public class PrebuiltAppleFrameworkDescription
       return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths)));
     }
     return Optional.empty();
+  }
+
+  private CxxPlatformsProvider getCxxPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        CxxPlatformsProvider.class);
   }
 
   @RuleArg
