@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.PathByteSource;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
@@ -70,7 +70,7 @@ public class XzStepTest {
             /* keep */ true,
             XZ.CHECK_CRC32);
 
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
 
     assertEquals(0, step.execute(context).getExitCode());
 
@@ -105,7 +105,7 @@ public class XzStepTest {
             /* keep */ false,
             XZ.CHECK_CRC32);
 
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
 
     assertEquals(0, step.execute(context).getExitCode());
 

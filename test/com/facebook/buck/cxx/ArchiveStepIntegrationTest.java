@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -96,7 +96,8 @@ public class ArchiveStepIntegrationTest {
         new FileScrubberStep(filesystem, output, archiver.getScrubbers());
 
     // Execute the archive step and verify it ran successfully.
-    ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
+    StepExecutionContext executionContext =
+        TestExecutionContext.newInstanceWithRealProcessExecutor();
     TestConsole console = (TestConsole) executionContext.getConsole();
     int exitCode = archiveStep.execute(executionContext).getExitCode();
     assertEquals("archive step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);
@@ -153,7 +154,8 @@ public class ArchiveStepIntegrationTest {
             false);
 
     // Execute the archive step and verify it ran successfully.
-    ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
+    StepExecutionContext executionContext =
+        TestExecutionContext.newInstanceWithRealProcessExecutor();
     TestConsole console = (TestConsole) executionContext.getConsole();
     int exitCode = archiveStep.execute(executionContext).getExitCode();
     assertEquals("archive step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);
@@ -199,7 +201,8 @@ public class ArchiveStepIntegrationTest {
             false);
 
     // Execute the archive step and verify it ran successfully.
-    ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
+    StepExecutionContext executionContext =
+        TestExecutionContext.newInstanceWithRealProcessExecutor();
     TestConsole console = (TestConsole) executionContext.getConsole();
     int exitCode = archiveStep.execute(executionContext).getExitCode();
     assertEquals("archive step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);
@@ -257,7 +260,8 @@ public class ArchiveStepIntegrationTest {
             false);
 
     // Execute the archive step and verify it ran successfully.
-    ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
+    StepExecutionContext executionContext =
+        TestExecutionContext.newInstanceWithRealProcessExecutor();
     TestConsole console = (TestConsole) executionContext.getConsole();
     int exitCode = archiveStep.execute(executionContext).getExitCode();
     assertEquals("archive step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);

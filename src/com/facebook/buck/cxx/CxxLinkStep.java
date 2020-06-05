@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.Verbosity;
@@ -49,7 +49,7 @@ class CxxLinkStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
     return ImmutableList.<String>builder().addAll(linker).add("@" + argFilePath).build();
   }
 

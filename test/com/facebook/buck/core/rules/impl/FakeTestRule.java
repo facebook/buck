@@ -18,7 +18,7 @@ package com.facebook.buck.core.rules.impl;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -105,7 +105,7 @@ public class FakeTestRule extends AbstractBuildRuleWithDeclaredAndExtraDeps impl
 
   @Override
   public ImmutableList<Step> runTests(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       TestRunningOptions options,
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
@@ -114,7 +114,7 @@ public class FakeTestRule extends AbstractBuildRuleWithDeclaredAndExtraDeps impl
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     return interpretedTestResults;

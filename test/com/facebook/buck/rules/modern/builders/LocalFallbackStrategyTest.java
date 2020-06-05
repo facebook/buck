@@ -21,7 +21,7 @@ import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
@@ -66,7 +66,7 @@ public class LocalFallbackStrategyTest {
   private ListeningExecutorService directExecutor;
   private BuckEventBus eventBus;
   private RemoteRuleContext ruleContext;
-  private ExecutionContext executionContext;
+  private StepExecutionContext executionContext;
 
   @Before
   public void setUp() {
@@ -178,7 +178,7 @@ public class LocalFallbackStrategyTest {
         StepFailedException.createForFailingStepWithExitCode(
             new AbstractExecutionStep("remote_execution") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context) {
+              public StepExecutionResult execute(StepExecutionContext context) {
                 throw new RuntimeException();
               }
             },
@@ -325,7 +325,7 @@ public class LocalFallbackStrategyTest {
         StepFailedException.createForFailingStepWithExitCode(
             new AbstractExecutionStep("remote_execution") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context) {
+              public StepExecutionResult execute(StepExecutionContext context) {
                 throw new RuntimeException();
               }
             },

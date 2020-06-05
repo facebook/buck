@@ -17,7 +17,7 @@
 package com.facebook.buck.core.rules.tool;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -108,7 +108,7 @@ public class RuleAnalysisLegacyTestBuildRuleView extends RuleAnalysisLegacyBinar
 
   @Override
   public ImmutableList<Step> runTests(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       TestRunningOptions options,
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
@@ -136,7 +136,7 @@ public class RuleAnalysisLegacyTestBuildRuleView extends RuleAnalysisLegacyBinar
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     return () -> {
@@ -187,7 +187,7 @@ public class RuleAnalysisLegacyTestBuildRuleView extends RuleAnalysisLegacyBinar
 
   @Override
   public ExternalTestSpec getExternalTestRunnerSpec(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
     RunInfoLegacyTool tool = RunInfoLegacyTool.of(runInfo);

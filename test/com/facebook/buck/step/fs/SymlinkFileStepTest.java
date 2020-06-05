@@ -21,7 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
@@ -47,7 +47,7 @@ public class SymlinkFileStepTest {
 
   @Test
   public void testAbsoluteSymlinkFiles() throws IOException {
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
 
     File source = tmpDir.newFile();
     Files.write("foobar", source, StandardCharsets.UTF_8);
@@ -97,7 +97,7 @@ public class SymlinkFileStepTest {
     // Create an ExecutionContext to return the ProjectFilesystem.
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
 
     tmpDir.newFile("dummy");
     SymlinkFileStep symlinkStep =

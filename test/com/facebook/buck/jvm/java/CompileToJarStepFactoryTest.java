@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
@@ -50,7 +50,7 @@ public class CompileToJarStepFactoryTest {
             .add(filesystem.resolve("rt.jar").getPath())
             .add(filesystem.resolve("dep.jar").getPath())
             .build();
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     Platform platform = executionContext.getPlatform();
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();

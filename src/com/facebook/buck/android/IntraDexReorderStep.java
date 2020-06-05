@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -89,7 +89,7 @@ public class IntraDexReorderStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(StepExecutionContext context) throws InterruptedException {
     try {
       List<Step> dxSteps = generateReorderCommands();
       for (Step step : dxSteps) {
@@ -168,7 +168,7 @@ public class IntraDexReorderStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return String.format("%s --- intradex reorder using %s", buildTarget, reorderTool);
   }
 }

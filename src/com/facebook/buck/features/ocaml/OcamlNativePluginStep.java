@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.ocaml;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
@@ -78,7 +78,7 @@ public class OcamlNativePluginStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
     ImmutableList.Builder<String> cmd =
         ImmutableList.<String>builder()
             .addAll(ocamlCompilerCommandPrefix)

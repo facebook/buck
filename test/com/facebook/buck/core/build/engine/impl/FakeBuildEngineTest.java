@@ -30,7 +30,6 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
-import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
@@ -55,7 +54,7 @@ public class FakeBuildEngineTest {
                     new BuildId(),
                     ImmutableMap.of(),
                     false),
-                TestExecutionContext.newInstance(),
+                TestExecutionContextUtils.executionContextBuilder().build(),
                 fakeBuildRule)
             .getResult()
             .get(),

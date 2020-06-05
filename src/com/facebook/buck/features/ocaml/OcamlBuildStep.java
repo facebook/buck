@@ -17,7 +17,7 @@
 package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -104,12 +104,12 @@ public class OcamlBuildStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return depToolStep.getDescription(context);
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     if (hasGeneratedSources) {
       StepExecutionResult genExecutionResult = generateSources(context, filesystem.getRootPath());
@@ -195,7 +195,7 @@ public class OcamlBuildStep implements Step {
   }
 
   private StepExecutionResult executeCCompilation(
-      ExecutionContext context, ImmutableList.Builder<Path> linkerInputs)
+      StepExecutionContext context, ImmutableList.Builder<Path> linkerInputs)
       throws IOException, InterruptedException {
 
     ImmutableList.Builder<Arg> cCompileFlags = ImmutableList.builder();
@@ -231,7 +231,7 @@ public class OcamlBuildStep implements Step {
   }
 
   private StepExecutionResult executeNativeLinking(
-      ExecutionContext context, ImmutableList<Path> linkerInputs)
+      StepExecutionContext context, ImmutableList<Path> linkerInputs)
       throws IOException, InterruptedException {
 
     ImmutableList.Builder<Arg> flags = ImmutableList.builder();
@@ -259,7 +259,7 @@ public class OcamlBuildStep implements Step {
   }
 
   private StepExecutionResult executeBytecodeLinking(
-      ExecutionContext context, ImmutableList<Path> linkerInputs)
+      StepExecutionContext context, ImmutableList<Path> linkerInputs)
       throws IOException, InterruptedException {
 
     ImmutableList.Builder<Arg> flags = ImmutableList.builder();
@@ -300,7 +300,7 @@ public class OcamlBuildStep implements Step {
   }
 
   private StepExecutionResult executeMLNativeCompilation(
-      ExecutionContext context,
+      StepExecutionContext context,
       AbsPath workingDirectory,
       ImmutableList<Path> sortedInput,
       ImmutableList.Builder<Path> linkerInputs,
@@ -353,7 +353,7 @@ public class OcamlBuildStep implements Step {
   }
 
   private StepExecutionResult executeMLBytecodeCompilation(
-      ExecutionContext context,
+      StepExecutionContext context,
       AbsPath workingDirectory,
       ImmutableList<Path> sortedInput,
       ImmutableList.Builder<Path> linkerInputs)
@@ -404,7 +404,8 @@ public class OcamlBuildStep implements Step {
     return StepExecutionResults.SUCCESS;
   }
 
-  private StepExecutionResult generateSources(ExecutionContext context, AbsPath workingDirectory)
+  private StepExecutionResult generateSources(
+      StepExecutionContext context, AbsPath workingDirectory)
       throws IOException, InterruptedException {
     for (Step step :
         MakeCleanDirectoryStep.of(

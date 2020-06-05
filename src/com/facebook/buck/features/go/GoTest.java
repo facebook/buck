@@ -18,7 +18,7 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
@@ -124,7 +124,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ImmutableList<Step> runTests(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       TestRunningOptions options,
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
@@ -262,17 +262,16 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
-    return () -> {
-      return TestResults.of(
-          getBuildTarget(),
-          ImmutableList.of(
-              new TestCaseSummary(getBuildTarget().getFullyQualifiedName(), parseTestResults())),
-          contacts,
-          labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
-    };
+    return () ->
+        TestResults.of(
+            getBuildTarget(),
+            ImmutableList.of(
+                new TestCaseSummary(getBuildTarget().getFullyQualifiedName(), parseTestResults())),
+            contacts,
+            labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
   }
 
   @Override
@@ -342,7 +341,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ExternalTestSpec getExternalTestRunnerSpec(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()

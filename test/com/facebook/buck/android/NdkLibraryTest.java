@@ -24,7 +24,7 @@ import com.facebook.buck.android.toolchain.ndk.impl.TestNdkCxxPlatformsProviderF
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -51,7 +51,7 @@ import org.junit.Test;
 
 public class NdkLibraryTest {
 
-  private ExecutionContext executionContext;
+  private StepExecutionContext executionContext;
   private ProjectFilesystem projectFilesystem;
 
   @Before

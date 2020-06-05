@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
@@ -184,7 +184,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
     // Run ProGuard as a standalone executable JAR file.
     Path proguardJar;
     if (proguardJarOverride.isPresent()) {
@@ -209,7 +209,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     StepExecutionResult executionResult = super.execute(context);
 
@@ -225,7 +225,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     return executionResult;
   }
 
-  private int ensureAllOutputsExist(ExecutionContext context) {
+  private int ensureAllOutputsExist(StepExecutionContext context) {
     for (Path outputJar : inputAndOutputEntries.values()) {
       if (!Files.exists(outputJar)) {
         try {
@@ -321,7 +321,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context) throws IOException {
+    public StepExecutionResult execute(StepExecutionContext context) throws IOException {
       String proGuardArguments =
           Joiner.on('\n').join(getParameters(filesystem.getRootPath().getPath()));
       filesystem.writeContentsToPath(proGuardArguments, pathToProGuardCommandLineArgsFile);

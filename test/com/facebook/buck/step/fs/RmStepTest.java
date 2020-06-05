@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -40,15 +40,15 @@ public class RmStepTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private ExecutionContext context;
+  private StepExecutionContext context;
   private ProjectFilesystem filesystem;
 
   @Before
   public void setUp() {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     context =
-        ExecutionContext.builder()
+        StepExecutionContext.builder()
             .from(executionContext)
             .setBuildCellRootPath(filesystem.getRootPath().getPath())
             .build();

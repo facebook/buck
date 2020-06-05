@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
@@ -33,16 +33,19 @@ import org.junit.Test;
 
 public class StepFailedExceptionTest {
 
-  private ExecutionContext verboseContext;
-  private ExecutionContext silentContext;
+  private StepExecutionContext verboseContext;
+  private StepExecutionContext silentContext;
 
   @Before
   public void setUp() {
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
     verboseContext =
-        ExecutionContext.builder().from(context).setConsole(new TestConsole(Verbosity.ALL)).build();
+        StepExecutionContext.builder()
+            .from(context)
+            .setConsole(new TestConsole(Verbosity.ALL))
+            .build();
     silentContext =
-        ExecutionContext.builder()
+        StepExecutionContext.builder()
             .from(context)
             .setConsole(new TestConsole(Verbosity.SILENT))
             .build();
@@ -168,7 +171,7 @@ public class StepFailedExceptionTest {
 
     StepExecutionResult executionResult = StepExecutionResult.of(result);
 
-    ExecutionContext context =
+    StepExecutionContext context =
         TestExecutionContext.newBuilder().setTruncateFailingCommandEnabled(false).build();
 
     StepFailedException exception =

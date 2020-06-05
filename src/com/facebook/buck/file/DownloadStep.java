@@ -16,7 +16,7 @@
 
 package com.facebook.buck.file;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.file.downloader.Downloader;
@@ -67,7 +67,7 @@ public class DownloadStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     BuckEventBus eventBus = context.getBuckEventBus();
     Path resolved = filesystem.resolve(output);
 
@@ -130,7 +130,7 @@ public class DownloadStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return String.format(
         "curl %s -o '%s'",
         canonicalUri, PathFormatter.pathWithUnixSeparators(filesystem.resolve(output)));

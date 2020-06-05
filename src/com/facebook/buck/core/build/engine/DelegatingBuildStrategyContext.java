@@ -18,7 +18,7 @@ package com.facebook.buck.core.build.engine;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.util.Scope;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -56,7 +56,7 @@ public class DelegatingBuildStrategyContext implements BuildStrategyContext {
   }
 
   @Override
-  public ExecutionContext getExecutionContext() {
+  public StepExecutionContext getExecutionContext() {
     return delegateContext.getExecutionContext();
   }
 

@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -59,7 +59,7 @@ public class WriteFileHashCode extends ModernBuildRule<WriteFileHashCode> implem
     return ImmutableList.of(
         new AbstractExecutionStep("writing_file_hash") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) throws IOException {
+          public StepExecutionResult execute(StepExecutionContext context) throws IOException {
             filesystem.writeContentsToPath(
                 filesystem
                     .computeSha1(

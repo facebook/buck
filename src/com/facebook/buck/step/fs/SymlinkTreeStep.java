@@ -16,7 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -43,7 +43,7 @@ public class SymlinkTreeStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return getShortName() + " @ " + root;
   }
 
@@ -53,7 +53,7 @@ public class SymlinkTreeStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     for (Path dir :
         RichStream.from(links.keySet())
             .map(root::resolve)

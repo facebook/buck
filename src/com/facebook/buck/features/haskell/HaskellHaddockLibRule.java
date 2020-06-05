@@ -18,7 +18,7 @@ package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -250,7 +250,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context) throws IOException {
+    public StepExecutionResult execute(StepExecutionContext context) throws IOException {
       getProjectFilesystem().createParentDirs(getArgsfile());
       getProjectFilesystem()
           .writeLinesToPath(
@@ -267,7 +267,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     }
 
     @Override
-    public String getDescription(ExecutionContext context) {
+    public String getDescription(StepExecutionContext context) {
       return "Write argsfile for haddock";
     }
   }
@@ -310,7 +310,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     }
 
     @Override
-    protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+    protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
       SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
       ImmutableList.Builder<String> cmdArgs = ImmutableList.builder();

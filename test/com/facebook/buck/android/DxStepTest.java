@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.cli.VerbosityParser;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
@@ -63,7 +63,7 @@ public class DxStepTest {
   @Test
   public void testDxCommandNoOptimizeNoJumbo() throws IOException {
     // Context with --verbose 2.
-    try (ExecutionContext context = createExecutionContext(2)) {
+    try (StepExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
       DxStep dx =
@@ -93,7 +93,7 @@ public class DxStepTest {
   @Test
   public void testDxCommandOptimizeNoJumbo() throws IOException {
     // Context with --verbose 2.
-    try (ExecutionContext context = createExecutionContext(2)) {
+    try (StepExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
       DxStep dx =
@@ -117,7 +117,7 @@ public class DxStepTest {
   @Test
   public void testDxCommandNoOptimizeForceJumbo() throws IOException {
     // Context with --verbose 2.
-    try (ExecutionContext context = createExecutionContext(2)) {
+    try (StepExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
       DxStep dx =
@@ -147,7 +147,8 @@ public class DxStepTest {
   @Test
   public void testVerbose3AddsStatisticsFlag() throws IOException {
     // Context with --verbose 3.
-    try (ExecutionContext context = createExecutionContext(COMMANDS_AND_SPECIAL_OUTPUT.ordinal())) {
+    try (StepExecutionContext context =
+        createExecutionContext(COMMANDS_AND_SPECIAL_OUTPUT.ordinal())) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
       DxStep dx =
@@ -176,7 +177,7 @@ public class DxStepTest {
   @Test
   public void testVerbose10AddsVerboseFlagToDx() throws IOException {
     // Context with --verbose 10.
-    try (ExecutionContext context = createExecutionContext(10)) {
+    try (StepExecutionContext context = createExecutionContext(10)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
       DxStep dx =
@@ -206,7 +207,7 @@ public class DxStepTest {
 
   @Test
   public void testOverridenMaxHeapSize() throws IOException {
-    try (ExecutionContext context = createExecutionContext(2)) {
+    try (StepExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
       DxStep dx =
@@ -237,7 +238,7 @@ public class DxStepTest {
 
   @Test
   public void testMinSdkVersion() throws IOException {
-    try (ExecutionContext context = createExecutionContext(2)) {
+    try (StepExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
       DxStep dx =
@@ -269,7 +270,7 @@ public class DxStepTest {
     }
   }
 
-  private ExecutionContext createExecutionContext(int verbosityLevel) {
+  private StepExecutionContext createExecutionContext(int verbosityLevel) {
     Verbosity verbosity = VerbosityParser.getVerbosityForLevel(verbosityLevel);
     TestConsole console = new TestConsole(verbosity);
     return TestExecutionContext.newBuilder().setConsole(console).build();

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -46,7 +46,7 @@ public class FindAndReplaceStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     try (BufferedReader reader =
             new BufferedReader(new InputStreamReader(filesystem.newFileInputStream(input)));
         BufferedWriter writer =
@@ -67,7 +67,7 @@ public class FindAndReplaceStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return String.format("sed %s %s", input, output);
   }
 }

@@ -26,7 +26,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -95,7 +95,7 @@ public class JarDirectoryStepTest {
                 .setMainClass(Optional.of("com.example.Main"))
                 .setMergeManifests(true)
                 .build());
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
 
     int returnCode = step.execute(context).getExitCode();
 
@@ -133,7 +133,7 @@ public class JarDirectoryStepTest {
                 .setMainClass(Optional.of("com.example.Main"))
                 .setMergeManifests(true)
                 .build());
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
 
     BuckEventBusForTests.CapturingConsoleEventListener listener =
         new BuckEventBusForTests.CapturingConsoleEventListener();
@@ -163,7 +163,7 @@ public class JarDirectoryStepTest {
                 .setMergeManifests(true)
                 .build());
     TestConsole console = new TestConsole();
-    ExecutionContext context = TestExecutionContext.newBuilder().setConsole(console).build();
+    StepExecutionContext context = TestExecutionContext.newBuilder().setConsole(console).build();
 
     try {
       step.execute(context);
@@ -199,7 +199,7 @@ public class JarDirectoryStepTest {
                 .setMergeManifests(true)
                 .build());
 
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
 
     int returnCode = step.execute(context).getExitCode();
 
@@ -248,7 +248,7 @@ public class JarDirectoryStepTest {
                 .setManifestFile(Optional.of(tmp.resolve("manifest").getPath()))
                 .setMergeManifests(true)
                 .build());
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
     assertEquals(0, step.execute(context).getExitCode());
 
     try (ZipArchive zipArchive = new ZipArchive(output.getPath(), false)) {
@@ -276,7 +276,7 @@ public class JarDirectoryStepTest {
                 .setEntriesToJar(ImmutableSortedSet.of(zipup.getPath()))
                 .setMergeManifests(true)
                 .build());
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
 
     int returnCode = step.execute(context).getExitCode();
 
@@ -427,7 +427,7 @@ public class JarDirectoryStepTest {
                 .setEntriesToJar(ImmutableSortedSet.of(zipup.getPath()))
                 .setMergeManifests(true)
                 .build());
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
     int returnCode = step.execute(context).getExitCode();
     assertEquals(0, returnCode);
 
@@ -571,7 +571,7 @@ public class JarDirectoryStepTest {
                 .setMergeManifests(mergeEntries)
                 .setRemoveEntryPredicate(RemoveClassesPatternsMatcher.EMPTY)
                 .build());
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
     step.execute(context);
 
     try (JarFile jf = new JarFile(output.toFile())) {

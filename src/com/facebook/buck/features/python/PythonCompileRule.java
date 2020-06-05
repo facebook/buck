@@ -17,7 +17,7 @@
 package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -115,7 +115,7 @@ public class PythonCompileRule extends ModernBuildRule<PythonCompileRule.Impl> {
           .add(
               new AbstractExecutionStep("py-compile") {
                 @Override
-                public StepExecutionResult execute(ExecutionContext context)
+                public StepExecutionResult execute(StepExecutionContext context)
                     throws IOException, InterruptedException {
                   ImmutableList.Builder<String> builder = ImmutableList.builder();
                   builder.addAll(python.getCommandPrefix(buildContext.getSourcePathResolver()));

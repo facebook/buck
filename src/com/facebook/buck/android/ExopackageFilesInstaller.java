@@ -20,7 +20,7 @@ import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -101,7 +101,7 @@ public class ExopackageFilesInstaller extends AbstractBuildRule {
     return ImmutableList.of(
         new AbstractExecutionStep("installing_exo_files") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
+          public StepExecutionResult execute(StepExecutionContext context)
               throws IOException, InterruptedException {
             trigger.verify(context);
             String packageName =
@@ -122,7 +122,7 @@ public class ExopackageFilesInstaller extends AbstractBuildRule {
                           Objects.requireNonNull(contents.get(device.getSerialNumber()));
                       new ExopackageInstaller(
                               buildContext.getSourcePathResolver(),
-                              context,
+                              context.getBuckEventBus(),
                               getProjectFilesystem(),
                               packageName,
                               device)

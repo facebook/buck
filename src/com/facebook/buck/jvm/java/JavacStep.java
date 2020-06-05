@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
@@ -101,7 +101,7 @@ public class JavacStep implements Step {
   }
 
   @Override
-  public final StepExecutionResult execute(ExecutionContext context)
+  public final StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     int declaredDepsBuildResult;
     String firstOrderStdout;
@@ -158,7 +158,7 @@ public class JavacStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     String description =
         getJavac()
             .getDescription(
@@ -209,7 +209,7 @@ public class JavacStep implements Step {
    */
   @VisibleForTesting
   ImmutableList<String> getOptions(
-      ExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
+      StepExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
     return pipeline.getOptions(context, buildClasspathEntries, filesystem, resolver);
   }
 

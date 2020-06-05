@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
@@ -54,7 +54,7 @@ public abstract class ShellStep implements Step {
   private static final Logger LOG = Logger.get(ShellStep.class);
   private static final OperatingSystemMXBean OS_JMX = ManagementFactory.getOperatingSystemMXBean();
 
-  /** Defined lazily by {@link #getShellCommand(ExecutionContext)}. */
+  /** Defined lazily by {@link #getShellCommand(StepExecutionContext)}. */
   @Nullable private ImmutableList<String> shellCommandArgs;
 
   /**
@@ -96,7 +96,7 @@ public abstract class ShellStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws InterruptedException, IOException {
     ImmutableList<String> command = getShellCommand(context);
     if (command.isEmpty()) {
@@ -152,7 +152,7 @@ public abstract class ShellStep implements Step {
 
   @VisibleForTesting
   void setProcessEnvironment(
-      ExecutionContext context, Map<String, String> environment, String workDir) {
+      StepExecutionContext context, Map<String, String> environment, String workDir) {
 
     // Replace environment with client environment.
     environment.clear();
@@ -177,7 +177,7 @@ public abstract class ShellStep implements Step {
 
   @VisibleForTesting
   ProcessExecutor.Result launchAndInteractWithProcess(
-      ExecutionContext context, ProcessExecutorParams params, Optional<String> stdin)
+      StepExecutionContext context, ProcessExecutorParams params, Optional<String> stdin)
       throws InterruptedException, IOException {
     ImmutableSet.Builder<Option> options = ImmutableSet.builder();
 
@@ -225,7 +225,7 @@ public abstract class ShellStep implements Step {
    *
    * @return the shell command arguments
    */
-  public final ImmutableList<String> getShellCommand(ExecutionContext context) {
+  public final ImmutableList<String> getShellCommand(StepExecutionContext context) {
     if (shellCommandArgs == null) {
       shellCommandArgs = getShellCommandInternal(context);
       if (shellCommandArgs.size() > 0) {
@@ -235,7 +235,7 @@ public abstract class ShellStep implements Step {
     return shellCommandArgs;
   }
 
-  protected ImmutableList<String> getShellCommandArgsForDescription(ExecutionContext context) {
+  protected ImmutableList<String> getShellCommandArgsForDescription(StepExecutionContext context) {
     return getShellCommand(context);
   }
 
@@ -245,10 +245,10 @@ public abstract class ShellStep implements Step {
 
   /** Implementations of this method should not have any observable side-effects. */
   @VisibleForTesting
-  protected abstract ImmutableList<String> getShellCommandInternal(ExecutionContext context);
+  protected abstract ImmutableList<String> getShellCommandInternal(StepExecutionContext context);
 
   @Override
-  public final String getDescription(ExecutionContext context) {
+  public final String getDescription(StepExecutionContext context) {
     // Get environment variables for this command as VAR1=val1 VAR2=val2... etc., with values
     // quoted as necessary.
     Iterable<String> env =
@@ -286,8 +286,8 @@ public abstract class ShellStep implements Step {
   /**
    * @param verbosity is provided in case that affects what should be printed.
    * @return whether the stdout of the shell command, when executed, should be printed to the stderr
-   *     of the specified {@link ExecutionContext}. If {@code false}, stdout will only be printed on
-   *     error and only if verbosity is set to standard information.
+   *     of the specified {@link StepExecutionContext}. If {@code false}, stdout will only be
+   *     printed on error and only if verbosity is set to standard information.
    */
   protected boolean shouldPrintStdout(Verbosity verbosity) {
     return verbosity.shouldPrintOutput();
@@ -306,8 +306,8 @@ public abstract class ShellStep implements Step {
 
   /**
    * @return whether the stderr of the shell command, when executed, should be printed to the stderr
-   *     of the specified {@link ExecutionContext}. If {@code false}, stderr will only be printed on
-   *     error and only if verbosity is set to standard information.
+   *     of the specified {@link StepExecutionContext}. If {@code false}, stderr will only be
+   *     printed on error and only if verbosity is set to standard information.
    */
   protected boolean shouldPrintStderr(Verbosity verbosity) {
     return verbosity.shouldPrintOutput();
@@ -334,7 +334,7 @@ public abstract class ShellStep implements Step {
    *     killed.
    */
   @SuppressWarnings("unused")
-  protected Optional<Consumer<Process>> getTimeoutHandler(ExecutionContext context) {
+  protected Optional<Consumer<Process>> getTimeoutHandler(StepExecutionContext context) {
     return Optional.empty();
   }
 

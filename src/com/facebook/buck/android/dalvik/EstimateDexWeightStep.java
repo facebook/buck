@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android.dalvik;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
@@ -76,7 +76,7 @@ public class EstimateDexWeightStep implements Step, Supplier<Integer> {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     Path path = filesystem.resolve(pathToJarOrClassesDirectory);
     AtomicInteger totalWeightEstimate = new AtomicInteger();
     ClasspathTraversal traversal =
@@ -114,7 +114,7 @@ public class EstimateDexWeightStep implements Step, Supplier<Integer> {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return "estimate_dex_weight";
   }
 

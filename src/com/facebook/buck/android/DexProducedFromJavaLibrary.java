@@ -24,7 +24,7 @@ import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.android.dalvik.EstimateDexWeightStep;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -250,7 +250,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
           new AbstractExecutionStep(stepName) {
 
             @Override
-            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            public StepExecutionResult execute(StepExecutionContext context) throws IOException {
               if (hasClassesToDx) {
 
                 @Nullable

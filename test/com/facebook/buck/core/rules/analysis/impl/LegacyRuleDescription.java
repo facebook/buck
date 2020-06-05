@@ -20,7 +20,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.BuildTargetSourcePathToArtifactConverter;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
@@ -122,7 +122,7 @@ public class LegacyRuleDescription
         steps.add(
             new AbstractExecutionStep("read vals") {
               @Override
-              public StepExecutionResult execute(ExecutionContext ctx) throws IOException {
+              public StepExecutionResult execute(StepExecutionContext ctx) throws IOException {
                 for (Path path : toRead) {
                   deps.add(ObjectMappers.createParser(path).readValueAs(Map.class));
                 }
@@ -140,7 +140,7 @@ public class LegacyRuleDescription
         steps.add(
             new AbstractExecutionStep("write json") {
               @Override
-              public StepExecutionResult execute(ExecutionContext ctx) throws IOException {
+              public StepExecutionResult execute(StepExecutionContext ctx) throws IOException {
                 getProjectFilesystem()
                     .writeContentsToPath(
                         ObjectMappers.WRITER.writeValueAsString(data),

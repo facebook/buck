@@ -22,7 +22,7 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -364,7 +364,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
       steps.add(
           new AbstractExecutionStep("symlinking for preprocessing") {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            public StepExecutionResult execute(StepExecutionContext context) throws IOException {
               for (Pair<Path, Path> entry : pathToTarget) {
                 Path symlinkPath = projectFilesystem.resolve(entry.getFirst());
                 Path symlinkTarget = projectFilesystem.resolve(entry.getSecond());
@@ -478,7 +478,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     steps.add(
         new AbstractExecutionStep("writing_secondary_dex_listing") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) throws IOException {
+          public StepExecutionResult execute(StepExecutionContext context) throws IOException {
             projectFilesystem.mkdirs(getSecondaryDexListing().getParent());
             projectFilesystem.writeLinesToPath(
                 secondaryDexDirectoriesBuilder.build().stream().map(Path::toString)::iterator,
@@ -522,7 +522,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     steps.add(
         new AbstractExecutionStep("collect_all_class_names") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) {
+          public StepExecutionResult execute(StepExecutionContext context) {
             Map<String, Path> classesToSources = new HashMap<>();
             for (Path path : classPathEntriesToDex) {
               Optional<ImmutableSortedMap<String, HashCode>> hashes =

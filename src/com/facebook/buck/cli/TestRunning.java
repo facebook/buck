@@ -22,7 +22,7 @@ import com.facebook.buck.android.AndroidInstrumentationTest;
 import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildEngine;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -132,7 +132,7 @@ public class TestRunning {
       CommandRunnerParams params,
       BuildRuleResolver ruleResolver,
       Iterable<TestRule> tests,
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       TestRunningOptions options,
       ListeningExecutorService service,
       BuildEngine buildEngine,
@@ -858,7 +858,7 @@ public class TestRunning {
   }
 
   private static ListenableFuture<TestResults> runStepsAndYieldResult(
-      ExecutionContext context,
+      StepExecutionContext context,
       List<Step> steps,
       Callable<TestResults> interpretResults,
       BuildTarget buildTarget,

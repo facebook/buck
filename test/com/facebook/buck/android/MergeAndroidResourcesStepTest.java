@@ -31,7 +31,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.aapt.RDotTxtEntryUtil;
 import com.facebook.buck.android.aapt.RDotTxtEntryUtil.FakeEntry;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -331,7 +331,7 @@ public class MergeAndroidResourcesStepTest {
             /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
 
     assertEquals(0, mergeStep.execute(executionContext).getExitCode());
 
@@ -398,7 +398,7 @@ public class MergeAndroidResourcesStepTest {
             /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
 
     assertEquals(0, mergeStep.execute(executionContext).getExitCode());
 
@@ -481,7 +481,7 @@ public class MergeAndroidResourcesStepTest {
             /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
 
     assertEquals(0, mergeStep.execute(executionContext).getExitCode());
 
@@ -663,7 +663,7 @@ public class MergeAndroidResourcesStepTest {
             /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ true);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
 
     assertEquals(0, mergeStep.execute(executionContext).getExitCode());
 
@@ -731,7 +731,7 @@ public class MergeAndroidResourcesStepTest {
             /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
 
     assertEquals(0, mergeStep.execute(executionContext).getExitCode());
 
@@ -778,7 +778,7 @@ public class MergeAndroidResourcesStepTest {
             /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
 
     assertEquals(0, mergeStep.execute(executionContext).getExitCode());
 
@@ -825,7 +825,7 @@ public class MergeAndroidResourcesStepTest {
             /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
 
     assertEquals(0, mergeStep.execute(executionContext).getExitCode());
 

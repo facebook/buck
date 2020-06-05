@@ -27,6 +27,7 @@ import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDeleg
 import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -322,7 +323,7 @@ public class TestCommand extends BuildCommand {
               params,
               ruleResolver,
               testRules,
-              build.getExecutionContext(),
+              StepExecutionContext.from(build.getExecutionContext()),
               getTestRunningOptions(params),
               testPool.getWeightedListeningExecutorService(),
               buildEngine,
@@ -385,7 +386,9 @@ public class TestCommand extends BuildCommand {
                           .getBuckEventBus()
                           .post(ExternalTestSpecCalculationEvent.started(rule.getBuildTarget()));
                       return rule.getExternalTestRunnerSpec(
-                          build.getExecutionContext(), options, buildContext);
+                          StepExecutionContext.from(build.getExecutionContext()),
+                          options,
+                          buildContext);
                     } finally {
                       params
                           .getBuckEventBus()

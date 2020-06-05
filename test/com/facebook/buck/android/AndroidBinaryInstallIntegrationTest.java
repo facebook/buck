@@ -24,7 +24,7 @@ import static org.junit.Assert.fail;
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -97,7 +97,7 @@ public class AndroidBinaryInstallIntegrationTest {
 
   private ExoState currentBuildState;
   private ProjectFilesystem filesystem;
-  private ExecutionContext executionContext;
+  private StepExecutionContext executionContext;
   private TestAndroidDevice testDevice;
   private InstallLimitingAndroidDevice installLimiter;
   private String apkVersionCode;

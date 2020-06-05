@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.python;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
@@ -82,7 +82,7 @@ public class PythonRunTestsStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     StepExecutionResult result = doExecute(context);
     if (timedOut) {
@@ -95,7 +95,7 @@ public class PythonRunTestsStep implements Step {
     return result;
   }
 
-  private StepExecutionResult doExecute(ExecutionContext context)
+  private StepExecutionResult doExecute(StepExecutionContext context)
       throws IOException, InterruptedException {
     if (testSelectorList.isEmpty()) {
       return getShellStepWithArgs("-o", resultsOutputPath.toString()).execute(context);
@@ -178,7 +178,7 @@ public class PythonRunTestsStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     if (testSelectorList.isEmpty()) {
       return getShellStepWithArgs("-o", resultsOutputPath.toString()).getDescription(context);
     }
@@ -190,7 +190,7 @@ public class PythonRunTestsStep implements Step {
   private ShellStep getShellStepWithArgs(String... args) {
     return new ShellStep(workingDirectory, withDownwardApi) {
       @Override
-      public StepExecutionResult execute(ExecutionContext context)
+      public StepExecutionResult execute(StepExecutionContext context)
           throws InterruptedException, IOException {
         StepExecutionResult executionResult = super.execute(context);
         // The test runner returns 0 if all tests passed, or
@@ -204,7 +204,7 @@ public class PythonRunTestsStep implements Step {
       }
 
       @Override
-      protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+      protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
         return ImmutableList.<String>builder().addAll(commandPrefix).add(args).build();
       }
 
@@ -224,7 +224,7 @@ public class PythonRunTestsStep implements Step {
       }
 
       @Override
-      protected Optional<Consumer<Process>> getTimeoutHandler(ExecutionContext context) {
+      protected Optional<Consumer<Process>> getTimeoutHandler(StepExecutionContext context) {
         return Optional.of(timeoutHandler);
       }
     };

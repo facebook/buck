@@ -19,7 +19,6 @@ package com.facebook.buck.android.exopackage;
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.android.agent.util.AgentUtil;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -70,13 +69,13 @@ public class ExopackageInstaller {
 
   public ExopackageInstaller(
       SourcePathResolverAdapter pathResolver,
-      ExecutionContext context,
+      BuckEventBus eventBus,
       ProjectFilesystem projectFilesystem,
       String packageName,
       AndroidDevice device) {
     this.pathResolver = pathResolver;
     this.projectFilesystem = projectFilesystem;
-    this.eventBus = context.getBuckEventBus();
+    this.eventBus = eventBus;
     this.device = device;
     this.packageName = packageName;
     this.dataRoot = EXOPACKAGE_INSTALL_ROOT.resolve(packageName);

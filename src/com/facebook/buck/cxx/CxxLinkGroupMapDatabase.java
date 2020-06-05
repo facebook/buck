@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -107,7 +107,7 @@ public class CxxLinkGroupMapDatabase extends ModernBuildRule<CxxLinkGroupMapData
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context) throws IOException {
+    public StepExecutionResult execute(StepExecutionContext context) throws IOException {
       try (OutputStream outputStream = filesystem.newFileOutputStream(outputRelativePath)) {
         try (JsonGenerator jsonGen = ObjectMappers.createGenerator(outputStream)) {
           jsonGen.writeStartArray();

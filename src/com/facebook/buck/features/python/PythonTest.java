@@ -18,7 +18,7 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.model.BuildTarget;
@@ -156,7 +156,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ImmutableList<Step> runTests(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       TestRunningOptions options,
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
@@ -217,7 +217,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     return () -> {
@@ -278,7 +278,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
 

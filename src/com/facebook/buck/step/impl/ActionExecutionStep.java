@@ -17,7 +17,7 @@
 package com.facebook.buck.step.impl;
 
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
@@ -47,7 +47,7 @@ public class ActionExecutionStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
 
     BuckEventBus buckEventBus = context.getBuckEventBus();
     ProcessExecutor processExecutor = context.getProcessExecutor();
@@ -97,7 +97,7 @@ public class ActionExecutionStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return "running action: " + action;
   }
 }

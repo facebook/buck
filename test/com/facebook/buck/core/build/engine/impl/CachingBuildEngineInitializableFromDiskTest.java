@@ -51,7 +51,6 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -475,7 +474,10 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
       CachingBuildEngine cachingBuildEngine, InitializableFromDiskRule dependent, BuildId buildId)
       throws InterruptedException, java.util.concurrent.ExecutionException {
     return cachingBuildEngine
-        .build(createBuildContext(buildId), TestExecutionContext.newInstance(), dependent)
+        .build(
+            createBuildContext(buildId),
+            TestExecutionContextUtils.executionContextBuilder().build(),
+            dependent)
         .getResult()
         .get();
   }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.ExecutableFinder;
@@ -102,7 +102,7 @@ public class JUnitStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(javaRuntimeLauncher);
 
@@ -122,7 +122,7 @@ public class JUnitStep extends ShellStep {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws InterruptedException, IOException {
     ensureClasspathArgfile();
     return super.execute(context);
@@ -137,7 +137,7 @@ public class JUnitStep extends ShellStep {
     return env.build();
   }
 
-  private void warnUser(ExecutionContext context, String message) {
+  private void warnUser(StepExecutionContext context, String message) {
     context.getStdErr().println(context.getAnsi().asWarningText(message));
   }
 
@@ -147,7 +147,7 @@ public class JUnitStep extends ShellStep {
   }
 
   @Override
-  protected Optional<Consumer<Process>> getTimeoutHandler(ExecutionContext context) {
+  protected Optional<Consumer<Process>> getTimeoutHandler(StepExecutionContext context) {
     return Optional.of(
         process -> {
           Optional<Long> pid = Optional.empty();

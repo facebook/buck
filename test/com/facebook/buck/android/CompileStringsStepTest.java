@@ -20,7 +20,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.StringResources.Gender;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -406,7 +406,7 @@ public class CompileStringsStepTest {
     Path destinationDir = Paths.get("");
     Path rDotJavaSrcDir = Paths.get("");
 
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
     FakeProjectFileSystem fileSystem = new FakeProjectFileSystem();
 
     ImmutableList<Path> stringFiles =

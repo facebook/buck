@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
@@ -131,7 +131,7 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
 
   @Override
   public ImmutableList<Step> runTests(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       TestRunningOptions options,
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
@@ -298,12 +298,12 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
     }
 
     @Override
-    protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+    protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
       return ImmutableList.<String>builder().addAll(command).add("--gtest_list_tests").build();
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
+    public StepExecutionResult execute(StepExecutionContext context)
         throws IOException, InterruptedException {
 
       StepExecutionResult result = super.execute(context);

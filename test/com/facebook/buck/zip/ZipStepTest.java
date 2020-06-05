@@ -24,7 +24,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -430,7 +430,7 @@ public class ZipStepTest {
 
     // Run the zip step on a filesystem with a particular ordering.
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
     filesystem.mkdirs(zipdir);
     filesystem.touch(zipdir.resolve("file1"));
     filesystem.touch(zipdir.resolve("file2"));

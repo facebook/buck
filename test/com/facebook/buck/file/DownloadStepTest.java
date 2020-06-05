@@ -16,7 +16,7 @@
 
 package com.facebook.buck.file;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.file.downloader.Downloader;
@@ -74,7 +74,7 @@ public class DownloadStepTest {
 
   ProjectFilesystem filesystem;
   BuckEventBusForTests.CapturingConsoleEventListener listener;
-  ExecutionContext context;
+  StepExecutionContext context;
   final Path outputPath = Paths.get("some", "dir", "out.txt");
 
   @Before

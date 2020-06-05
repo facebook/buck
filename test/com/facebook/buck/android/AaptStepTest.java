@@ -21,7 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
@@ -106,14 +106,14 @@ public class AaptStepTest {
    * been replayed, so the calling code may add additional expectations, and is responsible for
    * calling replay().
    */
-  private ExecutionContext createTestExecutionContext(Verbosity verbosity) {
+  private StepExecutionContext createTestExecutionContext(Verbosity verbosity) {
     return TestExecutionContext.newBuilder().setConsole(new TestConsole(verbosity)).build();
   }
 
   @Test
   public void shouldEmitVerbosityFlagWithVerboseContext() {
     AaptStep aaptStep = buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
-    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+    StepExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
     assertTrue(command.contains("-v"));
@@ -122,7 +122,7 @@ public class AaptStepTest {
   @Test
   public void shouldNotEmitVerbosityFlagWithQuietContext() {
     AaptStep aaptStep = buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
-    ExecutionContext executionContext = createTestExecutionContext(Verbosity.SILENT);
+    StepExecutionContext executionContext = createTestExecutionContext(Verbosity.SILENT);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
     assertFalse(command.contains("-v"));
@@ -131,7 +131,7 @@ public class AaptStepTest {
   @Test
   public void shouldEmitGFlagIfProguardConfigPresent() {
     AaptStep aaptStep = buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
-    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+    StepExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
@@ -143,7 +143,7 @@ public class AaptStepTest {
   @Test
   public void shouldEmitNoCrunchFlagIfNotCrunch() {
     AaptStep aaptStep = buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
-    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+    StepExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
@@ -153,7 +153,7 @@ public class AaptStepTest {
   @Test
   public void shouldNotEmitNoCrunchFlagIfCrunch() {
     AaptStep aaptStep = buildAaptStep(proguardConfig, true, false, ManifestEntries.empty());
-    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+    StepExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
@@ -163,7 +163,7 @@ public class AaptStepTest {
   @Test
   public void shouldEmitNoVersionVectorsFlagIfRequested() {
     AaptStep aaptStep = buildAaptStep(proguardConfig, false, true, ManifestEntries.empty());
-    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+    StepExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
@@ -173,7 +173,7 @@ public class AaptStepTest {
   @Test
   public void shouldNotEmitNoVersionVectorsFlagIfNotRequested() {
     AaptStep aaptStep = buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
-    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+    StepExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
@@ -191,7 +191,7 @@ public class AaptStepTest {
             .setDebugMode(true)
             .build();
     AaptStep aaptStep = buildAaptStep(proguardConfig, true, false, entries);
-    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+    StepExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
     assertTrue(command.contains("--min-sdk-version"));
@@ -214,7 +214,7 @@ public class AaptStepTest {
   @Test
   public void shouldNotEmitFailOnInsertWithoutManifestEntries() {
     AaptStep aaptStep = buildAaptStep(proguardConfig, true, false, ManifestEntries.empty());
-    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+    StepExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
     assertFalse(command.contains("--error-on-failed-insert"));
   }
@@ -228,7 +228,7 @@ public class AaptStepTest {
             false,
             ManifestEntries.empty(),
             ImmutableList.of("--shared-lib"));
-    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+    StepExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
     assertTrue(command.contains("--shared-lib"));
   }

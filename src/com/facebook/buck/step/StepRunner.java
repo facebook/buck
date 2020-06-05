@@ -16,7 +16,7 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.collect.ImmutableList;
@@ -34,13 +34,14 @@ public final class StepRunner {
   /**
    * Runs a single {@link Step}
    *
-   * @param context the {@link ExecutionContext} containing information and console logging
+   * @param context the {@link StepExecutionContext} containing information and console logging
    *     utilities for the {@link Step}
    * @param step the {@link Step} to execute
    * @throws StepFailedException if the step failed
    * @throws InterruptedException if an interrupt occurred while executing the {@link Step}
    */
-  public static void runStep(ExecutionContext context, Step step, Optional<BuildTarget> buildTarget)
+  public static void runStep(
+      StepExecutionContext context, Step step, Optional<BuildTarget> buildTarget)
       throws StepFailedException, InterruptedException {
     if (context.getVerbosity().shouldPrintCommand()) {
       context.getStdErr().println(step.getDescription(context));
@@ -69,12 +70,12 @@ public final class StepRunner {
   }
 
   private static void logStepEvent(
-      ExecutionContext context, StepEvent stepEvent, String buildTargetName) {
+      StepExecutionContext context, StepEvent stepEvent, String buildTargetName) {
     logStepEvent(context, stepEvent, buildTargetName, ImmutableList.of());
   }
 
   private static void logStepEvent(
-      ExecutionContext context,
+      StepExecutionContext context,
       StepEvent stepEvent,
       String buildTargetName,
       ImmutableList<String> command) {

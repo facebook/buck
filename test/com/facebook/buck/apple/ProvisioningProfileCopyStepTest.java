@@ -33,7 +33,7 @@ import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import com.facebook.buck.apple.toolchain.impl.ProvisioningProfileStoreFactory;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -70,7 +70,7 @@ public class ProvisioningProfileCopyStepTest {
   private Path dryRunResultFile;
   private Path entitlementsFile;
   private FakeProjectFilesystem projectFilesystem;
-  private ExecutionContext executionContext;
+  private StepExecutionContext executionContext;
   private Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier;
 
   private static final ImmutableList<String> FAKE_READ_COMMAND = ImmutableList.of("cat");

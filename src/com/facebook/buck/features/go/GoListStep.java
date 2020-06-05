@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.ProcessExecutor.Option;
 import com.facebook.buck.util.environment.Platform;
@@ -61,7 +61,7 @@ public class GoListStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
     commandBuilder
         .add(platform.getGoRoot().resolve("bin").resolve("go").toString())

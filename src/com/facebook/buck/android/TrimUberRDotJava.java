@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
@@ -123,7 +123,7 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context) throws IOException {
+    public StepExecutionResult execute(StepExecutionContext context) throws IOException {
       ImmutableSet.Builder<String> allReferencedResourcesBuilder = ImmutableSet.builder();
       for (UsesResources preDexRule : allPreDexRules) {
         allReferencedResourcesBuilder.addAll(preDexRule.getReferencedResources());
@@ -193,7 +193,7 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     }
 
     @Override
-    public String getDescription(ExecutionContext context) {
+    public String getDescription(StepExecutionContext context) {
       return String.format("trim_uber_r_dot_java %s > %s", pathToInput, pathToOutput);
     }
   }

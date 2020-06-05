@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -285,7 +285,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
         return ImmutableList.of(
             new AbstractExecutionStep("throwing_step") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context) {
+              public StepExecutionResult execute(StepExecutionContext context) {
                 context.getBuckEventBus().post(ConsoleEvent.severe(STEP_CONSOLE_EVENT_MESSAGE));
                 throw new HumanReadableException(FAILING_STEP_MESSAGE);
               }
@@ -451,7 +451,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
             }
 
             @Override
-            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            public StepExecutionResult execute(StepExecutionContext context) throws IOException {
               writeOutput(output1);
               writeOutput(output2);
               return StepExecutionResults.SUCCESS;

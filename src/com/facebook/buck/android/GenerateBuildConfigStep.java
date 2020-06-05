@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -57,7 +57,7 @@ public class GenerateBuildConfigStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     String java =
         BuildConfigs.generateBuildConfigDotJava(
             source, javaPackage, useConstantExpressions, fields.get());
@@ -67,7 +67,7 @@ public class GenerateBuildConfigStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return String.format("generate_build_config %s", javaPackage);
   }
 

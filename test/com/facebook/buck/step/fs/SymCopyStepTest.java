@@ -19,7 +19,7 @@ package com.facebook.buck.step.fs;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
@@ -36,7 +36,7 @@ public class SymCopyStepTest {
 
   @Rule public final TemporaryFolder tmpDir = new TemporaryFolder();
 
-  private ExecutionContext context;
+  private StepExecutionContext context;
   private ProjectFilesystem projectFilesystem;
 
   @Before

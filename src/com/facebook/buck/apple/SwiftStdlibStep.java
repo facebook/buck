@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
@@ -141,7 +141,7 @@ class SwiftStdlibStep implements Step {
   }
 
   private ProcessExecutorParams makeProcessExecutorParams(
-      ExecutionContext context, ImmutableList<String> command) {
+      StepExecutionContext context, ImmutableList<String> command) {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
     builder.setDirectory(workingDirectory.getPath());
     builder.setCommand(command);
@@ -153,7 +153,7 @@ class SwiftStdlibStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
     if (withDownwardApi) {
@@ -203,7 +203,7 @@ class SwiftStdlibStep implements Step {
   }
 
   private StepExecutionResult sliceAndCopyRuntimeDylibs(
-      ExecutionContext context, ProcessExecutor executor, ImmutableList<Path> libs)
+      StepExecutionContext context, ProcessExecutor executor, ImmutableList<Path> libs)
       throws IOException, InterruptedException {
     // Get needed archs from the binary.
     ProcessExecutorParams params =
@@ -272,7 +272,7 @@ class SwiftStdlibStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return Joiner.on(' ').join(getSwiftStdlibCommand());
   }
 }

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.FakeBuckEventListener;
@@ -42,7 +42,8 @@ public class StepRunnerTest {
     FakeBuckEventListener listener = new FakeBuckEventListener();
     eventBus.register(listener);
 
-    ExecutionContext context = TestExecutionContext.newBuilder().setBuckEventBus(eventBus).build();
+    StepExecutionContext context =
+        TestExecutionContext.newBuilder().setBuckEventBus(eventBus).build();
     StepRunner.runStep(context, passingStep, Optional.empty());
     try {
       StepRunner.runStep(context, failingStep, Optional.empty());
@@ -82,7 +83,7 @@ public class StepRunnerTest {
 
   @Test
   public void testExplodingStep() throws InterruptedException {
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
 
     try {
       StepRunner.runStep(context, new ExplosionStep(), Optional.empty());
@@ -97,7 +98,7 @@ public class StepRunnerTest {
 
   private static class ExplosionStep implements Step {
     @Override
-    public StepExecutionResult execute(ExecutionContext context) {
+    public StepExecutionResult execute(StepExecutionContext context) {
       throw new RuntimeException("#yolo");
     }
 
@@ -107,7 +108,7 @@ public class StepRunnerTest {
     }
 
     @Override
-    public String getDescription(ExecutionContext context) {
+    public String getDescription(StepExecutionContext context) {
       return "MOAR EXPLOSIONS!!!!";
     }
   }

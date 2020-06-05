@@ -26,7 +26,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.impl.FakeBuildEngine;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -445,7 +445,7 @@ public class TestRunningTest {
                 BuildResult.success(separateTest2, BUILT_LOCALLY, CacheResult.miss()),
                 separateTest3Target,
                 BuildResult.success(separateTest3, BUILT_LOCALLY, CacheResult.miss())));
-    ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
+    StepExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     int ret =
         TestRunning.runTests(
@@ -602,7 +602,7 @@ public class TestRunningTest {
                     parallelTest3Target,
                     BuildResult.success(parallelTest3, BUILT_LOCALLY, CacheResult.miss()))
                 .build());
-    ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
+    StepExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     int ret =
         TestRunning.runTests(
@@ -721,7 +721,7 @@ public class TestRunningTest {
             ImmutableMap.of(
                 failingTestTarget,
                 BuildResult.success(failingTest, BUILT_LOCALLY, CacheResult.miss())));
-    ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
+    StepExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
     int ret =
         TestRunning.runTests(
             commandRunnerParams,

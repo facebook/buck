@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -72,7 +72,7 @@ public class AppleWriteFileHash extends ModernBuildRule<AppleWriteFileHash> impl
     return ImmutableList.of(
         new AbstractExecutionStep("writing_apple_file_hash") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) throws IOException {
+          public StepExecutionResult execute(StepExecutionContext context) throws IOException {
             filesystem.writeContentsToPath(
                 computeHash(), outputPathResolver.resolvePath(outputPath));
             return StepExecutionResults.SUCCESS;

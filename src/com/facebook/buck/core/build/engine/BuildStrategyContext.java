@@ -18,7 +18,7 @@ package com.facebook.buck.core.build.engine;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.util.Scope;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -38,7 +38,7 @@ public interface BuildStrategyContext {
 
   BuildResult createCancelledResult(Throwable throwable);
 
-  ExecutionContext getExecutionContext();
+  StepExecutionContext getExecutionContext();
 
   Scope buildRuleScope();
 

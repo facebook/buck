@@ -23,7 +23,7 @@ import static org.junit.Assert.assertThat;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
@@ -60,7 +60,7 @@ public class PlistProcessStepTest {
 
     projectFilesystem.writeContentsToPath("<html>not a <b>plist</b></html>", INPUT_PATH);
 
-    ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
+    StepExecutionContext executionContext = TestExecutionContext.newBuilder().build();
     thrown.expect(IOException.class);
     thrown.expectMessage(containsString("not a property list"));
     plistProcessStep.execute(executionContext);
@@ -82,7 +82,7 @@ public class PlistProcessStepTest {
 
     projectFilesystem.writeContentsToPath("", INPUT_PATH);
 
-    ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
+    StepExecutionContext executionContext = TestExecutionContext.newBuilder().build();
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
         containsString("input.plist: the content of the plist is invalid or empty."));
@@ -108,7 +108,7 @@ public class PlistProcessStepTest {
     dict.put("Key2", "Value2");
     projectFilesystem.writeContentsToPath(dict.toXMLPropertyList(), INPUT_PATH);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     int errorCode = plistProcessStep.execute(executionContext).getExitCode();
     assertThat(errorCode, equalTo(0));
 
@@ -137,7 +137,7 @@ public class PlistProcessStepTest {
     dict.put("Key2", "Value2");
     projectFilesystem.writeContentsToPath(dict.toXMLPropertyList(), INPUT_PATH);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     int errorCode = plistProcessStep.execute(executionContext).getExitCode();
     assertThat(errorCode, equalTo(0));
 
@@ -163,7 +163,7 @@ public class PlistProcessStepTest {
     NSArray array = new NSArray(new NSString("Value1"), new NSString("Value2"));
     projectFilesystem.writeContentsToPath(array.toXMLPropertyList(), INPUT_PATH);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     int errorCode = plistProcessStep.execute(executionContext).getExitCode();
     assertThat(errorCode, equalTo(0));
 
@@ -195,7 +195,7 @@ public class PlistProcessStepTest {
     overrideDict.put("Key1", "OverrideValue");
     projectFilesystem.writeContentsToPath(overrideDict.toXMLPropertyList(), MERGE_PATH);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     int errorCode = plistProcessStep.execute(executionContext).getExitCode();
     assertThat(errorCode, equalTo(0));
 

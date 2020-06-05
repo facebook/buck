@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.android.common.sdklib.build.ApkBuilder;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -114,7 +114,7 @@ public class AaptStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.addAll(androidPlatformTarget.getAaptExecutable().get().getCommandPrefix(pathResolver));
     builder.add("package");

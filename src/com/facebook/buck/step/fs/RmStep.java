@@ -16,7 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MostFiles;
@@ -42,7 +42,7 @@ public abstract class RmStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     Path absolutePath =
         context.getBuildCellRootPath().resolve(getPath().getPathRelativeToBuildCellRoot());
     if (isRecursive()) {
@@ -56,7 +56,7 @@ public abstract class RmStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("rm");
     args.add("-f");

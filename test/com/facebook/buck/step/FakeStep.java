@@ -16,7 +16,7 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 
 public class FakeStep implements Step {
   private final String shortName;
@@ -30,7 +30,7 @@ public class FakeStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(StepExecutionContext context) {
     return StepExecutionResult.of(exitCode);
   }
 
@@ -40,7 +40,7 @@ public class FakeStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return description;
   }
 }

@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
@@ -52,7 +52,7 @@ import org.junit.Test;
 public class ProGuardObfuscateStepTest {
   @Rule public final TemporaryPaths tmpDir = new TemporaryPaths();
 
-  private ExecutionContext executionContext;
+  private StepExecutionContext executionContext;
   private AndroidPlatformTarget androidPlatformTarget;
 
   @Before

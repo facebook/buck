@@ -23,7 +23,7 @@ import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.Scope;
@@ -75,7 +75,7 @@ class SimpleBuildStrategyContext implements BuildStrategyContext {
   }
 
   @Override
-  public ExecutionContext getExecutionContext() {
+  public StepExecutionContext getExecutionContext() {
     return TestExecutionContext.newInstance();
   }
 

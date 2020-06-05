@@ -16,7 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -54,13 +54,13 @@ public abstract class SymlinkFileStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return Joiner.on(" ")
         .join("ln", "-f", "-s", getAbsoluteExistingFilePath(), getAbsoluteDesiredLinkPath());
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     Path existingFilePath = getAbsoluteExistingFilePath();
     Path desiredLinkPath = getAbsoluteDesiredLinkPath();
     getFilesystem().createSymLink(desiredLinkPath, existingFilePath, /* force */ true);

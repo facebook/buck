@@ -23,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
@@ -125,7 +125,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         CxxCollectAndLogInferDependenciesStep.fromCaptureTransitiveRule(
             captureTransRule, filesystem, outputFile);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
     assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
@@ -160,7 +160,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         CxxCollectAndLogInferDependenciesStep.fromCaptureTransitiveRule(
             captureTransRule, filesystem, outputFile);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
     assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
@@ -206,7 +206,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         CxxCollectAndLogInferDependenciesStep.fromCaptureTransitiveRule(
             captureTransRule, filesystem1, outputFile);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
     assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
@@ -252,7 +252,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         CxxCollectAndLogInferDependenciesStep.fromCaptureTransitiveRule(
             captureTransRule, filesystem1, outputFile);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
     assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 

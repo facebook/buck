@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -57,7 +57,7 @@ class RegisterDebugSymbolsStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     ImmutableList<String> lldbCommandPrefix = lldb.getCommandPrefix(resolver);
     ProcessExecutorParams params =
@@ -88,7 +88,7 @@ class RegisterDebugSymbolsStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return String.format(
         "register debug symbols for binary '%s': '%s'", resolver.getRelativePath(binary), dsymPath);
   }

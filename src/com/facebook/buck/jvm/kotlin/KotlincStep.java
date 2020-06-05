@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.kotlin;
 
 import static com.google.common.collect.Iterables.transform;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -87,14 +87,14 @@ public class KotlincStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     Verbosity verbosity =
         context.getVerbosity().isSilent() ? Verbosity.STANDARD_INFORMATION : context.getVerbosity();
 
     try (CapturingPrintStream stdout = new CapturingPrintStream();
         CapturingPrintStream stderr = new CapturingPrintStream();
-        ExecutionContext firstOrderContext =
+        StepExecutionContext firstOrderContext =
             context.createSubContext(stdout, stderr, Optional.of(verbosity))) {
 
       int declaredDepsBuildResult =
@@ -128,7 +128,7 @@ public class KotlincStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return getKotlinc()
         .getDescription(
             getOptions(context, getClasspathEntries()), sourceFilePaths, pathToSrcsList);
@@ -143,7 +143,7 @@ public class KotlincStep implements Step {
    */
   @VisibleForTesting
   ImmutableList<String> getOptions(
-      ExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
+      StepExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     if (outputDirectory != null) {

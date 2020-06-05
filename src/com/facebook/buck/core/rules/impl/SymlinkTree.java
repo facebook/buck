@@ -18,7 +18,7 @@ package com.facebook.buck.core.rules.impl;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -225,7 +225,7 @@ public class SymlinkTree extends AbstractBuildRule
   protected Step getVerifyStep(SymlinkPaths links) {
     return new AbstractExecutionStep("verify_symlink_tree") {
       @Override
-      public StepExecutionResult execute(ExecutionContext context) throws IOException {
+      public StepExecutionResult execute(StepExecutionContext context) throws IOException {
         Set<Path> invalidPaths = new HashSet<>();
         links.forEachSymlink(
             (dst, src) -> {

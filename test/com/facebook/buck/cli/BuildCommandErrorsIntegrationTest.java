@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -501,7 +501,7 @@ public class BuildCommandErrorsIntegrationTest {
       return ImmutableList.of(
           new AbstractExecutionStep("failing_step") {
             @Override
-            public StepExecutionResult execute(ExecutionContext context)
+            public StepExecutionResult execute(StepExecutionContext context)
                 throws IOException, InterruptedException {
               Throwables.throwIfInstanceOf(throwable, IOException.class);
               Throwables.throwIfInstanceOf(throwable, InterruptedException.class);
@@ -573,7 +573,7 @@ public class BuildCommandErrorsIntegrationTest {
       return ImmutableList.of(
           new AbstractExecutionStep("step_with_exit_code_" + exitCode) {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) {
+            public StepExecutionResult execute(StepExecutionContext context) {
               return StepExecutionResult.builder()
                   .setExitCode(exitCode)
                   .setStderr(Optional.of(message))

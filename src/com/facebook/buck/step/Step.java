@@ -16,16 +16,17 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import java.io.IOException;
 
 /** Steps are executed in the same working directory as the root cell. */
 public interface Step {
 
-  StepExecutionResult execute(ExecutionContext context) throws IOException, InterruptedException;
+  StepExecutionResult execute(StepExecutionContext context)
+      throws IOException, InterruptedException;
 
   /** @return a short name/description for the command, such as "javac". Should fit on one line. */
   String getShortName();
 
-  String getDescription(ExecutionContext context);
+  String getDescription(StepExecutionContext context);
 }

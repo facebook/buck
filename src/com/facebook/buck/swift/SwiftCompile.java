@@ -18,7 +18,7 @@ package com.facebook.buck.swift;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -354,7 +354,7 @@ public class SwiftCompile extends AbstractBuildRule {
 
     return new Step() {
       @Override
-      public StepExecutionResult execute(ExecutionContext context) throws IOException {
+      public StepExecutionResult execute(StepExecutionContext context) throws IOException {
         if (Files.notExists(swiftFileListPath.getParent().getPath())) {
           Files.createDirectories(swiftFileListPath.getParent().getPath());
         }
@@ -368,7 +368,7 @@ public class SwiftCompile extends AbstractBuildRule {
       }
 
       @Override
-      public String getDescription(ExecutionContext context) {
+      public String getDescription(StepExecutionContext context) {
         return "swift-filelist";
       }
     };

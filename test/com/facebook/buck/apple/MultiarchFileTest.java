@@ -28,7 +28,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -148,7 +148,7 @@ public class MultiarchFileTest {
 
     ShellStep step = Iterables.getLast(Iterables.filter(steps, ShellStep.class));
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     ImmutableList<String> command = step.getShellCommand(executionContext);
     assertThat(
         command,

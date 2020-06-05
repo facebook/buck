@@ -19,7 +19,7 @@ package com.facebook.buck.zip;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -63,7 +63,7 @@ public class ZipScrubberStepIntegrationTest {
     }
 
     // Execute the zip scrubber step.
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     ZipScrubberStep step =
         ZipScrubberStep.of(tmp.getRoot().resolve(Paths.get("output.zip")).getPath());
     assertEquals(0, step.execute(executionContext).getExitCode());

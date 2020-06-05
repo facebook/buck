@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.kotlin;
 
 import static com.google.common.collect.Iterables.transform;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -118,7 +118,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
 
   @Override
   public int buildWithClasspath(
-      ExecutionContext context,
+      StepExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableSortedSet<Path> kotlinSourceFilePaths,
@@ -178,7 +178,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
     }
   }
 
-  private Object loadCompilerShim(ExecutionContext context) {
+  private Object loadCompilerShim(StepExecutionContext context) {
     try {
       ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
       classLoaderCache.addRef();

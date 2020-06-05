@@ -16,7 +16,7 @@
 
 package com.facebook.buck.swift;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
@@ -73,7 +73,7 @@ class SwiftCompileStep implements Step {
     return "swift compile";
   }
 
-  private ProcessExecutorParams makeProcessExecutorParams(ExecutionContext context)
+  private ProcessExecutorParams makeProcessExecutorParams(StepExecutionContext context)
       throws IOException {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
     builder.setDirectory(compilerCwd.getPath());
@@ -120,7 +120,7 @@ class SwiftCompileStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     ProcessExecutorParams params = makeProcessExecutorParams(context);
 
@@ -144,7 +144,7 @@ class SwiftCompileStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return Joiner.on(" ").join(getRawCommand());
   }
 }

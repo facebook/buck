@@ -19,7 +19,7 @@ package com.facebook.buck.step.fs;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
 import java.nio.file.Paths;
@@ -33,7 +33,7 @@ public class WriteFileStepTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     WriteFileStep writeFileStep =
         new WriteFileStep(filesystem, "Hello world", Paths.get("foo.txt"), /* executable */ false);
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     writeFileStep.execute(executionContext);
     assertThat(
         filesystem.readFileIfItExists(Paths.get("foo.txt")), equalTo(Optional.of("Hello world\n")));

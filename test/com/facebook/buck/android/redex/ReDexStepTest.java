@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.rules.args.Arg;
@@ -80,7 +80,7 @@ public class ReDexStepTest {
 
     assertEquals("redex", redex.getShortName());
 
-    ExecutionContext context = TestExecutionContext.newBuilder().build();
+    StepExecutionContext context = TestExecutionContext.newBuilder().build();
     assertEquals(
         ImmutableMap.of("ANDROID_SDK", sdkDirectory.toString(), "REDEX_DEBUG", "1"),
         redex.getEnvironmentVariables(context.getPlatform()));

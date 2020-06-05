@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -150,7 +150,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context) throws IOException {
+    public StepExecutionResult execute(StepExecutionContext context) throws IOException {
       try (OutputStream outputStream =
           getProjectFilesystem().newFileOutputStream(outputRelativePath)) {
         try (JsonGenerator jsonGen = ObjectMappers.createGenerator(outputStream)) {

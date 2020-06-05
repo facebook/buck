@@ -19,7 +19,7 @@ package com.facebook.buck.android.relinker;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -217,7 +217,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
         .add(
             new AbstractExecutionStep("xdso-dce relinker") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context)
+              public StepExecutionResult execute(StepExecutionContext context)
                   throws IOException, InterruptedException {
                 ImmutableSet<String> symbolsNeeded = readSymbolsNeeded();
                 ProcessExecutor processExecutor = context.getProcessExecutor();

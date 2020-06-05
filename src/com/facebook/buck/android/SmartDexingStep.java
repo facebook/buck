@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -189,7 +189,7 @@ public class SmartDexingStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
 
     Multimap<Path, Path> outputToInputs;
@@ -242,7 +242,7 @@ public class SmartDexingStep implements Step {
   }
 
   private void runXzsCommands(
-      ExecutionContext context, ImmutableMultimap<Path, Path> outputsToInputs)
+      StepExecutionContext context, ImmutableMultimap<Path, Path> outputsToInputs)
       throws StepFailedException, InterruptedException {
     for (Map.Entry<Path, Collection<Path>> entry : outputsToInputs.asMap().entrySet()) {
       Path secondaryCompressedBlobOutput = entry.getKey();
@@ -262,7 +262,7 @@ public class SmartDexingStep implements Step {
     }
   }
 
-  private void runDxCommands(ExecutionContext context, Multimap<Path, Path> outputToInputs)
+  private void runDxCommands(StepExecutionContext context, Multimap<Path, Path> outputToInputs)
       throws StepFailedException, InterruptedException {
     // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
     // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
@@ -318,7 +318,7 @@ public class SmartDexingStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     StringBuilder b = new StringBuilder();
     b.append(getShortName());
     minSdkVersion.ifPresent(minSdk -> b.append("--min-sdk-version ").append(minSdk));

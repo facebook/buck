@@ -32,7 +32,7 @@ import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -1658,7 +1658,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       List<Step> steps = javaLibrary.getBuildSteps(buildContext, new FakeBuildableContext());
       JavacStep javacCommand = lastJavacCommand(steps);
 
-      ExecutionContext executionContext =
+      StepExecutionContext executionContext =
           TestExecutionContext.newBuilder()
               .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
               .build();

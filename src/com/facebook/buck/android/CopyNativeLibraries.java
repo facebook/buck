@@ -22,7 +22,7 @@ import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -271,7 +271,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
       ProjectFilesystem filesystem, Path pathToMetadataTxt, Path pathToAllLibsDir) {
     return new AbstractExecutionStep("hash_native_libs") {
       @Override
-      public StepExecutionResult execute(ExecutionContext context) throws IOException {
+      public StepExecutionResult execute(StepExecutionContext context) throws IOException {
         ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
         for (Path nativeLib : filesystem.getFilesUnderPath(pathToAllLibsDir)) {
           Sha1HashCode filesha1 = filesystem.computeSha1(nativeLib);
@@ -326,7 +326,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
         steps.add(
             new Step() {
               @Override
-              public StepExecutionResult execute(ExecutionContext context) throws IOException {
+              public StepExecutionResult execute(StepExecutionContext context) throws IOException {
                 // TODO(simons): Using a projectfilesystem here is almost definitely wrong.
                 // This is because each library may come from different build rules, which may be in
                 // different cells --- this check works by coincidence.
@@ -346,7 +346,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
               }
 
               @Override
-              public String getDescription(ExecutionContext context) {
+              public String getDescription(StepExecutionContext context) {
                 ImmutableList.Builder<String> stringBuilder = ImmutableList.builder();
                 stringBuilder.add(String.format("[ -d %s ]", libSourceDir.toString()));
                 stringBuilder.add(mkDirStep.getDescription(context));
@@ -363,7 +363,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
     steps.add(
         new AbstractExecutionStep("rename_native_executables") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) throws IOException {
+          public StepExecutionResult execute(StepExecutionContext context) throws IOException {
             ImmutableSet.Builder<Path> executablesBuilder = ImmutableSet.builder();
             filesystem.walkRelativeFileTree(
                 destinationDir,

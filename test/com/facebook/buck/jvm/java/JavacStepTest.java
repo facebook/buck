@@ -24,7 +24,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -89,7 +89,7 @@ public class JavacStepTest {
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
@@ -138,7 +138,7 @@ public class JavacStepTest {
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
 
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
@@ -195,7 +195,7 @@ public class JavacStepTest {
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
@@ -244,7 +244,7 @@ public class JavacStepTest {
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
@@ -299,7 +299,7 @@ public class JavacStepTest {
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
 
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))

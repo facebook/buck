@@ -22,7 +22,7 @@ import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
@@ -294,7 +294,7 @@ public class DuplicateResourcesTest {
 
     AaptStep step = (AaptStep) Iterables.getOnlyElement(Iterables.getOnlyElement(ruleSteps));
 
-    ExecutionContext context = TestExecutionContext.newBuilder().build();
+    StepExecutionContext context = TestExecutionContext.newBuilder().build();
 
     return step.getShellCommand(context);
   }

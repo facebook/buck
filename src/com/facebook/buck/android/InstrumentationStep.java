@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.google.common.collect.ImmutableList;
@@ -44,7 +44,7 @@ public class InstrumentationStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(javaRuntimeLauncher);
 
@@ -67,7 +67,7 @@ public class InstrumentationStep extends ShellStep {
     return testRuleTimeoutMs;
   }
 
-  private void warnUser(ExecutionContext context, String message) {
+  private void warnUser(StepExecutionContext context, String message) {
     context.getStdErr().println(context.getAnsi().asWarningText(message));
   }
 }

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -166,7 +166,8 @@ public class AccumulateClassNamesStep extends IsolatedStep {
   }
 
   /**
-   * @param lines that were written in the same format output by {@link #execute(ExecutionContext)}.
+   * @param lines that were written in the same format output by {@link
+   *     #execute(StepExecutionContext)}.
    */
   public static ImmutableSortedMap<String, HashCode> parseClassHashes(List<String> lines) {
     Map<String, HashCode> classNames = new HashMap<>();

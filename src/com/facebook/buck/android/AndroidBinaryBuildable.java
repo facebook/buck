@@ -23,7 +23,7 @@ import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -665,7 +665,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ImmutableList.Builder<Path> outputAssetLibrariesBuilder) {
     return new AbstractExecutionStep("rename_asset_libraries_as_temp_files_" + module.getName()) {
       @Override
-      public StepExecutionResult execute(ExecutionContext context) throws IOException {
+      public StepExecutionResult execute(StepExecutionContext context) throws IOException {
         ProjectFilesystem filesystem = getProjectFilesystem();
         for (Path libPath : inputAssetLibrariesBuilder.build()) {
           Path tempPath = libPath.resolveSibling(libPath.getFileName() + "~");
@@ -684,7 +684,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ImmutableSortedSet.Builder<Path> inputAssetLibrariesBuilder) {
     return new AbstractExecutionStep("write_metadata_for_asset_libraries_" + module.getName()) {
       @Override
-      public StepExecutionResult execute(ExecutionContext context) throws IOException {
+      public StepExecutionResult execute(StepExecutionContext context) throws IOException {
         ProjectFilesystem filesystem = getProjectFilesystem();
         // Walk file tree to find libraries
         filesystem.walkRelativeFileTree(

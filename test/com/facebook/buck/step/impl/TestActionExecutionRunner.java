@@ -18,7 +18,7 @@ package com.facebook.buck.step.impl;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.AbstractAction;
@@ -97,7 +97,7 @@ public class TestActionExecutionRunner {
 
     StepExecutionResult executionResult =
         step.execute(
-            ExecutionContext.builder()
+            StepExecutionContext.builder()
                 .setConsole(Console.createNullConsole())
                 .setBuckEventBus(testEventBus)
                 .setPlatform(Platform.UNKNOWN)

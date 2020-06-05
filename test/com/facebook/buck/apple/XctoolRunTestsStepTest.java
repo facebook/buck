@@ -25,7 +25,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.selectors.TestSelectorList;
@@ -98,7 +98,7 @@ public class XctoolRunTestsStepTest {
     FakeProcess fakeXctoolSuccess = new FakeProcess(0, "", "");
     FakeProcessExecutor processExecutor =
         new FakeProcessExecutor(ImmutableMap.of(xctoolParams, fakeXctoolSuccess));
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(processExecutor)
             .setEnvironment(ImmutableMap.of())
@@ -153,7 +153,7 @@ public class XctoolRunTestsStepTest {
     FakeProcessExecutor processExecutor =
         new FakeProcessExecutor(ImmutableMap.of(xctoolParams, fakeXctoolFailure));
     TestConsole testConsole = new TestConsole();
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(processExecutor)
             .setEnvironment(ImmutableMap.of())
@@ -214,7 +214,7 @@ public class XctoolRunTestsStepTest {
     FakeProcess fakeXctoolSuccess = new FakeProcess(0, "", "");
     FakeProcessExecutor processExecutor =
         new FakeProcessExecutor(ImmutableMap.of(xctoolParams, fakeXctoolSuccess));
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(processExecutor)
             .setEnvironment(ImmutableMap.of())
@@ -273,7 +273,7 @@ public class XctoolRunTestsStepTest {
     FakeProcess fakeXctoolSuccess = new FakeProcess(0, "", "");
     FakeProcessExecutor processExecutor =
         new FakeProcessExecutor(ImmutableMap.of(xctoolParams, fakeXctoolSuccess));
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(processExecutor)
             .setEnvironment(ImmutableMap.of())
@@ -332,7 +332,7 @@ public class XctoolRunTestsStepTest {
     FakeProcess fakeXctoolSuccess = new FakeProcess(0, "", "");
     FakeProcessExecutor processExecutor =
         new FakeProcessExecutor(ImmutableMap.of(xctoolParams, fakeXctoolSuccess));
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(processExecutor)
             .setEnvironment(ImmutableMap.of())
@@ -389,7 +389,7 @@ public class XctoolRunTestsStepTest {
     FakeProcess fakeXctoolTestFailure = new FakeProcess(1, "", "");
     FakeProcessExecutor processExecutor =
         new FakeProcessExecutor(ImmutableMap.of(xctoolParams, fakeXctoolTestFailure));
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(processExecutor)
             .setEnvironment(ImmutableMap.of())
@@ -444,7 +444,7 @@ public class XctoolRunTestsStepTest {
     FakeProcess fakeXctoolFailure = new FakeProcess(400, "", "");
     FakeProcessExecutor processExecutor =
         new FakeProcessExecutor(ImmutableMap.of(xctoolParams, fakeXctoolFailure));
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(processExecutor)
             .setEnvironment(ImmutableMap.of())
@@ -536,7 +536,7 @@ public class XctoolRunTestsStepTest {
                   // is run with the correct -only parameters. (We don't really care what
                   // the return value of this xctool is, so we make it always succeed.)
                   xctoolRunTestsParamsWithOnlyFilters, fakeXctoolSuccess));
-      ExecutionContext executionContext =
+      StepExecutionContext executionContext =
           TestExecutionContext.newBuilder()
               .setProcessExecutor(processExecutor)
               .setEnvironment(ImmutableMap.of())
@@ -599,7 +599,7 @@ public class XctoolRunTestsStepTest {
         new FakeProcessExecutor(
             ImmutableMap.of(xctoolListOnlyParams, fakeXctoolListTestsFailureProcess));
     TestConsole testConsole = new TestConsole();
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(processExecutor)
             .setEnvironment(ImmutableMap.of())
@@ -669,7 +669,7 @@ public class XctoolRunTestsStepTest {
       FakeProcessExecutor processExecutor =
           new FakeProcessExecutor(
               ImmutableMap.of(xctoolListOnlyParams, fakeXctoolListTestsProcess));
-      ExecutionContext executionContext =
+      StepExecutionContext executionContext =
           TestExecutionContext.newBuilder()
               .setProcessExecutor(processExecutor)
               .setEnvironment(ImmutableMap.of())
@@ -732,7 +732,7 @@ public class XctoolRunTestsStepTest {
     FakeProcess fakeXctoolSuccess = new FakeProcess(0, "", "");
     FakeProcessExecutor processExecutor =
         new FakeProcessExecutor(ImmutableMap.of(xctoolParams, fakeXctoolSuccess));
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(processExecutor)
             .setEnvironment(ImmutableMap.of())

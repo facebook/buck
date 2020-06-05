@@ -21,7 +21,7 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -229,7 +229,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
     steps.add(
         new AbstractExecutionStep("write_primary_dex_input_metadata") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) throws IOException {
+          public StepExecutionResult execute(StepExecutionContext context) throws IOException {
             writePrimaryDexInputMetadata(primaryDexInputHashesPath, result.primaryDexInputMetadata);
             return StepExecutionResults.SUCCESS;
           }
@@ -238,7 +238,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
     steps.add(
         new AbstractExecutionStep("write_referenced_resources") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) throws IOException {
+          public StepExecutionResult execute(StepExecutionContext context) throws IOException {
             ImmutableList.Builder<String> builder = ImmutableList.builder();
             for (DexProducedFromJavaLibrary dex : preDexDeps) {
               builder.addAll(dex.getReferencedResources());
@@ -280,7 +280,8 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
     steps.add(
         new AbstractExecutionStep("write_metadata_txt") {
           @Override
-          public StepExecutionResult execute(ExecutionContext executionContext) throws IOException {
+          public StepExecutionResult execute(StepExecutionContext executionContext)
+              throws IOException {
             Map<Path, DexWithClasses> metadataTxtEntries = result.metadataTxtDexEntries;
             List<String> lines = Lists.newArrayListWithCapacity(metadataTxtEntries.size());
             for (Map.Entry<Path, DexWithClasses> entry : metadataTxtEntries.entrySet()) {

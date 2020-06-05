@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.ConsoleEvent;
@@ -72,7 +72,7 @@ public class WorkerShellStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     // Use the process's startup command as the key.
     WorkerJobParams paramsToUse = getWorkerJobParamsToUse(context.getPlatform());
@@ -109,7 +109,7 @@ public class WorkerShellStep implements Step {
   }
 
   @VisibleForTesting
-  String getExpandedJobArgs(ExecutionContext context) {
+  String getExpandedJobArgs(StepExecutionContext context) {
     return expandEnvironmentVariables(
         this.getWorkerJobParamsToUse(context.getPlatform()).getJobArgs(),
         getEnvironmentVariables());
@@ -170,7 +170,7 @@ public class WorkerShellStep implements Step {
   }
 
   @Override
-  public final String getDescription(ExecutionContext context) {
+  public final String getDescription(StepExecutionContext context) {
     return String.format(
         "Sending job with args '%s' to the process started with '%s'",
         getExpandedJobArgs(context),

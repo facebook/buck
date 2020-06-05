@@ -27,6 +27,7 @@ import com.facebook.buck.android.exopackage.ExopackageInfo.DexInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
+import com.facebook.buck.core.build.engine.impl.TestExecutionContextUtils;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -91,7 +92,7 @@ public class ExopackageInstallerIntegrationTest {
   public void setUp() throws Exception {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
-    executionContext = TestExecutionContext.newInstance();
+    executionContext = TestExecutionContextUtils.executionContextBuilder().build();
     currentBuildState = null;
     filesystem.mkdirs(dexDirectory);
     filesystem.mkdirs(nativeDirectory);
@@ -592,7 +593,7 @@ public class ExopackageInstallerIntegrationTest {
         }
       }
       CopyNativeLibraries.createMetadataStep(filesystem, nativeManifest, nativeDirectory)
-          .execute(executionContext);
+          .execute(TestExecutionContext.newInstance());
       nativeLibsInfo =
           Optional.of(
               ExopackageInfo.NativeLibsInfo.of(
@@ -683,7 +684,7 @@ public class ExopackageInstallerIntegrationTest {
       assertTrue(
           new ExopackageInstaller(
                   new TestActionGraphBuilder().getSourcePathResolver(),
-                  executionContext,
+                  executionContext.getBuckEventBus(),
                   filesystem,
                   FAKE_PACKAGE_NAME,
                   device)
@@ -740,7 +741,7 @@ public class ExopackageInstallerIntegrationTest {
       zf.write(apkContent.getBytes(StandardCharsets.US_ASCII), 0, apkContent.length());
       zf.closeEntry();
     }
-    ZipScrubberStep.of(filesystem.resolve(apkPath)).execute(executionContext);
+    ZipScrubberStep.of(filesystem.resolve(apkPath)).execute(TestExecutionContext.newInstance());
   }
 
   private String createFakeManifest(String manifestContent) {

@@ -21,9 +21,11 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.io.Closer;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,7 +34,27 @@ import org.immutables.value.Value;
 
 /** The context exposed for executing {@link com.facebook.buck.step.Step}s */
 @BuckStyleValueWithBuilder
-public abstract class ExecutionContext extends IsolatedExecutionContext {
+public abstract class StepExecutionContext extends IsolatedExecutionContext {
+
+  public static StepExecutionContext from(ExecutionContext executionContext) {
+    return StepExecutionContext.builder()
+        .setConsole(executionContext.getConsole())
+        .setBuckEventBus(executionContext.getBuckEventBus())
+        .setPlatform(executionContext.getPlatform())
+        .setEnvironment(executionContext.getEnvironment())
+        .setProcessExecutor(executionContext.getProcessExecutor())
+        .setAndroidDevicesHelper(executionContext.getAndroidDevicesHelper())
+        .setPersistentWorkerPools(executionContext.getPersistentWorkerPools())
+        .setCellPathResolver(executionContext.getCellPathResolver())
+        .setBuildCellRootPath(executionContext.getBuildCellRootPath())
+        .setProjectFilesystemFactory(executionContext.getProjectFilesystemFactory())
+        .setClassLoaderCache(executionContext.getClassLoaderCache())
+        .setShouldReportAbsolutePaths(executionContext.shouldReportAbsolutePaths())
+        .setRuleKeyDiagnosticsMode(executionContext.getRuleKeyDiagnosticsMode())
+        .setTruncateFailingCommandEnabled(executionContext.isTruncateFailingCommandEnabled())
+        .setWorkerProcessPools(executionContext.getWorkerProcessPools())
+        .build();
+  }
 
   public abstract Optional<AndroidDevicesHelper> getAndroidDevicesHelper();
 
@@ -73,6 +95,26 @@ public abstract class ExecutionContext extends IsolatedExecutionContext {
     return new ConcurrentHashMap<>();
   }
 
+  public StepExecutionContext createSubContext(
+      PrintStream newStdout, PrintStream newStderr, Optional<Verbosity> verbosityOverride) {
+    Console console =
+        new Console(
+            verbosityOverride.orElse(this.getConsole().getVerbosity()),
+            newStdout,
+            newStderr,
+            this.getConsole().getAnsi());
+
+    // This should replace (or otherwise retain) all of the closeable parts of the context.
+    return StepExecutionContext.builder()
+        .from(this)
+        .setConsole(console)
+        .setProcessExecutor(getProcessExecutor().cloneWithOutputStreams(newStdout, newStderr))
+        .setClassLoaderCache(getClassLoaderCache().addRef())
+        .setAndroidDevicesHelper(Optional.empty())
+        .setWorkerProcessPools(new ConcurrentHashMap<>())
+        .build();
+  }
+
   @Override
   protected void registerCloseables(Closer closer) {
     super.registerCloseables(closer);
@@ -86,13 +128,5 @@ public abstract class ExecutionContext extends IsolatedExecutionContext {
     return new Builder();
   }
 
-  public ExecutionContext withProcessExecutor(ProcessExecutor processExecutor) {
-    if (getProcessExecutor() == processExecutor) {
-      return this;
-    }
-
-    return builder().from(this).setProcessExecutor(processExecutor).build();
-  }
-
-  public static class Builder extends ImmutableExecutionContext.Builder {}
+  public static class Builder extends ImmutableStepExecutionContext.Builder {}
 }

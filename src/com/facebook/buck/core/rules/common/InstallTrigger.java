@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.rules.common;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -45,7 +45,7 @@ public class InstallTrigger implements AddsToRuleKey {
     return filesystem.getBuckPaths().getScratchDir().resolve("install.trigger");
   }
 
-  public void verify(ExecutionContext context) {
+  public void verify(StepExecutionContext context) {
     Optional<String> uuid = filesystem.readFirstLine(getTriggerPath(filesystem));
     Preconditions.checkState(uuid.isPresent());
     Preconditions.checkState(uuid.get().equals(context.getBuildId().toString()));

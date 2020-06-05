@@ -18,7 +18,7 @@ package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -175,7 +175,7 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     }
 
     @Override
-    protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+    protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
       SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
       return ImmutableList.<String>builder()
           .addAll(haddockTool.getCommandPrefix(resolver))

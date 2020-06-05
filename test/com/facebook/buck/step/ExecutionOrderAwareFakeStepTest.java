@@ -19,7 +19,7 @@ package com.facebook.buck.step;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Test;
@@ -31,7 +31,7 @@ public class ExecutionOrderAwareFakeStepTest {
     ExecutionOrderAwareFakeStep step1 = new ExecutionOrderAwareFakeStep("name", "desc", 0, order);
     ExecutionOrderAwareFakeStep step2 = new ExecutionOrderAwareFakeStep("name", "desc", 0, order);
     ExecutionOrderAwareFakeStep step3 = new ExecutionOrderAwareFakeStep("name", "desc", 0, order);
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
     step1.execute(context);
     step2.execute(context);
     step3.execute(context);

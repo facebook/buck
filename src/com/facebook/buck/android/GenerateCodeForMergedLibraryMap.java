@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -131,7 +131,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
 
   private class WriteMapDataStep implements Step {
     @Override
-    public StepExecutionResult execute(ExecutionContext context) throws IOException {
+    public StepExecutionResult execute(StepExecutionContext context) throws IOException {
       ProjectFilesystem projectFilesystem = getProjectFilesystem();
       try (Writer out =
           new BufferedWriter(
@@ -158,14 +158,14 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
     }
 
     @Override
-    public String getDescription(ExecutionContext context) {
+    public String getDescription(StepExecutionContext context) {
       return String.format("%s > %s", getShortName(), getMappingPath());
     }
   }
 
   private class WriteTargetsFileStep implements Step {
     @Override
-    public StepExecutionResult execute(ExecutionContext context) throws IOException {
+    public StepExecutionResult execute(StepExecutionContext context) throws IOException {
       ProjectFilesystem projectFilesystem = getProjectFilesystem();
       try (Writer out =
           new BufferedWriter(
@@ -190,7 +190,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
     }
 
     @Override
-    public String getDescription(ExecutionContext context) {
+    public String getDescription(StepExecutionContext context) {
       return String.format("%s > %s", getShortName(), getMappingPath());
     }
   }
@@ -204,7 +204,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
     }
 
     @Override
-    protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+    protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
       Preconditions.checkState(
           GenerateCodeForMergedLibraryMap.this.codeGenerator instanceof BinaryBuildRule);
       String executableCommand =

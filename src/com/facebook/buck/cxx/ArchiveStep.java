@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.cxx.toolchain.Archiver;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.ConsoleEvent;
@@ -115,7 +115,7 @@ class ArchiveStep implements Step {
   }
 
   private ProcessExecutor.Result runArchiver(
-      ExecutionContext context, ImmutableList<String> command)
+      StepExecutionContext context, ImmutableList<String> command)
       throws IOException, InterruptedException {
     Map<String, String> env = new HashMap<>(context.getEnvironment());
     env.putAll(environment);
@@ -145,7 +145,7 @@ class ArchiveStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     ImmutableList<String> allInputs = getAllInputs();
     if (allInputs.isEmpty()) {
@@ -182,7 +182,7 @@ class ArchiveStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     ImmutableList.Builder<String> command =
         archiver.isArgfileRequired()
             ? ImmutableList.<String>builder().addAll(archiverCommand).add("@" + getArgfile())

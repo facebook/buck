@@ -26,7 +26,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -214,7 +214,7 @@ public class GenruleTest {
             "genrule"),
         steps);
 
-    ExecutionContext executionContext = newEmptyExecutionContext();
+    StepExecutionContext executionContext = newEmptyExecutionContext();
 
     assertEquals(
         RmStep.of(
@@ -477,14 +477,14 @@ public class GenruleTest {
     assertThat(genrule.getBuildDeps(), Matchers.hasItems(shBinaryRule, workerToolRule));
   }
 
-  private ExecutionContext newEmptyExecutionContext(Platform platform) {
+  private StepExecutionContext newEmptyExecutionContext(Platform platform) {
     return TestExecutionContext.newBuilder()
         .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
         .setPlatform(platform)
         .build();
   }
 
-  private ExecutionContext newEmptyExecutionContext() {
+  private StepExecutionContext newEmptyExecutionContext() {
     return newEmptyExecutionContext(Platform.detect());
   }
 
@@ -514,8 +514,8 @@ public class GenruleTest {
     String bash = "rm -rf /usr";
     String cmdExe = "rmdir /s /q C:\\Windows";
     String cmd = "echo \"Hello\"";
-    ExecutionContext linuxExecutionContext = newEmptyExecutionContext(Platform.LINUX);
-    ExecutionContext windowsExecutionContext = newEmptyExecutionContext(Platform.WINDOWS);
+    StepExecutionContext linuxExecutionContext = newEmptyExecutionContext(Platform.LINUX);
+    StepExecutionContext windowsExecutionContext = newEmptyExecutionContext(Platform.WINDOWS);
 
     // Test platform-specific
     Genrule genrule =
@@ -587,7 +587,7 @@ public class GenruleTest {
 
   private void assertGenruleCommandAndScript(
       AbstractGenruleStep genruleStep,
-      ExecutionContext context,
+      StepExecutionContext context,
       ImmutableList<String> expectedCommandPrefix,
       String expectedScriptFileContents)
       throws IOException {

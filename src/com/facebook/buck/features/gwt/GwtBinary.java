@@ -18,7 +18,7 @@ package com.facebook.buck.features.gwt;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -157,7 +157,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
           @Override
           protected ImmutableList<String> getShellCommandInternal(
-              ExecutionContext executionContext) {
+              StepExecutionContext executionContext) {
             ImmutableList.Builder<String> javaArgsBuilder = ImmutableList.builder();
             javaArgsBuilder.addAll(
                 javaRuntimeLauncher.getCommandPrefix(context.getSourcePathResolver()));

@@ -26,7 +26,7 @@ import com.android.sdklib.build.IArchiveBuilder;
 import com.android.sdklib.build.SealedApkException;
 import com.android.tools.build.bundletool.commands.BuildBundleCommand;
 import com.android.tools.build.bundletool.model.BundleModule;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -100,7 +100,7 @@ public class AabBuilderStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     PrintStream output = null;
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
       output = context.getStdOut();
@@ -159,7 +159,7 @@ public class AabBuilderStep implements Step {
   }
 
   private StepExecutionResult addModule(
-      ExecutionContext context,
+      StepExecutionContext context,
       Path moduleGenPath,
       File fakeResApk,
       @Nullable PrintStream verboseStream,
@@ -497,7 +497,7 @@ public class AabBuilderStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     ImmutableList.Builder<String> args =
         ImmutableList.<String>builder()
             .add("bundletool")

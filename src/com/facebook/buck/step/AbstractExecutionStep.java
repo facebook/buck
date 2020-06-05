@@ -16,12 +16,12 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import java.io.IOException;
 
 /**
  * Abstract implementation of {@link Step} that takes the description as a constructor parameter and
- * requires only the implementation of {@link #execute(ExecutionContext)}. This facilitates the
+ * requires only the implementation of {@link #execute(StepExecutionContext)}. This facilitates the
  * creation of an anonymous implementation of {@link Step}.
  */
 public abstract class AbstractExecutionStep implements Step {
@@ -33,7 +33,7 @@ public abstract class AbstractExecutionStep implements Step {
   }
 
   @Override
-  public abstract StepExecutionResult execute(ExecutionContext context)
+  public abstract StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException;
 
   @Override
@@ -42,7 +42,7 @@ public abstract class AbstractExecutionStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return description;
   }
 }

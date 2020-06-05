@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.BuckPaths;
@@ -52,7 +52,7 @@ public class GenerateManifestStepTest {
 
   @Test
   public void testManifestGeneration() throws Exception {
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
     ProjectFilesystem filesystem =
         context
             .getProjectFilesystemFactory()
@@ -96,7 +96,7 @@ public class GenerateManifestStepTest {
 
   @Test
   public void testManifestGenerationWithModule() throws Exception {
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
     ProjectFilesystem filesystem =
         context
             .getProjectFilesystemFactory()

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
@@ -34,7 +34,7 @@ import org.junit.Test;
 
 public class GetStringsFilesStepTest {
   private ProjectFilesystem filesystem;
-  private ExecutionContext context;
+  private StepExecutionContext context;
 
   private void setUpFakeFilesystem(Set<Path> files) {
     filesystem = new FakeProjectFilesystem(files);

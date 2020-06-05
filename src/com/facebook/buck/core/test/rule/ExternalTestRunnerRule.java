@@ -17,14 +17,14 @@
 package com.facebook.buck.core.test.rule;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.test.TestRunningOptions;
 import java.io.IOException;
 
 /** A interface describing {@link TestRule}s which support being run by an external test runner. */
 public interface ExternalTestRunnerRule extends TestRule {
   ExternalTestSpec getExternalTestRunnerSpec(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext);
 

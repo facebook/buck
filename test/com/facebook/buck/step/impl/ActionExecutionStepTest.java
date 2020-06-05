@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -200,9 +200,9 @@ public class ActionExecutionStepTest {
     assertFalse("file must exist: " + expectedPath, projectFilesystem.exists(expectedPath));
   }
 
-  private ExecutionContext.Builder getCommonExecutionContentBuilder(
+  private StepExecutionContext.Builder getCommonExecutionContentBuilder(
       ProjectFilesystem projectFilesystem, Path baseCell, BuckEventBus testEventBus) {
-    return ExecutionContext.builder()
+    return StepExecutionContext.builder()
         .setConsole(Console.createNullConsole())
         .setBuckEventBus(testEventBus)
         .setPlatform(Platform.UNKNOWN)

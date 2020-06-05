@@ -18,7 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
@@ -254,7 +254,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
     return new AbstractExecutionStep(STEP_CATEGORY + "_link_conflicts") {
       @Override
-      public StepExecutionResult execute(ExecutionContext context) {
+      public StepExecutionResult execute(StepExecutionContext context) {
         for (String conflict : conflicts) {
           context.getBuckEventBus().post(ConsoleEvent.create(Level.SEVERE, conflict));
         }

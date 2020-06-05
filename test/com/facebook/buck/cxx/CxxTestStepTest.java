@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.environment.Platform;
@@ -45,7 +45,7 @@ public class CxxTestStepTest {
 
   private Path exitCode;
   private Path output;
-  private ExecutionContext context;
+  private StepExecutionContext context;
   private FakeProjectFilesystem filesystem;
 
   private static int readExitCode(Path file) throws IOException {

@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -59,7 +59,7 @@ public class TouchStepTest {
             tmp.getRoot(),
             ImmutableSet.of());
     TouchStep touchStep = new TouchStep(projectFilesystem, path);
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     touchStep.execute(executionContext);
     assertTrue(projectFilesystem.exists(path));
   }
@@ -75,7 +75,7 @@ public class TouchStepTest {
             ImmutableSet.of(path));
     FileTime lastModifiedTime = projectFilesystem.getLastModifiedTime(path);
     TouchStep touchStep = new TouchStep(projectFilesystem, path);
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     touchStep.execute(executionContext);
     assertTrue(projectFilesystem.exists(path));
     assertTrue(lastModifiedTime.compareTo(projectFilesystem.getLastModifiedTime(path)) < 0);

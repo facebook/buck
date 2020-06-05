@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
@@ -141,7 +141,7 @@ public class InstallTriggerIntegrationTest {
         return ImmutableList.of(
             new AbstractExecutionStep("verify_trigger") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context) {
+              public StepExecutionResult execute(StepExecutionContext context) {
                 trigger.verify(context);
                 return StepExecutionResults.SUCCESS;
               }

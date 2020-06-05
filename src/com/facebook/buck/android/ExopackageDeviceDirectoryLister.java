@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -78,7 +78,7 @@ public class ExopackageDeviceDirectoryLister extends AbstractBuildRule {
     return ImmutableList.of(
         new AbstractExecutionStep("listing_exo_contents") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
+          public StepExecutionResult execute(StepExecutionContext context)
               throws IOException, InterruptedException {
             trigger.verify(context);
             ConcurrentHashMap<String, SortedSet<String>> contents = new ConcurrentHashMap<>();

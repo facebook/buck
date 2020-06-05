@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.groovy;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
@@ -78,7 +78,7 @@ class GroovycStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()
@@ -102,7 +102,7 @@ class GroovycStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return Joiner.on(" ").join(createCommand());
   }
 

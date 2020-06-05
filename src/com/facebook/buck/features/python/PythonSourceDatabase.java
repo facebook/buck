@@ -17,7 +17,7 @@
 package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -162,7 +162,7 @@ public class PythonSourceDatabase extends ModernBuildRule<PythonSourceDatabase.I
                 dependencies.resolve(buildContext.getSourcePathResolver());
 
             @Override
-            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            public StepExecutionResult execute(StepExecutionContext context) throws IOException {
               try (OutputStream stream =
                   new BufferedOutputStream(
                       Files.newOutputStream(context.getBuildCellRootPath().resolve(output)))) {

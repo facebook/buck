@@ -20,7 +20,7 @@ import static java.lang.Thread.sleep;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.event.BuckEvent;
@@ -125,18 +125,19 @@ public class WorkerShellStepTest {
                 : Optional.of(WorkerProcessIdentity.of(persistentWorkerKey, workerHash))));
   }
 
-  private ExecutionContext createExecutionContextWith(int exitCode, String stdout, String stderr) {
+  private StepExecutionContext createExecutionContextWith(
+      int exitCode, String stdout, String stderr) {
     WorkerJobResult jobResult =
         WorkerJobResult.of(exitCode, Optional.of(stdout), Optional.of(stderr));
     return createExecutionContextWith(ImmutableMap.of("myJobArgs", jobResult));
   }
 
-  private ExecutionContext createExecutionContextWith(
+  private StepExecutionContext createExecutionContextWith(
       ImmutableMap<String, WorkerJobResult> jobArgs) {
     return createExecutionContextWith(jobArgs, 1);
   }
 
-  private ExecutionContext createExecutionContextWith(
+  private StepExecutionContext createExecutionContextWith(
       ImmutableMap<String, WorkerJobResult> jobArgs, int poolCapacity) {
     WorkerProcessPool workerProcessPool =
         new WorkerProcessPool(
@@ -246,7 +247,7 @@ public class WorkerShellStepTest {
   public void testJobIsExecutedAndResultIsReceived() throws IOException, InterruptedException {
     String stdout = "my stdout";
     String stderr = "my stderr";
-    ExecutionContext context = createExecutionContextWith(0, stdout, stderr);
+    StepExecutionContext context = createExecutionContextWith(0, stdout, stderr);
     WorkerShellStep step =
         createWorkerShellStep(
             createJobParams(
@@ -274,7 +275,7 @@ public class WorkerShellStepTest {
   @Test
   public void testPersistentJobIsExecutedAndResultIsReceived()
       throws IOException, InterruptedException {
-    ExecutionContext context = createExecutionContextWith(0, "", "");
+    StepExecutionContext context = createExecutionContextWith(0, "", "");
     WorkerShellStep step =
         createWorkerShellStep(
             createJobParams(
@@ -297,7 +298,7 @@ public class WorkerShellStepTest {
       throws IOException, InterruptedException, TimeoutException, ExecutionException {
     String jobArgs1 = "jobArgs1";
     String jobArgs2 = "jobArgs2";
-    ExecutionContext context =
+    StepExecutionContext context =
         createExecutionContextWith(
             ImmutableMap.of(
                 jobArgs1, WorkerJobResult.of(0, Optional.of("stdout 1"), Optional.of("stderr 1")),
@@ -331,7 +332,7 @@ public class WorkerShellStepTest {
   @Test
   public void testStdErrIsPrintedAsErrorIfJobFails() throws IOException, InterruptedException {
     String stderr = "my stderr";
-    ExecutionContext context = createExecutionContextWith(1, "", stderr);
+    StepExecutionContext context = createExecutionContextWith(1, "", stderr);
     WorkerShellStep step =
         createWorkerShellStep(
             createJobParams(
@@ -378,7 +379,7 @@ public class WorkerShellStepTest {
           }
         };
 
-    ExecutionContext context =
+    StepExecutionContext context =
         TestExecutionContext.newBuilder()
             .setEnvironment(
                 ImmutableMap.of(
@@ -423,7 +424,7 @@ public class WorkerShellStepTest {
             new WorkerProcessPoolFactory(new FakeProjectFilesystem(), false) {
               @Override
               public WorkerProcess createWorkerProcess(
-                  ProcessExecutorParams processParams, ExecutionContext context, Path tmpDir)
+                  ProcessExecutorParams processParams, StepExecutionContext context, Path tmpDir)
                   throws IOException {
                 try {
                   sleep(5);
@@ -436,7 +437,7 @@ public class WorkerShellStepTest {
       }
     }
 
-    ExecutionContext context =
+    StepExecutionContext context =
         TestExecutionContext.newBuilder()
             .setPlatform(Platform.LINUX)
             .setConsole(new TestConsole(Verbosity.ALL))
@@ -475,7 +476,7 @@ public class WorkerShellStepTest {
     int existingPoolSize = 2;
     int stepPoolSize = 4;
 
-    ExecutionContext context =
+    StepExecutionContext context =
         createExecutionContextWith(
             ImmutableMap.of("jobArgs", WorkerJobResult.of(0, Optional.of(""), Optional.of(""))),
             existingPoolSize);
@@ -510,9 +511,9 @@ public class WorkerShellStepTest {
 
   private static class ConcurrentExecution extends Thread {
     private final WorkerShellStep step;
-    private final ExecutionContext context;
+    private final StepExecutionContext context;
 
-    ConcurrentExecution(WorkerShellStep step, ExecutionContext context) {
+    ConcurrentExecution(WorkerShellStep step, StepExecutionContext context) {
       this.step = step;
       this.context = context;
     }

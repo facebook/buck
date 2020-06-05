@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.d;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.environment.Platform;
@@ -50,7 +50,7 @@ public class DCompileStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
     return ImmutableList.<String>builder()
         .addAll(compiler)
         .addAll(flags)

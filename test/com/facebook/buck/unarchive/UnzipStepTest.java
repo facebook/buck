@@ -19,7 +19,7 @@ package com.facebook.buck.unarchive;
 import static com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem.createJavaOnlyFilesystem;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
@@ -54,7 +54,7 @@ public class UnzipStepTest {
     UnzipStep unzipStep =
         new UnzipStep(projectFilesystem, zipFile, outputDirectory, Optional.empty());
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     assertEquals(
         "unzip /abs/path/the/zipfile.zip -d /abs/path/an/output/dir",
         unzipStep.getDescription(executionContext));

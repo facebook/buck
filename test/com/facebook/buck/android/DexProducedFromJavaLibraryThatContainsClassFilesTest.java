@@ -27,7 +27,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -100,7 +100,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
     steps = steps.subList(4, steps.size());
 
-    ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
+    StepExecutionContext executionContext = TestExecutionContext.newBuilder().build();
 
     String expectedDxCommand =
         String.format(
@@ -165,7 +165,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             false);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
-    ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
+    StepExecutionContext executionContext = TestExecutionContext.newBuilder().build();
 
     Step recordArtifactAndMetadataStep = Iterables.getLast(steps);
     assertThat(recordArtifactAndMetadataStep.getShortName(), startsWith("record_"));

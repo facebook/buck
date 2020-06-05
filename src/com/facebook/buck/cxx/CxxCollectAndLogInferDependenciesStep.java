@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -65,7 +65,7 @@ final class CxxCollectAndLogInferDependenciesStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     ImmutableList<String> output;
     if (captureTransitiveRule.isPresent()) {
       output = processCaptureTransitiveRule(captureTransitiveRule.get());
@@ -82,7 +82,7 @@ final class CxxCollectAndLogInferDependenciesStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return "Log Infer's dependencies used for the analysis";
   }
 }

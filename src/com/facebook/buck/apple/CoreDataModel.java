@@ -19,7 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -97,7 +97,7 @@ public class CoreDataModel extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           new ShellStep(getProjectFilesystem().getRootPath(), withDownwardApi) {
             @Override
             protected ImmutableList<String> getShellCommandInternal(
-                ExecutionContext executionContext) {
+                StepExecutionContext executionContext) {
               ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
 
               commandBuilder.addAll(momc.getCommandPrefix(context.getSourcePathResolver()));

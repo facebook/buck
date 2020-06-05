@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
@@ -132,7 +132,7 @@ class CxxPreprocessAndCompileStep implements Step {
    *
    * @return Half-configured ProcessExecutorParams.Builder
    */
-  private ProcessExecutorParams.Builder makeSubprocessBuilder(ExecutionContext context) {
+  private ProcessExecutorParams.Builder makeSubprocessBuilder(StepExecutionContext context) {
     Map<String, String> env = new HashMap<>(context.getEnvironment());
 
     env.putAll(
@@ -179,7 +179,7 @@ class CxxPreprocessAndCompileStep implements Step {
         input);
   }
 
-  private ProcessExecutor.Result executeCompilation(ExecutionContext context)
+  private ProcessExecutor.Result executeCompilation(StepExecutionContext context)
       throws IOException, InterruptedException {
     ProcessExecutorParams.Builder builder = makeSubprocessBuilder(context);
 
@@ -240,7 +240,7 @@ class CxxPreprocessAndCompileStep implements Step {
     return result;
   }
 
-  private void processResult(ProcessExecutor.Result result, ExecutionContext context) {
+  private void processResult(ProcessExecutor.Result result, StepExecutionContext context) {
     // If we generated any error output, print that to the console.
     String err = result.getStderr().orElse("");
     if (!err.isEmpty()) {
@@ -259,7 +259,7 @@ class CxxPreprocessAndCompileStep implements Step {
    * @return The sanitized version of stderr captured during step execution. Sanitized output does
    *     not include symlink references and other internal buck details.
    */
-  private String getSanitizedStderr(ProcessExecutor.Result result, ExecutionContext context)
+  private String getSanitizedStderr(ProcessExecutor.Result result, StepExecutionContext context)
       throws IOException {
     String stdErr = compiler.getStderr(result).orElse("");
     Stream<String> lines = MoreStrings.lines(stdErr).stream();
@@ -335,7 +335,7 @@ class CxxPreprocessAndCompileStep implements Step {
     filesystem.writeLinesToPath(srcAndIncludes, depFile);
   }
 
-  private String formatErrors(Stream<String> errorLines, ExecutionContext context) {
+  private String formatErrors(Stream<String> errorLines, StepExecutionContext context) {
     CxxErrorTransformer cxxErrorTransformer =
         new CxxErrorTransformer(
             filesystem, context.shouldReportAbsolutePaths(), headerPathNormalizer);
@@ -364,7 +364,7 @@ class CxxPreprocessAndCompileStep implements Step {
   }
 
   private ConsoleEvent createConsoleEvent(
-      ExecutionContext context, boolean commandOutputsColor, Level level, String message) {
+      StepExecutionContext context, boolean commandOutputsColor, Level level, String message) {
     if (context.getAnsi().isAnsiTerminal() && commandOutputsColor) {
       return ConsoleEvent.createForMessageWithAnsiEscapeCodes(level, message);
     } else {
@@ -373,7 +373,7 @@ class CxxPreprocessAndCompileStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     if (LOG.isDebugEnabled()) {
       LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
@@ -429,7 +429,7 @@ class CxxPreprocessAndCompileStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     if (context.getVerbosity().shouldPrintCommand()) {
       return Stream.concat(command.getCommandPrefix().stream(), getArguments(false).stream())
           .map(Escaper.SHELL_ESCAPER)

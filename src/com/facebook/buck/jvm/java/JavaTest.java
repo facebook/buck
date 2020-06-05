@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
@@ -216,7 +216,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private JUnitStep getJUnitStep(
-      ExecutionContext executionContext,
+      BuckEventBus buckEventBus,
       SourcePathResolverAdapter pathResolver,
       TestRunningOptions options,
       Optional<Path> outDir,
@@ -234,7 +234,6 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             options.getTargetDevice(),
             options.getJavaTempDir());
 
-    BuckEventBus buckEventBus = executionContext.getBuckEventBus();
     BuildId buildId = buckEventBus.getBuildId();
     TestSelectorList testSelectorList = options.getTestSelectorList();
     JUnitJvmArgs args =
@@ -290,7 +289,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
    */
   @Override
   public ImmutableList<Step> runTests(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       TestRunningOptions options,
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
@@ -317,7 +316,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       for (String testClass : testClassNames) {
         junitsBuilder.add(
             getJUnitStep(
-                executionContext,
+                executionContext.getBuckEventBus(),
                 buildContext.getSourcePathResolver(),
                 options,
                 Optional.of(pathToTestOutput),
@@ -330,7 +329,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       junits =
           ImmutableList.of(
               getJUnitStep(
-                  executionContext,
+                  executionContext.getBuckEventBus(),
                   buildContext.getSourcePathResolver(),
                   options,
                   Optional.of(pathToTestOutput),
@@ -411,7 +410,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext context,
+      StepExecutionContext context,
       SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     ImmutableSet<String> contacts = getContacts();
@@ -552,10 +551,12 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ExternalTestSpec getExternalTestRunnerSpec(
-      ExecutionContext executionContext, TestRunningOptions options, BuildContext buildContext) {
+      StepExecutionContext executionContext,
+      TestRunningOptions options,
+      BuildContext buildContext) {
     externalJunitStep =
         getJUnitStep(
-            executionContext,
+            executionContext.getBuckEventBus(),
             buildContext.getSourcePathResolver(),
             options,
             Optional.empty(),
@@ -592,7 +593,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .add(
             new AbstractExecutionStep("write classpath file") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context) throws IOException {
+              public StepExecutionResult execute(StepExecutionContext context) throws IOException {
                 ImmutableSet<Path> classpathEntries = getRuntimeClasspath(buildContext);
                 getProjectFilesystem()
                     .writeLinesToPath(

@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import static java.nio.channels.FileChannel.MapMode.READ_ONLY;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.elf.Elf;
@@ -104,7 +104,7 @@ abstract class ElfCompactSectionsStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     ImmutableMap<String, Long> addresses = getNewSectionAddresses();
     Step objcopy =
@@ -122,7 +122,7 @@ abstract class ElfCompactSectionsStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return String.format("Compact ELF sections in %s", getInputFilesystem().resolve(getInput()));
   }
 }

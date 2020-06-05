@@ -17,7 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -619,7 +619,7 @@ public class GenruleBuildable implements Buildable {
       }
 
       @Override
-      public StepExecutionResult execute(ExecutionContext context)
+      public StepExecutionResult execute(StepExecutionContext context)
           throws IOException, InterruptedException {
         StepExecutionResult result = super.execute(context);
         if (result.getExitCode() != StepExecutionResults.SUCCESS_EXIT_CODE) {

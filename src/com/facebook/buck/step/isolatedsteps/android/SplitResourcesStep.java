@@ -17,7 +17,7 @@
 package com.facebook.buck.step.isolatedsteps.android;
 
 import com.facebook.buck.android.resources.ExoResourcesRewriter;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -26,6 +26,7 @@ import java.nio.file.Path;
 
 /** Step to construct build outputs for exo-for-resources. */
 public class SplitResourcesStep implements Step {
+
   private final Path absolutePathToAaptResources;
   private final Path absolutePathToOriginalRDotTxt;
   private final Path relativePathToPrimaryResourceOutputPath;
@@ -46,7 +47,7 @@ public class SplitResourcesStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     ExoResourcesRewriter.rewrite(
         absolutePathToAaptResources,
         absolutePathToOriginalRDotTxt,
@@ -62,7 +63,7 @@ public class SplitResourcesStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return String.format(
         "split_exo_resources %s %s", absolutePathToAaptResources, absolutePathToOriginalRDotTxt);
   }

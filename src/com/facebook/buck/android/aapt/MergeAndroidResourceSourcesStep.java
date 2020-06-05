@@ -23,7 +23,7 @@ import com.android.ide.common.res2.ResourceMerger;
 import com.android.ide.common.res2.ResourceSet;
 import com.android.utils.ILogger;
 import com.facebook.buck.android.BuckEventAndroidLogger;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -65,7 +65,7 @@ abstract class MergeAndroidResourceSourcesStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(StepExecutionContext context) {
     ResourceMerger merger = new ResourceMerger(1);
     try {
       for (Path resPath : getResPaths()) {
@@ -96,7 +96,7 @@ abstract class MergeAndroidResourceSourcesStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     StringBuilder sb = new StringBuilder(getShortName());
     sb.append(' ');
     Joiner.on(',').appendTo(sb, getResPaths());

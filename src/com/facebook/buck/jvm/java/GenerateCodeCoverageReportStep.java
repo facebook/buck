@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.jvm.java.JacocoConstants.JACOCO_EXEC_COVERAGE_FILE;
 import static java.util.stream.Collectors.joining;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -90,7 +90,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     Set<Path> tempDirs = new HashSet<>();
     Set<Path> extractedClassesDirectories = new HashSet<>();
@@ -116,7 +116,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
 
   @VisibleForTesting
   StepExecutionResult executeInternal(
-      ExecutionContext context, Set<Path> extractedClassesDirectories)
+      StepExecutionContext context, Set<Path> extractedClassesDirectories)
       throws IOException, InterruptedException {
     try (OutputStream propertyFileStream =
         new FileOutputStream(filesystem.resolve(propertyFile).toFile())) {
@@ -164,7 +164,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(javaRuntimeLauncher);
 

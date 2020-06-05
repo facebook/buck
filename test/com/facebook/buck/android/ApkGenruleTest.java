@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
@@ -197,7 +197,7 @@ public class ApkGenruleTest {
     Optional<Step> maybeGenruleStep =
         steps.stream().filter(step -> step instanceof AbstractGenruleStep).findFirst();
     assertTrue(maybeGenruleStep.isPresent());
-    ExecutionContext executionContext = newEmptyExecutionContext();
+    StepExecutionContext executionContext = newEmptyExecutionContext();
     AbstractGenruleStep genruleStep = (AbstractGenruleStep) maybeGenruleStep.get();
     assertEquals("genrule", genruleStep.getShortName());
     ImmutableMap<String, String> environmentVariables =
@@ -221,7 +221,7 @@ public class ApkGenruleTest {
     assertEquals("python signer.py $APK key.properties > $OUT", scriptFileContents);
   }
 
-  private ExecutionContext newEmptyExecutionContext() {
+  private StepExecutionContext newEmptyExecutionContext() {
     return TestExecutionContext.newBuilder()
         .setPlatform(Platform.LINUX) // Fix platform to Linux to use bash in genrule.
         .build();

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.zip.rules;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -66,7 +66,7 @@ public class CopyToZipStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     if (projectFilesystem.exists(outputPath)) {
       context.postEvent(
@@ -107,7 +107,7 @@ public class CopyToZipStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     StringBuilder result = new StringBuilder();
     result.append("Create zip archive ").append(outputPath);
     if (!entryPathToAbsolutePathMap.isEmpty()) {

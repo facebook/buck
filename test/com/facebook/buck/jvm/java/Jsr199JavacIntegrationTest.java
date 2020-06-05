@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -116,7 +116,7 @@ public class Jsr199JavacIntegrationTest {
   @Test
   public void testClassesFile() throws IOException, InterruptedException {
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
@@ -171,7 +171,7 @@ public class Jsr199JavacIntegrationTest {
     graphBuilder.addToIndex(rule);
 
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
@@ -264,7 +264,7 @@ public class Jsr199JavacIntegrationTest {
     graphBuilder.addToIndex(rule);
 
     Path fakeJavacJar = Paths.get("ae036e57-77a7-4356-a79c-0f85b1a3290d", "fakeJavac.jar");
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     MockClassLoader mockClassLoader =
         new MockClassLoader(
             ClassLoader.getSystemClassLoader(),
@@ -375,7 +375,7 @@ public class Jsr199JavacIntegrationTest {
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public void jdkNotFound() {
     Jsr199Javac javac = new JdkNotFoundJavac();
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),

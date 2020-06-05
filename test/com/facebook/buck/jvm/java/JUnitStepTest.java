@@ -20,7 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.io.file.MorePaths;
@@ -90,7 +90,7 @@ public class JUnitStepTest {
             args,
             false);
 
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder().setConsole(new TestConsole(Verbosity.ALL)).build();
     assertEquals(executionContext.getVerbosity(), Verbosity.ALL);
     assertEquals(args.getDefaultTestTimeoutMillis(), 5000L);
@@ -167,7 +167,7 @@ public class JUnitStepTest {
             args,
             false);
 
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder().setConsole(new TestConsole(Verbosity.ALL)).build();
     assertEquals(executionContext.getVerbosity(), Verbosity.ALL);
     assertEquals(args.getDefaultTestTimeoutMillis(), 5000L);
@@ -284,7 +284,7 @@ public class JUnitStepTest {
             false);
 
     TestConsole console = new TestConsole(Verbosity.ALL);
-    ExecutionContext executionContext =
+    StepExecutionContext executionContext =
         TestExecutionContext.newBuilder().setConsole(console).build();
 
     List<String> observedArgs = junit.getShellCommand(executionContext);

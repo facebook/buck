@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -95,7 +95,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     Path scriptFilePath = getScriptFilePath(context);
     String scriptFileContents = getScriptFileContents(context);
@@ -107,7 +107,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
     return super.execute(context);
   }
 
-  private ImmutableList<String> getCommandLine(ExecutionContext context) {
+  private ImmutableList<String> getCommandLine(StepExecutionContext context) {
     ExecutionArgsAndCommand executionArgsAndCommand =
         getExecutionArgsAndCommand(context.getPlatform());
     ImmutableList.Builder<String> commandLineBuilder = ImmutableList.builder();
@@ -121,12 +121,12 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
     return programRunner.enhanceCommandLine(getCommandLine(context));
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandArgsForDescription(ExecutionContext context) {
+  protected ImmutableList<String> getShellCommandArgsForDescription(StepExecutionContext context) {
     return programRunner.enhanceCommandLineForDescription(getCommandLine(context));
   }
 
@@ -159,7 +159,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   @VisibleForTesting
-  public String getScriptFileContents(ExecutionContext context) {
+  public String getScriptFileContents(StepExecutionContext context) {
     Platform platform = context.getPlatform();
     ExecutionArgsAndCommand executionArgsAndCommand = getExecutionArgsAndCommand(platform);
     if (platform == Platform.WINDOWS) {
@@ -171,7 +171,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   @VisibleForTesting
-  public Path getScriptFilePath(ExecutionContext context) throws IOException {
+  public Path getScriptFilePath(StepExecutionContext context) throws IOException {
     try {
       return scriptFilePath.get(context.getPlatform());
     } catch (Exception e) {

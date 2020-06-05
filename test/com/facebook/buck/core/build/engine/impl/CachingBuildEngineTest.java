@@ -71,6 +71,7 @@ import com.facebook.buck.core.build.engine.type.DepFiles;
 import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.ExceptionWithContext;
@@ -139,7 +140,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.StepFailedException;
-import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -381,7 +381,8 @@ public class CachingBuildEngineTest {
       // Run the build.
       BuildResult result =
           cachingBuildEngine
-              .build(buildContext, TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
               .getResult()
               .get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -533,7 +534,7 @@ public class CachingBuildEngineTest {
       buildSteps.add(
           new AbstractExecutionStep("Some Short Name") {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            public StepExecutionResult execute(StepExecutionContext context) throws IOException {
               Path outputPath = pathResolver.getRelativePath(ruleToTest.getSourcePathToOutput());
               filesystem.mkdirs(outputPath.getParent());
               filesystem.touch(outputPath);
@@ -549,7 +550,10 @@ public class CachingBuildEngineTest {
 
       BuildResult result =
           cachingBuildEngine
-              .build(buildContext, TestExecutionContext.newInstance(), ruleToTest)
+              .build(
+                  buildContext,
+                  TestExecutionContextUtils.executionContextBuilder().build(),
+                  ruleToTest)
               .getResult()
               .get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -642,7 +646,10 @@ public class CachingBuildEngineTest {
           cachingBuildEngineFactory().setExecutorService(service).build()) {
         ListenableFuture<BuildResult> buildResult =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), buildRule)
+                .build(
+                    buildContext,
+                    TestExecutionContextUtils.executionContextBuilder().build(),
+                    buildRule)
                 .getResult();
 
         BuildResult result = buildResult.get();
@@ -683,7 +690,7 @@ public class CachingBuildEngineTest {
       Step step =
           new AbstractExecutionStep("exploding step") {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) {
+            public StepExecutionResult execute(StepExecutionContext context) {
               throw new UnsupportedOperationException("build step should not be executed");
             }
           };
@@ -746,7 +753,10 @@ public class CachingBuildEngineTest {
       try (CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build()) {
         ListenableFuture<BuildResult> buildResult =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), buildRule)
+                .build(
+                    buildContext,
+                    TestExecutionContextUtils.executionContextBuilder().build(),
+                    buildRule)
                 .getResult();
         buildContext
             .getBuildContext()
@@ -776,11 +786,11 @@ public class CachingBuildEngineTest {
         throws InterruptedException, ExecutionException, IOException {
       // Add a post build step so we can verify that it's steps are executed.
       Step buildStep = createMock(Step.class);
-      expect(buildStep.getDescription(anyObject(ExecutionContext.class)))
+      expect(buildStep.getDescription(anyObject(StepExecutionContext.class)))
           .andReturn("Some Description")
           .anyTimes();
       expect(buildStep.getShortName()).andReturn("Some Short Name").anyTimes();
-      expect(buildStep.execute(anyObject(ExecutionContext.class)))
+      expect(buildStep.execute(anyObject(StepExecutionContext.class)))
           .andReturn(StepExecutionResults.SUCCESS);
 
       BuildRule buildRule =
@@ -839,7 +849,10 @@ public class CachingBuildEngineTest {
       try (CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build()) {
         ListenableFuture<BuildResult> buildResult =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), buildRule)
+                .build(
+                    buildContext,
+                    TestExecutionContextUtils.executionContextBuilder().build(),
+                    buildRule)
                 .getResult();
         buildContext
             .getBuildContext()
@@ -885,7 +898,10 @@ public class CachingBuildEngineTest {
         replayAll();
         BuildResult result =
             cachingBuildEngine
-                .build(context, TestExecutionContext.newInstance(), ruleToTest)
+                .build(
+                    context,
+                    TestExecutionContextUtils.executionContextBuilder().build(),
+                    ruleToTest)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, result.getSuccess());
@@ -951,7 +967,10 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), ruleToTest)
+                .build(
+                    buildContext,
+                    TestExecutionContextUtils.executionContextBuilder().build(),
+                    ruleToTest)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, result.getSuccess());
@@ -1055,7 +1074,10 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), ruleToTest)
+                .build(
+                    buildContext,
+                    TestExecutionContextUtils.executionContextBuilder().build(),
+                    ruleToTest)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, result.getSuccess());
@@ -1146,7 +1168,7 @@ public class CachingBuildEngineTest {
       Step exchangerStep =
           new AbstractExecutionStep("interleaved_step") {
             @Override
-            public StepExecutionResult execute(ExecutionContext context)
+            public StepExecutionResult execute(StepExecutionContext context)
                 throws InterruptedException {
               try {
                 // Forces both rules to wait for the other at this point.
@@ -1186,10 +1208,14 @@ public class CachingBuildEngineTest {
           cachingBuildEngineFactory().setExecutorService(executorService).build()) {
         BuildEngine.BuildEngineResult engineResultOne =
             cachingBuildEngine.build(
-                buildContext, TestExecutionContext.newInstance(), interleavedRuleOne);
+                buildContext,
+                TestExecutionContextUtils.executionContextBuilder().build(),
+                interleavedRuleOne);
         BuildEngine.BuildEngineResult engineResultTwo =
             cachingBuildEngine.build(
-                buildContext, TestExecutionContext.newInstance(), interleavedRuleTwo);
+                buildContext,
+                TestExecutionContextUtils.executionContextBuilder().build(),
+                interleavedRuleTwo);
         assertThat(engineResultOne.getResult().get().getStatus(), equalTo(BuildRuleStatus.SUCCESS));
         assertThat(engineResultTwo.getResult().get().getStatus(), equalTo(BuildRuleStatus.SUCCESS));
       }
@@ -1202,7 +1228,7 @@ public class CachingBuildEngineTest {
       Step failingStep =
           new AbstractExecutionStep(description) {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) {
+            public StepExecutionResult execute(StepExecutionContext context) {
               return StepExecutionResults.ERROR;
             }
           };
@@ -1224,7 +1250,10 @@ public class CachingBuildEngineTest {
       try (CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build()) {
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), withRuntimeDep)
+                .build(
+                    buildContext,
+                    TestExecutionContextUtils.executionContextBuilder().build(),
+                    withRuntimeDep)
                 .getResult()
                 .get();
 
@@ -1243,7 +1272,7 @@ public class CachingBuildEngineTest {
       Step failingStep =
           new AbstractExecutionStep(description) {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) {
+            public StepExecutionResult execute(StepExecutionContext context) {
               System.out.println("Failing");
               failedSteps.incrementAndGet();
               return StepExecutionResults.ERROR;
@@ -1285,7 +1314,10 @@ public class CachingBuildEngineTest {
                 .build();
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), withFailingDeps)
+                .build(
+                    buildContext,
+                    TestExecutionContextUtils.executionContextBuilder().build(),
+                    withFailingDeps)
                 .getResult()
                 .get();
 
@@ -1305,7 +1337,7 @@ public class CachingBuildEngineTest {
       Step failingStep =
           new AbstractExecutionStep(description) {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) {
+            public StepExecutionResult execute(StepExecutionContext context) {
               return StepExecutionResults.ERROR;
             }
           };
@@ -1327,7 +1359,10 @@ public class CachingBuildEngineTest {
       try (CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build()) {
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), withRuntimeDep)
+                .build(
+                    buildContext,
+                    TestExecutionContextUtils.executionContextBuilder().build(),
+                    withRuntimeDep)
                 .getResult()
                 .get();
 
@@ -1341,7 +1376,7 @@ public class CachingBuildEngineTest {
       Step failingStep =
           new AbstractExecutionStep("test") {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) {
+            public StepExecutionResult execute(StepExecutionContext context) {
               return StepExecutionResults.ERROR;
             }
           };
@@ -1368,7 +1403,10 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), ruleToTest)
+                .build(
+                    buildContext,
+                    TestExecutionContextUtils.executionContextBuilder().build(),
+                    ruleToTest)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, result.getSuccess());
@@ -1401,7 +1439,10 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), ruleToTest)
+                .build(
+                    buildContext,
+                    TestExecutionContextUtils.executionContextBuilder().build(),
+                    ruleToTest)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -1434,7 +1475,10 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), ruleToTest)
+                .build(
+                    buildContext,
+                    TestExecutionContextUtils.executionContextBuilder().build(),
+                    ruleToTest)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -1462,7 +1506,8 @@ public class CachingBuildEngineTest {
       try (CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build()) {
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .build(
+                    buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
                 .getResult()
                 .get();
         assertThat(result.getSuccess(), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
@@ -1536,17 +1581,32 @@ public class CachingBuildEngineTest {
       CachingBuildEngine engine = cachingBuildEngineFactory().setExecutorService(executor).build();
       Throwable depFailure =
           engine
-              .build(buildContext, TestExecutionContext.newInstance(), dependent)
+              .build(
+                  buildContext,
+                  TestExecutionContextUtils.executionContextBuilder().build(),
+                  dependent)
               .getResult()
               .get()
               .getFailure();
 
       BuildResult result1 =
-          engine.build(buildContext, TestExecutionContext.newInstance(), rule1).getResult().get();
+          engine
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule1)
+              .getResult()
+              .get();
       BuildResult result2 =
-          engine.build(buildContext, TestExecutionContext.newInstance(), rule2).getResult().get();
+          engine
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule2)
+              .getResult()
+              .get();
       BuildResult result3 =
-          engine.build(buildContext, TestExecutionContext.newInstance(), rule3).getResult().get();
+          engine
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule3)
+              .getResult()
+              .get();
 
       BuildResult failingResult = null;
       if (result1.getStatus().equals(BuildRuleStatus.FAIL)) {
@@ -1613,7 +1673,8 @@ public class CachingBuildEngineTest {
       Throwable thrown =
           cachingBuildEngineFactory()
               .build()
-              .build(buildContext, TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
               .getResult()
               .get()
               .getFailure();
@@ -1626,7 +1687,8 @@ public class CachingBuildEngineTest {
       thrown =
           cachingBuildEngineFactory()
               .build()
-              .build(buildContext, TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
               .getResult()
               .get()
               .getFailure();
@@ -1651,7 +1713,7 @@ public class CachingBuildEngineTest {
       try (CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory().setCachingBuildEngineDelegate(testDelegate).build()) {
         cachingBuildEngine
-            .build(buildContext, TestExecutionContext.newInstance(), rule)
+            .build(buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
             .getResult()
             .get();
         assertThat(lastRuleToBeBuilt.get(), is(rule));
@@ -1676,7 +1738,8 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .build(
+                    buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -1746,7 +1809,8 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .build(
+                    buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
                 .getResult()
                 .get();
         assertTrue(service.shutdownNow().isEmpty());
@@ -1829,7 +1893,8 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .build(
+                    buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
                 .getResult()
                 .get();
         assertThat(result.getStatus(), equalTo(BuildRuleStatus.FAIL));
@@ -1897,7 +1962,8 @@ public class CachingBuildEngineTest {
         // Verify that after building successfully, nothing is cached.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .build(
+                    buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
                 .getResult()
                 .get();
         assertThat(result.getSuccess(), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
@@ -1917,7 +1983,8 @@ public class CachingBuildEngineTest {
       try (CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build()) {
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .build(
+                    buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -1935,7 +2002,8 @@ public class CachingBuildEngineTest {
               .build()) {
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .build(
+                    buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE, result.getSuccess());
@@ -1982,7 +2050,8 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .build(
+                    buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -2043,7 +2112,8 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .build(
+                    buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -2144,7 +2214,8 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .build(
+                    buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE, result.getSuccess());
@@ -2188,7 +2259,8 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .build(
+                    buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY, result.getSuccess());
@@ -2271,7 +2343,8 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .build(
+                    buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED, result.getSuccess());
@@ -2380,7 +2453,7 @@ public class CachingBuildEngineTest {
         Step step =
             new AbstractExecutionStep("step") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context)
+              public StepExecutionResult execute(StepExecutionContext context)
                   throws InterruptedException {
                 return resultSupplier.get();
               }
@@ -2399,7 +2472,8 @@ public class CachingBuildEngineTest {
       public void runVerifiedBuild(BuildRule rule) throws InterruptedException, ExecutionException {
         try (CachingBuildEngine cachingBuildEngine =
             cachingBuildEngineFactory().setCustomBuildRuleStrategy(strategy).build()) {
-          ExecutionContext executionContext = TestExecutionContext.newInstance();
+          ExecutionContext executionContext =
+              TestExecutionContextUtils.executionContextBuilder().build();
           BuildResult buildResult =
               cachingBuildEngine.build(buildContext, executionContext, rule).getResult().get();
           assertTrue(
@@ -2489,7 +2563,7 @@ public class CachingBuildEngineTest {
                 return ImmutableList.of(
                     new AbstractExecutionStep("failing_step") {
                       @Override
-                      public StepExecutionResult execute(ExecutionContext context)
+                      public StepExecutionResult execute(StepExecutionContext context)
                           throws InterruptedException {
                         System.err.println("Waiting to fail.");
                         if (failureBlocker.await(1, TimeUnit.SECONDS)) {
@@ -2507,7 +2581,8 @@ public class CachingBuildEngineTest {
                 .setCustomBuildRuleStrategy(strategy)
                 .setExecutorService(executorService)
                 .build()) {
-          ExecutionContext executionContext = TestExecutionContext.newInstance();
+          ExecutionContext executionContext =
+              TestExecutionContextUtils.executionContextBuilder().build();
 
           cachingBuildEngine
               .build(
@@ -2591,7 +2666,8 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .build(
+                    buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -2623,7 +2699,7 @@ public class CachingBuildEngineTest {
         return ImmutableList.of(
             new AbstractExecutionStep("false") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context) {
+              public StepExecutionResult execute(StepExecutionContext context) {
                 return StepExecutionResults.ERROR;
               }
             });
@@ -2707,7 +2783,8 @@ public class CachingBuildEngineTest {
               .getRuleKey();
       BuildResult result =
           cachingBuildEngine
-              .build(buildContext, TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
               .getResult()
               .get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
@@ -2765,7 +2842,7 @@ public class CachingBuildEngineTest {
               return ImmutableList.of(
                   new AbstractExecutionStep("false") {
                     @Override
-                    public StepExecutionResult execute(ExecutionContext context) {
+                    public StepExecutionResult execute(StepExecutionContext context) {
                       return StepExecutionResults.ERROR;
                     }
                   });
@@ -2813,7 +2890,8 @@ public class CachingBuildEngineTest {
       // Run the build.
       BuildResult result =
           cachingBuildEngine
-              .build(buildContext, TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
               .getResult()
               .get();
       assertEquals(BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY, result.getSuccess());
@@ -2895,7 +2973,8 @@ public class CachingBuildEngineTest {
       CachingBuildEngine cachingBuildEngine = engineWithDepFileFactory(depFileFactory);
       BuildResult result =
           cachingBuildEngine
-              .build(buildContext, TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
               .getResult()
               .get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
@@ -2974,7 +3053,8 @@ public class CachingBuildEngineTest {
       CachingBuildEngine cachingBuildEngine = engineWithDepFileFactory(depFileFactory);
       BuildResult result =
           cachingBuildEngine
-              .build(buildContext, TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
               .getResult()
               .get();
 
@@ -3067,7 +3147,8 @@ public class CachingBuildEngineTest {
       CachingBuildEngine cachingBuildEngine = engineWithDepFileFactory(depFileFactory);
       BuildResult result =
           cachingBuildEngine
-              .build(buildContext, TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
               .getResult()
               .get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
@@ -3154,7 +3235,8 @@ public class CachingBuildEngineTest {
       CachingBuildEngine cachingBuildEngine = engineWithDepFileFactory(depFileRuleKeyFactory);
       BuildResult result =
           cachingBuildEngine
-              .build(buildContext, TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
               .getResult()
               .get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
@@ -3264,7 +3346,8 @@ public class CachingBuildEngineTest {
       // Run the build.
       BuildResult result =
           cachingBuildEngine
-              .build(buildContext, TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
               .getResult()
               .get();
       assertThat(getSuccess(result), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
@@ -3387,7 +3470,8 @@ public class CachingBuildEngineTest {
       // Run the build.
       BuildResult result =
           cachingBuildEngine
-              .build(buildContext, TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
               .getResult()
               .get();
       assertThat(getSuccess(result), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
@@ -3511,7 +3595,8 @@ public class CachingBuildEngineTest {
       // Run the build.
       BuildResult result =
           cachingBuildEngine
-              .build(buildContext, TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
               .getResult()
               .get();
       assertThat(getSuccess(result), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
@@ -3662,7 +3747,8 @@ public class CachingBuildEngineTest {
       // Run the build.
       BuildResult result =
           cachingBuildEngine
-              .build(buildContext, TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
               .getResult()
               .get();
       assertThat(
@@ -3765,7 +3851,8 @@ public class CachingBuildEngineTest {
       // Run the build.
       BuildResult result =
           cachingBuildEngine
-              .build(buildContext, TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
               .getResult()
               .get();
       assertThat(getSuccess(result), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
@@ -3813,7 +3900,8 @@ public class CachingBuildEngineTest {
               .build();
       BuildResult result =
           cachingBuildEngine
-              .build(buildContext, TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
               .getResult()
               .get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -3892,13 +3980,15 @@ public class CachingBuildEngineTest {
               .build();
       ListenableFuture<BuildResult> result1 =
           cachingBuildEngine
-              .build(buildContext, TestExecutionContext.newInstance(), rule1)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule1)
               .getResult();
       rule1.waitForStart();
       assertThat(rule1.hasStarted(), equalTo(true));
       ListenableFuture<BuildResult> result2 =
           cachingBuildEngine
-              .build(buildContext, TestExecutionContext.newInstance(), rule2)
+              .build(
+                  buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule2)
               .getResult();
       Thread.sleep(250);
       assertThat(semaphore.getQueueLength(), equalTo(1));
@@ -3935,7 +4025,7 @@ public class CachingBuildEngineTest {
         return ImmutableList.of(
             new AbstractExecutionStep("step") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context)
+              public StepExecutionResult execute(StepExecutionContext context)
                   throws InterruptedException {
                 started.release();
                 finish.acquire();
@@ -3996,7 +4086,8 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .build(
+                    buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -4034,7 +4125,8 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .build(
+                    buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, result.getSuccess());
@@ -4069,7 +4161,8 @@ public class CachingBuildEngineTest {
         // Run the build.
         BuildResult result =
             cachingBuildEngine
-                .build(buildContext, TestExecutionContext.newInstance(), rule)
+                .build(
+                    buildContext, TestExecutionContextUtils.executionContextBuilder().build(), rule)
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -4095,7 +4188,10 @@ public class CachingBuildEngineTest {
       BuildId buildId = new BuildId("id");
       BuildResult result =
           cachingBuildEngine
-              .build(buildContext.withBuildId(buildId), TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext.withBuildId(buildId),
+                  TestExecutionContextUtils.executionContextBuilder().build(),
+                  rule)
               .getResult()
               .get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
@@ -4124,7 +4220,10 @@ public class CachingBuildEngineTest {
       BuildId buildId1 = new BuildId("id1");
       BuildResult result1 =
           cachingBuildEngine1
-              .build(buildContext.withBuildId(buildId1), TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext.withBuildId(buildId1),
+                  TestExecutionContextUtils.executionContextBuilder().build(),
+                  rule)
               .getResult()
               .get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result1.getSuccess());
@@ -4134,7 +4233,10 @@ public class CachingBuildEngineTest {
       BuildId buildId2 = new BuildId("id2");
       BuildResult result2 =
           cachingBuildEngine2
-              .build(buildContext.withBuildId(buildId2), TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext.withBuildId(buildId2),
+                  TestExecutionContextUtils.executionContextBuilder().build(),
+                  rule)
               .getResult()
               .get();
       assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, getSuccess(result2));
@@ -4162,7 +4264,10 @@ public class CachingBuildEngineTest {
       BuildId buildId1 = new BuildId("id1");
       BuildResult result1 =
           cachingBuildEngine1
-              .build(buildContext.withBuildId(buildId1), TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext.withBuildId(buildId1),
+                  TestExecutionContextUtils.executionContextBuilder().build(),
+                  rule)
               .getResult()
               .get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result1.getSuccess());
@@ -4175,7 +4280,10 @@ public class CachingBuildEngineTest {
       BuildId buildId2 = new BuildId("id2");
       BuildResult result2 =
           cachingBuildEngine2
-              .build(buildContext.withBuildId(buildId2), TestExecutionContext.newInstance(), rule)
+              .build(
+                  buildContext.withBuildId(buildId2),
+                  TestExecutionContextUtils.executionContextBuilder().build(),
+                  rule)
               .getResult()
               .get();
       assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE, getSuccess(result2));
@@ -4653,7 +4761,7 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+    public StepExecutionResult execute(StepExecutionContext context) throws InterruptedException {
       Thread.sleep(millis);
       return StepExecutionResults.SUCCESS;
     }
@@ -4666,7 +4774,7 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context) {
+    public StepExecutionResult execute(StepExecutionContext context) {
       return StepExecutionResults.ERROR;
     }
   }

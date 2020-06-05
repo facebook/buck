@@ -53,6 +53,7 @@ import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.event.BuildRuleExecutionEvent;
 import com.facebook.buck.core.build.event.FinalizingBuildRuleEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -923,7 +924,7 @@ class CachingBuildRuleBuilder {
           }
 
           @Override
-          public ExecutionContext getExecutionContext() {
+          public StepExecutionContext getExecutionContext() {
             return buildRuleSteps.ruleExecutionContext;
           }
 
@@ -1311,12 +1312,13 @@ class CachingBuildRuleBuilder {
     LOG.debug("Running post-build steps for %s", rule);
 
     for (Step step : postBuildSteps) {
-      StepRunner.runStep(
-          executionContext.withProcessExecutor(
+      ExecutionContext executionContext =
+          this.executionContext.withProcessExecutor(
               new ContextualProcessExecutor(
-                  executionContext.getProcessExecutor(), processExecutorContext)),
-          step,
-          Optional.of(rule.getBuildTarget()));
+                  this.executionContext.getProcessExecutor(), processExecutorContext));
+
+      StepRunner.runStep(
+          StepExecutionContext.from(executionContext), step, Optional.of(rule.getBuildTarget()));
 
       // Check for interruptions that may have been ignored by step.
       if (Thread.interrupted()) {
@@ -1428,7 +1430,7 @@ class CachingBuildRuleBuilder {
   public class BuildRuleSteps<T extends RulePipelineState> {
     private final CacheResult cacheResult;
     private final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
-    private final ExecutionContext ruleExecutionContext;
+    private final StepExecutionContext ruleExecutionContext;
     @Nullable private final T pipelineState;
 
     public BuildRuleSteps(CacheResult cacheResult, @Nullable T pipelineState) {
@@ -1436,9 +1438,10 @@ class CachingBuildRuleBuilder {
       this.cacheResult = cacheResult;
       this.pipelineState = pipelineState;
       this.ruleExecutionContext =
-          executionContext.withProcessExecutor(
-              new ContextualProcessExecutor(
-                  executionContext.getProcessExecutor(), processExecutorContext));
+          StepExecutionContext.from(
+              executionContext.withProcessExecutor(
+                  new ContextualProcessExecutor(
+                      executionContext.getProcessExecutor(), processExecutorContext)));
     }
 
     public SettableFuture<Optional<BuildResult>> getFuture() {
@@ -1471,7 +1474,7 @@ class CachingBuildRuleBuilder {
     }
 
     private void executeCommands(
-        ExecutionContext executionContext,
+        StepExecutionContext executionContext,
         BuildContext buildRuleBuildContext,
         BuildableContext buildableContext)
         throws StepFailedException, InterruptedException {

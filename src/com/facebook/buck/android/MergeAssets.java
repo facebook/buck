@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.resources.ResourcesZipBuilder;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -119,7 +119,7 @@ public class MergeAssets extends AbstractBuildRule {
     steps.add(
         new AbstractExecutionStep("finding_assets") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) throws IOException {
+          public StepExecutionResult execute(StepExecutionContext context) throws IOException {
             for (SourcePath sourcePath : assetsDirectories) {
               Path relativePath = pathResolver.getRelativePath(sourcePath);
               AbsPath absolutePath = pathResolver.getAbsolutePath(sourcePath);
@@ -185,7 +185,7 @@ public class MergeAssets extends AbstractBuildRule {
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context) throws IOException {
+    public StepExecutionResult execute(StepExecutionContext context) throws IOException {
       try (ResourcesZipBuilder output = new ResourcesZipBuilder(pathToMergedAssets)) {
         if (pathToBaseApk.isPresent()) {
           try (ZipFile base = new ZipFile(pathToBaseApk.get().toFile())) {

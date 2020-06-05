@@ -18,7 +18,7 @@ package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -268,7 +268,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context) throws IOException {
+    public StepExecutionResult execute(StepExecutionContext context) throws IOException {
       getProjectFilesystem().createParentDirs(getArgsfile());
       // we write the source file arguments to @ghc.argsfile as this is the
       // problematic part when we exceed the argument size limit.
@@ -290,7 +290,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     }
 
     @Override
-    public String getDescription(ExecutionContext context) {
+    public String getDescription(StepExecutionContext context) {
       return "Write argsfile for ghc";
     }
   }
@@ -318,7 +318,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     }
 
     @Override
-    protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+    protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
       return ImmutableList.<String>builder()
           .addAll(compiler.getCommandPrefix(buildContext.getSourcePathResolver()))
           .addAll(getCompilerArguments(buildContext.getSourcePathResolver()))
@@ -423,7 +423,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   private Step prepareOutputDir(String name, Path root, String suffix) {
     return new AbstractExecutionStep(String.format("preparing %s output dir", name)) {
       @Override
-      public StepExecutionResult execute(ExecutionContext context) throws IOException {
+      public StepExecutionResult execute(StepExecutionContext context) throws IOException {
         getProjectFilesystem().mkdirs(root);
         getProjectFilesystem()
             .walkRelativeFileTree(

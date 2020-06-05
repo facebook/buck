@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.build.context.FakeBuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.OutputLabel;
@@ -123,7 +123,7 @@ public class CxxTestTest {
           }
         };
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     TestRunningOptions options =
         TestRunningOptions.builder().setTestSelectorList(TestSelectorList.empty()).build();
     ImmutableList<Step> actualSteps =
@@ -187,7 +187,7 @@ public class CxxTestTest {
         };
     graphBuilder.addToIndex(cxxTest);
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     Callable<TestResults> result =
         cxxTest.interpretTestResults(
             executionContext,

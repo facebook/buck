@@ -22,7 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.file.MorePathsForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -62,7 +62,7 @@ public class GenerateCodeCoverageReportStepTest {
           MorePathsForTests.rootRelativePath("/absolute/path/to/parentDirectory2/src").toString());
 
   private GenerateCodeCoverageReportStep step;
-  private ExecutionContext context;
+  private StepExecutionContext context;
   private ProjectFilesystem filesystem;
   private Set<Path> jarFiles;
 
@@ -141,7 +141,7 @@ public class GenerateCodeCoverageReportStepTest {
             Optional.empty(),
             false) {
           @Override
-          StepExecutionResult executeInternal(ExecutionContext context, Set<Path> jarFiles) {
+          StepExecutionResult executeInternal(StepExecutionContext context, Set<Path> jarFiles) {
             for (int i = 0; i < 2; i++) {
               extractedDir[i] = new ArrayList<>(jarFiles).get(i).toFile();
               assertTrue(extractedDir[i].isDirectory());
@@ -176,7 +176,7 @@ public class GenerateCodeCoverageReportStepTest {
             Optional.empty(),
             false) {
           @Override
-          StepExecutionResult executeInternal(ExecutionContext context, Set<Path> jarFiles) {
+          StepExecutionResult executeInternal(StepExecutionContext context, Set<Path> jarFiles) {
             assertEquals(1, jarFiles.size());
             assertEquals(classesDir.toPath(), jarFiles.iterator().next());
             return null;

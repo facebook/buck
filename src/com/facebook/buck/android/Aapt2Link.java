@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -254,7 +254,7 @@ public class Aapt2Link extends AbstractBuildRule {
     }
 
     @Override
-    protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+    protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       builder.add("zip");
       builder.add("-d");
@@ -304,7 +304,7 @@ public class Aapt2Link extends AbstractBuildRule {
     }
 
     @Override
-    protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+    protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       builder.addAll(aapt2Tool.getCommandPrefix(pathResolver));
 
@@ -391,7 +391,7 @@ public class Aapt2Link extends AbstractBuildRule {
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context) throws IOException {
+    public StepExecutionResult execute(StepExecutionContext context) throws IOException {
       String args = Joiner.on(' ').join(getParameters());
       filesystem.writeContentsToPath(args, argsFilePath);
 

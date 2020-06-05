@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -377,7 +377,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
           .add(
               new AbstractExecutionStep("verify_cxx_outputs") {
                 @Override
-                public StepExecutionResult execute(ExecutionContext executionContext) {
+                public StepExecutionResult execute(StepExecutionContext executionContext) {
                   AbsPath outputPath = filesystem.getRootPath().resolve(resolvedOutput);
                   if (!Files.exists(outputPath.getPath())) {
                     LOG.warn(

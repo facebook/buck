@@ -21,7 +21,7 @@ import com.facebook.buck.android.packageable.NativeLinkableEnhancementResult;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -1067,7 +1067,7 @@ class NativeLibraryMergeEnhancer {
       return ImmutableList.of(
           new Step() {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            public StepExecutionResult execute(StepExecutionContext context) throws IOException {
               // Copy the output into place, then fix it in-place with mmap.
               Files.copy(linkOutput, finalOutput, StandardCopyOption.REPLACE_EXISTING);
 
@@ -1135,7 +1135,7 @@ class NativeLibraryMergeEnhancer {
             }
 
             @Override
-            public String getDescription(ExecutionContext context) {
+            public String getDescription(StepExecutionContext context) {
               return String.format(
                   "localize_dynamic_symbols --symbols %s --in %s --out %s",
                   symbolsToLocalize, linkOutput, finalOutput);

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.test.TestResultSummary;
@@ -56,7 +56,7 @@ public class RunShTestAndRecordResultStep extends RunTestAndRecordResultStep {
   }
 
   @Override
-  protected TestResultSummary getTestSummary(ExecutionContext context)
+  protected TestResultSummary getTestSummary(StepExecutionContext context)
       throws IOException, InterruptedException {
     if (context.getPlatform() == Platform.WINDOWS) {
       // Ignore sh_test on Windows.

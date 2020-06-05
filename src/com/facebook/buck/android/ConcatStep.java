@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -70,7 +70,7 @@ public class ConcatStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     ImmutableList<Path> list = inputs.get();
     try (OutputStream out = filesystem.newFileOutputStream(output)) {
       for (Path p : list) {
@@ -87,7 +87,7 @@ public class ConcatStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     ImmutableList<Path> list = inputs.get();
     ImmutableList.Builder<String> desc = ImmutableList.builder();
     desc.add(getShortName());

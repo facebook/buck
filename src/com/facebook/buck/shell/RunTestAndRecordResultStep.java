@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -77,7 +77,7 @@ public class RunTestAndRecordResultStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return shortName;
   }
 
@@ -85,7 +85,7 @@ public class RunTestAndRecordResultStep implements Step {
    * Run whatever binaries are necessary, and return a {@link TestResultSummary} explaining the
    * outcome
    */
-  protected TestResultSummary getTestSummary(ExecutionContext context)
+  protected TestResultSummary getTestSummary(StepExecutionContext context)
       throws IOException, InterruptedException {
 
     ShellStep test =
@@ -98,7 +98,7 @@ public class RunTestAndRecordResultStep implements Step {
           }
 
           @Override
-          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+          protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
             return command;
           }
 
@@ -114,7 +114,7 @@ public class RunTestAndRecordResultStep implements Step {
           }
 
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
+          public StepExecutionResult execute(StepExecutionContext context)
               throws IOException, InterruptedException {
             StepExecutionResult executionResult = super.execute(context);
             if (timedOut) {
@@ -128,7 +128,7 @@ public class RunTestAndRecordResultStep implements Step {
           }
 
           @Override
-          protected Optional<Consumer<Process>> getTimeoutHandler(ExecutionContext context) {
+          protected Optional<Consumer<Process>> getTimeoutHandler(StepExecutionContext context) {
             return Optional.of(process -> timedOut = true);
           }
 
@@ -159,7 +159,7 @@ public class RunTestAndRecordResultStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     TestResultSummary summary = getTestSummary(context);
 

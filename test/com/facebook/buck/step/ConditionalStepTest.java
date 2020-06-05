@@ -18,7 +18,7 @@ package com.facebook.buck.step;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -47,7 +47,7 @@ public class ConditionalStepTest {
     Step stepToRunWhenSupplierIsTrue =
         new AbstractExecutionStep("inc") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) {
+          public StepExecutionResult execute(StepExecutionContext context) {
             numCalls.incrementAndGet();
             return StepExecutionResult.of(37);
           }
@@ -56,7 +56,7 @@ public class ConditionalStepTest {
     // Create and execute the ConditionalStep.
     ConditionalStep conditionalStep = new ConditionalStep(conditional, stepToRunWhenSupplierIsTrue);
     condition.set(Optional.of(true));
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
     int exitCode = conditionalStep.execute(context).getExitCode();
     assertEquals("stepToRunWhenSupplierIsTrue should have been run once.", 1, numCalls.get());
     assertEquals(
@@ -85,7 +85,7 @@ public class ConditionalStepTest {
     Step stepToRunWhenSupplierIsTrue =
         new AbstractExecutionStep("inc") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) {
+          public StepExecutionResult execute(StepExecutionContext context) {
             numCalls.incrementAndGet();
             throw new IllegalStateException("This step should not be executed.");
           }
@@ -94,7 +94,7 @@ public class ConditionalStepTest {
     // Create and execute the ConditionalStep.
     ConditionalStep conditionalStep = new ConditionalStep(conditional, stepToRunWhenSupplierIsTrue);
     condition.set(Optional.of(false));
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
     int exitCode = conditionalStep.execute(context).getExitCode();
     assertEquals("stepToRunWhenSupplierIsTrue should not have been run.", 0, numCalls.get());
     assertEquals("The exit code should be zero when the conditional is false.", 0, exitCode);

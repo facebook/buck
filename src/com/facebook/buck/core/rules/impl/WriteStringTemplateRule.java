@@ -18,7 +18,7 @@ package com.facebook.buck.core.rules.impl;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -85,7 +85,7 @@ public class WriteStringTemplateRule extends AbstractBuildRuleWithDeclaredAndExt
       steps.add(
           new AbstractExecutionStep("chmod +x") {
             @Override
-            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            public StepExecutionResult execute(StepExecutionContext context) throws IOException {
               MostFiles.makeExecutable(getProjectFilesystem().resolve(output));
               return StepExecutionResults.SUCCESS;
             }

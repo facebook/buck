@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.FilterResourcesSteps.ImageScaler;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.file.ProjectFilesystemMatchers;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -83,13 +83,13 @@ public class FilterResourcesStepTest {
             FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             new ImageScaler() {
               @Override
-              public boolean isAvailable(ExecutionContext context) {
+              public boolean isAvailable(StepExecutionContext context) {
                 return true;
               }
 
               @Override
               public void scale(
-                  double factor, Path source, Path destination, ExecutionContext context) {}
+                  double factor, Path source, Path destination, StepExecutionContext context) {}
             });
 
     // We'll use this to verify the source->destination mappings created by the command.

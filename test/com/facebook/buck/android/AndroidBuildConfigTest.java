@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.android.AndroidBuildConfig.ReadValuesStep;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -94,7 +94,7 @@ public class AndroidBuildConfigTest {
         ImmutableList.of("boolean DEBUG = false", "String FOO = \"BAR\""), pathToValues);
 
     ReadValuesStep step = new ReadValuesStep(projectFilesystem, pathToValues);
-    ExecutionContext context = TestExecutionContext.newBuilder().build();
+    StepExecutionContext context = TestExecutionContext.newBuilder().build();
     int exitCode = step.execute(context).getExitCode();
     assertEquals(0, exitCode);
     assertEquals(

@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.shell.ShellStep;
@@ -177,7 +177,10 @@ public final class MoreAsserts {
    * corresponding entry in the expected list.
    */
   public static void assertShellCommands(
-      String userMessage, List<String> expected, List<Step> observed, ExecutionContext context) {
+      String userMessage,
+      List<String> expected,
+      List<Step> observed,
+      StepExecutionContext context) {
     Iterator<String> expectedIter = expected.iterator();
     Iterator<Step> observedIter = observed.iterator();
     Joiner joiner = Joiner.on(" ");
@@ -202,14 +205,14 @@ public final class MoreAsserts {
   }
 
   /**
-   * Invokes the {@link Step#getDescription(ExecutionContext)} method on each of the observed steps
-   * to create a list of strings and compares it to the expected value.
+   * Invokes the {@link Step#getDescription(StepExecutionContext)} method on each of the observed
+   * steps to create a list of strings and compares it to the expected value.
    */
   public static void assertSteps(
       String userMessage,
       List<String> expectedStepDescriptions,
       List<Step> observedSteps,
-      ExecutionContext executionContext) {
+      StepExecutionContext executionContext) {
     ImmutableList<String> commands =
         observedSteps.stream()
             .map(step -> step.getDescription(executionContext))
@@ -218,8 +221,8 @@ public final class MoreAsserts {
   }
 
   /**
-   * Invokes the {@link Step#getDescription(ExecutionContext)} method on each of the observed steps
-   * to create a list of strings and compares it to the expected value.
+   * Invokes the {@link Step#getDescription(StepExecutionContext)} method on each of the observed
+   * steps to create a list of strings and compares it to the expected value.
    */
   public static void assertStepsNames(
       String userMessage, List<String> expectedStepDescriptions, List<Step> observedSteps) {

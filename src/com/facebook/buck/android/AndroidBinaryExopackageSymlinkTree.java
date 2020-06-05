@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -83,7 +83,7 @@ public class AndroidBinaryExopackageSymlinkTree extends AbstractBuildRule {
     steps.add(
         new AbstractExecutionStep("creating_exopackage_symlink_tree") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
+          public StepExecutionResult execute(StepExecutionContext context)
               throws IOException, InterruptedException {
             ExopackageSymlinkTreeStep.createExopackageDirForExopackageInfo(
                 exopackageInfo,

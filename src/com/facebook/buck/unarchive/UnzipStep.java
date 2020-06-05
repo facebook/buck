@@ -16,7 +16,7 @@
 
 package com.facebook.buck.unarchive;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.PatternsMatcher;
@@ -79,7 +79,7 @@ public class UnzipStep extends UnarchiveStep {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return String.format(
         "unzip %s -d %s",
         PathFormatter.pathWithUnixSeparators(filesystem.resolve(archiveFile)),

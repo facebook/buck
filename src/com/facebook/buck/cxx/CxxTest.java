@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
@@ -165,7 +165,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ImmutableList<Step> runTests(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       TestRunningOptions options,
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
@@ -239,20 +239,19 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
-    return () -> {
-      return TestResults.of(
-          getBuildTarget(),
-          ImmutableList.of(
-              new TestCaseSummary(
-                  getBuildTarget().getFullyQualifiedName(),
-                  parseResults(
-                      getPathToTestExitCode(), getPathToTestOutput(), getPathToTestResults()))),
-          contacts,
-          labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
-    };
+    return () ->
+        TestResults.of(
+            getBuildTarget(),
+            ImmutableList.of(
+                new TestCaseSummary(
+                    getBuildTarget().getFullyQualifiedName(),
+                    parseResults(
+                        getPathToTestExitCode(), getPathToTestOutput(), getPathToTestResults()))),
+            contacts,
+            labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
   }
 
   @Override
@@ -299,7 +298,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
 

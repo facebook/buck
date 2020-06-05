@@ -17,7 +17,7 @@
 package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -272,7 +272,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
 
             @Override
             protected ImmutableList<String> getShellCommandInternal(
-                ExecutionContext executionContext) {
+                StepExecutionContext executionContext) {
               ImmutableList<String> linkerCmd = linker.getCommandPrefix(resolver);
               ImmutableList.Builder<String> cmd = ImmutableList.builder();
 

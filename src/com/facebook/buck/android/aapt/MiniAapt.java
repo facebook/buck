@@ -20,7 +20,7 @@ import com.facebook.buck.android.AaptStep;
 import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -193,7 +193,7 @@ public class MiniAapt implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
 
     ProjectFilesystemView filesystemViewWithoutIgnores = filesystem.asView();
@@ -661,7 +661,7 @@ public class MiniAapt implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return getShortName() + " " + resDirectory;
   }
 

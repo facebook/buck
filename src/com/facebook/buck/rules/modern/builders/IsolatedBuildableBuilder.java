@@ -18,7 +18,7 @@ package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
@@ -103,7 +103,7 @@ import org.pf4j.PluginWrapper;
 public abstract class IsolatedBuildableBuilder {
   private static final Logger LOG = Logger.get(IsolatedBuildableBuilder.class);
   private final BuildContext buildContext;
-  private final ExecutionContext executionContext;
+  private final StepExecutionContext executionContext;
   private final Function<Optional<String>, ProjectFilesystem> filesystemFunction;
   private final Deserializer.ClassFinder classFinder;
   private final Path dataRoot;
@@ -209,7 +209,7 @@ public abstract class IsolatedBuildableBuilder {
     this.eventBus = createEventBus(console);
 
     this.executionContext =
-        ExecutionContext.builder()
+        StepExecutionContext.builder()
             .setConsole(console)
             .setBuckEventBus(eventBus)
             .setPlatform(platform)

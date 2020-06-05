@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
@@ -83,7 +83,7 @@ public class AccumulateClassNamesStepTest {
             ImmutableSet.of(),
             Optional.of(RelPath.get(name)),
             RelPath.get("output.txt"));
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
     accumulateClassNamesStep.executeIsolatedStep(context);
 
     String contents = Files.toString(new File(tmp.getRoot(), "output.txt"), StandardCharsets.UTF_8);
@@ -121,7 +121,7 @@ public class AccumulateClassNamesStepTest {
             ImmutableSet.of(),
             Optional.of(RelPath.get(name)),
             RelPath.get("output.txt"));
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
     accumulateClassNamesStep.executeIsolatedStep(context);
 
     String contents = Files.toString(new File(tmp.getRoot(), "output.txt"), StandardCharsets.UTF_8);
@@ -163,7 +163,7 @@ public class AccumulateClassNamesStepTest {
             ImmutableSet.of(),
             Optional.of(RelPath.get(name)),
             RelPath.get("output.txt"));
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
     accumulateClassNamesStep.executeIsolatedStep(context);
 
     List<String> lines = ProjectFilesystemUtils.readLines(projectRoot, Paths.get("output.txt"));

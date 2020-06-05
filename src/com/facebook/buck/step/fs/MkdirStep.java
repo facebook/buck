@@ -16,7 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.step.Step;
@@ -33,7 +33,7 @@ public abstract class MkdirStep implements Step {
   public abstract BuildCellRelativePath getPath();
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     Files.createDirectories(
         context.getBuildCellRootPath().resolve(getPath().getPathRelativeToBuildCellRoot()));
     return StepExecutionResults.SUCCESS;
@@ -45,7 +45,7 @@ public abstract class MkdirStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return String.format(
         "mkdir -p %s",
         Escaper.escapeAsShellString(getPath().getPathRelativeToBuildCellRoot().toString()));

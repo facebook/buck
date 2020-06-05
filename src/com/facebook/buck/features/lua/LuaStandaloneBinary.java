@@ -18,7 +18,7 @@ package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -131,7 +131,7 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
           }
 
           @Override
-          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+          protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
             ImmutableList.Builder<String> command = ImmutableList.builder();
             command.addAll(builder.getCommandPrefix(resolver));
             command.add("--entry-point", mainModule);

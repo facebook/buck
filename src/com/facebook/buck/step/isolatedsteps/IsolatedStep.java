@@ -16,8 +16,8 @@
 
 package com.facebook.buck.step.isolatedsteps;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import java.io.IOException;
@@ -31,13 +31,13 @@ import java.io.IOException;
 public abstract class IsolatedStep implements Step {
 
   @Override
-  public final StepExecutionResult execute(ExecutionContext context)
+  public final StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     return executeIsolatedStep(context);
   }
 
   @Override
-  public final String getDescription(ExecutionContext context) {
+  public final String getDescription(StepExecutionContext context) {
     return getIsolatedStepDescription(context);
   }
 

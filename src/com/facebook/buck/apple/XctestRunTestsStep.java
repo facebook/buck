@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.TeeInputStream;
@@ -98,7 +98,7 @@ class XctestRunTestsStep implements Step {
     return args.build();
   }
 
-  public ImmutableMap<String, String> getEnv(ExecutionContext context) {
+  public ImmutableMap<String, String> getEnv(StepExecutionContext context) {
     Map<String, String> environment = new HashMap<>(context.getEnvironment());
     Optional<Path> xcodeDeveloperDir =
         appleDeveloperDirectoryForTestsProvider.map(
@@ -112,7 +112,7 @@ class XctestRunTestsStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     ProcessExecutorParams.Builder builder =
         ProcessExecutorParams.builder()
@@ -167,7 +167,7 @@ class XctestRunTestsStep implements Step {
   }
 
   @Override
-  public final String getDescription(ExecutionContext context) {
+  public final String getDescription(StepExecutionContext context) {
     return "Run XCTest or SenTestingKit tests";
   }
 }

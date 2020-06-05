@@ -16,7 +16,7 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.ExceptionWithContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.WrapsException;
@@ -57,7 +57,7 @@ public class StepFailedException extends Exception implements WrapsException, Ex
 
   /** Creates a StepFailedException based on a StepExecutionResult. */
   public static StepFailedException createForFailingStepWithExitCode(
-      Step step, ExecutionContext context, StepExecutionResult executionResult) {
+      Step step, StepExecutionContext context, StepExecutionResult executionResult) {
     int exitCode = executionResult.getExitCode();
     StringBuilder messageBuilder = new StringBuilder();
     messageBuilder.append(String.format("Command failed with exit code %d.", exitCode));
@@ -89,7 +89,7 @@ public class StepFailedException extends Exception implements WrapsException, Ex
   /** Same as above but includes RE action metadata */
   public static StepFailedException createForFailingStepWithExitCode(
       Step step,
-      ExecutionContext context,
+      StepExecutionContext context,
       StepExecutionResult executionResult,
       RemoteExecutionMetadata remoteExecutionMetadata) {
     StepFailedException ret =
@@ -109,12 +109,12 @@ public class StepFailedException extends Exception implements WrapsException, Ex
   }
 
   static StepFailedException createForFailingStepWithException(
-      Step step, ExecutionContext context, Throwable throwable) {
+      Step step, StepExecutionContext context, Throwable throwable) {
     return new StepFailedException(
         throwable, step, descriptionForStep(step, context), OptionalInt.empty());
   }
 
-  private static String descriptionForStep(Step step, ExecutionContext context) {
+  private static String descriptionForStep(Step step, StepExecutionContext context) {
     return context.getVerbosity().shouldPrintCommand()
         ? step.getDescription(context)
         : step.getShortName();

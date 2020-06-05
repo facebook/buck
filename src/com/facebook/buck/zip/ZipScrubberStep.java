@@ -16,7 +16,7 @@
 
 package com.facebook.buck.zip;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.step.Step;
@@ -45,12 +45,12 @@ public abstract class ZipScrubberStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return "zip-scrub " + getZipAbsolutePath();
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     ZipScrubber.scrubZip(getZipAbsolutePath());
     return StepExecutionResults.SUCCESS;
   }

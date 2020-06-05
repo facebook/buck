@@ -20,7 +20,7 @@ import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -100,7 +100,7 @@ public class ExopackageInstallFinisher extends AbstractBuildRule {
     return ImmutableList.of(
         new AbstractExecutionStep("finishing_apk_installation") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
+          public StepExecutionResult execute(StepExecutionContext context)
               throws IOException, InterruptedException {
             trigger.verify(context);
             ExopackageInfo exoInfo = apkInfo.getExopackageInfo().get();
@@ -121,7 +121,7 @@ public class ExopackageInstallFinisher extends AbstractBuildRule {
                       ExopackageInstaller installer =
                           new ExopackageInstaller(
                               buildContext.getSourcePathResolver(),
-                              context,
+                              context.getBuckEventBus(),
                               getProjectFilesystem(),
                               packageName,
                               device);

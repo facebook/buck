@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -82,7 +82,7 @@ public class CxxWriteArgsToFileStepTest {
       ImmutableList<String> expectedArgFileContents,
       CanonicalCellName currentCellName)
       throws IOException {
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
 
     SourcePathResolverAdapter sourcePathResolverAdapter =
         new TestActionGraphBuilder().getSourcePathResolver();

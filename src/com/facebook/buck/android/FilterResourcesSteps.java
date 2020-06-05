@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -140,7 +140,7 @@ public class FilterResourcesSteps {
 
   private class CopyStep implements Step {
     @Override
-    public StepExecutionResult execute(ExecutionContext context) throws IOException {
+    public StepExecutionResult execute(StepExecutionContext context) throws IOException {
       LOG.info(
           "FilterResourcesSteps: canDownscale: %s. imageScalar non-null: %s.",
           canDownscale(context), imageScaler != null);
@@ -156,14 +156,14 @@ public class FilterResourcesSteps {
     }
 
     @Override
-    public String getDescription(ExecutionContext context) {
+    public String getDescription(StepExecutionContext context) {
       return "Copy resources, filtering by density";
     }
   }
 
   private class ScaleStep implements Step {
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
+    public StepExecutionResult execute(StepExecutionContext context)
         throws IOException, InterruptedException {
       if (canDownscale(context) && filterByDensity) {
         scaleUnmatchedDrawables(context);
@@ -177,7 +177,7 @@ public class FilterResourcesSteps {
     }
 
     @Override
-    public String getDescription(ExecutionContext context) {
+    public String getDescription(StepExecutionContext context) {
       return "Scale resources to the appropriate density";
     }
   }
@@ -190,12 +190,12 @@ public class FilterResourcesSteps {
     return scaleStep;
   }
 
-  private boolean canDownscale(ExecutionContext context) {
+  private boolean canDownscale(StepExecutionContext context) {
     return imageScaler != null && imageScaler.isAvailable(context);
   }
 
   @VisibleForTesting
-  Predicate<Path> getFilteringPredicate(ExecutionContext context) throws IOException {
+  Predicate<Path> getFilteringPredicate(StepExecutionContext context) throws IOException {
     List<Predicate<Path>> pathPredicates = new ArrayList<>();
 
     if (filterByDensity) {
@@ -254,7 +254,7 @@ public class FilterResourcesSteps {
    * <p>Any drawables found by this step didn't have equivalents in the target density. If they are
    * of a higher density, we can replicate what Android does and downscale them at compile-time.
    */
-  private void scaleUnmatchedDrawables(ExecutionContext context)
+  private void scaleUnmatchedDrawables(StepExecutionContext context)
       throws IOException, InterruptedException {
     ResourceFilters.Density targetDensity = ResourceFilters.Density.ORDERING.max(targetDensities);
 
@@ -366,9 +366,9 @@ public class FilterResourcesSteps {
   }
 
   public interface ImageScaler {
-    boolean isAvailable(ExecutionContext context);
+    boolean isAvailable(StepExecutionContext context);
 
-    void scale(double factor, Path source, Path destination, ExecutionContext context)
+    void scale(double factor, Path source, Path destination, StepExecutionContext context)
         throws IOException, InterruptedException;
   }
 
@@ -387,14 +387,14 @@ public class FilterResourcesSteps {
     }
 
     @Override
-    public boolean isAvailable(ExecutionContext context) {
+    public boolean isAvailable(StepExecutionContext context) {
       return new ExecutableFinder()
           .getOptionalExecutable(Paths.get("convert"), context.getEnvironment())
           .isPresent();
     }
 
     @Override
-    public void scale(double factor, Path source, Path destination, ExecutionContext context)
+    public void scale(double factor, Path source, Path destination, StepExecutionContext context)
         throws IOException, InterruptedException {
       Step convertStep =
           new BashStep(

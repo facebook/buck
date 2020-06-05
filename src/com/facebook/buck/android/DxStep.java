@@ -25,7 +25,7 @@ import com.android.tools.r8.OutputMode;
 import com.android.tools.r8.utils.AbortException;
 import com.android.tools.r8.utils.InternalOptions;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
@@ -241,7 +241,7 @@ public class DxStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
     CharsCountingStringList commandArgs = new CharsCountingStringList(10 + filesToDex.size());
 
     // TODO: Support D8 for out of process dexing by respecting dexTool here
@@ -330,7 +330,7 @@ public class DxStep extends ShellStep {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     if (isRunningInProc()) {
       return StepExecutionResult.of(executeInProcess(context));
@@ -339,7 +339,7 @@ public class DxStep extends ShellStep {
     }
   }
 
-  private int executeInProcess(ExecutionContext context) {
+  private int executeInProcess(StepExecutionContext context) {
     if (D8.equals(dexTool)) {
 
       D8DiagnosticsHandler diagnosticsHandler = new D8DiagnosticsHandler();
@@ -463,7 +463,7 @@ public class DxStep extends ShellStep {
   }
 
   private void postCompilationFailureToConsole(
-      ExecutionContext context, D8DiagnosticsHandler diagnosticsHandler) {
+      StepExecutionContext context, D8DiagnosticsHandler diagnosticsHandler) {
     context.postEvent(
         ConsoleEvent.severe(
             String.join(

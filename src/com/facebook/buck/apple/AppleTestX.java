@@ -19,7 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -189,7 +189,7 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 Objects.requireNonNull(appleConfigsOutputPaths.getResolvedPath().getParent()))),
         new AbstractExecutionStep("write apple_configs to file") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) throws IOException {
+          public StepExecutionResult execute(StepExecutionContext context) throws IOException {
 
             getProjectFilesystem()
                 .writeContentsToPath(

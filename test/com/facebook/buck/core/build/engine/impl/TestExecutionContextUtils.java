@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.step;
+package com.facebook.buck.core.build.engine.impl;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -24,45 +24,25 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ClassLoaderCache;
-import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 
-public class TestExecutionContext {
+public class TestExecutionContextUtils {
 
-  private TestExecutionContext() {
-    // Utility class.
-  }
-
-  // For test code, use a global class loader cache to avoid having to call ExecutionContext.close()
-  // in each test case.
-  private static final ClassLoaderCache testClassLoaderCache = new ClassLoaderCache();
-
-  public static StepExecutionContext.Builder newBuilder() {
+  public static ExecutionContext.Builder executionContextBuilder() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
 
-    return StepExecutionContext.builder()
+    return ExecutionContext.builder()
         .setConsole(new TestConsole())
         .setBuckEventBus(BuckEventBusForTests.newInstance())
         .setPlatform(Platform.detect())
         .setEnvironment(EnvVariablesProvider.getSystemEnv())
-        .setClassLoaderCache(testClassLoaderCache)
+        .setClassLoaderCache(new ClassLoaderCache())
         .setProcessExecutor(new FakeProcessExecutor())
         .setCellPathResolver(cellPathResolver)
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
         .setBuildCellRootPath(filesystem.getRootPath().getPath());
-  }
-
-  public static StepExecutionContext newInstance() {
-    return newBuilder().build();
-  }
-
-  public static StepExecutionContext newInstanceWithRealProcessExecutor() {
-    TestConsole console = new TestConsole();
-    ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
-    return newBuilder().setConsole(console).setProcessExecutor(processExecutor).build();
   }
 }

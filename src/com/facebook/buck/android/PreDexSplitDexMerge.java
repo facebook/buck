@@ -21,7 +21,7 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -205,7 +205,7 @@ public class PreDexSplitDexMerge extends PreDexMerge {
     steps.add(
         new AbstractExecutionStep("merge_metadata") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) throws IOException {
+          public StepExecutionResult execute(StepExecutionContext context) throws IOException {
             // Read metadata from all groups, combine into one metadata.txt per APK module
             ImmutableMultimap.Builder<APKModule, String> mergedDexEntriesBuilder =
                 ImmutableMultimap.builder();

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.worker;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -61,7 +61,7 @@ public class WorkerProcessPoolFactory {
    * a new one.
    */
   public WorkerProcessPool getWorkerProcessPool(
-      ExecutionContext context, WorkerProcessParams paramsToUse) {
+      StepExecutionContext context, WorkerProcessParams paramsToUse) {
     ConcurrentMap<String, WorkerProcessPool> processPoolMap;
     String key;
     HashCode workerHash;
@@ -103,7 +103,7 @@ public class WorkerProcessPoolFactory {
   }
 
   private WorkerProcessPool createWorkerProcessPool(
-      ExecutionContext context,
+      StepExecutionContext context,
       WorkerProcessParams paramsToUse,
       ConcurrentMap<String, WorkerProcessPool> processPoolMap,
       String key,
@@ -153,7 +153,7 @@ public class WorkerProcessPoolFactory {
 
   @VisibleForTesting
   public ImmutableMap<String, String> getEnvironmentForProcess(
-      ExecutionContext context, WorkerProcessParams workerJobParams) {
+      StepExecutionContext context, WorkerProcessParams workerJobParams) {
     Path tmpDir = workerJobParams.getTempDir();
 
     Map<String, String> envVars = new HashMap<>(context.getEnvironment());
@@ -164,7 +164,7 @@ public class WorkerProcessPoolFactory {
 
   @VisibleForTesting
   public WorkerProcess createWorkerProcess(
-      ProcessExecutorParams processParams, ExecutionContext context, Path tmpDir)
+      ProcessExecutorParams processParams, StepExecutionContext context, Path tmpDir)
       throws IOException {
     Path stdErr = Files.createTempFile("buck-worker-", "-stderr.log");
     ProcessExecutor processExecutor = context.getProcessExecutor();

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.ocaml;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -64,7 +64,7 @@ public class OcamlDepToolStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(@Nullable ExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(@Nullable StepExecutionContext context) {
 
     ImmutableList.Builder<String> cmd = ImmutableList.builder();
 

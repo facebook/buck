@@ -16,7 +16,7 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import java.io.IOException;
 import java.util.function.Supplier;
 
@@ -32,7 +32,7 @@ public class ConditionalStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
+  public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     if (shouldRunStep.get()) {
       return step.execute(context);
@@ -49,7 +49,7 @@ public class ConditionalStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(StepExecutionContext context) {
     return "conditionally: " + step.getDescription(context);
   }
 }

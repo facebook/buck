@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.kotlin;
 import static com.facebook.buck.jvm.java.JavaPaths.SRC_JAR;
 import static com.facebook.buck.jvm.java.JavaPaths.SRC_ZIP;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -40,7 +40,7 @@ public interface Kotlinc extends Tool {
   KotlincVersion getVersion();
 
   int buildWithClasspath(
-      ExecutionContext context,
+      StepExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableSortedSet<Path> kotlinSourceFilePaths,

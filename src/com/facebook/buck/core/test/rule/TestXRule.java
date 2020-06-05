@@ -17,7 +17,7 @@
 package com.facebook.buck.core.test.rule;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -48,7 +48,7 @@ public interface TestXRule extends TestRule, ExternalTestRunnerRule, HasSuppleme
   @Override
   @Deprecated
   default ImmutableList<Step> runTests(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       TestRunningOptions options,
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
@@ -59,7 +59,7 @@ public interface TestXRule extends TestRule, ExternalTestRunnerRule, HasSuppleme
   @Override
   @Deprecated
   default Callable<TestResults> interpretTestResults(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     throw shouldNotBeCalled();
@@ -94,7 +94,7 @@ public interface TestXRule extends TestRule, ExternalTestRunnerRule, HasSuppleme
    */
   @Override
   default ExternalTestSpec getExternalTestRunnerSpec(
-      ExecutionContext executionContext,
+      StepExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
     return ImmutableExternalRunnerTestProtocol.ofImpl(

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -91,7 +91,9 @@ public class JavacPipelineState implements RulePipelineState {
 
   /** Get the invocation instance. */
   public Javac.Invocation getJavacInvocation(
-      SourcePathResolverAdapter resolver, ProjectFilesystem filesystem, ExecutionContext context)
+      SourcePathResolverAdapter resolver,
+      ProjectFilesystem filesystem,
+      StepExecutionContext context)
       throws IOException {
     if (invocation == null) {
       javacOptions.validateOptions(classpathChecker::validateClasspath);
@@ -104,7 +106,7 @@ public class JavacPipelineState implements RulePipelineState {
           context.getVerbosity().isSilent()
               ? Verbosity.STANDARD_INFORMATION
               : context.getVerbosity();
-      ExecutionContext firstOrderContext =
+      StepExecutionContext firstOrderContext =
           context.createSubContext(stdout, stderr, Optional.of(verbosity));
       closeables.add(firstOrderContext);
 
@@ -206,7 +208,7 @@ public class JavacPipelineState implements RulePipelineState {
    */
   @VisibleForTesting
   ImmutableList<String> getOptions(
-      ExecutionContext context,
+      StepExecutionContext context,
       ImmutableSortedSet<Path> buildClasspathEntries,
       ProjectFilesystem filesystem,
       SourcePathResolverAdapter resolver) {
@@ -226,7 +228,7 @@ public class JavacPipelineState implements RulePipelineState {
       SourcePathResolverAdapter pathResolver,
       Path outputDirectory,
       Path generatedCodeDirectory,
-      ExecutionContext context,
+      StepExecutionContext context,
       ImmutableSortedSet<Path> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 

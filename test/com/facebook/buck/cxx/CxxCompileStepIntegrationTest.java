@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -103,7 +103,7 @@ public class CxxCompileStepIntegrationTest {
             false);
 
     // Execute the archive step and verify it ran successfully.
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     TestConsole console = (TestConsole) executionContext.getConsole();
     int exitCode = step.execute(executionContext).getExitCode();
     if (failure.isPresent()) {
@@ -175,7 +175,7 @@ public class CxxCompileStepIntegrationTest {
             false);
 
     // Execute the archive step and verify it ran successfully.
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance();
     TestConsole console = (TestConsole) executionContext.getConsole();
     int exitCode = step.execute(executionContext).getExitCode();
     assertEquals("compile step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);

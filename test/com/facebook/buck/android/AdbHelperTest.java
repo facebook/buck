@@ -27,12 +27,12 @@ import com.facebook.buck.android.device.TargetDeviceOptions;
 import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.build.engine.impl.TestExecutionContextUtils;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.step.AdbOptions;
-import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.Platform;
@@ -54,7 +54,7 @@ public class AdbHelperTest {
 
   @Before
   public void setUp() {
-    testContext = TestExecutionContext.newInstance();
+    testContext = TestExecutionContextUtils.executionContextBuilder().build();
     testConsole = (TestConsole) testContext.getConsole();
     basicAdbHelper = createAdbHelper(createAdbOptions(), new TargetDeviceOptions());
   }
@@ -250,7 +250,7 @@ public class AdbHelperTest {
     for (IDevice device : devices) {
       AdbHelper myAdbHelper =
           createAdbHelper(
-              TestExecutionContext.newBuilder()
+              TestExecutionContextUtils.executionContextBuilder()
                   .setEnvironment(
                       ImmutableMap.of(AdbHelper.SERIAL_NUMBER_ENV, device.getSerialNumber()))
                   .build(),

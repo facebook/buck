@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.supermodule;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -56,7 +56,7 @@ public class GenerateSupermoduleTargetGraphJsonStep extends AbstractExecutionSte
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     try (OutputStream outputStream = filesystem.newFileOutputStream(outputRelativePath)) {
       try (JsonGenerator jsonGen = ObjectMappers.createGenerator(outputStream)) {
         jsonGen.writeStartObject();

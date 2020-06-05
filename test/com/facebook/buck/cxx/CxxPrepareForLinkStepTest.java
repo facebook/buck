@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -153,7 +153,7 @@ public class CxxPrepareForLinkStepTest {
   private void runTestForArgFilePathAndOutputPath(
       AbsPath argFilePath, AbsPath fileListPath, AbsPath output, AbsPath currentCellPath)
       throws IOException, InterruptedException {
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
 
@@ -218,7 +218,7 @@ public class CxxPrepareForLinkStepTest {
   private void runTestForArgFilePathAndOutputPathWithoutFileList(
       AbsPath argFilePath, AbsPath fileListPath, AbsPath output, AbsPath currentCellPath)
       throws IOException, InterruptedException {
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
 

@@ -749,7 +749,7 @@ public class AdbHelper implements AndroidDevicesHelper {
         device ->
             new ExopackageInstaller(
                     pathResolver,
-                    contextSupplier.get(),
+                    contextSupplier.get().getBuckEventBus(),
                     hasInstallableApk.getProjectFilesystem(),
                     tryToExtractPackageNameFromManifest(
                         pathResolver, hasInstallableApk.getApkInfo()),

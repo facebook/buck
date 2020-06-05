@@ -18,7 +18,7 @@ package com.facebook.buck.step;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import org.junit.Test;
 
 /** Unit test for {@link com.facebook.buck.step.AbstractExecutionStep}. */
@@ -30,11 +30,11 @@ public class AbstractExecutionStepTest {
     Step step =
         new AbstractExecutionStep(description) {
           @Override
-          public StepExecutionResult execute(ExecutionContext context) {
+          public StepExecutionResult execute(StepExecutionContext context) {
             return StepExecutionResults.SUCCESS;
           }
         };
-    ExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance();
 
     assertEquals(description, step.getShortName());
     assertEquals(description, step.getDescription(context));

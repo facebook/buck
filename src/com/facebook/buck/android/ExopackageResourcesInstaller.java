@@ -21,7 +21,7 @@ import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
 import com.facebook.buck.android.exopackage.ResourcesExoHelper;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -82,7 +82,7 @@ public class ExopackageResourcesInstaller extends AbstractBuildRule {
     return ImmutableList.of(
         new AbstractExecutionStep("installing_exo_resource_files") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
+          public StepExecutionResult execute(StepExecutionContext context)
               throws IOException, InterruptedException {
             trigger.verify(context);
             SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
@@ -103,7 +103,11 @@ public class ExopackageResourcesInstaller extends AbstractBuildRule {
                       ImmutableSortedSet<Path> presentFiles =
                           Objects.requireNonNull(contents.get(device.getSerialNumber()));
                       new ExopackageInstaller(
-                              resolver, context, getProjectFilesystem(), packageName, device)
+                              resolver,
+                              context.getBuckEventBus(),
+                              getProjectFilesystem(),
+                              packageName,
+                              device)
                           .installMissingFiles(
                               presentFiles,
                               ResourcesExoHelper.getFilesToInstall(
