@@ -348,12 +348,12 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
         generator.writeObjectField(
             UI_TEST_TARGET_APP,
-            AppleTest.extractBundlePathForBundle(uiTestTargetApp, sourcePathResolver)
+            AppleTest.extractBinaryPathForBundle(uiTestTargetApp, sourcePathResolver)
                 .map(Path::toString));
 
         generator.writeObjectField(
             TEST_HOST_APP,
-            AppleTest.extractBundlePathForBundle(testHostApp, sourcePathResolver)
+            AppleTest.extractBinaryPathForBundle(testHostApp, sourcePathResolver)
                 .map(Path::toString));
         generator.writeEndObject();
       }

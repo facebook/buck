@@ -304,9 +304,13 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     Path resolvedTestOutputPath = getProjectFilesystem().resolve(testOutputPath);
 
-    Optional<Path> testHostAppPath =
+    Optional<Path> testHostAppBinaryPath =
+        extractBinaryPathForBundle(testHostApp, buildContext.getSourcePathResolver());
+    Optional<AbsPath> testHostAppBundlePath =
         extractBundlePathForBundle(testHostApp, buildContext.getSourcePathResolver());
-    Optional<Path> uiTestTargetAppPath =
+    Optional<Path> uiTestTargetAppBinaryPath =
+        extractBinaryPathForBundle(uiTestTargetApp, buildContext.getSourcePathResolver());
+    Optional<AbsPath> uiTestTargetAppBundlePath =
         extractBundlePathForBundle(uiTestTargetApp, buildContext.getSourcePathResolver());
 
     ImmutableMap<String, String> testEnvironmentOverrides =
@@ -317,11 +321,11 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     ImmutableSet.Builder<Path> requiredPathsBuilder = ImmutableSet.builder();
     requiredPathsBuilder.add(resolvedTestBundleDirectory.getPath());
-    if (testHostAppPath.isPresent()) {
-      requiredPathsBuilder.add(testHostAppPath.get());
+    if (testHostAppBundlePath.isPresent()) {
+      requiredPathsBuilder.add(testHostAppBundlePath.get().getPath());
     }
-    if (uiTestTargetAppPath.isPresent()) {
-      requiredPathsBuilder.add(uiTestTargetAppPath.get());
+    if (uiTestTargetAppBundlePath.isPresent()) {
+      requiredPathsBuilder.add(uiTestTargetAppBundlePath.get().getPath());
     }
     externalSpec.setRequiredPaths(requiredPathsBuilder.build());
 
@@ -337,14 +341,14 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableMap.Builder<Path, Map<Path, Path>>
           appTestPathsToTestHostAppPathsToTestTargetAppsBuilder = ImmutableMap.builder();
 
-      if (testHostAppPath.isPresent()) {
-        if (uiTestTargetAppPath.isPresent()) {
+      if (testHostAppBinaryPath.isPresent()) {
+        if (uiTestTargetAppBinaryPath.isPresent()) {
           appTestPathsToTestHostAppPathsToTestTargetAppsBuilder.put(
               resolvedTestBundleDirectory.getPath(),
-              ImmutableMap.of(testHostAppPath.get(), uiTestTargetAppPath.get()));
+              ImmutableMap.of(testHostAppBinaryPath.get(), uiTestTargetAppBinaryPath.get()));
         } else {
           appTestPathsToHostAppsBuilder.put(
-              resolvedTestBundleDirectory.getPath(), testHostAppPath.get());
+              resolvedTestBundleDirectory.getPath(), testHostAppBinaryPath.get());
         }
       } else {
         logicTestPathsBuilder.add(resolvedTestBundleDirectory.getPath());
@@ -463,8 +467,8 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       HashMap<String, String> environment = new HashMap<>();
       environment.putAll(xctest.getEnvironment(buildContext.getSourcePathResolver()));
       environment.putAll(testEnvironmentOverrides);
-      if (testHostAppPath.isPresent()) {
-        environment.put("XCInjectBundleInto", testHostAppPath.get().toString());
+      if (testHostAppBinaryPath.isPresent()) {
+        environment.put("XCInjectBundleInto", testHostAppBinaryPath.get().toString());
       }
       XctestRunTestsStep xctestStep =
           new XctestRunTestsStep(
@@ -485,7 +489,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return new Pair<>(steps.build(), externalSpec.build());
   }
 
-  static Optional<Path> extractBundlePathForBundle(
+  static Optional<AbsPath> extractBundlePathForBundle(
       Optional<AppleBundle> bundle, SourcePathResolverAdapter sourcePathResolverAdapter) {
     if (!bundle.isPresent()) {
       return Optional.empty();
@@ -493,10 +497,17 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     AbsPath resolvedBundleDirectory =
         sourcePathResolverAdapter.getAbsolutePath(
             Objects.requireNonNull(bundle.get().getSourcePathToOutput()));
+    return Optional.of(resolvedBundleDirectory);
+  }
+
+  static Optional<Path> extractBinaryPathForBundle(
+      Optional<AppleBundle> bundle, SourcePathResolverAdapter sourcePathResolverAdapter) {
+    Optional<AbsPath> bundlePath = extractBundlePathForBundle(bundle, sourcePathResolverAdapter);
+    if (!bundlePath.isPresent()) {
+      return Optional.empty();
+    }
     return Optional.of(
-        resolvedBundleDirectory
-            .resolve(bundle.get().getUnzippedOutputFilePathToBinary())
-            .getPath());
+        bundlePath.get().resolve(bundle.get().getUnzippedOutputFilePathToBinary()).getPath());
   }
 
   @Override
