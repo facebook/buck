@@ -1193,6 +1193,35 @@ class BuckTool(object):
                         stripped_args.append(arg)
                 java_args = stripped_args
 
+            # Remove unsupported args on old Java versions. This is only here temporarily to
+            # simplify the transition while we need to support multiple versions of the JVM.
+            # TODO: Remove once Java 11 upgrade is done.
+            if self.get_buck_compiled_java_version() <= 8:
+                stripped_args = []
+                illegal_prev_arg = None
+                for arg in java_args:
+                    if illegal_prev_arg != None:
+                        logging.warning(
+                            "Warning: Removing JVM arg `%s %s`, which is not supported in Java %d.",
+                            illegal_prev_arg,
+                            arg,
+                            self.get_buck_compiled_java_version(),
+                        )
+                        illegal_prev_arg = None
+                    elif arg.startswith("--illegal-access"):
+                        logging.warning(
+                            "Warning: Removing JVM arg `%s`, which is not supported in Java %d.",
+                            arg,
+                            self.get_buck_compiled_java_version(),
+                        )
+                    elif arg.startswith("--add-opens") or arg.startswith(
+                        "--add-exports"
+                    ):
+                        illegal_prev_arg = arg
+                    else:
+                        stripped_args.append(arg)
+                java_args = stripped_args
+
             return java_args
 
 
