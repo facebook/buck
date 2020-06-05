@@ -17,10 +17,11 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.PathMatcher;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
 import com.facebook.buck.jvm.java.classes.DefaultClasspathTraverser;
 import com.facebook.buck.jvm.java.classes.FileLike;
@@ -28,6 +29,7 @@ import com.facebook.buck.jvm.java.classes.FileLikes;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -48,7 +50,7 @@ import java.util.Optional;
  * {@link Step} that takes a directory or zip of {@code .class} files and traverses it to get the
  * total set of {@code .class} files included by the directory or zip.
  */
-public class AccumulateClassNamesStep implements Step {
+public class AccumulateClassNamesStep extends IsolatedStep {
 
   /**
    * In the generated {@code classes.txt} file, each line will contain the path to a {@code .class}
@@ -56,7 +58,9 @@ public class AccumulateClassNamesStep implements Step {
    */
   static final String CLASS_NAME_HASH_CODE_SEPARATOR = " ";
 
-  private final ProjectFilesystem filesystem;
+  private final AbsPath rootPath;
+  // RelPath based patterns
+  private final ImmutableSet<PathMatcher> ignoredPaths;
   private final Optional<RelPath> pathToJarOrClassesDirectory;
   private final RelPath whereClassNamesShouldBeWritten;
 
@@ -67,24 +71,23 @@ public class AccumulateClassNamesStep implements Step {
    *     class files and corresponding SHA-1 hashes of their contents will be written.
    */
   public AccumulateClassNamesStep(
-      ProjectFilesystem filesystem,
+      AbsPath rootPath,
+      ImmutableSet<PathMatcher> ignoredPaths,
       Optional<RelPath> pathToJarOrClassesDirectory,
       RelPath whereClassNamesShouldBeWritten) {
-    this.filesystem = filesystem;
+    this.rootPath = rootPath;
+    this.ignoredPaths = ignoredPaths;
     this.pathToJarOrClassesDirectory = pathToJarOrClassesDirectory;
     this.whereClassNamesShouldBeWritten = whereClassNamesShouldBeWritten;
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+  public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
+      throws IOException {
     ImmutableSortedMap<String, HashCode> classNames;
     if (pathToJarOrClassesDirectory.isPresent()) {
       Optional<ImmutableSortedMap<String, HashCode>> classNamesOptional =
-          calculateClassHashes(
-              context,
-              filesystem.getRootPath(),
-              filesystem.getIgnoredPaths(),
-              pathToJarOrClassesDirectory.get());
+          calculateClassHashes(context, rootPath, ignoredPaths, pathToJarOrClassesDirectory.get());
       if (classNamesOptional.isPresent()) {
         classNames = classNamesOptional.get();
       } else {
@@ -94,7 +97,8 @@ public class AccumulateClassNamesStep implements Step {
       classNames = ImmutableSortedMap.of();
     }
 
-    filesystem.writeLinesToPath(
+    ProjectFilesystemUtils.writeLinesToPath(
+        rootPath,
         Iterables.transform(
             classNames.entrySet(),
             entry -> entry.getKey() + CLASS_NAME_HASH_CODE_SEPARATOR + entry.getValue()),
@@ -109,14 +113,14 @@ public class AccumulateClassNamesStep implements Step {
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getIsolatedStepDescription(IsolatedExecutionContext context) {
     String sourceString = pathToJarOrClassesDirectory.map(Object::toString).orElse("null");
     return String.format("get_class_names %s > %s", sourceString, whereClassNamesShouldBeWritten);
   }
 
   /** @return an Optional that will be absent if there was an error. */
   public static Optional<ImmutableSortedMap<String, HashCode>> calculateClassHashes(
-      ExecutionContext context,
+      IsolatedExecutionContext context,
       AbsPath rootPath,
       ImmutableSet<PathMatcher> ignoredPaths,
       RelPath path) {

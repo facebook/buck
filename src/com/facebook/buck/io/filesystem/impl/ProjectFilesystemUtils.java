@@ -125,7 +125,8 @@ public class ProjectFilesystemUtils {
    * @param path the path to check.
    * @return whether ignored paths contains path or any of its ancestors.
    */
-  public static boolean isIgnored(RelPath path, ImmutableCollection<PathMatcher> ignores) {
+  public static boolean isIgnored(
+      RelPath path, ImmutableCollection<? extends PathMatcher> ignores) {
     return ignores.stream().anyMatch(pathMatcher -> pathMatcher.matches(path.getPath()));
   }
 

@@ -16,20 +16,20 @@
 
 package com.facebook.buck.io.filesystem;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Set;
 
 /** Matcher that matches explicitly provided file paths. */
 public class ExactPathMatcher implements PathMatcher {
 
-  private final Path path;
+  private final RelPath path;
 
-  private ExactPathMatcher(Path path) {
+  private ExactPathMatcher(RelPath path) {
     this.path = path;
   }
 
@@ -57,7 +57,7 @@ public class ExactPathMatcher implements PathMatcher {
 
   @Override
   public boolean matches(Path path) {
-    return this.path.equals(path);
+    return this.path.getPath().equals(path);
   }
 
   private String getGlob() {
@@ -78,6 +78,6 @@ public class ExactPathMatcher implements PathMatcher {
 
   /** @return The matcher for paths that are exactly the same as {@code path}. */
   public static ExactPathMatcher of(String path) {
-    return new ExactPathMatcher(Paths.get(path));
+    return new ExactPathMatcher(RelPath.get(path));
   }
 }

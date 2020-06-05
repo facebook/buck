@@ -45,15 +45,15 @@ import java.util.zip.ZipFile;
  * visit the single file foo.txt.
  */
 public abstract class ClasspathTraversal {
-  private final ImmutableSet<PathMatcher> ignoredPaths;
   private final Iterable<Path> paths;
   private final AbsPath rootPath;
+  private final ImmutableSet<PathMatcher> ignoredPaths;
 
   public ClasspathTraversal(
       Collection<Path> paths, AbsPath rootPath, ImmutableSet<PathMatcher> ignoredPaths) {
-    this.ignoredPaths = ignoredPaths;
     this.paths = paths;
     this.rootPath = rootPath;
+    this.ignoredPaths = ignoredPaths;
   }
 
   public abstract void visit(FileLike fileLike) throws IOException;

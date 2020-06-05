@@ -44,7 +44,6 @@ import com.facebook.buck.rules.modern.CustomFieldInputs;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueVisitor;
-import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -375,9 +374,8 @@ public class JarBuildStepsFactory
         withDownwardApi);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
-        ModernBuildableSupport.newCellRelativePathFactory(
-            context.getBuildCellRootPath(), filesystem),
-        filesystem,
+        filesystem.getRootPath(),
+        filesystem.getIgnoredPaths(),
         steps,
         Optional.ofNullable(getSourcePathToOutput(buildTarget, filesystem))
             .map(context.getSourcePathResolver()::getRelativePath)
@@ -406,9 +404,8 @@ public class JarBuildStepsFactory
             buildableContext);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
-        ModernBuildableSupport.newCellRelativePathFactory(
-            context.getBuildCellRootPath(), filesystem),
-        filesystem,
+        filesystem.getRootPath(),
+        filesystem.getIgnoredPaths(),
         steps,
         Optional.ofNullable(getSourcePathToOutput(libraryTarget, filesystem))
             .map(context.getSourcePathResolver()::getRelativePath)

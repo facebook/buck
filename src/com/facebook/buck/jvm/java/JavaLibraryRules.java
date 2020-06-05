@@ -16,16 +16,18 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.google.common.collect.ImmutableList.Builder;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.facebook.buck.step.isolatedsteps.MkdirIsolatedStep;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -37,20 +39,18 @@ public class JavaLibraryRules {
   private JavaLibraryRules() {}
 
   static void addAccumulateClassNamesStep(
-      BuildCellRelativePathFactory cellRelativePathFactory,
-      ProjectFilesystem filesystem,
-      Builder<Step> steps,
+      AbsPath rootPath,
+      ImmutableSet<PathMatcher> ignorePaths,
+      ImmutableList.Builder<Step> steps,
       Optional<RelPath> pathToClasses,
       RelPath pathToClassHashes) {
 
-    BuildCellRelativePath directoryPath =
-        cellRelativePathFactory.from(pathToClassHashes.getPath().getParent());
-    MkdirStep mkdirStep = MkdirStep.of(directoryPath);
+    RelPath dir = pathToClassHashes.getParent();
+    IsolatedStep mkdirIsolatedStep = MkdirIsolatedStep.of(rootPath, dir);
+    IsolatedStep accumulateClassNamesStep =
+        new AccumulateClassNamesStep(rootPath, ignorePaths, pathToClasses, pathToClassHashes);
 
-    AccumulateClassNamesStep accumulateClassNamesStep =
-        new AccumulateClassNamesStep(filesystem, pathToClasses, pathToClassHashes);
-
-    steps.add(mkdirStep);
+    steps.add(mkdirIsolatedStep);
     steps.add(accumulateClassNamesStep);
   }
 
