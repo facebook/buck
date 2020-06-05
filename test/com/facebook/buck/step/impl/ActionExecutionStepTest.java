@@ -210,6 +210,7 @@ public class ActionExecutionStepTest {
         .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
         .setBuildCellRootPath(baseCell)
         .setProcessExecutor(new FakeProcessExecutor())
-        .setProjectFilesystemFactory(new FakeProjectFilesystemFactory());
+        .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
+        .setRuleCellRoot(projectFilesystem.getRootPath());
   }
 }

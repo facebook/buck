@@ -218,6 +218,7 @@ public abstract class IsolatedBuildableBuilder {
             .setBuildCellRootPath(canonicalProjectRoot.getPath())
             .setProcessExecutor(processExecutor)
             .setProjectFilesystemFactory(projectFilesystemFactory)
+            .setRuleCellRoot(filesystem.getRootPath())
             .build();
 
     this.buildContext =

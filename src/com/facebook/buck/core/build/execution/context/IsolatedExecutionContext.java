@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.build.execution.context;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.event.BuckEvent;
@@ -47,6 +48,8 @@ public abstract class IsolatedExecutionContext implements Closeable {
   public abstract ImmutableMap<String, String> getEnvironment();
 
   public abstract ProcessExecutor getProcessExecutor();
+
+  public abstract AbsPath getRuleCellRoot();
 
   @Value.Default
   public ClassLoaderCache getClassLoaderCache() {

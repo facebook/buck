@@ -18,6 +18,7 @@ package com.facebook.buck.core.build.execution.context;
 
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -36,7 +37,8 @@ import org.immutables.value.Value;
 @BuckStyleValueWithBuilder
 public abstract class StepExecutionContext extends IsolatedExecutionContext {
 
-  public static StepExecutionContext from(ExecutionContext executionContext) {
+  /** Creates {@link StepExecutionContext} from {@link ExecutionContext} and {@code ruleCellRoot} */
+  public static StepExecutionContext from(ExecutionContext executionContext, AbsPath ruleCellRoot) {
     return StepExecutionContext.builder()
         .setConsole(executionContext.getConsole())
         .setBuckEventBus(executionContext.getBuckEventBus())
@@ -53,6 +55,7 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
         .setRuleKeyDiagnosticsMode(executionContext.getRuleKeyDiagnosticsMode())
         .setTruncateFailingCommandEnabled(executionContext.isTruncateFailingCommandEnabled())
         .setWorkerProcessPools(executionContext.getWorkerProcessPools())
+        .setRuleCellRoot(ruleCellRoot)
         .build();
   }
 

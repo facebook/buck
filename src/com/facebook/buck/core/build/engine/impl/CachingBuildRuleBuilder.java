@@ -1318,7 +1318,9 @@ class CachingBuildRuleBuilder {
                   this.executionContext.getProcessExecutor(), processExecutorContext));
 
       StepRunner.runStep(
-          StepExecutionContext.from(executionContext), step, Optional.of(rule.getBuildTarget()));
+          StepExecutionContext.from(executionContext, rule.getProjectFilesystem().getRootPath()),
+          step,
+          Optional.of(rule.getBuildTarget()));
 
       // Check for interruptions that may have been ignored by step.
       if (Thread.interrupted()) {
@@ -1441,7 +1443,8 @@ class CachingBuildRuleBuilder {
           StepExecutionContext.from(
               executionContext.withProcessExecutor(
                   new ContextualProcessExecutor(
-                      executionContext.getProcessExecutor(), processExecutorContext)));
+                      executionContext.getProcessExecutor(), processExecutorContext)),
+              rule.getProjectFilesystem().getRootPath());
     }
 
     public SettableFuture<Optional<BuildResult>> getFuture() {

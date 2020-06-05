@@ -316,14 +316,17 @@ public class TestCommand extends BuildCommand {
           "unexpected arguments after \"--\" when using internal runner");
     }
 
+    ProjectFilesystem filesystem = params.getCells().getRootCell().getFilesystem();
+
     try (CommandThreadManager testPool =
         new CommandThreadManager("Test-Run", getTestConcurrencyLimit(params))) {
+
       int exitCodeInt =
           TestRunning.runTests(
               params,
               ruleResolver,
               testRules,
-              StepExecutionContext.from(build.getExecutionContext()),
+              StepExecutionContext.from(build.getExecutionContext(), filesystem.getRootPath()),
               getTestRunningOptions(params),
               testPool.getWeightedListeningExecutorService(),
               buildEngine,
@@ -386,7 +389,8 @@ public class TestCommand extends BuildCommand {
                           .getBuckEventBus()
                           .post(ExternalTestSpecCalculationEvent.started(rule.getBuildTarget()));
                       return rule.getExternalTestRunnerSpec(
-                          StepExecutionContext.from(build.getExecutionContext()),
+                          StepExecutionContext.from(
+                              build.getExecutionContext(), filesystem.getRootPath()),
                           options,
                           buildContext);
                     } finally {

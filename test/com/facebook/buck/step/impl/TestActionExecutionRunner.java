@@ -106,6 +106,7 @@ public class TestActionExecutionRunner {
                 .setBuildCellRootPath(projectFilesystem.getRootPath().getPath())
                 .setProcessExecutor(processExecutor)
                 .setProjectFilesystemFactory(projectFilesystemFactory)
+                .setRuleCellRoot(projectFilesystem.getRootPath())
                 .build());
 
     return ImmutableExecutionDetails.ofImpl(action, executionResult);
