@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -402,47 +401,34 @@ public abstract class DefaultJavaLibraryRules {
 
   private DefaultJavaLibrary buildLibraryRule(@Nullable CalculateSourceAbi sourceAbiRule) {
     UnusedDependenciesAction unusedDependenciesAction = getUnusedDependenciesAction();
-    Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory = Optional.empty();
 
-    if (unusedDependenciesAction != UnusedDependenciesAction.IGNORE
-        && getConfiguredCompilerFactory().trackClassUsage(getJavacOptions())) {
-      BuildRuleResolver buildRuleResolver = getActionGraphBuilder();
+    BuildTarget buildTarget = getLibraryTarget();
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    ActionGraphBuilder actionGraphBuilder = getActionGraphBuilder();
+    JavaLibraryDeps javaLibraryDeps = Objects.requireNonNull(getDeps());
+    ConfiguredCompilerFactory configuredCompilerFactory = getConfiguredCompilerFactory();
 
-      JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
-      unusedDependenciesFinderFactory =
-          Optional.of(
-              new UnusedDependenciesFinderFactory(
-                  javaBuckConfig.getUnusedDependenciesBuildozerString(),
-                  javaBuckConfig.isUnusedDependenciesOnlyPrintCommands(),
-                  javaBuckConfig.isUnusedDependenciesUltralightChecking(),
-                  UnusedDependenciesFinder.getDependencies(
-                      buildRuleResolver,
-                      buildRuleResolver.getAllRules(
-                          Objects.requireNonNull(getDeps()).getDepTargets())),
-                  UnusedDependenciesFinder.getDependencies(
-                      buildRuleResolver,
-                      buildRuleResolver.getAllRules(
-                          Objects.requireNonNull(getDeps()).getProvidedDepTargets())),
-                  javaBuckConfig.isUnusedDependenciesExportedDepsAsFirstOrderDeps()
-                      ? Objects.requireNonNull(getDeps().getExportedDepTargets()).stream()
-                          .map(buildTarget -> buildTarget.getUnconfiguredBuildTarget().toString())
-                          .collect(ImmutableList.toImmutableList())
-                      : ImmutableList.of()));
-    }
+    Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory =
+        getUnusedDependenciesFinderFactory(
+            unusedDependenciesAction,
+            javaLibraryDeps,
+            actionGraphBuilder,
+            configuredCompilerFactory);
 
+    CoreArg args = getArgs();
     DefaultJavaLibrary libraryRule =
         getConstructor()
             .newInstance(
-                getLibraryTarget(),
-                getProjectFilesystem(),
+                buildTarget,
+                projectFilesystem,
                 getJarBuildStepsFactory(),
-                getActionGraphBuilder(),
+                actionGraphBuilder,
                 getProguardConfig(),
-                Objects.requireNonNull(getDeps()).getDeps(),
-                Objects.requireNonNull(getDeps()).getExportedDeps(),
-                Objects.requireNonNull(getDeps()).getProvidedDeps(),
-                Objects.requireNonNull(getDeps()).getExportedProvidedDeps(),
-                Objects.requireNonNull(getDeps()).getRuntimeDeps(),
+                javaLibraryDeps.getDeps(),
+                javaLibraryDeps.getExportedDeps(),
+                javaLibraryDeps.getProvidedDeps(),
+                javaLibraryDeps.getExportedProvidedDeps(),
+                javaLibraryDeps.getRuntimeDeps(),
                 getAbiJar(),
                 getSourceOnlyAbiJar(),
                 getMavenCoords(),
@@ -452,11 +438,47 @@ public abstract class DefaultJavaLibraryRules {
                 unusedDependenciesFinderFactory,
                 sourceAbiRule,
                 isDesugarRequired(),
-                getConfiguredCompilerFactory().shouldDesugarInterfaceMethods(),
-                getArgs() != null && getArgs().getNeverMarkAsUnusedDependency().orElse(false));
+                configuredCompilerFactory.shouldDesugarInterfaceMethods(),
+                args != null && args.getNeverMarkAsUnusedDependency().orElse(false));
 
-    getActionGraphBuilder().addToIndex(libraryRule);
+    actionGraphBuilder.addToIndex(libraryRule);
     return libraryRule;
+  }
+
+  private Optional<UnusedDependenciesFinderFactory> getUnusedDependenciesFinderFactory(
+      UnusedDependenciesAction unusedDependenciesAction,
+      JavaLibraryDeps javaLibraryDeps,
+      ActionGraphBuilder actionGraphBuilder,
+      ConfiguredCompilerFactory configuredCompilerFactory) {
+
+    if (unusedDependenciesAction != UnusedDependenciesAction.IGNORE
+        && configuredCompilerFactory.trackClassUsage(getJavacOptions())) {
+
+      ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDeps> deps =
+          UnusedDependenciesFinder.getDependencies(
+              actionGraphBuilder, actionGraphBuilder.getAllRules(javaLibraryDeps.getDepTargets()));
+      ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDeps> providedDeps =
+          UnusedDependenciesFinder.getDependencies(
+              actionGraphBuilder,
+              actionGraphBuilder.getAllRules(javaLibraryDeps.getProvidedDepTargets()));
+      ImmutableSortedSet<BuildTarget> exportedDepTargets = javaLibraryDeps.getExportedDepTargets();
+
+      JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
+
+      return Optional.of(
+          new UnusedDependenciesFinderFactory(
+              javaBuckConfig.getUnusedDependenciesBuildozerString(),
+              javaBuckConfig.isUnusedDependenciesOnlyPrintCommands(),
+              javaBuckConfig.isUnusedDependenciesUltralightChecking(),
+              deps,
+              providedDeps,
+              javaBuckConfig.isUnusedDependenciesExportedDepsAsFirstOrderDeps()
+                  ? Objects.requireNonNull(exportedDepTargets).stream()
+                      .map(buildTarget -> buildTarget.getUnconfiguredBuildTarget().toString())
+                      .collect(ImmutableList.toImmutableList())
+                  : ImmutableList.of()));
+    }
+    return Optional.empty();
   }
 
   private boolean getRequiredForSourceOnlyAbi() {
