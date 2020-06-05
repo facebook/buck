@@ -34,6 +34,7 @@ import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.ParsingContext;
@@ -46,6 +47,7 @@ import com.facebook.buck.parser.spec.BuildTargetMatcherTargetNodeParser;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Functions;
@@ -112,7 +114,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
             .flatMap(arg -> specParser.parse(rootCell, arg).stream())
             .collect(ImmutableSet.toImmutableSet());
     ImmutableSet<BuildTarget> rootTargets;
-    try {
+    try (Scope ignored = LeafEvents.scope(params.getBuckEventBus(), "resolving_target_specs")) {
       rootTargets =
           parser
               .resolveTargetSpecs(
@@ -132,7 +134,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
 
     ConcurrentHashMap<BuildTarget, ListenableFuture<Unit>> jobsCache = new ConcurrentHashMap<>();
 
-    try {
+    try (Scope ignored = LeafEvents.scope(params.getBuckEventBus(), "discovering_targets")) {
       List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
       for (BuildTarget buildTarget : rootTargets) {
         discoverNewTargetsConcurrently(
@@ -175,7 +177,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
         new AcyclicDepthFirstPostOrderTraversalWithPayload<>(traversable);
     ImmutableSetMultimap.Builder<CellRelativePath, BuildTarget> pathToBuildTargetIndexBuilder =
         ImmutableSetMultimap.builder();
-    try {
+    try (Scope ignored = LeafEvents.scope(params.getBuckEventBus(), "building_graph")) {
       for (Pair<BuildTarget, TargetNode<?>> entry : targetNodeTraversal.traverse(rootTargets)) {
         TargetNode<?> node = entry.getSecond();
         graph.addNode(node);
