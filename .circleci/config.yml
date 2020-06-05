@@ -1179,13 +1179,43 @@ jobs:
           name: pip install python-dateutil
           command: python3 -m pip install python-dateutil
       - run:
-          name: pip install python-magic-bin
+          name: pip install python-magic
           command: python3 -m pip install python-magic
       - run:
           name: Run linux release
           command: |
             VERSION=${CIRCLE_TAG:1}
             python3 ./tools/release/publish_release.py --no-build-chocolatey --no-chocolatey-publish --no-build-homebrew --github-token ${GITHUB_TOKEN} --use-existing-release --version ${VERSION} --output-dir artifacts
+
+  windows_publish_release:
+    environment:
+      <<: *windows_environment
+    working_directory: "C:\\Users\\circleci\\buck"
+    executor: win/default
+    steps:
+      - checkout
+      - run:
+          # on Windows, python3 is installed as python but buck expect the name python3
+          name: Create symlink to python
+          command: $pythonpath=(Split-Path((Get-Command python).Path)); cmd /c mklink ${pythonpath}\python3.exe ${pythonpath}\python.exe
+          shell: powershell.exe
+      - run:
+          name: Upgrade pip
+          command: python3 -m pip install --upgrade pip
+      - run:
+          name: pip install requests
+          command: python3 -m pip install requests
+      - run:
+          name: pip install python-dateutil
+          command: python3 -m pip install python-dateutil
+      - run:
+          name: pip install python-magic-bin
+          command: python3 -m pip install python-magic-bin
+      - run:
+          name: Run windows release
+          command: |
+            VERSION=${CIRCLE_TAG:1}
+            python3 ./tools/release/publish_release.py --no-build-deb --no-build-homebrew --github-token ${GITHUB_TOKEN} --use-existing-release --version ${VERSION} --output-dir artifacts
 
 workflows:
   version: 2.1
