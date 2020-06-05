@@ -151,7 +151,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     this.javaClassHashesProvider =
         new DefaultJavaClassHashesProvider(
-            ExplicitBuildTargetSourcePath.of(buildTarget, getPathToClassHashes()));
+            ExplicitBuildTargetSourcePath.of(buildTarget, getPathToClassHashes().getPath()));
   }
 
   @Override
@@ -342,8 +342,8 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             context.getBuildCellRootPath(), getProjectFilesystem()),
         getProjectFilesystem(),
         steps,
-        Optional.of(context.getSourcePathResolver().getRelativePath(getSourcePathToOutput())),
-        pathToClassHashes.getPath());
+        Optional.of(RelPath.of(resolver.getRelativePath(getSourcePathToOutput()))),
+        pathToClassHashes);
 
     return steps.build();
   }

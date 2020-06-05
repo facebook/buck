@@ -52,7 +52,6 @@ import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -62,7 +61,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
@@ -75,6 +73,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -287,26 +286,24 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext buildContext, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
     ImmutableSet<Path> classpathEntriesToDex =
         classpathEntriesToDexSourcePaths.stream()
-            .map(
-                input ->
-                    getProjectFilesystem()
-                        .relativize(buildContext.getSourcePathResolver().getAbsolutePath(input))
-                        .getPath())
+            .map(sourcePathResolver::getAbsolutePath)
+            .map(projectFilesystem::relativize)
+            .map(RelPath::getPath)
             .collect(ImmutableSet.toImmutableSet());
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                buildContext.getBuildCellRootPath(), getProjectFilesystem(), getRootGenPath())));
+                buildContext.getBuildCellRootPath(), projectFilesystem, getRootGenPath())));
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                buildContext.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                getSecondaryDexRoot())));
+                buildContext.getBuildCellRootPath(), projectFilesystem, getSecondaryDexRoot())));
 
     ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
         moduleMappedClasspathEntriesToDex.get().entrySet().stream()
@@ -317,12 +314,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
                             v ->
                                 new AbstractMap.SimpleEntry<>(
                                     entry.getKey(),
-                                    buildContext
-                                        .getSourcePathResolver()
-                                        .getAbsolutePath(v)
-                                        .getPath())))
-            .collect(
-                ImmutableListMultimap.toImmutableListMultimap(e -> e.getKey(), e -> e.getValue()));
+                                    sourcePathResolver.getAbsolutePath(v).getPath())))
+            .collect(ImmutableListMultimap.toImmutableListMultimap(Entry::getKey, Entry::getValue));
 
     // Execute preprocess_java_classes_binary, if appropriate.
     if (preprocessJavaClassesBash.isPresent()) {
@@ -330,7 +323,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
       // directory.
       Path preprocessJavaClassesInDir = getBinPath("java_classes_preprocess_in");
       Path preprocessJavaClassesOutDir = getBinPath("java_classes_preprocess_out");
-      Path ESCAPED_PARENT = getProjectFilesystem().getPath("_.._");
+      Path ESCAPED_PARENT = projectFilesystem.getPath("_.._");
 
       ImmutableList.Builder<Pair<Path, Path>> pathToTargetBuilder = ImmutableList.builder();
       ImmutableSet.Builder<Path> outDirPaths = ImmutableSet.builder();
@@ -342,7 +335,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
             RichStream.from(entry)
                 .map(fragment -> fragment.toString().equals("..") ? ESCAPED_PARENT : fragment)
                 .reduce(Path::resolve)
-                .orElse(getProjectFilesystem().getPath(""));
+                .orElse(projectFilesystem.getPath(""));
         pathToTargetBuilder.add(new Pair<>(preprocessJavaClassesInDir.resolve(relPath), entry));
         outDirPaths.add(preprocessJavaClassesOutDir.resolve(relPath));
       }
@@ -356,14 +349,14 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
           MakeCleanDirectoryStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   buildContext.getBuildCellRootPath(),
-                  getProjectFilesystem(),
+                  projectFilesystem,
                   preprocessJavaClassesInDir)));
 
       steps.addAll(
           MakeCleanDirectoryStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   buildContext.getBuildCellRootPath(),
-                  getProjectFilesystem(),
+                  projectFilesystem,
                   preprocessJavaClassesOutDir)));
 
       steps.add(
@@ -371,10 +364,10 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
             @Override
             public StepExecutionResult execute(ExecutionContext context) throws IOException {
               for (Pair<Path, Path> entry : pathToTarget) {
-                Path symlinkPath = getProjectFilesystem().resolve(entry.getFirst());
-                Path symlinkTarget = getProjectFilesystem().resolve(entry.getSecond());
+                Path symlinkPath = projectFilesystem.resolve(entry.getFirst());
+                Path symlinkTarget = projectFilesystem.resolve(entry.getSecond());
                 java.nio.file.Files.createDirectories(symlinkPath.getParent());
-                getProjectFilesystem().createSymLink(symlinkPath, symlinkTarget, false);
+                projectFilesystem.createSymLink(symlinkPath, symlinkTarget, false);
               }
               return StepExecutionResults.SUCCESS;
             }
@@ -384,31 +377,29 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
           new AbstractGenruleStep.CommandString(
               /* cmd */ Optional.empty(),
               /* bash */ Arg.flattenToSpaceSeparatedString(
-                  preprocessJavaClassesBash, buildContext.getSourcePathResolver()),
+                  preprocessJavaClassesBash, sourcePathResolver),
               /* cmdExe */ Optional.empty());
       steps.add(
           new AbstractGenruleStep(
-              getProjectFilesystem(),
+              projectFilesystem,
               commandString,
-              getProjectFilesystem().getRootPath().resolve(preprocessJavaClassesInDir),
+              projectFilesystem.getRootPath().resolve(preprocessJavaClassesInDir),
               withDownwardApi) {
 
             @Override
             protected void addEnvironmentVariables(
                 ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
               environmentVariablesBuilder.put(
-                  "IN_JARS_DIR",
-                  getProjectFilesystem().resolve(preprocessJavaClassesInDir).toString());
+                  "IN_JARS_DIR", projectFilesystem.resolve(preprocessJavaClassesInDir).toString());
               environmentVariablesBuilder.put(
                   "OUT_JARS_DIR",
-                  getProjectFilesystem().resolve(preprocessJavaClassesOutDir).toString());
+                  projectFilesystem.resolve(preprocessJavaClassesOutDir).toString());
 
               String bootclasspath =
-                  Joiner.on(':')
-                      .join(
-                          Iterables.transform(
-                              androidPlatformTarget.getBootclasspathEntries(),
-                              getProjectFilesystem()::resolve));
+                  androidPlatformTarget.getBootclasspathEntries().stream()
+                      .map(projectFilesystem::resolve)
+                      .map(Path::toString)
+                      .collect(Collectors.joining(":"));
 
               environmentVariablesBuilder.put("ANDROID_BOOTCLASSPATH", bootclasspath);
             }
@@ -421,12 +412,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
           addProguardCommands(
               classpathEntriesToDex,
               proguardConfigs.stream()
-                  .map(
-                      sourcePath ->
-                          buildContext
-                              .getSourcePathResolver()
-                              .getAbsolutePath(sourcePath)
-                              .getPath())
+                  .map(sourcePath -> sourcePathResolver.getAbsolutePath(sourcePath).getPath())
                   .collect(ImmutableSet.toImmutableSet()),
               skipProguard,
               steps,
@@ -463,7 +449,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(),
-                getProjectFilesystem(),
+                projectFilesystem,
                 primaryDexPath.getParent())));
 
     addDexingSteps(
@@ -490,12 +476,10 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
         new AbstractExecutionStep("writing_secondary_dex_listing") {
           @Override
           public StepExecutionResult execute(ExecutionContext context) throws IOException {
-            getProjectFilesystem().mkdirs(getSecondaryDexListing().getParent());
-            getProjectFilesystem()
-                .writeLinesToPath(
-                    secondaryDexDirectoriesBuilder.build().stream().map(t -> t.toString())
-                        ::iterator,
-                    getSecondaryDexListing());
+            projectFilesystem.mkdirs(getSecondaryDexListing().getParent());
+            projectFilesystem.writeLinesToPath(
+                secondaryDexDirectoriesBuilder.build().stream().map(Path::toString)::iterator,
+                getSecondaryDexListing());
             return StepExecutionResults.SUCCESS;
           }
         });
@@ -536,7 +520,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
             for (Path path : classPathEntriesToDex) {
               Optional<ImmutableSortedMap<String, HashCode>> hashes =
                   AccumulateClassNamesStep.calculateClassHashes(
-                      context, getProjectFilesystem(), path);
+                      context, getProjectFilesystem(), RelPath.of(path));
               if (!hashes.isPresent()) {
                 return StepExecutionResults.ERROR;
               }

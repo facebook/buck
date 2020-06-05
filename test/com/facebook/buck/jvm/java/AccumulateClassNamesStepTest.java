@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.pathformat.PathFormatter;
@@ -32,11 +33,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -48,6 +51,14 @@ public class AccumulateClassNamesStepTest {
       HashCode.fromString(SHA1_FOR_EMPTY_STRING);
 
   @Rule public TemporaryFolder tmp = new TemporaryFolder();
+
+  private ProjectFilesystem filesystem;
+
+  @Before
+  public void setUp() throws Exception {
+    Path root = tmp.getRoot().toPath();
+    filesystem = TestProjectFilesystems.createProjectFilesystem(root);
+  }
 
   @Test
   public void testExecuteAccumulateClassNamesStepOnJarFile() throws IOException {
@@ -67,11 +78,9 @@ public class AccumulateClassNamesStepTest {
     }
 
     // Create the AccumulateClassNamesStep and execute it.
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
     AccumulateClassNamesStep accumulateClassNamesStep =
         new AccumulateClassNamesStep(
-            filesystem, Optional.of(Paths.get(name)), Paths.get("output.txt"));
+            filesystem, Optional.of(RelPath.get(name)), RelPath.get("output.txt"));
     ExecutionContext context = TestExecutionContext.newInstance();
     accumulateClassNamesStep.execute(context);
 
@@ -104,11 +113,9 @@ public class AccumulateClassNamesStepTest {
     tmp.newFile("dir/com/example/subpackage/Baz.class");
 
     // Create the AccumulateClassNamesStep and execute it.
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
     AccumulateClassNamesStep accumulateClassNamesStep =
         new AccumulateClassNamesStep(
-            filesystem, Optional.of(Paths.get(name)), Paths.get("output.txt"));
+            filesystem, Optional.of(RelPath.get(name)), RelPath.get("output.txt"));
     ExecutionContext context = TestExecutionContext.newInstance();
     accumulateClassNamesStep.execute(context);
 
@@ -145,11 +152,9 @@ public class AccumulateClassNamesStepTest {
     }
 
     // Create the AccumulateClassNamesStep and execute it.
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
     AccumulateClassNamesStep accumulateClassNamesStep =
         new AccumulateClassNamesStep(
-            filesystem, Optional.of(Paths.get(name)), Paths.get("output.txt"));
+            filesystem, Optional.of(RelPath.get(name)), RelPath.get("output.txt"));
     ExecutionContext context = TestExecutionContext.newInstance();
     accumulateClassNamesStep.execute(context);
 

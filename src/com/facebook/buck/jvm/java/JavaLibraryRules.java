@@ -19,24 +19,14 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList.Builder;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,10 +40,18 @@ public class JavaLibraryRules {
       BuildCellRelativePathFactory cellRelativePathFactory,
       ProjectFilesystem filesystem,
       Builder<Step> steps,
-      Optional<Path> pathToClasses,
-      Path pathToClassHashes) {
-    steps.add(MkdirStep.of(cellRelativePathFactory.from(pathToClassHashes.getParent())));
-    steps.add(new AccumulateClassNamesStep(filesystem, pathToClasses, pathToClassHashes));
+      Optional<RelPath> pathToClasses,
+      RelPath pathToClassHashes) {
+
+    BuildCellRelativePath directoryPath =
+        cellRelativePathFactory.from(pathToClassHashes.getPath().getParent());
+    MkdirStep mkdirStep = MkdirStep.of(directoryPath);
+
+    AccumulateClassNamesStep accumulateClassNamesStep =
+        new AccumulateClassNamesStep(filesystem, pathToClasses, pathToClassHashes);
+
+    steps.add(mkdirStep);
+    steps.add(accumulateClassNamesStep);
   }
 
   static JavaLibrary.Data initializeFromDisk(BuildTarget buildTarget, ProjectFilesystem filesystem)
@@ -65,27 +63,5 @@ public class JavaLibraryRules {
 
   static RelPath getPathToClassHashes(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.classes.txt");
-  }
-
-  /**
-   * @return all the transitive native libraries a rule depends on, represented as a map from their
-   *     system-specific library names to their {@link SourcePath} objects.
-   */
-  public static ImmutableMap<String, SourcePath> getNativeLibraries(
-      Iterable<BuildRule> deps, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    // Allow the transitive walk to find NativeLinkables through the BuildRuleParams deps of a
-    // JavaLibrary or CalculateAbi object. The deps may be either one depending if we're compiling
-    // against ABI rules or full rules
-    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
-        NativeLinkableGroups.getNativeLinkableRoots(
-            deps,
-            r ->
-                r instanceof JavaLibrary
-                    ? Optional.of(((JavaLibrary) r).getDepsForTransitiveClasspathEntries())
-                    : r instanceof CalculateAbi ? Optional.of(r.getBuildDeps()) : Optional.empty());
-    return NativeLinkables.getTransitiveSharedLibraries(
-        graphBuilder,
-        Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
-        true);
   }
 }

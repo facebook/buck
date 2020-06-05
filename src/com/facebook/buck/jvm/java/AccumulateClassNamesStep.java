@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
 import com.facebook.buck.jvm.java.classes.DefaultClasspathTraverser;
@@ -34,7 +35,6 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -54,8 +54,8 @@ public class AccumulateClassNamesStep implements Step {
   static final String CLASS_NAME_HASH_CODE_SEPARATOR = " ";
 
   private final ProjectFilesystem filesystem;
-  private final Optional<Path> pathToJarOrClassesDirectory;
-  private final Path whereClassNamesShouldBeWritten;
+  private final Optional<RelPath> pathToJarOrClassesDirectory;
+  private final RelPath whereClassNamesShouldBeWritten;
 
   /**
    * @param pathToJarOrClassesDirectory Where to look for .class files. If absent, then an empty
@@ -65,8 +65,8 @@ public class AccumulateClassNamesStep implements Step {
    */
   public AccumulateClassNamesStep(
       ProjectFilesystem filesystem,
-      Optional<Path> pathToJarOrClassesDirectory,
-      Path whereClassNamesShouldBeWritten) {
+      Optional<RelPath> pathToJarOrClassesDirectory,
+      RelPath whereClassNamesShouldBeWritten) {
     this.filesystem = filesystem;
     this.pathToJarOrClassesDirectory = pathToJarOrClassesDirectory;
     this.whereClassNamesShouldBeWritten = whereClassNamesShouldBeWritten;
@@ -77,8 +77,7 @@ public class AccumulateClassNamesStep implements Step {
     ImmutableSortedMap<String, HashCode> classNames;
     if (pathToJarOrClassesDirectory.isPresent()) {
       Optional<ImmutableSortedMap<String, HashCode>> classNamesOptional =
-          calculateClassHashes(
-              context, filesystem, filesystem.resolve(pathToJarOrClassesDirectory.get()));
+          calculateClassHashes(context, filesystem, pathToJarOrClassesDirectory.get());
       if (classNamesOptional.isPresent()) {
         classNames = classNamesOptional.get();
       } else {
@@ -92,7 +91,7 @@ public class AccumulateClassNamesStep implements Step {
         Iterables.transform(
             classNames.entrySet(),
             entry -> entry.getKey() + CLASS_NAME_HASH_CODE_SEPARATOR + entry.getValue()),
-        whereClassNamesShouldBeWritten);
+        whereClassNamesShouldBeWritten.getPath());
 
     return StepExecutionResults.SUCCESS;
   }
@@ -110,11 +109,11 @@ public class AccumulateClassNamesStep implements Step {
 
   /** @return an Optional that will be absent if there was an error. */
   public static Optional<ImmutableSortedMap<String, HashCode>> calculateClassHashes(
-      ExecutionContext context, ProjectFilesystem filesystem, Path path) {
+      ExecutionContext context, ProjectFilesystem filesystem, RelPath path) {
     Map<String, HashCode> classNames = new HashMap<>();
 
     ClasspathTraversal traversal =
-        new ClasspathTraversal(Collections.singleton(path), filesystem) {
+        new ClasspathTraversal(Collections.singleton(path.getPath()), filesystem) {
           @Override
           public void visit(FileLike fileLike) throws IOException {
             // When traversing a JAR file, it may have resources or directory entries that do not

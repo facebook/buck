@@ -249,7 +249,7 @@ public class DefaultJavaLibrary
     this.javaClassHashesProvider =
         new DefaultJavaClassHashesProvider(
             ExplicitBuildTargetSourcePath.of(
-                buildTarget, getBuildable().getPathToClassHashes(projectFilesystem)));
+                buildTarget, getBuildable().getPathToClassHashes(projectFilesystem).getPath()));
   }
 
   private static void validateExportedDepsType(

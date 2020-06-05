@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -379,8 +380,9 @@ public class JarBuildStepsFactory
         filesystem,
         steps,
         Optional.ofNullable(getSourcePathToOutput(buildTarget, filesystem))
-            .map(context.getSourcePathResolver()::getRelativePath),
-        pathToClassHashes);
+            .map(context.getSourcePathResolver()::getRelativePath)
+            .map(RelPath::of),
+        RelPath.of(pathToClassHashes));
 
     return steps.build();
   }
@@ -409,18 +411,20 @@ public class JarBuildStepsFactory
         filesystem,
         steps,
         Optional.ofNullable(getSourcePathToOutput(libraryTarget, filesystem))
-            .map(context.getSourcePathResolver()::getRelativePath),
-        pathToClassHashes);
+            .map(context.getSourcePathResolver()::getRelativePath)
+            .map(RelPath::of),
+        RelPath.of(pathToClassHashes));
 
     return steps.build();
   }
 
   protected CompilerParameters getCompilerParameters(
       BuildContext context, ProjectFilesystem filesystem, BuildTarget buildTarget) {
+    SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
     return CompilerParameters.builder()
         .setClasspathEntriesSourcePaths(
-            dependencyInfos.getCompileTimeClasspathSourcePaths(), context.getSourcePathResolver())
-        .setSourceFileSourcePaths(srcs, filesystem, context.getSourcePathResolver())
+            dependencyInfos.getCompileTimeClasspathSourcePaths(), sourcePathResolver)
+        .setSourceFileSourcePaths(srcs, filesystem, sourcePathResolver)
         .setScratchPaths(buildTarget, filesystem)
         .setShouldTrackClassUsage(trackClassUsage)
         .setShouldTrackJavacPhaseEvents(trackJavacPhaseEvents)

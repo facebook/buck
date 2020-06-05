@@ -33,10 +33,15 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
@@ -111,11 +116,11 @@ public class JavaBinaryDescription
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     ImmutableMap<String, SourcePath> nativeLibraries =
-        JavaLibraryRules.getNativeLibraries(
+        getNativeLibraries(
             params.getBuildDeps(),
             getCxxPlatform(args, buildTarget.getTargetConfiguration())
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
-            context.getActionGraphBuilder());
+            graphBuilder);
     BuildTarget binaryBuildTarget = buildTarget;
 
     // If we're packaging native libraries, we'll build the binary JAR in a separate rule and
@@ -190,6 +195,28 @@ public class JavaBinaryDescription
     }
 
     return rule;
+  }
+
+  /**
+   * @return all the transitive native libraries a rule depends on, represented as a map from their
+   *     system-specific library names to their {@link SourcePath} objects.
+   */
+  private ImmutableMap<String, SourcePath> getNativeLibraries(
+      Iterable<BuildRule> deps, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    // Allow the transitive walk to find NativeLinkables through the BuildRuleParams deps of a
+    // JavaLibrary or CalculateAbi object. The deps may be either one depending if we're compiling
+    // against ABI rules or full rules
+    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+        NativeLinkableGroups.getNativeLinkableRoots(
+            deps,
+            r ->
+                r instanceof JavaLibrary
+                    ? Optional.of(((JavaLibrary) r).getDepsForTransitiveClasspathEntries())
+                    : r instanceof CalculateAbi ? Optional.of(r.getBuildDeps()) : Optional.empty());
+    return NativeLinkables.getTransitiveSharedLibraries(
+        graphBuilder,
+        Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
+        true);
   }
 
   @Override
