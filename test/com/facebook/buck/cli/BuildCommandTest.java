@@ -35,6 +35,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
@@ -47,6 +48,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -700,6 +702,16 @@ public class BuildCommandTest {
         PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)
         throws BuildTargetException {
       return parser.getTargetNodeJobAssertCompatible(perBuildState, target, dependencyStack);
+    }
+
+    @Override
+    public ListenableFuture<UnconfiguredTargetNode> getUnconfiguredTargetNodeJob(
+        PerBuildState perBuildState,
+        UnconfiguredBuildTarget unconfiguredBuildTarget,
+        DependencyStack dependencyStack)
+        throws BuildFileParseException {
+      return parser.getUnconfiguredTargetNodeJob(
+          perBuildState, unconfiguredBuildTarget, dependencyStack);
     }
 
     @Nullable

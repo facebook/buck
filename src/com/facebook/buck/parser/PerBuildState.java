@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
@@ -40,6 +41,7 @@ public class PerBuildState implements AutoCloseable {
 
   private final CellManager cellManager;
   private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
+  private final UnconfiguredTargetNodePipeline unconfiguredTargetNodeParsePipeline;
   private final UnconfiguredTargetNodeToTargetNodeParsePipeline targetNodeParsePipeline;
   private final ParsingContext parsingContext;
   private final SelectorListResolver selectorListResolver;
@@ -49,6 +51,7 @@ public class PerBuildState implements AutoCloseable {
   PerBuildState(
       CellManager cellManager,
       BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline,
+      UnconfiguredTargetNodePipeline unconfiguredTargetNodeParsePipeline,
       UnconfiguredTargetNodeToTargetNodeParsePipeline targetNodeParsePipeline,
       ParsingContext parsingContext,
       SelectorListResolver selectorListResolver,
@@ -56,6 +59,7 @@ public class PerBuildState implements AutoCloseable {
       ConfigurationRuleRegistry configurationRuleRegistry) {
     this.cellManager = cellManager;
     this.buildFileRawNodeParsePipeline = buildFileRawNodeParsePipeline;
+    this.unconfiguredTargetNodeParsePipeline = unconfiguredTargetNodeParsePipeline;
     this.targetNodeParsePipeline = targetNodeParsePipeline;
     this.parsingContext = parsingContext;
     this.selectorListResolver = selectorListResolver;
@@ -111,6 +115,14 @@ public class PerBuildState implements AutoCloseable {
 
     return targetNodeParsePipeline.getAllRequestedTargetNodesJob(
         cell, buildFile, targetConfiguration);
+  }
+
+  ListenableFuture<UnconfiguredTargetNode> getUnconfiguredTargetNodeJob(
+      UnconfiguredBuildTarget target, DependencyStack dependencyStack)
+      throws BuildFileParseException {
+    Cell owningCell = cellManager.getCell(target.getCell());
+
+    return unconfiguredTargetNodeParsePipeline.getNodeJob(owningCell, target, dependencyStack);
   }
 
   public BuildFileManifest getBuildFileManifest(Cell cell, AbsPath buildFile)

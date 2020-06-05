@@ -22,10 +22,12 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayloadAndDependencyStack;
 import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversableWithPayloadAndDependencyStack;
@@ -122,6 +124,15 @@ abstract class AbstractParser implements Parser {
       PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)
       throws BuildTargetException {
     return perBuildState.getTargetNodeJobAssertCompatible(target, dependencyStack);
+  }
+
+  @Override
+  public ListenableFuture<UnconfiguredTargetNode> getUnconfiguredTargetNodeJob(
+      PerBuildState perBuildState,
+      UnconfiguredBuildTarget unconfiguredBuildTarget,
+      DependencyStack dependencyStack)
+      throws BuildFileParseException {
+    return perBuildState.getUnconfiguredTargetNodeJob(unconfiguredBuildTarget, dependencyStack);
   }
 
   private RuntimeException propagateRuntimeCause(RuntimeException e)

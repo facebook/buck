@@ -21,10 +21,12 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
@@ -73,6 +75,12 @@ public interface Parser {
   ListenableFuture<TargetNode<?>> getTargetNodeJobAssertCompatible(
       PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)
       throws BuildTargetException;
+
+  ListenableFuture<UnconfiguredTargetNode> getUnconfiguredTargetNodeJob(
+      PerBuildState perBuildState,
+      UnconfiguredBuildTarget unconfiguredBuildTarget,
+      DependencyStack dependencyStack)
+      throws BuildFileParseException;
 
   @Nullable
   SortedMap<ParamNameOrSpecial, Object> getTargetNodeRawAttributes(

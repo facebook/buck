@@ -329,6 +329,7 @@ public class PerBuildStateFactory {
     return new PerBuildState(
         cellManager,
         buildFileRawNodeParsePipeline,
+        unconfiguredTargetNodePipeline,
         targetNodeParsePipeline,
         parsingContext,
         selectorListResolver,
