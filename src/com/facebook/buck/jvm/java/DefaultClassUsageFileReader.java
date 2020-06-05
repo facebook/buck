@@ -16,8 +16,10 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.cell.CellPathExtractor;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
@@ -43,9 +45,14 @@ class DefaultClassUsageFileReader {
   private DefaultClassUsageFileReader() {}
 
   private static ImmutableMap<String, ImmutableMap<String, Integer>> loadClassUsageMap(
-      Path mapFilePath) throws IOException {
-    return ObjectMappers.readValue(
-        mapFilePath, new TypeReference<ImmutableMap<String, ImmutableMap<String, Integer>>>() {});
+      Path mapFilePath) {
+    try {
+      return ObjectMappers.readValue(
+          mapFilePath, new TypeReference<ImmutableMap<String, ImmutableMap<String, Integer>>>() {});
+    } catch (IOException e) {
+      throw new BuckUncheckedExecutionException(
+          e, "When loading class usage map from %s.", mapFilePath);
+    }
   }
 
   /**
@@ -59,43 +66,39 @@ class DefaultClassUsageFileReader {
       Path classUsageFilePath,
       ImmutableMap<Path, SourcePath> jarPathToSourcePath) {
     ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
-    try {
-      ImmutableMap<String, ImmutableMap<String, Integer>> classUsageEntries =
-          loadClassUsageMap(classUsageFilePath);
-      for (Map.Entry<String, ImmutableMap<String, Integer>> jarUsedClassesEntry :
-          classUsageEntries.entrySet()) {
-        AbsPath jarAbsolutePath =
-            convertRecordedJarPathToAbsolute(
-                projectFilesystem, cellPathResolver, jarUsedClassesEntry.getKey());
-        SourcePath sourcePath = jarPathToSourcePath.get(jarAbsolutePath.getPath());
-        if (sourcePath == null) {
-          // This indicates a dependency that wasn't among the deps of the rule; i.e.,
-          // it came from the build environment (JDK, Android SDK, etc.)
-          continue;
-        }
-
-        for (String classAbsolutePath : jarUsedClassesEntry.getValue().keySet()) {
-          builder.add(ArchiveMemberSourcePath.of(sourcePath, Paths.get(classAbsolutePath)));
-        }
+    ImmutableMap<String, ImmutableMap<String, Integer>> classUsageEntries =
+        loadClassUsageMap(classUsageFilePath);
+    for (Map.Entry<String, ImmutableMap<String, Integer>> jarUsedClassesEntry :
+        classUsageEntries.entrySet()) {
+      AbsPath jarAbsolutePath =
+          convertRecordedJarPathToAbsolute(
+              projectFilesystem,
+              cellPathResolver,
+              cellPathResolver.getCellNameResolver(),
+              jarUsedClassesEntry.getKey());
+      SourcePath sourcePath = jarPathToSourcePath.get(jarAbsolutePath.getPath());
+      if (sourcePath == null) {
+        // This indicates a dependency that wasn't among the deps of the rule; i.e.,
+        // it came from the build environment (JDK, Android SDK, etc.)
+        continue;
       }
-    } catch (IOException e) {
-      throw new BuckUncheckedExecutionException(
-          e,
-          "When loading class usage files from %s.",
-          projectFilesystem.resolve(classUsageFilePath));
+
+      for (String classAbsolutePath : jarUsedClassesEntry.getValue().keySet()) {
+        builder.add(ArchiveMemberSourcePath.of(sourcePath, Paths.get(classAbsolutePath)));
+      }
     }
     return builder.build();
   }
 
-  public static ImmutableSet<Path> loadUsedJarsFromFile(
+  public static ImmutableSet<AbsPath> loadUsedJarsFromFile(
       ProjectFilesystem projectFilesystem,
-      CellPathResolver cellPathResolver,
-      Path classUsageFilePath,
-      boolean doUltralightChecking)
-      throws IOException {
-    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+      CellPathExtractor cellPathExtractor,
+      CellNameResolver cellNameResolver,
+      AbsPath classUsageFilePath,
+      boolean doUltralightChecking) {
+    ImmutableSet.Builder<AbsPath> builder = ImmutableSet.builder();
     ImmutableMap<String, ImmutableMap<String, Integer>> classUsageEntries =
-        loadClassUsageMap(classUsageFilePath);
+        loadClassUsageMap(classUsageFilePath.getPath());
     for (Map.Entry<String, ImmutableMap<String, Integer>> entry : classUsageEntries.entrySet()) {
       if (doUltralightChecking && isUltralightOnlyDependency(entry.getValue())) {
         continue;
@@ -103,8 +106,9 @@ class DefaultClassUsageFileReader {
 
       String jarPath = entry.getKey();
       AbsPath jarAbsolutePath =
-          convertRecordedJarPathToAbsolute(projectFilesystem, cellPathResolver, jarPath);
-      builder.add(jarAbsolutePath.getPath());
+          convertRecordedJarPathToAbsolute(
+              projectFilesystem, cellPathExtractor, cellNameResolver, jarPath);
+      builder.add(jarAbsolutePath);
     }
     return builder.build();
   }
@@ -125,13 +129,14 @@ class DefaultClassUsageFileReader {
   }
 
   private static AbsPath convertRecordedJarPathToAbsolute(
-      ProjectFilesystem projectFilesystem, CellPathResolver cellPathResolver, String jarPath) {
+      ProjectFilesystem projectFilesystem,
+      CellPathExtractor cellPathExtractor,
+      CellNameResolver cellNameResolver,
+      String jarPath) {
     Path recordedPath = Paths.get(jarPath);
-    AbsPath jarAbsolutePath =
-        recordedPath.isAbsolute()
-            ? getAbsolutePathForCellRootedPath(recordedPath, cellPathResolver)
-            : AbsPath.of(projectFilesystem.resolve(recordedPath));
-    return jarAbsolutePath;
+    return recordedPath.isAbsolute()
+        ? getAbsolutePathForCellRootedPath(recordedPath, cellPathExtractor, cellNameResolver)
+        : AbsPath.of(projectFilesystem.resolve(recordedPath));
   }
 
   /**
@@ -139,11 +144,14 @@ class DefaultClassUsageFileReader {
    *
    * @param cellRootedPath a path beginning with '/cell_name/' followed by a relative path in that
    *     cell
-   * @param cellPathResolver the CellPathResolver capable of mapping cell_name to absolute root path
+   * @param cellPathExtractor the CellPathExtractor capable of mapping cell_name to absolute root
+   *     path
+   * @param cellNameResolver for resolving cell aliases to their {@link CanonicalCellName} needed
+   *     for {@link CellPathExtractor}
    * @return an absolute path: 'path/to/cell/root/' + 'relative/path/in/cell'
    */
   private static AbsPath getAbsolutePathForCellRootedPath(
-      Path cellRootedPath, CellPathResolver cellPathResolver) {
+      Path cellRootedPath, CellPathExtractor cellPathExtractor, CellNameResolver cellNameResolver) {
     Preconditions.checkArgument(cellRootedPath.isAbsolute(), "Path must begin with /<cell_name>");
     Iterator<Path> pathIterator = cellRootedPath.iterator();
     Path cellNamePath = pathIterator.next();
@@ -155,7 +163,7 @@ class DefaultClassUsageFileReader {
     CanonicalCellName canonicalCellName =
         cellName.equals(DefaultClassUsageFileWriter.ROOT_CELL_IDENTIFIER)
             ? CanonicalCellName.rootCell()
-            : cellPathResolver.getCellNameResolver().getName(Optional.of(cellName));
-    return cellPathResolver.getCellPathOrThrow(canonicalCellName).resolve(relativeToCellRoot);
+            : cellNameResolver.getName(Optional.of(cellName));
+    return cellPathExtractor.getCellPathOrThrow(canonicalCellName).resolve(relativeToCellRoot);
   }
 }

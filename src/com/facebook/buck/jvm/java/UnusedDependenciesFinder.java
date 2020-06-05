@@ -93,7 +93,7 @@ public abstract class UnusedDependenciesFinder implements Step {
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Preconditions.checkState(getUnusedDependenciesAction() != UnusedDependenciesAction.IGNORE);
 
-    ImmutableSet<Path> usedJars = loadUsedJarPaths(context.getCellPathResolver());
+    ImmutableSet<AbsPath> usedJars = loadUsedJarPaths(context.getCellPathResolver());
     MessageHandler messageHandler = chooseMessageHandler(context);
 
     findUnusedDependenciesAndProcessMessages(messageHandler, usedJars);
@@ -111,15 +111,19 @@ public abstract class UnusedDependenciesFinder implements Step {
     }
   }
 
-  private ImmutableSet<Path> loadUsedJarPaths(CellPathResolver cellPathResolver)
-      throws IOException {
-    Path depFile = getProjectFilesystem().getPathForRelativePath(getDepFileRelativePath());
+  private ImmutableSet<AbsPath> loadUsedJarPaths(CellPathResolver cellPathResolver) {
+    AbsPath depFile =
+        getProjectFilesystem().getPathForRelativePath(getDepFileRelativePath().toString());
     if (!depFile.toFile().exists()) {
       return ImmutableSet.of();
     }
 
     return DefaultClassUsageFileReader.loadUsedJarsFromFile(
-        getProjectFilesystem(), cellPathResolver, depFile, isDoUltralightChecking());
+        getProjectFilesystem(),
+        cellPathResolver,
+        cellPathResolver.getCellNameResolver(),
+        depFile,
+        isDoUltralightChecking());
   }
 
   private MessageHandler chooseMessageHandler(ExecutionContext executionContext) {
@@ -135,7 +139,7 @@ public abstract class UnusedDependenciesFinder implements Step {
   }
 
   private void findUnusedDependenciesAndProcessMessages(
-      MessageHandler messageHandler, ImmutableSet<Path> usedJars) {
+      MessageHandler messageHandler, ImmutableSet<AbsPath> usedJars) {
     findUnusedDependenciesAndProcessMessages(messageHandler, usedJars, getDeps(), "deps");
     findUnusedDependenciesAndProcessMessages(
         messageHandler, usedJars, getProvidedDeps(), "provided_deps");
@@ -143,7 +147,7 @@ public abstract class UnusedDependenciesFinder implements Step {
 
   private void findUnusedDependenciesAndProcessMessages(
       MessageHandler messageHandler,
-      ImmutableSet<Path> usedJars,
+      ImmutableSet<AbsPath> usedJars,
       ImmutableList<DependencyAndExportedDeps> targets,
       String dependencyType) {
     ImmutableSet<String> unusedDependencies = findUnusedDependencies(usedJars, targets);
@@ -154,7 +158,7 @@ public abstract class UnusedDependenciesFinder implements Step {
   }
 
   private ImmutableSet<String> findUnusedDependencies(
-      ImmutableSet<Path> usedJars, ImmutableList<DependencyAndExportedDeps> targets) {
+      ImmutableSet<AbsPath> usedJars, ImmutableList<DependencyAndExportedDeps> targets) {
     SourcePathResolverAdapter sourcePathResolverAdapter = getSourcePathResolver();
     ImmutableSet.Builder<String> unusedDependencies = ImmutableSet.builder();
 
@@ -174,7 +178,7 @@ public abstract class UnusedDependenciesFinder implements Step {
 
   private boolean isUnusedDependencyIncludingExportedDeps(
       DependencyAndExportedDeps dependency,
-      ImmutableSet<Path> usedJars,
+      ImmutableSet<AbsPath> usedJars,
       SourcePathResolverAdapter sourcePathResolverAdapter,
       ImmutableSet<String> firstOrderDepTargets) {
     if (isUsedDependency(dependency.dependency, usedJars, sourcePathResolverAdapter)) {
@@ -193,7 +197,7 @@ public abstract class UnusedDependenciesFinder implements Step {
 
   private boolean isUsedDependencyIncludingExportedDeps(
       DependencyAndExportedDeps exportedDep,
-      ImmutableSet<Path> usedJars,
+      ImmutableSet<AbsPath> usedJars,
       SourcePathResolverAdapter sourcePathResolverAdapter,
       ImmutableSet<String> firstOrderDepTargets) {
     if (!firstOrderDepTargets.contains(exportedDep.dependency.buildTarget)
@@ -213,21 +217,22 @@ public abstract class UnusedDependenciesFinder implements Step {
 
   private boolean isUsedDependency(
       BuildTargetAndSourcePaths dependency,
-      ImmutableSet<Path> usedJars,
+      ImmutableSet<AbsPath> usedJars,
       SourcePathResolverAdapter sourcePathResolverAdapter) {
     final @Nullable SourcePath dependencyOutput = dependency.fullJarSourcePath;
     if (dependencyOutput != null) {
-      AbsPath dependencyOutputPath = sourcePathResolverAdapter.getAbsolutePath(dependencyOutput);
-      if (usedJars.contains(dependencyOutputPath.getPath())) {
+      final AbsPath dependencyOutputPath =
+          sourcePathResolverAdapter.getAbsolutePath(dependencyOutput);
+      if (usedJars.contains(dependencyOutputPath)) {
         return true;
       }
     }
 
     final @Nullable SourcePath dependencyAbiOutput = dependency.abiSourcePath;
     if (dependencyAbiOutput != null) {
-      AbsPath dependencyAbiOutputPath =
+      final AbsPath dependencyAbiOutputPath =
           sourcePathResolverAdapter.getAbsolutePath(dependencyAbiOutput);
-      return usedJars.contains(dependencyAbiOutputPath.getPath());
+      return usedJars.contains(dependencyAbiOutputPath);
     }
 
     return false;
@@ -270,7 +275,7 @@ public abstract class UnusedDependenciesFinder implements Step {
     messageHandler.processMessage(message);
   }
 
-  private void logDiagnosticsIfNeeded(MessageHandler messageHandler, Set<Path> usedJars) {
+  private void logDiagnosticsIfNeeded(MessageHandler messageHandler, Set<AbsPath> usedJars) {
     if (messageHandler.encounteredMessage() && LOG.isLoggable(Level.INFO)) {
       LOG.info("Target: %s, usedJars:\n%s\n", getBuildTarget(), Joiner.on('\n').join(usedJars));
       LOG.info(
