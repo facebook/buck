@@ -1195,11 +1195,6 @@ jobs:
     steps:
       - checkout
       - run:
-          # on Windows, python3 is installed as python but buck expect the name python3
-          name: Create symlink to python
-          command: $pythonpath=(Split-Path((Get-Command python).Path)); cmd /c mklink ${pythonpath}\python3.exe ${pythonpath}\python.exe
-          shell: powershell.exe
-      - run:
           name: Upgrade pip
           command: python3 -m pip install --upgrade pip
       - run:
@@ -1215,7 +1210,8 @@ jobs:
           name: Run windows release
           command: |
             VERSION=${CIRCLE_TAG:1}
-            python3 ./tools/release/publish_release.py --no-build-deb --no-build-homebrew --github-token ${GITHUB_TOKEN} --use-existing-release --version ${VERSION} --output-dir artifacts
+            python3 ./tools/release/publish_release.py --no-build-deb --no-build-homebrew --github-token ${GITHUB_TOKEN} --chocolatey-token ${CHOCO_TOKEN} --use-existing-release --version ${VERSION} --output-dir artifacts
+          shell: bash.exe
 
 workflows:
   version: 2.1
