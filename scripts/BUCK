@@ -1,3 +1,5 @@
+load("//tools/build_rules:python_rules.bzl", "pytest_test")
+
 python_binary(
     name = "diff_rulekeys",
     main_module = "diff_rulekeys",
@@ -49,5 +51,18 @@ python_library(
     ],
     deps = [
         "//third-party/py/argparse:argparse",
+    ],
+)
+
+pytest_test(
+    name = "diff_buck_out_test",
+    srcs = [
+        "diff_buck_out_test.py",
+    ],
+    resources = [
+        "testdata",
+    ],
+    deps = [
+        ":diff_buck_out_lib",
     ],
 )

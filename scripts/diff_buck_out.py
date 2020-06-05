@@ -25,18 +25,19 @@ import os
 
 hash_cache = {}
 
-parser = argparse.ArgumentParser(description="Recursively diff two directories")
-parser.add_argument("dirOne", type=str, help="First top level directory")
-parser.add_argument("dirTwo", type=str, help="Second top level directory")
-parser.add_argument(
-    "--compareRootDirs",
-    action="store_true",
-    help="Will not compare the ./gen and ./bin sub dirs",
-)
-args = parser.parse_args()
-dirOne = args.dirOne
-dirTwo = args.dirTwo
-compareRootDirs = args.compareRootDirs
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Recursively diff two directories")
+    parser.add_argument("dirOne", type=str, help="First top level directory")
+    parser.add_argument("dirTwo", type=str, help="Second top level directory")
+    parser.add_argument(
+        "--compareRootDirs",
+        action="store_true",
+        help="Will not compare the ./gen and ./bin sub dirs",
+    )
+    args = parser.parse_args()
+    dirOne = args.dirOne
+    dirTwo = args.dirTwo
+    compareRootDirs = args.compareRootDirs
 
 
 class FileHash:
@@ -156,10 +157,11 @@ def print_hash_calculations(dirOne, dirTwo, description):
     paths_different_hash_by_extension = {}
 
     for path in matching_paths:
-        hashes = map(lambda fh: fh.hash_code, hashes_by_path[path])
+        hashes = list(map(lambda fh: fh.hash_code, hashes_by_path[path]))
         hashes_match = (
-            len(filter(lambda hash_code: hash_code != hashes[0], hashes)) == 0
+            len([hash_code for hash_code in hashes if hash_code != hashes[0]]) == 0
         )
+
         if hashes_match:
             paths_same_hash += 1
         else:
@@ -207,8 +209,10 @@ def compare_dirs(dirOne, dirTwo):
 # Main
 ################################################################
 
-if compareRootDirs:
-    compare_dirs(dirOne, dirTwo, "root dirs")
-else:
-    compare_dirs(os.path.join(dirOne, "bin"), os.path.join(dirTwo, "bin"), "bin")
-    compare_dirs(os.path.join(dirOne, "gen"), os.path.join(dirTwo, "gen"), "gen")
+if __name__ == "__main__":
+
+    if compareRootDirs:
+        compare_dirs(dirOne, dirTwo, "root dirs")
+    else:
+        compare_dirs(os.path.join(dirOne, "bin"), os.path.join(dirTwo, "bin"), "bin")
+        compare_dirs(os.path.join(dirOne, "gen"), os.path.join(dirTwo, "gen"), "gen")
