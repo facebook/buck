@@ -293,4 +293,10 @@ public class ObjectFileScrubbers {
     ByteArrayOutputStream cStringBuffer = readCString(byteBuffer, true);
     return cStringBuffer.toByteArray();
   }
+
+  /** Reads a NULL-terminated C string and decodes it as a String object. */
+  public static String decodeCString(ByteBuffer byteBuffer) {
+    ByteArrayOutputStream cStringBuffer = readCString(byteBuffer, false);
+    return cStringBuffer.toString();
+  }
 }
