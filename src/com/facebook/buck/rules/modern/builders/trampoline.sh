@@ -53,6 +53,7 @@ JAVA_PATH=$(getJavaPathForVersion $BUCK_JAVA_VERSION)
 
 $JAVA_PATH -cp $CLASSPATH \
   $BUCK_DEBUG_ARGS \
+  $EXTRA_JAVA_ARGS \
   -Xverify:none -XX:+TieredCompilation -XX:TieredStopAtLevel=1 \
   -Dpf4j.pluginsDir=$BUCK_PLUGIN_ROOT \
   -Dbuck.module.resources=$BUCK_PLUGIN_RESOURCES \

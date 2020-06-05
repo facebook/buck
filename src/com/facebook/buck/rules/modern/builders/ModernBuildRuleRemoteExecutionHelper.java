@@ -75,6 +75,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.management.ManagementFactory;
 import java.lang.ref.WeakReference;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -90,6 +91,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -678,6 +680,11 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     return ImmutableSortedMap.<String, String>naturalOrder()
         .put("CLASSPATH", classpathArg(bootstrapClasspath))
         .put("BUCK_CLASSPATH", classpathArg(classpath))
+        .put(
+            "EXTRA_JAVA_ARGS",
+            ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
+                .filter(ModernBuildRuleRemoteExecutionHelper::isValidJVMArgument)
+                .collect(Collectors.joining(" ")))
         .put("BUCK_JAVA_VERSION", String.valueOf(JavaVersion.getMajorVersion()))
         .put("BUCK_PLUGIN_ROOT", relativePluginRoot)
         .put("BASE_BUCK_OUT_DIR", baseBuckOutDir)
@@ -685,6 +692,12 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
         // TODO(cjhopman): This shouldn't be done here, it's not a Buck thing.
         .put("BUCK_DISTCC", "0")
         .build();
+  }
+
+  private static boolean isValidJVMArgument(String arg) {
+    return arg.startsWith("--illegal-access")
+        || arg.startsWith("--add-opens")
+        || arg.startsWith("--add-exports");
   }
 
   private static ImmutableList<String> getBuilderCommand(
