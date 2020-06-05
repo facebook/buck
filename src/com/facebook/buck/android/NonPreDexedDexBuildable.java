@@ -23,6 +23,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -38,6 +39,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AccumulateClassNamesStep;
 import com.facebook.buck.rules.args.Arg;
@@ -412,7 +414,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
           addProguardCommands(
               classpathEntriesToDex,
               proguardConfigs.stream()
-                  .map(sourcePath -> sourcePathResolver.getAbsolutePath(sourcePath).getPath())
+                  .map(sourcePathResolver::getAbsolutePath)
+                  .map(AbsPath::getPath)
                   .collect(ImmutableSet.toImmutableSet()),
               skipProguard,
               steps,
@@ -510,8 +513,12 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
 
   Supplier<ImmutableMap<String, HashCode>> addAccumulateClassNamesStep(
       ImmutableSet<Path> classPathEntriesToDex, ImmutableList.Builder<Step> steps) {
-    ImmutableMap.Builder<String, HashCode> builder = ImmutableMap.builder();
 
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    AbsPath rootPath = projectFilesystem.getRootPath();
+    ImmutableSet<PathMatcher> ignoredPaths = projectFilesystem.getIgnoredPaths();
+
+    ImmutableMap.Builder<String, HashCode> builder = ImmutableMap.builder();
     steps.add(
         new AbstractExecutionStep("collect_all_class_names") {
           @Override
@@ -520,7 +527,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
             for (Path path : classPathEntriesToDex) {
               Optional<ImmutableSortedMap<String, HashCode>> hashes =
                   AccumulateClassNamesStep.calculateClassHashes(
-                      context, getProjectFilesystem(), RelPath.of(path));
+                      context, rootPath, ignoredPaths, RelPath.of(path));
               if (!hashes.isPresent()) {
                 return StepExecutionResults.ERROR;
               }
@@ -555,16 +562,13 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     // Create list of proguard Configs for the app project and its dependencies
     ImmutableSet.Builder<Path> proguardConfigsBuilder = ImmutableSet.builder();
     proguardConfigsBuilder.addAll(depsProguardConfigs);
-    if (proguardConfig.isPresent()) {
-      proguardConfigsBuilder.add(
-          buildContext.getSourcePathResolver().getAbsolutePath(proguardConfig.get()).getPath());
-    }
+    SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
+    proguardConfig.ifPresent(
+        sourcePath ->
+            proguardConfigsBuilder.add(sourcePathResolver.getAbsolutePath(sourcePath).getPath()));
     for (SourcePath aaptGeneratedProguardConfigFile : proguardConfigs) {
       proguardConfigsBuilder.add(
-          buildContext
-              .getSourcePathResolver()
-              .getAbsolutePath(aaptGeneratedProguardConfigFile)
-              .getPath());
+          sourcePathResolver.getAbsolutePath(aaptGeneratedProguardConfigFile).getPath());
     }
 
     // Transform our input classpath to a set of output locations for each input classpath.
@@ -582,15 +586,9 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     // Run ProGuard on the classpath entries.
     ProGuardObfuscateStep.create(
         androidPlatformTarget,
-        javaRuntimeLauncher.getCommandPrefix(buildContext.getSourcePathResolver()),
+        javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
         getProjectFilesystem(),
-        proguardJarOverride.isPresent()
-            ? Optional.of(
-                buildContext
-                    .getSourcePathResolver()
-                    .getAbsolutePath(proguardJarOverride.get())
-                    .getPath())
-            : Optional.empty(),
+        proguardJarOverride.map(sourcePathResolver::getAbsolutePath).map(AbsPath::getPath),
         proguardMaxHeapSize,
         proguardAgentPath,
         proguardConfigsBuilder.build(),
@@ -598,8 +596,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
         optimizationPasses,
         proguardJvmArgs,
         inputOutputEntries,
-        buildContext.getSourcePathResolver()
-            .getAllAbsolutePaths(additionalJarsForProguardAndDesugar).stream()
+        sourcePathResolver.getAllAbsolutePaths(additionalJarsForProguardAndDesugar).stream()
             .map(PathWrapper::getPath)
             .collect(ImmutableSet.toImmutableSet()),
         getProguardConfigDir(),

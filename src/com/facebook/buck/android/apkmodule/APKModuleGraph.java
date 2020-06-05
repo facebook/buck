@@ -321,7 +321,10 @@ public class APKModuleGraph implements AddsToRuleKey {
         for (Path jarFilePath : apkModuleToJarPathMap.get(dexStore)) {
           ClasspathTraverser classpathTraverser = new DefaultClasspathTraverser();
           classpathTraverser.traverse(
-              new ClasspathTraversal(ImmutableSet.of(jarFilePath), filesystem) {
+              new ClasspathTraversal(
+                  ImmutableSet.of(jarFilePath),
+                  filesystem.getRootPath(),
+                  filesystem.getIgnoredPaths()) {
                 @Override
                 public void visit(FileLike entry) {
                   if (!entry.getRelativePath().endsWith(".class")) {

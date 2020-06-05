@@ -16,8 +16,10 @@
 
 package com.facebook.buck.jvm.java.classes;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.collect.ImmutableSet;
@@ -43,28 +45,32 @@ import java.util.zip.ZipFile;
  * visit the single file foo.txt.
  */
 public abstract class ClasspathTraversal {
+  private final ImmutableSet<PathMatcher> ignoredPaths;
   private final Iterable<Path> paths;
-  private final ProjectFilesystem filesystem;
+  private final AbsPath rootPath;
 
-  public ClasspathTraversal(Collection<Path> paths, ProjectFilesystem filesystem) {
+  public ClasspathTraversal(
+      Collection<Path> paths, AbsPath rootPath, ImmutableSet<PathMatcher> ignoredPaths) {
+    this.ignoredPaths = ignoredPaths;
     this.paths = paths;
-    this.filesystem = filesystem;
+    this.rootPath = rootPath;
   }
 
   public abstract void visit(FileLike fileLike) throws IOException;
 
   public final void traverse() throws IOException {
     for (Path path : paths) {
-      ClasspathTraverser adapter = createTraversalAdapter(filesystem.getPathForRelativePath(path));
+      ClasspathTraverser adapter =
+          createTraversalAdapter(ProjectFilesystemUtils.getPathForRelativePath(rootPath, path));
       adapter.traverse(this);
     }
   }
 
   private ClasspathTraverser createTraversalAdapter(Path path) {
     String extension = MorePaths.getFileExtension(path);
-    if (filesystem.isDirectory(path)) {
-      return new DirectoryTraversalAdapter(filesystem, path);
-    } else if (filesystem.isFile(path)) {
+    if (ProjectFilesystemUtils.isDirectory(rootPath, path)) {
+      return new DirectoryTraversalAdapter(rootPath, ignoredPaths, path);
+    } else if (ProjectFilesystemUtils.isFile(rootPath, path)) {
       if (extension.equalsIgnoreCase("jar") || extension.equalsIgnoreCase("zip")) {
         return new ZipFileTraversalAdapter(path);
       } else {
@@ -128,17 +134,21 @@ public abstract class ClasspathTraversal {
   }
 
   private static class DirectoryTraversalAdapter implements ClasspathTraverser {
-    private final ProjectFilesystem filesystem;
+    private final AbsPath rootPath;
+    private final ImmutableSet<PathMatcher> ignoredPaths;
     private final Path directory;
 
-    public DirectoryTraversalAdapter(ProjectFilesystem filesystem, Path directory) {
-      this.filesystem = filesystem;
+    public DirectoryTraversalAdapter(
+        AbsPath rootPath, ImmutableSet<PathMatcher> ignoredPaths, Path directory) {
+      this.rootPath = rootPath;
+      this.ignoredPaths = ignoredPaths;
       this.directory = directory;
     }
 
     @Override
     public void traverse(ClasspathTraversal traversal) throws IOException {
-      filesystem.walkFileTree(
+      ProjectFilesystemUtils.walkFileTree(
+          rootPath,
           directory,
           ImmutableSet.of(FileVisitOption.FOLLOW_LINKS),
           new SimpleFileVisitor<Path>() {
@@ -150,7 +160,8 @@ public abstract class ClasspathTraversal {
               traversal.visit(new FileLikeInDirectory(file, relativePath));
               return FileVisitResult.CONTINUE;
             }
-          });
+          },
+          ProjectFilesystemUtils.getIgnoreFilter(rootPath, true, ignoredPaths));
     }
   }
 

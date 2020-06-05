@@ -181,7 +181,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     LOG.verbose("Traversing classpath for primary zip");
 
     classpathTraverser.traverse(
-        new ClasspathTraversal(inFiles, filesystem) {
+        new ClasspathTraversal(inFiles, filesystem.getRootPath(), filesystem.getIgnoredPaths()) {
           @Override
           public void visit(FileLike entry) throws IOException {
             LOG.verbose("Visiting " + entry.getRelativePath());
@@ -248,7 +248,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     // Now that all of the required entries have been added to the primary zip, fill the rest of
     // the zip up with the remaining entries.
     classpathTraverser.traverse(
-        new ClasspathTraversal(inFiles, filesystem) {
+        new ClasspathTraversal(inFiles, filesystem.getRootPath(), filesystem.getIgnoredPaths()) {
           @Override
           public void visit(FileLike entry) throws IOException {
             Objects.requireNonNull(primaryOut);

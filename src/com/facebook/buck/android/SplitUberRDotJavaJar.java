@@ -143,7 +143,8 @@ public class SplitUberRDotJavaJar extends ModernBuildRule<SplitUberRDotJavaJar>
                             .getSourcePathResolver()
                             .getAbsolutePath(uberRDotJavaJar)
                             .getPath()),
-                    filesystem) {
+                    filesystem.getRootPath(),
+                    filesystem.getIgnoredPaths()) {
                   @Override
                   public void visit(FileLike fileLike) throws IOException {
                     if (!fileLike.getRelativePath().endsWith(".class")) {

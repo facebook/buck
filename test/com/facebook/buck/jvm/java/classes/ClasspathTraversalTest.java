@@ -19,11 +19,11 @@ package com.facebook.buck.jvm.java.classes;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
@@ -48,10 +48,8 @@ public class ClasspathTraversalTest {
         files.stream().map(File::toPath).collect(ImmutableList.toImmutableList());
     ImmutableMap.Builder<FileLike, String> completeList = ImmutableMap.builder();
     ClasspathTraverser traverser = new DefaultClasspathTraverser();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tempDir.getRoot().toPath());
     traverser.traverse(
-        new ClasspathTraversal(paths, filesystem) {
+        new ClasspathTraversal(paths, AbsPath.of(tempDir.getRoot().toPath()), ImmutableSet.of()) {
           @Override
           public void visit(FileLike fileLike) {
             String contents;

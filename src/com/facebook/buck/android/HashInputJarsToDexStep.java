@@ -91,7 +91,10 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
       Hasher hasher = Hashing.sha1().newHasher();
       new DefaultClasspathTraverser()
           .traverse(
-              new ClasspathTraversal(Collections.singleton(path), filesystem) {
+              new ClasspathTraversal(
+                  Collections.singleton(path),
+                  filesystem.getRootPath(),
+                  filesystem.getIgnoredPaths()) {
                 @Override
                 public void visit(FileLike fileLike) {
                   if (FileLikes.isClassFile(fileLike)) {

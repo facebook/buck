@@ -17,7 +17,9 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
 import com.facebook.buck.jvm.java.classes.DefaultClasspathTraverser;
@@ -27,6 +29,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -77,7 +80,11 @@ public class AccumulateClassNamesStep implements Step {
     ImmutableSortedMap<String, HashCode> classNames;
     if (pathToJarOrClassesDirectory.isPresent()) {
       Optional<ImmutableSortedMap<String, HashCode>> classNamesOptional =
-          calculateClassHashes(context, filesystem, pathToJarOrClassesDirectory.get());
+          calculateClassHashes(
+              context,
+              filesystem.getRootPath(),
+              filesystem.getIgnoredPaths(),
+              pathToJarOrClassesDirectory.get());
       if (classNamesOptional.isPresent()) {
         classNames = classNamesOptional.get();
       } else {
@@ -109,11 +116,14 @@ public class AccumulateClassNamesStep implements Step {
 
   /** @return an Optional that will be absent if there was an error. */
   public static Optional<ImmutableSortedMap<String, HashCode>> calculateClassHashes(
-      ExecutionContext context, ProjectFilesystem filesystem, RelPath path) {
+      ExecutionContext context,
+      AbsPath rootPath,
+      ImmutableSet<PathMatcher> ignoredPaths,
+      RelPath path) {
     Map<String, HashCode> classNames = new HashMap<>();
 
     ClasspathTraversal traversal =
-        new ClasspathTraversal(Collections.singleton(path.getPath()), filesystem) {
+        new ClasspathTraversal(Collections.singleton(path.getPath()), rootPath, ignoredPaths) {
           @Override
           public void visit(FileLike fileLike) throws IOException {
             // When traversing a JAR file, it may have resources or directory entries that do not

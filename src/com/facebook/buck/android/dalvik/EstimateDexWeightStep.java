@@ -80,7 +80,8 @@ public class EstimateDexWeightStep implements Step, Supplier<Integer> {
     Path path = filesystem.resolve(pathToJarOrClassesDirectory);
     AtomicInteger totalWeightEstimate = new AtomicInteger();
     ClasspathTraversal traversal =
-        new ClasspathTraversal(Collections.singleton(path), filesystem) {
+        new ClasspathTraversal(
+            Collections.singleton(path), filesystem.getRootPath(), filesystem.getIgnoredPaths()) {
 
           @Override
           public void visit(FileLike fileLike) throws IOException {
