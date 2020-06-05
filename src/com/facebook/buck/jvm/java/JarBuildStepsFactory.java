@@ -374,7 +374,6 @@ public class JarBuildStepsFactory
         withDownwardApi);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
-        filesystem.getRootPath(),
         filesystem.getIgnoredPaths(),
         steps,
         Optional.ofNullable(getSourcePathToOutput(buildTarget, filesystem))
@@ -404,7 +403,6 @@ public class JarBuildStepsFactory
             buildableContext);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
-        filesystem.getRootPath(),
         filesystem.getIgnoredPaths(),
         steps,
         Optional.ofNullable(getSourcePathToOutput(libraryTarget, filesystem))

@@ -224,9 +224,9 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
       SourcePathResolverAdapter resolver,
       JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction) {
 
-    AbsPath rootPath = filesystem.getRootPath();
+    AbsPath cellRootPath = filesystem.getRootPath();
     IsolatedCellPathExtractor isolatedCellPathExtractor =
-        IsolatedCellPathExtractor.of(rootPath, toCellToPathMapping(resolver, filesystem));
+        IsolatedCellPathExtractor.of(cellRootPath, toCellToPathMapping(resolver, filesystem));
     return ImmutableUnusedDependenciesFinder.ofImpl(
         buildTarget,
         convert(deps, resolver, filesystem),
@@ -238,7 +238,6 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
         isolatedCellPathExtractor,
         cellNameResolver,
         toRelativePath(depFileSourcePath, resolver, filesystem),
-        rootPath,
         doUltralightChecking);
   }
 

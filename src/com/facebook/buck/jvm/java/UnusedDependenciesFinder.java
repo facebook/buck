@@ -76,19 +76,18 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
 
   public abstract RelPath getDepFile();
 
-  public abstract AbsPath getRootPath();
-
   public abstract boolean doUltralightChecking();
 
   @Override
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context) {
     Preconditions.checkState(getUnusedDependenciesAction() != UnusedDependenciesAction.IGNORE);
 
+    AbsPath ruleCellRoot = context.getRuleCellRoot();
     ImmutableSet<AbsPath> usedJars =
-        loadUsedJarPaths(getCellPathExtractor(), getCellNameResolver());
+        loadUsedJarPaths(ruleCellRoot, getCellPathExtractor(), getCellNameResolver());
     MessageHandler messageHandler = chooseMessageHandler(context);
 
-    findUnusedDependenciesAndProcessMessages(messageHandler, usedJars);
+    findUnusedDependenciesAndProcessMessages(ruleCellRoot, messageHandler, usedJars);
 
     logDiagnosticsIfNeeded(messageHandler, usedJars);
 
@@ -104,13 +103,13 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
   }
 
   private ImmutableSet<AbsPath> loadUsedJarPaths(
-      CellPathExtractor cellPathExtractor, CellNameResolver cellNameResolver) {
-    AbsPath depFile = toAbsPath(getDepFile());
+      AbsPath root, CellPathExtractor cellPathExtractor, CellNameResolver cellNameResolver) {
+    AbsPath depFile = toAbsPath(root, getDepFile());
     if (!depFile.toFile().exists()) {
       return ImmutableSet.of();
     }
     return DefaultClassUsageFileReader.loadUsedJarsFromFile(
-        getRootPath(), cellPathExtractor, cellNameResolver, depFile, doUltralightChecking());
+        root, cellPathExtractor, cellNameResolver, depFile, doUltralightChecking());
   }
 
   private MessageHandler chooseMessageHandler(IsolatedExecutionContext executionContext) {
@@ -126,18 +125,19 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
   }
 
   private void findUnusedDependenciesAndProcessMessages(
-      MessageHandler messageHandler, ImmutableSet<AbsPath> usedJars) {
-    findUnusedDependenciesAndProcessMessages(messageHandler, usedJars, getDeps(), "deps");
+      AbsPath root, MessageHandler messageHandler, ImmutableSet<AbsPath> usedJars) {
+    findUnusedDependenciesAndProcessMessages(root, messageHandler, usedJars, getDeps(), "deps");
     findUnusedDependenciesAndProcessMessages(
-        messageHandler, usedJars, getProvidedDeps(), "provided_deps");
+        root, messageHandler, usedJars, getProvidedDeps(), "provided_deps");
   }
 
   private void findUnusedDependenciesAndProcessMessages(
+      AbsPath root,
       MessageHandler messageHandler,
       ImmutableSet<AbsPath> usedJars,
       ImmutableList<DependencyAndExportedDepsPath> targets,
       String dependencyType) {
-    ImmutableSet<String> unusedDependencies = findUnusedDependencies(usedJars, targets);
+    ImmutableSet<String> unusedDependencies = findUnusedDependencies(root, usedJars, targets);
 
     if (!unusedDependencies.isEmpty()) {
       processUnusedDependencies(messageHandler, dependencyType, unusedDependencies);
@@ -145,7 +145,9 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
   }
 
   private ImmutableSet<String> findUnusedDependencies(
-      ImmutableSet<AbsPath> usedJars, ImmutableList<DependencyAndExportedDepsPath> targets) {
+      AbsPath root,
+      ImmutableSet<AbsPath> usedJars,
+      ImmutableList<DependencyAndExportedDepsPath> targets) {
     ImmutableSet.Builder<String> unusedDependencies = ImmutableSet.builder();
 
     ImmutableSet<String> firstOrderDeps =
@@ -153,7 +155,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
                 targets.stream().map(x -> x.dependency.buildTarget), getExportedDeps().stream())
             .collect(ImmutableSet.toImmutableSet());
     for (DependencyAndExportedDepsPath target : targets) {
-      if (isUnusedDependencyIncludingExportedDeps(target, usedJars, firstOrderDeps)) {
+      if (isUnusedDependencyIncludingExportedDeps(root, target, usedJars, firstOrderDeps)) {
         unusedDependencies.add(target.dependency.buildTarget);
       }
     }
@@ -162,16 +164,17 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
   }
 
   private boolean isUnusedDependencyIncludingExportedDeps(
+      AbsPath root,
       DependencyAndExportedDepsPath dependency,
       ImmutableSet<AbsPath> usedJars,
       ImmutableSet<String> firstOrderDepTargets) {
-    if (isUsedDependency(dependency.dependency, usedJars)) {
+    if (isUsedDependency(root, dependency.dependency, usedJars)) {
       return false;
     }
 
     for (DependencyAndExportedDepsPath exportedDependency : dependency.exportedDeps) {
       if (isUsedDependencyIncludingExportedDeps(
-          exportedDependency, usedJars, firstOrderDepTargets)) {
+          root, exportedDependency, usedJars, firstOrderDepTargets)) {
         return false;
       }
     }
@@ -180,17 +183,18 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
   }
 
   private boolean isUsedDependencyIncludingExportedDeps(
+      AbsPath root,
       DependencyAndExportedDepsPath exportedDep,
       ImmutableSet<AbsPath> usedJars,
       ImmutableSet<String> firstOrderDepTargets) {
     if (!firstOrderDepTargets.contains(exportedDep.dependency.buildTarget)
-        && isUsedDependency(exportedDep.dependency, usedJars)) {
+        && isUsedDependency(root, exportedDep.dependency, usedJars)) {
       return true;
     }
 
     for (DependencyAndExportedDepsPath exportedDependency : exportedDep.exportedDeps) {
       if (isUsedDependencyIncludingExportedDeps(
-          exportedDependency, usedJars, firstOrderDepTargets)) {
+          root, exportedDependency, usedJars, firstOrderDepTargets)) {
         return true;
       }
     }
@@ -198,15 +202,17 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
     return false;
   }
 
-  private boolean isUsedDependency(BuildTargetAndPaths dependency, ImmutableSet<AbsPath> usedJars) {
-    if (dependency.fullJarPath != null && usedJars.contains(toAbsPath(dependency.fullJarPath))) {
+  private boolean isUsedDependency(
+      AbsPath root, BuildTargetAndPaths dependency, ImmutableSet<AbsPath> usedJars) {
+    if (dependency.fullJarPath != null
+        && usedJars.contains(toAbsPath(root, dependency.fullJarPath))) {
       return true;
     }
-    return dependency.abiPath != null && usedJars.contains(toAbsPath(dependency.abiPath));
+    return dependency.abiPath != null && usedJars.contains(toAbsPath(root, dependency.abiPath));
   }
 
-  private AbsPath toAbsPath(RelPath relPath) {
-    return ProjectFilesystemUtils.getAbsPathForRelativePath(getRootPath(), relPath.getPath());
+  private AbsPath toAbsPath(AbsPath root, RelPath relPath) {
+    return ProjectFilesystemUtils.getAbsPathForRelativePath(root, relPath.getPath());
   }
 
   private void processUnusedDependencies(

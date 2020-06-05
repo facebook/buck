@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -39,16 +38,15 @@ public class JavaLibraryRules {
   private JavaLibraryRules() {}
 
   static void addAccumulateClassNamesStep(
-      AbsPath rootPath,
       ImmutableSet<PathMatcher> ignorePaths,
       ImmutableList.Builder<Step> steps,
       Optional<RelPath> pathToClasses,
       RelPath pathToClassHashes) {
 
     RelPath dir = pathToClassHashes.getParent();
-    IsolatedStep mkdirIsolatedStep = MkdirIsolatedStep.of(rootPath, dir);
+    IsolatedStep mkdirIsolatedStep = MkdirIsolatedStep.of(dir);
     IsolatedStep accumulateClassNamesStep =
-        new AccumulateClassNamesStep(rootPath, ignorePaths, pathToClasses, pathToClassHashes);
+        new AccumulateClassNamesStep(ignorePaths, pathToClasses, pathToClassHashes);
 
     steps.add(mkdirIsolatedStep);
     steps.add(accumulateClassNamesStep);

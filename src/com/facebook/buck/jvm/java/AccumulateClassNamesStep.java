@@ -58,7 +58,6 @@ public class AccumulateClassNamesStep extends IsolatedStep {
    */
   static final String CLASS_NAME_HASH_CODE_SEPARATOR = " ";
 
-  private final AbsPath rootPath;
   // RelPath based patterns
   private final ImmutableSet<PathMatcher> ignoredPaths;
   private final Optional<RelPath> pathToJarOrClassesDirectory;
@@ -71,11 +70,9 @@ public class AccumulateClassNamesStep extends IsolatedStep {
    *     class files and corresponding SHA-1 hashes of their contents will be written.
    */
   public AccumulateClassNamesStep(
-      AbsPath rootPath,
       ImmutableSet<PathMatcher> ignoredPaths,
       Optional<RelPath> pathToJarOrClassesDirectory,
       RelPath whereClassNamesShouldBeWritten) {
-    this.rootPath = rootPath;
     this.ignoredPaths = ignoredPaths;
     this.pathToJarOrClassesDirectory = pathToJarOrClassesDirectory;
     this.whereClassNamesShouldBeWritten = whereClassNamesShouldBeWritten;
@@ -87,7 +84,8 @@ public class AccumulateClassNamesStep extends IsolatedStep {
     ImmutableSortedMap<String, HashCode> classNames;
     if (pathToJarOrClassesDirectory.isPresent()) {
       Optional<ImmutableSortedMap<String, HashCode>> classNamesOptional =
-          calculateClassHashes(context, rootPath, ignoredPaths, pathToJarOrClassesDirectory.get());
+          calculateClassHashes(
+              context, context.getRuleCellRoot(), ignoredPaths, pathToJarOrClassesDirectory.get());
       if (classNamesOptional.isPresent()) {
         classNames = classNamesOptional.get();
       } else {
@@ -98,7 +96,7 @@ public class AccumulateClassNamesStep extends IsolatedStep {
     }
 
     ProjectFilesystemUtils.writeLinesToPath(
-        rootPath,
+        context.getRuleCellRoot(),
         Iterables.transform(
             classNames.entrySet(),
             entry -> entry.getKey() + CLASS_NAME_HASH_CODE_SEPARATOR + entry.getValue()),

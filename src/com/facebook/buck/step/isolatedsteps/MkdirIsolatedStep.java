@@ -17,7 +17,6 @@
 package com.facebook.buck.step.isolatedsteps;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
@@ -31,15 +30,14 @@ import java.nio.file.Files;
 @BuckStyleValue
 public abstract class MkdirIsolatedStep extends IsolatedStep {
 
-  public abstract AbsPath getProjectRoot();
-
   public abstract RelPath getDirPath();
 
   @Override
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException {
     Files.createDirectories(
-        ProjectFilesystemUtils.getPathForRelativePath(getProjectRoot(), getDirPath().getPath()));
+        ProjectFilesystemUtils.getPathForRelativePath(
+            context.getRuleCellRoot(), getDirPath().getPath()));
     return StepExecutionResults.SUCCESS;
   }
 
@@ -53,7 +51,7 @@ public abstract class MkdirIsolatedStep extends IsolatedStep {
     return "mkdir";
   }
 
-  public static MkdirIsolatedStep of(AbsPath root, RelPath directoryToCreate) {
-    return ImmutableMkdirIsolatedStep.ofImpl(root, directoryToCreate);
+  public static MkdirIsolatedStep of(RelPath directoryToCreate) {
+    return ImmutableMkdirIsolatedStep.ofImpl(directoryToCreate);
   }
 }

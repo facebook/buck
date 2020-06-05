@@ -63,6 +63,10 @@ public class TestExecutionContext {
     return newBuilder().build();
   }
 
+  public static StepExecutionContext newInstance(AbsPath root) {
+    return newBuilder().setRuleCellRoot(root).build();
+  }
+
   public static StepExecutionContext newInstanceWithRealProcessExecutor() {
     TestConsole console = new TestConsole();
     ProcessExecutor processExecutor = new DefaultProcessExecutor(console);

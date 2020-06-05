@@ -336,7 +336,6 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     buildableContext.recordArtifact(pathToClassHashes.getPath());
 
     JavaLibraryRules.addAccumulateClassNamesStep(
-        projectFilesystem.getRootPath(),
         projectFilesystem.getIgnoredPaths(),
         steps,
         Optional.of(RelPath.of(resolver.getRelativePath(getSourcePathToOutput()))),

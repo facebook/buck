@@ -195,7 +195,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     Path annotationsPath = outputPathResolver.resolvePath(annotationsOutputPath).toAbsolutePath();
 
     return new MakeMissingOutputsStep(
-        projectRoot,
         projectRoot.relativize(rootOutput),
         projectRoot.relativize(pathToClassHashes),
         projectRoot.relativize(annotationsPath));

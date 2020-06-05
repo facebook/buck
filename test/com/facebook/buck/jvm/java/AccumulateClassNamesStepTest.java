@@ -18,12 +18,12 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -52,15 +52,16 @@ public class AccumulateClassNamesStepTest {
 
   @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
-  private AbsPath projectRoot;
+  private AbsPath ruleCellRoot;
 
   @Before
   public void setUp() throws Exception {
-    projectRoot = AbsPath.of(tmp.getRoot().toPath().toAbsolutePath());
+    ruleCellRoot = AbsPath.of(tmp.getRoot().toPath().toAbsolutePath());
   }
 
   @Test
-  public void testExecuteAccumulateClassNamesStepOnJarFile() throws IOException {
+  public void testExecuteAccumulateClassNamesStepOnJarFile()
+      throws IOException, InterruptedException {
     // Create a JAR file.
     String name = "example.jar";
     File jarFile = tmp.newFile(name);
@@ -79,12 +80,8 @@ public class AccumulateClassNamesStepTest {
     // Create the AccumulateClassNamesStep and execute it.
     AccumulateClassNamesStep accumulateClassNamesStep =
         new AccumulateClassNamesStep(
-            projectRoot,
-            ImmutableSet.of(),
-            Optional.of(RelPath.get(name)),
-            RelPath.get("output.txt"));
-    StepExecutionContext context = TestExecutionContext.newInstance();
-    accumulateClassNamesStep.executeIsolatedStep(context);
+            ImmutableSet.of(), Optional.of(RelPath.get(name)), RelPath.get("output.txt"));
+    executeStep(accumulateClassNamesStep);
 
     String contents = Files.toString(new File(tmp.getRoot(), "output.txt"), StandardCharsets.UTF_8);
     String separator = AccumulateClassNamesStep.CLASS_NAME_HASH_CODE_SEPARATOR;
@@ -100,7 +97,8 @@ public class AccumulateClassNamesStepTest {
   }
 
   @Test
-  public void testExecuteAccumulateClassNamesStepOnDirectory() throws IOException {
+  public void testExecuteAccumulateClassNamesStepOnDirectory()
+      throws IOException, InterruptedException {
     // Create a directory.
     String name = "dir";
     tmp.newFolder(name);
@@ -117,12 +115,8 @@ public class AccumulateClassNamesStepTest {
     // Create the AccumulateClassNamesStep and execute it.
     AccumulateClassNamesStep accumulateClassNamesStep =
         new AccumulateClassNamesStep(
-            projectRoot,
-            ImmutableSet.of(),
-            Optional.of(RelPath.get(name)),
-            RelPath.get("output.txt"));
-    StepExecutionContext context = TestExecutionContext.newInstance();
-    accumulateClassNamesStep.executeIsolatedStep(context);
+            ImmutableSet.of(), Optional.of(RelPath.get(name)), RelPath.get("output.txt"));
+    executeStep(accumulateClassNamesStep);
 
     String contents = Files.toString(new File(tmp.getRoot(), "output.txt"), StandardCharsets.UTF_8);
     String separator = AccumulateClassNamesStep.CLASS_NAME_HASH_CODE_SEPARATOR;
@@ -144,7 +138,7 @@ public class AccumulateClassNamesStepTest {
   }
 
   @Test
-  public void testParseClassHashesWithSpaces() throws IOException {
+  public void testParseClassHashesWithSpaces() throws IOException, InterruptedException {
     // Create a JAR file.
     String name = "example.jar";
     File jarFile = tmp.newFile(name);
@@ -159,14 +153,10 @@ public class AccumulateClassNamesStepTest {
     // Create the AccumulateClassNamesStep and execute it.
     AccumulateClassNamesStep accumulateClassNamesStep =
         new AccumulateClassNamesStep(
-            projectRoot,
-            ImmutableSet.of(),
-            Optional.of(RelPath.get(name)),
-            RelPath.get("output.txt"));
-    StepExecutionContext context = TestExecutionContext.newInstance();
-    accumulateClassNamesStep.executeIsolatedStep(context);
+            ImmutableSet.of(), Optional.of(RelPath.get(name)), RelPath.get("output.txt"));
+    executeStep(accumulateClassNamesStep);
 
-    List<String> lines = ProjectFilesystemUtils.readLines(projectRoot, Paths.get("output.txt"));
+    List<String> lines = ProjectFilesystemUtils.readLines(ruleCellRoot, Paths.get("output.txt"));
     ImmutableSortedMap<String, HashCode> parsedClassHashes =
         AccumulateClassNamesStep.parseClassHashes(lines);
 
@@ -175,5 +165,9 @@ public class AccumulateClassNamesStepTest {
     assertEquals(
         SHA1_HASHCODE_FOR_EMPTY_STRING,
         parsedClassHashes.get("com/example/Foo$something with spaces$1"));
+  }
+
+  private void executeStep(IsolatedStep step) throws IOException, InterruptedException {
+    step.executeIsolatedStep(TestExecutionContext.newInstance(ruleCellRoot));
   }
 }
