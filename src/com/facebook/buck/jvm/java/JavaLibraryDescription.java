@@ -241,7 +241,8 @@ public class JavaLibraryDescription
                 defaultJavaCompilerFactory,
                 javaBuckConfig,
                 downwardApiConfig,
-                args)
+                args,
+                context.getCellPathResolver())
             .setJavacOptions(javacOptions)
             .setToolchainProvider(context.getToolchainProvider())
             .build();

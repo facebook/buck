@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -110,6 +111,9 @@ public abstract class DefaultJavaLibraryRules {
   @org.immutables.builder.Builder.Parameter
   @Nullable
   abstract JavaBuckConfig getJavaBuckConfig();
+
+  @org.immutables.builder.Builder.Parameter
+  abstract CellPathResolver getCellPathResolver();
 
   @org.immutables.builder.Builder.Parameter
   abstract DownwardApiConfig getDownwardApiConfig();
@@ -411,8 +415,10 @@ public abstract class DefaultJavaLibraryRules {
     Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory =
         getUnusedDependenciesFinderFactory(
             unusedDependenciesAction,
-            javaLibraryDeps,
+            buildTarget,
+            projectFilesystem,
             actionGraphBuilder,
+            javaLibraryDeps,
             configuredCompilerFactory);
 
     CoreArg args = getArgs();
@@ -447,36 +453,30 @@ public abstract class DefaultJavaLibraryRules {
 
   private Optional<UnusedDependenciesFinderFactory> getUnusedDependenciesFinderFactory(
       UnusedDependenciesAction unusedDependenciesAction,
-      JavaLibraryDeps javaLibraryDeps,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       ActionGraphBuilder actionGraphBuilder,
+      JavaLibraryDeps javaLibraryDeps,
       ConfiguredCompilerFactory configuredCompilerFactory) {
-
     if (unusedDependenciesAction != UnusedDependenciesAction.IGNORE
         && configuredCompilerFactory.trackClassUsage(getJavacOptions())) {
-
-      ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDeps> deps =
-          UnusedDependenciesFinder.getDependencies(
-              actionGraphBuilder, actionGraphBuilder.getAllRules(javaLibraryDeps.getDepTargets()));
-      ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDeps> providedDeps =
-          UnusedDependenciesFinder.getDependencies(
-              actionGraphBuilder,
-              actionGraphBuilder.getAllRules(javaLibraryDeps.getProvidedDepTargets()));
-      ImmutableSortedSet<BuildTarget> exportedDepTargets = javaLibraryDeps.getExportedDepTargets();
-
       JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
-
       return Optional.of(
           new UnusedDependenciesFinderFactory(
+              buildTarget,
+              projectFilesystem,
               javaBuckConfig.getUnusedDependenciesBuildozerString(),
               javaBuckConfig.isUnusedDependenciesOnlyPrintCommands(),
               javaBuckConfig.isUnusedDependenciesUltralightChecking(),
-              deps,
-              providedDeps,
+              actionGraphBuilder,
+              javaLibraryDeps.getDepTargets(),
+              javaLibraryDeps.getProvidedDepTargets(),
               javaBuckConfig.isUnusedDependenciesExportedDepsAsFirstOrderDeps()
-                  ? Objects.requireNonNull(exportedDepTargets).stream()
-                      .map(buildTarget -> buildTarget.getUnconfiguredBuildTarget().toString())
+                  ? Objects.requireNonNull(javaLibraryDeps.getExportedDepTargets()).stream()
+                      .map(bt -> bt.getUnconfiguredBuildTarget().toString())
                       .collect(ImmutableList.toImmutableList())
-                  : ImmutableList.of()));
+                  : ImmutableList.of(),
+              getCellPathResolver()));
     }
     return Optional.empty();
   }
@@ -716,7 +716,8 @@ public abstract class DefaultJavaLibraryRules {
         ConfiguredCompilerFactory configuredCompilerFactory,
         @Nullable JavaBuckConfig javaBuckConfig,
         DownwardApiConfig downwardApiConfig,
-        @Nullable JavaLibraryDescription.CoreArg args) {
+        @Nullable JavaLibraryDescription.CoreArg args,
+        CellPathResolver cellPathResolver) {
       super(
           initialBuildTarget,
           projectFilesystem,
@@ -726,6 +727,7 @@ public abstract class DefaultJavaLibraryRules {
           configuredCompilerFactory,
           getUnusedDependenciesAction(javaBuckConfig, args),
           javaBuckConfig,
+          cellPathResolver,
           downwardApiConfig,
           args);
 

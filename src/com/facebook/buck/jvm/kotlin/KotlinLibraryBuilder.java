@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -39,7 +40,8 @@ final class KotlinLibraryBuilder {
       JavaBuckConfig javaBuckConfig,
       DownwardApiConfig downwardApiConfig,
       KotlinLibraryDescription.CoreArg args,
-      JavacFactory javacFactory) {
+      JavacFactory javacFactory,
+      CellPathResolver cellPathResolver) {
     return new DefaultJavaLibraryRules.Builder(
         buildTarget,
         projectFilesystem,
@@ -49,6 +51,7 @@ final class KotlinLibraryBuilder {
         new KotlinConfiguredCompilerFactory(kotlinBuckConfig, downwardApiConfig, javacFactory),
         javaBuckConfig,
         downwardApiConfig,
-        args);
+        args,
+        cellPathResolver);
   }
 }

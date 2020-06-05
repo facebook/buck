@@ -485,7 +485,7 @@ public class JarBuildStepsFactory
       BuildTarget buildTarget) {
     Preconditions.checkState(useDependencyFileRuleKeys());
     return DefaultClassUsageFileReader.loadFromFile(
-        filesystem,
+        filesystem.getRootPath(),
         cellPathResolver,
         filesystem.getPathForRelativePath(getDepFileRelativePath(filesystem, buildTarget)),
         getDepOutputPathToAbiSourcePath(context.getSourcePathResolver(), ruleFinder));

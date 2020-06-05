@@ -177,7 +177,8 @@ public class AndroidLibraryDescription
             javacFactory,
             javacOptions,
             args,
-            compilerFactory);
+            compilerFactory,
+            context.getCellPathResolver());
 
     if (hasDummyRDotJavaFlavor) {
       return androidLibraryBuilder.buildDummyRDotJava();

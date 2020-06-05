@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.scala;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -39,7 +40,8 @@ final class ScalaLibraryBuilder {
       JavaBuckConfig javaBuckConfig,
       DownwardApiConfig downwardApiConfig,
       ScalaLibraryDescription.CoreArg args,
-      JavacFactory javacFactory) {
+      JavacFactory javacFactory,
+      CellPathResolver cellPathResolver) {
     return new DefaultJavaLibraryRules.Builder(
         buildTarget,
         projectFilesystem,
@@ -49,6 +51,7 @@ final class ScalaLibraryBuilder {
         new ScalaConfiguredCompilerFactory(scalaBuckConfig, downwardApiConfig, javacFactory),
         javaBuckConfig,
         downwardApiConfig,
-        args);
+        args,
+        cellPathResolver);
   }
 }

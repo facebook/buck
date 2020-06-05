@@ -114,7 +114,8 @@ public class GroovyTestDescription
                 new GroovyConfiguredCompilerFactory(groovyBuckConfig, downwardApiConfig),
                 javaBuckConfig,
                 downwardApiConfig,
-                args)
+                args,
+                context.getCellPathResolver())
             .setJavacOptions(javacOptions)
             .build();
 

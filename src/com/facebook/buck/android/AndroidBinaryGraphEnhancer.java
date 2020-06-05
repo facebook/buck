@@ -118,6 +118,7 @@ public class AndroidBinaryGraphEnhancer {
   private final BuildRuleParams buildRuleParams;
   private final boolean trimResourceIds;
   private final Optional<String> keepResourcePattern;
+  private final CellPathResolver cellPathResolver;
   private final boolean ignoreAaptProguardConfig;
   private final Optional<BuildTarget> nativeLibraryMergeCodeGenerator;
   private final ActionGraphBuilder graphBuilder;
@@ -226,6 +227,7 @@ public class AndroidBinaryGraphEnhancer {
       int rDotJavaWeightFactor,
       int secondaryDexWeightLimit,
       ImmutableSet<String> resourcePackagesToExclude) {
+    this.cellPathResolver = cellPathResolver;
     this.downwardApiConfig = downwardApiConfig;
     this.ignoreAaptProguardConfig = ignoreAaptProguardConfig;
     this.androidPlatformTarget = androidPlatformTarget;
@@ -410,7 +412,8 @@ public class AndroidBinaryGraphEnhancer {
                       javaBuckConfig, downwardApiConfig, javacFactory),
                   javaBuckConfig,
                   downwardApiConfig,
-                  null)
+                  null,
+                  cellPathResolver)
               // Kind of a hack: override language level to 7 to allow string switch.
               // This can be removed once no one who uses this feature sets the level
               // to 6 in their .buckconfig.
@@ -578,7 +581,8 @@ public class AndroidBinaryGraphEnhancer {
                 new JavaConfiguredCompilerFactory(javaBuckConfig, downwardApiConfig, javacFactory),
                 javaBuckConfig,
                 downwardApiConfig,
-                null)
+                null,
+                cellPathResolver)
             .setJavacOptions(
                 javacOptions.withLanguageLevelOptions(
                     JavacLanguageLevelOptions.builder()

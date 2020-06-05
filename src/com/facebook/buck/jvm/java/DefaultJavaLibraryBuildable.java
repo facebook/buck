@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.version.JavaVersion;
@@ -126,12 +127,12 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
             buildTarget,
             outputPathResolver.resolvePath(pathToClassHashesOutputPath));
 
-    ImmutableList<IsolatedStep> isolatedSteps = getIsolatedSteps(outputPathResolver, filesystem);
+    ImmutableList<IsolatedStep> isolatedSteps =
+        getIsolatedSteps(buildContext, outputPathResolver, filesystem);
 
     ImmutableList.Builder<Step> steps =
         ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + 1 + isolatedSteps.size());
     steps.addAll(factoryBuildSteps);
-    maybeAddUnusedDependenciesStep(filesystem, buildContext, steps);
     steps.addAll(isolatedSteps);
     return steps.build();
   }
@@ -151,22 +152,37 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
             state,
             outputPathResolver.resolvePath(pathToClassHashesOutputPath));
 
-    ImmutableList<IsolatedStep> isolatedSteps = getIsolatedSteps(outputPathResolver, filesystem);
+    ImmutableList<IsolatedStep> isolatedSteps =
+        getIsolatedSteps(buildContext, outputPathResolver, filesystem);
 
     ImmutableList.Builder<Step> steps =
         ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + 1 + isolatedSteps.size());
     steps.addAll(factoryBuildSteps);
-    maybeAddUnusedDependenciesStep(filesystem, buildContext, steps);
     steps.addAll(isolatedSteps);
     return steps.build();
   }
 
   private ImmutableList<IsolatedStep> getIsolatedSteps(
-      OutputPathResolver outputPathResolver, ProjectFilesystem filesystem) {
+      BuildContext buildContext,
+      OutputPathResolver outputPathResolver,
+      ProjectFilesystem filesystem) {
 
-    ImmutableList.Builder<IsolatedStep> steps = ImmutableList.builderWithExpectedSize(1);
-    steps.add(getMakeMissingOutputsStep(outputPathResolver, filesystem));
-    return steps.build();
+    ImmutableList.Builder<IsolatedStep> isolatedSteps = ImmutableList.builder();
+    unusedDependenciesFinderFactory.ifPresent(
+        factory ->
+            isolatedSteps.add(
+                getUnusedDependenciesStep(
+                    factory, filesystem, buildContext.getSourcePathResolver())));
+    isolatedSteps.add(getMakeMissingOutputsStep(outputPathResolver, filesystem));
+
+    return isolatedSteps.build();
+  }
+
+  private IsolatedStep getUnusedDependenciesStep(
+      UnusedDependenciesFinderFactory factory,
+      ProjectFilesystem filesystem,
+      SourcePathResolverAdapter sourcePathResolver) {
+    return factory.create(buildTarget, filesystem, sourcePathResolver, unusedDependenciesAction);
   }
 
   private IsolatedStep getMakeMissingOutputsStep(
@@ -216,19 +232,5 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
   public boolean hasAnnotationProcessing() {
     return jarBuildStepsFactory.hasAnnotationProcessing();
-  }
-
-  public void maybeAddUnusedDependenciesStep(
-      ProjectFilesystem filesystem,
-      BuildContext buildContext,
-      ImmutableList.Builder<Step> stepsBuilder) {
-    unusedDependenciesFinderFactory.ifPresent(
-        factory ->
-            stepsBuilder.add(
-                factory.create(
-                    buildTarget,
-                    filesystem,
-                    buildContext.getSourcePathResolver(),
-                    unusedDependenciesAction)));
   }
 }

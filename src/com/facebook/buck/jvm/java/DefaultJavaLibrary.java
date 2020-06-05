@@ -135,7 +135,8 @@ public class DefaultJavaLibrary
       ConfiguredCompilerFactory compilerFactory,
       @Nullable JavaBuckConfig javaBuckConfig,
       DownwardApiConfig downwardApiConfig,
-      @Nullable JavaLibraryDescription.CoreArg args) {
+      @Nullable JavaLibraryDescription.CoreArg args,
+      CellPathResolver cellPathResolver) {
     return new DefaultJavaLibraryRules.Builder(
         buildTarget,
         projectFilesystem,
@@ -145,7 +146,8 @@ public class DefaultJavaLibrary
         compilerFactory,
         javaBuckConfig,
         downwardApiConfig,
-        args);
+        args,
+        cellPathResolver);
   }
 
   @Override

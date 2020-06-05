@@ -165,7 +165,8 @@ public class JavaTestDescription
                 new JavaConfiguredCompilerFactory(javaBuckConfig, downwardApiConfig, javacFactory),
                 javaBuckConfig,
                 downwardApiConfig,
-                args)
+                args,
+                context.getCellPathResolver())
             .setJavacOptions(javacOptions)
             .setToolchainProvider(context.getToolchainProvider())
             .build();

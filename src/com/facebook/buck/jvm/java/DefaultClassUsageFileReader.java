@@ -24,7 +24,7 @@ import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
@@ -61,7 +61,7 @@ class DefaultClassUsageFileReader {
    * actually among the deps of our rule.
    */
   public static ImmutableList<SourcePath> loadFromFile(
-      ProjectFilesystem projectFilesystem,
+      AbsPath root,
       CellPathResolver cellPathResolver,
       Path classUsageFilePath,
       ImmutableMap<Path, SourcePath> jarPathToSourcePath) {
@@ -72,7 +72,7 @@ class DefaultClassUsageFileReader {
         classUsageEntries.entrySet()) {
       AbsPath jarAbsolutePath =
           convertRecordedJarPathToAbsolute(
-              projectFilesystem,
+              root,
               cellPathResolver,
               cellPathResolver.getCellNameResolver(),
               jarUsedClassesEntry.getKey());
@@ -91,7 +91,7 @@ class DefaultClassUsageFileReader {
   }
 
   public static ImmutableSet<AbsPath> loadUsedJarsFromFile(
-      ProjectFilesystem projectFilesystem,
+      AbsPath root,
       CellPathExtractor cellPathExtractor,
       CellNameResolver cellNameResolver,
       AbsPath classUsageFilePath,
@@ -106,8 +106,7 @@ class DefaultClassUsageFileReader {
 
       String jarPath = entry.getKey();
       AbsPath jarAbsolutePath =
-          convertRecordedJarPathToAbsolute(
-              projectFilesystem, cellPathExtractor, cellNameResolver, jarPath);
+          convertRecordedJarPathToAbsolute(root, cellPathExtractor, cellNameResolver, jarPath);
       builder.add(jarAbsolutePath);
     }
     return builder.build();
@@ -129,14 +128,14 @@ class DefaultClassUsageFileReader {
   }
 
   private static AbsPath convertRecordedJarPathToAbsolute(
-      ProjectFilesystem projectFilesystem,
+      AbsPath root,
       CellPathExtractor cellPathExtractor,
       CellNameResolver cellNameResolver,
       String jarPath) {
     Path recordedPath = Paths.get(jarPath);
     return recordedPath.isAbsolute()
         ? getAbsolutePathForCellRootedPath(recordedPath, cellPathExtractor, cellNameResolver)
-        : AbsPath.of(projectFilesystem.resolve(recordedPath));
+        : AbsPath.of(ProjectFilesystemUtils.getPathForRelativePath(root, recordedPath));
   }
 
   /**

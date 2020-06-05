@@ -147,7 +147,8 @@ public class ScalaLibraryDescription
                 javaBuckConfig,
                 downwardApiConfig,
                 args,
-                javacFactory)
+                javacFactory,
+                context.getCellPathResolver())
             .setJavacOptions(javacOptions)
             .build();
 

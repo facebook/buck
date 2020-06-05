@@ -362,7 +362,8 @@ public class RobolectricTestDescription
                         buildTarget.getTargetConfiguration()),
                     javaBuckConfig,
                     downwardApiConfig,
-                    testLibraryArgs)
+                    testLibraryArgs,
+                    context.getCellPathResolver())
                 .setJavacOptions(javacOptions)
                 .build()
                 .buildLibrary());

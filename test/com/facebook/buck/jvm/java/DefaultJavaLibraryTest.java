@@ -33,6 +33,8 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -1348,6 +1350,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         .forEach(depsBuilder::addExportedDepTargets);
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
+
     DefaultJavaLibrary defaultJavaLibrary =
         DefaultJavaLibrary.rulesBuilder(
                 buildTarget,
@@ -1361,7 +1365,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                     JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
                 testJavaBuckConfig,
                 DEFAULT_DOWNWARD_API_CONFIG,
-                null)
+                null,
+                cellPathResolver)
             .setJavacOptions(javacOptions)
             .setSrcs(srcsAsPaths)
             .setPostprocessClassesCommands(postprocessClassesCommands)
@@ -1677,6 +1682,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
       BuildRuleParams buildRuleParams = TestBuildRuleParams.create();
 
+      CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
       DefaultJavaLibrary javaLibrary =
           DefaultJavaLibrary.rulesBuilder(
                   buildTarget,
@@ -1690,7 +1696,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                       JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
                   testJavaBuckConfig,
                   DEFAULT_DOWNWARD_API_CONFIG,
-                  null)
+                  null,
+                  cellPathResolver)
               .setJavacOptions(options)
               .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of(src)))
               .setResources(ImmutableSortedSet.of())

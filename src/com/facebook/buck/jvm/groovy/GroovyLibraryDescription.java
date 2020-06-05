@@ -95,7 +95,8 @@ public class GroovyLibraryDescription
                 compilerFactory,
                 javaBuckConfig,
                 downwardApiConfig,
-                args)
+                args,
+                context.getCellPathResolver())
             .setJavacOptions(javacOptions)
             .build();
 

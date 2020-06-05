@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.AndroidLibraryDescription.CoreArg;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -62,7 +63,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       JavacFactory javacFactory,
       JavacOptions javacOptions,
       CoreArg args,
-      ConfiguredCompilerFactory compilerFactory) {
+      ConfiguredCompilerFactory compilerFactory,
+      CellPathResolver cellPathResolver) {
     return new Builder(
         buildTarget,
         projectFilesystem,
@@ -74,7 +76,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         javacFactory,
         javacOptions,
         args,
-        compilerFactory);
+        compilerFactory,
+        cellPathResolver);
   }
 
   @VisibleForTesting
@@ -173,7 +176,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         JavacFactory javacFactory,
         JavacOptions javacOptions,
         CoreArg args,
-        ConfiguredCompilerFactory compilerFactory) {
+        ConfiguredCompilerFactory compilerFactory,
+        CellPathResolver cellPathResolver) {
       this.graphBuilder = graphBuilder;
       DefaultJavaLibraryRules.Builder delegateBuilder =
           new DefaultJavaLibraryRules.Builder(
@@ -185,35 +189,33 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               compilerFactory,
               javaBuckConfig,
               downwardApiConfig,
-              args);
+              args,
+              cellPathResolver);
       delegateBuilder.setConstructor(
-          new DefaultJavaLibraryRules.DefaultJavaLibraryConstructor() {
-            @Override
-            public DefaultJavaLibrary newInstance(
-                BuildTarget buildTarget,
-                ProjectFilesystem projectFilesystem,
-                JarBuildStepsFactory jarBuildStepsFactory,
-                SourcePathRuleFinder ruleFinder,
-                Optional<SourcePath> proguardConfig,
-                SortedSet<BuildRule> firstOrderPackageableDeps,
-                ImmutableSortedSet<BuildRule> fullJarExportedDeps,
-                ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
-                ImmutableSortedSet<BuildRule> fullJarExportedProvidedDeps,
-                ImmutableSortedSet<BuildRule> runtimeDeps,
-                @Nullable BuildTarget abiJar,
-                @Nullable BuildTarget sourceOnlyAbiJar,
-                Optional<String> mavenCoords,
-                ImmutableSortedSet<BuildTarget> tests,
-                boolean requiredForSourceOnlyAbi,
-                UnusedDependenciesAction unusedDependenciesAction,
-                Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
-                @Nullable CalculateSourceAbi sourceAbi,
-                boolean isDesugarEnabled,
-                boolean isInterfaceMethodsDesugarEnabled,
-                boolean neverMarkAsUnusedDependency) {
-              return new AndroidLibrary(
-                  buildTarget,
-                  projectFilesystem,
+          (target,
+              filesystem,
+              jarBuildStepsFactory,
+              ruleFinder,
+              proguardConfig,
+              firstOrderPackageableDeps,
+              fullJarExportedDeps,
+              fullJarProvidedDeps,
+              fullJarExportedProvidedDeps,
+              runtimeDeps,
+              abiJar,
+              sourceOnlyAbiJar,
+              mavenCoords,
+              tests,
+              requiredForSourceOnlyAbi,
+              unusedDependenciesAction,
+              unusedDependenciesFinderFactory,
+              sourceAbi,
+              isDesugarEnabled,
+              isInterfaceMethodsDesugarEnabled,
+              neverMarkAsUnusedDependency) ->
+              new AndroidLibrary(
+                  target,
+                  filesystem,
                   jarBuildStepsFactory,
                   ruleFinder,
                   proguardConfig,
@@ -234,9 +236,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   sourceAbi,
                   isDesugarEnabled,
                   isInterfaceMethodsDesugarEnabled,
-                  neverMarkAsUnusedDependency);
-            }
-          });
+                  neverMarkAsUnusedDependency));
       delegateBuilder.setJavacOptions(javacOptions);
       delegateBuilder.setTests(args.getTests());
 
