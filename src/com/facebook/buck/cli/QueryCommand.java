@@ -548,7 +548,9 @@ public class QueryCommand
   }
 
   private String toPresentationForm(ConfiguredQueryBuildTarget queryBuildTarget) {
-    return toPresentationForm(queryBuildTarget.getBuildTarget().getUnflavoredBuildTarget());
+    // NOTE: We are explicitly not using {@code toPresentationForm(UnflavoredBuildTarget)} here as
+    // there are preexisting issues with places relying on flavored output from query.
+    return queryBuildTarget.toString();
   }
 
   private String toPresentationForm(MergedTargetNode node) {
