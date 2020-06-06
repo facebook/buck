@@ -18,13 +18,16 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.log.Logger;
@@ -38,12 +41,15 @@ import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.VersionException;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.SortedSet;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -60,6 +66,8 @@ public class AuditActionGraphCommand extends AbstractCommand {
   }
 
   private static final Logger LOG = Logger.get(AuditActionGraphCommand.class);
+  private static final String LEFT_BRACKET = "[";
+  private static final String RIGHT_BRACKET = "]";
 
   @Option(
       name = "--dot",
@@ -198,11 +206,41 @@ public class AuditActionGraphCommand extends AbstractCommand {
         }
         json.writeEndArray();
       }
-      SourcePath sourcePathToOutput = node.getSourcePathToOutput();
-      if (sourcePathToOutput != null) {
-        AbsPath outputPath =
-            actionGraphBuilder.getSourcePathResolver().getAbsolutePath(sourcePathToOutput);
-        json.writeStringField("outputPath", outputPath.toString());
+      if (node instanceof HasMultipleOutputs) {
+        ImmutableSet<OutputLabel> outputLabels = ((HasMultipleOutputs) node).getOutputLabels();
+        json.writeObjectFieldStart("outputPaths");
+        SourcePathResolverAdapter resolver = actionGraphBuilder.getSourcePathResolver();
+        for (OutputLabel outputLabel : outputLabels) {
+          Optional<SourcePath> sourcePath =
+              getSourcePathForNamedOutput((HasMultipleOutputs) node, outputLabel);
+          if (sourcePath.isPresent()) {
+            json.writeObjectField(
+                outputLabel.toString(),
+                LEFT_BRACKET
+                    + resolver.getAbsolutePath(sourcePath.get()).toString()
+                    + RIGHT_BRACKET);
+          }
+        }
+        json.writeEndObject();
+        // For backwards compatibility for existing scripts in the repo, write the default output to
+        // outputPath
+        Optional<SourcePath> sourcePath =
+            getSourcePathForNamedOutput((HasMultipleOutputs) node, OutputLabel.defaultLabel());
+        if (sourcePath.isPresent()) {
+          json.writeStringField(
+              "outputPath",
+              actionGraphBuilder
+                  .getSourcePathResolver()
+                  .getAbsolutePath(sourcePath.get())
+                  .toString());
+        }
+      } else {
+        SourcePath sourcePathToOutput = node.getSourcePathToOutput();
+        if (sourcePathToOutput != null) {
+          AbsPath outputPath =
+              actionGraphBuilder.getSourcePathResolver().getAbsolutePath(sourcePathToOutput);
+          json.writeStringField("outputPath", outputPath.toString());
+        }
       }
     }
     if (nodeView == NodeView.Extended) {
@@ -248,9 +286,30 @@ public class AuditActionGraphCommand extends AbstractCommand {
     ImmutableSortedMap.Builder<String, Object> attrs = ImmutableSortedMap.naturalOrder();
     attrs.put("short_name", rule.getBuildTarget().getShortName());
     attrs.put("type", rule.getType());
-    attrs.put(
-        "output",
-        rule.getSourcePathToOutput() == null ? "" : rule.getSourcePathToOutput().toString());
+    if (rule instanceof HasMultipleOutputs) {
+      HasMultipleOutputs namedOutputsRule = (HasMultipleOutputs) rule;
+      ImmutableSet<OutputLabel> outputLabels = namedOutputsRule.getOutputLabels();
+      ImmutableSortedMap.Builder<String, String> builder = ImmutableSortedMap.naturalOrder();
+      for (OutputLabel outputLabel : outputLabels) {
+        Optional<SourcePath> sourcePath =
+            getSourcePathForNamedOutput(namedOutputsRule, outputLabel);
+        builder.put(
+            outputLabel.toString(),
+            sourcePath.isPresent()
+                ? LEFT_BRACKET + sourcePath.get().toString() + RIGHT_BRACKET
+                : "[]");
+      }
+      attrs.put("outputs", builder.build());
+      // For backwards compatibility for existing scripts in the repo, write the default output to
+      // outputPath
+      Optional<SourcePath> sourcePath =
+          getSourcePathForNamedOutput(namedOutputsRule, OutputLabel.defaultLabel());
+      attrs.put("output", sourcePath.isPresent() ? sourcePath.get().toString() : "");
+    } else {
+      attrs.put(
+          "output",
+          rule.getSourcePathToOutput() == null ? "" : rule.getSourcePathToOutput().toString());
+    }
     attrs.put("cacheable", rule.isCacheable() ? "true" : "false");
     attrs.put("flavored", rule.getBuildTarget().isFlavored() ? "true" : "false");
     return attrs.build();
@@ -264,5 +323,14 @@ public class AuditActionGraphCommand extends AbstractCommand {
     return actionGraphBuilder.getAllRules(
         RichStream.from(((HasRuntimeDeps) buildRule).getRuntimeDeps(actionGraphBuilder))
             .toOnceIterable());
+  }
+
+  private static Optional<SourcePath> getSourcePathForNamedOutput(
+      HasMultipleOutputs node, OutputLabel outputLabel) {
+    ImmutableSet<SourcePath> sourcePaths = node.getSourcePathToOutput(outputLabel);
+    if (sourcePaths.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(Iterables.getOnlyElement(sourcePaths));
   }
 }

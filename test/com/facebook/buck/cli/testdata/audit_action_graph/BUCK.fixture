@@ -17,6 +17,17 @@ genrule(
   """,
 )
 
+genrule(
+    name = "named_outputs",
+    outs = {
+        "output1": ["out1"],
+        "output2": ["out2"],
+    },
+    default_outs = [],
+    bash = "echo something> $OUT/out1 && echo another>$OUT/out2",
+    cmd_exe = "(echo something)> %OUT%\\out1 && (echo another)> %OUT%\\out2",
+)
+
 python_binary(
     name = "pybin",
     main_module = "main",
