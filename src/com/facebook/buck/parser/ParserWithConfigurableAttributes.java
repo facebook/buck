@@ -349,37 +349,48 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       throws BuildFileParseException, InterruptedException {
 
     try (PerBuildState state = perBuildStateFactory.create(parsingContext, permState)) {
-      TargetNodeFilterForSpecResolver targetNodeFilter = TargetNodeSpec::filter;
-
-      ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
-          targetSpecResolver.resolveTargetSpecs(
-              parsingContext.getCells(),
-              specs,
-              targetConfiguration,
-              (buildTarget, targetNode, targetType) ->
-                  applyDefaultFlavors(
-                      buildTarget,
-                      targetNode,
-                      targetType,
-                      parsingContext.getApplyDefaultFlavorsMode()),
-              state,
-              targetNodeFilter);
-
-      if (!state.getParsingContext().excludeUnsupportedTargets()) {
-        return buildTargets;
-      }
-      return buildTargets.stream()
-          .map(
-              targets ->
-                  filterIncompatibleTargetNodes(
-                          targets.stream()
-                              .map(
-                                  (BuildTarget target) ->
-                                      state.getTargetNode(target, DependencyStack.top(target))))
-                      .map(TargetNode::getBuildTarget)
-                      .collect(ImmutableSet.toImmutableSet()))
-          .collect(ImmutableList.toImmutableList());
+      return resolveTargetSpecs(state, specs, targetConfiguration);
     }
+  }
+
+  @Override
+  public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
+      PerBuildState state,
+      Iterable<? extends TargetNodeSpec> specs,
+      Optional<TargetConfiguration> targetConfiguration)
+      throws BuildFileParseException, InterruptedException {
+
+    ParsingContext parsingContext = state.getParsingContext();
+    TargetNodeFilterForSpecResolver targetNodeFilter = TargetNodeSpec::filter;
+
+    ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
+        targetSpecResolver.resolveTargetSpecs(
+            parsingContext.getCells(),
+            specs,
+            targetConfiguration,
+            (buildTarget, targetNode, targetType) ->
+                applyDefaultFlavors(
+                    buildTarget,
+                    targetNode,
+                    targetType,
+                    parsingContext.getApplyDefaultFlavorsMode()),
+            state,
+            targetNodeFilter);
+
+    if (!state.getParsingContext().excludeUnsupportedTargets()) {
+      return buildTargets;
+    }
+    return buildTargets.stream()
+        .map(
+            targets ->
+                filterIncompatibleTargetNodes(
+                        targets.stream()
+                            .map(
+                                (BuildTarget target) ->
+                                    state.getTargetNode(target, DependencyStack.top(target))))
+                    .map(TargetNode::getBuildTarget)
+                    .collect(ImmutableSet.toImmutableSet()))
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Override

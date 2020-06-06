@@ -763,5 +763,14 @@ public class BuildCommandTest {
         throws BuildFileParseException, InterruptedException {
       return parser.resolveTargetSpecs(parsingContext, specs, targetConfiguration);
     }
+
+    @Override
+    public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
+        PerBuildState perBuildState,
+        Iterable<? extends TargetNodeSpec> specs,
+        Optional<TargetConfiguration> targetConfiguration)
+        throws BuildFileParseException, InterruptedException {
+      return parser.resolveTargetSpecs(perBuildState, specs, targetConfiguration);
+    }
   }
 }

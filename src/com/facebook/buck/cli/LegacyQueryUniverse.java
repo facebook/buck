@@ -117,7 +117,7 @@ public class LegacyQueryUniverse implements TargetUniverse {
       Optional<TargetConfiguration> targetConfiguration,
       ParsingContext parsingContext)
       throws BuildFileParseException, InterruptedException {
-    return parser.resolveTargetSpecs(parsingContext, specs, targetConfiguration);
+    return parser.resolveTargetSpecs(parserState, specs, targetConfiguration);
   }
 
   @Override

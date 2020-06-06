@@ -122,4 +122,10 @@ public interface Parser {
       Iterable<? extends TargetNodeSpec> specs,
       Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException, InterruptedException;
+
+  ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
+      PerBuildState perBuildState,
+      Iterable<? extends TargetNodeSpec> specs,
+      Optional<TargetConfiguration> targetConfiguration)
+      throws BuildFileParseException, InterruptedException;
 }

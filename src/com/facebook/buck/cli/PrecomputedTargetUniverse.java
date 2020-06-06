@@ -116,9 +116,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
     ImmutableSet<BuildTarget> rootTargets;
     try (Scope ignored = LeafEvents.scope(params.getBuckEventBus(), "resolving_target_specs")) {
       rootTargets =
-          parser
-              .resolveTargetSpecs(
-                  perBuildState.getParsingContext(), universeSpecs, params.getTargetConfiguration())
+          parser.resolveTargetSpecs(perBuildState, universeSpecs, params.getTargetConfiguration())
               .stream()
               .flatMap(ImmutableSet::stream)
               .collect(ImmutableSet.toImmutableSet());
