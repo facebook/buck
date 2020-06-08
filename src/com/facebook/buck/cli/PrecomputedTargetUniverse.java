@@ -37,7 +37,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserMessages;
-import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -232,9 +231,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
 
   @Override
   public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      Iterable<? extends TargetNodeSpec> specs,
-      Optional<TargetConfiguration> targetConfiguration,
-      ParsingContext parsingContext)
+      Iterable<? extends TargetNodeSpec> specs, Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException, InterruptedException {
     ImmutableList.Builder<ImmutableSet<BuildTarget>> resultBuilder = ImmutableList.builder();
     for (TargetNodeSpec spec : specs) {

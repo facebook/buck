@@ -154,7 +154,6 @@ public class ConfiguredQueryEnvironmentTest {
             cells.getRootCell(),
             cells.getRootCell().getRoot().getPath(),
             FakeBuckConfig.empty(),
-            ParsingContext.builder(cells, executor).build(),
             Optional.empty());
     OwnersReport.Builder ownersReportBuilder =
         OwnersReport.builder(

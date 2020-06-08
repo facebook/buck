@@ -172,10 +172,7 @@ public class QueryCommand
                     params.getParser().getPermState())) {
       perBuildState = parserState;
       ConfiguredQueryEnvironment env =
-          ConfiguredQueryEnvironment.from(
-              params,
-              LegacyQueryUniverse.from(params, parserState),
-              perBuildState.getParsingContext());
+          ConfiguredQueryEnvironment.from(params, LegacyQueryUniverse.from(params, parserState));
       formatAndRunQuery(params, env);
     } catch (QueryException e) {
       throw new HumanReadableException(e);

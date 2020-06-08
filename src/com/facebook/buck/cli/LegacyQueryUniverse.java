@@ -34,7 +34,6 @@ import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserMessages;
-import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -113,9 +112,7 @@ public class LegacyQueryUniverse implements TargetUniverse {
 
   @Override
   public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      Iterable<? extends TargetNodeSpec> specs,
-      Optional<TargetConfiguration> targetConfiguration,
-      ParsingContext parsingContext)
+      Iterable<? extends TargetNodeSpec> specs, Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException, InterruptedException {
     return parser.resolveTargetSpecs(parserState, specs, targetConfiguration);
   }

@@ -126,11 +126,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
                         .withExcludeUnsupportedTargets(false),
                     params.getParser().getPermState())) {
       LegacyQueryUniverse targetUniverse = LegacyQueryUniverse.from(params, parserState);
-      ConfiguredQueryEnvironment env =
-          ConfiguredQueryEnvironment.from(
-              params,
-              targetUniverse,
-              createParsingContext(params.getCells(), pool.getListeningExecutorService()));
+      ConfiguredQueryEnvironment env = ConfiguredQueryEnvironment.from(params, targetUniverse);
       QueryCommand command =
           new QueryCommand(
               shouldGenerateJsonOutput()

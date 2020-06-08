@@ -101,9 +101,7 @@ public class ConfiguredQueryCommand
                 rootTargetsForUniverse(), params, perBuildState);
       }
 
-      ConfiguredQueryEnvironment env =
-          ConfiguredQueryEnvironment.from(
-              params, targetUniverse, perBuildState.getParsingContext());
+      ConfiguredQueryEnvironment env = ConfiguredQueryEnvironment.from(params, targetUniverse);
       formatAndRunQuery(params, env);
     } catch (QueryException e) {
       throw new HumanReadableException(e);

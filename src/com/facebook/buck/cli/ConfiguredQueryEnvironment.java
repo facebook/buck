@@ -37,7 +37,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.query.AllPathsFunction;
@@ -149,7 +148,7 @@ public class ConfiguredQueryEnvironment
   }
 
   public static ConfiguredQueryEnvironment from(
-      CommandRunnerParams params, TargetUniverse targetUniverse, ParsingContext parsingContext) {
+      CommandRunnerParams params, TargetUniverse targetUniverse) {
     return from(
         targetUniverse,
         params.getCells().getRootCell(),
@@ -164,10 +163,6 @@ public class ConfiguredQueryEnvironment
             params.getCells().getRootCell(),
             params.getClientWorkingDir(),
             params.getBuckConfig(),
-            // We disable mapping //path/to:lib to //path/to:lib#default,static
-            // because the query engine doesn't handle flavors very well.
-            parsingContext.withApplyDefaultFlavorsMode(
-                ParserConfig.ApplyDefaultFlavorsMode.DISABLED),
             params.getTargetConfiguration()),
         params.getBuckEventBus(),
         params.getTypeCoercerFactory());

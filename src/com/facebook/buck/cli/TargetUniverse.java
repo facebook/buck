@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.graph.TraversableGraph;
-import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.query.QueryException;
@@ -42,13 +41,10 @@ public interface TargetUniverse {
 
   /**
    * Returns the {@code buildTarget}s in the universe that are referenced by {@code specs}. These
-   * targets will be configured for {@code targetConfiguration}, if given. Some implementations may
-   * need to delegate to the parser, in which case they can use the given {@code ParsingContext}.
+   * targets will be configured for {@code targetConfiguration}, if given.
    */
   ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      Iterable<? extends TargetNodeSpec> specs,
-      Optional<TargetConfiguration> targetConfiguration,
-      ParsingContext parsingContext)
+      Iterable<? extends TargetNodeSpec> specs, Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException, InterruptedException;
 
   /**

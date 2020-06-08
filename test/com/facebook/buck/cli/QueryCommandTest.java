@@ -150,7 +150,6 @@ public class QueryCommandTest {
                 params.getCells().getRootCell(),
                 params.getClientWorkingDir(),
                 params.getBuckConfig(),
-                ParsingContext.builder(params.getCells(), executorService).build(),
                 Optional.empty()),
             eventBus,
             typeCoercerFactory);
