@@ -477,6 +477,9 @@ public class AndroidBinaryGraphEnhancer {
     }
     ImmutableList<SourcePath> proguardConfigs = proguardConfigsBuilder.build();
 
+    // TODO(T68204100): unify the way we trim resources; could we just use .class files
+    // in both paths, or always predex?
+
     HasDexFiles dexMergeRule;
     if (shouldPreDex) {
       ImmutableList<DexProducedFromJavaLibrary> preDexedLibrariesExceptRDotJava =
@@ -495,8 +498,11 @@ public class AndroidBinaryGraphEnhancer {
                     Iterables.concat(preDexedLibrariesExceptRDotJava, dexUberRDotJavaParts)));
       }
     } else {
+      ImmutableSet<SourcePath> classpathForTrim =
+          trimResourceIds ? classpathEntriesToDex : ImmutableSet.of();
       JavaLibrary compileUberRDotJava =
-          createTrimAndCompileUberRDotJava(resourcesEnhancementResult, ImmutableList.of());
+          createTrimAndCompileUberRDotJava(
+              resourcesEnhancementResult, ImmutableList.of(), classpathForTrim);
       dexMergeRule =
           createNonPredexedDexBuildable(
               dexSplitMode,
@@ -538,14 +544,15 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableList<? extends TrimUberRDotJava.UsesResources> preDexedLibrariesExceptRDotJava) {
     JavaLibrary compileUberRDotJava =
         createTrimAndCompileUberRDotJava(
-            resourcesEnhancementResult, preDexedLibrariesExceptRDotJava);
+            resourcesEnhancementResult, preDexedLibrariesExceptRDotJava, ImmutableSet.of());
     return createSplitAndDexUberRDotJava(compileUberRDotJava);
   }
 
   private JavaLibrary createTrimAndCompileUberRDotJava(
       AndroidBinaryResourcesGraphEnhancer.AndroidBinaryResourcesGraphEnhancementResult
           resourcesEnhancementResult,
-      ImmutableList<? extends TrimUberRDotJava.UsesResources> preDexedLibrariesExceptRDotJava) {
+      ImmutableList<? extends TrimUberRDotJava.UsesResources> preDexedLibrariesExceptRDotJava,
+      ImmutableSet<SourcePath> classpathEntriesToDex) {
     // Create rule to trim uber R.java sources.
     Collection<? extends TrimUberRDotJava.UsesResources> preDexedLibrariesForResourceIdFiltering =
         trimResourceIds ? preDexedLibrariesExceptRDotJava : ImmutableList.of();
@@ -564,7 +571,8 @@ public class AndroidBinaryGraphEnhancer {
             paramsForTrimUberRDotJava,
             resourcesEnhancementResult.getRDotJavaDir(),
             preDexedLibrariesForResourceIdFiltering,
-            keepResourcePattern);
+            keepResourcePattern,
+            classpathEntriesToDex);
     graphBuilder.addToIndex(trimUberRDotJava);
 
     // Create rule to compile uber R.java sources.
