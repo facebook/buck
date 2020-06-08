@@ -468,10 +468,10 @@ public class ConfiguredQueryCommand
   }
 
   private String toPresentationForm(BuildTarget buildTarget) {
-    // NOTE: We are explicitly ignoring flavors here because flavored nodes in the graph can really
-    // mess with us. Long term we hope to replace flavors with configurations anyway so in the end
-    // this shouldn't really matter.
-    return buildTarget.withoutFlavors().toStringWithConfiguration();
+    // NOTE: Ideally we would ignore flavors here, but doing so causes issues when two flavored
+    // targets get printed at the same time (since they will have duplicate map keys). Really if
+    // we want to eliminate flavors from this command we should build up an unflavored graph.
+    return buildTarget.toStringWithConfiguration();
   }
 
   /**
