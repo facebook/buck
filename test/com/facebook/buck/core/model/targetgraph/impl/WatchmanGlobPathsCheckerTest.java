@@ -80,9 +80,7 @@ public class WatchmanGlobPathsCheckerTest {
     checker.checkPaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")),
-        ImmutableSet.of(),
-        ImmutableSet.of());
+        ImmutableSet.of(ForwardRelativePath.of("b")));
   }
 
   @Test
@@ -93,9 +91,7 @@ public class WatchmanGlobPathsCheckerTest {
     checker.checkPaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")),
-        ImmutableSet.of(),
-        ImmutableSet.of());
+        ImmutableSet.of(ForwardRelativePath.of("b")));
   }
 
   @Test
@@ -104,12 +100,10 @@ public class WatchmanGlobPathsCheckerTest {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("b");
 
-    checker.checkPaths(
+    checker.checkFilePaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(),
-        ImmutableSet.of(ForwardRelativePath.of("b")),
-        ImmutableSet.of());
+        ImmutableSet.of(ForwardRelativePath.of("b")));
   }
 
   @Test
@@ -118,11 +112,9 @@ public class WatchmanGlobPathsCheckerTest {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFolder("b");
 
-    checker.checkPaths(
+    checker.checkDirPaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(),
-        ImmutableSet.of(),
         ImmutableSet.of(ForwardRelativePath.of("b")));
   }
 
@@ -135,12 +127,10 @@ public class WatchmanGlobPathsCheckerTest {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFolder("b");
 
-    checker.checkPaths(
+    checker.checkFilePaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(),
-        ImmutableSet.of(ForwardRelativePath.of("b")),
-        ImmutableSet.of());
+        ImmutableSet.of(ForwardRelativePath.of("b")));
   }
 
   @Test
@@ -152,11 +142,9 @@ public class WatchmanGlobPathsCheckerTest {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("b");
 
-    checker.checkPaths(
+    checker.checkDirPaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(),
-        ImmutableSet.of(),
         ImmutableSet.of(ForwardRelativePath.of("b")));
   }
 
@@ -169,12 +157,10 @@ public class WatchmanGlobPathsCheckerTest {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("B");
 
-    checker.checkPaths(
+    checker.checkFilePaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(),
-        ImmutableSet.of(ForwardRelativePath.of("b")),
-        ImmutableSet.of());
+        ImmutableSet.of(ForwardRelativePath.of("b")));
   }
 
   @Test
@@ -184,12 +170,10 @@ public class WatchmanGlobPathsCheckerTest {
 
     FileSystemUtils.ensureSymbolicLink(root.getChild("symlink-to-regular-file"), "b");
 
-    checker.checkPaths(
+    checker.checkFilePaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(),
-        ImmutableSet.of(ForwardRelativePath.of("symlink-to-regular-file")),
-        ImmutableSet.of());
+        ImmutableSet.of(ForwardRelativePath.of("symlink-to-regular-file")));
   }
 
   @Test
@@ -202,13 +186,11 @@ public class WatchmanGlobPathsCheckerTest {
     tmp.newFile("b");
     tmp.newFile("c");
 
-    checker.checkPaths(
+    checker.checkFilePaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(),
         ImmutableSet.of(
-            ForwardRelativePath.of("b"), ForwardRelativePath.of("c"), ForwardRelativePath.of("d")),
-        ImmutableSet.of());
+            ForwardRelativePath.of("b"), ForwardRelativePath.of("c"), ForwardRelativePath.of("d")));
   }
 
   @Test
@@ -220,11 +202,9 @@ public class WatchmanGlobPathsCheckerTest {
     tmp.newFile("b");
     projectFilesystem.createNewFile(Paths.get("b"));
 
-    checker.checkPaths(
+    checker.checkDirPaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(),
-        ImmutableSet.of(),
         ImmutableSet.of(ForwardRelativePath.of("b")));
   }
 
@@ -239,12 +219,10 @@ public class WatchmanGlobPathsCheckerTest {
     projectFilesystem.createNewFile(Paths.get("b"));
     projectFilesystem.createNewFile(Paths.get("c"));
 
-    checker.checkPaths(
+    checker.checkFilePaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(),
         ImmutableSet.of(
-            ForwardRelativePath.of("b"), ForwardRelativePath.of("c"), ForwardRelativePath.of("d")),
-        ImmutableSet.of());
+            ForwardRelativePath.of("b"), ForwardRelativePath.of("c"), ForwardRelativePath.of("d")));
   }
 }

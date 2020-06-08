@@ -46,9 +46,7 @@ public class MissingPathsCheckerTest {
     checker.checkPaths(
         new FakeProjectFilesystem(),
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")),
-        ImmutableSet.of(),
-        ImmutableSet.of());
+        ImmutableSet.of(ForwardRelativePath.of("b")));
   }
 
   @Test
@@ -58,9 +56,73 @@ public class MissingPathsCheckerTest {
     checker.checkPaths(
         new FakeProjectFilesystem(ImmutableSet.of(Paths.get("b"))),
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")),
-        ImmutableSet.of(),
-        ImmutableSet.of());
+        ImmutableSet.of(ForwardRelativePath.of("b")));
+  }
+
+  @Test
+  public void testCheckDirPathsPassesWithExistingDirPath() throws IOException {
+    MissingPathsChecker checker = new MissingPathsChecker();
+    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
+    fakeProjectFileSystem.mkdirs(Paths.get("b"));
+
+    checker.checkPaths(
+        fakeProjectFileSystem,
+        BuildTargetFactory.newInstance("//:a"),
+        ImmutableSet.of(ForwardRelativePath.of("b")));
+
+    checker.checkDirPaths(
+        fakeProjectFileSystem,
+        BuildTargetFactory.newInstance("//:a"),
+        ImmutableSet.of(ForwardRelativePath.of("b")));
+  }
+
+  @Test
+  public void testCheckFilePathsPassesWithExistingFilePath() throws IOException {
+    MissingPathsChecker checker = new MissingPathsChecker();
+    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
+    fakeProjectFileSystem.createNewFile(Paths.get("b"));
+
+    checker.checkPaths(
+        fakeProjectFileSystem,
+        BuildTargetFactory.newInstance("//:a"),
+        ImmutableSet.of(ForwardRelativePath.of("b")));
+
+    checker.checkFilePaths(
+        fakeProjectFileSystem,
+        BuildTargetFactory.newInstance("//:a"),
+        ImmutableSet.of(ForwardRelativePath.of("b")));
+  }
+
+  @Test
+  public void testCheckFilePathsThrowsWithDirPath() throws IOException {
+    MissingPathsChecker checker = new MissingPathsChecker();
+
+    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
+    fakeProjectFileSystem.mkdirs(Paths.get("b"));
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("//:a expected regular file: b");
+
+    checker.checkFilePaths(
+        fakeProjectFileSystem,
+        BuildTargetFactory.newInstance("//:a"),
+        ImmutableSet.of(ForwardRelativePath.of("b")));
+  }
+
+  @Test
+  public void testCheckDirPathsThrowsWithFilePath() throws IOException {
+    MissingPathsChecker checker = new MissingPathsChecker();
+
+    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
+    fakeProjectFileSystem.createNewFile(Paths.get("b"));
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("In //:a expected directory: b");
+
+    checker.checkDirPaths(
+        fakeProjectFileSystem,
+        BuildTargetFactory.newInstance("//:a"),
+        ImmutableSet.of(ForwardRelativePath.of("b")));
   }
 
   @Test
@@ -82,8 +144,6 @@ public class MissingPathsCheckerTest {
     checker.checkPaths(
         filesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")),
-        ImmutableSet.of(),
-        ImmutableSet.of());
+        ImmutableSet.of(ForwardRelativePath.of("b")));
   }
 }

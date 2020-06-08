@@ -59,6 +59,7 @@ class WatchmanPathsChecker implements PathsChecker {
   private final LoadingCache<AbsPath, Set<ForwardRelativePath>> pathsCache = initCache();
   private final LoadingCache<AbsPath, Set<ForwardRelativePath>> filePathsCache = initCache();
   private final LoadingCache<AbsPath, Set<ForwardRelativePath>> dirPathsCache = initCache();
+
   private final SyncCookieState syncCookieState = new SyncCookieState();
   private final boolean useFallbackFileSystemPathsChecker;
   private final MissingPathsChecker fallbackFileSystemPathsChecker = new MissingPathsChecker();
@@ -83,70 +84,79 @@ class WatchmanPathsChecker implements PathsChecker {
   public void checkPaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> paths,
-      ImmutableSet<ForwardRelativePath> filePaths,
+      ImmutableSet<ForwardRelativePath> paths) {
+    checkPathsWithExtraCheckThenFallbackIfEnabled(
+        projectFilesystem,
+        buildTarget,
+        paths,
+        pathsCache,
+        EnumSet.of(WatchmanGlobber.Option.FORCE_CASE_SENSITIVE),
+        () -> {
+          fallbackFileSystemPathsChecker.checkPaths(projectFilesystem, buildTarget, paths);
+        });
+  }
+
+  @Override
+  public void checkFilePaths(
+      ProjectFilesystem projectFilesystem,
+      BuildTarget buildTarget,
+      ImmutableSet<ForwardRelativePath> filePaths) {
+    checkPathsWithExtraCheckThenFallbackIfEnabled(
+        projectFilesystem,
+        buildTarget,
+        filePaths,
+        filePathsCache,
+        EnumSet.of(
+            WatchmanGlobber.Option.FORCE_CASE_SENSITIVE,
+            WatchmanGlobber.Option.EXCLUDE_DIRECTORIES),
+        () -> {
+          fallbackFileSystemPathsChecker.checkFilePaths(projectFilesystem, buildTarget, filePaths);
+        });
+  }
+
+  @Override
+  public void checkDirPaths(
+      ProjectFilesystem projectFilesystem,
+      BuildTarget buildTarget,
       ImmutableSet<ForwardRelativePath> dirPaths) {
+    checkPathsWithExtraCheckThenFallbackIfEnabled(
+        projectFilesystem,
+        buildTarget,
+        dirPaths,
+        dirPathsCache,
+        EnumSet.of(
+            WatchmanGlobber.Option.FORCE_CASE_SENSITIVE,
+            WatchmanGlobber.Option.EXCLUDE_REGULAR_FILES),
+        () -> {
+          fallbackFileSystemPathsChecker.checkDirPaths(projectFilesystem, buildTarget, dirPaths);
+        });
+  }
+
+  @FunctionalInterface
+  private interface FallbackPathChecker {
+    void checkWithFallback();
+  }
+
+  private void checkPathsWithExtraCheckThenFallbackIfEnabled(
+      ProjectFilesystem projectFilesystem,
+      BuildTarget buildTarget,
+      ImmutableSet<ForwardRelativePath> paths,
+      LoadingCache<AbsPath, Set<ForwardRelativePath>> pathsCache,
+      EnumSet<WatchmanGlobber.Option> options,
+      FallbackPathChecker fallbackPathChecker) {
     try {
-      checkPathsWithExtraCheck(
-          watchman,
-          buildTarget,
-          projectFilesystem,
-          paths,
-          pathsCache,
-          EnumSet.of(WatchmanGlobber.Option.FORCE_CASE_SENSITIVE));
-      checkPathsWithExtraCheck(
-          watchman,
-          buildTarget,
-          projectFilesystem,
-          filePaths,
-          filePathsCache,
-          EnumSet.of(
-              WatchmanGlobber.Option.FORCE_CASE_SENSITIVE,
-              WatchmanGlobber.Option.EXCLUDE_DIRECTORIES));
-      checkPathsWithExtraCheck(
-          watchman,
-          buildTarget,
-          projectFilesystem,
-          dirPaths,
-          dirPathsCache,
-          EnumSet.of(
-              WatchmanGlobber.Option.FORCE_CASE_SENSITIVE,
-              WatchmanGlobber.Option.EXCLUDE_REGULAR_FILES));
+      checkPathsWithExtraCheck(buildTarget, projectFilesystem, paths, pathsCache, options);
     } catch (Exception e) {
       if (useFallbackFileSystemPathsChecker) {
         LOG.warn("Watchman could not find paths, fallback to file system for verification: " + e);
-        fallbackFileSystemPathsChecker.checkPaths(
-            projectFilesystem, buildTarget, paths, filePaths, dirPaths);
+        fallbackPathChecker.checkWithFallback();
       } else {
         throw e;
       }
     }
   }
 
-  private Optional<ImmutableSet<String>> glob(
-      Watchman watchman,
-      Collection<String> patterns,
-      ProjectFilesystem projectFilesystem,
-      EnumSet<WatchmanGlobber.Option> options)
-      throws IOException, InterruptedException {
-    if (patterns.isEmpty()) {
-      return Optional.empty();
-    }
-
-    try (WatchmanClient watchmanClient = watchman.createClient()) {
-      ProjectWatch watch = watchman.getProjectWatches().get(projectFilesystem.getRootPath());
-      if (watch == null) {
-        throw new FileSystemNotWatchedException();
-      }
-
-      WatchmanGlobber globber =
-          WatchmanGlobber.create(watchmanClient, syncCookieState, "", watch.getWatchRoot());
-      return globber.run(patterns, ImmutableList.of(), options, TIMEOUT_NANOS, WARN_TIMEOUT_NANOS);
-    }
-  }
-
   private void checkPathsWithExtraCheck(
-      Watchman watchman,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ImmutableSet<ForwardRelativePath> paths,
@@ -196,6 +206,28 @@ class WatchmanPathsChecker implements PathsChecker {
     } catch (InterruptedException e) {
       throw new HumanReadableException(
           e, "%s Watchman is interrupted when querying file or directory '%s'", buildTarget, paths);
+    }
+  }
+
+  private Optional<ImmutableSet<String>> glob(
+      Watchman watchman,
+      Collection<String> patterns,
+      ProjectFilesystem projectFilesystem,
+      EnumSet<WatchmanGlobber.Option> options)
+      throws IOException, InterruptedException {
+    if (patterns.isEmpty()) {
+      return Optional.empty();
+    }
+
+    try (WatchmanClient watchmanClient = watchman.createClient()) {
+      ProjectWatch watch = watchman.getProjectWatches().get(projectFilesystem.getRootPath());
+      if (watch == null) {
+        throw new FileSystemNotWatchedException();
+      }
+
+      WatchmanGlobber globber =
+          WatchmanGlobber.create(watchmanClient, syncCookieState, "", watch.getWatchRoot());
+      return globber.run(patterns, ImmutableList.of(), options, TIMEOUT_NANOS, WARN_TIMEOUT_NANOS);
     }
   }
 }

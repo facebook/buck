@@ -199,9 +199,13 @@ public class TargetNodeFactory implements NodeCopier {
     }
 
     ImmutableSet<ForwardRelativePath> paths = pathsBuilder.build();
+    pathsChecker.checkPaths(filesystem, buildTarget, paths);
+
     ImmutableSet<ForwardRelativePath> filePaths = filePathsBuilder.build();
+    pathsChecker.checkFilePaths(filesystem, buildTarget, filePaths);
+
     ImmutableSet<ForwardRelativePath> dirPaths = dirPathsBuilder.build();
-    pathsChecker.checkPaths(filesystem, buildTarget, paths, filePaths, dirPaths);
+    pathsChecker.checkDirPaths(filesystem, buildTarget, dirPaths);
 
     // This method uses the TargetNodeFactory, rather than just calling withBuildTarget,
     // because

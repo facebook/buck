@@ -48,11 +48,16 @@ class MissingPathsChecker implements PathsChecker {
   public void checkPaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> paths,
-      ImmutableSet<ForwardRelativePath> filePaths,
-      ImmutableSet<ForwardRelativePath> dirPaths) {
+      ImmutableSet<ForwardRelativePath> paths) {
     checkPathsWithExtraCheck(
         projectFilesystem, buildTarget, paths, pathsCache, (path, attrs) -> {});
+  }
+
+  @Override
+  public void checkFilePaths(
+      ProjectFilesystem projectFilesystem,
+      BuildTarget buildTarget,
+      ImmutableSet<ForwardRelativePath> filePaths) {
     checkPathsWithExtraCheck(
         projectFilesystem,
         buildTarget,
@@ -63,6 +68,13 @@ class MissingPathsChecker implements PathsChecker {
             throw new HumanReadableException("In %s expected regular file: %s", buildTarget, path);
           }
         });
+  }
+
+  @Override
+  public void checkDirPaths(
+      ProjectFilesystem projectFilesystem,
+      BuildTarget buildTarget,
+      ImmutableSet<ForwardRelativePath> dirPaths) {
     checkPathsWithExtraCheck(
         projectFilesystem,
         buildTarget,
