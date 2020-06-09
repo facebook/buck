@@ -251,7 +251,8 @@ public class UnconfiguredQueryEnvironment
   public ImmutableSet<Object> filterAttributeContents(
       UnconfiguredQueryTarget target, ParamName attribute, Predicate<Object> predicate)
       throws QueryException {
-    throw new RuntimeException("Not yet implemented");
+    UnconfiguredTargetNode node = getNode((UnconfiguredQueryBuildTarget) target);
+    return targetGraph.filterAttributeContents(node, attribute, predicate);
   }
 
   /**

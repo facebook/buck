@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Represents a list of {@link Selector} objects
@@ -75,6 +76,22 @@ public final class SelectorList<T> {
       for (Map.Entry<SelectorKey, T> entry : selector.getConditions().entrySet()) {
         consumer.accept(entry.getKey(), entry.getValue());
       }
+    }
+  }
+
+  /**
+   * Check if an object is a {@code SelectorList} and, if it is, invokes {@code consumer} with every
+   * value. If the object is not a {@code SelectorList}, invokes {@code consumer} on the object
+   * immediately.
+   */
+  @SuppressWarnings("unchecked")
+  public static <T> void traverseSelectorListValuesOrValue(
+      Object selectorListOrValue, Consumer<T> consumer) {
+    if (selectorListOrValue instanceof SelectorList<?>) {
+      SelectorList<?> argAsSelectorList = (SelectorList<?>) selectorListOrValue;
+      argAsSelectorList.traverseSelectors((ignored, value) -> consumer.accept((T) value));
+    } else {
+      consumer.accept((T) selectorListOrValue);
     }
   }
 

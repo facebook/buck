@@ -60,6 +60,7 @@ import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Functions;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
@@ -75,6 +76,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import org.immutables.value.Value;
 
@@ -255,6 +257,35 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
     }
   }
 
+  /**
+   * Traverses the object hiearchy for {@code attribute} on {@code node}, returning a set of all
+   * objects where {@code predicate} returns true.
+   */
+  @SuppressWarnings("unchecked")
+  public ImmutableSet<Object> filterAttributeContents(
+      UnconfiguredTargetNode node, ParamName attribute, Predicate<Object> predicate) {
+    Object value = node.getAttributes().get(attribute);
+    if (value == null) {
+      // Ignore if the field does not exist on this target.
+      return ImmutableSet.of();
+    }
+
+    ParamInfo<?> info =
+        lookupParamsInfoForRule(node.getBuildTarget(), node.getRuleType()).getByName(attribute);
+    Preconditions.checkState(
+        info != null,
+        "Attributes not supported by the rule shouldn't have a value: %s + %s",
+        node.getRuleType(),
+        attribute);
+
+    TypeCoercer<Object, ?> coercer = (TypeCoercer<Object, ?>) info.getTypeCoercer();
+    ImmutableSet.Builder<Object> result = ImmutableSet.builder();
+
+    SelectorList.traverseSelectorListValuesOrValue(
+        value, v -> collectMatchingObjectsFromCoercerTraversal(result, coercer, predicate, v));
+    return result.build();
+  }
+
   public NodeAttributeTraversalResult getTraversalResult(UnconfiguredTargetNode node) {
     return targetsToTraversalResults.computeIfAbsent(
         node.getBuildTarget(), t -> this.computeTraversalResult(node));
@@ -401,6 +432,21 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
                         return Unit.UNIT;
                       }
                     });
+          }
+        });
+  }
+
+  private void collectMatchingObjectsFromCoercerTraversal(
+      ImmutableSet.Builder<Object> result,
+      TypeCoercer<Object, ?> coercer,
+      Predicate<Object> predicate,
+      Object value) {
+    coercer.traverseUnconfigured(
+        rootCell.getCellNameResolver(),
+        value,
+        object -> {
+          if (predicate.test(object)) {
+            result.add(object);
           }
         });
   }

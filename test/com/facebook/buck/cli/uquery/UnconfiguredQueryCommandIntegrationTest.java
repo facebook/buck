@@ -125,6 +125,32 @@ public class UnconfiguredQueryCommandIntegrationTest {
    * =============================================================================================
    */
   @Test
+  public void attrfilterFunctionOnlyReturnsTargetsWithMatchingValue() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery", "attrfilter(compiler_flags, '-Oz', //libraries/apple/...)");
+
+    assertOutputMatchesFileContents(
+        "stdout-attrfilter-function-only-returns-targets-with-matching-value", result, workspace);
+  }
+
+  @Test
+  public void attrregexfilterFunctionAppliesRegexMatchingToAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery", "attrregexfilter(default_target_platform, '.*-opt', //apps/apple/...)");
+
+    assertOutputMatchesFileContents(
+        "stdout-attrregexfilter-function-applies-regex-matching-to-attribute", result, workspace);
+  }
+
+  @Test
   public void depsFunctionPrintsDependenciesOfTargetInAnyConfiguration() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
