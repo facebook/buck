@@ -222,7 +222,6 @@ public class AppleBundleDescription
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks(),
         cxxBuckConfig.shouldCacheStrip(),
-        appleConfig.useEntitlementsWhenAdhocCodeSigning(),
         resourceFilter,
         swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
         swiftBuckConfig.getSliceAppBundleSwiftRuntime(),

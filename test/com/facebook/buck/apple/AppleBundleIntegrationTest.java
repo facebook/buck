@@ -495,11 +495,7 @@ public class AppleBundleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "macos_application_bundle_with_codesigning_and_entitlements", tmp);
     workspace.setUp();
-    Path outputPath =
-        workspace.buildAndReturnOutput(
-            "//:App#macosx-x86_64",
-            "--config",
-            "apple.use_entitlements_when_adhoc_code_signing=true");
+    Path outputPath = workspace.buildAndReturnOutput("//:App#macosx-x86_64");
 
     assertTrue(
         CodeSigning.hasEntitlement(
