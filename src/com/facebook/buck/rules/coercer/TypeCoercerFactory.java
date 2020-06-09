@@ -22,6 +22,8 @@ import com.google.common.reflect.TypeToken;
 
 public interface TypeCoercerFactory {
 
+  <U> TypeCoercer<U, ?> typeCoercerForUnconfiguredType(TypeToken<U> type);
+
   <T> TypeCoercer<?, T> typeCoercerForType(TypeToken<T> type);
 
   /**

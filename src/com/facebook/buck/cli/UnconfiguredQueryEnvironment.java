@@ -20,9 +20,17 @@ import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInst
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.model.CellRelativePath;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
+import com.facebook.buck.core.select.SelectorList;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
 import com.facebook.buck.core.util.graph.CycleException;
@@ -52,13 +60,19 @@ import com.facebook.buck.query.RdepsFunction;
 import com.facebook.buck.query.TestsOfFunction;
 import com.facebook.buck.query.UnconfiguredQueryBuildTarget;
 import com.facebook.buck.query.UnconfiguredQueryTarget;
+import com.facebook.buck.rules.coercer.ParamInfo;
+import com.facebook.buck.rules.coercer.ParamsInfo;
+import com.facebook.buck.rules.coercer.TypeCoercer;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -87,6 +101,8 @@ public class UnconfiguredQueryEnvironment
   private final Parser parser;
   private final PerBuildState perBuildState;
   private final Cell rootCell;
+  private final KnownRuleTypesProvider knownRuleTypesProvider;
+  private final TypeCoercerFactory typeCoercerFactory;
   private final UnconfiguredQueryTargetEvaluator targetEvaluator;
   // Query execution is single threaded, however the buildTransitiveClosure implementation
   // traverses the graph in parallel.
@@ -104,10 +120,14 @@ public class UnconfiguredQueryEnvironment
       Parser parser,
       PerBuildState perBuildState,
       Cell rootCell,
+      KnownRuleTypesProvider knownRuleTypesProvider,
+      TypeCoercerFactory typeCoercerFactory,
       UnconfiguredQueryTargetEvaluator targetEvaluator) {
     this.parser = parser;
     this.perBuildState = perBuildState;
     this.rootCell = rootCell;
+    this.knownRuleTypesProvider = knownRuleTypesProvider;
+    this.typeCoercerFactory = typeCoercerFactory;
     this.targetEvaluator = targetEvaluator;
   }
 
@@ -124,7 +144,13 @@ public class UnconfiguredQueryEnvironment
             params.getClientWorkingDir(),
             params.getBuckConfig());
 
-    return new UnconfiguredQueryEnvironment(parser, perBuildState, rootCell, targetEvaluator);
+    return new UnconfiguredQueryEnvironment(
+        parser,
+        perBuildState,
+        rootCell,
+        params.getKnownRuleTypesProvider(),
+        params.getTypeCoercerFactory(),
+        targetEvaluator);
   }
 
   @Override
@@ -265,7 +291,13 @@ public class UnconfiguredQueryEnvironment
   @Override
   public ImmutableSet<UnconfiguredQueryTarget> getFwdDeps(Iterable<UnconfiguredQueryTarget> targets)
       throws QueryException {
-    throw new RuntimeException("Not yet implemented");
+    return Streams.stream(targets)
+        .flatMap(this::filterNonBuildTargets)
+        .map(UnconfiguredQueryBuildTarget::getBuildTarget)
+        .map(this::assertNode)
+        .flatMap(n -> this.getDepsForNode(n).stream())
+        .map(this::getOrCreateQueryBuildTarget)
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
@@ -428,8 +460,73 @@ public class UnconfiguredQueryEnvironment
         node.getBuildTarget(), (buildTarget) -> computeDepsForNode(node));
   }
 
+  @SuppressWarnings("unchecked")
   private ImmutableSet<UnconfiguredBuildTarget> computeDepsForNode(UnconfiguredTargetNode node) {
-    // TODO(srice): Obviously not a correct solution.
-    return ImmutableSet.of();
+    ImmutableSet.Builder<UnconfiguredBuildTarget> result = ImmutableSet.builder();
+    TwoArraysImmutableHashMap<ParamName, Object> attributes = node.getAttributes();
+
+    ParamsInfo paramsInfo = lookupParamsInfoForRule(node.getBuildTarget(), node.getRuleType());
+    for (ParamName name : attributes.keySet()) {
+      ParamInfo<?> info = paramsInfo.getByName(name);
+      TypeCoercer<Object, ?> coercer = (TypeCoercer<Object, ?>) info.getTypeCoercer();
+
+      Object value = attributes.get(name);
+      // `selects` play a bit of a funny role, because our `ParamsInfo` _says_ that an attribute
+      // should be of type X, but instead it's a `SelectorList<X>`. Handle this case explicitly.
+      if (value instanceof SelectorList) {
+        SelectorList<Object> valueAsSelectorList = (SelectorList<Object>) value;
+        valueAsSelectorList.traverseSelectors(
+            (selectorKey, selectorValue) -> {
+              selectorKey
+                  .getBuildTarget()
+                  .ifPresent(target -> result.add(target.getUnconfiguredBuildTarget()));
+              collectBuildTargetsFromCoercerTraversal(result, coercer, selectorValue);
+            });
+      } else {
+        collectBuildTargetsFromCoercerTraversal(result, coercer, value);
+      }
+    }
+    return result.build();
+  }
+
+  private ParamsInfo lookupParamsInfoForRule(UnflavoredBuildTarget buildTarget, RuleType ruleType) {
+    Cell cell = rootCell.getCell(buildTarget.getCell());
+    KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
+    RuleDescriptor<?> descriptor = knownRuleTypes.getDescriptorByName(ruleType.getName());
+    return typeCoercerFactory
+        .getNativeConstructorArgDescriptor(descriptor.getConstructorArgType())
+        .getParamsInfo();
+  }
+
+  private void collectBuildTargetsFromCoercerTraversal(
+      ImmutableSet.Builder<UnconfiguredBuildTarget> result,
+      TypeCoercer<Object, ?> coercer,
+      Object value) {
+    coercer.traverseUnconfigured(
+        rootCell.getCellNameResolver(),
+        value,
+        object -> {
+          if (object instanceof UnconfiguredBuildTarget) {
+            result.add((UnconfiguredBuildTarget) object);
+          } else if (object instanceof UnflavoredBuildTarget) {
+            result.add(UnconfiguredBuildTarget.of((UnflavoredBuildTarget) object));
+          } else if (object instanceof UnconfiguredSourcePath) {
+            ((UnconfiguredSourcePath) object)
+                .match(
+                    new UnconfiguredSourcePath.Matcher<Unit>() {
+                      @Override
+                      public Unit path(CellRelativePath path) {
+                        return Unit.UNIT;
+                      }
+
+                      @Override
+                      public Unit buildTarget(
+                          UnconfiguredBuildTargetWithOutputs targetWithOutputs) {
+                        result.add(targetWithOutputs.getBuildTarget());
+                        return Unit.UNIT;
+                      }
+                    });
+          }
+        });
   }
 }

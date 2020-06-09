@@ -18,7 +18,9 @@ package com.facebook.buck.core.select;
 
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.google.common.collect.ImmutableList;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
 /**
  * Represents a list of {@link Selector} objects
@@ -65,6 +67,15 @@ public final class SelectorList<T> {
     }
 
     return new SelectorList<>(selectors.build());
+  }
+
+  /** Iterate over all the selectors, invoking `consumer` on each entry. */
+  public void traverseSelectors(BiConsumer<SelectorKey, T> consumer) {
+    for (Selector<T> selector : selectors) {
+      for (Map.Entry<SelectorKey, T> entry : selector.getConditions().entrySet()) {
+        consumer.accept(entry.getKey(), entry.getValue());
+      }
+    }
   }
 
   @Override

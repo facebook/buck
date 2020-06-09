@@ -1,0 +1,17 @@
+//bin:foo-bin
+//bin:keystore-debug
+//bin:keystore-prod
+//config/java:version-11
+//config/java:version-8
+//config/java:version-constraint
+//config/java:version-value-11
+//config/java:version-value-8
+//config/mode:dev
+//config/mode:mode-constraint
+//config/mode:mode-value-dev
+//config/mode:mode-value-opt
+//config/mode:opt
+//config/platform:java8-dev
+//lib:bar
+//lib:devtools
+//lib:foo

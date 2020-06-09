@@ -17,6 +17,7 @@
 package com.facebook.buck.cli.uquery;
 
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatches;
+import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContents;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -72,6 +73,19 @@ public class UnconfiguredQueryCommandIntegrationTest {
         workspace.runBuckCommand(
             "uquery", query, "--target-platforms", "//config/platform:java11-dev");
     assertOutputMatches(expected, resultForSpecificPlatform);
+  }
+
+  @Test
+  public void depsFunctionPrintsDependenciesOfTargetInAnyConfiguration() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("uquery", "deps(//bin:foo-bin)");
+    assertOutputMatchesFileContents(
+        "stdout-deps-function-prints-dependencies-of-target-in-any-configuration",
+        result,
+        workspace);
   }
 
   @Test
