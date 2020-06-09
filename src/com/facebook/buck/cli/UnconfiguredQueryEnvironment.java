@@ -298,7 +298,8 @@ public class UnconfiguredQueryEnvironment
         .flatMap(this::filterNonBuildTargets)
         .map(UnconfiguredQueryBuildTarget::getBuildTarget)
         .map(this::assertCachedNode)
-        .flatMap(n -> this.getDepsForNode(n).stream())
+        .flatMap(n -> Streams.stream(graph.getOutgoingNodesFor(n)))
+        .map(UnconfiguredTargetNode::getBuildTarget)
         .map(this::getOrCreateQueryBuildTarget)
         .collect(ImmutableSet.toImmutableSet());
   }
@@ -306,7 +307,14 @@ public class UnconfiguredQueryEnvironment
   @Override
   public Set<UnconfiguredQueryTarget> getReverseDeps(Iterable<UnconfiguredQueryTarget> targets)
       throws QueryException {
-    throw new RuntimeException("Not yet implemented");
+    return Streams.stream(targets)
+        .flatMap(this::filterNonBuildTargets)
+        .map(UnconfiguredQueryBuildTarget::getBuildTarget)
+        .map(this::assertCachedNode)
+        .flatMap(n -> Streams.stream(graph.getIncomingNodesFor(n)))
+        .map(UnconfiguredTargetNode::getBuildTarget)
+        .map(this::getOrCreateQueryBuildTarget)
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
@@ -427,11 +435,6 @@ public class UnconfiguredQueryEnvironment
     } else {
       return Stream.of();
     }
-  }
-
-  private UnconfiguredQueryBuildTarget getOrCreateQueryBuildTarget(
-      UnconfiguredBuildTarget buildTarget) {
-    return getOrCreateQueryBuildTarget(buildTarget.getUnflavoredBuildTarget());
   }
 
   private UnconfiguredQueryBuildTarget getOrCreateQueryBuildTarget(

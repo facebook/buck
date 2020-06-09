@@ -157,4 +157,19 @@ public class UnconfiguredQueryCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("uquery", "owner(lib/DevtoolsEight.java)");
     assertOutputMatches("//lib:devtools", result);
   }
+
+  @Test
+  public void rdepsFunctionPrintsNodesWithIncomingEdgesToTarget() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    // We're being a bit tricky here. On a configured graph this intersection would return nothing,
+    // since `keystore-prod` is only used in configurations where `devtools` isn't used. We're
+    // not operating on the configured graph though.
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery", "rdeps(//bin:, //bin:keystore-prod) ^ rdeps(//bin:, //lib:devtools)");
+    assertOutputMatches("//bin:bar-bin\n//bin:foo-bin", result);
+  }
 }
