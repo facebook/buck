@@ -21,6 +21,7 @@ import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.ass
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesExactly;
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContents;
 
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -148,6 +149,16 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
     assertOutputMatchesFileContents(
         "stdout-attrregexfilter-function-applies-regex-matching-to-attribute", result, workspace);
+  }
+
+  @Test
+  public void buildfileFunctionGivesPathToBUCKFile() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("uquery", "buildfile(appletv-app-prod)");
+    assertOutputMatches(MorePaths.pathWithPlatformSeparators("apps/apple/BUCK"), result);
   }
 
   @Test

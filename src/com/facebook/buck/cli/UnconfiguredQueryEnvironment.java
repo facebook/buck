@@ -17,12 +17,22 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.query.AllPathsFunction;
 import com.facebook.buck.query.AttrFilterFunction;
 import com.facebook.buck.query.AttrRegexFilterFunction;
@@ -38,21 +48,26 @@ import com.facebook.buck.query.OwnerFunction;
 import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
+import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.RdepsFunction;
 import com.facebook.buck.query.TestsOfFunction;
 import com.facebook.buck.query.UnconfiguredQueryBuildTarget;
 import com.facebook.buck.query.UnconfiguredQueryTarget;
 import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -60,16 +75,33 @@ import java.util.stream.Stream;
 public class UnconfiguredQueryEnvironment
     implements EvaluatingQueryEnvironment<UnconfiguredQueryTarget> {
 
+  private final Cell rootCell;
   private final UnconfiguredQueryTargetEvaluator targetEvaluator;
   private final UnconfiguredTargetGraph targetGraph;
+
+  private final ImmutableMap<Cell, BuildFileTree> buildFileTrees;
+
   // This should only be modified during query execution though, so we don't need a concurrent map.
   private final Map<UnflavoredBuildTarget, UnconfiguredQueryBuildTarget> buildTargetToQueryTarget =
       new HashMap<>();
 
   public UnconfiguredQueryEnvironment(
-      UnconfiguredQueryTargetEvaluator targetEvaluator, UnconfiguredTargetGraph targetGraph) {
+      Cell rootCell,
+      UnconfiguredQueryTargetEvaluator targetEvaluator,
+      UnconfiguredTargetGraph targetGraph) {
+    this.rootCell = rootCell;
     this.targetEvaluator = targetEvaluator;
     this.targetGraph = targetGraph;
+
+    this.buildFileTrees =
+        rootCell.getAllCells().stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    Function.identity(),
+                    cell ->
+                        new FilesystemBackedBuildFileTree(
+                            cell.getFilesystem(),
+                            cell.getBuckConfigView(ParserConfig.class).getBuildFileName())));
   }
 
   /** Convenience constructor */
@@ -92,7 +124,7 @@ public class UnconfiguredQueryEnvironment
             params.getKnownRuleTypesProvider(),
             params.getTypeCoercerFactory());
 
-    return new UnconfiguredQueryEnvironment(targetEvaluator, targetGraph);
+    return new UnconfiguredQueryEnvironment(rootCell, targetEvaluator, targetGraph);
   }
 
   @Override
@@ -215,7 +247,10 @@ public class UnconfiguredQueryEnvironment
 
   @Override
   public ImmutableSet<UnconfiguredQueryTarget> getBuildFiles(Set<UnconfiguredQueryTarget> targets) {
-    throw new RuntimeException("Not yet implemented");
+    return targets.stream()
+        .flatMap(this::filterNonBuildTargets)
+        .map(this::buildfileForTarget)
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
@@ -266,6 +301,28 @@ public class UnconfiguredQueryEnvironment
     } else {
       return Stream.of();
     }
+  }
+
+  private QueryFileTarget buildfileForTarget(UnconfiguredQueryBuildTarget queryBuildTarget) {
+    ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
+    AbsPath rootPath = rootCellFilesystem.getRootPath();
+
+    UnconfiguredBuildTarget buildTarget = queryBuildTarget.getBuildTarget();
+    Cell cell = rootCell.getCell(buildTarget.getCell());
+    BuildFileTree buildFileTree = Objects.requireNonNull(buildFileTrees.get(cell));
+    Optional<ForwardRelativePath> path =
+        buildFileTree.getBasePathOfAncestorTarget(buildTarget.getCellRelativeBasePath().getPath());
+    Preconditions.checkState(path.isPresent());
+
+    RelPath buildFilePath =
+        MorePaths.relativize(
+            rootPath,
+            cell.getFilesystem()
+                .resolve(path.get())
+                .resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName()));
+    Preconditions.checkState(rootCellFilesystem.exists(buildFilePath));
+    SourcePath sourcePath = PathSourcePath.of(cell.getFilesystem(), buildFilePath);
+    return QueryFileTarget.of(sourcePath);
   }
 
   private UnconfiguredQueryBuildTarget getOrCreateQueryBuildTarget(
