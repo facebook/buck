@@ -148,11 +148,11 @@ class BuckProject:
         self._buck_out = os.path.join(self.root, self._buck_out_dirname)
         add_eden_bindmounts(self.root, self._buck_out)
 
-        self._buck_out_tmp = os.path.join(self._buck_out, "tmp")
-        makedirs(self._buck_out_tmp)
+        self.buck_out_tmp = os.path.join(self._buck_out, "tmp")
+        makedirs(self.buck_out_tmp)
         self._buck_out_log = os.path.join(self._buck_out, "log")
         makedirs(self._buck_out_log)
-        self.tmp_dir = tempfile.mkdtemp(prefix="buck_run.", dir=self._buck_out_tmp)
+        self.tmp_dir = tempfile.mkdtemp(prefix="buck_run.", dir=self.buck_out_tmp)
 
         # Only created if buckd is used.
         self.buckd_tmp_dir = None
@@ -241,7 +241,7 @@ class BuckProject:
         if self.buckd_tmp_dir is not None:
             return self.buckd_tmp_dir
         self.buckd_tmp_dir = tempfile.mkdtemp(
-            prefix="buckd_tmp.", dir=self._buck_out_tmp
+            prefix="buckd_tmp.", dir=self.buck_out_tmp
         )
         return self.buckd_tmp_dir
 

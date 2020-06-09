@@ -392,6 +392,7 @@ class BuckTool(object):
         self._command_line = CommandLineArgs(sys.argv)
         self._buck_project = buck_project
         self._tmp_dir = platform_path(buck_project.tmp_dir)
+        self._buck_out_tmp = platform_path(buck_project.buck_out_tmp)
         self._fake_buck_version = os.environ.get("BUCK_FAKE_VERSION")
         if self._fake_buck_version:
             logging.info("Using fake buck version: {}".format(self._fake_buck_version))

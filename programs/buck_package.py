@@ -61,11 +61,9 @@ class BuckPackage(BuckTool):
         return self._get_buck_version_uid()
 
     def _get_resource_dir(self):
-        if self._use_buckd:
-            base_dir = self._buck_project.buckd_dir
-        else:
-            base_dir = self._tmp_dir
-        return os.path.join(base_dir, "resources")
+        # sharing the same resource dir for buck with and without the daemon
+        # to produce more stable action digests when using RE
+        return os.path.join(self._buck_out_tmp, "resources")
 
     def _get_resource_subdir(self):
         def try_subdir(lock_file_dir):
@@ -114,6 +112,7 @@ class BuckPackage(BuckTool):
         resource_path = os.path.join(self._get_resource_subdir(), resource.basename)
         if not os.path.exists(os.path.dirname(resource_path)):
             self.__create_dir(os.path.dirname(resource_path))
+
         if not os.path.exists(resource_path):
             self._unpack_resource(resource_path, resource.name, resource.executable)
         return resource_path
