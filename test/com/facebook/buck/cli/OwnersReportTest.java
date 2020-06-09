@@ -126,6 +126,11 @@ public class OwnersReportTest {
     }
   }
 
+  static OwnersReport<TargetNode<?>> generateOwnersReportConfigured(
+      Cell rootCell, TargetNode<?> targetNode, String filePath) {
+    return OwnersReport.generateOwnersReport((n) -> n.getInputs(), rootCell, targetNode, filePath);
+  }
+
   private ProjectFilesystem filesystem;
 
   @Before
@@ -145,7 +150,7 @@ public class OwnersReportTest {
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.of());
 
     Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
-    OwnersReport report = OwnersReport.generateOwnersReport(cell.getRootCell(), targetNode, input);
+    OwnersReport report = generateOwnersReportConfigured(cell.getRootCell(), targetNode, input);
     assertTrue(report.owners.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());
     assertTrue(report.inputsWithNoOwners.isEmpty());
@@ -161,7 +166,7 @@ public class OwnersReportTest {
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.of());
 
     Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
-    OwnersReport report = OwnersReport.generateOwnersReport(cell.getRootCell(), targetNode, input);
+    OwnersReport report = generateOwnersReportConfigured(cell.getRootCell(), targetNode, input);
     assertTrue(report.owners.isEmpty());
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.inputsWithNoOwners.isEmpty());
@@ -182,7 +187,7 @@ public class OwnersReportTest {
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.of());
 
     Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
-    OwnersReport report = OwnersReport.generateOwnersReport(cell.getRootCell(), targetNode, input);
+    OwnersReport report = generateOwnersReportConfigured(cell.getRootCell(), targetNode, input);
     assertTrue(report.owners.isEmpty());
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());
@@ -204,7 +209,7 @@ public class OwnersReportTest {
         createTargetNode(target, ImmutableSet.of(filesystem.getPath("java/somefolder")));
 
     Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
-    OwnersReport report = OwnersReport.generateOwnersReport(cell.getRootCell(), targetNode, input);
+    OwnersReport report = generateOwnersReportConfigured(cell.getRootCell(), targetNode, input);
     assertTrue(report.owners.containsKey(targetNode));
     assertEquals(ImmutableSet.of(inputPath), report.owners.get(targetNode));
     assertTrue(report.nonFileInputs.isEmpty());
@@ -231,9 +236,9 @@ public class OwnersReportTest {
 
     Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
     OwnersReport report1 =
-        OwnersReport.generateOwnersReport(cell.getRootCell(), targetNode, inputs.get(0));
+        generateOwnersReportConfigured(cell.getRootCell(), targetNode, inputs.get(0));
     OwnersReport report2 =
-        OwnersReport.generateOwnersReport(cell.getRootCell(), targetNode, inputs.get(1));
+        generateOwnersReportConfigured(cell.getRootCell(), targetNode, inputs.get(1));
     OwnersReport report = report1.updatedWith(report2);
 
     assertTrue(report.nonFileInputs.isEmpty());
@@ -264,10 +269,9 @@ public class OwnersReportTest {
     TargetNode<?> targetNode2 = createTargetNode(target2, ImmutableSet.of(inputPath));
 
     Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
-    OwnersReport report = OwnersReport.generateOwnersReport(cell.getRootCell(), targetNode1, input);
+    OwnersReport report = generateOwnersReportConfigured(cell.getRootCell(), targetNode1, input);
     report =
-        report.updatedWith(
-            OwnersReport.generateOwnersReport(cell.getRootCell(), targetNode2, input));
+        report.updatedWith(generateOwnersReportConfigured(cell.getRootCell(), targetNode2, input));
 
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());
@@ -300,10 +304,10 @@ public class OwnersReportTest {
             perBuildState,
             TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true));
     OwnersReport report =
-        OwnersReport.builder(
-                targetUniverse,
+        OwnersReport.builderForConfigured(
                 cell.getRootCell(),
                 cell.getRootCell().getRoot().getPath(),
+                targetUniverse,
                 Optional.empty())
             .build(getBuildFileTrees(cell.getRootCell()), ImmutableSet.of(input));
 
@@ -341,8 +345,9 @@ public class OwnersReportTest {
             perBuildState,
             TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true));
 
-    OwnersReport report =
-        OwnersReport.builder(targetUniverse, cell.getRootCell(), workingDir, Optional.empty())
+    OwnersReport<TargetNode<?>> report =
+        OwnersReport.builderForConfigured(
+                cell.getRootCell(), workingDir, targetUniverse, Optional.empty())
             .build(getBuildFileTrees(cell.getRootCell()), inputs);
 
     assertTrue(report.nonFileInputs.isEmpty());

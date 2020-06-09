@@ -90,7 +90,7 @@ public class ConfiguredQueryEnvironment
 
   private final TargetUniverse targetUniverse;
   private final Cell rootCell;
-  private final OwnersReport.Builder ownersReportBuilder;
+  private final OwnersReport.Builder<TargetNode<?>> ownersReportBuilder;
   private final TargetConfigurationFactory targetConfigurationFactory;
   private final TargetPatternEvaluator targetPatternEvaluator;
   private final BuckEventBus eventBus;
@@ -105,7 +105,7 @@ public class ConfiguredQueryEnvironment
   protected ConfiguredQueryEnvironment(
       TargetUniverse targetUniverse,
       Cell rootCell,
-      Builder ownersReportBuilder,
+      Builder<TargetNode<?>> ownersReportBuilder,
       TargetConfigurationFactory targetConfigurationFactory,
       TargetPatternEvaluator targetPatternEvaluator,
       BuckEventBus eventBus,
@@ -132,7 +132,7 @@ public class ConfiguredQueryEnvironment
   public static ConfiguredQueryEnvironment from(
       TargetUniverse targetUniverse,
       Cell rootCell,
-      OwnersReport.Builder ownersReportBuilder,
+      OwnersReport.Builder<TargetNode<?>> ownersReportBuilder,
       TargetConfigurationFactory targetConfigurationFactory,
       TargetPatternEvaluator targetPatternEvaluator,
       BuckEventBus eventBus,
@@ -152,10 +152,10 @@ public class ConfiguredQueryEnvironment
     return from(
         targetUniverse,
         params.getCells().getRootCell(),
-        OwnersReport.builder(
-            targetUniverse,
+        OwnersReport.builderForConfigured(
             params.getCells().getRootCell(),
             params.getClientWorkingDir(),
+            targetUniverse,
             params.getTargetConfiguration()),
         params.getTargetConfigurationFactory(),
         new TargetPatternEvaluator(
@@ -355,7 +355,7 @@ public class ConfiguredQueryEnvironment
 
   @Override
   public ImmutableSet<ConfiguredQueryTarget> getFileOwners(ImmutableList<String> files) {
-    OwnersReport report = ownersReportBuilder.build(buildFileTrees, files);
+    OwnersReport<TargetNode<?>> report = ownersReportBuilder.build(buildFileTrees, files);
     report
         .getInputsWithNoOwners()
         .forEach(path -> eventBus.post(ConsoleEvent.warning("No owner was found for %s", path)));

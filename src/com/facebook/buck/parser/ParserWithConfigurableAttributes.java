@@ -61,11 +61,13 @@ import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -333,6 +335,20 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     return filterIncompatibleTargetNodes(
             getAllTargetNodes(state, cell, buildFile, targetConfiguration).stream())
         .collect(ImmutableList.toImmutableList());
+  }
+
+  @Override
+  public ImmutableList<UnconfiguredTargetNode> getAllUnconfiguredTargetNodes(
+      PerBuildState state, Cell cell, AbsPath buildFile) throws BuildFileParseException {
+    try {
+      // TODO(srice) Yeah it's not great that we're randomly blocking in this code, we should really
+      // be making this async. This just matches what we do for configured nodes though.
+      return state.getAllUnconfiguredTargetNodesJobs(cell, buildFile).get();
+    } catch (ExecutionException e) {
+      throw new UncheckedExecutionException(e);
+    } catch (InterruptedException e) {
+      throw new RuntimeException("Interrupted while getting all nodes for " + buildFile, e);
+    }
   }
 
   private Stream<TargetNode<?>> filterIncompatibleTargetNodes(

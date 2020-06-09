@@ -675,6 +675,12 @@ public class BuildCommandTest {
     }
 
     @Override
+    public ImmutableList<UnconfiguredTargetNode> getAllUnconfiguredTargetNodes(
+        PerBuildState state, Cell cell, AbsPath buildFile) throws BuildFileParseException {
+      return parser.getAllUnconfiguredTargetNodes(state, cell, buildFile);
+    }
+
+    @Override
     public DaemonicParserState getPermState() {
       return parser.getPermState();
     }

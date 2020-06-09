@@ -21,12 +21,14 @@ import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInst
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -61,6 +63,7 @@ import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
@@ -172,6 +175,26 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
     } catch (InterruptedException e) {
       throw new BuckUncheckedExecutionException(e, "Interrupted while waiting for target node");
     }
+  }
+
+  public ImmutableList<UnconfiguredTargetNode> getAllNodesInBuildFile(
+      Cell cell, AbsPath buildFilePath) {
+    return parser.getAllUnconfiguredTargetNodes(perBuildState, cell, buildFilePath);
+  }
+
+  /** The set of {@code ForwardRelativePath}`s that are used as input for {@code node} */
+  public ImmutableSet<ForwardRelativePath> getInputPathsForNode(UnconfiguredTargetNode node) {
+    // TODO(srice): At one point we knew these were `CellRelativePath`s, but we turned them into
+    // `QueryFileTarget`s losing a bunch of information in the process. I don't think there is any
+    // possibility of a QueryFileTarget that isn't a `PathSourcePath` here, nor is it possible for
+    // the inner path to be anything but ForwardRelativePath. If that's the case then we should
+    // store them in their original state to not lose this information.
+    return getTraversalResult(node).getInputs().stream()
+        .map(QueryFileTarget::getPath)
+        .filter(p -> p instanceof PathSourcePath)
+        .map(p -> (PathSourcePath) p)
+        .map(psp -> ForwardRelativePath.ofPath(psp.getRelativePath()))
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   /**

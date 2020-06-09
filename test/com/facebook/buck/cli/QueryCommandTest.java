@@ -139,10 +139,10 @@ public class QueryCommandTest {
         new FakeConfiguredQueryEnvironment(
             targetUniverse,
             cell.getRootCell(),
-            OwnersReport.builder(
-                targetUniverse,
+            OwnersReport.builderForConfigured(
                 params.getCells().getRootCell(),
                 params.getClientWorkingDir(),
+                targetUniverse,
                 Optional.empty()),
             targetConfigurationFactory,
             new TargetPatternEvaluator(

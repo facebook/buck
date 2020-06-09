@@ -156,10 +156,10 @@ public class ConfiguredQueryEnvironmentTest {
             FakeBuckConfig.empty(),
             Optional.empty());
     OwnersReport.Builder ownersReportBuilder =
-        OwnersReport.builder(
-            targetUniverse,
+        OwnersReport.builderForConfigured(
             cells.getRootCell(),
             cells.getRootCell().getRoot().getPath(),
+            targetUniverse,
             Optional.empty());
     buckQueryEnvironment =
         ConfiguredQueryEnvironment.from(

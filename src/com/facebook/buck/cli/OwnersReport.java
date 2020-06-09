@@ -22,6 +22,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -43,18 +44,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /** Used to determine owners of specific files */
-final class OwnersReport {
-  final ImmutableSetMultimap<TargetNode<?>, Path> owners;
+final class OwnersReport<N extends Comparable<N>> {
+  final ImmutableSetMultimap<N, Path> owners;
   final ImmutableSet<Path> inputsWithNoOwners;
   final ImmutableSet<String> nonExistentInputs;
   final ImmutableSet<String> nonFileInputs;
 
   private OwnersReport(
-      ImmutableSetMultimap<TargetNode<?>, Path> owners,
+      ImmutableSetMultimap<N, Path> owners,
       ImmutableSet<Path> inputsWithNoOwners,
       ImmutableSet<String> nonExistentInputs,
       ImmutableSet<String> nonFileInputs) {
@@ -79,8 +82,8 @@ final class OwnersReport {
     return nonFileInputs;
   }
 
-  private static OwnersReport emptyReport() {
-    return new OwnersReport(
+  private static <N extends Comparable<N>> OwnersReport<N> emptyReport() {
+    return new OwnersReport<N>(
         ImmutableSetMultimap.of(), ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of());
   }
 
@@ -92,7 +95,7 @@ final class OwnersReport {
   }
 
   @VisibleForTesting
-  OwnersReport updatedWith(OwnersReport other) {
+  OwnersReport<N> updatedWith(OwnersReport<N> other) {
     // If either this or other are empty, the intersection below for missing files will get
     // screwed up. This mostly is just so that when we do a fold elsewhere in the class against
     // a default empty object, we don't obliterate inputsWithNoOwners
@@ -102,10 +105,10 @@ final class OwnersReport {
       return this;
     }
 
-    SetMultimap<TargetNode<?>, Path> updatedOwners = TreeMultimap.create(owners);
+    SetMultimap<N, Path> updatedOwners = TreeMultimap.create(owners);
     updatedOwners.putAll(other.owners);
 
-    return new OwnersReport(
+    return new OwnersReport<>(
         ImmutableSetMultimap.copyOf(updatedOwners),
         Sets.intersection(inputsWithNoOwners, other.inputsWithNoOwners).immutableCopy(),
         Sets.union(nonExistentInputs, other.nonExistentInputs).immutableCopy(),
@@ -113,24 +116,27 @@ final class OwnersReport {
   }
 
   @VisibleForTesting
-  static OwnersReport generateOwnersReport(
-      Cell rootCell, TargetNode<?> targetNode, String filePath) {
+  static <N extends Comparable<N>> OwnersReport<N> generateOwnersReport(
+      Function<N, ImmutableSet<ForwardRelativePath>> inputsFunction,
+      Cell rootCell,
+      N targetNode,
+      String filePath) {
     AbsPath file = rootCell.getFilesystem().getPathForRelativePath(filePath);
     if (!Files.exists(file.getPath())) {
-      return new OwnersReport(
+      return new OwnersReport<N>(
           ImmutableSetMultimap.of(),
           ImmutableSet.of(),
           ImmutableSet.of(filePath),
           ImmutableSet.of());
     } else if (!Files.isRegularFile(file.getPath())) {
-      return new OwnersReport(
+      return new OwnersReport<N>(
           ImmutableSetMultimap.of(),
           ImmutableSet.of(),
           ImmutableSet.of(),
           ImmutableSet.of(filePath));
     } else {
       Path commandInput = rootCell.getFilesystem().getPath(filePath);
-      ImmutableSet<ForwardRelativePath> ruleInputs = targetNode.getInputs();
+      ImmutableSet<ForwardRelativePath> ruleInputs = inputsFunction.apply(targetNode);
       ImmutableSet<Path> ruleInputPaths =
           ruleInputs.stream()
               .map(p -> p.toPath(commandInput.getFileSystem()))
@@ -138,13 +144,13 @@ final class OwnersReport {
       Predicate<Path> startsWith =
           input -> !commandInput.equals(input) && commandInput.startsWith(input);
       if (ruleInputPaths.contains(commandInput) || ruleInputPaths.stream().anyMatch(startsWith)) {
-        return new OwnersReport(
+        return new OwnersReport<>(
             ImmutableSetMultimap.of(targetNode, commandInput),
             ImmutableSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of());
       } else {
-        return new OwnersReport(
+        return new OwnersReport<N>(
             ImmutableSetMultimap.of(),
             ImmutableSet.of(commandInput),
             ImmutableSet.of(),
@@ -153,48 +159,60 @@ final class OwnersReport {
     }
   }
 
-  static Builder builder(
-      TargetUniverse targetUniverse,
-      Cell rootCell,
-      Path clientWorkingDir,
-      Optional<TargetConfiguration> targetConfiguration) {
-    return new Builder(targetUniverse, rootCell, clientWorkingDir, targetConfiguration);
+  static Builder<UnconfiguredTargetNode> builderForUnconfigured(
+      Cell rootCell, Path clientWorkingDir, UnconfiguredTargetGraph targetGraph) {
+    return new Builder<>(
+        rootCell,
+        clientWorkingDir,
+        targetGraph::getAllNodesInBuildFile,
+        targetGraph::getInputPathsForNode);
   }
 
-  static final class Builder {
-    private final TargetUniverse targetUniverse;
+  static Builder<TargetNode<?>> builderForConfigured(
+      Cell rootCell,
+      Path clientWorkingDir,
+      TargetUniverse targetUniverse,
+      Optional<TargetConfiguration> targetConfiguration) {
+    return new Builder<>(
+        rootCell,
+        clientWorkingDir,
+        (cell, path) ->
+            targetUniverse.getAllTargetNodesWithTargetCompatibilityFiltering(
+                cell, path, targetConfiguration),
+        TargetNode::getInputs);
+  }
+
+  /** Class that can create {@code OwnerReport}s for a set of modified files */
+  static final class Builder<N extends Comparable<N>> {
     private final Cell rootCell;
     private final Path clientWorkingDir;
-    private final Optional<TargetConfiguration> targetConfiguration;
+    private final BiFunction<Cell, AbsPath, ImmutableList<N>> buildfileNodesFunction;
+    private final Function<N, ImmutableSet<ForwardRelativePath>> inputsFunction;
 
     private Builder(
-        TargetUniverse targetUniverse,
         Cell rootCell,
         Path clientWorkingDir,
-        Optional<TargetConfiguration> targetConfiguration) {
-      this.targetUniverse = targetUniverse;
+        BiFunction<Cell, AbsPath, ImmutableList<N>> buildfileNodesFunction,
+        Function<N, ImmutableSet<ForwardRelativePath>> inputsFunction) {
       this.rootCell = rootCell;
       this.clientWorkingDir = clientWorkingDir;
-      this.targetConfiguration = targetConfiguration;
+      this.buildfileNodesFunction = buildfileNodesFunction;
+      this.inputsFunction = inputsFunction;
     }
 
-    private OwnersReport getReportForBasePath(
-        Map<AbsPath, ImmutableList<TargetNode<?>>> map,
-        Cell cell,
-        RelPath basePath,
-        RelPath cellRelativePath) {
+    private OwnersReport<N> getReportForBasePath(
+        Map<AbsPath, ImmutableList<N>> map, Cell cell, RelPath basePath, RelPath cellRelativePath) {
       AbsPath buckFile =
           cell.getFilesystem()
               .resolve(basePath)
               .resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
-      ImmutableList<TargetNode<?>> targetNodes =
-          map.computeIfAbsent(
-              buckFile,
-              basePath1 ->
-                  targetUniverse.getAllTargetNodesWithTargetCompatibilityFiltering(
-                      cell, basePath1, targetConfiguration));
+      ImmutableList<N> targetNodes =
+          map.computeIfAbsent(buckFile, basePath1 -> buildfileNodesFunction.apply(cell, basePath1));
       return targetNodes.stream()
-          .map(targetNode -> generateOwnersReport(cell, targetNode, cellRelativePath.toString()))
+          .map(
+              targetNode ->
+                  generateOwnersReport(
+                      inputsFunction, cell, targetNode, cellRelativePath.toString()))
           .reduce(OwnersReport.emptyReport(), OwnersReport::updatedWith);
     }
 
@@ -219,7 +237,7 @@ final class OwnersReport {
       return resultBuilder.build();
     }
 
-    OwnersReport build(
+    OwnersReport<N> build(
         ImmutableMap<Cell, BuildFileTree> buildFileTrees, Iterable<String> arguments) {
 
       // Order cells by cell path length so that nested cells will resolve to the most specific
@@ -264,7 +282,7 @@ final class OwnersReport {
               .toImmutableSet();
 
       ImmutableSet.Builder<Path> inputWithNoOwners = ImmutableSet.builder();
-      OwnersReport report = OwnersReport.emptyReport();
+      OwnersReport<N> report = OwnersReport.emptyReport();
       // Process every cell's files independently.
       for (Map.Entry<Optional<Cell>, List<Path>> entry : argumentsByCell.entrySet()) {
         if (!entry.getKey().isPresent()) {
@@ -280,7 +298,7 @@ final class OwnersReport {
 
         // Path from buck file to target nodes. We keep our own cache here since the manner that we
         // are calling the parser does not make use of its internal caches.
-        Map<AbsPath, ImmutableList<TargetNode<?>>> map = new HashMap<>();
+        Map<AbsPath, ImmutableList<N>> map = new HashMap<>();
         for (Path absolutePath : entry.getValue()) {
           RelPath cellRelativePath = cell.getFilesystem().relativize(absolutePath);
           ImmutableSet<RelPath> basePaths = getAllBasePathsForPath(buildFileTree, cellRelativePath);
@@ -296,7 +314,7 @@ final class OwnersReport {
       }
 
       return report.updatedWith(
-          new OwnersReport(
+          new OwnersReport<N>(
               ImmutableSetMultimap.of(),
               /* inputWithNoOwners */ inputWithNoOwners.build(),
               /* nonExistentInputs */ missingFiles,

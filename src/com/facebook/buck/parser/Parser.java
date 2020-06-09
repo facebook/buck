@@ -69,6 +69,9 @@ public interface Parser {
       Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException;
 
+  ImmutableList<UnconfiguredTargetNode> getAllUnconfiguredTargetNodes(
+      PerBuildState state, Cell cell, AbsPath buildFile) throws BuildFileParseException;
+
   TargetNode<?> getTargetNodeAssertCompatible(
       PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)
       throws BuildFileParseException;

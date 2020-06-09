@@ -27,7 +27,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -89,7 +88,6 @@ public class UnconfiguredQueryCommandIntegrationTest {
    * =============================================================================================
    */
   @Test
-  @Ignore // TODO(srice): owner function NYI
   public void doesntConfigureDependenciesOfTargetForPlatform() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
@@ -98,7 +96,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
     // Since `foo-bin` is set up for java8 running this on a configured graph would give no results,
     // since DevtoolsEleven is only used on java11 platforms.
     ProcessResult result =
-        workspace.runBuckCommand("uquery", "deps(//bin:foo-bin) ^ owner(lib/DevtoolsEleven)");
+        workspace.runBuckCommand("uquery", "deps(//bin:foo-bin) ^ owner(lib/DevtoolsEleven.java)");
     assertOutputMatches("//lib:devtools", result);
   }
 
@@ -218,7 +216,6 @@ public class UnconfiguredQueryCommandIntegrationTest {
   }
 
   @Test
-  @Ignore // TODO(srice): owner function NYI
   public void ownerFunctionPrintsTargetsWithGivenFileInSrcs() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);

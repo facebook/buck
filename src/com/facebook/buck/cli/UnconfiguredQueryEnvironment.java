@@ -28,6 +28,8 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.Parser;
@@ -76,8 +78,10 @@ public class UnconfiguredQueryEnvironment
     implements EvaluatingQueryEnvironment<UnconfiguredQueryTarget> {
 
   private final Cell rootCell;
+  private final BuckEventBus eventBus;
   private final UnconfiguredQueryTargetEvaluator targetEvaluator;
   private final UnconfiguredTargetGraph targetGraph;
+  private final OwnersReport.Builder<UnconfiguredTargetNode> ownersReportBuilder;
 
   private final ImmutableMap<Cell, BuildFileTree> buildFileTrees;
 
@@ -87,11 +91,15 @@ public class UnconfiguredQueryEnvironment
 
   public UnconfiguredQueryEnvironment(
       Cell rootCell,
+      BuckEventBus eventBus,
       UnconfiguredQueryTargetEvaluator targetEvaluator,
-      UnconfiguredTargetGraph targetGraph) {
+      UnconfiguredTargetGraph targetGraph,
+      OwnersReport.Builder<UnconfiguredTargetNode> ownersReportBuilder) {
     this.rootCell = rootCell;
+    this.eventBus = eventBus;
     this.targetEvaluator = targetEvaluator;
     this.targetGraph = targetGraph;
+    this.ownersReportBuilder = ownersReportBuilder;
 
     this.buildFileTrees =
         rootCell.getAllCells().stream()
@@ -123,8 +131,12 @@ public class UnconfiguredQueryEnvironment
             rootCell,
             params.getKnownRuleTypesProvider(),
             params.getTypeCoercerFactory());
+    OwnersReport.Builder<UnconfiguredTargetNode> ownersReportBuilder =
+        OwnersReport.builderForUnconfigured(
+            params.getCells().getRootCell(), params.getClientWorkingDir(), targetGraph);
 
-    return new UnconfiguredQueryEnvironment(rootCell, targetEvaluator, targetGraph);
+    return new UnconfiguredQueryEnvironment(
+        rootCell, params.getBuckEventBus(), targetEvaluator, targetGraph, ownersReportBuilder);
   }
 
   @Override
@@ -255,7 +267,20 @@ public class UnconfiguredQueryEnvironment
 
   @Override
   public ImmutableSet<UnconfiguredQueryTarget> getFileOwners(ImmutableList<String> files) {
-    throw new RuntimeException("Not yet implemented");
+    OwnersReport<UnconfiguredTargetNode> report = ownersReportBuilder.build(buildFileTrees, files);
+    report
+        .getInputsWithNoOwners()
+        .forEach(path -> eventBus.post(ConsoleEvent.warning("No owner was found for %s", path)));
+    report
+        .getNonExistentInputs()
+        .forEach(path -> eventBus.post(ConsoleEvent.warning("File %s does not exist", path)));
+    report
+        .getNonFileInputs()
+        .forEach(path -> eventBus.post(ConsoleEvent.warning("%s is not a regular file", path)));
+    return report.owners.keySet().stream()
+        .map(UnconfiguredTargetNode::getBuildTarget)
+        .map(this::getOrCreateQueryBuildTarget)
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override

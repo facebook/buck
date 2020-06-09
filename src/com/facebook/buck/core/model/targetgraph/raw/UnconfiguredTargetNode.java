@@ -36,7 +36,7 @@ import java.util.Optional;
  * <p>The main purpose of having such nodes is to perform additional processing before storing them
  * in a structured constructor arguments.
  */
-public interface UnconfiguredTargetNode extends ComputeResult {
+public interface UnconfiguredTargetNode extends Comparable<UnconfiguredTargetNode>, ComputeResult {
 
   /** Build target of this node. */
   UnflavoredBuildTarget getBuildTarget();
@@ -69,4 +69,9 @@ public interface UnconfiguredTargetNode extends ComputeResult {
    * while {@code compatible_with} can be defined only for build rules.
    */
   ImmutableList<UnflavoredBuildTarget> getCompatibleWith();
+
+  @Override
+  default int compareTo(UnconfiguredTargetNode other) {
+    return getBuildTarget().compareTo(other.getBuildTarget());
+  }
 }
