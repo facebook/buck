@@ -1,0 +1,24 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+)
+
+java_immutables_library(
+    name = "java",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/...",
+        "//test/com/facebook/buck/...",
+    ],
+    deps = [
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/jvm/java:config",
+        "//src/com/facebook/buck/jvm/java:support",
+        "//src/com/facebook/buck/jvm/java/classes:classes",
+        "//src/com/facebook/buck/rules/modern:modern",
+        "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
+        "//src/com/facebook/buck/step/isolatedsteps/common:common",
+    ],
+)

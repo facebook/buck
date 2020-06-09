@@ -40,6 +40,8 @@ import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.facebook.buck.step.isolatedsteps.java.MakeMissingOutputsStep;
+import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinderFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;

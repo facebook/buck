@@ -25,6 +25,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
+import com.facebook.buck.step.isolatedsteps.java.AccumulateClassNamesStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;

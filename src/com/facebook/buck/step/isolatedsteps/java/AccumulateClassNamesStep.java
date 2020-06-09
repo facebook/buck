@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java;
+package com.facebook.buck.step.isolatedsteps.java;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
@@ -56,7 +56,7 @@ public class AccumulateClassNamesStep extends IsolatedStep {
    * In the generated {@code classes.txt} file, each line will contain the path to a {@code .class}
    * file (without its suffix) and the SHA-1 hash of its contents, separated by this separator.
    */
-  static final String CLASS_NAME_HASH_CODE_SEPARATOR = " ";
+  public static final String CLASS_NAME_HASH_CODE_SEPARATOR = " ";
 
   // RelPath based patterns
   private final ImmutableSet<PathMatcher> ignoredPaths;

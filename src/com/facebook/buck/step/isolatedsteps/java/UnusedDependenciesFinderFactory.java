@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java;
+package com.facebook.buck.step.isolatedsteps.java;
 
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
@@ -38,6 +38,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.CompilerOutputPaths;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.modern.CellNameResolverSerialization;
 import com.facebook.buck.step.isolatedsteps.common.IsolatedCellPathExtractor;
 import com.google.common.collect.ImmutableList;
@@ -49,7 +51,10 @@ import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
 
-/** The factory is used to avoid creation of {@link UnusedDependenciesFinder} */
+/**
+ * The factory is used to avoid creation of {@link
+ * com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder}
+ */
 public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
   @AddToRuleKey private final Optional<String> buildozerPath;
   @AddToRuleKey private final boolean onlyPrintCommands;
@@ -218,7 +223,8 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
     }
   }
 
-  UnusedDependenciesFinder create(
+  /** Creates a new {@link UnusedDependenciesFinder} instance. */
+  public UnusedDependenciesFinder create(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       SourcePathResolverAdapter resolver,

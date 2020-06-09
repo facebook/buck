@@ -462,6 +462,7 @@ java_test(
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
+        "//src/com/facebook/buck/step/isolatedsteps/java:java",
         "//src/com/facebook/buck/swift:swift",
         "//src/com/facebook/buck/test:report-format",
         "//src/com/facebook/buck/test:test",

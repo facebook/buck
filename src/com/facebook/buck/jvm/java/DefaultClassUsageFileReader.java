@@ -40,7 +40,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /** Provides utility methods for reading dependency file entries. */
-class DefaultClassUsageFileReader {
+public class DefaultClassUsageFileReader {
   /** Utility code, not instantiable */
   private DefaultClassUsageFileReader() {}
 

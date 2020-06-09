@@ -25,6 +25,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.rules.modern.EmptyMemoizerDeserialization;
+import com.facebook.buck.step.isolatedsteps.java.AccumulateClassNamesStep;
 import com.facebook.buck.util.Memoizer;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
