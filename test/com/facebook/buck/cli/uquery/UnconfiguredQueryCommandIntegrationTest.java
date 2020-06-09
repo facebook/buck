@@ -33,6 +33,11 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
+  /**
+   * =============================================================================================
+   * ====================================== Output Formats =======================================
+   * =============================================================================================
+   */
   @Test
   public void basicTargetPrinting() throws IOException {
     ProjectWorkspace workspace =
@@ -76,6 +81,11 @@ public class UnconfiguredQueryCommandIntegrationTest {
         "stdout-basic-multi-query-json-printing.json", result, workspace);
   }
 
+  /**
+   * =============================================================================================
+   * =============================== General uquery functionality ================================
+   * =============================================================================================
+   */
   @Test
   @Ignore // TODO(srice): owner function NYI
   public void doesntConfigureDependenciesOfTargetForPlatform() throws IOException {
@@ -109,6 +119,11 @@ public class UnconfiguredQueryCommandIntegrationTest {
     assertOutputMatches(expected, resultForSpecificPlatform);
   }
 
+  /**
+   * =============================================================================================
+   * ================================== Function specific tests ==================================
+   * =============================================================================================
+   */
   @Test
   public void depsFunctionPrintsDependenciesOfTargetInAnyConfiguration() throws IOException {
     ProjectWorkspace workspace =
