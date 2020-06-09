@@ -32,14 +32,17 @@ class QueryMacroTypeCoercer<U extends UnconfiguredQueryMacro, M extends QueryMac
     implements MacroTypeCoercer<U, M> {
 
   private final TypeCoercer<UnconfiguredQuery, Query> queryCoercer;
+  private final Class<U> uClass;
   private final Class<M> mClass;
   private final Function<UnconfiguredQuery, U> factory;
 
   public QueryMacroTypeCoercer(
       TypeCoercer<UnconfiguredQuery, Query> queryCoercer,
+      Class<U> uClass,
       Class<M> mClass,
       Function<UnconfiguredQuery, U> factory) {
     this.queryCoercer = queryCoercer;
+    this.uClass = uClass;
     this.mClass = mClass;
     this.factory = factory;
   }
@@ -50,8 +53,19 @@ class QueryMacroTypeCoercer<U extends UnconfiguredQueryMacro, M extends QueryMac
   }
 
   @Override
+  public void traverseUnconfigured(CellNameResolver cellRoots, U macro, Traversal traversal) {
+    // TODO(srice): Uncomment this once we implement `traverseUnconfigured` on `TypeCoercer`
+    //    queryCoercer.traverseUnconfigured(cellRoots, macro.getQuery(), traversal);
+  }
+
+  @Override
   public void traverse(CellNameResolver cellRoots, M macro, Traversal traversal) {
     queryCoercer.traverse(cellRoots, macro.getQuery(), traversal);
+  }
+
+  @Override
+  public Class<U> getUnconfiguredOutputClass() {
+    return uClass;
   }
 
   @Override

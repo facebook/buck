@@ -38,6 +38,11 @@ public abstract class UnconfiguredQueryTargetsAndOutputsMacro extends Unconfigur
   public abstract UnconfiguredQuery getQuery();
 
   @Override
+  public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+    return UnconfiguredQueryTargetsAndOutputsMacro.class;
+  }
+
+  @Override
   public QueryTargetsAndOutputsMacro configure(
       TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
     return QueryTargetsAndOutputsMacro.of(

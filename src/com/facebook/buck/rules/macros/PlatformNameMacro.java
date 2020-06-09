@@ -24,6 +24,11 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 public interface PlatformNameMacro extends Macro, UnconfiguredMacro {
 
   @Override
+  default Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+    return PlatformNameMacro.class;
+  }
+
+  @Override
   default Class<? extends Macro> getMacroClass() {
     return PlatformNameMacro.class;
   }

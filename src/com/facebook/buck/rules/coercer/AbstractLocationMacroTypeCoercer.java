@@ -44,6 +44,14 @@ abstract class AbstractLocationMacroTypeCoercer<
   }
 
   @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, U macro, TypeCoercer.Traversal traversal) {
+    // TODO(srice): Uncomment this once we implement `traverseUnconfigured` on `TypeCoercer`
+    //    buildTargetWithOutputsTypeCoercer.traverseUnconfigured(
+    //        cellRoots, macro.getTargetWithOutputs(), traversal);
+  }
+
+  @Override
   public void traverse(CellNameResolver cellRoots, T macro, TypeCoercer.Traversal traversal) {
     buildTargetWithOutputsTypeCoercer.traverse(cellRoots, macro.getTargetWithOutputs(), traversal);
   }

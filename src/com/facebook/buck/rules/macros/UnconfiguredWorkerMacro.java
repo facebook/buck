@@ -25,6 +25,11 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 public abstract class UnconfiguredWorkerMacro extends UnconfiguredBuildTargetMacro {
 
   @Override
+  public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+    return UnconfiguredWorkerMacro.class;
+  }
+
+  @Override
   public WorkerMacro configure(
       TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
     return WorkerMacro.of(getTargetWithOutputs().configure(targetConfiguration));

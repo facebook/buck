@@ -38,8 +38,19 @@ public class EnvMacroTypeCoercer implements MacroTypeCoercer<EnvMacro, EnvMacro>
   }
 
   @Override
+  public Class<EnvMacro> getUnconfiguredOutputClass() {
+    return EnvMacro.class;
+  }
+
+  @Override
   public Class<EnvMacro> getOutputClass() {
     return EnvMacro.class;
+  }
+
+  @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, EnvMacro macro, Traversal traversal) {
+    traversal.traverse(macro.getVar());
   }
 
   @Override

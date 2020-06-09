@@ -42,8 +42,19 @@ public class AbsoluteOutputMacroTypeCoercer
   }
 
   @Override
+  public Class<AbsoluteOutputMacro> getUnconfiguredOutputClass() {
+    return AbsoluteOutputMacro.class;
+  }
+
+  @Override
   public Class<AbsoluteOutputMacro> getOutputClass() {
     return AbsoluteOutputMacro.class;
+  }
+
+  @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, AbsoluteOutputMacro macro, Traversal traversal) {
+    traversal.traverse(macro);
   }
 
   @Override

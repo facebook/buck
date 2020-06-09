@@ -28,10 +28,12 @@ import com.google.common.collect.ImmutableList;
 public class ZeroArgMacroTypeCoercer<U extends UnconfiguredMacro, M extends Macro>
     implements MacroTypeCoercer<U, M> {
 
+  private final Class<U> uClass;
   private final Class<M> mClass;
   private final U unconfigured;
 
-  public ZeroArgMacroTypeCoercer(Class<M> mClass, U unconfigured) {
+  public ZeroArgMacroTypeCoercer(Class<U> uClass, Class<M> mClass, U unconfigured) {
+    this.uClass = uClass;
     this.mClass = mClass;
     this.unconfigured = unconfigured;
   }
@@ -42,7 +44,15 @@ public class ZeroArgMacroTypeCoercer<U extends UnconfiguredMacro, M extends Macr
   }
 
   @Override
+  public void traverseUnconfigured(CellNameResolver cellRoots, U macro, Traversal traversal) {}
+
+  @Override
   public void traverse(CellNameResolver cellRoots, M macro, Traversal traversal) {}
+
+  @Override
+  public Class<U> getUnconfiguredOutputClass() {
+    return uClass;
+  }
 
   @Override
   public Class<M> getOutputClass() {

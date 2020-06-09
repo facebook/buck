@@ -25,6 +25,11 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 public abstract class UnconfiguredClasspathMacro extends UnconfiguredBuildTargetMacro {
 
   @Override
+  public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+    return UnconfiguredClasspathMacro.class;
+  }
+
+  @Override
   public ClasspathMacro configure(
       TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
     return ClasspathMacro.of(getTargetWithOutputs().configure(targetConfiguration));

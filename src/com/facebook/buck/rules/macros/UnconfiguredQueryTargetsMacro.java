@@ -28,6 +28,11 @@ import com.facebook.buck.rules.query.UnconfiguredQuery;
 public abstract class UnconfiguredQueryTargetsMacro extends UnconfiguredQueryMacro {
 
   @Override
+  public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+    return UnconfiguredQueryTargetsMacro.class;
+  }
+
+  @Override
   public QueryTargetsMacro configure(
       TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
     return QueryTargetsMacro.of(getQuery().configure(targetConfiguration));

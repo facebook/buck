@@ -38,7 +38,7 @@ public class ZeroArgMacroTypeCoercerTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ZeroArgMacro macro = new ZeroArgMacro();
     ZeroArgMacroTypeCoercer<ZeroArgMacro, ZeroArgMacro> coercer =
-        new ZeroArgMacroTypeCoercer<>(ZeroArgMacro.class, macro);
+        new ZeroArgMacroTypeCoercer<>(ZeroArgMacro.class, ZeroArgMacro.class, macro);
     ZeroArgMacro result =
         coercer.coerceBoth(
             createCellRoots(filesystem).getCellNameResolver(),
@@ -55,7 +55,7 @@ public class ZeroArgMacroTypeCoercerTest {
     ForwardRelativePath basePath = ForwardRelativePath.of("java/com/facebook/buck/example");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ZeroArgMacroTypeCoercer<ZeroArgMacro, ZeroArgMacro> coercer =
-        new ZeroArgMacroTypeCoercer<>(ZeroArgMacro.class, new ZeroArgMacro());
+        new ZeroArgMacroTypeCoercer<>(ZeroArgMacro.class, ZeroArgMacro.class, new ZeroArgMacro());
     coercer.coerceBoth(
         createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
@@ -66,6 +66,11 @@ public class ZeroArgMacroTypeCoercerTest {
   }
 
   private static class ZeroArgMacro implements Macro, UnconfiguredMacro {
+
+    @Override
+    public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+      return ZeroArgMacro.class;
+    }
 
     @Override
     public Class<? extends Macro> getMacroClass() {

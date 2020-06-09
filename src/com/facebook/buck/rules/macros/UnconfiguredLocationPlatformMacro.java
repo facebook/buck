@@ -27,6 +27,11 @@ import com.google.common.collect.ImmutableSet;
 public abstract class UnconfiguredLocationPlatformMacro extends UnconfiguredBaseLocationMacro {
 
   @Override
+  public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+    return UnconfiguredLocationPlatformMacro.class;
+  }
+
+  @Override
   public abstract UnconfiguredBuildTargetWithOutputs getTargetWithOutputs();
 
   public static UnconfiguredLocationPlatformMacro of(

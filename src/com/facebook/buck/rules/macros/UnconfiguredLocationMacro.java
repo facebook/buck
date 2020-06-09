@@ -24,6 +24,11 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 @BuckStyleValue
 public abstract class UnconfiguredLocationMacro extends UnconfiguredBaseLocationMacro {
 
+  @Override
+  public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+    return UnconfiguredLocationMacro.class;
+  }
+
   public static UnconfiguredLocationMacro of(UnconfiguredBuildTargetWithOutputs target) {
     return ImmutableUnconfiguredLocationMacro.ofImpl(target);
   }

@@ -24,6 +24,11 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 public abstract class LdMacro implements Macro, UnconfiguredMacro {
 
   @Override
+  public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+    return LdMacro.class;
+  }
+
+  @Override
   public Class<? extends Macro> getMacroClass() {
     return LdMacro.class;
   }

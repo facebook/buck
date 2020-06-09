@@ -24,6 +24,11 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 public interface CcFlagsMacro extends Macro, UnconfiguredMacro {
 
   @Override
+  default Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+    return CcFlagsMacro.class;
+  }
+
+  @Override
   default Class<? extends Macro> getMacroClass() {
     return CcFlagsMacro.class;
   }

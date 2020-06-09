@@ -61,6 +61,11 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
   }
 
   @Override
+  public Class<UnconfiguredCxxGenruleFilterAndTargetsMacro> getUnconfiguredOutputClass() {
+    return UnconfiguredCxxGenruleFilterAndTargetsMacro.class;
+  }
+
+  @Override
   public Class<M> getOutputClass() {
     return clazz;
   }
@@ -68,6 +73,21 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
   @Override
   public boolean hasElementClass(Class<?>[] types) {
     return buildTargetsTypeCoercer.hasElementClass(types);
+  }
+
+  @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots,
+      UnconfiguredCxxGenruleFilterAndTargetsMacro macro,
+      TypeCoercer.Traversal traversal) {
+    // TODO(srice): Uncomment this once we implement `traverseUnconfigured` on `TypeCoercer`
+    //    patternTypeCoercer.ifPresent(
+    //        coercer ->
+    //            macro
+    //                .getFilter()
+    //                .ifPresent(filter -> coercer.traverseUnconfigured(cellRoots, filter,
+    // traversal)));
+    //    buildTargetsTypeCoercer.traverseUnconfigured(cellRoots, macro.getTargets(), traversal);
   }
 
   @Override

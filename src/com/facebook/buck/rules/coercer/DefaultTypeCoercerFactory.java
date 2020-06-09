@@ -165,6 +165,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 ClasspathMacro.class,
                 new BuildTargetMacroTypeCoercer<>(
                     buildTargetWithOutputsTypeCoercer,
+                    UnconfiguredClasspathMacro.class,
                     ClasspathMacro.class,
                     UnconfiguredClasspathMacro::of))
             .put(
@@ -172,6 +173,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 ClasspathAbiMacro.class,
                 new BuildTargetMacroTypeCoercer<>(
                     buildTargetWithOutputsTypeCoercer,
+                    UnconfiguredClasspathAbiMacro.class,
                     ClasspathAbiMacro.class,
                     UnconfiguredClasspathAbiMacro::of))
             .put(
@@ -179,6 +181,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 ExecutableMacro.class,
                 new BuildTargetMacroTypeCoercer<>(
                     buildTargetWithOutputsTypeCoercer,
+                    UnconfiguredExecutableMacro.class,
                     ExecutableMacro.class,
                     // TODO(nga): switch to host
                     UnconfiguredExecutableMacro::of))
@@ -187,6 +190,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 ExecutableTargetMacro.class,
                 new BuildTargetMacroTypeCoercer<>(
                     buildTargetWithOutputsTypeCoercer,
+                    UnconfiguredExecutableTargetMacro.class,
                     ExecutableTargetMacro.class,
                     UnconfiguredExecutableTargetMacro::of))
             .put("env", EnvMacro.class, new EnvMacroTypeCoercer())
@@ -203,6 +207,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 MavenCoordinatesMacro.class,
                 new BuildTargetMacroTypeCoercer<>(
                     buildTargetWithOutputsTypeCoercer,
+                    UnconfiguredMavenCoordinatesMacro.class,
                     MavenCoordinatesMacro.class,
                     UnconfiguredMavenCoordinatesMacro::of))
             .put("output", OutputMacro.class, new OutputMacroTypeCoercer())
@@ -211,17 +216,26 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 "query_targets",
                 QueryTargetsMacro.class,
                 new QueryMacroTypeCoercer<>(
-                    queryTypeCoercer, QueryTargetsMacro.class, UnconfiguredQueryTargetsMacro::of))
+                    queryTypeCoercer,
+                    UnconfiguredQueryTargetsMacro.class,
+                    QueryTargetsMacro.class,
+                    UnconfiguredQueryTargetsMacro::of))
             .put(
                 "query_outputs",
                 QueryOutputsMacro.class,
                 new QueryMacroTypeCoercer<>(
-                    queryTypeCoercer, QueryOutputsMacro.class, UnconfiguredQueryOutputsMacro::of))
+                    queryTypeCoercer,
+                    UnconfiguredQueryOutputsMacro.class,
+                    QueryOutputsMacro.class,
+                    UnconfiguredQueryOutputsMacro::of))
             .put(
                 "query_paths",
                 QueryPathsMacro.class,
                 new QueryMacroTypeCoercer<>(
-                    queryTypeCoercer, QueryPathsMacro.class, UnconfiguredQueryPathsMacro::of))
+                    queryTypeCoercer,
+                    UnconfiguredQueryPathsMacro.class,
+                    QueryPathsMacro.class,
+                    UnconfiguredQueryPathsMacro::of))
             .put(
                 "query_targets_and_outputs",
                 QueryTargetsAndOutputsMacro.class,
@@ -231,13 +245,18 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 WorkerMacro.class,
                 new BuildTargetMacroTypeCoercer<>(
                     buildTargetWithOutputsTypeCoercer,
+                    UnconfiguredWorkerMacro.class,
                     WorkerMacro.class,
                     UnconfiguredWorkerMacro::of))
-            .put("cc", CcMacro.class, new ZeroArgMacroTypeCoercer<>(CcMacro.class, CcMacro.of()))
+            .put(
+                "cc",
+                CcMacro.class,
+                new ZeroArgMacroTypeCoercer<>(CcMacro.class, CcMacro.class, CcMacro.of()))
             .put(
                 "cflags",
                 CcFlagsMacro.class,
-                new ZeroArgMacroTypeCoercer<>(CcFlagsMacro.class, CcFlagsMacro.of()))
+                new ZeroArgMacroTypeCoercer<>(
+                    CcFlagsMacro.class, CcFlagsMacro.class, CcFlagsMacro.of()))
             .put(
                 "cppflags",
                 CppFlagsMacro.class,
@@ -249,11 +268,14 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                         UnconfiguredCxxGenruleFilterAndTargetsMacro.of(
                             UnconfiguredCxxGenruleFilterAndTargetsMacro.Which.CPPFLAGS, p, t)))
             .put(
-                "cxx", CxxMacro.class, new ZeroArgMacroTypeCoercer<>(CxxMacro.class, CxxMacro.of()))
+                "cxx",
+                CxxMacro.class,
+                new ZeroArgMacroTypeCoercer<>(CxxMacro.class, CxxMacro.class, CxxMacro.of()))
             .put(
                 "cxxflags",
                 CxxFlagsMacro.class,
-                new ZeroArgMacroTypeCoercer<>(CxxFlagsMacro.class, CxxFlagsMacro.of()))
+                new ZeroArgMacroTypeCoercer<>(
+                    CxxFlagsMacro.class, CxxFlagsMacro.class, CxxFlagsMacro.of()))
             .put(
                 "cxxppflags",
                 CxxppFlagsMacro.class,
@@ -267,11 +289,12 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
             .put(
                 "cuda",
                 CudaMacro.class,
-                new ZeroArgMacroTypeCoercer<>(CudaMacro.class, CudaMacro.of()))
+                new ZeroArgMacroTypeCoercer<>(CudaMacro.class, CudaMacro.class, CudaMacro.of()))
             .put(
                 "cudaflags",
                 CudaFlagsMacro.class,
-                new ZeroArgMacroTypeCoercer<>(CudaFlagsMacro.class, CudaFlagsMacro.of()))
+                new ZeroArgMacroTypeCoercer<>(
+                    CudaFlagsMacro.class, CudaFlagsMacro.class, CudaFlagsMacro.of()))
             .put(
                 "cudappflags",
                 CudappFlagsMacro.class,
@@ -282,7 +305,10 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                     (p, t) ->
                         UnconfiguredCxxGenruleFilterAndTargetsMacro.of(
                             UnconfiguredCxxGenruleFilterAndTargetsMacro.Which.CXXPPFLAGS, p, t)))
-            .put("ld", LdMacro.class, new ZeroArgMacroTypeCoercer<>(LdMacro.class, LdMacro.of()))
+            .put(
+                "ld",
+                LdMacro.class,
+                new ZeroArgMacroTypeCoercer<>(LdMacro.class, LdMacro.class, LdMacro.of()))
             .put(
                 "ldflags-shared",
                 LdflagsSharedMacro.class,
@@ -359,7 +385,8 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
             .put(
                 "platform-name",
                 PlatformNameMacro.class,
-                new ZeroArgMacroTypeCoercer<>(PlatformNameMacro.class, PlatformNameMacro.of()))
+                new ZeroArgMacroTypeCoercer<>(
+                    PlatformNameMacro.class, PlatformNameMacro.class, PlatformNameMacro.of()))
             .build();
     nonParameterizedTypeCoercers =
         (TypeCoercer<Object, ?>[])

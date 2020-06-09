@@ -36,6 +36,11 @@ class LocationMacroTypeCoercer
   }
 
   @Override
+  public Class<UnconfiguredLocationMacro> getUnconfiguredOutputClass() {
+    return UnconfiguredLocationMacro.class;
+  }
+
+  @Override
   public Class<LocationMacro> getOutputClass() {
     return LocationMacro.class;
   }

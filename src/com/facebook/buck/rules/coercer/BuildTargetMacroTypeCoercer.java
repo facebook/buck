@@ -34,15 +34,18 @@ public final class BuildTargetMacroTypeCoercer<
 
   private final TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
       buildTargetWithOutputsTypeCoercer;
+  private final Class<U> uClass;
   private final Class<M> mClass;
   private final Function<UnconfiguredBuildTargetWithOutputs, U> factory;
 
   public BuildTargetMacroTypeCoercer(
       TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
           buildTargetWithOutputsTypeCoercer,
+      Class<U> uClass,
       Class<M> mClass,
       Function<UnconfiguredBuildTargetWithOutputs, U> factory) {
     this.buildTargetWithOutputsTypeCoercer = buildTargetWithOutputsTypeCoercer;
+    this.uClass = uClass;
     this.mClass = mClass;
     this.factory = factory;
   }
@@ -53,12 +56,25 @@ public final class BuildTargetMacroTypeCoercer<
   }
 
   @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, U macro, TypeCoercer.Traversal traversal) {
+    // TODO(srice): Uncomment this once we implement `traverseUnconfigured` on `TypeCoercer`
+    //    buildTargetWithOutputsTypeCoercer.traverseUnconfigured(
+    //        cellRoots, macro.getTargetWithOutputs(), traversal);
+  }
+
+  @Override
   public void traverse(CellNameResolver cellRoots, M macro, TypeCoercer.Traversal traversal) {
     // TODO(irenewchen): Add output label to BuildTargetMacro and pass it on here
     buildTargetWithOutputsTypeCoercer.traverse(
         cellRoots,
         BuildTargetWithOutputs.of(macro.getTarget(), macro.getTargetWithOutputs().getOutputLabel()),
         traversal);
+  }
+
+  @Override
+  public Class<U> getUnconfiguredOutputClass() {
+    return uClass;
   }
 
   @Override

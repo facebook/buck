@@ -44,9 +44,23 @@ class QueryTargetsAndOutputsMacroTypeCoercer
   }
 
   @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots,
+      UnconfiguredQueryTargetsAndOutputsMacro macro,
+      Traversal traversal) {
+    // TODO(srice): Uncomment this once we implement `traverseUnconfigured` on `TypeCoercer`
+    //    queryCoercer.traverseUnconfigured(cellRoots, macro.getQuery(), traversal);
+  }
+
+  @Override
   public void traverse(
       CellNameResolver cellRoots, QueryTargetsAndOutputsMacro macro, Traversal traversal) {
     queryCoercer.traverse(cellRoots, macro.getQuery(), traversal);
+  }
+
+  @Override
+  public Class<UnconfiguredQueryTargetsAndOutputsMacro> getUnconfiguredOutputClass() {
+    return UnconfiguredQueryTargetsAndOutputsMacro.class;
   }
 
   @Override

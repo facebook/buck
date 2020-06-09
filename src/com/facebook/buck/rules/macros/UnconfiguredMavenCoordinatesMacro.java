@@ -25,6 +25,11 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 public abstract class UnconfiguredMavenCoordinatesMacro extends UnconfiguredBuildTargetMacro {
 
   @Override
+  public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+    return UnconfiguredMavenCoordinatesMacro.class;
+  }
+
+  @Override
   public MavenCoordinatesMacro configure(
       TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
     return MavenCoordinatesMacro.of(getTargetWithOutputs().configure(targetConfiguration));

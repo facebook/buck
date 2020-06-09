@@ -41,8 +41,19 @@ public class OutputMacroTypeCoercer implements MacroTypeCoercer<OutputMacro, Out
   }
 
   @Override
+  public Class<OutputMacro> getUnconfiguredOutputClass() {
+    return OutputMacro.class;
+  }
+
+  @Override
   public Class<OutputMacro> getOutputClass() {
     return OutputMacro.class;
+  }
+
+  @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, OutputMacro macro, Traversal traversal) {
+    traversal.traverse(macro);
   }
 
   @Override

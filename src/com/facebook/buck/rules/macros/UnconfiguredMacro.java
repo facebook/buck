@@ -20,5 +20,8 @@ import com.facebook.buck.core.model.TargetConfiguration;
 
 /** Unconfigured version of {@link Macro} */
 public interface UnconfiguredMacro {
+
+  Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass();
+
   Macro configure(TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration);
 }

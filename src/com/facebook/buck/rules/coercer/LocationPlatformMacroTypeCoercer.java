@@ -39,6 +39,11 @@ class LocationPlatformMacroTypeCoercer
   }
 
   @Override
+  public Class<UnconfiguredLocationPlatformMacro> getUnconfiguredOutputClass() {
+    return UnconfiguredLocationPlatformMacro.class;
+  }
+
+  @Override
   public Class<LocationPlatformMacro> getOutputClass() {
     return LocationPlatformMacro.class;
   }

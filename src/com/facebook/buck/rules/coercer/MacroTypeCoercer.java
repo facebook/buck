@@ -30,7 +30,11 @@ interface MacroTypeCoercer<U extends UnconfiguredMacro, T extends Macro> {
 
   boolean hasElementClass(Class<?>[] types);
 
+  Class<U> getUnconfiguredOutputClass();
+
   Class<T> getOutputClass();
+
+  void traverseUnconfigured(CellNameResolver cellRoots, U macro, Traversal traversal);
 
   void traverse(CellNameResolver cellRoots, T macro, Traversal traversal);
 

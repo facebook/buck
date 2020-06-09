@@ -31,6 +31,11 @@ public abstract class AbsoluteOutputMacro implements Macro, UnconfiguredMacro {
   }
 
   @Override
+  public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+    return AbsoluteOutputMacro.class;
+  }
+
+  @Override
   public Class<? extends Macro> getMacroClass() {
     return AbsoluteOutputMacro.class;
   }

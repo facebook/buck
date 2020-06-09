@@ -441,6 +441,11 @@ public class StringWithMacrosTypeCoercerTest {
     }
 
     @Override
+    public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+      return TestMacro.class;
+    }
+
+    @Override
     public Class<? extends Macro> getMacroClass() {
       return TestMacro.class;
     }
@@ -479,6 +484,11 @@ public class StringWithMacrosTypeCoercerTest {
     }
 
     @Override
+    public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+      return TestMacro.class;
+    }
+
+    @Override
     public Class<? extends Macro> getMacroClass() {
       return TestMacro.class;
     }
@@ -503,9 +513,18 @@ public class StringWithMacrosTypeCoercerTest {
     }
 
     @Override
+    public Class<TestMacro> getUnconfiguredOutputClass() {
+      return TestMacro.class;
+    }
+
+    @Override
     public Class<TestMacro> getOutputClass() {
       return TestMacro.class;
     }
+
+    @Override
+    public void traverseUnconfigured(
+        CellNameResolver cellRoots, TestMacro macro, Traversal traversal) {}
 
     @Override
     public void traverse(CellNameResolver cellRoots, TestMacro macro, Traversal traversal) {}
@@ -528,9 +547,18 @@ public class StringWithMacrosTypeCoercerTest {
     }
 
     @Override
+    public Class<Test2Macro> getUnconfiguredOutputClass() {
+      return Test2Macro.class;
+    }
+
+    @Override
     public Class<Test2Macro> getOutputClass() {
       return Test2Macro.class;
     }
+
+    @Override
+    public void traverseUnconfigured(
+        CellNameResolver cellRoots, Test2Macro macro, Traversal traversal) {}
 
     @Override
     public void traverse(CellNameResolver cellRoots, Test2Macro macro, Traversal traversal) {}
@@ -553,9 +581,18 @@ public class StringWithMacrosTypeCoercerTest {
     }
 
     @Override
+    public Class<TestMacro> getUnconfiguredOutputClass() {
+      return TestMacro.class;
+    }
+
+    @Override
     public Class<TestMacro> getOutputClass() {
       return TestMacro.class;
     }
+
+    @Override
+    public void traverseUnconfigured(
+        CellNameResolver cellRoots, TestMacro macro, Traversal traversal) {}
 
     @Override
     public void traverse(CellNameResolver cellRoots, TestMacro macro, Traversal traversal) {}

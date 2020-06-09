@@ -52,6 +52,11 @@ public abstract class UnconfiguredCxxGenruleFilterAndTargetsMacro implements Unc
     return ImmutableUnconfiguredCxxGenruleFilterAndTargetsMacro.ofImpl(which, filter, targets);
   }
 
+  @Override
+  public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+    return UnconfiguredCxxGenruleFilterAndTargetsMacro.class;
+  }
+
   /** Apply the configuration. */
   @Override
   public CxxGenruleFilterAndTargetsMacro configure(

@@ -30,6 +30,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.macros.BuildTargetMacro;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.UnconfiguredBuildTargetMacro;
+import com.facebook.buck.rules.macros.UnconfiguredMacro;
 import com.google.common.collect.ImmutableList;
 import org.junit.Assert;
 import org.junit.Test;
@@ -72,6 +73,11 @@ public class BuildTargetMacroTypeCoercerTest {
     }
 
     @Override
+    public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+      return UnconfiguredMyBuildTargetMacro.class;
+    }
+
+    @Override
     public MyBuildTargetMacro configure(
         TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
       return new MyBuildTargetMacro(getTargetWithOutputs().configure(targetConfiguration));
@@ -95,6 +101,7 @@ public class BuildTargetMacroTypeCoercerTest {
     BuildTargetMacroTypeCoercer<UnconfiguredMyBuildTargetMacro, MyBuildTargetMacro> coercer =
         new BuildTargetMacroTypeCoercer<>(
             buildTargetWithOutputsTypeCoercer,
+            UnconfiguredMyBuildTargetMacro.class,
             MyBuildTargetMacro.class,
             UnconfiguredMyBuildTargetMacro::new);
     MyBuildTargetMacro macro =

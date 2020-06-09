@@ -40,7 +40,10 @@ public class QueryMacroTypeCoercerTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     QueryMacroTypeCoercer<UnconfiguredQueryMacro, QueryMacro> coercer =
         new QueryMacroTypeCoercer<>(
-            new QueryCoercer(), QueryMacro.class, UnconfiguredQueryOutputsMacro::of);
+            new QueryCoercer(),
+            UnconfiguredQueryMacro.class,
+            QueryMacro.class,
+            UnconfiguredQueryOutputsMacro::of);
     QueryMacro queryMacro =
         coercer.coerceBoth(
             createCellRoots(filesystem).getCellNameResolver(),

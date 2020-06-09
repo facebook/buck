@@ -24,6 +24,11 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 public interface CudaFlagsMacro extends Macro, UnconfiguredMacro {
 
   @Override
+  default Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+    return CudaFlagsMacro.class;
+  }
+
+  @Override
   default Class<? extends Macro> getMacroClass() {
     return CudaFlagsMacro.class;
   }

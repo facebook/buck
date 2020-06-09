@@ -26,6 +26,11 @@ public abstract class UnconfiguredExecutableMacro
     extends AbstractUnconfiguredExecutableTargetOrHostMacro {
 
   @Override
+  public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+    return UnconfiguredExecutableMacro.class;
+  }
+
+  @Override
   public ExecutableMacro configure(
       TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
     return ExecutableMacro.of(getTargetWithOutputs().configure(targetConfiguration));
