@@ -31,6 +31,7 @@ import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectorList;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
 import com.facebook.buck.core.util.graph.CycleException;
@@ -39,6 +40,7 @@ import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.PerBuildState;
@@ -382,6 +384,11 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
                     new UnconfiguredSourcePath.Matcher<Unit>() {
                       @Override
                       public Unit path(CellRelativePath path) {
+                        // We might not actually want to use `SourcePath` to represent our paths...
+                        ProjectFilesystem pathFilesystem =
+                            rootCell.getCell(path.getCellName()).getFilesystem();
+                        PathSourcePath psp = PathSourcePath.of(pathFilesystem, path.getPath());
+                        result.add(QueryFileTarget.of(psp));
                         return Unit.UNIT;
                       }
 

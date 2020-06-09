@@ -18,6 +18,7 @@ package com.facebook.buck.cli.uquery;
 
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertJSONOutputMatchesFileContents;
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatches;
+import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesExactly;
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContents;
 
 import com.facebook.buck.testutil.ProcessResult;
@@ -145,6 +146,28 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("uquery", "kind(keystore, //bin:)");
     assertOutputMatches("//bin:keystore-debug\n//bin:keystore-prod", result);
+  }
+
+  @Test
+  public void labelsFunctionPrintsTargetsFromSpecificAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("uquery", "labels(keystore, //bin:foo-bin)");
+    assertOutputMatchesFileContents(
+        "stdout-labels-function-prints-targets-from-specific-attribute", result, workspace);
+  }
+
+  @Test
+  public void labelsFunctionCanPrintFiles() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("uquery", "labels(properties, //bin:keystore-prod)");
+    assertOutputMatchesExactly("bin/prod.keystore.properties\n", result);
   }
 
   @Test

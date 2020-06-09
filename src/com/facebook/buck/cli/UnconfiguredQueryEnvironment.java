@@ -235,7 +235,8 @@ public class UnconfiguredQueryEnvironment
   @Override
   public ImmutableSet<UnconfiguredQueryTarget> getTargetsInAttribute(
       UnconfiguredQueryTarget target, ParamName attribute) throws QueryException {
-    throw new RuntimeException("Not yet implemented");
+    UnconfiguredTargetNode node = getNode((UnconfiguredQueryBuildTarget) target);
+    return targetGraph.getTraversalResult(node).getTargetsByParam().get(attribute);
   }
 
   @Override
