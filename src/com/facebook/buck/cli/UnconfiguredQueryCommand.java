@@ -24,13 +24,20 @@ import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.query.QueryException;
+import com.facebook.buck.query.QueryFileTarget;
+import com.facebook.buck.query.UnconfiguredQueryBuildTarget;
 import com.facebook.buck.query.UnconfiguredQueryTarget;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
+import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Multimap;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Optional;
 import java.util.Set;
 
 /** Buck subcommand which facilitates querying information about the unconfigured target graph. */
@@ -43,16 +50,9 @@ public class UnconfiguredQueryCommand
   }
 
   @Override
-  @SuppressWarnings({"unused", "PMD.UnconditionalIfStatement"})
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     if (arguments.isEmpty()) {
       throw new CommandLineException("must specify at least the query expression");
-    }
-
-    // Trick the compiler into thinking we might actually use the code below. This also gives us
-    // a quick one-line change to make if we want to test things out.
-    if (true) {
-      throw new HumanReadableException("uquery is not yet implemented and should not be used");
     }
 
     try (CommandThreadManager pool =
@@ -73,7 +73,23 @@ public class UnconfiguredQueryCommand
       Set<UnconfiguredQueryTarget> queryResult,
       PrintStream printStream)
       throws QueryException, IOException {
-    throw new IllegalStateException("This method is impossible to reach since uquery is NYI");
+    OutputFormat trueOutputFormat =
+        (outputFormat == OutputFormat.LIST && shouldOutputAttributes())
+            ? OutputFormat.JSON
+            : outputFormat;
+
+    Optional<ImmutableMap<UnconfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+        attributesByResult = collectAttributes(params, env, queryResult);
+
+    switch (trueOutputFormat) {
+      case LIST:
+        printListOutput(queryResult, attributesByResult, printStream);
+        break;
+        // Use a non-exhausive switch while we're still in the early stages of uquery.
+        // $CASES-OMITTED$
+      default:
+        throw new QueryException("Unsupported output format - uquery is still a work in progress");
+    }
   }
 
   @Override
@@ -84,6 +100,32 @@ public class UnconfiguredQueryCommand
       PrintStream printStream)
       throws QueryException, IOException {
     throw new IllegalStateException("This method is impossible to reach since uquery is NYI");
+  }
+
+  private void printListOutput(
+      Set<UnconfiguredQueryTarget> queryResult,
+      Optional<
+              ImmutableMap<UnconfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+          attributesByResultOptional,
+      PrintStream printStream) {
+    Preconditions.checkState(
+        !attributesByResultOptional.isPresent(), "We should be printing with JSON instead");
+
+    queryResult.stream().map(this::toPresentationForm).forEach(printStream::println);
+  }
+
+  @SuppressWarnings("unused")
+  private Optional<
+          ImmutableMap<UnconfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+      collectAttributes(
+          CommandRunnerParams params,
+          UnconfiguredQueryEnvironment env,
+          Set<UnconfiguredQueryTarget> queryResult) {
+    if (!shouldOutputAttributes()) {
+      return Optional.empty();
+    }
+    throw new HumanReadableException(
+        "Printing attributes is not yet supported - uquery is still a work in progress");
   }
 
   private PerBuildState createPerBuildState(CommandRunnerParams params, CommandThreadManager pool) {
@@ -104,5 +146,22 @@ public class UnconfiguredQueryCommand
             params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE));
 
     return factory.create(parsingContext, params.getParser().getPermState());
+  }
+
+  private String toPresentationForm(UnconfiguredQueryTarget queryTarget) {
+    if (queryTarget instanceof UnconfiguredQueryBuildTarget) {
+      return toPresentationForm((UnconfiguredQueryBuildTarget) queryTarget);
+    } else if (queryTarget instanceof QueryFileTarget) {
+      return toPresentationForm((QueryFileTarget) queryTarget);
+    } else {
+      throw new IllegalStateException(
+          String.format(
+              "Unknown UnconfiguredQueryTarget implementation - %s",
+              queryTarget.getClass().toString()));
+    }
+  }
+
+  private String toPresentationForm(UnconfiguredQueryBuildTarget queryBuildTarget) {
+    return queryBuildTarget.getBuildTarget().getUnflavoredBuildTarget().toString();
   }
 }

@@ -21,8 +21,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
@@ -455,16 +453,6 @@ public class ConfiguredQueryCommand
 
   private String toPresentationForm(ConfiguredQueryBuildTarget queryBuildTarget) {
     return toPresentationForm(queryBuildTarget.getBuildTarget());
-  }
-
-  private String toPresentationForm(QueryFileTarget queryFileTarget) {
-    // Attempt to return the relative file path for backwards compatibility with QueryCommand
-    SourcePath path = queryFileTarget.getPath();
-    if (path instanceof PathSourcePath) {
-      PathSourcePath psp = (PathSourcePath) path;
-      return psp.getRelativePath().toString();
-    }
-    return queryFileTarget.toString();
   }
 
   private String toPresentationForm(BuildTarget buildTarget) {

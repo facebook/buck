@@ -16,11 +16,14 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.query.EvaluatingQueryEnvironment;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
+import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryNormalizer;
 import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.facebook.buck.util.CloseableWrapper;
@@ -323,5 +326,16 @@ public abstract class AbstractQueryCommand<
         .collect(
             ImmutableSortedMap.toImmutableSortedMap(
                 Comparator.naturalOrder(), e -> e.getKey().getSnakeCase(), Map.Entry::getValue));
+  }
+
+  /** Formats a `QueryFileTarget` for printing - relativizing its absolute paths */
+  protected String toPresentationForm(QueryFileTarget queryFileTarget) {
+    SourcePath path = queryFileTarget.getPath();
+    if (path instanceof PathSourcePath) {
+      PathSourcePath psp = (PathSourcePath) path;
+      return psp.getRelativePath().toString();
+    } else {
+      return path.toString();
+    }
   }
 }

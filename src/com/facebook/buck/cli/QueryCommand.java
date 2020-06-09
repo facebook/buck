@@ -23,8 +23,6 @@ import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.MergedTargetGraph;
 import com.facebook.buck.core.model.targetgraph.MergedTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
@@ -531,16 +529,6 @@ public class QueryCommand
     } else {
       throw new IllegalStateException(
           "Unable to determine ConfiguredQueryTarget subclass - " + target.getClass());
-    }
-  }
-
-  private String toPresentationForm(QueryFileTarget queryFileTarget) {
-    SourcePath path = queryFileTarget.getPath();
-    if (path instanceof PathSourcePath) {
-      PathSourcePath psp = (PathSourcePath) path;
-      return psp.getRelativePath().toString();
-    } else {
-      return path.toString();
     }
   }
 

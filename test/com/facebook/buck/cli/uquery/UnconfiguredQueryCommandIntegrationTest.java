@@ -27,10 +27,6 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-// TODO(srice): These tests are more aspirational than functional right now. They describe behavior
-// that uquery _should_ have, not behavior it has. Once we have a real implementation of uquery
-// (one that isn't just `throw new NotImplementedException()`) we should remove this Ignore.
-@Ignore
 public class UnconfiguredQueryCommandIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -46,6 +42,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  @Ignore // TODO(srice): owner function NYI
   public void doesntConfigureDependenciesOfTargetForPlatform() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
@@ -59,6 +56,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  @Ignore // TODO(srice): inputs function NYI
   public void targetPlatformsArgDoesntChangeOutput() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
@@ -77,6 +75,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  @Ignore // TODO(srice): kind function NYI
   public void kindFunctionOnlyPrintsTargetsOfSpecificType() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
@@ -87,6 +86,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  @Ignore // TODO(srice): owner function NYI
   public void ownerFunctionPrintsTargetsWithGivenFileInSrcs() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
