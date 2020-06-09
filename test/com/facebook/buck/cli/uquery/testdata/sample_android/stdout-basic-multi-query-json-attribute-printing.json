@@ -1,0 +1,15 @@
+{
+  "//bin:keystore-debug": {},
+  "//bin:keystore-prod": {},
+  "//bin:bar-bin": {
+    "compatible_with": ["//config/mode:dev","//config/mode:opt"]
+  },
+  "//bin:foo-bin":{
+    "compatible_with": ["//config/mode:dev","//config/mode:opt"]
+  },
+  "//lib:devtools": {
+    "compatible_with":["//config/mode:dev"]
+  },
+  "//lib:bar": {},
+  "//lib:foo":{}
+}

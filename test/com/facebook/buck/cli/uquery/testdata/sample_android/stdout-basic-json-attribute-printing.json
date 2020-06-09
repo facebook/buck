@@ -1,0 +1,11 @@
+{
+  "//lib:bar": {
+    "srcs": ["Bar.java"]
+  },
+  "//lib:devtools": {
+    "srcs": ["DevtoolsEight.java", "DevtoolsEleven.java"]
+  },
+  "//lib:foo": {
+    "srcs": ["Foo.java"]
+  }
+}

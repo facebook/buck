@@ -16,13 +16,24 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.RawTargetNode;
+import com.facebook.buck.parser.config.ParserConfig;
+import com.facebook.buck.parser.syntax.ListWithSelects;
+import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.UnconfiguredQueryBuildTarget;
@@ -31,7 +42,9 @@ import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.PatternsMatcher;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -47,6 +60,8 @@ import java.util.Set;
 public class UnconfiguredQueryCommand
     extends AbstractQueryCommand<UnconfiguredQueryTarget, UnconfiguredQueryEnvironment> {
 
+  private PerBuildState perBuildState;
+
   @Override
   public String getShortDescription() {
     return "provides facilities to query information about the unconfigured target graph";
@@ -60,7 +75,8 @@ public class UnconfiguredQueryCommand
 
     try (CommandThreadManager pool =
             new CommandThreadManager("UQuery", getConcurrencyLimit(params.getBuckConfig()));
-        PerBuildState perBuildState = createPerBuildState(params, pool)) {
+        PerBuildState state = createPerBuildState(params, pool)) {
+      perBuildState = state;
       UnconfiguredQueryEnvironment env = UnconfiguredQueryEnvironment.from(params, perBuildState);
       formatAndRunQuery(params, env);
     } catch (QueryException e) {
@@ -177,7 +193,6 @@ public class UnconfiguredQueryCommand
     prettyPrintJsonObject(targetsAndResultsNames.asMap(), printStream);
   }
 
-  @SuppressWarnings("unused")
   private Optional<
           ImmutableMap<UnconfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
       collectAttributes(
@@ -187,8 +202,87 @@ public class UnconfiguredQueryCommand
     if (!shouldOutputAttributes()) {
       return Optional.empty();
     }
-    throw new HumanReadableException(
-        "Printing attributes is not yet supported - uquery is still a work in progress");
+    PatternsMatcher matcher = new PatternsMatcher(outputAttributes());
+    ImmutableMap.Builder<UnconfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>
+        result = ImmutableMap.builder();
+
+    for (UnconfiguredQueryTarget target : queryResult) {
+      nodeForQueryTarget(env, target)
+          .flatMap(node -> getAllAttributes(params, node))
+          .map(attrs -> getMatchingAttributes(matcher, attrs))
+          .map(attrs -> eliminateSelectsFromRawAttributes(attrs))
+          .ifPresent(
+              attrs ->
+                  result.put(
+                      target, ImmutableSortedMap.copyOf(attrs, ParamNameOrSpecial.COMPARATOR)));
+    }
+
+    return Optional.of(result.build());
+  }
+
+  private Optional<ImmutableMap<ParamNameOrSpecial, Object>> getAllAttributes(
+      CommandRunnerParams params, UnconfiguredTargetNode node) {
+    UnflavoredBuildTarget buildTarget = node.getBuildTarget();
+    Cell owningCell = params.getCells().getCell(buildTarget.getCell());
+    ParserConfig cellParserConfig = owningCell.getBuckConfigView(ParserConfig.class);
+    AbsPath buildFile =
+        cellParserConfig.getAbsolutePathToBuildFile(
+            owningCell, UnconfiguredBuildTarget.of(buildTarget), DependencyStack.top(buildTarget));
+    BuildFileManifest manifest = perBuildState.getBuildFileManifest(owningCell, buildFile);
+
+    RawTargetNode rawTargetNode = manifest.getTargets().get(buildTarget.getLocalName());
+    if (rawTargetNode == null) {
+      params
+          .getConsole()
+          .printErrorText(
+              "Unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
+      return Optional.empty();
+    }
+
+    return Optional.of(ImmutableMap.copyOf(rawTargetNode.getAttrs()));
+  }
+
+  private ImmutableMap<ParamNameOrSpecial, Object> eliminateSelectsFromRawAttributes(
+      ImmutableMap<ParamNameOrSpecial, Object> rawAttributes) {
+    ImmutableMap.Builder<ParamNameOrSpecial, Object> result =
+        ImmutableMap.builderWithExpectedSize(rawAttributes.size());
+    for (ParamNameOrSpecial key : rawAttributes.keySet()) {
+      Object value = eliminateSelect(rawAttributes.get(key));
+      result.put(key, value);
+    }
+    return result.build();
+  }
+
+  // `uquery` normally operates under the guise of "union of all possibilities". Therefore when
+  // printing attributes the correct thing to do upon encountering a select is concatenate all the
+  // branches together. We can't do this when building up the graph since it could lead to some type
+  // coercion problems, but the JSON serializer doesn't care.
+  @SuppressWarnings("unchecked")
+  private Object eliminateSelect(Object value) {
+    if (!(value instanceof ListWithSelects)) {
+      return value;
+    }
+    ListWithSelects lws = (ListWithSelects) value;
+    Class<?> type = lws.getType();
+    if (ImmutableList.class.isAssignableFrom(type)) {
+      ImmutableList.Builder<Object> listResult = ImmutableList.builder();
+
+      for (Object element : lws.getElements()) {
+        if (element instanceof SelectorValue) {
+          SelectorValue selectElement = (SelectorValue) element;
+          for (Object selectElementValue : selectElement.getDictionary().values()) {
+            assert type.isInstance(selectElementValue);
+            listResult.addAll((ImmutableList<Object>) selectElementValue);
+          }
+        } else {
+          assert type.isInstance(element);
+          listResult.addAll((ImmutableList<Object>) element);
+        }
+      }
+
+      return listResult.build();
+    }
+    throw new RuntimeException("Unknown selector type - uquery needs improvements. Type:" + type);
   }
 
   private PerBuildState createPerBuildState(CommandRunnerParams params, CommandThreadManager pool) {
@@ -209,6 +303,15 @@ public class UnconfiguredQueryCommand
             params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE));
 
     return factory.create(parsingContext, params.getParser().getPermState());
+  }
+
+  private Optional<UnconfiguredTargetNode> nodeForQueryTarget(
+      UnconfiguredQueryEnvironment env, UnconfiguredQueryTarget target) {
+    if (target instanceof UnconfiguredQueryBuildTarget) {
+      return Optional.of(env.getNode((UnconfiguredQueryBuildTarget) target));
+    } else {
+      return Optional.empty();
+    }
   }
 
   private String toPresentationForm(UnconfiguredQueryTarget queryTarget) {

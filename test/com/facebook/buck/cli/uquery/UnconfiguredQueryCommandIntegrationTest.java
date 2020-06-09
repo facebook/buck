@@ -60,6 +60,19 @@ public class UnconfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void basicJsonAttributePrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery", "//lib:", "--output-format", "json", "--output-attribute", "srcs");
+    assertJSONOutputMatchesFileContents(
+        "stdout-basic-json-attribute-printing.json", result, workspace);
+  }
+
+  @Test
   public void basicMultiQueryPrinting() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
@@ -80,6 +93,26 @@ public class UnconfiguredQueryCommandIntegrationTest {
             "uquery", "%s", "//lib:", "//config/platform:", "--output-format", "json");
     assertJSONOutputMatchesFileContents(
         "stdout-basic-multi-query-json-printing.json", result, workspace);
+  }
+
+  @Test
+  public void basicMultiQueryJsonAttributePrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery",
+            "%s",
+            "//bin:",
+            "//lib:",
+            "--output-format",
+            "json",
+            "--output-attribute",
+            "compatible_with");
+    assertJSONOutputMatchesFileContents(
+        "stdout-basic-multi-query-json-attribute-printing.json", result, workspace);
   }
 
   /**

@@ -315,6 +315,18 @@ public class UnconfiguredQueryEnvironment
     return targetGraph.filterAttributeContents(node, attribute, predicate);
   }
 
+  public UnconfiguredTargetNode getNode(UnconfiguredQueryBuildTarget queryBuildTarget) {
+    return targetGraph.getNode(queryBuildTarget.getBuildTarget().getUnflavoredBuildTarget());
+  }
+
+  public UnconfiguredTargetNode getNode(UnconfiguredBuildTarget buildTarget) {
+    return targetGraph.getNode(buildTarget.getUnflavoredBuildTarget());
+  }
+
+  public UnconfiguredTargetNode getNode(UnflavoredBuildTarget buildTarget) {
+    return targetGraph.getNode(buildTarget);
+  }
+
   /**
    * Filter function to remove any {@code UnconfiguredQueryTarget}s that don't refer to build
    * targets
@@ -353,17 +365,5 @@ public class UnconfiguredQueryEnvironment
   private UnconfiguredQueryBuildTarget getOrCreateQueryBuildTarget(
       UnflavoredBuildTarget buildTarget) {
     return buildTargetToQueryTarget.computeIfAbsent(buildTarget, UnconfiguredQueryBuildTarget::of);
-  }
-
-  private UnconfiguredTargetNode getNode(UnconfiguredQueryBuildTarget queryBuildTarget) {
-    return targetGraph.getNode(queryBuildTarget.getBuildTarget().getUnflavoredBuildTarget());
-  }
-
-  private UnconfiguredTargetNode getNode(UnconfiguredBuildTarget buildTarget) {
-    return targetGraph.getNode(buildTarget.getUnflavoredBuildTarget());
-  }
-
-  private UnconfiguredTargetNode getNode(UnflavoredBuildTarget buildTarget) {
-    return targetGraph.getNode(buildTarget);
   }
 }
