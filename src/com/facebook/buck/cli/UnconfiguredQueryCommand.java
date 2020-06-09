@@ -33,10 +33,12 @@ import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Multimap;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -85,6 +87,9 @@ public class UnconfiguredQueryCommand
       case LIST:
         printListOutput(queryResult, attributesByResult, printStream);
         break;
+      case JSON:
+        printJsonOutput(queryResult, attributesByResult, printStream);
+        break;
         // Use a non-exhausive switch while we're still in the early stages of uquery.
         // $CASES-OMITTED$
       default:
@@ -112,6 +117,33 @@ public class UnconfiguredQueryCommand
         !attributesByResultOptional.isPresent(), "We should be printing with JSON instead");
 
     queryResult.stream().map(this::toPresentationForm).forEach(printStream::println);
+  }
+
+  private void printJsonOutput(
+      Set<UnconfiguredQueryTarget> queryResult,
+      Optional<
+              ImmutableMap<UnconfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+          attributesByResultOptional,
+      PrintStream printStream)
+      throws IOException {
+
+    Object printableObject;
+    if (attributesByResultOptional.isPresent()) {
+      ImmutableMap<UnconfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>
+          attributesByResult = attributesByResultOptional.get();
+      printableObject =
+          queryResult.stream()
+              .collect(
+                  ImmutableMap.toImmutableMap(this::toPresentationForm, attributesByResult::get));
+    } else {
+      printableObject =
+          queryResult.stream()
+              .peek(Objects::requireNonNull)
+              .map(this::toPresentationForm)
+              .collect(ImmutableSet.toImmutableSet());
+    }
+
+    prettyPrintJsonObject(printableObject, printStream);
   }
 
   @SuppressWarnings("unused")

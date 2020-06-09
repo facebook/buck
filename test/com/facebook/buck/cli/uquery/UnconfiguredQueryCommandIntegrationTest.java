@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli.uquery;
 
+import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertJSONOutputMatchesFileContents;
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatches;
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContents;
 
@@ -40,6 +41,16 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("uquery", "//lib:foo");
     assertOutputMatches("//lib:foo", result);
+  }
+
+  @Test
+  public void basicJsonPrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("uquery", "//lib:", "--output-format", "json");
+    assertJSONOutputMatchesFileContents("stdout-basic-json-printing.json", result, workspace);
   }
 
   @Test
