@@ -28,6 +28,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
+import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
@@ -92,7 +93,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
 
   @ExcludeFromRuleKey(
       serialization = CellNameResolverSerialization.class,
-      inputs = DefaultFieldInputs.class)
+      inputs = IgnoredFieldInputs.class)
   private final CellNameResolver cellNameResolver;
 
   public UnusedDependenciesFinderFactory(
