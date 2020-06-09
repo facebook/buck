@@ -39,6 +39,8 @@ import javax.annotation.Nullable;
 
 public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller {
 
+  public DefaultConstructorArgMarshaller() {}
+
   private void collectDeclaredDeps(
       CellNameResolver cellNameResolver,
       @Nullable ParamInfo<?> deps,

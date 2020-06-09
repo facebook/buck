@@ -40,6 +40,7 @@ import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
@@ -64,6 +65,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
   private final TargetPlatformResolver targetPlatformResolver;
   private final TargetConfigurationTransformer targetConfigurationTransformer;
   private final TargetConfiguration hostConfiguration;
+  private final boolean hostConfigurationSwitchEnabled;
   private final BuckConfig buckConfig;
   private final Optional<ConfigurationRuleRegistry> configurationRuleRegistry;
 
@@ -90,6 +92,8 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
     this.targetPlatformResolver = targetPlatformResolver;
     this.targetConfigurationTransformer = targetConfigurationTransformer;
     this.hostConfiguration = hostConfiguration;
+    this.hostConfigurationSwitchEnabled =
+        buckConfig.getView(ParserConfig.class).getHostConfigurationSwitchEnabled();
     this.buckConfig = buckConfig;
     this.configurationRuleRegistry = configurationRuleRegistry;
   }
@@ -151,7 +155,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
               targetConfigurationTransformer,
               targetPlatformResolver,
               target,
-              hostConfiguration,
+              hostConfigurationSwitchEnabled ? hostConfiguration : target.getTargetConfiguration(),
               dependencyStack,
               builder,
               declaredDeps,

@@ -596,4 +596,31 @@ public class ConfigurationsIntegrationTest {
     List<String> lines = Files.readAllLines(outTxt);
     assertEquals(ImmutableList.of("tttarget"), lines);
   }
+
+  @Test
+  public void exeSwitchesToHost() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exe_switches_to_host", tmp);
+    workspace.setUp();
+
+    Path outTxt =
+        workspace.buildAndReturnOutput("--target-platforms=//:t", "--host-platform=//:h", "//:g");
+    List<String> lines = Files.readAllLines(outTxt);
+    assertEquals(ImmutableList.of("hhhost"), lines);
+  }
+
+  @Test
+  public void exeSwitchesToHostNoHostPlatform() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exe_switches_to_host", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckBuild("--target-platforms=//:t", "//:g");
+    result.assertFailure();
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        MoreStringsForTests.containsIgnoringPlatformNewlines(
+            "Cannot use select() expression when target platform is not specified\n"
+                + "    At //:b"));
+  }
 }

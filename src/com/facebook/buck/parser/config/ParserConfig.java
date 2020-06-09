@@ -351,6 +351,11 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
     return getDelegate().getValue("parser", "target_platform_detector_spec").orElse("");
   }
 
+  @Value.Lazy
+  public boolean getHostConfigurationSwitchEnabled() {
+    return getDelegate().getBooleanValue("parser", "host_configuration_switch_enabled", false);
+  }
+
   /**
    * @return a target that points to a {@code platform} rule that describes the target platforms.
    *     This is used when command-line argument is unspecified. Please do not use this option.

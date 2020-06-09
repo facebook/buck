@@ -33,7 +33,7 @@ public abstract class UnconfiguredExecutableMacro
   @Override
   public ExecutableMacro configure(
       TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
-    return ExecutableMacro.of(getTargetWithOutputs().configure(targetConfiguration));
+    return ExecutableMacro.of(getTargetWithOutputs().configure(hostConfiguration));
   }
 
   public static UnconfiguredExecutableMacro of(UnconfiguredBuildTargetWithOutputs buildTarget) {
