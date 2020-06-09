@@ -211,6 +211,13 @@ public class BuckConfig {
     }
   }
 
+  /** @return the parsed {@link UnconfiguredBuildTarget} in the given section and field, if set. */
+  public Optional<UnconfiguredBuildTarget> getUnconfiguredBuildTarget(
+      String section, String field) {
+    Optional<String> value = getValue(section, field);
+    return value.map(this::getUnconfiguredBuildTargetForFullyQualifiedTarget);
+  }
+
   /** @return the parsed BuildTarget in the given section and field. */
   public BuildTarget getRequiredBuildTarget(
       String section, String field, TargetConfiguration targetConfiguration) {

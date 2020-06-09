@@ -624,7 +624,7 @@ public class CxxBuckConfig {
     String cxxSection = new CxxBuckConfig(config, flavor).cxxSection;
 
     Optional<UnconfiguredBuildTarget> toolchainTarget =
-        config.getMaybeUnconfiguredBuildTarget(cxxSection, TOOLCHAIN_TARGET);
+        config.getUnconfiguredBuildTarget(cxxSection, TOOLCHAIN_TARGET);
     if (!toolchainTarget.isPresent()) {
       return Optional.empty();
     }
