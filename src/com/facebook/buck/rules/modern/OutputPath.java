@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import java.nio.file.Path;
@@ -26,13 +27,17 @@ import java.nio.file.Paths;
  */
 public class OutputPath implements AddsToRuleKey {
   @AddToRuleKey(stringify = true)
-  private final Path path;
+  private final RelPath path;
 
   public OutputPath(String name) {
     this(Paths.get(name));
   }
 
   public OutputPath(Path path) {
+    this(RelPath.of(path));
+  }
+
+  public OutputPath(RelPath path) {
     this.path = path;
   }
 
@@ -45,7 +50,7 @@ public class OutputPath implements AddsToRuleKey {
   }
 
   Path getPath() {
-    return path;
+    return path.getPath();
   }
 
   public static Internals internals() {
