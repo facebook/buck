@@ -1,0 +1,8 @@
+bin/AndroidManifest.xml
+bin/debug.keystore
+bin/debug.keystore.properties
+bin/prod.keystore
+bin/prod.keystore.properties
+lib/Bar.java
+lib/DevtoolsEight.java
+lib/DevtoolsEleven.java

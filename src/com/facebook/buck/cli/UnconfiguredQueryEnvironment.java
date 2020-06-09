@@ -199,7 +199,8 @@ public class UnconfiguredQueryEnvironment
   @Override
   public Set<UnconfiguredQueryTarget> getInputs(UnconfiguredQueryTarget target)
       throws QueryException {
-    throw new RuntimeException("Not yet implemented");
+    UnconfiguredTargetNode node = getNode((UnconfiguredQueryBuildTarget) target);
+    return ImmutableSet.copyOf(targetGraph.getTraversalResult(node).getInputs());
   }
 
   @Override

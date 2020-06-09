@@ -102,7 +102,6 @@ public class UnconfiguredQueryCommandIntegrationTest {
   }
 
   @Test
-  @Ignore // TODO(srice): inputs function NYI
   public void targetPlatformsArgDoesntChangeOutput() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
@@ -136,6 +135,17 @@ public class UnconfiguredQueryCommandIntegrationTest {
         "stdout-deps-function-prints-dependencies-of-target-in-any-configuration",
         result,
         workspace);
+  }
+
+  @Test
+  public void inputsFunctionPrintsAllFilesUsedByATarget() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("uquery", "inputs(deps(//bin:bar-bin))");
+    assertOutputMatchesFileContents(
+        "stdout-inputs-function-prints-all-files-used-by-a-target", result, workspace);
   }
 
   @Test
