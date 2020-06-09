@@ -33,9 +33,10 @@ import com.facebook.buck.core.graph.transformation.impl.DefaultGraphTransformati
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.BuildPackagePaths;
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathComputation;
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathKey;
@@ -52,6 +53,7 @@ import com.facebook.buck.parser.spec.BuildFileSpec;
 import com.facebook.buck.parser.spec.BuildTargetSpec;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.util.MoreThrowables;
+import com.facebook.buck.util.function.TriFunction;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.cache.CacheBuilder;
@@ -207,13 +209,51 @@ public class TargetSpecResolver implements AutoCloseable {
    * @return a list of sets of build targets where each set contains all build targets that match a
    *     corresponding {@link TargetNodeSpec}.
    */
-  public <T extends HasBuildTarget> ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      Cells rootCell,
+  public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
+      Cells cells,
       Iterable<? extends TargetNodeSpec> specs,
       Optional<TargetConfiguration> targetConfiguration,
       FlavorEnhancer flavorEnhancer,
       PerBuildState perBuildState,
-      TargetNodeFilterForSpecResolver targetNodeFilter)
+      TargetNodeFilterForSpecResolver<BuildTarget, TargetNodeMaybeIncompatible> targetNodeFilter)
+      throws BuildFileParseException, InterruptedException {
+    return resolveSpecsGeneric(
+        cells,
+        specs,
+        (cell, path, spec) ->
+            handleTargetNodeSpec(
+                flavorEnhancer,
+                perBuildState,
+                targetNodeFilter,
+                cell,
+                targetConfiguration,
+                path,
+                spec));
+  }
+
+  /**
+   * @return a list of sets of unflavored build targets where each set contains all build targets
+   *     that match a corresponding {@link TargetNodeSpec}
+   */
+  public ImmutableList<ImmutableSet<UnflavoredBuildTarget>> resolveTargetSpecsUnconfigured(
+      Cells cells,
+      Iterable<? extends TargetNodeSpec> specs,
+      PerBuildState perBuildState,
+      TargetNodeFilterForSpecResolver<UnflavoredBuildTarget, UnconfiguredTargetNode>
+          targetNodeFilter)
+      throws BuildFileParseException, InterruptedException {
+    return resolveSpecsGeneric(
+        cells,
+        specs,
+        (cell, path, spec) ->
+            handleTargetNodeSpecUnconfigured(perBuildState, targetNodeFilter, cell, path, spec));
+  }
+
+  private <T> ImmutableList<ImmutableSet<T>> resolveSpecsGeneric(
+      Cells cells,
+      Iterable<? extends TargetNodeSpec> specs,
+      TriFunction<Cell, AbsPath, TargetNodeSpec, ListenableFuture<ImmutableSet<T>>>
+          handleSpecFunction)
       throws BuildFileParseException, InterruptedException {
 
     // Convert the input spec iterable into a list so we have a fixed ordering, which we'll rely on
@@ -221,16 +261,16 @@ public class TargetSpecResolver implements AutoCloseable {
     ImmutableList<TargetNodeSpec> orderedSpecs = ImmutableList.copyOf(specs);
 
     Multimap<AbsPath, Integer> perBuildFileSpecs =
-        groupSpecsByBuildFile(rootCell.getRootCell(), orderedSpecs);
+        groupSpecsByBuildFile(cells.getRootCell(), orderedSpecs);
 
     // Kick off parse futures for each build file.
-    ArrayList<ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>> targetFutures =
+    ArrayList<ListenableFuture<Map.Entry<Integer, ImmutableSet<T>>>> targetFutures =
         new ArrayList<>();
     for (AbsPath buildFile : perBuildFileSpecs.keySet()) {
       Collection<Integer> buildFileSpecs = perBuildFileSpecs.get(buildFile);
       TargetNodeSpec firstSpec = orderedSpecs.get(Iterables.get(buildFileSpecs, 0));
       Cell cell =
-          rootCell
+          cells
               .getCellProvider()
               .getCellByCanonicalCellName(
                   firstSpec.getBuildFileSpec().getCellRelativeBaseName().getCellName());
@@ -245,16 +285,11 @@ public class TargetSpecResolver implements AutoCloseable {
 
       for (int index : buildFileSpecs) {
         TargetNodeSpec spec = orderedSpecs.get(index);
-        handleTargetNodeSpec(
-            flavorEnhancer,
-            perBuildState,
-            targetNodeFilter,
-            targetFutures,
-            cell,
-            buildFile,
-            targetConfiguration,
-            index,
-            spec);
+        targetFutures.add(
+            Futures.transform(
+                handleSpecFunction.apply(cell, buildFile, spec),
+                targets -> new AbstractMap.SimpleEntry<>(index, targets),
+                MoreExecutors.directExecutor()));
       }
     }
 
@@ -307,56 +342,81 @@ public class TargetSpecResolver implements AutoCloseable {
     return perBuildFileSpecs;
   }
 
-  private void handleTargetNodeSpec(
+  private ListenableFuture<ImmutableSet<BuildTarget>> handleTargetNodeSpec(
       FlavorEnhancer flavorEnhancer,
       PerBuildState perBuildState,
-      TargetNodeFilterForSpecResolver targetNodeFilter,
-      List<ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>> targetFutures,
+      TargetNodeFilterForSpecResolver<BuildTarget, TargetNodeMaybeIncompatible> targetNodeFilter,
       Cell cell,
-      AbsPath buildFile,
       Optional<TargetConfiguration> targetConfiguration,
-      int index,
+      AbsPath buildFile,
       TargetNodeSpec spec) {
     if (spec instanceof BuildTargetSpec) {
       BuildTargetSpec buildTargetSpec = (BuildTargetSpec) spec;
-      targetFutures.add(
-          Futures.transform(
-              perBuildState.getRequestedTargetNodeJob(
-                  buildTargetSpec.getUnconfiguredBuildTarget(), targetConfiguration),
-              node -> {
-                ImmutableSet<BuildTarget> buildTargets =
-                    applySpecFilter(spec, ImmutableList.of(node), flavorEnhancer, targetNodeFilter);
-                Preconditions.checkState(
-                    buildTargets.size() == 1,
-                    "BuildTargetSpec %s filter discarded target %s, but was not supposed to.",
-                    spec,
-                    node.getBuildTarget());
-                return new AbstractMap.SimpleEntry<>(index, buildTargets);
-              },
-              MoreExecutors.directExecutor()));
+      return Futures.transform(
+          perBuildState.getRequestedTargetNodeJob(
+              buildTargetSpec.getUnconfiguredBuildTarget(), targetConfiguration),
+          node -> {
+            ImmutableSet<BuildTarget> buildTargets =
+                applySpecFilterAndFlavorEnhancer(
+                    spec, ImmutableList.of(node), flavorEnhancer, targetNodeFilter);
+            Preconditions.checkState(
+                buildTargets.size() == 1,
+                "BuildTargetSpec %s filter discarded target %s, but was not supposed to.",
+                spec,
+                node.getBuildTarget());
+            return buildTargets;
+          },
+          MoreExecutors.directExecutor());
     } else {
       // Build up a list of all target nodes from the build file.
-      targetFutures.add(
-          Futures.transform(
-              perBuildState.getRequestedTargetNodesJob(cell, buildFile, targetConfiguration),
-              nodes ->
-                  new AbstractMap.SimpleEntry<>(
-                      index, applySpecFilter(spec, nodes, flavorEnhancer, targetNodeFilter)),
-              MoreExecutors.directExecutor()));
+      return Futures.transform(
+          perBuildState.getRequestedTargetNodesJob(cell, buildFile, targetConfiguration),
+          nodes -> applySpecFilterAndFlavorEnhancer(spec, nodes, flavorEnhancer, targetNodeFilter),
+          MoreExecutors.directExecutor());
     }
   }
 
-  private ImmutableList<ImmutableSet<BuildTarget>> collectTargets(
-      int specsCount,
-      List<ListenableFuture<Entry<Integer, ImmutableSet<BuildTarget>>>> targetFutures)
+  private ListenableFuture<ImmutableSet<UnflavoredBuildTarget>> handleTargetNodeSpecUnconfigured(
+      PerBuildState perBuildState,
+      TargetNodeFilterForSpecResolver<UnflavoredBuildTarget, UnconfiguredTargetNode>
+          targetNodeFilter,
+      Cell cell,
+      AbsPath buildFile,
+      TargetNodeSpec spec) {
+    if (spec instanceof BuildTargetSpec) {
+      BuildTargetSpec buildTargetSpec = (BuildTargetSpec) spec;
+      return Futures.transform(
+          perBuildState.getUnconfiguredTargetNodeJob(
+              buildTargetSpec.getUnconfiguredBuildTarget(), DependencyStack.root()),
+          node -> {
+            ImmutableSet<UnflavoredBuildTarget> buildTargets =
+                applySpecFilter(spec, ImmutableList.of(node), targetNodeFilter).keySet();
+            Preconditions.checkState(
+                buildTargets.size() == 1,
+                "BuildTargetSpec %s filter discarded target %s, but was not supposed to.",
+                spec,
+                node.getBuildTarget());
+            return buildTargets;
+          },
+          MoreExecutors.directExecutor());
+    } else {
+      // Build up a list of all target nodes from the build file.
+      return Futures.transform(
+          perBuildState.getAllUnconfiguredTargetNodesJobs(cell, buildFile),
+          nodes -> applySpecFilter(spec, nodes, targetNodeFilter).keySet(),
+          MoreExecutors.directExecutor());
+    }
+  }
+
+  private <T> ImmutableList<ImmutableSet<T>> collectTargets(
+      int specsCount, List<ListenableFuture<Entry<Integer, ImmutableSet<T>>>> targetFutures)
       throws InterruptedException {
     // Walk through and resolve all the futures, and place their results in a multimap that
     // is indexed by the integer representing the input target spec order.
-    LinkedHashMultimap<Integer, BuildTarget> targetsMap = LinkedHashMultimap.create();
+    LinkedHashMultimap<Integer, T> targetsMap = LinkedHashMultimap.create();
     try {
-      for (ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>> targetFuture :
-          targetFutures) {
-        Map.Entry<Integer, ImmutableSet<BuildTarget>> result = targetFuture.get();
+      for (ListenableFuture<Map.Entry<Integer, ImmutableSet<T>>> targetFuture : targetFutures) {
+        Map.Entry<Integer, ImmutableSet<T>> result = targetFuture.get();
         targetsMap.putAll(result.getKey(), result.getValue());
       }
     } catch (ExecutionException e) {
@@ -366,21 +426,29 @@ public class TargetSpecResolver implements AutoCloseable {
     }
     // Finally, pull out the final build target results in input target spec order, and place them
     // into a list of sets that exactly matches the ihput order.
-    ImmutableList.Builder<ImmutableSet<BuildTarget>> targets = ImmutableList.builder();
+    ImmutableList.Builder<ImmutableSet<T>> targets = ImmutableList.builder();
     for (int index = 0; index < specsCount; index++) {
       targets.add(ImmutableSet.copyOf(targetsMap.get(index)));
     }
     return targets.build();
   }
 
-  private ImmutableSet<BuildTarget> applySpecFilter(
+  /** Applies a SpecFilter<T, N> */
+  private <T, N> ImmutableMap<T, N> applySpecFilter(
+      TargetNodeSpec spec,
+      ImmutableList<N> targetNodes,
+      TargetNodeFilterForSpecResolver<T, N> targetNodeFilter) {
+    return targetNodeFilter.filter(spec, targetNodes);
+  }
+
+  private ImmutableSet<BuildTarget> applySpecFilterAndFlavorEnhancer(
       TargetNodeSpec spec,
       ImmutableList<TargetNodeMaybeIncompatible> targetNodes,
       FlavorEnhancer flavorEnhancer,
-      TargetNodeFilterForSpecResolver targetNodeFilter) {
+      TargetNodeFilterForSpecResolver<BuildTarget, TargetNodeMaybeIncompatible> targetNodeFilter) {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
     ImmutableMap<BuildTarget, TargetNodeMaybeIncompatible> partialTargets =
-        targetNodeFilter.filter(spec, targetNodes);
+        applySpecFilter(spec, targetNodes, targetNodeFilter);
     for (Map.Entry<BuildTarget, TargetNodeMaybeIncompatible> partialTarget :
         partialTargets.entrySet()) {
       BuildTarget target =
@@ -404,9 +472,12 @@ public class TargetSpecResolver implements AutoCloseable {
         TargetNodeSpec.TargetType targetType);
   }
 
-  /** Performs filtering of target nodes using a given {@link TargetNodeSpec}. */
-  public interface TargetNodeFilterForSpecResolver {
-    ImmutableMap<BuildTarget, TargetNodeMaybeIncompatible> filter(
-        TargetNodeSpec spec, Iterable<TargetNodeMaybeIncompatible> nodes);
+  /**
+   * Performs filtering of target nodes using a given {@link TargetNodeSpec}. `T` refers to the
+   * Target type (eg BuildTarget or UnflavoredBuildTarget) and `N` refers to the Node type (eg
+   * `TargetNodeMaybeIncompatible or UnconfiguredTargetNode)
+   */
+  public interface TargetNodeFilterForSpecResolver<T, N> {
+    ImmutableMap<T, N> filter(TargetNodeSpec spec, Iterable<N> nodes);
   }
 }

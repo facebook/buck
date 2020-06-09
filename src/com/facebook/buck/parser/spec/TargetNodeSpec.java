@@ -19,8 +19,10 @@ package com.facebook.buck.parser.spec;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser;
 import com.google.common.collect.ImmutableMap;
@@ -42,6 +44,9 @@ public interface TargetNodeSpec {
   /** @return the targets which should be built according to this spec */
   ImmutableMap<BuildTarget, TargetNodeMaybeIncompatible> filter(
       Iterable<TargetNodeMaybeIncompatible> nodes);
+
+  ImmutableMap<UnflavoredBuildTarget, UnconfiguredTargetNode> filterUnconfigured(
+      Iterable<UnconfiguredTargetNode> nodes);
 
   /**
    * @return a {@link BuildFileSpec} representing the build files to parse to search for specific

@@ -22,8 +22,10 @@ import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -98,6 +100,20 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
         .collect(
             ImmutableMap.toImmutableMap(
                 TargetNodeMaybeIncompatible::getBuildTarget, Function.identity()));
+  }
+
+  @Override
+  public ImmutableMap<UnflavoredBuildTarget, UnconfiguredTargetNode> filterUnconfigured(
+      Iterable<UnconfiguredTargetNode> nodes) {
+    return StreamSupport.stream(nodes.spliterator(), false)
+        .filter(
+            input ->
+                input
+                    .getBuildTarget()
+                    .equals(getUnconfiguredBuildTarget().getUnflavoredBuildTarget()))
+        .collect(
+            ImmutableMap.toImmutableMap(
+                UnconfiguredTargetNode::getBuildTarget, Function.identity()));
   }
 
   @Override

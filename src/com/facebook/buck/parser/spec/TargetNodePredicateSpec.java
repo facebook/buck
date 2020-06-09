@@ -20,8 +20,10 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CellRelativePath;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetLanguageConstants;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -52,6 +54,21 @@ public abstract class TargetNodePredicateSpec implements TargetNodeSpec {
     for (TargetNodeMaybeIncompatible node : nodes) {
       Optional<TargetNode<?>> targetNode = node.getTargetNodeOptional();
       if (!onlyTests() || !targetNode.isPresent() || targetNode.get().getRuleType().isTestRule()) {
+        resultBuilder.put(node.getBuildTarget(), node);
+      }
+    }
+
+    return resultBuilder.build();
+  }
+
+  @Override
+  public ImmutableMap<UnflavoredBuildTarget, UnconfiguredTargetNode> filterUnconfigured(
+      Iterable<UnconfiguredTargetNode> nodes) {
+    ImmutableMap.Builder<UnflavoredBuildTarget, UnconfiguredTargetNode> resultBuilder =
+        ImmutableMap.builder();
+
+    for (UnconfiguredTargetNode node : nodes) {
+      if (!onlyTests() || node.getRuleType().isTestRule()) {
         resultBuilder.put(node.getBuildTarget(), node);
       }
     }

@@ -38,6 +38,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
@@ -771,6 +772,13 @@ public class BuildCommandTest {
         Optional<TargetConfiguration> targetConfiguration)
         throws BuildFileParseException, InterruptedException {
       return parser.resolveTargetSpecs(perBuildState, specs, targetConfiguration);
+    }
+
+    @Override
+    public ImmutableList<ImmutableSet<UnflavoredBuildTarget>> resolveTargetSpecsUnconfigured(
+        PerBuildState perBuildState, Iterable<? extends TargetNodeSpec> specs)
+        throws BuildFileParseException, InterruptedException {
+      return parser.resolveTargetSpecsUnconfigured(perBuildState, specs);
     }
   }
 }

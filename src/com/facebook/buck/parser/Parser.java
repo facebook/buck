@@ -22,6 +22,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -127,5 +128,9 @@ public interface Parser {
       PerBuildState perBuildState,
       Iterable<? extends TargetNodeSpec> specs,
       Optional<TargetConfiguration> targetConfiguration)
+      throws BuildFileParseException, InterruptedException;
+
+  ImmutableList<ImmutableSet<UnflavoredBuildTarget>> resolveTargetSpecsUnconfigured(
+      PerBuildState perBuildState, Iterable<? extends TargetNodeSpec> specs)
       throws BuildFileParseException, InterruptedException;
 }

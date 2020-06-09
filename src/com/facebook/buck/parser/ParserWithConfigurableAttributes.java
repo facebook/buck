@@ -26,9 +26,11 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.HasDefaultFlavors;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
@@ -361,7 +363,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       throws BuildFileParseException, InterruptedException {
 
     ParsingContext parsingContext = state.getParsingContext();
-    TargetNodeFilterForSpecResolver targetNodeFilter = TargetNodeSpec::filter;
+    TargetNodeFilterForSpecResolver<BuildTarget, TargetNodeMaybeIncompatible> targetNodeFilter =
+        TargetNodeSpec::filter;
 
     ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
         targetSpecResolver.resolveTargetSpecs(
@@ -394,6 +397,18 @@ class ParserWithConfigurableAttributes extends AbstractParser {
   }
 
   @Override
+  public ImmutableList<ImmutableSet<UnflavoredBuildTarget>> resolveTargetSpecsUnconfigured(
+      PerBuildState perBuildState, Iterable<? extends TargetNodeSpec> specs)
+      throws BuildFileParseException, InterruptedException {
+    ParsingContext parsingContext = perBuildState.getParsingContext();
+    TargetNodeFilterForSpecResolver<UnflavoredBuildTarget, UnconfiguredTargetNode>
+        targetNodeFilter = TargetNodeSpec::filterUnconfigured;
+
+    return targetSpecResolver.resolveTargetSpecsUnconfigured(
+        parsingContext.getCells(), specs, perBuildState, targetNodeFilter);
+  }
+
+  @Override
   protected ImmutableSet<BuildTarget> collectBuildTargetsFromTargetNodeSpecs(
       ParsingContext parsingContext,
       PerBuildState state,
@@ -402,11 +417,12 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       boolean excludeConfigurationTargets)
       throws InterruptedException {
 
-    TargetNodeFilterForSpecResolver targetNodeFilter = TargetNodeSpec::filter;
+    TargetNodeFilterForSpecResolver<BuildTarget, TargetNodeMaybeIncompatible> targetNodeFilter =
+        TargetNodeSpec::filter;
 
     if (excludeConfigurationTargets) {
       targetNodeFilter =
-          new TargetNodeFilterForSpecResolverWithNodeFiltering(
+          new TargetNodeFilterForSpecResolverWithNodeFiltering<>(
               targetNodeFilter, ParserWithConfigurableAttributes::filterOutNonBuildTargets);
     }
 

@@ -117,6 +117,13 @@ public class PerBuildState implements AutoCloseable {
         cell, buildFile, targetConfiguration);
   }
 
+  ListenableFuture<ImmutableList<UnconfiguredTargetNode>> getAllUnconfiguredTargetNodesJobs(
+      Cell cell, AbsPath buildFile) throws BuildFileParseException {
+    Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
+
+    return unconfiguredTargetNodeParsePipeline.getAllNodesJob(cell, buildFile);
+  }
+
   ListenableFuture<UnconfiguredTargetNode> getUnconfiguredTargetNodeJob(
       UnconfiguredBuildTarget target, DependencyStack dependencyStack)
       throws BuildFileParseException {

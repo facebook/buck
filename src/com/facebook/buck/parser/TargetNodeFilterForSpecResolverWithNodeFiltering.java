@@ -16,8 +16,6 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeFilterForSpecResolver;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.google.common.collect.ImmutableMap;
@@ -28,20 +26,20 @@ import java.util.function.Predicate;
  * A version of {@link TargetNodeFilterForSpecResolver} delegates filtering to another instance of
  * {@link TargetNodeFilterForSpecResolver} and performs additional filtering of nodes.
  */
-class TargetNodeFilterForSpecResolverWithNodeFiltering implements TargetNodeFilterForSpecResolver {
+class TargetNodeFilterForSpecResolverWithNodeFiltering<T, N>
+    implements TargetNodeFilterForSpecResolver<T, N> {
 
-  private final TargetNodeFilterForSpecResolver filter;
-  private final Predicate<TargetNodeMaybeIncompatible> nodeFilter;
+  private final TargetNodeFilterForSpecResolver<T, N> filter;
+  private final Predicate<N> nodeFilter;
 
   protected TargetNodeFilterForSpecResolverWithNodeFiltering(
-      TargetNodeFilterForSpecResolver filter, Predicate<TargetNodeMaybeIncompatible> nodeFilter) {
+      TargetNodeFilterForSpecResolver<T, N> filter, Predicate<N> nodeFilter) {
     this.filter = filter;
     this.nodeFilter = nodeFilter;
   }
 
   @Override
-  public ImmutableMap<BuildTarget, TargetNodeMaybeIncompatible> filter(
-      TargetNodeSpec spec, Iterable<TargetNodeMaybeIncompatible> nodes) {
+  public ImmutableMap<T, N> filter(TargetNodeSpec spec, Iterable<N> nodes) {
     return filter.filter(spec, nodes).entrySet().stream()
         .filter(entry -> nodeFilter.test(entry.getValue()))
         .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
