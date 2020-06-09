@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.RuleType;
@@ -36,6 +37,7 @@ import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWith
 import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.PerBuildState;
@@ -94,9 +96,10 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 /** QueryEnvironment implementation that operates over the unconfigured target graph. */
-@SuppressWarnings("unused")
 public class UnconfiguredQueryEnvironment
     implements EvaluatingQueryEnvironment<UnconfiguredQueryTarget> {
+
+  private static final Logger LOG = Logger.get(UnconfiguredQueryEnvironment.class);
 
   private final Parser parser;
   private final PerBuildState perBuildState;
@@ -252,7 +255,7 @@ public class UnconfiguredQueryEnvironment
 
     GraphTraversableWithPayload<UnconfiguredBuildTarget, UnconfiguredTargetNode> traversable =
         target -> {
-          UnconfiguredTargetNode node = assertNode(target);
+          UnconfiguredTargetNode node = assertCachedNode(target);
 
           // If a node has been added to the graph it means it and all of its children have been
           // visited by an acyclic traversal and added to the graph. From this it follows that there
@@ -275,7 +278,7 @@ public class UnconfiguredQueryEnvironment
         UnconfiguredTargetNode node = entry.getSecond();
         graph.addNode(node);
         for (UnconfiguredBuildTarget dep : getDepsForNode(node)) {
-          graph.addEdge(node, assertNode(dep));
+          graph.addEdge(node, assertCachedNode(dep));
         }
       }
     } catch (CycleException e) {
@@ -294,7 +297,7 @@ public class UnconfiguredQueryEnvironment
     return Streams.stream(targets)
         .flatMap(this::filterNonBuildTargets)
         .map(UnconfiguredQueryBuildTarget::getBuildTarget)
-        .map(this::assertNode)
+        .map(this::assertCachedNode)
         .flatMap(n -> this.getDepsForNode(n).stream())
         .map(this::getOrCreateQueryBuildTarget)
         .collect(ImmutableSet.toImmutableSet());
@@ -338,7 +341,8 @@ public class UnconfiguredQueryEnvironment
 
   @Override
   public String getTargetKind(UnconfiguredQueryTarget target) throws QueryException {
-    throw new RuntimeException("Not yet implemented");
+    UnconfiguredBuildTarget buildTarget = ((UnconfiguredQueryBuildTarget) target).getBuildTarget();
+    return getNode(buildTarget).get().getRuleType().getName();
   }
 
   @Override
@@ -435,8 +439,13 @@ public class UnconfiguredQueryEnvironment
     return buildTargetToQueryTarget.computeIfAbsent(buildTarget, UnconfiguredQueryBuildTarget::of);
   }
 
+  /**
+   * Get a node from the {@code targetsToNodes} cache. This method throws an exception when the node
+   * you're looking for isn't in the cache, so you should be reasonably confident the node will
+   * exist there before trying to look it up.
+   */
   @Nonnull
-  private UnconfiguredTargetNode assertNode(UnconfiguredBuildTarget buildTarget) {
+  private UnconfiguredTargetNode assertCachedNode(UnconfiguredBuildTarget buildTarget) {
     UnflavoredBuildTarget unflavored = buildTarget.getUnflavoredBuildTarget();
     return Objects.requireNonNull(
         targetsToNodes.get(unflavored),
@@ -452,7 +461,30 @@ public class UnconfiguredQueryEnvironment
   }
 
   private Optional<UnconfiguredTargetNode> getNode(UnflavoredBuildTarget buildTarget) {
-    return Optional.ofNullable(targetsToNodes.get(buildTarget));
+    UnconfiguredTargetNode cached = targetsToNodes.get(buildTarget);
+    if (cached != null) {
+      return Optional.of(cached);
+    }
+
+    UnconfiguredBuildTarget unconfiguredBuildTarget = UnconfiguredBuildTarget.of(buildTarget);
+    ListenableFuture<UnconfiguredTargetNode> nodeJob =
+        parser.getUnconfiguredTargetNodeJob(
+            perBuildState, unconfiguredBuildTarget, DependencyStack.top(unconfiguredBuildTarget));
+    LOG.verbose("Request for node getting delegated to parser: %s", buildTarget);
+    try {
+      UnconfiguredTargetNode node = nodeJob.get();
+      // The implementation of the parser method suggests this will never be null, but it can't
+      // hurt.
+      // NOTE: We are explicitly not populating the `targetsToNodes` cache here since we never went
+      // looking for the recursive deps of this node. If we put the node in the cache anyway then
+      // the discoverNewTargetsConcurrently method will have no way to differentiate between targets
+      // that have had their transitive closure calculated already and those that haven't.
+      return Optional.ofNullable(node);
+    } catch (ExecutionException e) {
+      throw new BuckUncheckedExecutionException(e, "Error occurred while calculating target node");
+    } catch (InterruptedException e) {
+      throw new BuckUncheckedExecutionException(e, "Interrupted while waiting for target node");
+    }
   }
 
   private Set<UnconfiguredBuildTarget> getDepsForNode(UnconfiguredTargetNode node) {

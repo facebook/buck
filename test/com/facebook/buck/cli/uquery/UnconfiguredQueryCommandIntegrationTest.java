@@ -89,7 +89,6 @@ public class UnconfiguredQueryCommandIntegrationTest {
   }
 
   @Test
-  @Ignore // TODO(srice): kind function NYI
   public void kindFunctionOnlyPrintsTargetsOfSpecificType() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
