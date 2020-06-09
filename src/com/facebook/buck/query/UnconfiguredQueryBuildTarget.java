@@ -41,6 +41,7 @@ public class UnconfiguredQueryBuildTarget implements UnconfiguredQueryTarget {
     return new UnconfiguredQueryBuildTarget(buildTarget);
   }
 
+  /** See {@code of(UnconfiguredBuildTarget} */
   public static UnconfiguredQueryBuildTarget of(UnflavoredBuildTarget buildTarget) {
     return of(UnconfiguredBuildTarget.of(buildTarget));
   }

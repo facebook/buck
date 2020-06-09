@@ -18,14 +18,15 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 
 public class ParserMessages {
   protected ParserMessages() {}
 
-  private static HumanReadableException createReadableGenericExceptionWithWhenSuffix(
-      BuildTarget buildTarget, BuildTarget parseDep, Exception exceptionInput) {
+  private static <T> HumanReadableException createReadableGenericExceptionWithWhenSuffix(
+      T buildTarget, T parseDep, Exception exceptionInput) {
     return new HumanReadableException(
         exceptionInput,
         "%s\n\nThis error happened while trying to get dependency '%s' of target '%s'",
@@ -46,6 +47,20 @@ public class ParserMessages {
 
   public static HumanReadableException createReadableExceptionWithWhenSuffix(
       BuildTarget buildTarget, BuildTarget parseDep, HumanReadableException exceptionInput) {
+    return createReadableGenericExceptionWithWhenSuffix(buildTarget, parseDep, exceptionInput);
+  }
+
+  public static HumanReadableException createReadableExceptionWithWhenSuffix(
+      UnconfiguredBuildTarget buildTarget,
+      UnconfiguredBuildTarget parseDep,
+      BuildFileParseException exceptionInput) {
+    return createReadableGenericExceptionWithWhenSuffix(buildTarget, parseDep, exceptionInput);
+  }
+
+  public static HumanReadableException createReadableExceptionWithWhenSuffix(
+      UnconfiguredBuildTarget buildTarget,
+      UnconfiguredBuildTarget parseDep,
+      BuildTargetException exceptionInput) {
     return createReadableGenericExceptionWithWhenSuffix(buildTarget, parseDep, exceptionInput);
   }
 }
