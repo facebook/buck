@@ -39,7 +39,7 @@ import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.modern.CellNameResolverSerialization;
-import com.facebook.buck.step.isolatedsteps.IsolatedCellPathExtractor;
+import com.facebook.buck.step.isolatedsteps.common.IsolatedCellPathExtractor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;

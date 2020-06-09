@@ -22,7 +22,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.step.isolatedsteps.AbstractIsolatedExecutionStep;
+import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
 import java.io.IOException;
 
 /** Make Missing Output directories step. */

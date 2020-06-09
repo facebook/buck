@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.step.isolatedsteps;
+package com.facebook.buck.step.isolatedsteps.common;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import java.io.IOException;
 
 /**
