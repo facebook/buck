@@ -27,7 +27,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.macros.CppFlagsMacro;
 import com.facebook.buck.rules.macros.LdflagsStaticMacro;
-import com.facebook.buck.rules.macros.UnconfiguredCxxGenruleFilterAndTargetsMacro;
+import com.facebook.buck.rules.macros.UnconfiguredCppFlagsMacro;
+import com.facebook.buck.rules.macros.UnconfiguredLdflagsStaticMacro;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -40,17 +41,16 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
   public void testNoPattern() throws CoerceFailedException {
     ForwardRelativePath basePath = ForwardRelativePath.of("java/com/facebook/buck/example");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CxxGenruleFilterAndTargetsMacroTypeCoercer<CppFlagsMacro> coercer =
+    CxxGenruleFilterAndTargetsMacroTypeCoercer<UnconfiguredCppFlagsMacro, CppFlagsMacro> coercer =
         new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
             Optional.empty(),
             new ListTypeCoercer<>(
                 new BuildTargetTypeCoercer(
                     new UnconfiguredBuildTargetTypeCoercer(
                         new ParsingUnconfiguredBuildTargetViewFactory()))),
+            UnconfiguredCppFlagsMacro.class,
             CppFlagsMacro.class,
-            (p, t) ->
-                UnconfiguredCxxGenruleFilterAndTargetsMacro.of(
-                    UnconfiguredCxxGenruleFilterAndTargetsMacro.Which.CPPFLAGS, p, t));
+            UnconfiguredCppFlagsMacro::of);
     CppFlagsMacro result =
         coercer.coerceBoth(
             createCellRoots(filesystem).getCellNameResolver(),
@@ -70,17 +70,17 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
   public void testPattern() throws CoerceFailedException {
     ForwardRelativePath basePath = ForwardRelativePath.of("java/com/facebook/buck/example");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CxxGenruleFilterAndTargetsMacroTypeCoercer<LdflagsStaticMacro> coercer =
-        new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
-            Optional.of(new PatternTypeCoercer()),
-            new ListTypeCoercer<>(
-                new BuildTargetTypeCoercer(
-                    new UnconfiguredBuildTargetTypeCoercer(
-                        new ParsingUnconfiguredBuildTargetViewFactory()))),
-            LdflagsStaticMacro.class,
-            (p, t) ->
-                UnconfiguredCxxGenruleFilterAndTargetsMacro.of(
-                    UnconfiguredCxxGenruleFilterAndTargetsMacro.Which.LDFLAGS_STATIC, p, t));
+    CxxGenruleFilterAndTargetsMacroTypeCoercer<UnconfiguredLdflagsStaticMacro, LdflagsStaticMacro>
+        coercer =
+            new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                Optional.of(new PatternTypeCoercer()),
+                new ListTypeCoercer<>(
+                    new BuildTargetTypeCoercer(
+                        new UnconfiguredBuildTargetTypeCoercer(
+                            new ParsingUnconfiguredBuildTargetViewFactory()))),
+                UnconfiguredLdflagsStaticMacro.class,
+                LdflagsStaticMacro.class,
+                UnconfiguredLdflagsStaticMacro::of);
     LdflagsStaticMacro result =
         coercer.coerceBoth(
             createCellRoots(filesystem).getCellNameResolver(),

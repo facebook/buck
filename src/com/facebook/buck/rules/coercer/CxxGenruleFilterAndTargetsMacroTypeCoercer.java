@@ -31,43 +31,40 @@ import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 
 /** Coercer for <code>cxx_genrule</code> flag-based macros. */
-public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilterAndTargetsMacro>
-    implements MacroTypeCoercer<UnconfiguredCxxGenruleFilterAndTargetsMacro, M> {
+public class CxxGenruleFilterAndTargetsMacroTypeCoercer<
+        U extends UnconfiguredCxxGenruleFilterAndTargetsMacro,
+        M extends CxxGenruleFilterAndTargetsMacro>
+    implements MacroTypeCoercer<U, M> {
 
   private final Optional<TypeCoercer<Pattern, Pattern>> patternTypeCoercer;
   private final TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ImmutableList<BuildTarget>>
       buildTargetsTypeCoercer;
-  private final Class<M> clazz;
-  private final BiFunction<
-          Optional<Pattern>,
-          ImmutableList<UnconfiguredBuildTarget>,
-          UnconfiguredCxxGenruleFilterAndTargetsMacro>
-      factory;
+  private final Class<U> uClass;
+  private final Class<M> mClass;
+  private final BiFunction<Optional<Pattern>, ImmutableList<UnconfiguredBuildTarget>, U> factory;
 
   public CxxGenruleFilterAndTargetsMacroTypeCoercer(
       Optional<TypeCoercer<Pattern, Pattern>> patternTypeCoercer,
       TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ImmutableList<BuildTarget>>
           buildTargetsTypeCoercer,
-      Class<M> clazz,
-      BiFunction<
-              Optional<Pattern>,
-              ImmutableList<UnconfiguredBuildTarget>,
-              UnconfiguredCxxGenruleFilterAndTargetsMacro>
-          factory) {
+      Class<U> uClass,
+      Class<M> mClass,
+      BiFunction<Optional<Pattern>, ImmutableList<UnconfiguredBuildTarget>, U> factory) {
     this.patternTypeCoercer = patternTypeCoercer;
     this.buildTargetsTypeCoercer = buildTargetsTypeCoercer;
-    this.clazz = clazz;
+    this.uClass = uClass;
+    this.mClass = mClass;
     this.factory = factory;
   }
 
   @Override
-  public Class<UnconfiguredCxxGenruleFilterAndTargetsMacro> getUnconfiguredOutputClass() {
-    return UnconfiguredCxxGenruleFilterAndTargetsMacro.class;
+  public Class<U> getUnconfiguredOutputClass() {
+    return uClass;
   }
 
   @Override
   public Class<M> getOutputClass() {
-    return clazz;
+    return mClass;
   }
 
   @Override
@@ -99,7 +96,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
   }
 
   @Override
-  public UnconfiguredCxxGenruleFilterAndTargetsMacro coerceToUnconfigured(
+  public U coerceToUnconfigured(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,

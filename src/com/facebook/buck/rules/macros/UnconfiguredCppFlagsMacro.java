@@ -17,32 +17,31 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 
-/** Unconfigured graph version of {@link CxxGenruleFilterAndTargetsMacro}. */
-public abstract class UnconfiguredCxxGenruleFilterAndTargetsMacro implements UnconfiguredMacro {
+/** Unconfigured version of {@link CppFlagsMacro}. */
+@BuckStyleValue
+public abstract class UnconfiguredCppFlagsMacro
+    extends UnconfiguredCxxGenruleFilterAndTargetsMacro {
 
-  public abstract Optional<Pattern> getFilter();
+  public static UnconfiguredCppFlagsMacro of(
+      Optional<Pattern> pattern, ImmutableList<UnconfiguredBuildTarget> buildTargets) {
+    return ImmutableUnconfiguredCppFlagsMacro.ofImpl(pattern, buildTargets);
+  }
 
-  public abstract ImmutableList<UnconfiguredBuildTarget> getTargets();
-
-  abstract BiFunction<
-          Optional<Pattern>, ImmutableList<BuildTarget>, CxxGenruleFilterAndTargetsMacro>
-      getConfiguredFactory();
-
-  /** Apply the configuration. */
   @Override
-  public CxxGenruleFilterAndTargetsMacro configure(
-      TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
-    ImmutableList<BuildTarget> configuredTargets =
-        getTargets().stream()
-            .map(t -> t.configure(targetConfiguration))
-            .collect(ImmutableList.toImmutableList());
-    return getConfiguredFactory().apply(getFilter(), configuredTargets);
+  public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
+    return UnconfiguredCppFlagsMacro.class;
+  }
+
+  @Override
+  public BiFunction<Optional<Pattern>, ImmutableList<BuildTarget>, CxxGenruleFilterAndTargetsMacro>
+      getConfiguredFactory() {
+    return CppFlagsMacro::of;
   }
 }
