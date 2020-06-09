@@ -21,12 +21,16 @@ import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.ass
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesExactly;
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContents;
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContentsExactly;
+import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.ThriftOutputUtils;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.query.thrift.DirectedAcyclicGraph;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -189,6 +193,27 @@ public class UnconfiguredQueryCommandIntegrationTest {
             "srcs");
     assertOutputMatchesFileContentsExactly(
         "stdout-basic-dot-bfs-compact-attribute-printing.dot", result, workspace);
+  }
+
+  @Test
+  public void basicThriftPrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery", "deps(//lib/...) ^ set(//lib:)", "--output-format", "thrift");
+
+    result.assertSuccess();
+    DirectedAcyclicGraph thriftDag = ThriftOutputUtils.parseThriftDag(result.getStdout());
+    assertEquals(
+        ImmutableSet.copyOf(ThriftOutputUtils.nodesToStringList(thriftDag)),
+        ImmutableSet.of("//lib:bar", "//lib:foo", "//lib:devtools"));
+    assertEquals(
+        ImmutableSet.copyOf(ThriftOutputUtils.edgesToStringList(thriftDag)),
+        ImmutableSet.of(
+            "//lib:foo->//lib:bar", "//lib:foo->//lib:devtools", "//lib:bar->//lib:devtools"));
   }
 
   @Test

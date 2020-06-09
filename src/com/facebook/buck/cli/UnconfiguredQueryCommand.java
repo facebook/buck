@@ -124,7 +124,7 @@ public class UnconfiguredQueryCommand
         printDotBfsCompactOutput(queryResult, attributesByResult, printStream);
         break;
       case THRIFT:
-        throw new QueryException("Unsupported output format - uquery is still a work in progress");
+        printThriftOutput(queryResult, attributesByResult, printStream);
     }
   }
 
@@ -206,6 +206,38 @@ public class UnconfiguredQueryCommand
       PrintStream printStream)
       throws IOException {
     printDotGraph(queryResult, attributesByResultOptional, Dot.OutputOrder.BFS, true, printStream);
+  }
+
+  private void printThriftOutput(
+      Set<UnconfiguredQueryTarget> queryResult,
+      Optional<
+              ImmutableMap<UnconfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+          attributesByResultOptional,
+      PrintStream printStream)
+      throws IOException {
+    ImmutableMap<UnflavoredBuildTarget, UnconfiguredQueryTarget> resultByBuildTarget =
+        queryResult.stream()
+            .filter(t -> t instanceof UnconfiguredQueryBuildTarget)
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    t ->
+                        ((UnconfiguredQueryBuildTarget) t)
+                            .getBuildTarget()
+                            .getUnflavoredBuildTarget(),
+                    t -> t));
+
+    ThriftOutput.Builder<UnconfiguredTargetNode> thriftBuilder =
+        ThriftOutput.builder(targetGraph)
+            .filter(n -> resultByBuildTarget.containsKey(n.getBuildTarget()))
+            .nodeToNameMappingFunction(node -> node.getBuildTarget().toString());
+
+    attributesByResultOptional.ifPresent(
+        attrs ->
+            thriftBuilder.nodeToAttributesFunction(
+                node ->
+                    attrMapToMapBySnakeCase(
+                        attrs.get(resultByBuildTarget.get(node.getBuildTarget())))));
+    thriftBuilder.build().writeOutput(printStream);
   }
 
   private void printListOutput(
