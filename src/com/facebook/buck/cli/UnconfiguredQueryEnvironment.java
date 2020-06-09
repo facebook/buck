@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.query.AllPathsFunction;
 import com.facebook.buck.query.AttrFilterFunction;
 import com.facebook.buck.query.AttrRegexFilterFunction;
@@ -51,14 +52,29 @@ public class UnconfiguredQueryEnvironment
 
   private final Parser parser;
   private final Cell rootCell;
+  private final UnconfiguredQueryTargetEvaluator targetEvaluator;
 
-  public UnconfiguredQueryEnvironment(Parser parser, Cell rootCell) {
+  public UnconfiguredQueryEnvironment(
+      Parser parser, Cell rootCell, UnconfiguredQueryTargetEvaluator targetEvaluator) {
     this.parser = parser;
     this.rootCell = rootCell;
+    this.targetEvaluator = targetEvaluator;
   }
 
-  public static UnconfiguredQueryEnvironment from(CommandRunnerParams params) {
-    return new UnconfiguredQueryEnvironment(params.getParser(), params.getCells().getRootCell());
+  /** Convenience constructor */
+  public static UnconfiguredQueryEnvironment from(
+      CommandRunnerParams params, PerBuildState perBuildState) {
+    Cell rootCell = params.getCells().getRootCell();
+    Parser parser = params.getParser();
+    UnconfiguredQueryTargetEvaluator targetEvaluator =
+        UnconfiguredQueryTargetEvaluator.from(
+            parser,
+            perBuildState,
+            params.getCells().getRootCell(),
+            params.getClientWorkingDir(),
+            params.getBuckConfig());
+
+    return new UnconfiguredQueryEnvironment(parser, rootCell, targetEvaluator);
   }
 
   @Override
@@ -73,7 +89,9 @@ public class UnconfiguredQueryEnvironment
   @Override
   public void preloadTargetPatterns(Iterable<String> patterns)
       throws QueryException, InterruptedException {
-    throw new RuntimeException("Not yet implemented");
+    for (String pattern : patterns) {
+      targetEvaluator.evaluateTarget(pattern);
+    }
   }
 
   @Override
@@ -108,7 +126,7 @@ public class UnconfiguredQueryEnvironment
 
   @Override
   public QueryEnvironment.TargetEvaluator<UnconfiguredQueryTarget> getTargetEvaluator() {
-    throw new RuntimeException("Not yet implemented");
+    return targetEvaluator;
   }
 
   @Override

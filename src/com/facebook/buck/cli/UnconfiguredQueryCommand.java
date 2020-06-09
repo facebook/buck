@@ -58,7 +58,7 @@ public class UnconfiguredQueryCommand
     try (CommandThreadManager pool =
             new CommandThreadManager("UQuery", getConcurrencyLimit(params.getBuckConfig()));
         PerBuildState perBuildState = createPerBuildState(params, pool)) {
-      UnconfiguredQueryEnvironment env = UnconfiguredQueryEnvironment.from(params);
+      UnconfiguredQueryEnvironment env = UnconfiguredQueryEnvironment.from(params, perBuildState);
       formatAndRunQuery(params, env);
     } catch (QueryException e) {
       throw new HumanReadableException(e);

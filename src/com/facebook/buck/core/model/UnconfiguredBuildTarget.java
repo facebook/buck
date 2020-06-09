@@ -195,6 +195,10 @@ public class UnconfiguredBuildTarget
 
   private static final Interner<UnconfiguredBuildTarget> interner = Interners.newWeakInterner();
 
+  public static UnconfiguredBuildTarget of(UnflavoredBuildTarget unflavoredBuildTarget) {
+    return of(unflavoredBuildTarget, FlavorSet.NO_FLAVORS);
+  }
+
   /** A constructor */
   public static UnconfiguredBuildTarget of(
       UnflavoredBuildTarget unflavoredBuildTarget, FlavorSet flavors) {

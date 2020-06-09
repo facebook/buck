@@ -17,6 +17,7 @@
 package com.facebook.buck.query;
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import javax.annotation.Nullable;
 
 /**
@@ -38,6 +39,10 @@ public class UnconfiguredQueryBuildTarget implements UnconfiguredQueryTarget {
    */
   public static UnconfiguredQueryBuildTarget of(UnconfiguredBuildTarget buildTarget) {
     return new UnconfiguredQueryBuildTarget(buildTarget);
+  }
+
+  public static UnconfiguredQueryBuildTarget of(UnflavoredBuildTarget buildTarget) {
+    return of(UnconfiguredBuildTarget.of(buildTarget));
   }
 
   /** @return The value of the {@code buildTarget} attribute */
