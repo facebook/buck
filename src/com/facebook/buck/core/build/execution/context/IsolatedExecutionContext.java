@@ -49,6 +49,20 @@ public abstract class IsolatedExecutionContext implements Closeable {
 
   public abstract ProcessExecutor getProcessExecutor();
 
+  /**
+   * The path to the root cell associated with the current rules being interacted with by this
+   * context.
+   *
+   * <p>For example, consider two cells: cell1 and cell2. If a build like "buck build cell2//:bar"
+   * was invoked from cell1, this method would return cell2's path in the context for bar. Note that
+   * if anything from cell1 is executed during "buck build cell2//:bar", this method would return
+   * cell1's path for those things.
+   *
+   * <p>The return value of this method does not have anything to do with what command line args
+   * were passed. Consider cell1 and cell2 again. When executing a rule in cell1 (like cell1//:foo),
+   * this would return cell1's path. When executing a rule in cell2 (like cell2//:bar) this would
+   * return cell2's path.
+   */
   public abstract AbsPath getRuleCellRoot();
 
   @Value.Default

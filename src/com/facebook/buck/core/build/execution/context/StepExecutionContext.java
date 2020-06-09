@@ -69,7 +69,14 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
 
   public abstract CellPathResolver getCellPathResolver();
 
-  /** See {@link com.facebook.buck.core.build.context.BuildContext#getBuildCellRootPath}. */
+  /**
+   * The absolute path to the cell where this build was invoked.
+   *
+   * <p>For example, consider two cells: cell1 and cell2. If a build like "buck build cell2//:bar"
+   * was invoked from cell1, this method would return cell1's path.
+   *
+   * <p>See {@link com.facebook.buck.core.build.context.BuildContext#getBuildCellRootPath}.
+   */
   public abstract Path getBuildCellRootPath();
 
   public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
