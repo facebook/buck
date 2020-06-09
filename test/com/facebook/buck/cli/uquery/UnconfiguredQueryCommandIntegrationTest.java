@@ -20,6 +20,7 @@ import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.ass
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatches;
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesExactly;
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContents;
+import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContentsExactly;
 
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.testutil.ProcessResult;
@@ -70,6 +71,124 @@ public class UnconfiguredQueryCommandIntegrationTest {
             "uquery", "//lib:", "--output-format", "json", "--output-attribute", "srcs");
     assertJSONOutputMatchesFileContents(
         "stdout-basic-json-attribute-printing.json", result, workspace);
+  }
+
+  @Test
+  public void basicDotPrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("uquery", "deps(//lib/...)", "--output-format", "dot");
+    assertOutputMatchesFileContents("stdout-basic-dot-printing", result, workspace);
+  }
+
+  @Test
+  public void basicDotAttributePrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery", "deps(//lib/...)", "--output-format", "dot", "--output-attribute", "srcs");
+    assertOutputMatchesFileContents("stdout-basic-dot-attribute-printing", result, workspace);
+  }
+
+  @Test
+  public void basicDotCompactPrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    // `dot_compact` poses a unique problem for testing because it assigns nodes an integer id in
+    // a nondeterministic fashion (well, only nondeterministic when you use the UNDEFINED) output
+    // order, which we do by default. Therefore the only way to get a test that's determinstic is
+    // to make sure the output only has one node.
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery", "deps(//lib/...) ^ set(//lib:devtools)", "--output-format", "dot_compact");
+    assertOutputMatchesFileContentsExactly(
+        "stdout-basic-dot-compact-printing.dot", result, workspace);
+  }
+
+  @Test
+  public void basicDotCompactAttributePrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery",
+            "deps(//lib/...) ^ set(//lib:devtools)",
+            "--output-format",
+            "dot_compact",
+            "--output-attribute",
+            "srcs");
+    assertOutputMatchesFileContentsExactly(
+        "stdout-basic-dot-compact-attribute-printing.dot", result, workspace);
+  }
+
+  @Test
+  public void basicDotBfsPrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("uquery", "deps(//bin:foo-bin)", "--output-format", "dot_bfs");
+    assertOutputMatchesFileContentsExactly("stdout-basic-dot-bfs-printing.dot", result, workspace);
+  }
+
+  @Test
+  public void basicDotBfsAttributePrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery",
+            "deps(//bin:foo-bin)",
+            "--output-format",
+            "dot_bfs",
+            "--output-attribute",
+            "srcs");
+    assertOutputMatchesFileContentsExactly(
+        "stdout-basic-dot-bfs-attribute-printing.dot", result, workspace);
+  }
+
+  @Test
+  public void basicDotBfsCompactPrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery", "deps(//bin:foo-bin)", "--output-format", "dot_bfs_compact");
+    assertOutputMatchesFileContentsExactly(
+        "stdout-basic-dot-bfs-compact-printing.dot", result, workspace);
+  }
+
+  @Test
+  public void basicDotBfsCompactAttributePrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery",
+            "deps(//bin:foo-bin)",
+            "--output-format",
+            "dot_bfs_compact",
+            "--output-attribute",
+            "srcs");
+    assertOutputMatchesFileContentsExactly(
+        "stdout-basic-dot-bfs-compact-attribute-printing.dot", result, workspace);
   }
 
   @Test

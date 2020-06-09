@@ -1,0 +1,38 @@
+  "//config/java:version-11" -> "//config/java:version-value-11";
+  "//config/java:version-11" [style=filled,color="#D3D9FD"];
+  "//config/java:version-8" -> "//config/java:version-value-8";
+  "//config/java:version-8" [style=filled,color="#D3D9FD"];
+  "//config/java:version-constraint" [style=filled,color="#AEB88A"];
+  "//config/java:version-value-11" -> "//config/java:version-constraint";
+  "//config/java:version-value-11" [style=filled,color="#8F8398"];
+  "//config/java:version-value-8" -> "//config/java:version-constraint";
+  "//config/java:version-value-8" [style=filled,color="#8F8398"];
+  "//config/mode:dev" -> "//config/mode:mode-value-dev";
+  "//config/mode:dev" [style=filled,color="#D3D9FD"];
+  "//config/mode:mode-constraint" [style=filled,color="#AEB88A"];
+  "//config/mode:mode-value-dev" -> "//config/mode:mode-constraint";
+  "//config/mode:mode-value-dev" [style=filled,color="#8F8398"];
+  "//config/mode:mode-value-opt" -> "//config/mode:mode-constraint";
+  "//config/mode:mode-value-opt" [style=filled,color="#8F8398"];
+  "//config/mode:opt" -> "//config/mode:mode-value-opt";
+  "//config/mode:opt" [style=filled,color="#D3D9FD"];
+  "//config/platform:java8-dev" -> "//config/java:version-value-8";
+  "//config/platform:java8-dev" -> "//config/mode:mode-value-dev";
+  "//config/platform:java8-dev" [style=filled,color="#F3E1D6"];
+  "//lib:bar" -> "//config/mode:dev";
+  "//lib:bar" -> "//config/mode:opt";
+  "//lib:bar" -> "//config/platform:java8-dev";
+  "//lib:bar" -> "//lib:devtools";
+  "//lib:bar" [style=filled,color=springgreen3,buck_srcs="[Bar.java]"];
+  "//lib:devtools" -> "//config/java:version-11";
+  "//lib:devtools" -> "//config/java:version-8";
+  "//lib:devtools" -> "//config/mode:dev";
+  "//lib:devtools" -> "//config/platform:java8-dev";
+  "//lib:devtools" [style=filled,color=springgreen3,buck_srcs="[DevtoolsEleven.java, DevtoolsEight.java]"];
+  "//lib:foo" -> "//config/mode:dev";
+  "//lib:foo" -> "//config/platform:java8-dev";
+  "//lib:foo" -> "//lib:bar";
+  "//lib:foo" -> "//lib:devtools";
+  "//lib:foo" [style=filled,color=springgreen3,buck_srcs="[Foo.java]"];
+digraph result_graph {
+}

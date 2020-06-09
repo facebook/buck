@@ -28,6 +28,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.file.MorePaths;
@@ -313,6 +314,10 @@ public class UnconfiguredQueryEnvironment
       throws QueryException {
     UnconfiguredTargetNode node = getNode((UnconfiguredQueryBuildTarget) target);
     return targetGraph.filterAttributeContents(node, attribute, predicate);
+  }
+
+  public TraversableGraph<UnconfiguredTargetNode> getTargetGraph() {
+    return targetGraph;
   }
 
   public UnconfiguredTargetNode getNode(UnconfiguredQueryBuildTarget queryBuildTarget) {

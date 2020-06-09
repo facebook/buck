@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
@@ -61,6 +62,7 @@ public class UnconfiguredQueryCommand
     extends AbstractQueryCommand<UnconfiguredQueryTarget, UnconfiguredQueryEnvironment> {
 
   private PerBuildState perBuildState;
+  private TraversableGraph<UnconfiguredTargetNode> targetGraph;
 
   @Override
   public String getShortDescription() {
@@ -78,6 +80,8 @@ public class UnconfiguredQueryCommand
         PerBuildState state = createPerBuildState(params, pool)) {
       perBuildState = state;
       UnconfiguredQueryEnvironment env = UnconfiguredQueryEnvironment.from(params, perBuildState);
+      targetGraph = env.getTargetGraph();
+
       formatAndRunQuery(params, env);
     } catch (QueryException e) {
       throw new HumanReadableException(e);
@@ -107,9 +111,19 @@ public class UnconfiguredQueryCommand
       case JSON:
         printJsonOutput(queryResult, attributesByResult, printStream);
         break;
-        // Use a non-exhausive switch while we're still in the early stages of uquery.
-        // $CASES-OMITTED$
-      default:
+      case DOT:
+        printDotOutput(queryResult, attributesByResult, printStream);
+        break;
+      case DOT_COMPACT:
+        printDotCompactOutput(queryResult, attributesByResult, printStream);
+        break;
+      case DOT_BFS:
+        printDotBfsOutput(queryResult, attributesByResult, printStream);
+        break;
+      case DOT_BFS_COMPACT:
+        printDotBfsCompactOutput(queryResult, attributesByResult, printStream);
+        break;
+      case THRIFT:
         throw new QueryException("Unsupported output format - uquery is still a work in progress");
     }
   }
@@ -152,6 +166,48 @@ public class UnconfiguredQueryCommand
     queryResult.stream().map(this::toPresentationForm).forEach(printStream::println);
   }
 
+  private void printDotOutput(
+      Set<UnconfiguredQueryTarget> queryResult,
+      Optional<
+              ImmutableMap<UnconfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+          attributesByResultOptional,
+      PrintStream printStream)
+      throws IOException {
+    printDotGraph(
+        queryResult, attributesByResultOptional, Dot.OutputOrder.UNDEFINED, false, printStream);
+  }
+
+  private void printDotCompactOutput(
+      Set<UnconfiguredQueryTarget> queryResult,
+      Optional<
+              ImmutableMap<UnconfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+          attributesByResultOptional,
+      PrintStream printStream)
+      throws IOException {
+    printDotGraph(
+        queryResult, attributesByResultOptional, Dot.OutputOrder.UNDEFINED, true, printStream);
+  }
+
+  private void printDotBfsOutput(
+      Set<UnconfiguredQueryTarget> queryResult,
+      Optional<
+              ImmutableMap<UnconfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+          attributesByResultOptional,
+      PrintStream printStream)
+      throws IOException {
+    printDotGraph(queryResult, attributesByResultOptional, Dot.OutputOrder.BFS, false, printStream);
+  }
+
+  private void printDotBfsCompactOutput(
+      Set<UnconfiguredQueryTarget> queryResult,
+      Optional<
+              ImmutableMap<UnconfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+          attributesByResultOptional,
+      PrintStream printStream)
+      throws IOException {
+    printDotGraph(queryResult, attributesByResultOptional, Dot.OutputOrder.BFS, true, printStream);
+  }
+
   private void printListOutput(
       Multimap<String, UnconfiguredQueryTarget> queryResultMap, PrintStream printStream) {
     queryResultMap.values().stream().map(this::toPresentationForm).forEach(printStream::println);
@@ -191,6 +247,43 @@ public class UnconfiguredQueryCommand
         Multimaps.transformValues(
             queryResultMap, input -> toPresentationForm(Objects.requireNonNull(input)));
     prettyPrintJsonObject(targetsAndResultsNames.asMap(), printStream);
+  }
+
+  private void printDotGraph(
+      Set<UnconfiguredQueryTarget> queryResult,
+      Optional<
+              ImmutableMap<UnconfiguredQueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+          attributesByResultOptional,
+      Dot.OutputOrder outputOrder,
+      boolean compactMode,
+      PrintStream printStream)
+      throws IOException {
+    ImmutableMap<UnflavoredBuildTarget, UnconfiguredQueryTarget> resultByBuildTarget =
+        queryResult.stream()
+            .filter(t -> t instanceof UnconfiguredQueryBuildTarget)
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    t ->
+                        ((UnconfiguredQueryBuildTarget) t)
+                            .getBuildTarget()
+                            .getUnflavoredBuildTarget(),
+                    t -> t));
+
+    Dot.Builder<UnconfiguredTargetNode> dotBuilder =
+        Dot.builder(targetGraph, "result_graph")
+            .setNodesToFilter(n -> resultByBuildTarget.containsKey(n.getBuildTarget()))
+            .setNodeToName(node -> node.getBuildTarget().toString())
+            .setNodeToTypeName(node -> node.getRuleType().getName())
+            .setOutputOrder(outputOrder)
+            .setCompactMode(compactMode);
+
+    attributesByResultOptional.ifPresent(
+        attrs ->
+            dotBuilder.setNodeToAttributes(
+                node ->
+                    attrMapToMapBySnakeCase(
+                        attrs.get(resultByBuildTarget.get(node.getBuildTarget())))));
+    dotBuilder.build().writeOutput(printStream);
   }
 
   private Optional<
