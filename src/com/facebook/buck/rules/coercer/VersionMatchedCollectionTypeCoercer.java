@@ -63,6 +63,11 @@ public class VersionMatchedCollectionTypeCoercer<T>
   }
 
   @Override
+  public void traverseUnconfigured(CellNameResolver cellRoots, Object object, Traversal traversal) {
+    traversal.traverse(object);
+  }
+
+  @Override
   public void traverse(
       CellNameResolver cellRoots, VersionMatchedCollection<T> object, Traversal traversal) {
     for (Pair<ImmutableMap<BuildTarget, Version>, T> pair : object.getValuePairs()) {

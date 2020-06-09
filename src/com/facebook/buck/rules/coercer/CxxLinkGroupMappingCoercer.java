@@ -76,6 +76,13 @@ public class CxxLinkGroupMappingCoercer
   }
 
   @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, UnconfiguredCxxLinkGroupMapping object, Traversal traversal) {
+    linkGroupTypeCoercer.traverseUnconfigured(cellRoots, object.getLinkGroup(), traversal);
+    mappingTargetsCoercer.traverseUnconfigured(cellRoots, object.getMappingTargets(), traversal);
+  }
+
+  @Override
   public void traverse(
       CellNameResolver cellRoots, CxxLinkGroupMapping object, Traversal traversal) {
     linkGroupTypeCoercer.traverse(cellRoots, object.getLinkGroup(), traversal);

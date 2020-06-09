@@ -81,6 +81,12 @@ public class ListTypeCoercerTest {
     }
 
     @Override
+    public void traverseUnconfigured(
+        CellNameResolver cellRoots, String object, Traversal traversal) {
+      throw new AssertionError();
+    }
+
+    @Override
     public void traverse(CellNameResolver cellRoots, String object, Traversal traversal) {
       throw new AssertionError();
     }

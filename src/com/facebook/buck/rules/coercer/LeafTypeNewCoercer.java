@@ -32,6 +32,12 @@ public abstract class LeafTypeNewCoercer<U, T> implements TypeCoercer<U, T> {
   }
 
   @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellPathResolver, Object object, Traversal traversal) {
+    traversal.traverse(object);
+  }
+
+  @Override
   public void traverse(CellNameResolver cellPathResolver, Object object, Traversal traversal) {
     traversal.traverse(object);
   }

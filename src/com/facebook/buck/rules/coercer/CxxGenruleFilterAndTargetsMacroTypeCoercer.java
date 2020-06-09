@@ -77,14 +77,12 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<
       CellNameResolver cellRoots,
       UnconfiguredCxxGenruleFilterAndTargetsMacro macro,
       TypeCoercer.Traversal traversal) {
-    // TODO(srice): Uncomment this once we implement `traverseUnconfigured` on `TypeCoercer`
-    //    patternTypeCoercer.ifPresent(
-    //        coercer ->
-    //            macro
-    //                .getFilter()
-    //                .ifPresent(filter -> coercer.traverseUnconfigured(cellRoots, filter,
-    // traversal)));
-    //    buildTargetsTypeCoercer.traverseUnconfigured(cellRoots, macro.getTargets(), traversal);
+    patternTypeCoercer.ifPresent(
+        coercer ->
+            macro
+                .getFilter()
+                .ifPresent(filter -> coercer.traverseUnconfigured(cellRoots, filter, traversal)));
+    buildTargetsTypeCoercer.traverseUnconfigured(cellRoots, macro.getTargets(), traversal);
   }
 
   @Override

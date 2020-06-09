@@ -46,6 +46,14 @@ public abstract class CollectionTypeCoercer<
   }
 
   @Override
+  public void traverseUnconfigured(CellNameResolver cellRoots, D object, Traversal traversal) {
+    traversal.traverse(object);
+    for (U element : object) {
+      elementTypeCoercer.traverseUnconfigured(cellRoots, element, traversal);
+    }
+  }
+
+  @Override
   public void traverse(CellNameResolver cellRoots, C object, Traversal traversal) {
     traversal.traverse(object);
     for (T element : object) {

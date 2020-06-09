@@ -64,6 +64,14 @@ public class SourceWithFlagsTypeCoercer
   }
 
   @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, UnconfiguredSourceWithFlags object, Traversal traversal) {
+    sourcePathTypeCoercer.traverseUnconfigured(cellRoots, object.getSourcePath(), traversal);
+    flagsTypeCoercer.traverseUnconfigured(
+        cellRoots, ImmutableList.copyOf(object.getFlags()), traversal);
+  }
+
+  @Override
   public void traverse(CellNameResolver cellRoots, SourceWithFlags object, Traversal traversal) {
     sourcePathTypeCoercer.traverse(cellRoots, object.getSourcePath(), traversal);
     flagsTypeCoercer.traverse(cellRoots, ImmutableList.copyOf(object.getFlags()), traversal);

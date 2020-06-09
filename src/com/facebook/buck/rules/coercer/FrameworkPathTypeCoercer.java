@@ -25,6 +25,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -63,6 +64,25 @@ public class FrameworkPathTypeCoercer
       }
     }
     return sourcePathTypeCoercer.hasElementClass(types);
+  }
+
+  @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, UnconfiguredFrameworkPath object, Traversal traversal) {
+    object.match(
+        new UnconfiguredFrameworkPath.Matcher<Unit>() {
+          @Override
+          public Unit sourcePath(UnconfiguredSourcePath sourcePath) {
+            sourcePathTypeCoercer.traverseUnconfigured(cellRoots, sourcePath, traversal);
+            return Unit.UNIT;
+          }
+
+          @Override
+          public Unit sourceTreePath(SourceTreePath sourceTreePath) {
+            traversal.traverse(sourceTreePath);
+            return Unit.UNIT;
+          }
+        });
   }
 
   @Override

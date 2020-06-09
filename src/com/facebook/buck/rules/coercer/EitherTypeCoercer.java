@@ -64,6 +64,16 @@ public class EitherTypeCoercer<LU, RU, Left, Right>
   }
 
   @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, Either<LU, RU> object, Traversal traversal) {
+    if (object.isLeft()) {
+      leftTypeCoercer.traverseUnconfigured(cellRoots, object.getLeft(), traversal);
+    } else {
+      rightTypeCoercer.traverseUnconfigured(cellRoots, object.getRight(), traversal);
+    }
+  }
+
+  @Override
   public void traverse(
       CellNameResolver cellRoots, Either<Left, Right> object, Traversal traversal) {
     if (object.isLeft()) {

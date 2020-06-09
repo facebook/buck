@@ -51,6 +51,14 @@ public class QueryCoercer implements TypeCoercer<UnconfiguredQuery, Query> {
   }
 
   @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, UnconfiguredQuery query, Traversal traversal) {
+    // TODO(srice): This is very wrong. We need to parse the query like we do for configured
+    // traversal.
+    traversal.traverse(query);
+  }
+
+  @Override
   public void traverse(CellNameResolver cellRoots, Query query, Traversal traversal) {
     extractBuildTargets(cellRoots, query).forEach(traversal::traverse);
   }

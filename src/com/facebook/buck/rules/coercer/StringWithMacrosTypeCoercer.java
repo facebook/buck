@@ -48,11 +48,19 @@ public class StringWithMacrosTypeCoercer
 
   private final ImmutableMap<String, Class<? extends Macro>> macros;
   private final ImmutableMap<
+          Class<? extends UnconfiguredMacro>,
+          MacroTypeCoercer<? extends UnconfiguredMacro, ? extends Macro>>
+      unconfiguredCoercers;
+  private final ImmutableMap<
           Class<? extends Macro>, MacroTypeCoercer<? extends UnconfiguredMacro, ? extends Macro>>
       coercers;
 
   private StringWithMacrosTypeCoercer(
       ImmutableMap<String, Class<? extends Macro>> macros,
+      ImmutableMap<
+              Class<? extends UnconfiguredMacro>,
+              MacroTypeCoercer<? extends UnconfiguredMacro, ? extends Macro>>
+          unconfiguredCoercers,
       ImmutableMap<
               Class<? extends Macro>,
               MacroTypeCoercer<? extends UnconfiguredMacro, ? extends Macro>>
@@ -60,6 +68,7 @@ public class StringWithMacrosTypeCoercer
     Preconditions.checkArgument(
         Sets.difference(coercers.keySet(), new HashSet<>(macros.values())).isEmpty());
     this.macros = macros;
+    this.unconfiguredCoercers = unconfiguredCoercers;
     this.coercers = coercers;
   }
 
@@ -84,12 +93,40 @@ public class StringWithMacrosTypeCoercer
     return false;
   }
 
+  private <U extends UnconfiguredMacro, M extends Macro> void traverseUnconfigured(
+      CellNameResolver cellRoots,
+      MacroTypeCoercer<U, M> coercer,
+      UnconfiguredMacro macro,
+      Traversal traversal) {
+    coercer.traverseUnconfigured(
+        cellRoots, coercer.getUnconfiguredOutputClass().cast(macro), traversal);
+  }
+
   private <U extends UnconfiguredMacro, M extends Macro> void traverse(
       CellNameResolver cellRoots,
       MacroTypeCoercer<U, M> coercer,
       Macro macro,
       Traversal traversal) {
     coercer.traverse(cellRoots, coercer.getOutputClass().cast(macro), traversal);
+  }
+
+  @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots,
+      UnconfiguredStringWithMacros stringWithMacros,
+      Traversal traversal) {
+    for (Either<String, UnconfiguredMacroContainer> part :
+        stringWithMacros.getUnconfiguredParts()) {
+      if (part.isLeft()) {
+        traversal.traverse(part.getLeft());
+      } else {
+        UnconfiguredMacroContainer macroContainer = part.getRight();
+        MacroTypeCoercer<? extends UnconfiguredMacro, ? extends Macro> coercer =
+            Objects.requireNonNull(
+                unconfiguredCoercers.get(macroContainer.getMacro().getUnconfiguredMacroClass()));
+        traverseUnconfigured(cellRoots, coercer, macroContainer.getMacro(), traversal);
+      }
+    }
   }
 
   @Override
@@ -277,9 +314,12 @@ public class StringWithMacrosTypeCoercer
     }
 
     StringWithMacrosTypeCoercer build() {
+      ImmutableList<MacroTypeCoercer<? extends UnconfiguredMacro, ? extends Macro>> coercers =
+          this.macroCoercers.build();
       return new StringWithMacrosTypeCoercer(
           this.macros.build(),
-          Maps.uniqueIndex(this.macroCoercers.build(), MacroTypeCoercer::getOutputClass));
+          Maps.uniqueIndex(coercers, MacroTypeCoercer::getUnconfiguredOutputClass),
+          Maps.uniqueIndex(coercers, MacroTypeCoercer::getOutputClass));
     }
   }
 

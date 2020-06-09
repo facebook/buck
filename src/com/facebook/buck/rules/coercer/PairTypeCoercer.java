@@ -64,6 +64,13 @@ public class PairTypeCoercer<FU, SU, FIRST, SECOND>
   }
 
   @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, Pair<FU, SU> object, Traversal traversal) {
+    firstTypeCoercer.traverseUnconfigured(cellRoots, object.getFirst(), traversal);
+    secondTypeCoercer.traverseUnconfigured(cellRoots, object.getSecond(), traversal);
+  }
+
+  @Override
   public void traverse(
       CellNameResolver cellRoots, Pair<FIRST, SECOND> object, Traversal traversal) {
     firstTypeCoercer.traverse(cellRoots, object.getFirst(), traversal);

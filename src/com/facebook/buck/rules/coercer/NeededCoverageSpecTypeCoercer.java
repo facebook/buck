@@ -56,6 +56,18 @@ public class NeededCoverageSpecTypeCoercer
   }
 
   @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, UnconfiguredNeededCoverageSpec object, Traversal traversal) {
+    intTypeCoercer.traverseUnconfigured(
+        cellRoots, object.getNeededCoverageRatioPercentage(), traversal);
+    buildTargetTypeCoercer.traverseUnconfigured(cellRoots, object.getBuildTarget(), traversal);
+    Optional<String> pathName = object.getPathName();
+    if (pathName.isPresent()) {
+      pathNameTypeCoercer.traverseUnconfigured(cellRoots, pathName.get(), traversal);
+    }
+  }
+
+  @Override
   public void traverse(CellNameResolver cellRoots, NeededCoverageSpec object, Traversal traversal) {
     intTypeCoercer.traverse(cellRoots, object.getNeededCoverageRatioPercentage(), traversal);
     buildTargetTypeCoercer.traverse(cellRoots, object.getBuildTarget(), traversal);

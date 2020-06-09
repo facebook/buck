@@ -66,6 +66,10 @@ public class TestRunnerSpecCoercer
   }
 
   @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, UnconfiguredTestRunnerSpec object, Traversal traversal) {}
+
+  @Override
   public void traverse(CellNameResolver cellRoots, TestRunnerSpec object, Traversal traversal) {}
 
   @Override

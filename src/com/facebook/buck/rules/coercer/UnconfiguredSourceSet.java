@@ -48,7 +48,12 @@ public abstract class UnconfiguredSourceSet {
     }
 
     @Override
-    public <R, E extends Exception> R match(Matcher<R, E> matcher) throws E {
+    public <R> R match(Matcher<R> matcher) {
+      return matcher.named(getNamedSources());
+    }
+
+    @Override
+    public <R, E extends Exception> R match(MatcherWithException<R, E> matcher) throws E {
       return matcher.named(getNamedSources());
     }
   }
@@ -64,7 +69,12 @@ public abstract class UnconfiguredSourceSet {
     }
 
     @Override
-    public <R, E extends Exception> R match(Matcher<R, E> matcher) throws E {
+    public <R> R match(Matcher<R> matcher) {
+      return matcher.unnamed(getUnnamedSources());
+    }
+
+    @Override
+    public <R, E extends Exception> R match(MatcherWithException<R, E> matcher) throws E {
       return matcher.unnamed(getUnnamedSources());
     }
   }
@@ -82,12 +92,22 @@ public abstract class UnconfiguredSourceSet {
   public abstract boolean isEmpty();
 
   /** Callback for {@link #match(Matcher)}. */
-  public interface Matcher<R, E extends Exception> {
+  public interface Matcher<R> {
+    R named(ImmutableMap<String, UnconfiguredSourcePath> named);
+
+    R unnamed(ImmutableSet<UnconfiguredSourcePath> unnamed);
+  }
+
+  /** Callback for {@link #match(Matcher)}. */
+  public interface MatcherWithException<R, E extends Exception> {
     R named(ImmutableMap<String, UnconfiguredSourcePath> named) throws E;
 
     R unnamed(ImmutableSet<UnconfiguredSourcePath> unnamed) throws E;
   }
 
   /** Invoke different callback based on this subclass. */
-  public abstract <R, E extends Exception> R match(Matcher<R, E> matcher) throws E;
+  public abstract <R> R match(Matcher<R> matcher);
+
+  /** Invoke different callback based on this subclass. */
+  public abstract <R, E extends Exception> R match(MatcherWithException<R, E> matcher) throws E;
 }

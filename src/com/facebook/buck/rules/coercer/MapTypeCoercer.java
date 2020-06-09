@@ -66,6 +66,16 @@ public class MapTypeCoercer<KU, VU, K, V>
   }
 
   @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, ImmutableMap<KU, VU> object, Traversal traversal) {
+    traversal.traverse(object);
+    for (Map.Entry<KU, VU> element : object.entrySet()) {
+      keyTypeCoercer.traverseUnconfigured(cellRoots, element.getKey(), traversal);
+      valueTypeCoercer.traverseUnconfigured(cellRoots, element.getValue(), traversal);
+    }
+  }
+
+  @Override
   public void traverse(CellNameResolver cellRoots, ImmutableMap<K, V> object, Traversal traversal) {
     traversal.traverse(object);
     for (Map.Entry<K, V> element : object.entrySet()) {

@@ -39,7 +39,12 @@ public abstract class UnconfiguredSourceSortedSet {
     public abstract ImmutableSortedMap<String, UnconfiguredSourcePath> getNamedSources();
 
     @Override
-    public <R, E extends Exception> R match(Matcher<R, E> matcher) throws E {
+    public <R> R match(Matcher<R> matcher) {
+      return matcher.named(getNamedSources());
+    }
+
+    @Override
+    public <R, E extends Exception> R match(MatcherWithException<R, E> matcher) throws E {
       return matcher.named(getNamedSources());
     }
   }
@@ -50,7 +55,12 @@ public abstract class UnconfiguredSourceSortedSet {
     public abstract ImmutableSortedSet<UnconfiguredSourcePath> getUnnamedSources();
 
     @Override
-    public <R, E extends Exception> R match(Matcher<R, E> matcher) throws E {
+    public <R> R match(Matcher<R> matcher) {
+      return matcher.unnamed(getUnnamedSources());
+    }
+
+    @Override
+    public <R, E extends Exception> R match(MatcherWithException<R, E> matcher) throws E {
       return matcher.unnamed(getUnnamedSources());
     }
   }
@@ -59,14 +69,24 @@ public abstract class UnconfiguredSourceSortedSet {
       UnconfiguredSourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of());
 
   /** Callbacks for {@link #match(Matcher)}. */
-  public interface Matcher<R, E extends Exception> {
+  public interface Matcher<R> {
+    R named(ImmutableSortedMap<String, UnconfiguredSourcePath> named);
+
+    R unnamed(ImmutableSortedSet<UnconfiguredSourcePath> unnamed);
+  }
+
+  /** Callbacks for {@link #match(Matcher)}. */
+  public interface MatcherWithException<R, E extends Exception> {
     R named(ImmutableSortedMap<String, UnconfiguredSourcePath> named) throws E;
 
     R unnamed(ImmutableSortedSet<UnconfiguredSourcePath> unnamed) throws E;
   }
 
   /** Invoke a different callback depending on this subclass. */
-  public abstract <R, E extends Exception> R match(Matcher<R, E> matcher) throws E;
+  public abstract <R> R match(Matcher<R> matcher);
+
+  /** Invoke a different callback depending on this subclass. */
+  public abstract <R, E extends Exception> R match(MatcherWithException<R, E> matcher) throws E;
 
   public static UnconfiguredSourceSortedSet ofUnnamedSources(
       ImmutableSortedSet<UnconfiguredSourcePath> unnamedSources) {

@@ -54,8 +54,7 @@ class QueryMacroTypeCoercer<U extends UnconfiguredQueryMacro, M extends QueryMac
 
   @Override
   public void traverseUnconfigured(CellNameResolver cellRoots, U macro, Traversal traversal) {
-    // TODO(srice): Uncomment this once we implement `traverseUnconfigured` on `TypeCoercer`
-    //    queryCoercer.traverseUnconfigured(cellRoots, macro.getQuery(), traversal);
+    queryCoercer.traverseUnconfigured(cellRoots, macro.getQuery(), traversal);
   }
 
   @Override

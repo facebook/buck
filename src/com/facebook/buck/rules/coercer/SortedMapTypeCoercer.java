@@ -62,6 +62,16 @@ public class SortedMapTypeCoercer<KU extends Comparable<KU>, VU, K extends Compa
   }
 
   @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, ImmutableSortedMap<KU, VU> object, Traversal traversal) {
+    traversal.traverse(object);
+    for (Map.Entry<KU, VU> element : object.entrySet()) {
+      keyTypeCoercer.traverseUnconfigured(cellRoots, element.getKey(), traversal);
+      valueTypeCoercer.traverseUnconfigured(cellRoots, element.getValue(), traversal);
+    }
+  }
+
+  @Override
   public void traverse(
       CellNameResolver cellRoots, ImmutableSortedMap<K, V> object, Traversal traversal) {
     traversal.traverse(object);

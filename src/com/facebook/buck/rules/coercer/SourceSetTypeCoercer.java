@@ -61,6 +61,25 @@ public class SourceSetTypeCoercer extends SourceSetConcatable
   }
 
   @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, UnconfiguredSourceSet object, Traversal traversal) {
+    object.match(
+        new UnconfiguredSourceSet.Matcher<Unit>() {
+          @Override
+          public Unit named(ImmutableMap<String, UnconfiguredSourcePath> named) {
+            namedHeadersTypeCoercer.traverseUnconfigured(cellRoots, named, traversal);
+            return Unit.UNIT;
+          }
+
+          @Override
+          public Unit unnamed(ImmutableSet<UnconfiguredSourcePath> unnamed) {
+            unnamedHeadersTypeCoercer.traverseUnconfigured(cellRoots, unnamed, traversal);
+            return Unit.UNIT;
+          }
+        });
+  }
+
+  @Override
   public void traverse(CellNameResolver cellRoots, SourceSet object, Traversal traversal) {
     object.match(
         new SourceSet.Matcher<Unit>() {
@@ -106,7 +125,7 @@ public class SourceSetTypeCoercer extends SourceSetConcatable
       UnconfiguredSourceSet object)
       throws CoerceFailedException {
     return object.match(
-        new UnconfiguredSourceSet.Matcher<SourceSet, CoerceFailedException>() {
+        new UnconfiguredSourceSet.MatcherWithException<SourceSet, CoerceFailedException>() {
           @Override
           public SourceSet named(ImmutableMap<String, UnconfiguredSourcePath> named)
               throws CoerceFailedException {

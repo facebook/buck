@@ -58,9 +58,8 @@ public final class BuildTargetMacroTypeCoercer<
   @Override
   public void traverseUnconfigured(
       CellNameResolver cellRoots, U macro, TypeCoercer.Traversal traversal) {
-    // TODO(srice): Uncomment this once we implement `traverseUnconfigured` on `TypeCoercer`
-    //    buildTargetWithOutputsTypeCoercer.traverseUnconfigured(
-    //        cellRoots, macro.getTargetWithOutputs(), traversal);
+    buildTargetWithOutputsTypeCoercer.traverseUnconfigured(
+        cellRoots, macro.getTargetWithOutputs(), traversal);
   }
 
   @Override

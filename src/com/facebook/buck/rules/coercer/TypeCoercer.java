@@ -63,6 +63,14 @@ public interface TypeCoercer<U, T> extends Concatable<T> {
    * <p>#{link Traversal#traverse} function will be called once for the object. If the object is a
    * collection or map, it will also recursively traverse all elements of the map.
    */
+  void traverseUnconfigured(CellNameResolver cellRoots, U object, Traversal traversal);
+
+  /**
+   * Traverse an object guided by this TypeCoercer.
+   *
+   * <p>#{link Traversal#traverse} function will be called once for the object. If the object is a
+   * collection or map, it will also recursively traverse all elements of the map.
+   */
   void traverse(CellNameResolver cellRoots, T object, Traversal traversal);
 
   /** Coerce to a value for unconfigured graph. */

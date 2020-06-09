@@ -63,6 +63,28 @@ public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
   }
 
   @Override
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, UnconfiguredSourceSortedSet object, Traversal traversal) {
+    object.match(
+        new UnconfiguredSourceSortedSet.Matcher<Unit>() {
+          @Override
+          public Unit named(ImmutableSortedMap<String, UnconfiguredSourcePath> named) {
+            namedHeadersTypeCoercer.traverseUnconfigured(cellRoots, named, traversal);
+            return Unit.UNIT;
+          }
+
+          @Override
+          public Unit unnamed(ImmutableSortedSet<UnconfiguredSourcePath> unnamed) {
+            // TODO(srice): The types here are wonky - why are we making `unnamed` into an
+            // `ImmutableSortedSet` only to turn it back into a list for traversal?
+            unnamedHeadersTypeCoercer.traverseUnconfigured(
+                cellRoots, ImmutableList.copyOf(unnamed), traversal);
+            return Unit.UNIT;
+          }
+        });
+  }
+
+  @Override
   public void traverse(CellNameResolver cellRoots, SourceSortedSet object, Traversal traversal) {
     object.match(
         new SourceSortedSet.Matcher<Unit>() {
@@ -109,7 +131,8 @@ public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
       UnconfiguredSourceSortedSet object)
       throws CoerceFailedException {
     return object.match(
-        new UnconfiguredSourceSortedSet.Matcher<SourceSortedSet, CoerceFailedException>() {
+        new UnconfiguredSourceSortedSet.MatcherWithException<
+            SourceSortedSet, CoerceFailedException>() {
           @Override
           public SourceSortedSet named(ImmutableSortedMap<String, UnconfiguredSourcePath> named)
               throws CoerceFailedException {

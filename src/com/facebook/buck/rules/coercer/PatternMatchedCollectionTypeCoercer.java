@@ -66,6 +66,13 @@ public class PatternMatchedCollectionTypeCoercer<T>
   }
 
   @Override
+  public void traverseUnconfigured(CellNameResolver cellRoots, Object object, Traversal traversal) {
+    // TODO(srice): `coerceToUnconfigured` isn't fully implemented for this class, so our
+    //  `traverseUnconfigured` is incorrect as well
+    traversal.traverse(object);
+  }
+
+  @Override
   public void traverse(
       CellNameResolver cellRoots, PatternMatchedCollection<T> object, Traversal traversal) {
     for (Pair<Pattern, T> value : object.getPatternsAndValues()) {

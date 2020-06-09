@@ -53,6 +53,13 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
   }
 
   @Override
+  public void traverseUnconfigured(CellNameResolver cellRoots, Object object, Traversal traversal) {
+    // TODO(srice): `coerceToUnconfigured` isn't fully implemented for this class, so our
+    //  `traverseUnconfigured` is incorrect as well
+    traversal.traverse(object);
+  }
+
+  @Override
   public void traverse(CellNameResolver cellRoots, T object, Traversal traversal) {
     traversal.traverse(object);
     for (ParamInfo<?> paramInfo : paramsInfo.getParamInfosSorted()) {
