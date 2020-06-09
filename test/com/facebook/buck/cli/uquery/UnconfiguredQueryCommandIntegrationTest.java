@@ -54,6 +54,29 @@ public class UnconfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void basicMultiQueryPrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("uquery", "%s", "//bin:", "//config/platform:");
+    assertOutputMatchesFileContents("stdout-basic-multi-query-printing", result, workspace);
+  }
+
+  @Test
+  public void basicMultiQueryJsonPrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery", "%s", "//lib:", "//config/platform:", "--output-format", "json");
+    assertJSONOutputMatchesFileContents(
+        "stdout-basic-multi-query-json-printing.json", result, workspace);
+  }
+
+  @Test
   @Ignore // TODO(srice): owner function NYI
   public void doesntConfigureDependenciesOfTargetForPlatform() throws IOException {
     ProjectWorkspace workspace =

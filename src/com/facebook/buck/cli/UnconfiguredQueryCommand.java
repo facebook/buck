@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Objects;
@@ -104,7 +105,23 @@ public class UnconfiguredQueryCommand
       Multimap<String, UnconfiguredQueryTarget> queryResultMap,
       PrintStream printStream)
       throws QueryException, IOException {
-    throw new IllegalStateException("This method is impossible to reach since uquery is NYI");
+    if (shouldOutputAttributes()) {
+      // NOTE: This is what the old `buck query` did. If you provide a multiquery and ask Buck to
+      // output attributes we just combine all the query results together and print it like it was
+      // all one query. Does it make sense? Maybe.
+      ImmutableSet<UnconfiguredQueryTarget> combinedResults =
+          ImmutableSet.copyOf(queryResultMap.values());
+      printJsonOutput(
+          combinedResults, collectAttributes(params, env, combinedResults), printStream);
+    } else if (outputFormat == OutputFormat.LIST) {
+      printListOutput(queryResultMap, printStream);
+    } else if (outputFormat == OutputFormat.JSON) {
+      printJsonOutput(queryResultMap, printStream);
+    } else {
+      throw new QueryException(
+          "Multiqueries (those using `%s`) do not support printing with the given output format: "
+              + outputFormat.toString());
+    }
   }
 
   private void printListOutput(
@@ -117,6 +134,11 @@ public class UnconfiguredQueryCommand
         !attributesByResultOptional.isPresent(), "We should be printing with JSON instead");
 
     queryResult.stream().map(this::toPresentationForm).forEach(printStream::println);
+  }
+
+  private void printListOutput(
+      Multimap<String, UnconfiguredQueryTarget> queryResultMap, PrintStream printStream) {
+    queryResultMap.values().stream().map(this::toPresentationForm).forEach(printStream::println);
   }
 
   private void printJsonOutput(
@@ -144,6 +166,15 @@ public class UnconfiguredQueryCommand
     }
 
     prettyPrintJsonObject(printableObject, printStream);
+  }
+
+  private void printJsonOutput(
+      Multimap<String, UnconfiguredQueryTarget> queryResultMap, PrintStream printStream)
+      throws IOException {
+    Multimap<String, String> targetsAndResultsNames =
+        Multimaps.transformValues(
+            queryResultMap, input -> toPresentationForm(Objects.requireNonNull(input)));
+    prettyPrintJsonObject(targetsAndResultsNames.asMap(), printStream);
   }
 
   @SuppressWarnings("unused")

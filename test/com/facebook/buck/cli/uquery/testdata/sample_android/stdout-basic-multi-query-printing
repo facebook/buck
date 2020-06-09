@@ -1,0 +1,8 @@
+//bin:bar-bin
+//bin:foo-bin
+//bin:keystore-debug
+//bin:keystore-prod
+//config/platform:java11-dev
+//config/platform:java11-opt
+//config/platform:java8-dev
+//config/platform:java8-opt
