@@ -41,7 +41,6 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
@@ -1014,22 +1013,30 @@ public class AppleBundleIntegrationTest {
     result.assertSuccess();
     BuckBuildLog buckBuildLog = workspace.getBuildLog();
 
-    ImmutableSet<String> targetsThatShouldContainIncludeFrameworkFlavors =
+    ImmutableSet<String> targetsThatMightContainIncludeFrameworkFlavors =
         ImmutableSet.of("//:DemoAppWithExtension", "//:DemoExtension");
 
     ImmutableSet<Flavor> includeFrameworkFlavors =
-        ImmutableSet.of(
-            InternalFlavor.of("no-include-frameworks"), InternalFlavor.of("include-frameworks"));
+        AppleDescriptions.INCLUDE_FRAMEWORKS.getFlavors();
+    ImmutableSet<Flavor>
+        expectedInternalFlavorsForSameBaseNameAsBundleExclusiveToIncludeFrameworkFlavors =
+            ImmutableSet.of(AppleInfoPlist.FLAVOR);
 
     for (BuildTarget builtTarget : buckBuildLog.getAllTargets()) {
-      if (Sets.intersection(builtTarget.getFlavors().getSet(), includeFrameworkFlavors).isEmpty()) {
+      ImmutableSet<Flavor> allFlavors = builtTarget.getFlavors().getSet();
+      if (!Sets.intersection(
+              allFlavors,
+              expectedInternalFlavorsForSameBaseNameAsBundleExclusiveToIncludeFrameworkFlavors)
+          .isEmpty()) {
+        assertTrue(Sets.intersection(allFlavors, includeFrameworkFlavors).isEmpty());
+      } else if (Sets.intersection(allFlavors, includeFrameworkFlavors).isEmpty()) {
         assertThat(
             builtTarget.getUnflavoredBuildTarget().getFullyQualifiedName(),
-            not(in(targetsThatShouldContainIncludeFrameworkFlavors)));
+            not(in(targetsThatMightContainIncludeFrameworkFlavors)));
       } else {
         assertThat(
             builtTarget.getUnflavoredBuildTarget().getFullyQualifiedName(),
-            in(targetsThatShouldContainIncludeFrameworkFlavors));
+            in(targetsThatMightContainIncludeFrameworkFlavors));
       }
     }
   }

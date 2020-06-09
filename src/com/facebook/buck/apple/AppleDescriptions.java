@@ -686,7 +686,7 @@ public class AppleDescriptions {
       Optional<Flavor> defaultPlatform,
       Either<AppleBundleExtension, String> extension,
       Optional<String> productName,
-      SourcePath infoPlist,
+      SourcePath infoPlistSourcePath,
       ImmutableMap<String, String> infoPlistSubstitutions,
       ImmutableSortedSet<BuildTarget> deps,
       ImmutableSortedSet<BuildTarget> tests,
@@ -920,16 +920,41 @@ public class AppleDescriptions {
     ImmutableMap<SourcePath, String> extensionBundlePaths =
         collectFirstLevelAppleDependencyBundles(params.getBuildDeps(), destinations);
 
+    Optional<BuildRule> maybeBinary =
+        Optional.of(getBinaryFromBuildRuleWithBinary(flavoredBinaryRule));
+
+    String unwrappedExtension =
+        extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
+
+    BuildTarget infoPlistBuildTarget =
+        buildTarget.withoutFlavors().withAppendedFlavors(AppleInfoPlist.FLAVOR);
+    AppleInfoPlist infoPlist =
+        (AppleInfoPlist)
+            graphBuilder.computeIfAbsent(
+                infoPlistBuildTarget,
+                plistTarget ->
+                    createInfoPlistBuildRule(
+                        plistTarget,
+                        projectFilesystem,
+                        graphBuilder,
+                        infoPlistSourcePath,
+                        assetCatalog.map(AppleAssetCatalog::getSourcePathToPlist),
+                        maybeBinary,
+                        productName,
+                        unwrappedExtension,
+                        appleCxxPlatform,
+                        infoPlistSubstitutions));
+
     return new AppleBundle(
         buildTarget,
         projectFilesystem,
         bundleParamsWithFlavoredBinaryDep,
         graphBuilder,
-        extension,
+        unwrappedExtension,
         productName,
-        infoPlist,
+        infoPlist.getSourcePathToOutput(),
         infoPlistSubstitutions,
-        Optional.of(getBinaryFromBuildRuleWithBinary(flavoredBinaryRule)),
+        maybeBinary,
         appleDsym,
         extraBinaries,
         destinations,
@@ -1135,7 +1160,7 @@ public class AppleDescriptions {
                   || platformName.equals(ApplePlatform.WATCHSIMULATOR.getName()))
               && appleBundle.getExtension().equals(AppleBundleExtension.APP.toFileExtension())) {
             destinationPath = destinations.getWatchAppPath();
-          } else if (appleBundle.isLegacyWatchApp()) {
+          } else if (appleBundle.getIsLegacyWatchApp()) {
             destinationPath = destinations.getResourcesPath();
           } else {
             destinationPath = destinations.getPlugInsPath();
@@ -1262,5 +1287,29 @@ public class AppleDescriptions {
             platform ->
                 targetGraphOnlyDepsBuilder.addAll(
                     platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
+  }
+
+  private static AppleInfoPlist createInfoPlistBuildRule(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
+      SourcePath unprocessedInfoPlistPath,
+      Optional<SourcePath> maybeAssetCatalogPlistPath,
+      Optional<BuildRule> maybeBinary,
+      Optional<String> maybeProductName,
+      String extension,
+      AppleCxxPlatform appleCxxPlatform,
+      Map<String, String> substitutions) {
+    return new AppleInfoPlist(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
+        unprocessedInfoPlistPath,
+        maybeAssetCatalogPlistPath,
+        AppleBundleSupport.isLegacyWatchApp(extension, maybeBinary),
+        maybeProductName,
+        extension,
+        appleCxxPlatform,
+        substitutions);
   }
 }

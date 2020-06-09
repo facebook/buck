@@ -16,11 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.dd.plist.NSArray;
-import com.dd.plist.NSNumber;
-import com.dd.plist.NSObject;
-import com.dd.plist.NSString;
-import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
@@ -69,7 +64,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
-import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -114,13 +108,15 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final Optional<String> productName;
 
-  @AddToRuleKey private final SourcePath infoPlist;
+  @AddToRuleKey private final SourcePath processedInfoPlist;
 
   @AddToRuleKey private final ImmutableMap<String, String> infoPlistSubstitutions;
 
   @AddToRuleKey private final Optional<SourcePath> entitlementsFile;
 
   @AddToRuleKey private final Optional<BuildRule> binary;
+
+  @AddToRuleKey private final Boolean isLegacyWatchApp;
 
   @AddToRuleKey private final Optional<AppleDsym> appleDsym;
 
@@ -137,10 +133,6 @@ public class AppleBundle extends AbstractBuildRule
   @AddToRuleKey private final ImmutableSortedSet<BuildTarget> tests;
 
   @AddToRuleKey private final ApplePlatform platform;
-
-  @AddToRuleKey private final String sdkName;
-
-  @AddToRuleKey private final String sdkVersion;
 
   @AddToRuleKey private final ProvisioningProfileStore provisioningProfileStore;
 
@@ -170,17 +162,11 @@ public class AppleBundle extends AbstractBuildRule
   @AddToRuleKey private final boolean sliceAppPackageSwiftRuntime;
   @AddToRuleKey private final boolean sliceAppBundleSwiftRuntime;
 
-  @AddToRuleKey private final Optional<SourcePath> maybeAssetCatalogPlist;
-
   private final Optional<AppleAssetCatalog> assetCatalog;
   private final Optional<CoreDataModel> coreDataModel;
   private final Optional<SceneKitAssets> sceneKitAssets;
-  private final Optional<String> platformBuildVersion;
-  private final Optional<String> xcodeVersion;
-  private final Optional<String> xcodeBuildVersion;
   private final Path sdkPath;
 
-  private final String minOSVersion;
   private final String binaryName;
   private final Path bundleRoot;
   private final Path binaryPath;
@@ -204,9 +190,9 @@ public class AppleBundle extends AbstractBuildRule
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      Either<AppleBundleExtension, String> extension,
+      String extension,
       Optional<String> productName,
-      SourcePath infoPlist,
+      SourcePath processedInfoPlist,
       Map<String, String> infoPlistSubstitutions,
       Optional<BuildRule> binary,
       Optional<AppleDsym> appleDsym,
@@ -237,10 +223,9 @@ public class AppleBundle extends AbstractBuildRule
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.buildRuleParams = params;
-    this.extension =
-        extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
+    this.extension = extension;
     this.productName = productName;
-    this.infoPlist = infoPlist;
+    this.processedInfoPlist = processedInfoPlist;
     this.infoPlistSubstitutions = ImmutableMap.copyOf(infoPlistSubstitutions);
     this.binary = binary;
     this.withDownwardApi = withDownwardApi;
@@ -253,7 +238,7 @@ public class AppleBundle extends AbstractBuildRule
       }
     }
     this.entitlementsFile = entitlementsFile;
-
+    this.isLegacyWatchApp = AppleBundleSupport.isLegacyWatchApp(extension, binary);
     this.appleDsym = appleDsym;
     this.extraBinaries = extraBinaries;
     this.destinations = destinations;
@@ -271,13 +256,7 @@ public class AppleBundle extends AbstractBuildRule
     this.tests = ImmutableSortedSet.copyOf(tests);
     AppleSdk sdk = appleCxxPlatform.getAppleSdk();
     this.platform = sdk.getApplePlatform();
-    this.sdkName = sdk.getName();
     this.sdkPath = appleCxxPlatform.getAppleSdkPaths().getSdkPath();
-    this.sdkVersion = sdk.getVersion();
-    this.minOSVersion = appleCxxPlatform.getMinVersion();
-    this.platformBuildVersion = appleCxxPlatform.getBuildVersion();
-    this.xcodeBuildVersion = appleCxxPlatform.getXcodeBuildVersion();
-    this.xcodeVersion = appleCxxPlatform.getXcodeVersion();
     this.dryRunCodeSigning = dryRunCodeSigning;
     this.cacheable = cacheable;
     this.verifyResources = verifyResources;
@@ -314,7 +293,6 @@ public class AppleBundle extends AbstractBuildRule
 
     this.sliceAppPackageSwiftRuntime = sliceAppPackageSwiftRuntime;
     this.sliceAppBundleSwiftRuntime = sliceAppBundleSwiftRuntime;
-    this.maybeAssetCatalogPlist = assetCatalog.map(AppleAssetCatalog::getSourcePathToPlist);
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -360,14 +338,8 @@ public class AppleBundle extends AbstractBuildRule
     return appleDsym;
   }
 
-  public boolean isLegacyWatchApp() {
-    return extension.equals(AppleBundleExtension.APP.toFileExtension())
-        && binary.isPresent()
-        && binary
-            .get()
-            .getBuildTarget()
-            .getFlavors()
-            .contains(AppleBinaryDescription.LEGACY_WATCH_FLAVOR);
+  public boolean getIsLegacyWatchApp() {
+    return isLegacyWatchApp;
   }
 
   @Override
@@ -433,11 +405,6 @@ public class AppleBundle extends AbstractBuildRule
 
     Path metadataPath = getMetadataPath();
 
-    AbsPath infoPlistInputPath = context.getSourcePathResolver().getAbsolutePath(infoPlist);
-    RelPath infoPlistSubstitutionTempPath =
-        BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.plist");
-    Path infoPlistOutputPath = metadataPath.resolve("Info.plist");
-
     stepsBuilder.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -453,32 +420,10 @@ public class AppleBundle extends AbstractBuildRule
               /* executable */ false));
     }
 
+    Path infoPlistOutputPath = context.getSourcePathResolver().getRelativePath(processedInfoPlist);
+    Path infoPlistBundlePath = getInfoPlistPath();
     stepsBuilder.add(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                infoPlistSubstitutionTempPath.getParent())),
-        new FindAndReplaceStep(
-            getProjectFilesystem(),
-            infoPlistInputPath,
-            infoPlistSubstitutionTempPath.getPath(),
-            InfoPlistSubstitution.createVariableExpansionFunction(
-                InfoPlistSubstitution.variableExpansionWithDefaults(
-                    infoPlistSubstitutions,
-                    ImmutableMap.of(
-                        "EXECUTABLE_NAME", binaryName,
-                        "PRODUCT_NAME", binaryName)))),
-        new PlistProcessStep(
-            getProjectFilesystem(),
-            infoPlistSubstitutionTempPath.getPath(),
-            maybeAssetCatalogPlist.map(
-                assetCatalogPlist ->
-                    context.getSourcePathResolver().getRelativePath(assetCatalogPlist)),
-            infoPlistOutputPath,
-            getInfoPlistAdditionalKeys(),
-            getInfoPlistOverrideKeys(),
-            PlistProcessStep.OutputFormat.BINARY));
+        CopyStep.forFile(getProjectFilesystem(), infoPlistOutputPath, infoPlistBundlePath));
 
     if (hasBinary) {
       appendCopyBinarySteps(stepsBuilder, context);
@@ -497,7 +442,7 @@ public class AppleBundle extends AbstractBuildRule
         destinations,
         getProjectFilesystem(),
         ibtoolFlags,
-        isLegacyWatchApp(),
+        isLegacyWatchApp,
         platform,
         LOG,
         ibtool,
@@ -516,7 +461,7 @@ public class AppleBundle extends AbstractBuildRule
         stepsBuilder,
         getProjectFilesystem(),
         ibtoolFlags,
-        isLegacyWatchApp(),
+        isLegacyWatchApp,
         platform,
         LOG,
         ibtool,
@@ -560,7 +505,7 @@ public class AppleBundle extends AbstractBuildRule
         ProvisioningProfileCopyStep provisioningProfileCopyStep =
             new ProvisioningProfileCopyStep(
                 getProjectFilesystem(),
-                infoPlistOutputPath,
+                infoPlistBundlePath,
                 platform,
                 Optional.empty(), // Provisioning profile UUID -- find automatically.
                 entitlementsPlist,
@@ -859,7 +804,7 @@ public class AppleBundle extends AbstractBuildRule
 
   private void copyAnotherCopyOfWatchKitStub(
       ImmutableList.Builder<Step> stepsBuilder, BuildContext context, Path binaryOutputPath) {
-    if ((isLegacyWatchApp() || platform.getName().contains("watch"))
+    if ((isLegacyWatchApp || platform.getName().contains("watch"))
         && binary.get() instanceof WriteFile) {
       Path watchKitStubDir = bundleRoot.resolve("_WatchKitStub");
       stepsBuilder.add(
@@ -946,83 +891,6 @@ public class AppleBundle extends AbstractBuildRule
         codeSignOnCopyPathsBuilder.add(destPath.resolve(srcPath.getFileName()));
       }
     }
-  }
-
-  private boolean needsLSRequiresIPhoneOSInfoPlistKeyOnMac() {
-    return !extension.equals(AppleBundleExtension.XPC.toFileExtension());
-  }
-
-  private ImmutableMap<String, NSObject> getInfoPlistOverrideKeys() {
-    ImmutableMap.Builder<String, NSObject> keys = ImmutableMap.builder();
-
-    if (platform.getType() == ApplePlatformType.MAC) {
-      if (needsLSRequiresIPhoneOSInfoPlistKeyOnMac()) {
-        keys.put("LSRequiresIPhoneOS", new NSNumber(false));
-      }
-    } else if (!platform.getType().isWatch() && !isLegacyWatchApp()) {
-      keys.put("LSRequiresIPhoneOS", new NSNumber(true));
-    }
-
-    return keys.build();
-  }
-
-  private boolean needsAppInfoPlistKeysOnMac() {
-    // XPC bundles on macOS don't require app-specific keys
-    // (which also confuses Finder in displaying the XPC bundles as apps)
-    return !extension.equals(AppleBundleExtension.XPC.toFileExtension());
-  }
-
-  private ImmutableMap<String, NSObject> getInfoPlistAdditionalKeys() {
-    ImmutableMap.Builder<String, NSObject> keys = ImmutableMap.builder();
-
-    switch (platform.getType()) {
-      case MAC:
-        if (needsAppInfoPlistKeysOnMac()) {
-          keys.put("NSHighResolutionCapable", new NSNumber(true));
-          keys.put("NSSupportsAutomaticGraphicsSwitching", new NSNumber(true));
-        }
-        keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("MacOSX")));
-        break;
-      case IOS_DEVICE:
-        keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("iPhoneOS")));
-        break;
-      case IOS_SIMULATOR:
-        keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("iPhoneSimulator")));
-        break;
-      case WATCH_DEVICE:
-        if (!isLegacyWatchApp()) {
-          keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("WatchOS")));
-        }
-        break;
-      case WATCH_SIMULATOR:
-        if (!isLegacyWatchApp()) {
-          keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("WatchSimulator")));
-        }
-        break;
-      case TV_DEVICE:
-      case TV_SIMULATOR:
-      case UNKNOWN:
-        break;
-    }
-
-    keys.put("DTPlatformName", new NSString(platform.getName()));
-    keys.put("DTPlatformVersion", new NSString(sdkVersion));
-    keys.put("DTSDKName", new NSString(sdkName + sdkVersion));
-    keys.put("MinimumOSVersion", new NSString(minOSVersion));
-    if (platformBuildVersion.isPresent()) {
-      keys.put("DTPlatformBuild", new NSString(platformBuildVersion.get()));
-      keys.put("DTSDKBuild", new NSString(platformBuildVersion.get()));
-    }
-
-    if (xcodeBuildVersion.isPresent()) {
-      keys.put("DTXcodeBuild", new NSString(xcodeBuildVersion.get()));
-    }
-
-    if (xcodeVersion.isPresent()) {
-      keys.put("DTXcode", new NSString(xcodeVersion.get()));
-    }
-
-    return keys.build();
   }
 
   @Override
