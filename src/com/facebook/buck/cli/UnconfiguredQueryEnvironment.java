@@ -16,33 +16,13 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
-
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
-import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
-import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
-import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
-import com.facebook.buck.core.select.SelectorList;
-import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
-import com.facebook.buck.core.util.graph.CycleException;
-import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
-import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.PerBuildState;
-import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.query.AllPathsFunction;
 import com.facebook.buck.query.AttrFilterFunction;
 import com.facebook.buck.query.AttrRegexFilterFunction;
@@ -62,76 +42,33 @@ import com.facebook.buck.query.RdepsFunction;
 import com.facebook.buck.query.TestsOfFunction;
 import com.facebook.buck.query.UnconfiguredQueryBuildTarget;
 import com.facebook.buck.query.UnconfiguredQueryTarget;
-import com.facebook.buck.rules.coercer.ParamInfo;
-import com.facebook.buck.rules.coercer.ParamsInfo;
-import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.param.ParamName;
-import com.facebook.buck.util.MoreExceptions;
-import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
-import com.facebook.buck.util.types.Pair;
-import com.facebook.buck.util.types.Unit;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.SettableFuture;
-import com.google.common.util.concurrent.UncheckedExecutionException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
-import javax.annotation.Nonnull;
 
 /** QueryEnvironment implementation that operates over the unconfigured target graph. */
 public class UnconfiguredQueryEnvironment
     implements EvaluatingQueryEnvironment<UnconfiguredQueryTarget> {
 
-  private static final Logger LOG = Logger.get(UnconfiguredQueryEnvironment.class);
-
-  private final Parser parser;
-  private final PerBuildState perBuildState;
-  private final Cell rootCell;
-  private final KnownRuleTypesProvider knownRuleTypesProvider;
-  private final TypeCoercerFactory typeCoercerFactory;
   private final UnconfiguredQueryTargetEvaluator targetEvaluator;
-  // Query execution is single threaded, however the buildTransitiveClosure implementation
-  // traverses the graph in parallel.
-  private MutableDirectedGraph<UnconfiguredTargetNode> graph =
-      MutableDirectedGraph.createConcurrent();
-  private Map<UnflavoredBuildTarget, UnconfiguredTargetNode> targetsToNodes =
-      new ConcurrentHashMap<>();
-  private Map<UnflavoredBuildTarget, Set<UnconfiguredBuildTarget>> buildTargetToDependencies =
-      new ConcurrentHashMap<>();
+  private final UnconfiguredTargetGraph targetGraph;
   // This should only be modified during query execution though, so we don't need a concurrent map.
   private final Map<UnflavoredBuildTarget, UnconfiguredQueryBuildTarget> buildTargetToQueryTarget =
       new HashMap<>();
 
   public UnconfiguredQueryEnvironment(
-      Parser parser,
-      PerBuildState perBuildState,
-      Cell rootCell,
-      KnownRuleTypesProvider knownRuleTypesProvider,
-      TypeCoercerFactory typeCoercerFactory,
-      UnconfiguredQueryTargetEvaluator targetEvaluator) {
-    this.parser = parser;
-    this.perBuildState = perBuildState;
-    this.rootCell = rootCell;
-    this.knownRuleTypesProvider = knownRuleTypesProvider;
-    this.typeCoercerFactory = typeCoercerFactory;
+      UnconfiguredQueryTargetEvaluator targetEvaluator, UnconfiguredTargetGraph targetGraph) {
     this.targetEvaluator = targetEvaluator;
+    this.targetGraph = targetGraph;
   }
 
   /** Convenience constructor */
@@ -146,14 +83,15 @@ public class UnconfiguredQueryEnvironment
             params.getCells().getRootCell(),
             params.getClientWorkingDir(),
             params.getBuckConfig());
+    UnconfiguredTargetGraph targetGraph =
+        new UnconfiguredTargetGraph(
+            parser,
+            perBuildState,
+            rootCell,
+            params.getKnownRuleTypesProvider(),
+            params.getTypeCoercerFactory());
 
-    return new UnconfiguredQueryEnvironment(
-        parser,
-        perBuildState,
-        rootCell,
-        params.getKnownRuleTypesProvider(),
-        params.getTypeCoercerFactory(),
-        targetEvaluator);
+    return new UnconfiguredQueryEnvironment(targetEvaluator, targetGraph);
   }
 
   @Override
@@ -198,7 +136,7 @@ public class UnconfiguredQueryEnvironment
     Set<UnconfiguredTargetNode> nodes = new LinkedHashSet<>(targets.size());
     for (UnconfiguredQueryTarget queryTarget : targets) {
       if (queryTarget instanceof UnconfiguredQueryBuildTarget) {
-        getNode((UnconfiguredQueryBuildTarget) queryTarget).ifPresent(nodes::add);
+        nodes.add(getNode((UnconfiguredQueryBuildTarget) queryTarget));
       }
     }
 
@@ -208,8 +146,8 @@ public class UnconfiguredQueryEnvironment
       @Override
       public Iterable<UnconfiguredTargetNode> visit(UnconfiguredTargetNode node) {
         result.add(getOrCreateQueryBuildTarget(node.getBuildTarget()));
-        return getDepsForNode(node).stream()
-            .map((buildTarget) -> targetsToNodes.get(buildTarget.getUnflavoredBuildTarget()))
+        return targetGraph.getTraversalResult(node).getParseDeps().stream()
+            .map((buildTarget) -> getNode(buildTarget.getUnflavoredBuildTarget()))
             .collect(ImmutableSet.toImmutableSet());
       }
     }.start();
@@ -219,71 +157,12 @@ public class UnconfiguredQueryEnvironment
 
   @Override
   public void buildTransitiveClosure(Set<UnconfiguredQueryTarget> targets) throws QueryException {
-    ImmutableSet<UnconfiguredBuildTarget> newBuildTargets =
+    ImmutableSet<UnconfiguredBuildTarget> buildTargets =
         targets.stream()
             .flatMap(this::filterNonBuildTargets)
             .map(UnconfiguredQueryBuildTarget::getBuildTarget)
-            .filter(
-                buildTarget -> !targetsToNodes.containsKey(buildTarget.getUnflavoredBuildTarget()))
             .collect(ImmutableSet.toImmutableSet());
-
-    // TODO(mkosiba): This looks more and more like the Parser.buildTargetGraph method. Unify the
-    // two.
-
-    ConcurrentHashMap<UnconfiguredBuildTarget, ListenableFuture<Unit>> jobsCache =
-        new ConcurrentHashMap<>();
-
-    try {
-      List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
-      for (UnconfiguredBuildTarget buildTarget : newBuildTargets) {
-        discoverNewTargetsConcurrently(buildTarget, DependencyStack.top(buildTarget), jobsCache)
-            .ifPresent(dep -> depsFuture.add(dep));
-      }
-      Futures.allAsList(depsFuture).get();
-    } catch (ExecutionException e) {
-      if (e.getCause() != null) {
-        throw new QueryException(
-            e.getCause(),
-            "Failed parsing: " + MoreExceptions.getHumanReadableOrLocalizedMessage(e.getCause()));
-      }
-      propagateCauseIfInstanceOf(e, ExecutionException.class);
-      propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
-    } catch (BuildFileParseException | InterruptedException e) {
-      throw new QueryException(
-          e, "Failed parsing: " + MoreExceptions.getHumanReadableOrLocalizedMessage(e));
-    }
-
-    GraphTraversableWithPayload<UnconfiguredBuildTarget, UnconfiguredTargetNode> traversable =
-        target -> {
-          UnconfiguredTargetNode node = assertCachedNode(target);
-
-          // If a node has been added to the graph it means it and all of its children have been
-          // visited by an acyclic traversal and added to the graph. From this it follows that there
-          // are no outgoing edges from the graph (as it had been "fully" explored before) back out
-          // to the set of nodes we're currently exploring. Based on that:
-          //  - we can't have a cycle involving the "old" nodes,
-          //  - there are no new edges or nodes to be discovered by descending into the "old" nodes,
-          // making this node safe to skip.
-          if (graph.getNodes().contains(node)) {
-            return new Pair<>(node, ImmutableSet.<UnconfiguredBuildTarget>of().iterator());
-          }
-          return new Pair<>(node, getDepsForNode(node).iterator());
-        };
-
-    AcyclicDepthFirstPostOrderTraversalWithPayload<UnconfiguredBuildTarget, UnconfiguredTargetNode>
-        targetNodeTraversal = new AcyclicDepthFirstPostOrderTraversalWithPayload<>(traversable);
-    try {
-      for (Pair<UnconfiguredBuildTarget, UnconfiguredTargetNode> entry :
-          targetNodeTraversal.traverse(newBuildTargets)) {
-        UnconfiguredTargetNode node = entry.getSecond();
-        graph.addNode(node);
-        for (UnconfiguredBuildTarget dep : getDepsForNode(node)) {
-          graph.addEdge(node, assertCachedNode(dep));
-        }
-      }
-    } catch (CycleException e) {
-      throw new QueryException(e, e.getMessage());
-    }
+    targetGraph.buildTransitiveClosure(buildTargets);
   }
 
   @Override
@@ -297,8 +176,8 @@ public class UnconfiguredQueryEnvironment
     return Streams.stream(targets)
         .flatMap(this::filterNonBuildTargets)
         .map(UnconfiguredQueryBuildTarget::getBuildTarget)
-        .map(this::assertCachedNode)
-        .flatMap(n -> Streams.stream(graph.getOutgoingNodesFor(n)))
+        .map(targetGraph::assertCachedNode)
+        .flatMap(n -> Streams.stream(targetGraph.getOutgoingNodesFor(n)))
         .map(UnconfiguredTargetNode::getBuildTarget)
         .map(this::getOrCreateQueryBuildTarget)
         .collect(ImmutableSet.toImmutableSet());
@@ -310,8 +189,8 @@ public class UnconfiguredQueryEnvironment
     return Streams.stream(targets)
         .flatMap(this::filterNonBuildTargets)
         .map(UnconfiguredQueryBuildTarget::getBuildTarget)
-        .map(this::assertCachedNode)
-        .flatMap(n -> Streams.stream(graph.getIncomingNodesFor(n)))
+        .map(targetGraph::assertCachedNode)
+        .flatMap(n -> Streams.stream(targetGraph.getIncomingNodesFor(n)))
         .map(UnconfiguredTargetNode::getBuildTarget)
         .map(this::getOrCreateQueryBuildTarget)
         .collect(ImmutableSet.toImmutableSet());
@@ -350,7 +229,7 @@ public class UnconfiguredQueryEnvironment
   @Override
   public String getTargetKind(UnconfiguredQueryTarget target) throws QueryException {
     UnconfiguredBuildTarget buildTarget = ((UnconfiguredQueryBuildTarget) target).getBuildTarget();
-    return getNode(buildTarget).get().getRuleType().getName();
+    return getNode(buildTarget).getRuleType().getName();
   }
 
   @Override
@@ -364,64 +243,6 @@ public class UnconfiguredQueryEnvironment
       UnconfiguredQueryTarget target, ParamName attribute, Predicate<Object> predicate)
       throws QueryException {
     throw new RuntimeException("Not yet implemented");
-  }
-
-  private Optional<ListenableFuture<Unit>> discoverNewTargetsConcurrently(
-      UnconfiguredBuildTarget buildTarget,
-      DependencyStack dependencyStack,
-      ConcurrentHashMap<UnconfiguredBuildTarget, ListenableFuture<Unit>> jobsCache)
-      throws BuildFileParseException {
-    ListenableFuture<Unit> job = jobsCache.get(buildTarget);
-    if (job != null) {
-      return Optional.empty();
-    }
-    SettableFuture<Unit> newJob = SettableFuture.create();
-    if (jobsCache.putIfAbsent(buildTarget, newJob) != null) {
-      return Optional.empty();
-    }
-
-    ListenableFuture<Unit> future =
-        Futures.transformAsync(
-            parser.getUnconfiguredTargetNodeJob(perBuildState, buildTarget, dependencyStack),
-            targetNode -> {
-              targetsToNodes.put(buildTarget.getUnflavoredBuildTarget(), targetNode);
-              List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
-              Set<UnconfiguredBuildTarget> parseDeps = getDepsForNode(targetNode);
-              for (UnconfiguredBuildTarget parseDep : parseDeps) {
-                discoverNewTargetsConcurrently(parseDep, dependencyStack.child(parseDep), jobsCache)
-                    .ifPresent(
-                        depWork ->
-                            depsFuture.add(
-                                attachParentNodeToErrorMessage(buildTarget, parseDep, depWork)));
-              }
-              return Futures.transform(
-                  Futures.allAsList(depsFuture),
-                  Functions.constant(null),
-                  MoreExecutors.directExecutor());
-            });
-    newJob.setFuture(future);
-    return Optional.of(newJob);
-  }
-
-  private static ListenableFuture<Unit> attachParentNodeToErrorMessage(
-      UnconfiguredBuildTarget buildTarget,
-      UnconfiguredBuildTarget parseDep,
-      ListenableFuture<Unit> depWork) {
-    return Futures.catchingAsync(
-        depWork,
-        Exception.class,
-        exceptionInput -> {
-          if (exceptionInput instanceof BuildFileParseException) {
-            if (exceptionInput instanceof BuildTargetException) {
-              throw ParserMessages.createReadableExceptionWithWhenSuffix(
-                  buildTarget, parseDep, (BuildTargetException) exceptionInput);
-            } else {
-              throw ParserMessages.createReadableExceptionWithWhenSuffix(
-                  buildTarget, parseDep, (BuildFileParseException) exceptionInput);
-            }
-          }
-          throw exceptionInput;
-        });
   }
 
   /**
@@ -442,126 +263,15 @@ public class UnconfiguredQueryEnvironment
     return buildTargetToQueryTarget.computeIfAbsent(buildTarget, UnconfiguredQueryBuildTarget::of);
   }
 
-  /**
-   * Get a node from the {@code targetsToNodes} cache. This method throws an exception when the node
-   * you're looking for isn't in the cache, so you should be reasonably confident the node will
-   * exist there before trying to look it up.
-   */
-  @Nonnull
-  private UnconfiguredTargetNode assertCachedNode(UnconfiguredBuildTarget buildTarget) {
-    UnflavoredBuildTarget unflavored = buildTarget.getUnflavoredBuildTarget();
-    return Objects.requireNonNull(
-        targetsToNodes.get(unflavored),
-        () -> "Couldn't find UnconfiguredTargetNode for " + unflavored);
+  private UnconfiguredTargetNode getNode(UnconfiguredQueryBuildTarget queryBuildTarget) {
+    return targetGraph.getNode(queryBuildTarget.getBuildTarget().getUnflavoredBuildTarget());
   }
 
-  private Optional<UnconfiguredTargetNode> getNode(UnconfiguredQueryBuildTarget queryBuildTarget) {
-    return getNode(queryBuildTarget.getBuildTarget().getUnflavoredBuildTarget());
+  private UnconfiguredTargetNode getNode(UnconfiguredBuildTarget buildTarget) {
+    return targetGraph.getNode(buildTarget.getUnflavoredBuildTarget());
   }
 
-  private Optional<UnconfiguredTargetNode> getNode(UnconfiguredBuildTarget buildTarget) {
-    return getNode(buildTarget.getUnflavoredBuildTarget());
-  }
-
-  private Optional<UnconfiguredTargetNode> getNode(UnflavoredBuildTarget buildTarget) {
-    UnconfiguredTargetNode cached = targetsToNodes.get(buildTarget);
-    if (cached != null) {
-      return Optional.of(cached);
-    }
-
-    UnconfiguredBuildTarget unconfiguredBuildTarget = UnconfiguredBuildTarget.of(buildTarget);
-    ListenableFuture<UnconfiguredTargetNode> nodeJob =
-        parser.getUnconfiguredTargetNodeJob(
-            perBuildState, unconfiguredBuildTarget, DependencyStack.top(unconfiguredBuildTarget));
-    LOG.verbose("Request for node getting delegated to parser: %s", buildTarget);
-    try {
-      UnconfiguredTargetNode node = nodeJob.get();
-      // The implementation of the parser method suggests this will never be null, but it can't
-      // hurt.
-      // NOTE: We are explicitly not populating the `targetsToNodes` cache here since we never went
-      // looking for the recursive deps of this node. If we put the node in the cache anyway then
-      // the discoverNewTargetsConcurrently method will have no way to differentiate between targets
-      // that have had their transitive closure calculated already and those that haven't.
-      return Optional.ofNullable(node);
-    } catch (ExecutionException e) {
-      throw new BuckUncheckedExecutionException(e, "Error occurred while calculating target node");
-    } catch (InterruptedException e) {
-      throw new BuckUncheckedExecutionException(e, "Interrupted while waiting for target node");
-    }
-  }
-
-  private Set<UnconfiguredBuildTarget> getDepsForNode(UnconfiguredTargetNode node) {
-    return buildTargetToDependencies.computeIfAbsent(
-        node.getBuildTarget(), (buildTarget) -> computeDepsForNode(node));
-  }
-
-  @SuppressWarnings("unchecked")
-  private ImmutableSet<UnconfiguredBuildTarget> computeDepsForNode(UnconfiguredTargetNode node) {
-    ImmutableSet.Builder<UnconfiguredBuildTarget> result = ImmutableSet.builder();
-    TwoArraysImmutableHashMap<ParamName, Object> attributes = node.getAttributes();
-
-    ParamsInfo paramsInfo = lookupParamsInfoForRule(node.getBuildTarget(), node.getRuleType());
-    for (ParamName name : attributes.keySet()) {
-      ParamInfo<?> info = paramsInfo.getByName(name);
-      TypeCoercer<Object, ?> coercer = (TypeCoercer<Object, ?>) info.getTypeCoercer();
-
-      Object value = attributes.get(name);
-      // `selects` play a bit of a funny role, because our `ParamsInfo` _says_ that an attribute
-      // should be of type X, but instead it's a `SelectorList<X>`. Handle this case explicitly.
-      if (value instanceof SelectorList) {
-        SelectorList<Object> valueAsSelectorList = (SelectorList<Object>) value;
-        valueAsSelectorList.traverseSelectors(
-            (selectorKey, selectorValue) -> {
-              selectorKey
-                  .getBuildTarget()
-                  .ifPresent(target -> result.add(target.getUnconfiguredBuildTarget()));
-              collectBuildTargetsFromCoercerTraversal(result, coercer, selectorValue);
-            });
-      } else {
-        collectBuildTargetsFromCoercerTraversal(result, coercer, value);
-      }
-    }
-    return result.build();
-  }
-
-  private ParamsInfo lookupParamsInfoForRule(UnflavoredBuildTarget buildTarget, RuleType ruleType) {
-    Cell cell = rootCell.getCell(buildTarget.getCell());
-    KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
-    RuleDescriptor<?> descriptor = knownRuleTypes.getDescriptorByName(ruleType.getName());
-    return typeCoercerFactory
-        .getNativeConstructorArgDescriptor(descriptor.getConstructorArgType())
-        .getParamsInfo();
-  }
-
-  private void collectBuildTargetsFromCoercerTraversal(
-      ImmutableSet.Builder<UnconfiguredBuildTarget> result,
-      TypeCoercer<Object, ?> coercer,
-      Object value) {
-    coercer.traverseUnconfigured(
-        rootCell.getCellNameResolver(),
-        value,
-        object -> {
-          if (object instanceof UnconfiguredBuildTarget) {
-            result.add((UnconfiguredBuildTarget) object);
-          } else if (object instanceof UnflavoredBuildTarget) {
-            result.add(UnconfiguredBuildTarget.of((UnflavoredBuildTarget) object));
-          } else if (object instanceof UnconfiguredSourcePath) {
-            ((UnconfiguredSourcePath) object)
-                .match(
-                    new UnconfiguredSourcePath.Matcher<Unit>() {
-                      @Override
-                      public Unit path(CellRelativePath path) {
-                        return Unit.UNIT;
-                      }
-
-                      @Override
-                      public Unit buildTarget(
-                          UnconfiguredBuildTargetWithOutputs targetWithOutputs) {
-                        result.add(targetWithOutputs.getBuildTarget());
-                        return Unit.UNIT;
-                      }
-                    });
-          }
-        });
+  private UnconfiguredTargetNode getNode(UnflavoredBuildTarget buildTarget) {
+    return targetGraph.getNode(buildTarget);
   }
 }
