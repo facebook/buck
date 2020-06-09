@@ -1,0 +1,106 @@
+apple_library(
+    name = "PhoneProductKit",
+    srcs = ["PhoneProduct.m"],
+    compiler_flags = select({
+        "//config/mode:dev": [],
+        "//config/mode:opt": ["-Oz"],
+    }),
+    default_target_platform = "//config/platform:ios",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":LanguageUtilities",
+        ":NetworkKit",
+        ":ProductInfraKit",
+    ],
+)
+
+apple_library(
+    name = "TVProductKit",
+    srcs = ["TVProduct.m"],
+    compiler_flags = select({
+        "//config/mode:dev": [],
+        "//config/mode:opt": ["-Oz"],
+    }),
+    default_target_platform = "//config/platform:tvos",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":DatabaseKit",
+        ":LanguageUtilities",
+        ":NetworkKit",
+    ],
+)
+
+apple_library(
+    name = "ProductInfraKit",
+    srcs = ["ProductInfra.m"],
+    compatible_with = [
+        "//config/os:ios",
+        "//config/os:macos",
+        "//config/os:tvos",
+    ],
+    compiler_flags = select({
+        "//config/mode:dev": [],
+        "//config/mode:opt": ["-Oz"],
+    }),
+    default_target_platform = "//config/platform:ios",
+    preprocessor_flags = select({
+        "//config/os:ios": ["-DPLATFORM_IOS"],
+        "//config/os:macos": ["-DPLATFORM_MACOS"],
+        "//config/os:tvos": ["-DPLATFORM_TVOS"],
+    }),
+    visibility = ["PUBLIC"],
+    deps = [
+        ":DatabaseKit",
+        ":LanguageUtilities",
+        ":NetworkKit",
+    ],
+)
+
+apple_library(
+    name = "DatabaseKit",
+    srcs = select({
+        "//config/os:tvos": ["Database-tvos.m"],
+        "DEFAULT": ["Database-default.m"],
+    }),
+    compiler_flags = select({
+        "//config/mode:dev": [],
+        "//config/mode:opt": ["-O2"],
+    }),
+    default_target_platform = "//config/platform:ios",
+    tests = ["//tests/apple:DatabaseKitTest"],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":LanguageUtilities",
+    ],
+)
+
+apple_library(
+    name = "NetworkKit",
+    srcs = ["Network.m"],
+    compiler_flags = select({
+        "//config/mode:dev": [],
+        "//config/mode:opt": ["-O2"],
+    }),
+    default_target_platform = "//config/platform:ios",
+    headers = [
+        "//codegen:backend-types-apple",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":LanguageUtilities",
+    ],
+)
+
+apple_library(
+    name = "LanguageUtilities",
+    exported_headers = ["LanguageUtilities.h"],
+    exported_preprocessor_flags = ["-DUTIL"],
+    compatible_with = [
+        "//config/os:ios",
+        "//config/os:macos",
+        "//config/os:tvos",
+    ],
+    default_target_platform = "//config/platform:ios",
+    tests = ["//tests/apple:LanguageUtilitiesTest"],
+    visibility = ["PUBLIC"],
+)

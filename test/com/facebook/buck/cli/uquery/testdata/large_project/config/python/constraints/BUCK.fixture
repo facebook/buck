@@ -1,0 +1,32 @@
+constraint_setting(
+    name = "major-version",
+    visibility = ["PUBLIC"],
+)
+
+constraint_value(
+    name = "py3",
+    constraint_setting = ":major-version",
+    visibility = ["PUBLIC"],
+)
+
+constraint_setting(
+    name = "exact-version",
+)
+
+constraint_value(
+    name = "py36",
+    constraint_setting = ":exact-version",
+    visibility = ["PUBLIC"],
+)
+
+constraint_value(
+    name = "py37",
+    constraint_setting = ":exact-version",
+    visibility = ["PUBLIC"],
+)
+
+constraint_value(
+    name = "py38",
+    constraint_setting = ":exact-version",
+    visibility = ["PUBLIC"],
+)

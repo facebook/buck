@@ -21,6 +21,7 @@ public class CommonParamNames {
 
   public static final ParamName NAME = ParamName.bySnakeCase("name");
   public static final ParamName DEPS = ParamName.bySnakeCase("deps");
+  public static final ParamName TESTS = ParamName.bySnakeCase("tests");
 
   public static final ParamName COMPATIBLE_WITH = ParamName.bySnakeCase("compatible_with");
   public static final ParamName DEFAULT_TARGET_PLATFORM =

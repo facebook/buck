@@ -1,0 +1,15 @@
+python_library(
+    name = "codegen-tool-srcs",
+    srcs = ["codegen.py"],
+    default_target_platform = "//config/platform:py36",
+    deps = [
+        "//libraries/py:libcodegen",
+    ],
+)
+
+python_binary(
+    name = "codegen-tool",
+    main_module = "tools.codegen",
+    default_target_platform = "//config/platform:py36",
+    deps = [":codegen-tool-srcs"],
+)

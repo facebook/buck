@@ -1,0 +1,38 @@
+android_binary(
+    name = "foo-binary",
+    default_target_platform = "//config/platform:android",
+    keystore = select({
+        "//config/mode:dev": "//apps/android/keystores:debug",
+        "//config/mode:opt": "//apps/android/keystores:prod",
+    }),
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//libraries/android:foo-product",
+    ],
+)
+
+android_binary(
+    name = "bar-binary",
+    default_target_platform = "//config/platform:android",
+    keystore = select({
+        "//config/mode:dev": "//apps/android/keystores:debug",
+        "//config/mode:opt": "//apps/android/keystores:prod",
+    }),
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//libraries/android:bar-product",
+    ],
+)
+
+android_binary(
+    name = "tv-binary",
+    default_target_platform = "//config/platform:androidtv",
+    keystore = select({
+        "//config/mode:dev": "//apps/android/keystores:debug",
+        "//config/mode:opt": "//apps/android/keystores:prod",
+    }),
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//libraries/android:tv-product",
+    ],
+)

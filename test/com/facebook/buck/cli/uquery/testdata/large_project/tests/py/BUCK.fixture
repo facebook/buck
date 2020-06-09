@@ -1,0 +1,23 @@
+python_test(
+    name = "codegen-test",
+    srcs = ["test_codegen.py"],
+    compatible_with = [
+        "//config/python:py36",
+        "//config/python:py37",
+    ],
+    contacts = ["CodegenTeam"],
+    default_target_platform = "//config/platform:py36",
+    deps = ["//libraries/py:libcodegen"],
+)
+
+sh_test(
+    name = "codegen-integration-test",
+    args = [
+        "--tool-under-test",
+        "$(exe //tools:codegen-tool)",
+    ],
+    contacts = ["CodegenTeam"],
+    default_target_platform = "//config/platform:py36",
+    test = "codegen-integration-test.sh",
+    visibility = ["PUBLIC"],
+)

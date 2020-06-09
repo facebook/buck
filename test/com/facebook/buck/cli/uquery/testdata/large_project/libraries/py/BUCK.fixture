@@ -1,0 +1,5 @@
+python_library(
+    name = "libcodegen",
+    srcs = ["libcodegen.py"],
+    default_target_platform = "//config/platform:py36",
+)

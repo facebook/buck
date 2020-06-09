@@ -42,6 +42,7 @@ import com.facebook.buck.query.RdepsFunction;
 import com.facebook.buck.query.TestsOfFunction;
 import com.facebook.buck.query.UnconfiguredQueryBuildTarget;
 import com.facebook.buck.query.UnconfiguredQueryTarget;
+import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -206,7 +207,10 @@ public class UnconfiguredQueryEnvironment
   @Override
   public ImmutableSet<UnconfiguredQueryTarget> getTestsForTarget(UnconfiguredQueryTarget target)
       throws QueryException {
-    throw new RuntimeException("Not yet implemented");
+    // NOTE: For configured queries this works by looking for the `HasTests` interface. It's
+    // possible that a rule has a `tests` attribute but doesn't use the `HasTests` interface,
+    // leading to inconsistent results.
+    return getTargetsInAttribute(target, CommonParamNames.TESTS);
   }
 
   @Override
@@ -237,7 +241,10 @@ public class UnconfiguredQueryEnvironment
   public ImmutableSet<UnconfiguredQueryTarget> getTargetsInAttribute(
       UnconfiguredQueryTarget target, ParamName attribute) throws QueryException {
     UnconfiguredTargetNode node = getNode((UnconfiguredQueryBuildTarget) target);
-    return targetGraph.getTraversalResult(node).getTargetsByParam().get(attribute);
+    return targetGraph
+        .getTraversalResult(node)
+        .getTargetsByParam()
+        .getOrDefault(attribute, ImmutableSet.of());
   }
 
   @Override

@@ -1,0 +1,103 @@
+platform(
+    name = "android",
+    constraint_values = [
+        "//config/mode/constraints:dev",
+        "//config/os/constraints:android",
+    ],
+)
+
+platform(
+    name = "android-opt",
+    constraint_values = [
+        "//config/mode/constraints:opt",
+        "//config/os/constraints:android",
+    ],
+)
+
+platform(
+    name = "androidtv",
+    constraint_values = [
+        "//config/mode/constraints:dev",
+        "//config/os/constraints:androidtv",
+    ],
+)
+
+platform(
+    name = "androidtv-opt",
+    constraint_values = [
+        "//config/mode/constraints:opt",
+        "//config/os/constraints:androidtv",
+    ],
+)
+
+platform(
+    name = "ios",
+    constraint_values = [
+        "//config/mode/constraints:dev",
+        "//config/os/constraints:ios",
+    ],
+)
+
+platform(
+    name = "ios-opt",
+    constraint_values = [
+        "//config/mode/constraints:opt",
+        "//config/os/constraints:ios",
+    ],
+)
+
+platform(
+    name = "macos",
+    constraint_values = [
+        "//config/mode/constraints:dev",
+        "//config/os/constraints:macos",
+    ],
+)
+
+platform(
+    name = "macos-opt",
+    constraint_values = [
+        "//config/mode/constraints:opt",
+        "//config/os/constraints:macos",
+    ],
+)
+
+platform(
+    name = "py36",
+    constraint_values = [
+        "//config/python/constraints:py3",
+        "//config/python/constraints:py36",
+    ],
+)
+
+platform(
+    name = "py37",
+    constraint_values = [
+        "//config/python/constraints:py3",
+        "//config/python/constraints:py37",
+    ],
+)
+
+platform(
+    name = "py38",
+    constraint_values = [
+        "//config/python/constraints:py3",
+        "//config/python/constraints:py38",
+    ],
+)
+
+platform(
+    name = "tvos",
+    constraint_values = [
+        "//config/mode/constraints:dev",
+        "//config/os/constraints:tvos",
+    ],
+)
+
+platform(
+    name = "tvos-opt",
+    constraint_values = [
+        "//config/mode/constraints:opt",
+        "//config/os/constraints:tvos",
+    ],
+)

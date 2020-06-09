@@ -1,0 +1,13 @@
+keystore(
+    name = "debug",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+    visibility = ["PUBLIC"],
+)
+
+keystore(
+    name = "prod",
+    properties = "prod.keystore.properties",
+    store = "prod.keystore",
+    visibility = ["PUBLIC"],
+)
