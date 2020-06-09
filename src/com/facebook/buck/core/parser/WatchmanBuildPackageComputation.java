@@ -45,6 +45,7 @@ import java.nio.file.NotDirectoryException;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Discover paths for packages which contain targets that match specification (build target pattern)
@@ -65,6 +66,9 @@ public class WatchmanBuildPackageComputation
   private final Watchman watchman;
 
   private static final Logger LOG = Logger.get(WatchmanBuildPackageComputation.class);
+
+  private static final long WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(3);
+  private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(30);
 
   /**
    * @param buildFileName Name of the build file to search for, for example 'BUCK'
@@ -148,7 +152,9 @@ public class WatchmanBuildPackageComputation
                   .collect(ImmutableSet.toImmutableSet()),
               EnumSet.of(
                   WatchmanGlobber.Option.EXCLUDE_DIRECTORIES,
-                  WatchmanGlobber.Option.FORCE_CASE_SENSITIVE));
+                  WatchmanGlobber.Option.FORCE_CASE_SENSITIVE),
+              TIMEOUT_NANOS,
+              WARN_TIMEOUT_NANOS);
       LOG.info("Globber with basepath %s, pattern: %s result: %s", basePath, pattern, paths);
     }
     if (!paths.isPresent()) {
