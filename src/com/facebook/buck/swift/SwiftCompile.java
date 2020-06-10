@@ -21,11 +21,13 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -34,19 +36,19 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.PreprocessorFlags;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -68,10 +70,9 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.SortedSet;
-import java.util.function.Function;
 
 /** A build rule which compiles one or more Swift sources into a Swift module. */
-public class SwiftCompile extends AbstractBuildRule {
+public class SwiftCompile extends AbstractBuildRule implements SupportsInputBasedRuleKey {
 
   private static final String INCLUDE_FLAG = "-I";
 
@@ -82,13 +83,20 @@ public class SwiftCompile extends AbstractBuildRule {
   @AddToRuleKey(stringify = true)
   private final Path outputPath;
 
+  @AddToRuleKey(stringify = true)
   private final Path objectFilePath;
+  @AddToRuleKey(stringify = true)
   private final Path modulePath;
+  @AddToRuleKey(stringify = true)
   private final Path moduleObjectPath;
+  @AddToRuleKey(stringify = true)
   private final ImmutableList<Path> objectPaths;
   private final Optional<AbsPath> swiftFileListPath;
 
   @AddToRuleKey private final boolean shouldEmitSwiftdocs;
+  @AddToRuleKey private final boolean useModulewrap;
+  @AddToRuleKey private final boolean compileForceCache;
+  @AddToRuleKey(stringify = true)
   private final Path swiftdocPath;
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
@@ -96,14 +104,14 @@ public class SwiftCompile extends AbstractBuildRule {
   @AddToRuleKey private final Optional<String> version;
   @AddToRuleKey private final ImmutableList<? extends Arg> compilerFlags;
 
+  @AddToRuleKey(stringify = true)
   private final Path headerPath;
-  private final CxxPlatform cxxPlatform;
-  private final ImmutableSet<FrameworkPath> frameworks;
+  @AddToRuleKey private final ImmutableSet<FrameworkPath> frameworks;
+  @AddToRuleKey private final AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath;
+  @AddToRuleKey private final Flavor flavor;
 
-  private final boolean enableObjcInterop;
+  @AddToRuleKey private final boolean enableObjcInterop;
   @AddToRuleKey private final Optional<SourcePath> bridgingHeader;
-
-  private final SwiftBuckConfig swiftBuckConfig;
 
   @AddToRuleKey private final Preprocessor cPreprocessor;
 
@@ -114,7 +122,6 @@ public class SwiftCompile extends AbstractBuildRule {
   private BuildableSupport.DepsSupplier depsSupplier;
 
   SwiftCompile(
-      CxxPlatform cxxPlatform,
       SwiftBuckConfig swiftBuckConfig,
       BuildTarget buildTarget,
       SwiftTargetTriple swiftTarget,
@@ -122,6 +129,8 @@ public class SwiftCompile extends AbstractBuildRule {
       ActionGraphBuilder graphBuilder,
       Tool swiftCompiler,
       ImmutableSet<FrameworkPath> frameworks,
+      AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath,
+      Flavor flavor,
       String moduleName,
       Path outputPath,
       Iterable<SourcePath> srcs,
@@ -133,9 +142,9 @@ public class SwiftCompile extends AbstractBuildRule {
       PreprocessorFlags cxxDeps,
       boolean importUnderlyingModule) {
     super(buildTarget, projectFilesystem);
-    this.cxxPlatform = cxxPlatform;
     this.frameworks = frameworks;
-    this.swiftBuckConfig = swiftBuckConfig;
+    this.frameworkPathToSearchPath = frameworkPathToSearchPath;
+    this.flavor = flavor;
     this.swiftCompiler = swiftCompiler;
     this.outputPath = outputPath;
     this.importUnderlyingModule = importUnderlyingModule;
@@ -161,6 +170,8 @@ public class SwiftCompile extends AbstractBuildRule {
             : Optional.empty();
 
     this.shouldEmitSwiftdocs = swiftBuckConfig.getEmitSwiftdocs();
+    this.useModulewrap = swiftBuckConfig.getUseModulewrap();
+    this.compileForceCache = swiftBuckConfig.getCompileForceCache();
     this.swiftdocPath = outputPath.resolve(escapedModuleName + ".swiftdoc");
 
     this.srcs = ImmutableSortedSet.copyOf(srcs);
@@ -202,9 +213,6 @@ public class SwiftCompile extends AbstractBuildRule {
     if (importUnderlyingModule) {
       compilerCommand.add("-import-underlying-module");
     }
-
-    Function<FrameworkPath, Path> frameworkPathToSearchPath =
-        CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
 
     compilerCommand.addAll(
         Streams.concat(frameworks.stream(), cxxDeps.getFrameworkPaths().stream())
@@ -318,7 +326,7 @@ public class SwiftCompile extends AbstractBuildRule {
     // means that Obj-C headers can be included multiple times if the machines which
     // populated the cache and the machine which is building have placed the source
     // repository at different paths (usually the case with CI and developer machines).
-    return !bridgingHeader.isPresent() || swiftBuckConfig.getCompileForceCache();
+    return !bridgingHeader.isPresent() || compileForceCache;
   }
 
   @Override
@@ -345,7 +353,7 @@ public class SwiftCompile extends AbstractBuildRule {
         path -> steps.add(makeFileListStep(context.getSourcePathResolver(), path)));
     steps.add(makeCompileStep(context.getSourcePathResolver()));
 
-    if (swiftBuckConfig.getUseModulewrap()) {
+    if (useModulewrap) {
       steps.add(makeModulewrapStep(context.getSourcePathResolver()));
     }
 
@@ -402,7 +410,7 @@ public class SwiftCompile extends AbstractBuildRule {
             .toToolFlags(
                 resolver,
                 PathShortener.byRelativizingToWorkingDir(getProjectFilesystem().getRootPath()),
-                CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver),
+                frameworkPathToSearchPath,
                 cPreprocessor,
                 Optional.empty())
             .getAllFlags();
@@ -416,7 +424,7 @@ public class SwiftCompile extends AbstractBuildRule {
                 getProjectFilesystem(),
                 getBuildTarget().withFlavors(),
                 headerVisibility,
-                cxxPlatform.getFlavor());
+                flavor);
         args.add(INCLUDE_FLAG.concat(headerPath.toString()));
       }
     }
@@ -425,7 +433,7 @@ public class SwiftCompile extends AbstractBuildRule {
   }
 
   public ImmutableList<Arg> getAstLinkArgs() {
-    if (!swiftBuckConfig.getUseModulewrap()) {
+    if (!useModulewrap) {
       return ImmutableList.<Arg>builder()
           .addAll(StringArg.from("-Xlinker", "-add_ast_path"))
           .add(SourcePathArg.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), modulePath)))
@@ -474,5 +482,18 @@ public class SwiftCompile extends AbstractBuildRule {
    */
   public SourcePath getOutputPath() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputPath);
+  }
+
+  /**
+   * @return {@link SourcePath} to the .swiftmodule output from the compilation process. A
+   * swiftmodule file contains the public interface for a module, and is basically a binary file
+   * format equivalent to header files for a C framework or library.
+   *
+   * A swiftmodule file contains serialized ASTs (and possibly SIL), it conforms to
+   * Swift Binary Serialization Format, more details about this binary format can be found here:
+   * https://github.com/apple/swift/blob/7e6d62dae4bae4eb3737a6f76c0e51534c1bcca3/docs/Serialization.rst.
+   */
+  public SourcePath getSwiftModuleOutputPath() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), modulePath);
   }
 }

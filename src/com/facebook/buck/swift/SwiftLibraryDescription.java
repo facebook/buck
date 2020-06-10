@@ -288,7 +288,6 @@ public class SwiftLibraryDescription
 
       BuildTarget buildTargetCopy = buildTarget;
       return new SwiftCompile(
-          cxxPlatform,
           swiftBuckConfig,
           buildTarget,
           args.getTargetSdkVersion()
@@ -298,6 +297,8 @@ public class SwiftLibraryDescription
           graphBuilder,
           swiftPlatform.get().getSwiftc(),
           args.getFrameworks(),
+          CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, graphBuilder.getSourcePathResolver()),
+          cxxPlatform.getFlavor(),
           args.getModuleName().orElse(buildTarget.getShortName()),
           BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s"),
           args.getSrcs(),
@@ -460,7 +461,6 @@ public class SwiftLibraryDescription
     args.getSrcs().forEach(src -> srcsDepsBuilder.add(src));
 
     return new SwiftCompile(
-        cxxPlatform,
         swiftBuckConfig,
         buildTarget,
         swiftTarget.orElse(swiftPlatform.getSwiftTarget()),
@@ -468,6 +468,8 @@ public class SwiftLibraryDescription
         graphBuilder,
         swiftPlatform.getSwiftc(),
         args.getFrameworks(),
+        CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, graphBuilder.getSourcePathResolver()),
+        cxxPlatform.getFlavor(),
         args.getModuleName().orElse(buildTarget.getShortName()),
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s"),
         args.getSrcs(),
