@@ -42,6 +42,9 @@ public interface UnconfiguredBuildTargetViewFactory {
    */
   UnconfiguredBuildTarget create(String buildTargetName, CellNameResolver cellNameResolver);
 
+  /** Given a fully-qualified target name returns {@link UnflavoredBuildTarget}. */
+  UnflavoredBuildTarget createUnflavored(String buildTargetName, CellNameResolver cellNameResolver);
+
   /**
    * Given a target base name and a target name returns {@link UnconfiguredBuildTarget}.
    *

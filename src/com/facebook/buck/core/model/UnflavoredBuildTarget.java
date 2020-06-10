@@ -133,4 +133,9 @@ public class UnflavoredBuildTarget
       @JsonProperty("name") String name) {
     return of(cell, BaseName.of(baseName), name);
   }
+
+  /** Apply a configuration. */
+  public BuildTarget configure(TargetConfiguration targetConfiguration) {
+    return UnconfiguredBuildTarget.of(this, FlavorSet.NO_FLAVORS).configure(targetConfiguration);
+  }
 }

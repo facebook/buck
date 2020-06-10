@@ -23,6 +23,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -152,6 +153,10 @@ public class BuckConfig {
     return buildTargetParser.create(target, cellNameResolver);
   }
 
+  private UnflavoredBuildTarget getUnflavoredBuildTargetForFullyQualifiedTarget(String target) {
+    return buildTargetParser.createUnflavored(target, cellNameResolver);
+  }
+
   public BuildTarget getBuildTargetForFullyQualifiedTarget(
       String target, TargetConfiguration targetConfiguration) {
     return getUnconfiguredBuildTargetForFullyQualifiedTarget(target).configure(targetConfiguration);
@@ -216,6 +221,12 @@ public class BuckConfig {
       String section, String field) {
     Optional<String> value = getValue(section, field);
     return value.map(this::getUnconfiguredBuildTargetForFullyQualifiedTarget);
+  }
+
+  /** @return the parsed {@link UnconfiguredBuildTarget} in the given section and field, if set. */
+  public Optional<UnflavoredBuildTarget> getUnflavoredBuildTarget(String section, String field) {
+    Optional<String> value = getValue(section, field);
+    return value.map(this::getUnflavoredBuildTargetForFullyQualifiedTarget);
   }
 
   /** @return the parsed BuildTarget in the given section and field. */

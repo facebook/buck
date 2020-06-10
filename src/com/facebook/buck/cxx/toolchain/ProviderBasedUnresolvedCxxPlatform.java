@@ -19,7 +19,7 @@ package com.facebook.buck.cxx.toolchain;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.google.common.base.Verify;
@@ -28,11 +28,11 @@ import com.google.common.collect.ImmutableList;
 /** Used to provide a {@link CxxPlatform} that is specified as a cxx_toolchain build target. */
 public class ProviderBasedUnresolvedCxxPlatform
     implements UnresolvedCxxPlatform, ProviderBackedCxxPlatform {
-  private final UnconfiguredBuildTarget unconfiguredBuildTarget;
+  private final UnflavoredBuildTarget unconfiguredBuildTarget;
   private final Flavor flavor;
 
   public ProviderBasedUnresolvedCxxPlatform(
-      UnconfiguredBuildTarget unconfiguredBuildTarget, Flavor flavor) {
+      UnflavoredBuildTarget unconfiguredBuildTarget, Flavor flavor) {
     this.unconfiguredBuildTarget = unconfiguredBuildTarget;
     this.flavor = flavor;
   }

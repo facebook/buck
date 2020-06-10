@@ -37,6 +37,17 @@ public class ParsingUnconfiguredBuildTargetViewFactory
   }
 
   @Override
+  public UnflavoredBuildTarget createUnflavored(
+      String buildTargetName, CellNameResolver cellNameResolver) {
+    UnconfiguredBuildTarget unconfiguredBuildTarget = create(buildTargetName, cellNameResolver);
+    if (!unconfiguredBuildTarget.getFlavors().isEmpty()) {
+      throw new BuildTargetParseException(
+          String.format("expecting unflavored target: %s", buildTargetName));
+    }
+    return unconfiguredBuildTarget.getUnflavoredBuildTarget();
+  }
+
+  @Override
   public UnconfiguredBuildTarget createForBaseName(
       BaseName baseName, String buildTargetName, CellNameResolver cellNameResolver) {
     return buildTargetParser.parseTarget(buildTargetName, baseName, cellNameResolver);

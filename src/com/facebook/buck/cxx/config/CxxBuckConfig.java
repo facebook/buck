@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -623,8 +624,8 @@ public class CxxBuckConfig {
       BuckConfig config, Flavor flavor) {
     String cxxSection = new CxxBuckConfig(config, flavor).cxxSection;
 
-    Optional<UnconfiguredBuildTarget> toolchainTarget =
-        config.getUnconfiguredBuildTarget(cxxSection, TOOLCHAIN_TARGET);
+    Optional<UnflavoredBuildTarget> toolchainTarget =
+        config.getUnflavoredBuildTarget(cxxSection, TOOLCHAIN_TARGET);
     if (!toolchainTarget.isPresent()) {
       return Optional.empty();
     }
