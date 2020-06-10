@@ -46,7 +46,7 @@ public class DefaultOutputPathResolver implements OutputPathResolver {
   }
 
   @Override
-  public Path getRootPath() {
-    return genRoot.getPath();
+  public RelPath getRootPath() {
+    return genRoot;
   }
 }

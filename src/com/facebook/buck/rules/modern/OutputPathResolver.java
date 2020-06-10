@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import java.nio.file.Path;
 
 /** Provides Buildable's a way to construct Paths to outputs. */
@@ -31,5 +32,5 @@ public interface OutputPathResolver {
   Path resolvePath(OutputPath outputPath);
 
   /** Returns a relative path to the root directory for build outputs. */
-  Path getRootPath();
+  RelPath getRootPath();
 }

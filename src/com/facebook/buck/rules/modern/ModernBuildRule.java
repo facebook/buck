@@ -324,7 +324,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
 
       // Don't bother deleting the root path or anything under it, we're about to delete it and
       // re-create it.
-      if (!output.startsWith(outputPathResolver.getRootPath())) {
+      if (!output.startsWith(outputPathResolver.getRootPath().getPath())) {
         stepBuilder.add(
             RmStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
@@ -410,7 +410,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
       ClassInfo<T> classInfo,
       T buildable) {
     Stream.Builder<Path> collector = Stream.builder();
-    collector.add(outputPathResolver.getRootPath());
+    collector.add(outputPathResolver.getRootPath().getPath());
     classInfo.visit(
         buildable,
         new OutputPathVisitor(

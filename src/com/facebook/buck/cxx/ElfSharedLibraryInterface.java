@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -129,7 +130,7 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
       Path output = outputPathResolver.resolvePath(outputPath);
-      Path outputDir = outputPathResolver.getRootPath();
+      RelPath outputDir = outputPathResolver.getRootPath();
       Path outputScratch = outputPathResolver.resolvePath(new OutputPath(libName + ".scratch"));
       ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
@@ -210,7 +211,10 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
      *     the interface and return it's path.
      */
     protected abstract Pair<ProjectFilesystem, Path> getInput(
-        BuildContext context, ProjectFilesystem filesystem, Path outputPath, Builder<Step> steps);
+        BuildContext context,
+        ProjectFilesystem filesystem,
+        RelPath outputPath,
+        Builder<Step> steps);
   }
 
   private static class ExistingBasedElfSharedLibraryImpl extends AbstractBuildable {
@@ -230,7 +234,10 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
 
     @Override
     protected Pair<ProjectFilesystem, Path> getInput(
-        BuildContext context, ProjectFilesystem filesystem, Path outputPath, Builder<Step> steps) {
+        BuildContext context,
+        ProjectFilesystem filesystem,
+        RelPath outputPath,
+        Builder<Step> steps) {
       SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
       return new Pair<>(
           sourcePathResolverAdapter.getFilesystem(input),
@@ -258,7 +265,10 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
 
     @Override
     protected Pair<ProjectFilesystem, Path> getInput(
-        BuildContext context, ProjectFilesystem filesystem, Path outputPath, Builder<Step> steps) {
+        BuildContext context,
+        ProjectFilesystem filesystem,
+        RelPath outputPath,
+        Builder<Step> steps) {
       String shortNameAndFlavorPostfix = buildTarget.getShortNameAndFlavorPostfix();
       AbsPath outputDirPath = filesystem.getRootPath().resolve(outputPath);
 
