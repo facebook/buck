@@ -1729,4 +1729,22 @@ public class AppleBundleIntegrationTest {
     // Non-Swift target shouldn't include Frameworks/
     assertFalse(Files.exists(appPath.resolve("Frameworks")));
   }
+
+  @Test
+  public void coreDataModelIsIncludedInBundle() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_core_data_model_is_included_in_bundle", tmp);
+    workspace.setUp();
+    BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp#no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    RelPath outputPath =
+        BuildTargetPaths.getGenPath(
+            filesystem,
+            target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s");
+    Path appPath = outputPath.resolve(target.getShortName() + ".app");
+    assertTrue(Files.exists(workspace.getPath(appPath.resolve("Model.momd"))));
+  }
 }

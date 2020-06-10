@@ -1,0 +1,47 @@
+apple_bundle(
+    name = "DemoApp",
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = [
+        ":CoreDataModel",
+    ],
+)
+
+apple_binary(
+    name = "DemoAppBinary",
+    srcs = glob([
+        "DemoAppBinary/*.m",
+    ]),
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = glob([
+        "DemoAppBinary/*.h",
+    ]),
+    libraries = [
+        "$SDKROOT/usr/lib/libobjc.dylib",
+    ],
+    preprocessor_flags = ["-fobjc-arc"],
+    deps = [
+        ":DemoAppLibrary",
+    ],
+)
+
+apple_library(
+    name = "DemoAppLibrary",
+    srcs = glob([
+        "DemoAppLibrary/*.m",
+    ]),
+    exported_headers = glob([
+        "DemoAppLibrary/*.h",
+    ]),
+    frameworks = [],
+    preprocessor_flags = ["-fobjc-arc"],
+)
+
+core_data_model(
+    name = "CoreDataModel",
+    path = "CoreDataModel/Model.xcdatamodeld",
+)
