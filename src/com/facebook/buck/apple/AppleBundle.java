@@ -160,7 +160,8 @@ public class AppleBundle extends AbstractBuildRule
   @AddToRuleKey private final boolean sliceAppPackageSwiftRuntime;
   @AddToRuleKey private final boolean sliceAppBundleSwiftRuntime;
 
-  private final Optional<AppleAssetCatalog> assetCatalog;
+  @AddToRuleKey private final Optional<SourcePath> maybeAssetCatalogCompilationResultDir;
+
   private final Optional<CoreDataModel> coreDataModel;
   private final Optional<SceneKitAssets> sceneKitAssets;
   private final Path sdkPath;
@@ -200,7 +201,7 @@ public class AppleBundle extends AbstractBuildRule
       ImmutableMap<SourcePath, String> extensionBundlePaths,
       Set<SourcePath> frameworks,
       AppleCxxPlatform appleCxxPlatform,
-      Optional<AppleAssetCatalog> assetCatalog,
+      Optional<SourcePath> maybeAssetCatalogCompilationResultDir,
       Optional<CoreDataModel> coreDataModel,
       Optional<SceneKitAssets> sceneKitAssets,
       Set<BuildTarget> tests,
@@ -243,7 +244,7 @@ public class AppleBundle extends AbstractBuildRule
     this.extensionBundlePaths = extensionBundlePaths;
     this.frameworks = frameworks;
     this.ibtool = appleCxxPlatform.getIbtool();
-    this.assetCatalog = assetCatalog;
+    this.maybeAssetCatalogCompilationResultDir = maybeAssetCatalogCompilationResultDir;
     this.coreDataModel = coreDataModel;
     this.sceneKitAssets = sceneKitAssets;
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
@@ -349,18 +350,21 @@ public class AppleBundle extends AbstractBuildRule
                 context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot)));
 
     Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
-    if (assetCatalog.isPresent()) {
+    if (maybeAssetCatalogCompilationResultDir.isPresent()) {
       stepsBuilder.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(),
                   getProjectFilesystem(),
                   resourcesDestinationPath)));
-      Path bundleDir = assetCatalog.get().getOutputDir();
+      Path compilationResultDirPath =
+          context
+              .getSourcePathResolver()
+              .getRelativePath(maybeAssetCatalogCompilationResultDir.get());
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
-              bundleDir,
+              compilationResultDirPath,
               resourcesDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }

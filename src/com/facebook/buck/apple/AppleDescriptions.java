@@ -961,7 +961,7 @@ public class AppleDescriptions {
         extensionBundlePaths,
         frameworks,
         appleCxxPlatform,
-        assetCatalog,
+        assetCatalog.map(AppleAssetCatalog::getSourcePathToOutput),
         coreDataModel,
         sceneKitAssets,
         tests,
