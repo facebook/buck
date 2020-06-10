@@ -26,7 +26,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
@@ -41,35 +40,21 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.MethodNode;
 
 /** Rule for trimming unnecessary ids from R.java files. */
 class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
-  private static final Logger LOG = Logger.get(TrimUberRDotJava.class);
-
   /** Interface for build rules that keep track of referenced Android resources */
   interface UsesResources extends BuildRule {
     ImmutableList<String> getReferencedResources();
@@ -82,7 +67,6 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private final Collection<? extends UsesResources> allPreDexRules;
   private final Optional<String> keepResourcePattern;
-  private final ImmutableSet<SourcePath> classpathEntriesToDex;
 
   private static final Pattern R_DOT_JAVA_LINE_PATTERN =
       Pattern.compile("^ *public static final int(?:\\[\\])? (\\w+)=");
@@ -96,13 +80,11 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       BuildRuleParams buildRuleParams,
       Optional<SourcePath> pathToRDotJavaDir,
       Collection<? extends UsesResources> allPreDexRules,
-      Optional<String> keepResourcePattern,
-      ImmutableSet<SourcePath> classpathEntriesToDex) {
+      Optional<String> keepResourcePattern) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.pathToRDotJavaDir = pathToRDotJavaDir;
     this.allPreDexRules = allPreDexRules;
     this.keepResourcePattern = keepResourcePattern;
-    this.classpathEntriesToDex = classpathEntriesToDex;
   }
 
   @Override
@@ -111,22 +93,12 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     Path output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
     Optional<Path> input = pathToRDotJavaDir.map(context.getSourcePathResolver()::getRelativePath);
     buildableContext.recordArtifact(output);
-
-    ImmutableSet<Path> classpath =
-        classpathEntriesToDex.stream()
-            .map(
-                entry ->
-                    getProjectFilesystem()
-                        .relativize(context.getSourcePathResolver().getAbsolutePath(entry))
-                        .getPath())
-            .collect(ImmutableSet.toImmutableSet());
-
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
-        .add(new PerformTrimStep(output, input, classpath))
+        .add(new PerformTrimStep(output, input))
         .add(
             ZipScrubberStep.of(
                 context.getSourcePathResolver().getAbsolutePath(getSourcePathToOutput())))
@@ -144,69 +116,10 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private class PerformTrimStep implements Step {
     private final Path pathToOutput;
     private final Optional<Path> pathToInput;
-    private final ImmutableSet<Path> classpath;
 
-    public PerformTrimStep(
-        Path pathToOutput, Optional<Path> pathToInput, ImmutableSet<Path> classpath) {
+    public PerformTrimStep(Path pathToOutput, Optional<Path> pathToInput) {
       this.pathToOutput = pathToOutput;
       this.pathToInput = pathToInput;
-      this.classpath = classpath;
-    }
-
-    private ImmutableSet<String> getUsedResourcesFromClasspath(ImmutableSet<Path> classpath)
-        throws IOException {
-      ImmutableSet.Builder<String> referencedResources = ImmutableSet.builder();
-
-      for (Path p : classpath) {
-        // Skip classpath entries that don't exist.
-        if (!Files.exists(p)) {
-          LOG.warn("Classpath entry not found while looking for used resources: %s", p);
-          continue;
-        }
-
-        try (JarFile jarFile = new JarFile(p.toFile())) {
-          for (JarEntry entry : Collections.list(jarFile.entries())) {
-            String name = entry.getName();
-            if (entry.isDirectory() || (name == null) || !name.endsWith(".class")) {
-              continue;
-            }
-
-            ClassNode clazz = new ClassNode();
-            try (InputStream stream = jarFile.getInputStream(entry)) {
-              ClassReader reader = new ClassReader(stream);
-              reader.accept(clazz, ClassReader.EXPAND_FRAMES);
-              for (MethodNode method : clazz.methods) {
-                for (Iterator<AbstractInsnNode> i = method.instructions.iterator(); i.hasNext(); ) {
-                  AbstractInsnNode insnNode = i.next();
-                  if (insnNode.getOpcode() == Opcodes.GETSTATIC
-                      || insnNode.getOpcode() == Opcodes.PUTSTATIC) {
-                    FieldInsnNode node = (FieldInsnNode) insnNode;
-                    if (node.owner.contains("/R$")) {
-                      referencedResources.add(getPackageName(node.owner) + "." + node.name);
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      return referencedResources.build();
-    }
-
-    /**
-     * Returns the (dot separated) package name of a class binary name (JLS 13.1).
-     *
-     * @param classBinaryName a class name, for example "com/facebook/foo/R$strings"
-     * @return the package name of the given class, for example "com.facebook.foo", or "" if no
-     *     package name was present.
-     */
-    private String getPackageName(String classBinaryName) {
-      int lastSlash = classBinaryName.lastIndexOf('/');
-      if (lastSlash == -1) {
-        return "";
-      }
-      return classBinaryName.substring(0, lastSlash).replace('/', '.');
     }
 
     @Override
@@ -215,14 +128,9 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       for (UsesResources preDexRule : allPreDexRules) {
         allReferencedResourcesBuilder.addAll(preDexRule.getReferencedResources());
       }
-      ProjectFilesystem projectFilesystem = getProjectFilesystem();
-
-      // Find referenced resources from the classpath, if provided. This is
-      // needed for non-predexed targets that require resource trimming.
-      allReferencedResourcesBuilder.addAll(getUsedResourcesFromClasspath(classpath));
-
       ImmutableSet<String> allReferencedResources = allReferencedResourcesBuilder.build();
 
+      ProjectFilesystem projectFilesystem = getProjectFilesystem();
       try (CustomZipOutputStream output =
           ZipOutputStreams.newOutputStream(projectFilesystem.resolve(pathToOutput))) {
         if (!pathToInput.isPresent()) {
@@ -236,7 +144,6 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                   .getBytes());
         } else {
           Preconditions.checkState(projectFilesystem.exists(pathToInput.get()));
-
           projectFilesystem.walkRelativeFileTree(
               pathToInput.get(),
               new SimpleFileVisitor<Path>() {
@@ -261,7 +168,7 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                       new ZipEntry(
                           PathFormatter.pathWithUnixSeparators(
                               pathToInput.get().relativize(file))));
-                  if (allReferencedResources.isEmpty()) {
+                  if (allPreDexRules.isEmpty()) {
                     // If there are no pre-dexed inputs, we don't yet support trimming
                     // R.java, so just copy it verbatim (instead of trimming it down to nothing).
                     projectFilesystem.copyToOutputStream(file, output);

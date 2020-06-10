@@ -38,7 +38,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -129,8 +128,7 @@ public class TrimUberRDotJavaTest {
             TestBuildRuleParams.create(),
             Optional.of(FakeSourcePath.of(filesystem, rDotJavaDir.getPath())),
             ImmutableList.of(dexProducedFromJavaLibrary),
-            keepResourcePattern,
-            ImmutableSet.of());
+            keepResourcePattern);
     graphBuilder.addToIndex(trimUberRDotJava);
 
     BuildContext buildContext =

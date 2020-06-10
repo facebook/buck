@@ -257,7 +257,6 @@ java_library_with_plugins(
         "//src/com/facebook/buck/zip:zip",
         "//third-party/java/android:ddmlib",
         "//third-party/java/aosp:aosp",
-        "//third-party/java/asm:asm",
         "//third-party/java/commons-compress:commons-compress",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
