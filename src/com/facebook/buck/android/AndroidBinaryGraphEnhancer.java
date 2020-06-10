@@ -224,6 +224,7 @@ public class AndroidBinaryGraphEnhancer {
       boolean useAapt2LocaleFiltering,
       ImmutableSet<String> extraFilteredResources,
       Optional<SourcePath> resourceStableIds,
+      Optional<SourcePath> resourceIdBlocklist,
       int rDotJavaWeightFactor,
       int secondaryDexWeightLimit,
       ImmutableSet<String> resourcePackagesToExclude) {
@@ -310,6 +311,7 @@ public class AndroidBinaryGraphEnhancer {
             useAapt2LocaleFiltering,
             extraFilteredResources,
             resourceStableIds,
+            resourceIdBlocklist,
             downwardApiConfig.isEnabledForAndroid());
     this.apkModuleGraph = apkModuleGraph;
     this.dxConfig = dxConfig;

@@ -49,6 +49,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -77,6 +78,8 @@ public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final ImmutableSet<String> locales;
   @AddToRuleKey private final ImmutableSet<String> extraFilteredResources;
   @AddToRuleKey private final Optional<SourcePath> resourceStableIds;
+  @AddToRuleKey private final Optional<SourcePath> resourceIdBlocklist;
+
   private final Path androidJar;
   private final BuildableSupport.DepsSupplier depsSupplier;
   @AddToRuleKey private final boolean withDownwardApi;
@@ -105,7 +108,8 @@ public class Aapt2Link extends AbstractBuildRule {
       ImmutableSet<String> locales,
       ImmutableSet<String> extraFilteredResources,
       Optional<SourcePath> resourceStableIds,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      Optional<SourcePath> resourceIdBlocklist) {
     super(buildTarget, projectFilesystem);
     this.compileRules = compileRules;
     this.manifest = manifest;
@@ -127,6 +131,7 @@ public class Aapt2Link extends AbstractBuildRule {
     this.extraFilteredResources = extraFilteredResources;
     this.resourceStableIds = resourceStableIds;
     this.withDownwardApi = withDownwardApi;
+    this.resourceIdBlocklist = resourceIdBlocklist;
   }
 
   @Override
@@ -175,6 +180,11 @@ public class Aapt2Link extends AbstractBuildRule {
             getArgsPath(),
             compiledApkPaths,
             withDownwardApi));
+
+    if (resourceIdBlocklist.isPresent()) {
+      steps.add(new RemoveBlocklistedIdsStep(context.getSourcePathResolver()));
+    }
+
     steps.add(ZipScrubberStep.of(getProjectFilesystem().resolve(getResourceApkPath())));
 
     if (!extraFilteredResources.isEmpty()) {
@@ -219,6 +229,10 @@ public class Aapt2Link extends AbstractBuildRule {
 
   private Path getRDotTxtPath() {
     return getGenDir().resolve("R.txt");
+  }
+
+  private Path getRDotTxtOriginalPath() {
+    return getGenDir().resolve("R-original.txt");
   }
 
   /** Directory containing R.java files produced by aapt2 link. */
@@ -366,7 +380,11 @@ public class Aapt2Link extends AbstractBuildRule {
       // We don't need the R.java output, but aapt2 won't output R.txt
       // unless we also request R.java.
       builder.add("--java", getInitialRDotJavaDir().toString());
-      builder.add("--output-text-symbols", getRDotTxtPath().toString());
+      builder.add(
+          "--output-text-symbols",
+          resourceIdBlocklist.isPresent()
+              ? getRDotTxtOriginalPath().toString()
+              : getRDotTxtPath().toString());
 
       builder.add("-R", "@" + filesystem.resolve(argsFile).toString());
 
@@ -402,6 +420,41 @@ public class Aapt2Link extends AbstractBuildRule {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       compiledResourcePaths.forEach(r -> builder.add(r.toString()));
       return builder.build();
+    }
+  }
+
+  /** Write out a new R.txt with blocklisted resources stripped. */
+  class RemoveBlocklistedIdsStep extends AbstractExecutionStep {
+    private final SourcePathResolverAdapter pathResolver;
+
+    RemoveBlocklistedIdsStep(SourcePathResolverAdapter pathResolver) {
+      super("aapt2_remove_blocklisted_ids");
+      this.pathResolver = pathResolver;
+    }
+
+    private final String stripResourceId(String line) {
+      int lastSpace = line.lastIndexOf(' ');
+      if (lastSpace != -1) {
+        return line.substring(0, lastSpace);
+      }
+      return line;
+    }
+
+    @Override
+    public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+      Path blocklistPath = pathResolver.getAbsolutePath(resourceIdBlocklist.get()).getPath();
+      ImmutableSet<String> blocklist =
+          Files.lines(blocklistPath)
+              .filter(line -> !line.startsWith("#"))
+              .collect(ImmutableSet.toImmutableSet());
+      ImmutableList<String> filtered =
+          Files.lines(getRDotTxtOriginalPath())
+              .filter(line -> !blocklist.contains(stripResourceId(line)))
+              .collect(ImmutableList.toImmutableList());
+
+      Files.write(getRDotTxtPath(), filtered);
+
+      return StepExecutionResults.SUCCESS;
     }
   }
 }

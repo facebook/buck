@@ -274,6 +274,7 @@ public class AndroidInstrumentationApkDescription
             /* useAapt2LocaleFiltering= */ false,
             /* extraFilteredResources= */ ImmutableSet.of(),
             /* resourceStableIds= */ Optional.empty(),
+            /* resourceIdBlocklist= */ Optional.empty(),
             androidBuckConfig.getRDotJavaWeightFactor(),
             androidBuckConfig.getSecondaryDexWeightLimit(),
             resourcePackagesToExclude);

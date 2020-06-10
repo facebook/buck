@@ -103,6 +103,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final boolean useAapt2LocaleFiltering;
   private final ImmutableSet<String> extraFilteredResources;
   private final Optional<SourcePath> resourceStableIds;
+  private final Optional<SourcePath> resourceIdBlocklist;
   private final boolean withDownwardApi;
 
   public AndroidBinaryResourcesGraphEnhancer(
@@ -139,6 +140,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       boolean useAapt2LocaleFiltering,
       ImmutableSet<String> extraFilteredResources,
       Optional<SourcePath> resourceStableIds,
+      Optional<SourcePath> resourceIdBlocklist,
       boolean withDownwardApi) {
     this.androidPlatformTarget = androidPlatformTarget;
     this.buildTarget = buildTarget;
@@ -173,6 +175,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.useAapt2LocaleFiltering = useAapt2LocaleFiltering;
     this.extraFilteredResources = extraFilteredResources;
     this.resourceStableIds = resourceStableIds;
+    this.resourceIdBlocklist = resourceIdBlocklist;
     this.withDownwardApi = withDownwardApi;
   }
 
@@ -599,7 +602,8 @@ class AndroidBinaryResourcesGraphEnhancer {
         locales,
         extraFilteredResources,
         resourceStableIds,
-        withDownwardApi);
+        withDownwardApi,
+        resourceIdBlocklist);
   }
 
   public static ImmutableList<Aapt2Compile> createAapt2CompileablesForResourceProvider(

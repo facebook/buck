@@ -211,4 +211,6 @@ public interface AndroidGraphEnhancerArgs
   }
 
   Optional<SourcePath> getResourceStableIds();
+
+  Optional<SourcePath> getResourceIdBlocklist();
 }
