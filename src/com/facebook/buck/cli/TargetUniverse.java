@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -44,7 +43,7 @@ public interface TargetUniverse {
    * targets will be configured for {@code targetConfiguration}, if given.
    */
   ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      Iterable<? extends TargetNodeSpec> specs, Optional<TargetConfiguration> targetConfiguration)
+      Iterable<? extends TargetNodeSpec> specs)
       throws BuildFileParseException, InterruptedException;
 
   /**
@@ -54,7 +53,7 @@ public interface TargetUniverse {
   Optional<TargetNode<?>> getNode(BuildTarget buildTarget);
 
   ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
-      Cell cell, AbsPath buildFile, Optional<TargetConfiguration> targetConfiguration);
+      Cell cell, AbsPath buildFile);
 
   /**
    * Returns the forward transitive closure of all of the targets in "targets". Callers must ensure

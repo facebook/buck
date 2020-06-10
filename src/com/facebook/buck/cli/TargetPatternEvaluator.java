@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.spec.BuildTargetMatcherTargetNodeParser;
@@ -34,7 +33,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 /** Class capable of taking strings and turning them into {@code ConfiguredQueryTarget}s. */
@@ -44,14 +42,12 @@ class TargetPatternEvaluator extends AbstractQueryPatternEvaluator<ConfiguredQue
   private final TargetUniverse targetUniverse;
   private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
   private final Cell rootCell;
-  private final Optional<TargetConfiguration> targetConfiguration;
 
   public TargetPatternEvaluator(
       TargetUniverse targetUniverse,
       Cell rootCell,
       Path absoluteClientWorkingDir,
-      BuckConfig buckConfig,
-      Optional<TargetConfiguration> targetConfiguration) {
+      BuckConfig buckConfig) {
     super(rootCell, buckConfig);
 
     this.targetUniverse = targetUniverse;
@@ -62,7 +58,6 @@ class TargetPatternEvaluator extends AbstractQueryPatternEvaluator<ConfiguredQue
             absoluteClientWorkingDir,
             buckConfig,
             new BuildTargetMatcherTargetNodeParser());
-    this.targetConfiguration = targetConfiguration;
   }
 
   /** Attempts to parse and load the given collection of patterns. */
@@ -88,7 +83,7 @@ class TargetPatternEvaluator extends AbstractQueryPatternEvaluator<ConfiguredQue
       specs.addAll(targetNodeSpecParser.parse(rootCell, pattern));
     }
     ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
-        targetUniverse.resolveTargetSpecs(specs, targetConfiguration);
+        targetUniverse.resolveTargetSpecs(specs);
     LOG.verbose("Resolved target patterns %s -> targets %s", patterns, buildTargets);
 
     // Convert the ordered result into a result map of pattern to set of resolved targets.

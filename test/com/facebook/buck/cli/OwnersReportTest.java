@@ -302,13 +302,11 @@ public class OwnersReportTest {
         new LegacyQueryUniverse(
             parser,
             perBuildState,
+            Optional.empty(),
             TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true));
     OwnersReport report =
         OwnersReport.builderForConfigured(
-                cell.getRootCell(),
-                cell.getRootCell().getRoot().getPath(),
-                targetUniverse,
-                Optional.empty())
+                cell.getRootCell(), cell.getRootCell().getRoot().getPath(), targetUniverse)
             .build(getBuildFileTrees(cell.getRootCell()), ImmutableSet.of(input));
 
     assertEquals(1, report.nonExistentInputs.size());
@@ -343,11 +341,11 @@ public class OwnersReportTest {
         new LegacyQueryUniverse(
             parser,
             perBuildState,
+            Optional.empty(),
             TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true));
 
     OwnersReport<TargetNode<?>> report =
-        OwnersReport.builderForConfigured(
-                cell.getRootCell(), workingDir, targetUniverse, Optional.empty())
+        OwnersReport.builderForConfigured(cell.getRootCell(), workingDir, targetUniverse)
             .build(getBuildFileTrees(cell.getRootCell()), inputs);
 
     assertTrue(report.nonFileInputs.isEmpty());

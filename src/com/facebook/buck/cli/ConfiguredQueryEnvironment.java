@@ -153,17 +153,13 @@ public class ConfiguredQueryEnvironment
         targetUniverse,
         params.getCells().getRootCell(),
         OwnersReport.builderForConfigured(
-            params.getCells().getRootCell(),
-            params.getClientWorkingDir(),
-            targetUniverse,
-            params.getTargetConfiguration()),
+            params.getCells().getRootCell(), params.getClientWorkingDir(), targetUniverse),
         params.getTargetConfigurationFactory(),
         new TargetPatternEvaluator(
             targetUniverse,
             params.getCells().getRootCell(),
             params.getClientWorkingDir(),
-            params.getBuckConfig(),
-            params.getTargetConfiguration()),
+            params.getBuckConfig()),
         params.getBuckEventBus(),
         params.getTypeCoercerFactory());
   }

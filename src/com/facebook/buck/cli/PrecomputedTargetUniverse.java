@@ -23,7 +23,6 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -231,7 +230,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
 
   @Override
   public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      Iterable<? extends TargetNodeSpec> specs, Optional<TargetConfiguration> targetConfiguration)
+      Iterable<? extends TargetNodeSpec> specs)
       throws BuildFileParseException, InterruptedException {
     ImmutableList.Builder<ImmutableSet<BuildTarget>> resultBuilder = ImmutableList.builder();
     for (TargetNodeSpec spec : specs) {
@@ -254,9 +253,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
 
   @Override
   public ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
-      Cell cell, AbsPath buildFile, Optional<TargetConfiguration> targetConfiguration) {
-    // TODO(srice): Should we be ignorning the configuration here?
-
+      Cell cell, AbsPath buildFile) {
     // The index was built up with directories, but the input to this function is a buildfile path.
     // Make sure we're getting what we expect and then chop off the buildfile name.
     Preconditions.checkState(

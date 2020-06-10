@@ -147,20 +147,19 @@ public class ConfiguredQueryEnvironmentTest {
             buildTargetViewFactory, cells.getRootCell().getCellPathResolver());
     LegacyQueryUniverse targetUniverse =
         new LegacyQueryUniverse(
-            parser, parserState, TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true));
+            parser,
+            parserState,
+            Optional.empty(),
+            TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true));
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(
             targetUniverse,
             cells.getRootCell(),
             cells.getRootCell().getRoot().getPath(),
-            FakeBuckConfig.empty(),
-            Optional.empty());
+            FakeBuckConfig.empty());
     OwnersReport.Builder ownersReportBuilder =
         OwnersReport.builderForConfigured(
-            cells.getRootCell(),
-            cells.getRootCell().getRoot().getPath(),
-            targetUniverse,
-            Optional.empty());
+            cells.getRootCell(), cells.getRootCell().getRoot().getPath(), targetUniverse);
     buckQueryEnvironment =
         ConfiguredQueryEnvironment.from(
             targetUniverse,

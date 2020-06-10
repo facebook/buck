@@ -69,6 +69,7 @@ public class LegacyQueryUniverse implements TargetUniverse {
 
   private final Parser parser;
   private final PerBuildState parserState;
+  private final Optional<TargetConfiguration> targetConfiguration;
   // Query execution is single threaded, however the buildTransitiveClosure implementation
   // traverses the graph in parallel.
   private MutableDirectedGraph<TargetNode<?>> graph = MutableDirectedGraph.createConcurrent();
@@ -78,9 +79,11 @@ public class LegacyQueryUniverse implements TargetUniverse {
   public LegacyQueryUniverse(
       Parser parser,
       PerBuildState parserState,
+      Optional<TargetConfiguration> targetConfiguration,
       TemporaryUnconfiguredTargetToTargetUniquenessChecker checker) {
     this.parser = parser;
     this.parserState = parserState;
+    this.targetConfiguration = targetConfiguration;
     this.checker = checker;
   }
 
@@ -89,6 +92,7 @@ public class LegacyQueryUniverse implements TargetUniverse {
     return new LegacyQueryUniverse(
         params.getParser(),
         parserState,
+        params.getTargetConfiguration(),
         TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(
             BuildBuckConfig.of(params.getCells().getRootCell().getBuckConfig())
                 .shouldBuckOutIncludeTargetConfigHash()));
@@ -112,7 +116,7 @@ public class LegacyQueryUniverse implements TargetUniverse {
 
   @Override
   public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      Iterable<? extends TargetNodeSpec> specs, Optional<TargetConfiguration> targetConfiguration)
+      Iterable<? extends TargetNodeSpec> specs)
       throws BuildFileParseException, InterruptedException {
     return parser.resolveTargetSpecs(parserState, specs, targetConfiguration);
   }
@@ -133,7 +137,7 @@ public class LegacyQueryUniverse implements TargetUniverse {
 
   @Override
   public ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
-      Cell cell, AbsPath buildFile, Optional<TargetConfiguration> targetConfiguration) {
+      Cell cell, AbsPath buildFile) {
     try {
       return parser.getAllTargetNodesWithTargetCompatibilityFiltering(
           parserState, cell, buildFile, targetConfiguration);

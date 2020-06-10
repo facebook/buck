@@ -140,17 +140,13 @@ public class QueryCommandTest {
             targetUniverse,
             cell.getRootCell(),
             OwnersReport.builderForConfigured(
-                params.getCells().getRootCell(),
-                params.getClientWorkingDir(),
-                targetUniverse,
-                Optional.empty()),
+                params.getCells().getRootCell(), params.getClientWorkingDir(), targetUniverse),
             targetConfigurationFactory,
             new TargetPatternEvaluator(
                 targetUniverse,
                 params.getCells().getRootCell(),
                 params.getClientWorkingDir(),
-                params.getBuckConfig(),
-                Optional.empty()),
+                params.getBuckConfig()),
             eventBus,
             typeCoercerFactory);
   }

@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -169,16 +168,12 @@ final class OwnersReport<N extends Comparable<N>> {
   }
 
   static Builder<TargetNode<?>> builderForConfigured(
-      Cell rootCell,
-      Path clientWorkingDir,
-      TargetUniverse targetUniverse,
-      Optional<TargetConfiguration> targetConfiguration) {
+      Cell rootCell, Path clientWorkingDir, TargetUniverse targetUniverse) {
     return new Builder<>(
         rootCell,
         clientWorkingDir,
         (cell, path) ->
-            targetUniverse.getAllTargetNodesWithTargetCompatibilityFiltering(
-                cell, path, targetConfiguration),
+            targetUniverse.getAllTargetNodesWithTargetCompatibilityFiltering(cell, path),
         TargetNode::getInputs);
   }
 
