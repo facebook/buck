@@ -215,7 +215,7 @@ public class MachoDynamicLinkingTest {
         ByteBufferUnmapper.createUnsafe(file.map(FileChannel.MapMode.READ_ONLY, 0, file.size()))) {
       ByteBuffer mappedFile = unmapper.getByteBuffer();
 
-      Optional<ImmutableSet<MachoBindInfoSymbol>> boundSymbols =
+      ImmutableSet<MachoBindInfoSymbol> boundSymbols =
           MachoBindInfoReader.parseStronglyBoundSymbols(mappedFile);
 
       Set<MachoBindInfoSymbol> expectedSymbols = new HashSet<>();
@@ -224,7 +224,7 @@ public class MachoDynamicLinkingTest {
       // If `expectedSymbols` is a subset, then after computing the intersection, we expect all
       // elements to be still present.
       int sizeBeforeIntersection = expectedSymbols.size();
-      expectedSymbols.retainAll(boundSymbols.get());
+      expectedSymbols.retainAll(boundSymbols);
       int sizeAfterIntersection = expectedSymbols.size();
 
       assertThat(sizeBeforeIntersection, equalTo(sizeAfterIntersection));

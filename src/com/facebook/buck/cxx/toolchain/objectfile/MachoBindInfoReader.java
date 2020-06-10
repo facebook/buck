@@ -51,16 +51,16 @@ public class MachoBindInfoReader {
   private MachoBindInfoReader() {}
 
   /**
-   * Parses the strong binding information from a Mach-O executable and returns the set of symbols
-   * to be bound at runtime. Note that a symbol might have multiple bind points but we're only
-   * returning a set of the symbols, as we're not interested in the binding addresses.
+   * Parses the binding information from a Mach-O executable and returns the set of symbols to be
+   * bound at runtime. Note that a symbol might have multiple bind points but we're only returning a
+   * set of the symbols, as we're not interested in the binding addresses.
    *
    * <p>If there's no binding info in the executable, an empty optional is returned.
    *
    * <p>Mach-O executables have three different sets of binding info: strong, weak and lazy. The
    * format is the same for all three, so those could be exposed in the future if needed.
    */
-  public static Optional<ImmutableSet<MachoBindInfoSymbol>> parseStronglyBoundSymbols(
+  public static ImmutableSet<MachoBindInfoSymbol> parseStronglyBoundSymbols(
       ByteBuffer machoExecutable) throws Machos.MachoException {
 
     ImmutableList<String> dependentLibs =
@@ -71,26 +71,35 @@ public class MachoBindInfoReader {
 
     if (maybeDyldInfoCommand.isPresent()) {
       MachoDyldInfoCommand command = maybeDyldInfoCommand.get();
-      return parseBindInfoAtOffset(
-          machoExecutable, command.getBindInfoOffset(), command.getBindInfoSize(), dependentLibs);
+      ImmutableSet.Builder<MachoBindInfoSymbol> symbolBuilder = ImmutableSet.builder();
+      parseBindInfoAtOffset(
+          machoExecutable,
+          command.getBindInfoOffset(),
+          command.getBindInfoSize(),
+          dependentLibs,
+          symbolBuilder);
+      return symbolBuilder.build();
     }
 
-    return Optional.empty();
+    return ImmutableSet.of();
   }
 
   /**
    * For reference around Mach-O format, see ImageLoaderMachOCompressed::eachBind() in
    * ImageLoaderMachOCompressed.cpp (from Apple's dyld open source releases).
    */
-  private static Optional<ImmutableSet<MachoBindInfoSymbol>> parseBindInfoAtOffset(
-      ByteBuffer machoExecutable, int offset, int size, ImmutableList<String> dependentLibraries)
+  private static void parseBindInfoAtOffset(
+      ByteBuffer machoExecutable,
+      int offset,
+      int size,
+      ImmutableList<String> dependentLibraries,
+      ImmutableSet.Builder<MachoBindInfoSymbol> symbolBuilder)
       throws Machos.MachoException {
     if (offset == 0 || size == 0) {
       // No binding info present in executable, this is a valid state.
-      return Optional.empty();
+      return;
     }
 
-    ImmutableSet.Builder<MachoBindInfoSymbol> symbolBuilder = ImmutableSet.builder();
     MachoBindContext bindContext = new MachoBindContext();
     machoExecutable.position(offset);
 
@@ -161,8 +170,6 @@ public class MachoBindInfoReader {
               String.format("Encountered unknown opcode: %d, immediate: %d", opcode, immediate));
       }
     }
-
-    return Optional.of(symbolBuilder.build());
   }
 
   /**
