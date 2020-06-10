@@ -35,6 +35,7 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -96,7 +97,7 @@ public class CalculateSourceAbiFromLibraryTarget
                       JavaAbis.getTmpGenPathForSourceAbi(filesystem, libraryTarget).getPath()))
               .setHashEntries(true)
               .build();
-      return ImmutableList.of(new JarDirectoryStep(filesystem, jarParameters));
+      return ImmutableList.of(new JarDirectoryStep(jarParameters));
     }
   }
 

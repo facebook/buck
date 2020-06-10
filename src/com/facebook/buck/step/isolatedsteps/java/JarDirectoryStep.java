@@ -14,22 +14,25 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java;
+package com.facebook.buck.step.isolatedsteps.java;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.Step;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.facebook.buck.jvm.java.JarParameters;
+import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
+import com.facebook.buck.jvm.java.LoggingJarBuilderObserver;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.zip.JarBuilder;
-import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /** Creates a JAR file from a collection of directories/ZIP/JAR files. */
-public class JarDirectoryStep implements Step {
-
-  private final ProjectFilesystem filesystem;
+public class JarDirectoryStep extends IsolatedStep {
 
   private final JarParameters parameters;
 
@@ -42,17 +45,8 @@ public class JarDirectoryStep implements Step {
    * and copied to the generated JAR. @Param parameters the parameters that describe how to create
    * the jar.
    */
-  public JarDirectoryStep(ProjectFilesystem filesystem, JarParameters parameters) {
-    this.filesystem = filesystem;
+  public JarDirectoryStep(JarParameters parameters) {
     this.parameters = parameters;
-  }
-
-  private String getJarArgs() {
-    String result = "cf";
-    if (parameters.getManifestFile().isPresent()) {
-      result += "m";
-    }
-    return result;
   }
 
   @Override
@@ -61,33 +55,46 @@ public class JarDirectoryStep implements Step {
   }
 
   @Override
-  public String getDescription(StepExecutionContext context) {
-    return String.format(
-        "jar %s %s %s %s",
-        getJarArgs(),
-        parameters.getJarPath(),
-        parameters.getManifestFile().map(Path::toString).orElse(""),
-        Joiner.on(' ').join(parameters.getEntriesToJar()));
+  public String getIsolatedStepDescription(IsolatedExecutionContext context) {
+    Optional<Path> manifestFile = parameters.getManifestFile();
+    return String.join(
+        " ",
+        "jar",
+        manifestFile.map(ignore -> "cfm").orElse("cf"),
+        parameters.getJarPath().toString(),
+        manifestFile.map(Path::toString).orElse(""),
+        parameters.getEntriesToJar().stream().map(Path::toString).collect(Collectors.joining(" ")));
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+  public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
+      throws IOException {
 
     JavacEventSinkToBuckEventBusBridge eventSink =
         new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus());
     LoggingJarBuilderObserver loggingObserver =
         new LoggingJarBuilderObserver(eventSink, parameters.getDuplicatesLogLevel());
-    return StepExecutionResult.of(
+    AbsPath root = context.getRuleCellRoot();
+    int exitCode =
         new JarBuilder()
             .setObserver(loggingObserver)
-            .setEntriesToJar(parameters.getEntriesToJar().stream().map(filesystem::resolve))
+            .setEntriesToJar(
+                parameters.getEntriesToJar().stream()
+                    .map(p -> ProjectFilesystemUtils.getPathForRelativePath(root, p)))
             .setMainClass(parameters.getMainClass().orElse(null))
-            .setManifestFile(parameters.getManifestFile().map(filesystem::resolve).orElse(null))
+            .setManifestFile(
+                parameters
+                    .getManifestFile()
+                    .map(p -> ProjectFilesystemUtils.getPathForRelativePath(root, p))
+                    .orElse(null))
             .setShouldMergeManifests(parameters.getMergeManifests())
             .setShouldDisallowAllDuplicates(parameters.getDisallowAllDuplicates())
             .setShouldHashEntries(parameters.getHashEntries())
             .setRemoveEntryPredicate(parameters.getRemoveEntryPredicate())
-            .createJarFile(filesystem.resolve(parameters.getJarPath())));
+            .createJarFile(
+                ProjectFilesystemUtils.getPathForRelativePath(root, parameters.getJarPath()));
+
+    return StepExecutionResult.of(exitCode);
   }
 
   @Override

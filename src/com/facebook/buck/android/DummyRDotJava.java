@@ -41,7 +41,6 @@ import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerParameters;
-import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.step.Step;
@@ -50,6 +49,7 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -286,7 +286,7 @@ public class DummyRDotJava extends AbstractBuildRule
             .setMergeManifests(false)
             .setHashEntries(true)
             .build();
-    steps.add(new JarDirectoryStep(getProjectFilesystem(), jarParameters));
+    steps.add(new JarDirectoryStep(jarParameters));
     buildableContext.recordArtifact(outputJar);
 
     steps.add(new CheckDummyRJarNotEmptyStep(javaSourceFilePaths));

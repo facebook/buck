@@ -45,6 +45,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
+import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.facebook.buck.util.PatternsMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -174,7 +175,6 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             : context.getSourcePathResolver().getAbsolutePath(manifestFile).getPath();
     Step jar =
         new JarDirectoryStep(
-            getProjectFilesystem(),
             JarParameters.builder()
                 .setJarPath(outputFile)
                 .setEntriesToJar(includePaths)

@@ -30,7 +30,6 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.step.Step;
@@ -38,6 +37,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
@@ -139,7 +139,6 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // Create our Uber-jar, and place it in the tmp folder.
     commands.add(
         new JarDirectoryStep(
-            getProjectFilesystem(),
             JarParameters.builder()
                 .setJarPath(temp.resolve("classes.jar"))
                 .setEntriesToJar(

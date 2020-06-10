@@ -162,8 +162,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     }
 
     if (jarParameters.isPresent()) {
-      addJarCreationSteps(
-          projectFilesystem, compilerParameters, steps, buildableContext, jarParameters.get());
+      addJarCreationSteps(compilerParameters, steps, buildableContext, jarParameters.get());
     }
   }
 

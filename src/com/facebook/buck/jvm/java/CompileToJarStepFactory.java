@@ -26,6 +26,7 @@ import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -89,8 +90,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
     }
 
     if (jarParameters != null) {
-      addJarCreationSteps(
-          projectFilesystem, compilerParameters, steps, buildableContext, jarParameters);
+      addJarCreationSteps(compilerParameters, steps, buildableContext, jarParameters);
     }
   }
 
@@ -175,14 +175,13 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
   }
 
   protected void addJarCreationSteps(
-      ProjectFilesystem projectFilesystem,
       CompilerParameters compilerParameters,
       Builder<Step> steps,
       BuildableContext buildableContext,
       JarParameters jarParameters) {
     // No source files, only resources
     if (compilerParameters.getSourceFilePaths().isEmpty()) {
-      createJarStep(projectFilesystem, jarParameters, steps);
+      createJarStep(jarParameters, steps);
     }
     buildableContext.recordArtifact(jarParameters.getJarPath());
   }
@@ -219,12 +218,11 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
                 getBootClasspath(context),
                 withDownwardApi)));
 
-    createJarStep(projectFilesystem, libraryJarParameters, steps);
+    createJarStep(libraryJarParameters, steps);
   }
 
-  public void createJarStep(
-      ProjectFilesystem projectFilesystem, JarParameters parameters, Builder<Step> steps) {
-    steps.add(new JarDirectoryStep(projectFilesystem, parameters));
+  public void createJarStep(JarParameters parameters, Builder<Step> steps) {
+    steps.add(new JarDirectoryStep(parameters));
   }
 
   /**

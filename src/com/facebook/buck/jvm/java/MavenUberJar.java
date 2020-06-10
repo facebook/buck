@@ -33,6 +33,7 @@ import com.facebook.buck.jvm.core.HasSources;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -112,7 +113,6 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 context.getBuildCellRootPath(), getProjectFilesystem(), pathToOutput.getParent()));
     JarDirectoryStep mergeOutputsStep =
         new JarDirectoryStep(
-            getProjectFilesystem(),
             JarParameters.builder()
                 .setJarPath(pathToOutput)
                 .setEntriesToJar(

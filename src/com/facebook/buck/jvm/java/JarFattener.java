@@ -40,6 +40,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Preconditions;
@@ -218,7 +219,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .setMainClass(Optional.of(FatJarMain.class.getName()))
             .setMergeManifests(true)
             .build();
-    steps.add(new JarDirectoryStep(getProjectFilesystem(), jarParameters));
+    steps.add(new JarDirectoryStep(jarParameters));
 
     buildableContext.recordArtifact(output);
 

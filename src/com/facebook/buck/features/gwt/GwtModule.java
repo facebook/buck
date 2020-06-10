@@ -31,11 +31,11 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CopyResourcesStep;
-import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.ResourcesParameters;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -99,7 +99,6 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     steps.add(
         new JarDirectoryStep(
-            getProjectFilesystem(),
             JarParameters.builder()
                 .setJarPath(outputFile.getPath())
                 .setEntriesToJar(ImmutableSortedSet.of(tempJarFolder))
