@@ -52,8 +52,7 @@ public interface TargetUniverse {
    */
   Optional<TargetNode<?>> getNode(BuildTarget buildTarget);
 
-  ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
-      Cell cell, AbsPath buildFile);
+  ImmutableList<TargetNode<?>> getAllTargetNodesInBuildFile(Cell cell, AbsPath buildFile);
 
   /**
    * Returns the forward transitive closure of all of the targets in "targets". Callers must ensure

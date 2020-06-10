@@ -172,8 +172,7 @@ final class OwnersReport<N extends Comparable<N>> {
     return new Builder<>(
         rootCell,
         clientWorkingDir,
-        (cell, path) ->
-            targetUniverse.getAllTargetNodesWithTargetCompatibilityFiltering(cell, path),
+        (cell, path) -> targetUniverse.getAllTargetNodesInBuildFile(cell, path),
         TargetNode::getInputs);
   }
 

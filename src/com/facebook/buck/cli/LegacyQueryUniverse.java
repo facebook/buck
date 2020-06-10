@@ -136,8 +136,7 @@ public class LegacyQueryUniverse implements TargetUniverse {
   }
 
   @Override
-  public ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
-      Cell cell, AbsPath buildFile) {
+  public ImmutableList<TargetNode<?>> getAllTargetNodesInBuildFile(Cell cell, AbsPath buildFile) {
     try {
       return parser.getAllTargetNodesWithTargetCompatibilityFiltering(
           parserState, cell, buildFile, targetConfiguration);

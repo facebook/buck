@@ -252,8 +252,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
   }
 
   @Override
-  public ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
-      Cell cell, AbsPath buildFile) {
+  public ImmutableList<TargetNode<?>> getAllTargetNodesInBuildFile(Cell cell, AbsPath buildFile) {
     // The index was built up with directories, but the input to this function is a buildfile path.
     // Make sure we're getting what we expect and then chop off the buildfile name.
     Preconditions.checkState(
