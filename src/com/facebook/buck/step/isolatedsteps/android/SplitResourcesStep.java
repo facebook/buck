@@ -17,15 +17,15 @@
 package com.facebook.buck.step.isolatedsteps.android;
 
 import com.facebook.buck.android.resources.ExoResourcesRewriter;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import java.io.IOException;
 
 /** Step to construct build outputs for exo-for-resources. */
-public class SplitResourcesStep implements Step {
+public class SplitResourcesStep extends IsolatedStep {
 
   private final RelPath pathToAaptResources;
   private final RelPath pathToOriginalRDotTxt;
@@ -47,7 +47,8 @@ public class SplitResourcesStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+  public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
+      throws IOException {
     ExoResourcesRewriter.rewrite(
         context.getRuleCellRoot(),
         pathToAaptResources,
@@ -64,7 +65,7 @@ public class SplitResourcesStep implements Step {
   }
 
   @Override
-  public String getDescription(StepExecutionContext context) {
+  public String getIsolatedStepDescription(IsolatedExecutionContext context) {
     return String.format("split_exo_resources %s %s", pathToAaptResources, pathToOriginalRDotTxt);
   }
 }
