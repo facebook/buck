@@ -16,40 +16,37 @@
 
 package com.facebook.buck.step.isolatedsteps.android;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 
-public class ZipalignStep extends ShellStep {
+/** {@link IsolatedShellStep} wrapping Android's zipalign tool. */
+public class ZipalignStep extends IsolatedShellStep {
 
-  private final Path inputFile;
-  private final Path outputFile;
-  private final Tool zipalignTool;
-  private final SourcePathResolverAdapter sourcePathResolver;
+  private final RelPath inputFile;
+  private final RelPath outputFile;
+  private final ImmutableList<String> zipAlignCommandPrefix;
 
   public ZipalignStep(
       AbsPath workingDirectory,
-      Path inputFile,
-      Path outputFile,
-      Tool zipalignTool,
-      SourcePathResolverAdapter sourcePathResolver,
+      RelPath cellRootPath,
+      RelPath inputFile,
+      RelPath outputFile,
+      ImmutableList<String> zipAlignCommandPrefix,
       boolean withDownwardApi) {
-    super(workingDirectory, withDownwardApi);
+    super(workingDirectory, cellRootPath, withDownwardApi);
     this.inputFile = inputFile;
     this.outputFile = outputFile;
-    this.zipalignTool = zipalignTool;
-    this.sourcePathResolver = sourcePathResolver;
+    this.zipAlignCommandPrefix = zipAlignCommandPrefix;
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
-    args.addAll(zipalignTool.getCommandPrefix(sourcePathResolver));
+    args.addAll(zipAlignCommandPrefix);
     args.add("-f").add("4");
     args.add(inputFile.toString());
     args.add(outputFile.toString());

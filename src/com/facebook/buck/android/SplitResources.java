@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -24,6 +25,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.DefaultOutputPathResolver;
@@ -145,10 +147,11 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
           .add(
               new ZipalignStep(
                   filesystem.getRootPath(),
-                  getUnalignedExoPath(filesystem),
-                  outputPathResolver.resolvePath(exoResourcesOutputPath),
-                  zipalignTool,
-                  buildContext.getSourcePathResolver(),
+                  ProjectFilesystemUtils.relativize(
+                      filesystem.getRootPath(), buildContext.getBuildCellRootPath()),
+                  RelPath.of(getUnalignedExoPath(filesystem)),
+                  RelPath.of(outputPathResolver.resolvePath(exoResourcesOutputPath)),
+                  zipalignTool.getCommandPrefix(buildContext.getSourcePathResolver()),
                   withDownwardApi))
           .build();
     }

@@ -120,7 +120,6 @@ java_library(
         "//src/com/facebook/buck/sandbox:sandbox",
         "//src/com/facebook/buck/shell/programrunner:programrunner",
         "//src/com/facebook/buck/step:step",
-        "//src/com/facebook/buck/step/isolatedsteps/shell:shell_steps",
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/util:process_executor",
@@ -130,6 +129,9 @@ java_library(
         "//third-party/java/guava:guava",
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/step/isolatedsteps/shell:shell_steps",
     ],
 )
 

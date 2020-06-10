@@ -35,6 +35,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -360,15 +361,16 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               redexedApk));
     }
 
+    AbsPath ruleRootPath = getProjectFilesystem().getRootPath();
     if (isApk) {
       Path zipalignedApkPath = getZipalignedApkPath();
       steps.add(
           new ZipalignStep(
-              getProjectFilesystem().getRootPath(),
-              apkToAlign,
-              zipalignedApkPath,
-              zipalignTool,
-              pathResolver,
+              ruleRootPath,
+              ProjectFilesystemUtils.relativize(ruleRootPath, context.getBuildCellRootPath()),
+              RelPath.of(apkToAlign),
+              RelPath.of(zipalignedApkPath),
+              zipalignTool.getCommandPrefix(pathResolver),
               withDownwardApi));
       steps.add(
           new ApkSignerStep(
@@ -381,11 +383,11 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     } else {
       steps.add(
           new ZipalignStep(
-              getProjectFilesystem().getRootPath(),
-              apkToAlign,
-              v2SignedApkPath,
-              zipalignTool,
-              pathResolver,
+              ruleRootPath,
+              ProjectFilesystemUtils.relativize(ruleRootPath, context.getBuildCellRootPath()),
+              RelPath.of(apkToAlign),
+              RelPath.of(v2SignedApkPath),
+              zipalignTool.getCommandPrefix(pathResolver),
               withDownwardApi));
     }
     buildableContext.recordArtifact(v2SignedApkPath);
