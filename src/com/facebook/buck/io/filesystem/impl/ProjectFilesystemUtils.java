@@ -101,6 +101,11 @@ public class ProjectFilesystemUtils {
     return getAbsPathForRelativePath(root, pathRelativeToProjectRoot).getPath();
   }
 
+  /** Get path that is an absolute path resolved against the root path. */
+  public static Path getPathForRelativePath(AbsPath root, RelPath pathRelativeToProjectRoot) {
+    return getPathForRelativePath(root, pathRelativeToProjectRoot.getPath());
+  }
+
   /** Get absolute path that is resolved against the root path. */
   public static AbsPath getAbsPathForRelativePath(AbsPath root, Path pathRelativeToProjectRoot) {
     AbsPath result;
@@ -114,6 +119,11 @@ public class ProjectFilesystemUtils {
     }
 
     return MorePaths.normalize(result);
+  }
+
+  /** Get absolute path that is resolved against the root path. */
+  public static AbsPath getAbsPathForRelativePath(AbsPath root, RelPath pathRelativeToProjectRoot) {
+    return getAbsPathForRelativePath(root, pathRelativeToProjectRoot.getPath());
   }
 
   /** Construct a relative path between the project root and a given path. */

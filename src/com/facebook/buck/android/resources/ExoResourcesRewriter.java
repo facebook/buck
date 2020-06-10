@@ -16,7 +16,10 @@
 
 package com.facebook.buck.android.resources;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
@@ -30,7 +33,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -110,19 +112,23 @@ public class ExoResourcesRewriter {
   private ExoResourcesRewriter() {}
 
   public static void rewrite(
-      Path inputPath,
-      Path inputRDotTxt,
-      Path primaryResources,
-      Path exoResources,
-      Path outputRDotTxt)
+      AbsPath ruleCellRoot,
+      RelPath inputPath,
+      RelPath inputRDotTxt,
+      RelPath primaryResources,
+      RelPath exoResources,
+      RelPath outputRDotTxt)
       throws IOException {
-    ReferenceMapper resMapping = rewriteResources(inputPath, primaryResources, exoResources);
-    rewriteRDotTxt(resMapping, inputRDotTxt, outputRDotTxt);
+    ReferenceMapper resMapping =
+        rewriteResources(ruleCellRoot, inputPath, primaryResources, exoResources);
+    rewriteRDotTxt(ruleCellRoot, resMapping, inputRDotTxt, outputRDotTxt);
   }
 
-  static ReferenceMapper rewriteResources(Path inputPath, Path primaryResources, Path exoResources)
+  static ReferenceMapper rewriteResources(
+      AbsPath ruleCellRoot, RelPath inputPath, RelPath primaryResources, RelPath exoResources)
       throws IOException {
-    try (ApkZip apkZip = new ApkZip(inputPath)) {
+    try (ApkZip apkZip =
+        new ApkZip(ProjectFilesystemUtils.getAbsPathForRelativePath(ruleCellRoot, inputPath))) {
       UsedResourcesFinder.ResourceClosure closure =
           UsedResourcesFinder.computePrimaryApkClosure(apkZip);
       ReferenceMapper resMapping =
@@ -134,7 +140,9 @@ public class ExoResourcesRewriter {
         xml.transformReferences(resMapping::map);
       }
       // Write the full (rearranged) resources to the exo resources.
-      try (ResourcesZipBuilder zipBuilder = new ResourcesZipBuilder(exoResources)) {
+      try (ResourcesZipBuilder zipBuilder =
+          new ResourcesZipBuilder(
+              ProjectFilesystemUtils.getPathForRelativePath(ruleCellRoot, exoResources))) {
         for (ZipEntry entry : apkZip.getEntries()) {
           addEntry(
               zipBuilder,
@@ -145,7 +153,9 @@ public class ExoResourcesRewriter {
         }
       }
       // Then, slice out the resources needed for the primary apk.
-      try (ResourcesZipBuilder zipBuilder = new ResourcesZipBuilder(primaryResources)) {
+      try (ResourcesZipBuilder zipBuilder =
+          new ResourcesZipBuilder(
+              ProjectFilesystemUtils.getPathForRelativePath(ruleCellRoot, primaryResources))) {
         ResourceTable primaryResourceTable =
             ResourceTable.slice(
                 apkZip.getResourceTable(),
@@ -172,14 +182,21 @@ public class ExoResourcesRewriter {
     }
   }
 
-  static void rewriteRDotTxt(ReferenceMapper refMapping, Path inputRDotTxt, Path outputRDotTxt) {
+  static void rewriteRDotTxt(
+      AbsPath ruleCellRoot,
+      ReferenceMapper refMapping,
+      RelPath inputRDotTxt,
+      RelPath outputRDotTxt) {
     Map<String, String> cache = new HashMap<>();
     Function<String, String> mapping =
         (s) ->
             cache.computeIfAbsent(
                 s, (k) -> String.format("0x%x", refMapping.map(Integer.parseInt(k, 16))));
     try {
-      List<String> lines = Files.readAllLines(inputRDotTxt, StandardCharsets.UTF_8);
+      List<String> lines =
+          Files.readAllLines(
+              ProjectFilesystemUtils.getPathForRelativePath(ruleCellRoot, inputRDotTxt),
+              StandardCharsets.UTF_8);
       List<String> mappedLines = new ArrayList<>(lines.size());
       Pattern regular = Pattern.compile("int ([^ ]*) ([^ ]*) 0x(7f[0-9a-f]{6})");
       Pattern styleable = Pattern.compile("int\\[] (styleable) ([^ ]*) \\{(.*) }");
@@ -232,7 +249,8 @@ public class ExoResourcesRewriter {
           mappedLines.add(String.format("int styleable %s %d", m.group(2), newIdx));
         }
       }
-      MostFiles.writeLinesToFile(mappedLines, outputRDotTxt);
+      MostFiles.writeLinesToFile(
+          mappedLines, ProjectFilesystemUtils.getPathForRelativePath(ruleCellRoot, outputRDotTxt));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -265,7 +283,7 @@ public class ExoResourcesRewriter {
     private final Map<String, ResourcesXml> xmlEntries;
     private final Supplier<ResourceTable> resourceTable;
 
-    public ApkZip(Path inputPath) throws IOException {
+    public ApkZip(AbsPath inputPath) throws IOException {
       this.zipFile = new ZipFile(inputPath.toFile());
       this.entries =
           Collections.list(zipFile.entries()).stream()

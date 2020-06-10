@@ -18,42 +18,43 @@ package com.facebook.buck.step.isolatedsteps.android;
 
 import com.facebook.buck.android.resources.ExoResourcesRewriter;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import java.io.IOException;
-import java.nio.file.Path;
 
 /** Step to construct build outputs for exo-for-resources. */
 public class SplitResourcesStep implements Step {
 
-  private final Path absolutePathToAaptResources;
-  private final Path absolutePathToOriginalRDotTxt;
-  private final Path relativePathToPrimaryResourceOutputPath;
-  private final Path relativePathToUnalignedExoPath;
-  private final Path relativePathTorDotTxtOutputPath;
+  private final RelPath pathToAaptResources;
+  private final RelPath pathToOriginalRDotTxt;
+  private final RelPath pathToPrimaryResourceOutputPath;
+  private final RelPath pathToUnalignedExoPath;
+  private final RelPath pathTorDotTxtOutputPath;
 
   public SplitResourcesStep(
-      Path absolutePathToAaptResources,
-      Path absolutePathToOriginalRDotTxt,
-      Path relativePathToPrimaryResourceOutputPath,
-      Path relativePathToUnalignedExoPath,
-      Path relativePathTorDotTxtOutputPath) {
-    this.absolutePathToAaptResources = absolutePathToAaptResources;
-    this.absolutePathToOriginalRDotTxt = absolutePathToOriginalRDotTxt;
-    this.relativePathToPrimaryResourceOutputPath = relativePathToPrimaryResourceOutputPath;
-    this.relativePathToUnalignedExoPath = relativePathToUnalignedExoPath;
-    this.relativePathTorDotTxtOutputPath = relativePathTorDotTxtOutputPath;
+      RelPath pathToAaptResources,
+      RelPath pathToOriginalRDotTxt,
+      RelPath pathToPrimaryResourceOutputPath,
+      RelPath pathToUnalignedExoPath,
+      RelPath pathTorDotTxtOutputPath) {
+    this.pathToAaptResources = pathToAaptResources;
+    this.pathToOriginalRDotTxt = pathToOriginalRDotTxt;
+    this.pathToPrimaryResourceOutputPath = pathToPrimaryResourceOutputPath;
+    this.pathToUnalignedExoPath = pathToUnalignedExoPath;
+    this.pathTorDotTxtOutputPath = pathTorDotTxtOutputPath;
   }
 
   @Override
   public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     ExoResourcesRewriter.rewrite(
-        absolutePathToAaptResources,
-        absolutePathToOriginalRDotTxt,
-        relativePathToPrimaryResourceOutputPath,
-        relativePathToUnalignedExoPath,
-        relativePathTorDotTxtOutputPath);
+        context.getRuleCellRoot(),
+        pathToAaptResources,
+        pathToOriginalRDotTxt,
+        pathToPrimaryResourceOutputPath,
+        pathToUnalignedExoPath,
+        pathTorDotTxtOutputPath);
     return StepExecutionResults.SUCCESS;
   }
 
@@ -64,7 +65,6 @@ public class SplitResourcesStep implements Step {
 
   @Override
   public String getDescription(StepExecutionContext context) {
-    return String.format(
-        "split_exo_resources %s %s", absolutePathToAaptResources, absolutePathToOriginalRDotTxt);
+    return String.format("split_exo_resources %s %s", pathToAaptResources, pathToOriginalRDotTxt);
   }
 }

@@ -20,10 +20,9 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.environment.Platform;
@@ -34,33 +33,33 @@ import java.io.PrintStream;
 import java.nio.IntBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 public class ExoResourcesRewriterTest {
   private static final String APK_NAME = "example.apk";
 
-  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
   private ProjectFilesystem filesystem;
-  private AbsPath apkPath;
+  private RelPath apkPath;
 
   @Before
   public void setUp() {
     filesystem =
         TestProjectFilesystems.createProjectFilesystem(
             TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));
-    apkPath = AbsPath.of(filesystem.resolve(filesystem.getPath(APK_NAME)));
+    apkPath = RelPath.of(filesystem.getPath(APK_NAME));
   }
 
   @Test
   public void testRewriteResources() throws IOException {
-    AbsPath primaryOutput = tmpFolder.getRoot().resolve("primary.apk");
-    AbsPath exoOutput = tmpFolder.getRoot().resolve("exo.apk");
+    RelPath primaryOutput = RelPath.of(Paths.get("primary.apk"));
+    RelPath exoOutput = RelPath.of(Paths.get("exo.apk"));
     ExoResourcesRewriter.rewriteResources(
-        apkPath.getPath(), primaryOutput.getPath(), exoOutput.getPath());
+        filesystem.getRootPath(), apkPath, primaryOutput, exoOutput);
 
-    ZipInspector primaryApkInspector = new ZipInspector(primaryOutput);
+    ZipInspector primaryApkInspector =
+        new ZipInspector(filesystem.getRootPath().resolve(primaryOutput));
     assertEquals(
         ImmutableList.of(
             "resources.arsc",
@@ -68,8 +67,8 @@ public class ExoResourcesRewriterTest {
             "res/drawable-nodpi-v4/exo_icon.png",
             "res/xml/meta_xml.xml"),
         primaryApkInspector.getZipFileEntries());
-    ZipInspector baseApkInspector = new ZipInspector(apkPath);
-    ZipInspector exoApkInspector = new ZipInspector(exoOutput);
+    ZipInspector baseApkInspector = new ZipInspector(filesystem.getRootPath().resolve(apkPath));
+    ZipInspector exoApkInspector = new ZipInspector(filesystem.getRootPath().resolve(exoOutput));
     assertEquals(baseApkInspector.getZipFileEntries(), exoApkInspector.getZipFileEntries());
 
     assertArrayEquals(
@@ -106,7 +105,7 @@ public class ExoResourcesRewriterTest {
   @Test
   public void testRewriteRTxt() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    AbsPath inputRTxt = tmpFolder.getRoot().resolve("input.R.txt");
+    RelPath inputRTxt = RelPath.of(Paths.get("input.R.txt"));
     String rtxtContent =
         "int style Widget_AppCompat_Light_PopupMenu 0x7f0b0025\n"
             + "int style Widget_AppCompat_Light_PopupMenu_Overflow 0x7f0b0023\n"
@@ -129,8 +128,9 @@ public class ExoResourcesRewriterTest {
             + "int styleable ActionMode_titleTextStyle 3\n";
     filesystem.writeContentsToPath(rtxtContent, inputRTxt);
 
-    AbsPath outputRTxt = tmpFolder.getRoot().resolve("output.R.txt");
+    RelPath outputRTxt = RelPath.of(Paths.get("output.R.txt"));
     ExoResourcesRewriter.rewriteRDotTxt(
+        filesystem.getRootPath(),
         new ReferenceMapper() {
           @Override
           public int map(int id) {
@@ -150,8 +150,8 @@ public class ExoResourcesRewriterTest {
             throw new UnsupportedOperationException();
           }
         },
-        inputRTxt.getPath(),
-        outputRTxt.getPath());
+        inputRTxt,
+        outputRTxt);
 
     assertEquals(expectedOutput, filesystem.readFileIfItExists(outputRTxt).get());
   }
