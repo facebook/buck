@@ -158,20 +158,25 @@ public class AppleBundleDescription
       BuildRuleParams params,
       AppleBundleDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    AppleDebugFormat flavoredDebugFormat =
-        AppleDebugFormat.FLAVOR_DOMAIN
-            .getValue(buildTarget)
-            .orElse(appleConfig.getDefaultDebugInfoFormatForBinaries());
-    if (!buildTarget.getFlavors().contains(flavoredDebugFormat.getFlavor())) {
+
+    Optional<AppleDebugFormat> maybeProvidedDebugFormat =
+        AppleDebugFormat.FLAVOR_DOMAIN.getValue(buildTarget);
+    if (!maybeProvidedDebugFormat.isPresent()) {
+      Flavor defaultDebugFormatFlavor =
+          appleConfig.getDefaultDebugInfoFormatForBinaries().getFlavor();
+      return (AppleBundle)
+          graphBuilder.requireRule(buildTarget.withAppendedFlavors(defaultDebugFormatFlavor));
+    }
+
+    boolean isShouldIncludeFrameworksProvided =
+        AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(buildTarget).isPresent();
+    if (!isShouldIncludeFrameworksProvided) {
+      Flavor defaultShouldIncludeFrameworksFlavor = AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR;
       return (AppleBundle)
           graphBuilder.requireRule(
-              buildTarget.withAppendedFlavors(flavoredDebugFormat.getFlavor()));
+              buildTarget.withAppendedFlavors(defaultShouldIncludeFrameworksFlavor));
     }
-    if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(buildTarget).isPresent()) {
-      return (AppleBundle)
-          graphBuilder.requireRule(
-              buildTarget.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
-    }
+
     CxxPlatformsProvider cxxPlatformsProvider =
         getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
 
@@ -209,7 +214,7 @@ public class AppleBundleDescription
         args.getInfoPlistSubstitutions(),
         args.getDeps(),
         args.getTests(),
-        flavoredDebugFormat,
+        maybeProvidedDebugFormat.get(),
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.shouldVerifyBundleResources(),
