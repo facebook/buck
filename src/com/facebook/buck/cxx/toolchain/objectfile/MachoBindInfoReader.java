@@ -59,8 +59,10 @@ public class MachoBindInfoReader {
    *
    * <p>Mach-O executables have three different sets of binding info: strong, weak and lazy. The
    * format is the same for all three, so those could be exposed in the future if needed.
+   *
+   * <p>This method returns the strong and lazy bound symbols.
    */
-  public static ImmutableSet<MachoBindInfoSymbol> parseStronglyBoundSymbols(
+  public static ImmutableSet<MachoBindInfoSymbol> parseStrongAndLazyBoundSymbols(
       ByteBuffer machoExecutable) throws Machos.MachoException {
 
     ImmutableList<String> dependentLibs =
@@ -76,6 +78,15 @@ public class MachoBindInfoReader {
           machoExecutable,
           command.getBindInfoOffset(),
           command.getBindInfoSize(),
+          true,
+          dependentLibs,
+          symbolBuilder);
+      parseBindInfoAtOffset(
+          machoExecutable,
+          command.getLazyBindInfoOffset(),
+          command.getLazyBindInfoSize(),
+          // Linker inserts BIND_OPCODE_DONE after each bind
+          false,
           dependentLibs,
           symbolBuilder);
       return symbolBuilder.build();
@@ -92,6 +103,7 @@ public class MachoBindInfoReader {
       ByteBuffer machoExecutable,
       int offset,
       int size,
+      boolean stopOnDone,
       ImmutableList<String> dependentLibraries,
       ImmutableSet.Builder<MachoBindInfoSymbol> symbolBuilder)
       throws Machos.MachoException {
@@ -111,7 +123,7 @@ public class MachoBindInfoReader {
 
       switch (opcode) {
         case BIND_OPCODE_DONE:
-          done = true;
+          done = stopOnDone;
           break;
 
         case BIND_OPCODE_SET_DYLIB_ORDINAL_IMM:

@@ -49,6 +49,10 @@ public class MachoDynamicLinkingTest {
 
   private Path testDataDir;
 
+  private Path getHelloWorldWithLazySymbols() {
+    return testDataDir.resolve("macho_dynamic_linking").resolve("macOSHelloWorld_WithLazySymbols");
+  }
+
   private Path getHelloWorldFlatNamespace() {
     return testDataDir.resolve("macho_dynamic_linking").resolve("iOSHelloWorldApp_FlatNamespace");
   }
@@ -207,6 +211,29 @@ public class MachoDynamicLinkingTest {
     assertExecutableContainsStronglyBoundSymbols(twoLevelBinary, expectedSymbols);
   }
 
+  @Test
+  public void testHelloWorldContainsLazySymbol() throws IOException, Machos.MachoException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    List<MachoBindInfoSymbol> expectedSymbols = new ArrayList<>();
+    expectedSymbols.add(
+        // These are the lazy bound symbols
+        MachoBindInfoSymbol.of(
+            "_answer",
+            Optional.of("@rpath/libApps_TestLibrary_TestLibrary.dylib"),
+            MachoBindInfoSymbol.LibraryLookup.DEPENDENT_LIBRARY));
+    expectedSymbols.add(
+        MachoBindInfoSymbol.of(
+            "_CFStringGetLength",
+            Optional.of(
+                "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation"),
+            MachoBindInfoSymbol.LibraryLookup.DEPENDENT_LIBRARY));
+
+    Path lazySymbolsBinary = getHelloWorldWithLazySymbols();
+    assertExecutableContainsStronglyBoundSymbols(lazySymbolsBinary, expectedSymbols);
+  }
+
   private void assertExecutableContainsStronglyBoundSymbols(
       Path executablePath, Collection<MachoBindInfoSymbol> symbols)
       throws IOException, Machos.MachoException {
@@ -216,7 +243,7 @@ public class MachoDynamicLinkingTest {
       ByteBuffer mappedFile = unmapper.getByteBuffer();
 
       ImmutableSet<MachoBindInfoSymbol> boundSymbols =
-          MachoBindInfoReader.parseStronglyBoundSymbols(mappedFile);
+          MachoBindInfoReader.parseStrongAndLazyBoundSymbols(mappedFile);
 
       Set<MachoBindInfoSymbol> expectedSymbols = new HashSet<>();
       expectedSymbols.addAll(symbols);
