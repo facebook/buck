@@ -20,8 +20,10 @@ import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.step.isolatedsteps.shell.ShellStepDelegate;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Escaper;
@@ -112,11 +114,28 @@ public class ShellStepTest {
     workingDirectory =
         workingDirectory == null ? Paths.get(".").toAbsolutePath().normalize() : workingDirectory;
 
-    return new ShellStep(workingDirectory, false) {
-      @Override
-      public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
-        return env;
-      }
+    return new ShellStep(
+        new ShellStepDelegate(workingDirectory, false, Logger.get("ShellStepTest")) {
+          @Override
+          public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
+            return env;
+          }
+
+          @Override
+          public Optional<String> getStdin() {
+            return stdin;
+          }
+
+          @Override
+          public boolean shouldPrintStderr(Verbosity verbosity) {
+            return shouldPrintStdErr;
+          }
+
+          @Override
+          public boolean shouldPrintStdout(Verbosity verbosity) {
+            return shouldPrintStdOut;
+          }
+        }) {
 
       @Override
       public String getShortName() {
@@ -124,23 +143,8 @@ public class ShellStepTest {
       }
 
       @Override
-      protected Optional<String> getStdin() {
-        return stdin;
-      }
-
-      @Override
       protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
         return cmd;
-      }
-
-      @Override
-      protected boolean shouldPrintStderr(Verbosity verbosity) {
-        return shouldPrintStdErr;
-      }
-
-      @Override
-      protected boolean shouldPrintStdout(Verbosity verbosity) {
-        return shouldPrintStdOut;
       }
     };
   }
@@ -269,7 +273,11 @@ public class ShellStepTest {
     Path pwd = Paths.get("/right-pwd");
     Map<String, String> subProcessEnvironment = new HashMap<>();
     subProcessEnvironment.put("PROCESS_ENVIRONMENT_VARIABLE", "PROCESS_VALUE");
-    command.setProcessEnvironment(context, subProcessEnvironment, pwd.toString());
+    command.setProcessEnvironment(
+        context,
+        subProcessEnvironment,
+        pwd.toString(),
+        command.getEnvironmentVariables(context.getPlatform()));
     Map<String, String> actualProcessEnvironment = new HashMap<>(context.getEnvironment());
     actualProcessEnvironment.remove("PWD");
     assertEquals(

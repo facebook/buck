@@ -1,0 +1,26 @@
+java_library(
+    name = "shell_steps",
+    srcs = [
+        "IsolatedShellStep.java",
+        "ShellStepDelegate.java",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/...",
+        "//test/com/facebook/buck/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/downwardapi/processexecutor:processexecutor",
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/io/filesystem/impl:impl",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
+    ],
+)

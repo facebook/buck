@@ -19,12 +19,10 @@ package com.facebook.buck.shell;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
-import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.Escaper;
+import com.facebook.buck.step.isolatedsteps.shell.ShellStepDelegate;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Option;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -32,63 +30,32 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
 public abstract class ShellStep implements Step {
-
   private static final Logger LOG = Logger.get(ShellStep.class);
-  private static final OperatingSystemMXBean OS_JMX = ManagementFactory.getOperatingSystemMXBean();
 
   /** Defined lazily by {@link #getShellCommand(StepExecutionContext)}. */
   @Nullable private ImmutableList<String> shellCommandArgs;
 
-  /**
-   * The working directory where this shell step will execute its command. If relative, the path is
-   * relative to the build cell root.
-   */
-  private final Path workingDirectory;
+  private final ShellStepDelegate shellStepDelegate;
 
-  private final boolean withDownwardApi;
-
-  /**
-   * This is set if {@link #shouldPrintStdout(Verbosity)} returns {@code true} when the command is
-   * executed.
-   */
-  private Optional<String> stdout;
-
-  /**
-   * This is set if {@link #shouldPrintStderr(Verbosity)} returns {@code true} when the command is
-   * executed.
-   */
-  private Optional<String> stderr;
-
-  private long startTime = 0L;
-  private long endTime = 0L;
+  @VisibleForTesting
+  protected ShellStep(ShellStepDelegate shellStepDelegate) {
+    this.shellStepDelegate = shellStepDelegate;
+  }
 
   protected ShellStep(Path workingDirectory, boolean withDownwardApi) {
-    this.workingDirectory = Objects.requireNonNull(workingDirectory);
-    this.withDownwardApi = withDownwardApi;
-    this.stdout = Optional.empty();
-    this.stderr = Optional.empty();
-
-    if (!workingDirectory.isAbsolute()) {
-      LOG.info("Working directory is not absolute: %s", workingDirectory);
-    }
+    this(new ShellStepDelegate(workingDirectory, withDownwardApi, LOG));
   }
 
   protected ShellStep(AbsPath workingDirectory, boolean withDownwardApi) {
@@ -98,126 +65,56 @@ public abstract class ShellStep implements Step {
   @Override
   public StepExecutionResult execute(StepExecutionContext context)
       throws InterruptedException, IOException {
-    ImmutableList<String> command = getShellCommand(context);
-    if (command.isEmpty()) {
-      return StepExecutionResults.SUCCESS;
-    }
-
-    // Kick off a Process in which this ShellCommand will be run.
-    ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
-    builder.setCommand(command);
-    Map<String, String> environment = new HashMap<>();
-    setProcessEnvironment(context, environment, workingDirectory.toString());
-
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Environment: %s", Joiner.on(" ").withKeyValueSeparator('=').join(environment));
-    }
-    builder.setEnvironment(ImmutableMap.copyOf(environment));
-    builder.setDirectory(context.getBuildCellRootPath().resolve(workingDirectory));
-
-    Optional<String> stdin = getStdin();
-    if (stdin.isPresent()) {
-      builder.setRedirectInput(ProcessBuilder.Redirect.PIPE);
-    }
-
-    double initialLoad = OS_JMX.getSystemLoadAverage();
-    startTime = System.currentTimeMillis();
-    ProcessExecutor.Result result = launchAndInteractWithProcess(context, builder.build(), stdin);
-    int exitCode = getExitCodeFromResult(result);
-    endTime = System.currentTimeMillis();
-    double endLoad = OS_JMX.getSystemLoadAverage();
-
-    if (LOG.isDebugEnabled()) {
-      boolean hasOutput =
-          (stdout.isPresent() && !stdout.get().isEmpty())
-              || (stderr.isPresent() && !stderr.get().isEmpty());
-      String outputFormat = hasOutput ? "\nstdout:\n%s\nstderr:\n%s\n" : " (no output)%s%s";
-      LOG.debug(
-          "%s: exit code: %d. os load (before, after): (%f, %f). CPU count: %d." + outputFormat,
-          shellCommandArgs,
-          exitCode,
-          initialLoad,
-          endLoad,
-          OS_JMX.getAvailableProcessors(),
-          stdout.orElse(""),
-          stderr.orElse(""));
-    }
-
-    return StepExecutionResult.builder()
-        .setExitCode(exitCode)
-        .setExecutedCommand(result.getCommand())
-        .setStderr(stderr)
-        .build();
+    return shellStepDelegate.executeCommand(
+        context,
+        ProjectFilesystemUtils.relativize(
+            context.getRuleCellRoot(), context.getBuildCellRootPath()),
+        getShellCommand(context),
+        getEnvironmentVariables(context.getPlatform()),
+        getStdin(),
+        getTimeout(),
+        getTimeoutHandler(context),
+        shouldPrintStdout(context.getVerbosity()),
+        shouldPrintStderr(context.getVerbosity()),
+        this::addOptions,
+        this::getExitCodeFromResult);
   }
 
   @VisibleForTesting
   void setProcessEnvironment(
-      StepExecutionContext context, Map<String, String> environment, String workDir) {
-
-    // Replace environment with client environment.
-    environment.clear();
-    environment.putAll(context.getEnvironment());
-
-    // Make sure the special PWD variable matches the working directory
-    // of the process (unless otherwise set).
-    environment.put("PWD", workDir);
-
-    // Add extra environment variables for step, if appropriate.
-    Platform platform = context.getPlatform();
-    ImmutableMap<String, String> environmentVariables = getEnvironmentVariables(platform);
-    if (!environmentVariables.isEmpty()) {
-      environment.putAll(environmentVariables);
-    }
+      StepExecutionContext context,
+      Map<String, String> environment,
+      String workDir,
+      ImmutableMap<String, String> additionalEnvVars) {
+    shellStepDelegate.setProcessEnvironment(context, environment, workDir, additionalEnvVars);
   }
 
   /** @return the exit code interpreted from the {@code result}. */
   protected int getExitCodeFromResult(ProcessExecutor.Result result) {
-    return result.getExitCode();
+    return shellStepDelegate.getExitCodeFromResult(result);
   }
 
   @VisibleForTesting
   ProcessExecutor.Result launchAndInteractWithProcess(
       StepExecutionContext context, ProcessExecutorParams params, Optional<String> stdin)
       throws InterruptedException, IOException {
-    ImmutableSet.Builder<Option> options = ImmutableSet.builder();
-
-    addOptions(options);
-
-    ProcessExecutor executor = context.getProcessExecutor();
-    if (withDownwardApi) {
-      executor =
-          executor.withDownwardAPI(DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
-    }
-
-    ProcessExecutor.Result result =
-        executor.launchAndExecute(
-            params, options.build(), stdin, getTimeout(), getTimeoutHandler(context));
-    stdout = result.getStdout();
-    stderr = result.getStderr();
-
-    Verbosity verbosity = context.getVerbosity();
-    if (stdout.isPresent()
-        && !stdout.get().isEmpty()
-        && (result.getExitCode() != 0 || shouldPrintStdout(verbosity))) {
-      context.postEvent(ConsoleEvent.info("%s", stdout.get()));
-    }
-    if (stderr.isPresent()
-        && !stderr.get().isEmpty()
-        && (result.getExitCode() != 0 || shouldPrintStderr(verbosity))) {
-      context.postEvent(ConsoleEvent.warning("%s", stderr.get()));
-    }
-
-    return result;
+    return shellStepDelegate.launchAndInteractWithProcess(
+        context,
+        params,
+        stdin,
+        getTimeout(),
+        getTimeoutHandler(context),
+        shouldPrintStdout(context.getVerbosity()),
+        shouldPrintStderr(context.getVerbosity()),
+        this::addOptions);
   }
 
   protected void addOptions(ImmutableSet.Builder<Option> options) {
-    options.add(Option.IS_SILENT);
+    shellStepDelegate.addOptions(options);
   }
 
   public long getDuration() {
-    Preconditions.checkState(startTime > 0);
-    Preconditions.checkState(endTime > 0);
-    return endTime - startTime;
+    return shellStepDelegate.getDuration();
   }
 
   /**
@@ -240,7 +137,7 @@ public abstract class ShellStep implements Step {
   }
 
   protected Optional<String> getStdin() throws IOException {
-    return Optional.empty();
+    return shellStepDelegate.getStdin();
   }
 
   /** Implementations of this method should not have any observable side-effects. */
@@ -249,27 +146,8 @@ public abstract class ShellStep implements Step {
 
   @Override
   public final String getDescription(StepExecutionContext context) {
-    // Get environment variables for this command as VAR1=val1 VAR2=val2... etc., with values
-    // quoted as necessary.
-    Iterable<String> env =
-        Iterables.transform(
-            getEnvironmentVariables(context.getPlatform()).entrySet(),
-            e -> String.format("%s=%s", e.getKey(), Escaper.escapeAsBashString(e.getValue())));
-
-    // Quote the arguments to the shell command as needed (this applies to $0 as well
-    // e.g. if we run '/path/a b.sh' quoting is needed).
-    Iterable<String> cmd =
-        Iterables.transform(
-            getShellCommandArgsForDescription(context), Escaper.SHELL_ESCAPER::apply);
-
-    String shellCommand = Joiner.on(" ").join(Iterables.concat(env, cmd));
-    // This is what the user might type in a shell to set the working directory correctly. The (...)
-    // syntax introduces a subshell in which the command is only executed if cd was successful.
-    // Note that we shouldn't add a special case for workingDirectory==null, because we always
-    // resolve symbolic links in this case, and the default PWD might leave symbolic links
-    // unresolved.  We try to make PWD match, and cd sets PWD.
-    return String.format(
-        "(cd %s && %s)", Escaper.escapeAsBashString(workingDirectory), shellCommand);
+    return shellStepDelegate.createDescriptionFromCmd(
+        getShellCommandArgsForDescription(context), getEnvironmentVariables(context.getPlatform()));
   }
 
   /**
@@ -280,7 +158,7 @@ public abstract class ShellStep implements Step {
    * @param platform that may be useful when determining environment variables to include.
    */
   public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
-    return ImmutableMap.of();
+    return shellStepDelegate.getEnvironmentVariables(platform);
   }
 
   /**
@@ -290,18 +168,14 @@ public abstract class ShellStep implements Step {
    *     printed on error and only if verbosity is set to standard information.
    */
   protected boolean shouldPrintStdout(Verbosity verbosity) {
-    return verbosity.shouldPrintOutput();
+    return shellStepDelegate.shouldPrintStdout(verbosity);
   }
 
   /**
    * @return the stdout of this ShellCommand or throws an exception if the stdout was not recorded
    */
   public final String getStdout() {
-    Preconditions.checkState(
-        this.stdout.isPresent(),
-        "stdout was not set: shouldPrintStdout() must return false and execute() must "
-            + "have been invoked");
-    return this.stdout.get();
+    return shellStepDelegate.getStdout();
   }
 
   /**
@@ -310,39 +184,34 @@ public abstract class ShellStep implements Step {
    *     printed on error and only if verbosity is set to standard information.
    */
   protected boolean shouldPrintStderr(Verbosity verbosity) {
-    return verbosity.shouldPrintOutput();
+    return shellStepDelegate.shouldPrintStderr(verbosity);
   }
 
   /**
    * @return the stderr of this ShellCommand or throws an exception if the stderr was not recorded
    */
   public final String getStderr() {
-    Preconditions.checkState(
-        this.stderr.isPresent(),
-        "stderr was not set: shouldPrintStdErr() must return false and execute() must "
-            + "have been invoked");
-    return this.stderr.get();
+    return shellStepDelegate.getStderr();
   }
 
   /** @return an optional timeout to apply to the step. */
   protected Optional<Long> getTimeout() {
-    return Optional.empty();
+    return shellStepDelegate.getTimeout();
   }
 
   /**
    * @return an optional timeout handler {@link Function} to do something before the process is
    *     killed.
    */
-  @SuppressWarnings("unused")
   protected Optional<Consumer<Process>> getTimeoutHandler(StepExecutionContext context) {
-    return Optional.empty();
+    return shellStepDelegate.getTimeoutHandler(context);
   }
 
   protected boolean isWithDownwardApi() {
-    return withDownwardApi;
+    return shellStepDelegate.isWithDownwardApi();
   }
 
   protected Path getWorkingDirectory() {
-    return workingDirectory;
+    return shellStepDelegate.getWorkingDirectory();
   }
 }
