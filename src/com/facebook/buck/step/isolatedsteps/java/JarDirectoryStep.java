@@ -18,6 +18,7 @@ package com.facebook.buck.step.isolatedsteps.java;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
@@ -29,6 +30,7 @@ import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /** Creates a JAR file from a collection of directories/ZIP/JAR files. */
@@ -56,14 +58,16 @@ public class JarDirectoryStep extends IsolatedStep {
 
   @Override
   public String getIsolatedStepDescription(IsolatedExecutionContext context) {
-    Optional<Path> manifestFile = parameters.getManifestFile();
+    Optional<RelPath> manifestFile = parameters.getManifestFile();
     return String.join(
         " ",
         "jar",
         manifestFile.map(ignore -> "cfm").orElse("cf"),
         parameters.getJarPath().toString(),
-        manifestFile.map(Path::toString).orElse(""),
-        parameters.getEntriesToJar().stream().map(Path::toString).collect(Collectors.joining(" ")));
+        manifestFile.map(RelPath::toString).orElse(""),
+        parameters.getEntriesToJar().stream()
+            .map(RelPath::toString)
+            .collect(Collectors.joining(" ")));
   }
 
   @Override
@@ -78,23 +82,22 @@ public class JarDirectoryStep extends IsolatedStep {
     int exitCode =
         new JarBuilder()
             .setObserver(loggingObserver)
-            .setEntriesToJar(
-                parameters.getEntriesToJar().stream()
-                    .map(p -> ProjectFilesystemUtils.getPathForRelativePath(root, p)))
+            .setEntriesToJar(parameters.getEntriesToJar().stream().map(resolve(root)))
             .setMainClass(parameters.getMainClass().orElse(null))
-            .setManifestFile(
-                parameters
-                    .getManifestFile()
-                    .map(p -> ProjectFilesystemUtils.getPathForRelativePath(root, p))
-                    .orElse(null))
+            .setManifestFile(parameters.getManifestFile().map(resolve(root)).orElse(null))
             .setShouldMergeManifests(parameters.getMergeManifests())
             .setShouldDisallowAllDuplicates(parameters.getDisallowAllDuplicates())
             .setShouldHashEntries(parameters.getHashEntries())
             .setRemoveEntryPredicate(parameters.getRemoveEntryPredicate())
             .createJarFile(
-                ProjectFilesystemUtils.getPathForRelativePath(root, parameters.getJarPath()));
+                ProjectFilesystemUtils.getPathForRelativePath(
+                    root, parameters.getJarPath().getPath()));
 
     return StepExecutionResult.of(exitCode);
+  }
+
+  private Function<RelPath, Path> resolve(AbsPath root) {
+    return relPath -> ProjectFilesystemUtils.getPathForRelativePath(root, relPath.getPath());
   }
 
   @Override

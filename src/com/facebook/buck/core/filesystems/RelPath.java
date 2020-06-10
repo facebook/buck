@@ -18,9 +18,13 @@ package com.facebook.buck.core.filesystems;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 
 /** Relative path. */
 public interface RelPath extends PathWrapper {
+
+  Comparator<RelPath> COMPARATOR = Comparator.comparing(RelPath::getPath);
+
   /**
    * Construct using {@link java.nio.file.Path} object.
    *

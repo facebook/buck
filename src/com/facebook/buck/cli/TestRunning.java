@@ -26,6 +26,7 @@ import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
@@ -754,7 +755,7 @@ public class TestRunning {
       if (!sourceFolderPath.isEmpty()) {
         srcDirectories.addAll(sourceFolderPath);
       }
-      Path classesItem = null;
+      RelPath classesItem = null;
 
       if (useIntermediateClassesDir) {
         classesItem = CompilerOutputPaths.getClassesDir(rule.getBuildTarget(), filesystem);
@@ -764,13 +765,13 @@ public class TestRunning {
       if (classesItem == null || !filesystem.isDirectory(classesItem)) {
         SourcePath path = rule.getSourcePathToOutput();
         if (path != null) {
-          classesItem = ruleFinder.getSourcePathResolver().getRelativePath(path);
+          classesItem = RelPath.of(ruleFinder.getSourcePathResolver().getRelativePath(path));
         }
       }
       if (classesItem == null) {
         continue;
       }
-      pathsToJars.add(classesItem);
+      pathsToJars.add(classesItem.getPath());
     }
 
     return new GenerateCodeCoverageReportStep(

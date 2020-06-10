@@ -18,6 +18,8 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -42,7 +44,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
@@ -59,6 +60,7 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<String> mavenCoords;
   private final Optional<SourcePath> mavenPomTemplate;
   private final TraversedDeps traversedDeps;
+  private final AbsPath rootPath;
 
   private MavenUberJar(
       TraversedDeps traversedDeps,
@@ -68,6 +70,7 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> mavenCoords,
       Optional<SourcePath> mavenPomTemplate) {
     super(buildTarget, projectFilesystem, params);
+    this.rootPath = projectFilesystem.getRootPath();
     this.traversedDeps = traversedDeps;
     this.mavenCoords = mavenCoords;
     this.mavenPomTemplate = mavenPomTemplate;
@@ -106,7 +109,8 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    Path pathToOutput = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+    SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
+    RelPath pathToOutput = RelPath.of(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
     MkdirStep mkOutputDirStep =
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -115,20 +119,20 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         new JarDirectoryStep(
             JarParameters.builder()
                 .setJarPath(pathToOutput)
-                .setEntriesToJar(
-                    toOutputPaths(context.getSourcePathResolver(), traversedDeps.packagedDeps))
+                .setEntriesToJar(toOutputPaths(sourcePathResolver, traversedDeps.packagedDeps))
                 .setMergeManifests(true)
                 .build());
     return ImmutableList.of(mkOutputDirStep, mergeOutputsStep);
   }
 
-  private static ImmutableSortedSet<Path> toOutputPaths(
+  private ImmutableSortedSet<RelPath> toOutputPaths(
       SourcePathResolverAdapter pathResolver, Iterable<? extends BuildRule> rules) {
     return RichStream.from(rules)
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
         .map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath())
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+        .map(p -> rootPath.relativize(p))
+        .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.COMPARATOR));
   }
 
   @Override

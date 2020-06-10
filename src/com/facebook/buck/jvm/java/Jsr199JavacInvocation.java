@@ -18,9 +18,12 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.api.BuckTracing;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
@@ -51,7 +54,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
-import java.io.PrintWriter; // NOPMD required by API
+import java.io.PrintWriter; // NOPMD
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -630,14 +633,19 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     private JarBuilder newJarBuilder(JarParameters jarParameters) {
       JarBuilder jarBuilder = new JarBuilder();
       Objects.requireNonNull(inMemoryFileManager).writeToJar(jarBuilder);
+      AbsPath rootPath = context.getProjectFilesystem().getRootPath();
       return jarBuilder
           .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
           .setEntriesToJar(
-              jarParameters.getEntriesToJar().stream().map(context.getProjectFilesystem()::resolve))
+              jarParameters.getEntriesToJar().stream().map(path -> resolve(rootPath, path)))
           .setMainClass(jarParameters.getMainClass().orElse(null))
-          .setManifestFile(jarParameters.getManifestFile().orElse(null))
+          .setManifestFile(jarParameters.getManifestFile().map(RelPath::getPath).orElse(null))
           .setShouldMergeManifests(true)
           .setRemoveEntryPredicate(jarParameters.getRemoveEntryPredicate());
+    }
+
+    private Path resolve(AbsPath rootPath, RelPath path) {
+      return ProjectFilesystemUtils.getPathForRelativePath(rootPath, path.getPath());
     }
 
     private Iterable<? extends JavaFileObject> createCompilationUnits(
