@@ -245,8 +245,15 @@ public class UnconfiguredQueryEnvironment
   @Override
   public Set<UnconfiguredQueryTarget> getInputs(UnconfiguredQueryTarget target)
       throws QueryException {
-    UnconfiguredTargetNode node = getNode((UnconfiguredQueryBuildTarget) target);
-    return ImmutableSet.copyOf(targetGraph.getTraversalResult(node).getInputs());
+    UnconfiguredQueryBuildTarget queryBuildTarget = (UnconfiguredQueryBuildTarget) target;
+    UnconfiguredTargetNode node = getNode(queryBuildTarget);
+
+    Cell cell = rootCell.getCell(queryBuildTarget.getBuildTarget().getCell());
+    ProjectFilesystem filesystem = cell.getFilesystem();
+
+    return targetGraph.getInputPathsForNode(node).stream()
+        .map(frp -> QueryFileTarget.of(PathSourcePath.of(filesystem, frp)))
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override

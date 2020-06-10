@@ -11,7 +11,6 @@
 //config/mode:mode-value-dev
 //config/mode:mode-value-opt
 //config/mode:opt
-//config/platform:java8-dev
 //lib:bar
 //lib:devtools
 //lib:foo

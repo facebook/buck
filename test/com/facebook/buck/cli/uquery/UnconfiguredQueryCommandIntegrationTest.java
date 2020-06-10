@@ -295,6 +295,17 @@ public class UnconfiguredQueryCommandIntegrationTest {
     assertOutputMatches(expected, resultForSpecificPlatform);
   }
 
+  @Test
+  public void doesntTreatTestAttributeAsParseDependencies() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("uquery", "kind('.*_test', deps(//libraries/...))");
+    assertOutputMatchesExactly("", result);
+  }
+
   /**
    * =============================================================================================
    * ================================== Function specific tests ==================================
