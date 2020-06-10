@@ -74,14 +74,14 @@ p, pre, ul, ol {
     margin:  0 0 1em 0;
 }
 
-/*  
+/*
  *
  *  Override pre.prettyprint from
  *
  *    google-code-prettify/prettify.css
- *  
- *  in order to make the non-code aspects 
- *  of our code blocks all share the same 
+ *
+ *  in order to make the non-code aspects
+ *  of our code blocks all share the same
  *  styling.
  *
  */
@@ -106,13 +106,13 @@ code {
 }
 
 /*
- *  
+ *
  *  Use this class for code-formatted text that is not inline and also
  *  not in a code block, for example, code-formatted text in a table
  *  cell, where drawing a box around the code--as in the standard `code`
  *  style above--looks redundant and somewhat strange: boxes inside
  *  boxes.
- *  
+ *
  */
 code.not-inline {
     background: #fff;
@@ -153,12 +153,12 @@ td {
  * Use a class to scope styling specifically for the exit-codes.
  *
  * The styling from the incumbent styling (above) is not being
- * expressed in the tables on the exit-codes page. I suspect that 
+ * expressed in the tables on the exit-codes page. I suspect that
  * I am getting collisions from styling for <table> elsewhere.
  *
- * Note that the styling specified above also does not show up 
+ * Note that the styling specified above also does not show up
  * correctly in the Exopackage and HTTP Cache API topics.
- * 
+ *
  * I will take a task to debug this global CSS issue as a separate
  * issue.
 */
@@ -576,3 +576,12 @@ block {
   display: block;
 }
 
+#dev-branch {
+  background-color: rgba(237, 51, 21, 0.2);
+  padding-top: 5px;
+}
+
+#dev-branch>p, h4 {
+  font-style: normal;
+  color: black;
+}
