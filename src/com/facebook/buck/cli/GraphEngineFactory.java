@@ -29,7 +29,6 @@ import com.facebook.buck.core.graph.transformation.composition.Composition;
 import com.facebook.buck.core.graph.transformation.impl.DefaultGraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
@@ -39,9 +38,10 @@ import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDe
 import com.facebook.buck.core.parser.BuildPackagePaths;
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathComputation;
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathKey;
-import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
+import com.facebook.buck.core.select.SelectorListResolved;
 import com.facebook.buck.core.select.SelectorListResolver;
+import com.facebook.buck.core.select.SelectorResolved;
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.parser.BuiltTargetVerifier;
@@ -60,13 +60,11 @@ import com.facebook.buck.parser.targetnode.BuildTargetToUnconfiguredTargetNodeCo
 import com.facebook.buck.parser.targetnode.UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.concat.Concatable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Closer;
 import java.io.IOException;
 import java.util.Optional;
-import javax.annotation.Nullable;
 
 /** Factory that creates {@link GraphTransformationEngine} for given parameters */
 public class GraphEngineFactory {
@@ -176,16 +174,13 @@ public class GraphEngineFactory {
             // TODO: replace with DefaultSelectorListResolver
             new SelectorListResolver() {
 
-              @Nullable
               @Override
-              public <T> T resolveList(
-                  SelectableConfigurationContext configurationContext,
-                  BuildTarget buildTarget,
-                  String attributeName,
-                  SelectorList<T> selectorList,
-                  Concatable<T> concatable,
-                  DependencyStack dependencyStack) {
-                return selectorList.getSelectors().get(0).getDefaultConditionValue();
+              public <T> SelectorListResolved<T> resolveSelectorList(
+                  SelectorList<T> selectorList, DependencyStack dependencyStack) {
+                return new SelectorListResolved<>(
+                    ImmutableList.of(
+                        SelectorResolved.onlyDefault(
+                            selectorList.getSelectors().get(0).getDefaultConditionValue())));
               }
             },
             // TODO: replace with RuleBasedConstraintResolver

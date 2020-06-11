@@ -33,6 +33,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
+import com.facebook.buck.core.select.SelectorListResolved;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.core.util.log.Logger;
@@ -265,6 +266,14 @@ class ParserWithConfigurableAttributes extends AbstractParser {
         convertedAttributes.put(attributeName, resolvedAttribute);
       } catch (CoerceFailedException e) {
         throw new HumanReadableException(e, dependencyStack, e.getMessage());
+      } catch (HumanReadableException e) {
+        throw new HumanReadableException(
+            e,
+            dependencyStack,
+            "When resolving attribute %s of %s: %s",
+            attributeName,
+            buildTarget,
+            e.getMessage());
       }
     }
 
@@ -303,13 +312,12 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       }
     }
 
-    return selectorListResolver.resolveList(
-        configurationContext,
-        buildTarget,
-        attributeName.getSnakeCase(),
-        selectorList,
-        coercer,
-        dependencyStack);
+    String attributeName1 = attributeName.getSnakeCase();
+    SelectorListResolved<Object> selectorListResolved =
+        selectorListResolver.resolveSelectorList(selectorList, dependencyStack);
+
+    return selectorListResolved.eval(
+        configurationContext, coercer, buildTarget, attributeName1, dependencyStack);
   }
 
   @Override

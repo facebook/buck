@@ -232,4 +232,16 @@ public class SelectorResolved<T> {
 
     return new Selector<>(conditions.build(), nullConditions.build(), noMatchMessage);
   }
+
+  /**
+   * Create a resolved selector object which has the only default key which resolves to specified
+   * value.
+   */
+  public static <T> SelectorResolved<T> onlyDefault(@Nullable T element) {
+    return new SelectorResolved<>(
+        ImmutableMap.of(
+            SelectorKey.DEFAULT,
+            new Resolved<>(ConfigSettingSelectable.any(), Optional.ofNullable(element))),
+        "");
+  }
 }

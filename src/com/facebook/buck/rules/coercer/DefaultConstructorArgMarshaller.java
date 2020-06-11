@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorList;
+import com.facebook.buck.core.select.SelectorListResolved;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.param.ParamName;
@@ -316,13 +317,27 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       ParamInfo<T> paramInfo,
       SelectorList<T> selectorList) {
+    String attributeName = paramInfo.getName().getSnakeCase();
+    SelectorListResolved<T> selectorListResolved;
+    try {
+      selectorListResolved =
+          selectorListResolver.resolveSelectorList(selectorList, dependencyStack);
+    } catch (HumanReadableException e) {
+      throw new HumanReadableException(
+          e,
+          dependencyStack,
+          "When checking configurable attribute \"%s\" in %s: %s",
+          attributeName,
+          buildTarget.getUnflavoredBuildTarget(),
+          e.getMessage());
+    }
+
     T value =
-        selectorListResolver.resolveList(
+        selectorListResolved.eval(
             configurationContext,
-            buildTarget,
-            paramInfo.getName().getSnakeCase(),
-            selectorList,
             paramInfo.getTypeCoercer(),
+            buildTarget,
+            attributeName,
             dependencyStack);
     addSelectorListConfigurationDepsToBuilder(configurationDeps, selectorList);
     return value;

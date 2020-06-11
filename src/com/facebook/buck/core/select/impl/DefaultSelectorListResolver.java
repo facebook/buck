@@ -17,11 +17,8 @@
 package com.facebook.buck.core.select.impl;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.select.ConfigSettingSelectable;
 import com.facebook.buck.core.select.ConfigSettingUtil;
-import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableResolver;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
@@ -29,13 +26,11 @@ import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolved;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.SelectorResolved;
-import com.facebook.buck.rules.coercer.concat.Concatable;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Optional;
-import javax.annotation.Nullable;
 
 /**
  * A {@link SelectorListResolver} that finds the most specialized condition in the given list and
@@ -89,34 +84,9 @@ public class DefaultSelectorListResolver implements SelectorListResolver {
     return new SelectorResolved<>(conditionsMap, selector.getNoMatchMessage());
   }
 
-  private <T> SelectorListResolved<T> resolveSelectorList(
+  @Override
+  public <T> SelectorListResolved<T> resolveSelectorList(
       SelectorList<T> selectorList, DependencyStack dependencyStack) {
     return selectorList.mapToResolved(s -> this.resolveSelector(s, dependencyStack));
-  }
-
-  @Nullable
-  @Override
-  public <T> T resolveList(
-      SelectableConfigurationContext configurationContext,
-      BuildTarget buildTarget,
-      String attributeName,
-      SelectorList<T> selectorList,
-      Concatable<T> concatable,
-      DependencyStack dependencyStack) {
-    SelectorListResolved<T> selectorListResolved;
-    try {
-      selectorListResolved = resolveSelectorList(selectorList, dependencyStack);
-    } catch (HumanReadableException e) {
-      throw new HumanReadableException(
-          e,
-          dependencyStack,
-          "When checking configurable attribute \"%s\" in %s: %s",
-          attributeName,
-          buildTarget.getUnflavoredBuildTarget(),
-          e.getMessage());
-    }
-
-    return selectorListResolved.eval(
-        configurationContext, concatable, buildTarget, attributeName, dependencyStack);
   }
 }

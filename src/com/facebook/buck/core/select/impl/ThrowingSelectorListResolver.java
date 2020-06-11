@@ -17,26 +17,16 @@
 package com.facebook.buck.core.select.impl;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
+import com.facebook.buck.core.select.SelectorListResolved;
 import com.facebook.buck.core.select.SelectorListResolver;
-import com.facebook.buck.rules.coercer.concat.Concatable;
-import javax.annotation.Nullable;
 
 /** Selector list resolver which throws unconditionally */
 public class ThrowingSelectorListResolver implements SelectorListResolver {
 
-  /** Throw unconditionally */
-  @Nullable
   @Override
-  public <T> T resolveList(
-      SelectableConfigurationContext configurationContext,
-      BuildTarget buildTarget,
-      String attributeName,
-      SelectorList<T> selectorList,
-      Concatable<T> concatable,
-      DependencyStack dependencyStack) {
+  public <T> SelectorListResolved<T> resolveSelectorList(
+      SelectorList<T> selectorList, DependencyStack dependencyStack) {
     throw new IllegalStateException();
   }
 }

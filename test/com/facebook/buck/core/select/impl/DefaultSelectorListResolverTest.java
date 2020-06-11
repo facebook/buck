@@ -35,6 +35,7 @@ import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
+import com.facebook.buck.core.select.SelectorListResolved;
 import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.core.select.TestSelectables;
 import com.facebook.buck.core.select.TestSelectorListFactory;
@@ -66,14 +67,17 @@ public class DefaultSelectorListResolverTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//a:b");
     SelectorList<ImmutableList<Flavor>> selectorList = createSelectorListForListsOfFlavors();
 
+    DependencyStack dependencyStack = DependencyStack.root();
+    SelectorListResolved<ImmutableList<Flavor>> selectorListResolved =
+        resolver.resolveSelectorList(selectorList, dependencyStack);
+
     ImmutableList<Flavor> flavors =
-        resolver.resolveList(
+        selectorListResolved.eval(
             configurationContext,
+            flavorListTypeCoercer(),
             buildTarget,
             "some_attribute",
-            selectorList,
-            flavorListTypeCoercer(),
-            DependencyStack.root());
+            dependencyStack);
 
     assertTrue(flavors.isEmpty());
   }
@@ -93,14 +97,17 @@ public class DefaultSelectorListResolverTest {
             new TestSelectableResolver(
                 ImmutableMap.of(selectableTarget, TestSelectables.configSetting(constraintValue))));
 
+    DependencyStack dependencyStack = DependencyStack.root();
+    SelectorListResolved<Flavor> selectorListResolved =
+        resolver.resolveSelectorList(selectorList, dependencyStack);
+
     Flavor flavor =
-        resolver.resolveList(
+        selectorListResolved.eval(
             TestSelectables.selectableConfigurationContext(constraintValue),
+            new FlavorTypeCoercer(),
             keyTarget,
             "some_attribute",
-            selectorList,
-            new FlavorTypeCoercer(),
-            DependencyStack.root());
+            dependencyStack);
 
     assertEquals("flavor2", flavor.getName());
   }
@@ -124,14 +131,17 @@ public class DefaultSelectorListResolverTest {
             ImmutableMap.of("DEFAULT", "flavor1", "//x:y", "flavor2"),
             ImmutableMap.of("DEFAULT", "flavor3", "//x:y", "flavor4"));
 
+    DependencyStack dependencyStack = DependencyStack.root();
+    SelectorListResolved<Flavor> selectorListResolved =
+        resolver.resolveSelectorList(selectorList, dependencyStack);
+
     Flavor flavor =
-        resolver.resolveList(
+        selectorListResolved.eval(
             TestSelectables.selectableConfigurationContext(),
+            new FlavorTypeCoercer(),
             keyTarget,
             "some_attribute",
-            selectorList,
-            new FlavorTypeCoercer(),
-            DependencyStack.root());
+            dependencyStack);
 
     assertNull(flavor);
   }
@@ -163,14 +173,17 @@ public class DefaultSelectorListResolverTest {
                 "//x:y",
                 Lists.newArrayList("flavor41", "flavor42")));
 
+    DependencyStack dependencyStack = DependencyStack.root();
+    SelectorListResolved<ImmutableList<Flavor>> selectorListResolved =
+        resolver.resolveSelectorList(selectorList, dependencyStack);
+
     ImmutableList<Flavor> flavors =
-        resolver.resolveList(
+        selectorListResolved.eval(
             TestSelectables.selectableConfigurationContext(constraintValue),
+            flavorListTypeCoercer(),
             keyTarget,
             "some_attribute",
-            selectorList,
-            flavorListTypeCoercer(),
-            DependencyStack.root());
+            dependencyStack);
 
     assertEquals(
         Lists.newArrayList("flavor21", "flavor22", "flavor41", "flavor42"),
@@ -203,14 +216,17 @@ public class DefaultSelectorListResolverTest {
                 "//x:y",
                 Lists.newArrayList("flavor41", "flavor42")));
 
+    DependencyStack dependencyStack = DependencyStack.root();
+    SelectorListResolved<ImmutableList<Flavor>> selectorListResolved =
+        resolver.resolveSelectorList(selectorList, dependencyStack);
+
     ImmutableList<Flavor> flavors =
-        resolver.resolveList(
+        selectorListResolved.eval(
             TestSelectables.selectableConfigurationContext(windows),
+            flavorListTypeCoercer(),
             keyTarget,
             "some_attribute",
-            selectorList,
-            flavorListTypeCoercer(),
-            DependencyStack.root());
+            dependencyStack);
 
     assertEquals(
         Lists.newArrayList("flavor11", "flavor12", "flavor31", "flavor32"),
@@ -244,14 +260,17 @@ public class DefaultSelectorListResolverTest {
                 "//x:z",
                 Lists.newArrayList("flavor21", "flavor22")));
 
+    DependencyStack dependencyStack = DependencyStack.root();
+    SelectorListResolved<ImmutableList<Flavor>> selectorListResolved =
+        resolver.resolveSelectorList(selectorList, dependencyStack);
+
     ImmutableList<Flavor> flavors =
-        resolver.resolveList(
+        selectorListResolved.eval(
             TestSelectables.selectableConfigurationContext(linux, arm64),
+            flavorListTypeCoercer(),
             keyTarget,
             "some_attribute",
-            selectorList,
-            flavorListTypeCoercer(),
-            DependencyStack.root());
+            dependencyStack);
 
     assertEquals(
         Lists.newArrayList("flavor21", "flavor22"),
@@ -286,17 +305,19 @@ public class DefaultSelectorListResolverTest {
                 Lists.newArrayList("flavor21", "flavor22")));
 
     try {
-      resolver.resolveList(
+      DependencyStack dependencyStack = DependencyStack.root();
+      SelectorListResolved<ImmutableList<Flavor>> selectorListResolved =
+          resolver.resolveSelectorList(selectorList, dependencyStack);
+
+      selectorListResolved.eval(
           TestSelectables.selectableConfigurationContext(linux, arm64),
+          flavorListTypeCoercer(),
           keyTarget,
           "some_attribute",
-          selectorList,
-          flavorListTypeCoercer(),
-          DependencyStack.root());
+          dependencyStack);
     } catch (HumanReadableException e) {
       assertEquals(
-          "When checking configurable attribute \"some_attribute\" in //a:b:"
-              + " Ambiguous keys in select: //x:y and //x:z;"
+          "Ambiguous keys in select: //x:y and //x:z;"
               + " keys must have at least one different constraint or config property",
           e.getHumanReadableErrorMessage());
     }
@@ -318,14 +339,17 @@ public class DefaultSelectorListResolverTest {
             ImmutableMap.of("//x:y", Lists.newArrayList("flavor11", "flavor12")));
 
     try {
-      resolver.resolveList(
+      DependencyStack dependencyStack = DependencyStack.root();
+      SelectorListResolved<ImmutableList<Flavor>> selectorListResolved =
+          resolver.resolveSelectorList(selectorList, dependencyStack);
+
+      selectorListResolved.eval(
           TestSelectables.selectableConfigurationContext(
               TestSelectables.constraintValue("//c:windows", "//c:os")),
+          flavorListTypeCoercer(),
           keyTarget,
           "some_attribute",
-          selectorList,
-          flavorListTypeCoercer(),
-          DependencyStack.root());
+          dependencyStack);
     } catch (HumanReadableException e) {
       assertEquals(
           "None of the conditions in attribute \"some_attribute\" of //a:b match the configuration.\nChecked conditions:\n"
@@ -357,14 +381,17 @@ public class DefaultSelectorListResolverTest {
         new SelectorList<>(ImmutableList.of(selector));
 
     try {
-      resolver.resolveList(
+      DependencyStack dependencyStack = DependencyStack.root();
+      SelectorListResolved<ImmutableList<Flavor>> selectorListResolved =
+          resolver.resolveSelectorList(selectorList, dependencyStack);
+
+      selectorListResolved.eval(
           TestSelectables.selectableConfigurationContext(
               TestSelectables.constraintValue("//c:windows", "//c:os")),
+          flavorListTypeCoercer,
           keyTarget,
           "some_attribute",
-          selectorList,
-          flavorListTypeCoercer,
-          DependencyStack.root());
+          dependencyStack);
     } catch (HumanReadableException e) {
       assertEquals(
           "None of the conditions in attribute \"some_attribute\" of //a:b match the configuration: Custom message",
