@@ -140,7 +140,6 @@ public class PerBuildStateFactory {
         TargetConfigurationDetectorFactory.fromBuckConfig(
             parserConfig,
             unconfiguredBuildTargetFactory,
-            cells.getRootCell().getCellPathResolver(),
             cells.getRootCell().getCellNameResolver());
 
     int numParsingThreads = parserConfig.getNumParsingThreads();

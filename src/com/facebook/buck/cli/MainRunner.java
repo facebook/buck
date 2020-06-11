@@ -876,7 +876,8 @@ public final class MainRunner {
           DefaultCellPathResolver.create(filesystem.getRootPath(), buckConfig.getConfig());
 
       TargetConfigurationFactory targetConfigurationFactory =
-          new TargetConfigurationFactory(buildTargetFactory, cellPathResolver);
+          new TargetConfigurationFactory(
+              buildTargetFactory, cellPathResolver.getCellNameResolver());
 
       Optional<TargetConfiguration> targetConfiguration =
           createTargetConfiguration(command, buckConfig, targetConfigurationFactory);

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.parser.detector;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -41,7 +40,6 @@ public class TargetConfigurationDetectorFactory {
   private static Pair<TargetConfigurationDetector.Matcher, TargetConfiguration> parseRule(
       String rule,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory,
-      CellPathResolver cellPathResolver,
       CellNameResolver cellNameResolver) {
     Matcher matcher = RULE_PATTERN.matcher(rule);
     if (!matcher.matches()) {
@@ -65,7 +63,7 @@ public class TargetConfigurationDetectorFactory {
     }
 
     TargetConfigurationFactory targetConfigurationFactory =
-        new TargetConfigurationFactory(unconfiguredBuildTargetViewFactory, cellPathResolver);
+        new TargetConfigurationFactory(unconfiguredBuildTargetViewFactory, cellNameResolver);
 
     TargetConfiguration targetConfiguration = targetConfigurationFactory.create(target);
 
@@ -76,7 +74,6 @@ public class TargetConfigurationDetectorFactory {
   public static TargetConfigurationDetector fromBuckConfig(
       ParserConfig parserConfig,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory,
-      CellPathResolver cellPathResolver,
       CellNameResolver cellNameResolver) {
     ImmutableList.Builder<Pair<TargetConfigurationDetector.Matcher, TargetConfiguration>> rules =
         ImmutableList.builder();
@@ -86,8 +83,7 @@ public class TargetConfigurationDetectorFactory {
       if (rule.isEmpty()) {
         continue;
       }
-      rules.add(
-          parseRule(rule, unconfiguredBuildTargetViewFactory, cellPathResolver, cellNameResolver));
+      rules.add(parseRule(rule, unconfiguredBuildTargetViewFactory, cellNameResolver));
     }
 
     return new TargetConfigurationDetector(rules.build());

@@ -144,7 +144,8 @@ public class ConfiguredQueryEnvironmentTest {
 
     TargetConfigurationFactory targetConfigurationFactory =
         new TargetConfigurationFactory(
-            buildTargetViewFactory, cells.getRootCell().getCellPathResolver());
+            buildTargetViewFactory,
+            cells.getRootCell().getCellPathResolver().getCellNameResolver());
     LegacyQueryUniverse targetUniverse =
         new LegacyQueryUniverse(
             parser,

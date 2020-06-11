@@ -134,7 +134,7 @@ public class QueryCommandTest {
     LegacyQueryUniverse targetUniverse = LegacyQueryUniverse.from(params, perBuildState);
     TargetConfigurationFactory targetConfigurationFactory =
         new TargetConfigurationFactory(
-            buildTargetViewFactory, cell.getRootCell().getCellPathResolver());
+            buildTargetViewFactory, cell.getRootCell().getCellPathResolver().getCellNameResolver());
     env =
         new FakeConfiguredQueryEnvironment(
             targetUniverse,

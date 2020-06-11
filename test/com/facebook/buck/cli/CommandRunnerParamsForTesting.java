@@ -159,7 +159,8 @@ public class CommandRunnerParamsForTesting {
             FakeClock.doNotCare());
 
     TargetConfigurationFactory targetConfigurationFactory =
-        new TargetConfigurationFactory(buildTargetViewFactory, cellPathResolver);
+        new TargetConfigurationFactory(
+            buildTargetViewFactory, cellPathResolver.getCellNameResolver());
 
     return ImmutableCommandRunnerParams.ofImpl(
         console,

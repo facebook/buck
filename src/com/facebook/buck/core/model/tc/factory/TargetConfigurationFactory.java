@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model.tc.factory;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -29,13 +29,13 @@ import java.util.Optional;
 public class TargetConfigurationFactory {
 
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory;
-  private final CellPathResolver cellPathResolver;
+  private final CellNameResolver cellNameResolver;
 
   public TargetConfigurationFactory(
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory,
-      CellPathResolver cellPathResolver) {
+      CellNameResolver cellNameResolver) {
     this.unconfiguredBuildTargetViewFactory = unconfiguredBuildTargetViewFactory;
-    this.cellPathResolver = cellPathResolver;
+    this.cellNameResolver = cellNameResolver;
   }
 
   private Optional<TargetConfiguration> tryNonBuildTarget(String targetConfiguration) {
@@ -53,8 +53,7 @@ public class TargetConfigurationFactory {
     }
 
     UnconfiguredBuildTarget buildTarget =
-        unconfiguredBuildTargetViewFactory.create(
-            targetConfiguration, cellPathResolver.getCellNameResolver());
+        unconfiguredBuildTargetViewFactory.create(targetConfiguration, cellNameResolver);
     return RuleBasedTargetConfiguration.of(ConfigurationBuildTargets.convert(buildTarget));
   }
 }

@@ -30,7 +30,7 @@ public class TargetConfigurationFactoryTest {
     TargetConfigurationFactory targetConfigurationFactory =
         new TargetConfigurationFactory(
             new ParsingUnconfiguredBuildTargetViewFactory(),
-            TestCellBuilder.createCellRoots(new FakeProjectFilesystem()));
+            TestCellBuilder.createCellRoots(new FakeProjectFilesystem()).getCellNameResolver());
     assertSame(
         UnconfiguredTargetConfiguration.INSTANCE,
         targetConfigurationFactory.create("builtin//platform:unconfigured"));
