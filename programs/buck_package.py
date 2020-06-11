@@ -36,6 +36,8 @@ PEX_ONLY_EXPORTED_RESOURCES = [Resource("external_executor_jar")]
 MODULES_DIR = "buck-modules"
 MODULES_RESOURCES_DIR = "buck-modules-resources"
 
+BUCK_FAKE_VERSION_ENV = "BUCK_FAKE_VERSION"
+
 
 def _get_package_info():
     return json.loads(pkg_resources.resource_string(__name__, "buck_package_info"))
@@ -49,10 +51,19 @@ class BuckPackage(BuckTool):
 
     @classmethod
     def get_buck_version(cls):
-        fake_version = os.environ.get("BUCK_FAKE_VERSION")
-        if fake_version:
+        fake_version = cls.get_fake_version("")
+        if fake_version != "":
             return fake_version
+
         return _get_package_info()["version"]
+
+    @classmethod
+    def has_fake_version(cls):
+        return cls.get_fake_version("") != ""
+
+    @classmethod
+    def get_fake_version(cls, default=""):
+        return os.environ.get(BUCK_FAKE_VERSION_ENV, default)
 
     def _get_package_info(self):
         return _get_package_info()
@@ -112,6 +123,15 @@ class BuckPackage(BuckTool):
         resource_path = os.path.join(self._get_resource_subdir(), resource.basename)
         if not os.path.exists(os.path.dirname(resource_path)):
             self.__create_dir(os.path.dirname(resource_path))
+
+        # special case to handle the buck fake version
+        # updating resources every time since they could change
+        # but fake version remains the same
+        if self.has_fake_version() and os.path.exists(resource_path):
+            if os.path.isfile(resource_path):
+                os.remove(resource_path)
+            elif os.path.isdir(resource_path):
+                shutil.rmtree(resource_path, ignore_errors=True)
 
         if not os.path.exists(resource_path):
             self._unpack_resource(resource_path, resource.name, resource.executable)
