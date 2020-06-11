@@ -613,10 +613,7 @@ class Session(nodes.FSCollector):
         if self.config.option.pyargs:
             strpath = self._tryconvertpyarg(strpath)
         relpath = strpath.replace("/", os.sep)
-        print("here in pytest")
         fspath = self.config.invocation_dir.join(relpath, abs=True)
-        print(relpath)
-        print(fspath)
         if not fspath.check():
             if self.config.option.pyargs:
                 raise UsageError(
