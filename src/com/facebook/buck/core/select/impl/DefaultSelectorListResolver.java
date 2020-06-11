@@ -17,52 +17,106 @@
 package com.facebook.buck.core.select.impl;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.select.AbstractSelectorListResolver;
-import com.facebook.buck.core.select.NamedSelectable;
+import com.facebook.buck.core.select.ConfigSettingSelectable;
+import com.facebook.buck.core.select.ConfigSettingUtil;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableResolver;
+import com.facebook.buck.core.select.Selector;
+import com.facebook.buck.core.select.SelectorKey;
+import com.facebook.buck.core.select.SelectorList;
+import com.facebook.buck.core.select.SelectorListResolved;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.SelectorResolved;
-import com.google.common.collect.Iterables;
+import com.facebook.buck.rules.coercer.concat.Concatable;
+import com.facebook.buck.util.types.Pair;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
  * A {@link SelectorListResolver} that finds the most specialized condition in the given list and
  * concatenates the results.
  */
-public class DefaultSelectorListResolver extends AbstractSelectorListResolver {
+public class DefaultSelectorListResolver implements SelectorListResolver {
+
+  private final SelectableResolver selectableResolver;
 
   public DefaultSelectorListResolver(SelectableResolver selectableResolver) {
-    super(selectableResolver);
+    this.selectableResolver = selectableResolver;
   }
 
-  @Override
+  private ConfigSettingSelectable resolveSelectorKey(
+      SelectorKey selectorKey, DependencyStack dependencyStack) {
+    return (ConfigSettingSelectable)
+        selectorKey
+            .getBuildTarget()
+            .map(t -> selectableResolver.getSelectable(t, dependencyStack))
+            .orElse(ConfigSettingSelectable.any());
+  }
+
+  /** Resolve selector keys into {@link ConfigSettingSelectable}. */
+  private <T> SelectorResolved<T> resolveSelector(
+      Selector<T> selector, DependencyStack dependencyStack) {
+    ImmutableMap.Builder<SelectorKey, SelectorResolved.Resolved<T>> conditions =
+        ImmutableMap.builder();
+    for (Map.Entry<SelectorKey, T> e : selector.getConditions().entrySet()) {
+      conditions.put(
+          e.getKey(),
+          new SelectorResolved.Resolved<T>(
+              resolveSelectorKey(e.getKey(), dependencyStack), Optional.of(e.getValue())));
+    }
+    for (SelectorKey nullCondition : selector.getNullConditions()) {
+      conditions.put(
+          nullCondition,
+          new SelectorResolved.Resolved<>(
+              resolveSelectorKey(nullCondition, dependencyStack), Optional.empty()));
+    }
+    ImmutableMap<SelectorKey, SelectorResolved.Resolved<T>> conditionsMap = conditions.build();
+
+    ConfigSettingUtil.checkUnambiguous(
+        conditionsMap.entrySet().stream()
+            .map(
+                e ->
+                    new Pair<ConfigSettingSelectable, Object>(
+                        e.getValue().getSelectable(), e.getKey()))
+            .collect(ImmutableList.toImmutableList()),
+        dependencyStack);
+
+    return new SelectorResolved<>(conditionsMap, selector.getNoMatchMessage());
+  }
+
+  private <T> SelectorListResolved<T> resolveSelectorList(
+      SelectorList<T> selectorList, DependencyStack dependencyStack) {
+    return selectorList.mapToResolved(s -> this.resolveSelector(s, dependencyStack));
+  }
+
   @Nullable
-  @SuppressWarnings("unchecked")
-  protected <T> T resolveSelectorValue(
+  @Override
+  public <T> T resolveList(
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
-      DependencyStack dependencyStack,
       String attributeName,
-      SelectorResolved<T> selectorResolved) {
-
-    Map<NamedSelectable, Object> matchingConditions =
-        findMatchingConditions(configurationContext, selectorResolved, dependencyStack);
-
-    Object matchingResult = null;
-    assertNotMultipleMatches(matchingConditions, attributeName, buildTarget);
-    if (matchingConditions.size() == 1) {
-      matchingResult = Iterables.getOnlyElement(matchingConditions.values());
+      SelectorList<T> selectorList,
+      Concatable<T> concatable,
+      DependencyStack dependencyStack) {
+    SelectorListResolved<T> selectorListResolved;
+    try {
+      selectorListResolved = resolveSelectorList(selectorList, dependencyStack);
+    } catch (HumanReadableException e) {
+      throw new HumanReadableException(
+          e,
+          dependencyStack,
+          "When checking configurable attribute \"%s\" in %s: %s",
+          attributeName,
+          buildTarget.getUnflavoredBuildTarget(),
+          e.getMessage());
     }
 
-    if (matchingResult == null) {
-      assertSelectorHasDefault(
-          buildTarget, dependencyStack, attributeName, selectorResolved.toSelector());
-      matchingResult = selectorResolved.getDefaultConditionValue();
-    }
-
-    return matchingResult == NULL_VALUE ? null : (T) matchingResult;
+    return selectorListResolved.eval(
+        configurationContext, concatable, buildTarget, attributeName, dependencyStack);
   }
 }
