@@ -18,6 +18,7 @@ package com.facebook.buck.io.namedpipes.posix;
 
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
+import com.sun.jna.LastErrorException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,9 +41,19 @@ public enum POSIXNamedPipeFactory implements NamedPipeFactory {
   private static void createNamedPipe(Path path) throws IOException {
     Files.createDirectories(path.getParent());
     String pathString = path.toString();
-    int exitCode =
-        POSIXNamedPipeLibrary.mkfifo(
-            pathString, POSIXNamedPipeLibrary.OWNER_READ_WRITE_ACCESS_MODE);
+    int exitCode;
+    try {
+      exitCode =
+          POSIXNamedPipeLibrary.mkfifo(
+              pathString, POSIXNamedPipeLibrary.OWNER_READ_WRITE_ACCESS_MODE);
+    } catch (LastErrorException e) {
+      throw new IOException(
+          String.format(
+              "Can't create named pipe: %s with `mkfifo` command. Error code: %s. "
+                  + "Check where 'java.io.tmpdir':%s points to and make sure that this directory is on a filesystem that supports pipes (e.g. not EdenFS).",
+              pathString, e.getErrorCode(), TMP_DIR),
+          e);
+    }
     if (exitCode != 0) {
       throw new IOException(
           String.format(
