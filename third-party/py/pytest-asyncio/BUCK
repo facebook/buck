@@ -1,0 +1,10 @@
+python_library(
+    name = "pytest-asyncio",
+    srcs = glob(["**/*"]),  # expose everything for setuptool
+    base_module = "",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = ["PUBLIC"],
+    deps = ["//third-party/py/pytest:pytest"],
+)
