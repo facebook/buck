@@ -704,6 +704,7 @@ public class AppleDescriptions {
       Duration codesignTimeout,
       boolean copySwiftStdlibToFrameworks,
       boolean cacheStrips,
+      boolean useEntitlementsWhenAdhocCodeSigning,
       Predicate<BuildTarget> filter,
       boolean sliceAppPackageSwiftRuntime,
       boolean sliceAppBundleSwiftRuntime,
@@ -977,6 +978,7 @@ public class AppleDescriptions {
         ibtoolFlagsUnwrapped,
         codesignTimeout,
         copySwiftStdlibToFrameworks,
+        useEntitlementsWhenAdhocCodeSigning,
         sliceAppPackageSwiftRuntime,
         sliceAppBundleSwiftRuntime,
         withDownwardApi);

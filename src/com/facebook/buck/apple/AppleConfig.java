@@ -499,6 +499,16 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getRequiredPath(APPLE_SECTION, BUILD_SCRIPT);
   }
 
+  /**
+   * @return whether entitlements should be used during adhoc code signing phase (adhoc is used on
+   *     simulator and macOS platforms).
+   */
+  public boolean useEntitlementsWhenAdhocCodeSigning() {
+    return delegate
+        .getBoolean(APPLE_SECTION, "use_entitlements_when_adhoc_code_signing")
+        .orElse(false);
+  }
+
   public boolean shouldUseModernBuildSystem() {
     return delegate.getBooleanValue(APPLE_SECTION, "use_modern_build_system", true);
   }

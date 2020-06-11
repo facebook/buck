@@ -157,6 +157,8 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final boolean copySwiftStdlibToFrameworks;
 
+  @AddToRuleKey private final boolean useEntitlementsWhenAdhocCodeSigning;
+
   @AddToRuleKey private final boolean sliceAppPackageSwiftRuntime;
   @AddToRuleKey private final boolean sliceAppBundleSwiftRuntime;
 
@@ -216,6 +218,7 @@ public class AppleBundle extends AbstractBuildRule
       ImmutableList<String> ibtoolFlags,
       Duration codesignTimeout,
       boolean copySwiftStdlibToFrameworks,
+      boolean useEntitlementsWhenAdhocCodeSigning,
       boolean sliceAppPackageSwiftRuntime,
       boolean sliceAppBundleSwiftRuntime,
       boolean withDownwardApi) {
@@ -286,6 +289,7 @@ public class AppleBundle extends AbstractBuildRule
 
     this.codesignTimeout = codesignTimeout;
     this.copySwiftStdlibToFrameworks = copySwiftStdlibToFrameworks;
+    this.useEntitlementsWhenAdhocCodeSigning = useEntitlementsWhenAdhocCodeSigning;
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
 
     this.sliceAppPackageSwiftRuntime = sliceAppPackageSwiftRuntime;
@@ -482,9 +486,10 @@ public class AppleBundle extends AbstractBuildRule
       Optional<Path> signingEntitlementsTempPath = Optional.empty();
       Supplier<CodeSignIdentity> codeSignIdentitySupplier;
 
-      Optional<Path> entitlementsPlist = prepareEntitlementsPlistFile(context, stepsBuilder);
       if (adHocCodeSignIsSufficient()) {
-        signingEntitlementsTempPath = entitlementsPlist;
+        if (useEntitlementsWhenAdhocCodeSigning) {
+          signingEntitlementsTempPath = prepareEntitlementsPlistFile(context, stepsBuilder);
+        }
         CodeSignIdentity identity =
             codesignIdentitySubjectName
                 .map(id -> CodeSignIdentity.ofAdhocSignedWithSubjectCommonName(id))
@@ -492,6 +497,7 @@ public class AppleBundle extends AbstractBuildRule
         codeSignIdentitySupplier = () -> identity;
       } else {
         // Copy the .mobileprovision file if the platform requires it, and sign the executable.
+        Optional<Path> entitlementsPlist = prepareEntitlementsPlistFile(context, stepsBuilder);
         signingEntitlementsTempPath =
             Optional.of(
                 BuildTargetPaths.getScratchPath(
