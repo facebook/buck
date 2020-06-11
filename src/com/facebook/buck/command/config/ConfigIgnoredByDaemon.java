@@ -93,6 +93,7 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
     ignoreFieldsForDaemonRestartBuilder.put(
         "ui",
         ImmutableSet.of(
+            "hide_succeeded_rules_in_log_mode",
             "superconsole",
             "thread_line_limit",
             "thread_line_output_max_columns",
