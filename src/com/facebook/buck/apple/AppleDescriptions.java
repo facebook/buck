@@ -61,6 +61,7 @@ import com.facebook.buck.cxx.CxxDiagnosticsEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxLinkGroupMapDatabase;
+import com.facebook.buck.cxx.CxxPlatformParseTimeDeps;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
@@ -1285,6 +1286,13 @@ public class AppleDescriptions {
             platform ->
                 targetGraphOnlyDepsBuilder.addAll(
                     platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
+
+    // Get any parse time deps from the C/C++ platforms.
+    // We need it to properly add cxx_toolchain rule dependency
+    // when we build apple_ rules with cxx_toolchain without properly configured apple toolchain.
+    targetGraphOnlyDepsBuilder.addAll(
+        CxxPlatformParseTimeDeps.getPlatformParseTimeDeps(
+            toolchainProvider, buildTarget.getTargetConfiguration()));
   }
 
   private static AppleInfoPlist createInfoPlistBuildRule(

@@ -37,6 +37,7 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -109,6 +110,11 @@ public class ApplePackageDescriptionTest {
                 AppleCxxPlatformsProvider.DEFAULT_NAME,
                 AppleCxxPlatformsProvider.of(
                     FakeAppleRuleDescriptions.DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN))
+            .withToolchain(
+                CxxPlatformsProvider.DEFAULT_NAME,
+                CxxPlatformsProvider.of(
+                    FakeAppleRuleDescriptions.DEFAULT_PLATFORM,
+                    FakeAppleRuleDescriptions.DEFAULT_APPLE_FLAVOR_DOMAIN))
             .build(),
         new NoSandboxExecutionStrategy(),
         FakeBuckConfig.builder()

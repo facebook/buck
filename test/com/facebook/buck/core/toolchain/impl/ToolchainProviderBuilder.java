@@ -58,7 +58,10 @@ public class ToolchainProviderBuilder {
     @Override
     public Toolchain getByName(
         String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
-      return toolchains.get(toolchainName);
+      Toolchain toolchain = toolchains.get(toolchainName);
+      // TODO(nga): uncomment
+      // Preconditions.checkNotNull(toolchain, "toolchain not found: %s", toolchainName);
+      return toolchain;
     }
 
     @Override
