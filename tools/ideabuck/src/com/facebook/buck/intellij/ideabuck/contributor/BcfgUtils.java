@@ -40,7 +40,7 @@ public class BcfgUtils {
     // TODO:  Replace this with a method that returns the buckconfig
     // files for a given cell, accounting for included config files and
     // Buck's rules of precedence, as per:
-    //   https://buck.build/files-and-dirs/buckconfig.html#config-precedence
+    //   https://dev.buck.build/files-and-dirs/buckconfig.html#config-precedence
     PsiManager psiManager = PsiManager.getInstance(project);
     GlobalSearchScope searchScope = GlobalSearchScope.allScope(project);
     return FileBasedIndex.getInstance()

@@ -249,7 +249,8 @@ public class XcodeNativeTargetGenerator {
         // If there is an Xcode product type set, use that directly.
         return Optional.of(ProductType.of(xCodeProductType.get()));
       } else if (bundleNode.getConstructorArg().getExtension().isLeft()) {
-        // apple_bundles (https://buck.build/rule/apple_bundle.html) must have a binary (which must
+        // apple_bundles (https://dev.buck.build/rule/apple_bundle.html) must have a binary (which
+        // must
         // be an apple_binary or apple_library) attribute.
         TargetNode<AppleNativeTargetDescriptionArg> binaryNode =
             TargetNodes.castArg(

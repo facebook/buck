@@ -1495,7 +1495,7 @@ public class TargetsCommandIntegrationTest {
     assertThat(
         result.getStderr(),
         containsString(
-            "Must specify at least one build target pattern. See https://buck.build/concept/build_target_pattern.html"));
+            "Must specify at least one build target pattern. See https://dev.buck.build/concept/build_target_pattern.html"));
   }
 
   @Test

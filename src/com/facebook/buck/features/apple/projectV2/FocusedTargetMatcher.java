@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
 /**
  * Matcher class that matches build targets against specific focused target entries. The focus
  * entries may be either a Build Target Pattern
- * (https://buck.build/concept/build_target_pattern.html) or a regular expression. Preference is
+ * (https://dev.buck.build/concept/build_target_pattern.html) or a regular expression. Preference is
  * given to Build Target Patterns.
  */
 public class FocusedTargetMatcher {

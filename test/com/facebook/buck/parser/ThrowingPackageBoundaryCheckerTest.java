@@ -113,7 +113,7 @@ public class ThrowingPackageBoundaryCheckerTest {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage(
         "Target '//a/b:c' refers to file 'a/b/Test.java', which doesn't belong to any package."
-            + " More info at:\nhttps://buck.build/about/overview.html\n");
+            + " More info at:\nhttps://dev.buck.build/about/overview.html\n");
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
@@ -151,7 +151,7 @@ public class ThrowingPackageBoundaryCheckerTest {
                 + "a[/\\\\]b[/\\\\]Test.java' and use that in '//a/b:c'\n"
                 + "instead of directly referencing 'a[/\\\\]b[/\\\\]Test.java'.\n"
                 + "More info at:\n"
-                + "https://buck.build/concept/build_rule.html\n\n"
+                + "https://dev.buck.build/concept/build_rule.html\n\n"
                 + "This issue might also be caused by a bug in buckd's caching.\n"
                 + "Please check whether using `buck kill` resolves it."));
 

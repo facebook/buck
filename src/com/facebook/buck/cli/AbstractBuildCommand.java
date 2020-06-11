@@ -312,7 +312,7 @@ abstract class AbstractBuildCommand extends AbstractCommand {
       return;
     }
     String message =
-        "Must specify at least one build target. See https://buck.build/concept/build_target_pattern.html";
+        "Must specify at least one build target. See https://dev.buck.build/concept/build_target_pattern.html";
     ImmutableSet<String> aliases = AliasConfig.from(params.getBuckConfig()).getAliases().keySet();
     if (!aliases.isEmpty()) {
       // If there are aliases defined in .buckconfig, suggest that the user

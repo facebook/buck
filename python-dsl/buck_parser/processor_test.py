@@ -1427,7 +1427,7 @@ class BuckTest(unittest.TestCase):
             + "function before trying to access the file, e.g.\n"
             + "'add_build_file_dep({0!r})'\n".format(py_file.name)
             + "The 'add_build_file_dep' function is documented at "
-            + "https://buck.build/function/add_build_file_dep.html\n"
+            + "https://dev.buck.build/function/add_build_file_dep.html\n"
         )
         self.assertEqual(
             [

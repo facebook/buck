@@ -64,7 +64,7 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
       name = "--ide",
       usage =
           "The type of IDE for which to generate a project. You may specify it in the "
-              + ".buckconfig file. Please refer to https://buck.build/concept/buckconfig.html#project")
+              + ".buckconfig file. Please refer to https://dev.buck.build/concept/buckconfig.html#project")
   @Nullable
   private String ide = null;
 

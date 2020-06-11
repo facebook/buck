@@ -83,8 +83,8 @@ public class BuckCell {
   /**
    * The name of Buck files for this cell.
    *
-   * @see {@url https://buck.build/concept/buckconfig.html#buildfile.name The buck config setting
-   *     for <code>buildfile.name</code>}
+   * @see {@url https://dev.buck.build/concept/buckconfig.html#buildfile.name The buck config
+   *     setting for <code>buildfile.name</code>}
    */
   public String getBuildFileName() {
     return buildFileName;

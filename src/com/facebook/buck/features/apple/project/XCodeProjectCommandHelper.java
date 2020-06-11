@@ -543,7 +543,7 @@ public class XCodeProjectCommandHelper {
 
     Iterable<String> patterns = Splitter.onPattern("\\s+").split(modulesToFocusOn);
     // Parse patterns with the following syntax:
-    // https://buck.build/concept/build_target_pattern.html
+    // https://dev.buck.build/concept/build_target_pattern.html
     ImmutableList<TargetNodeSpec> specs = argsParser.apply(patterns);
 
     // Resolve the list of targets matching the patterns.

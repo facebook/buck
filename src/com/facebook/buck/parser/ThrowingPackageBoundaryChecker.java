@@ -82,7 +82,7 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
         throw new IllegalStateException(
             String.format(
                 "Target '%s' refers to file '%s', which doesn't belong to any package. "
-                    + "More info at:\nhttps://buck.build/about/overview.html\n",
+                    + "More info at:\nhttps://dev.buck.build/about/overview.html\n",
                 target, path));
       }
 
@@ -99,7 +99,7 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
                 + "You should find or create a rule in '%3$s' that references\n"
                 + "'%2$s' and use that in '%1$s'\n"
                 + "instead of directly referencing '%2$s'.\n"
-                + "More info at:\nhttps://buck.build/concept/build_rule.html\n"
+                + "More info at:\nhttps://dev.buck.build/concept/build_rule.html\n"
                 + "\n"
                 + "This issue might also be caused by a bug in buckd's caching.\n"
                 + "Please check whether using `buck kill` resolves it.";

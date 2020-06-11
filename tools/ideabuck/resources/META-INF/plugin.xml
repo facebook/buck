@@ -6,7 +6,7 @@
   <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
   <description><![CDATA[
-    An IntelliJ plugin for <a href="https://buck.build">the Buck build system.</a>
+    An IntelliJ plugin for <a href="https://dev.buck.build">the Buck build system.</a>
   ]]></description>
 
   <change-notes><![CDATA[

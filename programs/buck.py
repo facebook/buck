@@ -51,7 +51,7 @@ if sys.version_info < (2, 7):
     print(
         (
             "Buck requires at least version 2.7 of Python, but you are using {}."
-            "\nPlease follow https://buck.build/setup/getting_started.html "
+            "\nPlease follow https://dev.buck.build/setup/getting_started.html "
             + "to properly setup your development environment."
         ).format(platform.version())
     )
@@ -122,7 +122,7 @@ def _try_to_verify_java_version(
             )
             # warning += (
             #     " Please update JAVA_HOME if it's pointing at the wrong version of Java."
-            #     + "\nPlease follow https://buck.build/setup/getting_started.html"
+            #     + "\nPlease follow https://dev.buck.build/setup/getting_started.html"
             #     + " to properly setup your local environment and avoid build issues."
             # )
     except:

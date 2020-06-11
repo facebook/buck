@@ -38,7 +38,7 @@ public class UnexpectedFlavorException extends HumanReadableException {
           PatternAndMessage.of(
               Pattern.compile("android-*"),
               "Please make sure you have the Android SDK/NDK installed and set up. See "
-                  + "https://buck.build/setup/getting_started.html#locate-android-sdk"),
+                  + "https://dev.buck.build/setup/getting_started.html#locate-android-sdk"),
           PatternAndMessage.of(
               Pattern.compile("macosx*"),
               "Please make sure you have the Mac OSX SDK installed and set up."),

@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
  */
 public class RuleFunctionFactory {
 
-  private static final String BUCK_RULE_DOC_URL_PREFIX = "https://buck.build/rule/";
+  private static final String BUCK_RULE_DOC_URL_PREFIX = "https://dev.buck.build/rule/";
 
   private final TypeCoercerFactory typeCoercerFactory;
 

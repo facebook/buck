@@ -53,7 +53,7 @@ public class AuditOwnerCommand extends AbstractCommand {
           .post(
               ConsoleEvent.info(
                   "'buck audit owner' is deprecated. Please use 'buck query' instead. e.g.\n\t%s\n\n"
-                      + "The query language is documented at https://buck.build/command/query.html",
+                      + "The query language is documented at https://dev.buck.build/command/query.html",
                   buildEquivalentQueryInvocation(getArguments(), shouldGenerateJsonOutput())));
     }
 

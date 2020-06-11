@@ -1003,7 +1003,7 @@ public class AppleDescriptions {
                             "Binary matching target platform "
                                 + targetPlatform
                                 + " cannot be found and binary default is not specified.\n"
-                                + "Please refer to https://buck.build/rule/apple_bundle.html#binary for "
+                                + "Please refer to https://dev.buck.build/rule/apple_bundle.html#binary for "
                                 + "more details.")));
   }
 
