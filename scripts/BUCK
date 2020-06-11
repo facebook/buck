@@ -18,7 +18,6 @@ python_library(
         "//scripts/...",
     ],
     deps = [
-        "//third-party/py/argparse:argparse",
     ],
 )
 
@@ -50,7 +49,6 @@ python_library(
         "//scripts/...",
     ],
     deps = [
-        "//third-party/py/argparse:argparse",
     ],
 )
 
