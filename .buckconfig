@@ -53,6 +53,7 @@
       ant-out, \
       bin, \
       intellij-out, \
+      .lsp-buck-out, \
       **/*.swp, \
       **/*#, \
       **/*$, \
