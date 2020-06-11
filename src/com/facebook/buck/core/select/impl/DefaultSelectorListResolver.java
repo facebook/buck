@@ -17,13 +17,11 @@
 package com.facebook.buck.core.select.impl;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.select.AbstractSelectorListResolver;
 import com.facebook.buck.core.select.NamedSelectable;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableResolver;
-import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.SelectorResolved;
 import com.google.common.collect.Iterables;
@@ -48,19 +46,7 @@ public class DefaultSelectorListResolver extends AbstractSelectorListResolver {
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       String attributeName,
-      Selector<T> selector) {
-    SelectorResolved<T> selectorResolved;
-    try {
-      selectorResolved = resolveSelector(selector, dependencyStack);
-    } catch (HumanReadableException e) {
-      throw new HumanReadableException(
-          e,
-          dependencyStack,
-          "When checking configurable attribute \"%s\" in %s: %s",
-          attributeName,
-          buildTarget.getUnflavoredBuildTarget(),
-          e.getMessage());
-    }
+      SelectorResolved<T> selectorResolved) {
 
     Map<NamedSelectable, Object> matchingConditions =
         findMatchingConditions(configurationContext, selectorResolved, dependencyStack);
@@ -72,8 +58,9 @@ public class DefaultSelectorListResolver extends AbstractSelectorListResolver {
     }
 
     if (matchingResult == null) {
-      assertSelectorHasDefault(buildTarget, dependencyStack, attributeName, selector);
-      matchingResult = selector.getDefaultConditionValue();
+      assertSelectorHasDefault(
+          buildTarget, dependencyStack, attributeName, selectorResolved.toSelector());
+      matchingResult = selectorResolved.getDefaultConditionValue();
     }
 
     return matchingResult == NULL_VALUE ? null : (T) matchingResult;

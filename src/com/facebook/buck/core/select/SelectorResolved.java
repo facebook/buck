@@ -17,7 +17,10 @@
 package com.facebook.buck.core.select;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import java.util.Map;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * {@link com.facebook.buck.core.select.Selector} but with labels resolved to {@link
@@ -60,5 +63,28 @@ public class SelectorResolved<T> {
 
   public String getNoMatchMessage() {
     return noMatchMessage;
+  }
+
+  @Nullable
+  public T getDefaultConditionValue() {
+    Resolved<T> resolved = conditions.get(SelectorKey.DEFAULT);
+    return resolved != null ? resolved.output.orElse(null) : null;
+  }
+
+  /** Unresolve. */
+  public Selector<T> toSelector() {
+    ImmutableMap.Builder<SelectorKey, T> conditions = ImmutableMap.builder();
+    ImmutableSet.Builder<SelectorKey> nullConditions = ImmutableSet.builder();
+
+    for (Map.Entry<SelectorKey, Resolved<T>> entry : this.conditions.entrySet()) {
+      Optional<T> output = entry.getValue().output;
+      if (output.isPresent()) {
+        conditions.put(entry.getKey(), output.get());
+      } else {
+        nullConditions.add(entry.getKey());
+      }
+    }
+
+    return new Selector<>(conditions.build(), nullConditions.build(), noMatchMessage);
   }
 }

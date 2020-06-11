@@ -83,6 +83,11 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
     return new SelectorResolved<>(conditionsMap, selector.getNoMatchMessage());
   }
 
+  protected <T> SelectorListResolved<T> resolveSelectorList(
+      SelectorList<T> selectorList, DependencyStack dependencyStack) {
+    return selectorList.mapToResolved(s -> this.resolveSelector(s, dependencyStack));
+  }
+
   @Nullable
   @Override
   public <T> T resolveList(
@@ -92,8 +97,21 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
       SelectorList<T> selectorList,
       Concatable<T> concatable,
       DependencyStack dependencyStack) {
+    SelectorListResolved<T> selectorListResolved;
+    try {
+      selectorListResolved = resolveSelectorList(selectorList, dependencyStack);
+    } catch (HumanReadableException e) {
+      throw new HumanReadableException(
+          e,
+          dependencyStack,
+          "When checking configurable attribute \"%s\" in %s: %s",
+          attributeName,
+          buildTarget.getUnflavoredBuildTarget(),
+          e.getMessage());
+    }
+
     List<T> resolvedList = new ArrayList<>();
-    for (Selector<T> selector : selectorList.getSelectors()) {
+    for (SelectorResolved<T> selector : selectorListResolved.getSelectors()) {
       T selectorValue =
           resolveSelectorValue(
               configurationContext, buildTarget, dependencyStack, attributeName, selector);
@@ -111,7 +129,7 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       String attributeName,
-      Selector<T> selector);
+      SelectorResolved<T> selector);
 
   /**
    * Returns the value for which the current configuration matches the key inside the select

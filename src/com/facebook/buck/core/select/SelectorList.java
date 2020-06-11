@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Represents a list of {@link Selector} objects
@@ -93,6 +94,12 @@ public final class SelectorList<T> {
     } else {
       consumer.accept((T) selectorListOrValue);
     }
+  }
+
+  public SelectorListResolved<T> mapToResolved(
+      Function<Selector<T>, SelectorResolved<T>> function) {
+    return new SelectorListResolved<>(
+        selectors.stream().map(function).collect(ImmutableList.toImmutableList()));
   }
 
   @Override
