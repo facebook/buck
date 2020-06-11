@@ -371,19 +371,6 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   }
 
   /**
-   * @return a target that points to a {@code platform} rule that describes the host platforms. This
-   *     is used when command-line argument is unspecified. Please do not use this option.
-   */
-  @Value.Lazy
-  public Optional<String> getHostPlatform() {
-    // TODO(nga): remove this option, it exists only for migration,
-    //            and in the future platform should be only specified via one of:
-    //            * `--host-platform=` command line argument
-    //            * host platform detector
-    return getDelegate().getValue("parser", "host_platform");
-  }
-
-  /**
    * For use in performance-sensitive code or if you don't care if the build file actually exists,
    * otherwise prefer {@link #getAbsolutePathToBuildFile}.
    *

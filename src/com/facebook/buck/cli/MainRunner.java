@@ -882,7 +882,7 @@ public final class MainRunner {
       Optional<TargetConfiguration> targetConfiguration =
           createTargetConfiguration(command, buckConfig, targetConfigurationFactory);
       Optional<TargetConfiguration> hostConfiguration =
-          createHostConfiguration(command, buckConfig, targetConfigurationFactory);
+          createHostConfiguration(command, targetConfigurationFactory);
 
       ExecutableFinder executableFinder = new ExecutableFinder();
 
@@ -1689,17 +1689,9 @@ public final class MainRunner {
   }
 
   private Optional<TargetConfiguration> createHostConfiguration(
-      Command command,
-      BuckConfig buckConfig,
-      TargetConfigurationFactory targetConfigurationFactory) {
+      Command command, TargetConfigurationFactory targetConfigurationFactory) {
     if (command.getHostPlatform().isPresent()) {
       return Optional.of(targetConfigurationFactory.create(command.getHostPlatform().get()));
-    }
-
-    Optional<String> hostPlatformFromBuckConfig =
-        buckConfig.getView(ParserConfig.class).getHostPlatform();
-    if (hostPlatformFromBuckConfig.isPresent()) {
-      return Optional.of(targetConfigurationFactory.create(hostPlatformFromBuckConfig.get()));
     }
 
     return Optional.empty();
