@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
+import com.facebook.buck.core.select.AnySelectable;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -61,33 +62,41 @@ class TargetCompatibilityChecker {
     return true;
   }
 
+  private static AnySelectable resolveCompatibleWithAttr(
+      ConfigurationRuleRegistry configurationRuleRegistry,
+      ImmutableList<UnflavoredBuildTarget> compatibleConfigTargets,
+      DependencyStack dependencyStack) {
+    ConfigurationRuleResolver configurationRuleResolver =
+        configurationRuleRegistry.getConfigurationRuleResolver();
+
+    if (compatibleConfigTargets.isEmpty()) {
+      return AnySelectable.any();
+    }
+
+    return AnySelectable.of(
+        compatibleConfigTargets.stream()
+            .map(
+                t -> {
+                  ConfigSettingRule configSettingRule =
+                      configurationRuleResolver.getRule(
+                          ConfigurationBuildTargets.convert(t),
+                          ConfigSettingRule.class,
+                          ConfigurationGraphDependencyStack.root(dependencyStack).child(t));
+                  return configSettingRule.getSelectable();
+                })
+            .collect(ImmutableList.toImmutableList()));
+  }
+
   public static boolean configTargetsMatchPlatform(
       ConfigurationRuleRegistry configurationRuleRegistry,
       ImmutableList<UnflavoredBuildTarget> compatibleConfigTargets,
       Platform platform,
       DependencyStack dependencyStack,
       BuckConfig buckConfig) {
-    if (compatibleConfigTargets.isEmpty()) {
-      return true;
-    }
-    ConfigurationRuleResolver configurationRuleResolver =
-        configurationRuleRegistry.getConfigurationRuleResolver();
-    boolean compatible = false;
-    for (UnflavoredBuildTarget compatibleConfigTarget : compatibleConfigTargets) {
-      ConfigSettingRule configSettingRule =
-          configurationRuleResolver.getRule(
-              ConfigurationBuildTargets.convert(compatibleConfigTarget),
-              ConfigSettingRule.class,
-              ConfigurationGraphDependencyStack.root(dependencyStack)
-                  .child(compatibleConfigTarget));
+    AnySelectable compatibleWith =
+        resolveCompatibleWithAttr(
+            configurationRuleRegistry, compatibleConfigTargets, dependencyStack);
 
-      if (configSettingRule
-          .getSelectable()
-          .matchesPlatform(platform, buckConfig, dependencyStack.child(compatibleConfigTarget))) {
-        compatible = true;
-        break;
-      }
-    }
-    return compatible;
+    return compatibleWith.matchesPlatform(platform, buckConfig, dependencyStack);
   }
 }

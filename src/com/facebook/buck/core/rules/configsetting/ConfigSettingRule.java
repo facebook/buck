@@ -22,7 +22,6 @@ import com.facebook.buck.core.rules.platform.ConstraintValueRule;
 import com.facebook.buck.core.select.BuckConfigKey;
 import com.facebook.buck.core.select.ConfigSettingSelectable;
 import com.facebook.buck.core.select.ProvidesSelectable;
-import com.facebook.buck.core.select.Selectable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -45,7 +44,7 @@ public class ConfigSettingRule extends AbstractConfigurationRule implements Prov
   }
 
   @Override
-  public Selectable getSelectable() {
+  public ConfigSettingSelectable getSelectable() {
     return configSettingSelectable;
   }
 }
