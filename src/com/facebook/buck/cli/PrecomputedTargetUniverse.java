@@ -50,9 +50,11 @@ import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.SetMultimap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -84,7 +86,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
   // already have and that can get expensive fast. This should not be mutated - if there was an
   // immutable interface I could use here I would use it.
   private final Map<BuildTarget, TargetNode<?>> targetToNodeIndex;
-  private final ImmutableSetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex;
+  private final SetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex;
   private final BuildFileDescendantsIndex descendantsIndex;
 
   /** Creates a `PrecomputedTargetUniverse` by parsing the transitive closure of `targets`. */
@@ -124,6 +126,9 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
           "Failed parsing: " + MoreExceptions.getHumanReadableOrLocalizedMessage(e.getCause()));
     }
 
+    SetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex =
+        Multimaps.synchronizedSetMultimap(HashMultimap.create());
+
     // Most of this is taken from the `buildTransitiveClosure` implementation of
     // `LegacyQueryUniverse`. We are tracking more information (and with different types) than that
     // class though which makes sharing code hard.
@@ -135,6 +140,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
       for (BuildTarget buildTarget : rootTargets) {
         discoverNewTargetsConcurrently(
                 targetToNodeIndex,
+                pathToBuildTargetIndex,
                 parser,
                 perBuildState,
                 buildTarget,
@@ -171,15 +177,10 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
 
     AcyclicDepthFirstPostOrderTraversalWithPayload<BuildTarget, TargetNode<?>> targetNodeTraversal =
         new AcyclicDepthFirstPostOrderTraversalWithPayload<>(traversable);
-    ImmutableSetMultimap.Builder<CellRelativePath, BuildTarget> pathToBuildTargetIndexBuilder =
-        ImmutableSetMultimap.builder();
     try (Scope ignored = LeafEvents.scope(params.getBuckEventBus(), "building_graph")) {
       for (Pair<BuildTarget, TargetNode<?>> entry : targetNodeTraversal.traverse(rootTargets)) {
         TargetNode<?> node = entry.getSecond();
         graph.addNode(node);
-
-        BuildTarget buildTarget = node.getBuildTarget();
-        pathToBuildTargetIndexBuilder.put(buildTarget.getCellRelativeBasePath(), buildTarget);
 
         for (BuildTarget dep : node.getParseDeps()) {
           graph.addEdge(
@@ -193,9 +194,6 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
       throw new QueryException(e, e.getMessage());
     }
 
-    ImmutableSetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex =
-        pathToBuildTargetIndexBuilder.build();
-
     LOG.debug("Finished creating universe with final total of %d nodes", graph.getNodeCount());
 
     return new PrecomputedTargetUniverse(
@@ -208,7 +206,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
   private PrecomputedTargetUniverse(
       TraversableGraph<TargetNode<?>> graph,
       Map<BuildTarget, TargetNode<?>> targetToNodeIndex,
-      ImmutableSetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex,
+      SetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex,
       BuildFileDescendantsIndex descendantsIndex) {
     this.graph = graph;
     this.targetToNodeIndex = targetToNodeIndex;
@@ -336,6 +334,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
 
   private static Optional<ListenableFuture<Unit>> discoverNewTargetsConcurrently(
       Map<BuildTarget, TargetNode<?>> targetToNodeIndex,
+      SetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex,
       Parser parser,
       PerBuildState parserState,
       BuildTarget buildTarget,
@@ -356,11 +355,13 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
             parser.getTargetNodeJobAssertCompatible(parserState, buildTarget, dependencyStack),
             targetNode -> {
               targetToNodeIndex.put(buildTarget, targetNode);
+              pathToBuildTargetIndex.put(buildTarget.getCellRelativeBasePath(), buildTarget);
               List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
               Set<BuildTarget> parseDeps = targetNode.getParseDeps();
               for (BuildTarget parseDep : parseDeps) {
                 discoverNewTargetsConcurrently(
                         targetToNodeIndex,
+                        pathToBuildTargetIndex,
                         parser,
                         parserState,
                         parseDep,
