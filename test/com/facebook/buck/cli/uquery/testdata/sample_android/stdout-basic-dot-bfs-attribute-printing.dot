@@ -14,7 +14,6 @@ digraph result_graph {
   "//lib:foo" [style=filled,color=springgreen3,buck_srcs="[Foo.java]"];
   "//lib:foo" -> "//config/mode:dev";
   "//lib:foo" -> "//lib:bar";
-  "//lib:foo" -> "//lib:devtools";
   "//config/mode:mode-value-dev" [style=filled,color="#8F8398"];
   "//config/mode:mode-value-dev" -> "//config/mode:mode-constraint";
   "//config/mode:mode-value-opt" [style=filled,color="#8F8398"];
@@ -22,10 +21,6 @@ digraph result_graph {
   "//lib:bar" [style=filled,color=springgreen3,buck_srcs="[Bar.java]"];
   "//lib:bar" -> "//config/mode:dev";
   "//lib:bar" -> "//config/mode:opt";
-  "//lib:bar" -> "//lib:devtools";
-  "//lib:devtools" [style=filled,color=springgreen3,buck_srcs="[DevtoolsEleven.java, DevtoolsEight.java]"];
-  "//lib:devtools" -> "//config/java:version-11";
-  "//lib:devtools" -> "//config/java:version-8";
   "//config/mode:mode-constraint" [style=filled,color="#AEB88A"];
   "//config/java:version-11" [style=filled,color="#D3D9FD"];
   "//config/java:version-11" -> "//config/java:version-value-11";

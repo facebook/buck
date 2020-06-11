@@ -96,7 +96,12 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "uquery", "deps(//lib/...)", "--output-format", "dot", "--output-attribute", "srcs");
+            "uquery",
+            "deps(//lib/...) - set(//lib:devtools)",
+            "--output-format",
+            "dot",
+            "--output-attribute",
+            "srcs");
     assertOutputMatchesFileContents("stdout-basic-dot-attribute-printing", result, workspace);
   }
 
@@ -126,7 +131,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "uquery",
-            "deps(//lib/...) ^ set(//lib:devtools)",
+            "deps(//lib/...) ^ set(//lib:bar)",
             "--output-format",
             "dot_compact",
             "--output-attribute",
@@ -155,7 +160,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "uquery",
-            "deps(//bin:foo-bin)",
+            "deps(//bin:foo-bin) - set(//lib:devtools)",
             "--output-format",
             "dot_bfs",
             "--output-attribute",
@@ -186,7 +191,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "uquery",
-            "deps(//bin:foo-bin)",
+            "deps(//bin:foo-bin) - set(//lib:devtools)",
             "--output-format",
             "dot_bfs_compact",
             "--output-attribute",
