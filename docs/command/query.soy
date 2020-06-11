@@ -83,6 +83,7 @@ and <code>owner</code>.
     <li><a href="#attrfilter"><code>attrfilter</code></a>: Rule attribute filtering</li>
     <li><a href="#attrregexfilter"><code>attrregexfilter</code></a>: Rule attribute filtering with regex</li>
     <li><a href="#buildfile"><code>buildfile</code></a>: Build files of targets</li>
+    <li><a href="#config"><code>config</code></a>: Targets in a specific configuration</li>
     <li><a href="#deps"><code>deps and first-order-deps</code></a>: Transitive closure of dependencies</li>
     <li><a href="#set-operations"><code>except</code></a>: Set difference</li>
     <li><a href="#filter"><code>filter</code></a>: Filter targets by name</li>
@@ -536,6 +537,32 @@ of the target expression, <code><em>expr</em></code>.
 </p>
 
 {call buckquery.example_buildfile_owner /}
+
+{call .section}
+{param anchor: 'config' /}
+{param title: 'Targets in a specific configuration: config'/}
+{/call}
+
+<p>
+<b>Syntax</b>
+<pre>
+{literal}
+config(<em title="target expression">expr</em>)
+config(<em title="target expression">expr</em>, <em title="configuration">configuration</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>config(<em>expr</em>, <em>configuration</em>)</code> operator evaluates to
+those targets with the same label as those in the target expression <code><em>expr</em></code>{sp}
+but all configured for the configuration <code><em>configuration</em></code>.
+</p>
+
+<p>
+When <code><em>configuration</em></code> is not provided, the targets are configured in their
+default target platform instead.
+</p>
 
 
 {call .section}
