@@ -163,8 +163,8 @@ public class AppleBundle extends AbstractBuildRule
   @AddToRuleKey private final boolean sliceAppBundleSwiftRuntime;
 
   @AddToRuleKey private final Optional<SourcePath> maybeAssetCatalogCompilationResultDir;
+  @AddToRuleKey private final Optional<SourcePath> maybeCoreDataModelCompilationResultDir;
 
-  private final Optional<CoreDataModel> coreDataModel;
   private final Optional<SceneKitAssets> sceneKitAssets;
   private final Path sdkPath;
 
@@ -204,7 +204,7 @@ public class AppleBundle extends AbstractBuildRule
       Set<SourcePath> frameworks,
       AppleCxxPlatform appleCxxPlatform,
       Optional<SourcePath> maybeAssetCatalogCompilationResultDir,
-      Optional<CoreDataModel> coreDataModel,
+      Optional<SourcePath> maybeCoreDataModelCompilationResultDir,
       Optional<SceneKitAssets> sceneKitAssets,
       Set<BuildTarget> tests,
       CodeSignIdentityStore codeSignIdentityStore,
@@ -248,7 +248,7 @@ public class AppleBundle extends AbstractBuildRule
     this.frameworks = frameworks;
     this.ibtool = appleCxxPlatform.getIbtool();
     this.maybeAssetCatalogCompilationResultDir = maybeAssetCatalogCompilationResultDir;
-    this.coreDataModel = coreDataModel;
+    this.maybeCoreDataModelCompilationResultDir = maybeCoreDataModelCompilationResultDir;
     this.sceneKitAssets = sceneKitAssets;
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
     this.bundleRoot =
@@ -373,7 +373,7 @@ public class AppleBundle extends AbstractBuildRule
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
 
-    if (coreDataModel.isPresent()) {
+    if (maybeCoreDataModelCompilationResultDir.isPresent()) {
       stepsBuilder.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
@@ -385,7 +385,7 @@ public class AppleBundle extends AbstractBuildRule
               getProjectFilesystem(),
               context
                   .getSourcePathResolver()
-                  .getRelativePath(coreDataModel.get().getSourcePathToOutput())
+                  .getRelativePath(maybeCoreDataModelCompilationResultDir.get())
                   .getPath(),
               resourcesDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));

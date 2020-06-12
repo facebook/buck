@@ -967,7 +967,7 @@ public class AppleDescriptions {
         frameworks,
         appleCxxPlatform,
         assetCatalog.map(AppleAssetCatalog::getSourcePathToOutput),
-        coreDataModel,
+        coreDataModel.map(CoreDataModel::getSourcePathToOutput),
         sceneKitAssets,
         tests,
         codeSignIdentityStore,
