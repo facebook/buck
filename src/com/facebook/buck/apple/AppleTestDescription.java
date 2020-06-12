@@ -533,14 +533,15 @@ public class AppleTestDescription
     TargetGraph targetGraph = context.getTargetGraph();
     AppleBundleResources collectedResources =
         AppleResources.collectResourceDirsAndFiles(
-            xcodeDescriptions,
-            targetGraph,
-            graphBuilder,
-            Optional.empty(),
-            targetGraph.get(buildTarget),
-            appleCxxPlatform,
-            AppleBuildRules.RecursiveDependenciesMode.COPYING,
-            Predicates.alwaysTrue());
+                xcodeDescriptions,
+                targetGraph,
+                graphBuilder,
+                Optional.empty(),
+                targetGraph.get(buildTarget),
+                appleCxxPlatform,
+                AppleBuildRules.RecursiveDependenciesMode.COPYING,
+                Predicates.alwaysTrue())
+            .build();
 
     ImmutableSortedSet<BuildRule> transitiveStaticLibraryDependencies =
         collectTransitiveStaticLibraries(

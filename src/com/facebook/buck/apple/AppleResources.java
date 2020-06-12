@@ -66,7 +66,7 @@ public class AppleResources {
   }
 
   /** Collect resource dirs and files */
-  public static <T extends ConstructorArg> AppleBundleResources collectResourceDirsAndFiles(
+  public static <T extends ConstructorArg> AppleBundleResources.Builder collectResourceDirsAndFiles(
       XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
       BuildRuleResolver resolver,
@@ -102,7 +102,7 @@ public class AppleResources {
 
       description.addAppleBundleResources(builder, node, filesystem, resolver);
     }
-    return builder.build();
+    return builder;
   }
 
   public static ImmutableSet<AppleResourceDescriptionArg> collectDirectResources(

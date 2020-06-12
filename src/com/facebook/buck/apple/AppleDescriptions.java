@@ -736,7 +736,7 @@ public class AppleDescriptions {
               appleCxxPlatform.getAppleSdk().getApplePlatform());
     }
 
-    AppleBundleResources collectedResources =
+    AppleBundleResources.Builder collectedResourcesBuilder =
         AppleResources.collectResourceDirsAndFiles(
             xcodeDescriptions,
             targetGraph,
@@ -900,15 +900,26 @@ public class AppleDescriptions {
             defaultPlatform,
             graphBuilder);
 
+    collectedResourcesBuilder.addAllDirsContainingResourceDirs(
+        Stream.of(
+                assetCatalog.map(AppleAssetCatalog::getSourcePathToOutput),
+                coreDataModel.map(CoreDataModel::getSourcePathToOutput),
+                sceneKitAssets.map(SceneKitAssets::getSourcePathToOutput))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .map(
+                sourcePath ->
+                    SourcePathWithAppleBundleDestination.of(
+                        sourcePath, AppleBundleDestination.RESOURCES, false))
+            .collect(Collectors.toSet()));
+    AppleBundleResources collectedResources = collectedResourcesBuilder.build();
+
     BuildRuleParams bundleParamsWithFlavoredBinaryDep =
         getBundleParamsWithUpdatedDeps(
             params,
             binaryTarget,
             ImmutableSet.<BuildRule>builder()
                 .add(targetDebuggableBinaryRule)
-                .addAll(RichStream.from(assetCatalog).iterator())
-                .addAll(RichStream.from(coreDataModel).iterator())
-                .addAll(RichStream.from(sceneKitAssets).iterator())
                 .addAll(
                     BuildRules.toBuildRulesFor(
                         buildTarget,
@@ -967,14 +978,6 @@ public class AppleDescriptions {
         extensionBundlePaths,
         frameworks,
         appleCxxPlatform,
-        ImmutableList.copyOf(
-            Stream.of(
-                    assetCatalog.map(AppleAssetCatalog::getSourcePathToOutput),
-                    coreDataModel.map(CoreDataModel::getSourcePathToOutput),
-                    sceneKitAssets.map(SceneKitAssets::getSourcePathToOutput))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toList())),
         tests,
         codeSignIdentityStore,
         provisioningProfileStore,

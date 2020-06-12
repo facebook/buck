@@ -162,8 +162,6 @@ public class AppleBundle extends AbstractBuildRule
   @AddToRuleKey private final boolean sliceAppPackageSwiftRuntime;
   @AddToRuleKey private final boolean sliceAppBundleSwiftRuntime;
 
-  @AddToRuleKey private final ImmutableList<SourcePath> directoriesWithBundleResourceContent;
-
   private final Path sdkPath;
 
   private final String binaryName;
@@ -201,7 +199,6 @@ public class AppleBundle extends AbstractBuildRule
       ImmutableMap<SourcePath, String> extensionBundlePaths,
       Set<SourcePath> frameworks,
       AppleCxxPlatform appleCxxPlatform,
-      ImmutableList<SourcePath> directoriesWithBundleResourceContent,
       Set<BuildTarget> tests,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
@@ -243,7 +240,6 @@ public class AppleBundle extends AbstractBuildRule
     this.extensionBundlePaths = extensionBundlePaths;
     this.frameworks = frameworks;
     this.ibtool = appleCxxPlatform.getIbtool();
-    this.directoriesWithBundleResourceContent = directoriesWithBundleResourceContent;
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
     this.bundleRoot =
         getBundleRoot(getProjectFilesystem(), getBuildTarget(), this.binaryName, this.extension);
@@ -347,26 +343,6 @@ public class AppleBundle extends AbstractBuildRule
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot)));
 
-    Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
-    if (!directoriesWithBundleResourceContent.isEmpty()) {
-      stepsBuilder.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(),
-                  getProjectFilesystem(),
-                  resourcesDestinationPath)));
-    }
-    for (SourcePath directorySourcePath : directoriesWithBundleResourceContent) {
-      Path directoryPath =
-          context.getSourcePathResolver().getRelativePath(directorySourcePath).getPath();
-      stepsBuilder.add(
-          CopyStep.forDirectory(
-              getProjectFilesystem(),
-              directoryPath,
-              resourcesDestinationPath,
-              CopyStep.DirectoryMode.CONTENTS_ONLY));
-    }
-
     Path metadataPath = getMetadataPath();
 
     stepsBuilder.add(
@@ -467,6 +443,8 @@ public class AppleBundle extends AbstractBuildRule
                     .getPath());
 
         Path dryRunResultPath = bundleRoot.resolve(PP_DRY_RUN_RESULT_FILE);
+
+        Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
 
         ProvisioningProfileCopyStep provisioningProfileCopyStep =
             new ProvisioningProfileCopyStep(
