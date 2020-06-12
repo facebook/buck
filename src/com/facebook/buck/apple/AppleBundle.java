@@ -164,8 +164,8 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final Optional<SourcePath> maybeAssetCatalogCompilationResultDir;
   @AddToRuleKey private final Optional<SourcePath> maybeCoreDataModelCompilationResultDir;
+  @AddToRuleKey private final Optional<SourcePath> maybeSceneKitAssetsCompilationResultDir;
 
-  private final Optional<SceneKitAssets> sceneKitAssets;
   private final Path sdkPath;
 
   private final String binaryName;
@@ -205,7 +205,7 @@ public class AppleBundle extends AbstractBuildRule
       AppleCxxPlatform appleCxxPlatform,
       Optional<SourcePath> maybeAssetCatalogCompilationResultDir,
       Optional<SourcePath> maybeCoreDataModelCompilationResultDir,
-      Optional<SceneKitAssets> sceneKitAssets,
+      Optional<SourcePath> maybeSceneKitAssetsCompilationResultDir,
       Set<BuildTarget> tests,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
@@ -249,7 +249,7 @@ public class AppleBundle extends AbstractBuildRule
     this.ibtool = appleCxxPlatform.getIbtool();
     this.maybeAssetCatalogCompilationResultDir = maybeAssetCatalogCompilationResultDir;
     this.maybeCoreDataModelCompilationResultDir = maybeCoreDataModelCompilationResultDir;
-    this.sceneKitAssets = sceneKitAssets;
+    this.maybeSceneKitAssetsCompilationResultDir = maybeSceneKitAssetsCompilationResultDir;
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
     this.bundleRoot =
         getBundleRoot(getProjectFilesystem(), getBuildTarget(), this.binaryName, this.extension);
@@ -391,7 +391,7 @@ public class AppleBundle extends AbstractBuildRule
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
 
-    if (sceneKitAssets.isPresent()) {
+    if (maybeSceneKitAssetsCompilationResultDir.isPresent()) {
       stepsBuilder.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
@@ -403,7 +403,7 @@ public class AppleBundle extends AbstractBuildRule
               getProjectFilesystem(),
               context
                   .getSourcePathResolver()
-                  .getRelativePath(sceneKitAssets.get().getSourcePathToOutput())
+                  .getRelativePath(maybeSceneKitAssetsCompilationResultDir.get())
                   .getPath(),
               resourcesDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
