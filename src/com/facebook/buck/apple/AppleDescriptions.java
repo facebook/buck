@@ -102,6 +102,7 @@ import java.util.SortedSet;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /** Common logic for a {@link DescriptionWithTargetGraph} that creates Apple target rules. */
@@ -966,9 +967,14 @@ public class AppleDescriptions {
         extensionBundlePaths,
         frameworks,
         appleCxxPlatform,
-        assetCatalog.map(AppleAssetCatalog::getSourcePathToOutput),
-        coreDataModel.map(CoreDataModel::getSourcePathToOutput),
-        sceneKitAssets.map(SceneKitAssets::getSourcePathToOutput),
+        ImmutableList.copyOf(
+            Stream.of(
+                    assetCatalog.map(AppleAssetCatalog::getSourcePathToOutput),
+                    coreDataModel.map(CoreDataModel::getSourcePathToOutput),
+                    sceneKitAssets.map(SceneKitAssets::getSourcePathToOutput))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList())),
         tests,
         codeSignIdentityStore,
         provisioningProfileStore,

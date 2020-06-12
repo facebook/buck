@@ -162,9 +162,7 @@ public class AppleBundle extends AbstractBuildRule
   @AddToRuleKey private final boolean sliceAppPackageSwiftRuntime;
   @AddToRuleKey private final boolean sliceAppBundleSwiftRuntime;
 
-  @AddToRuleKey private final Optional<SourcePath> maybeAssetCatalogCompilationResultDir;
-  @AddToRuleKey private final Optional<SourcePath> maybeCoreDataModelCompilationResultDir;
-  @AddToRuleKey private final Optional<SourcePath> maybeSceneKitAssetsCompilationResultDir;
+  @AddToRuleKey private final ImmutableList<SourcePath> directoriesWithBundleResourceContent;
 
   private final Path sdkPath;
 
@@ -203,9 +201,7 @@ public class AppleBundle extends AbstractBuildRule
       ImmutableMap<SourcePath, String> extensionBundlePaths,
       Set<SourcePath> frameworks,
       AppleCxxPlatform appleCxxPlatform,
-      Optional<SourcePath> maybeAssetCatalogCompilationResultDir,
-      Optional<SourcePath> maybeCoreDataModelCompilationResultDir,
-      Optional<SourcePath> maybeSceneKitAssetsCompilationResultDir,
+      ImmutableList<SourcePath> directoriesWithBundleResourceContent,
       Set<BuildTarget> tests,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
@@ -247,9 +243,7 @@ public class AppleBundle extends AbstractBuildRule
     this.extensionBundlePaths = extensionBundlePaths;
     this.frameworks = frameworks;
     this.ibtool = appleCxxPlatform.getIbtool();
-    this.maybeAssetCatalogCompilationResultDir = maybeAssetCatalogCompilationResultDir;
-    this.maybeCoreDataModelCompilationResultDir = maybeCoreDataModelCompilationResultDir;
-    this.maybeSceneKitAssetsCompilationResultDir = maybeSceneKitAssetsCompilationResultDir;
+    this.directoriesWithBundleResourceContent = directoriesWithBundleResourceContent;
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
     this.bundleRoot =
         getBundleRoot(getProjectFilesystem(), getBuildTarget(), this.binaryName, this.extension);
@@ -354,57 +348,21 @@ public class AppleBundle extends AbstractBuildRule
                 context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot)));
 
     Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
-    if (maybeAssetCatalogCompilationResultDir.isPresent()) {
+    if (!directoriesWithBundleResourceContent.isEmpty()) {
       stepsBuilder.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(),
                   getProjectFilesystem(),
                   resourcesDestinationPath)));
-      RelPath compilationResultDirPath =
-          context
-              .getSourcePathResolver()
-              .getRelativePath(maybeAssetCatalogCompilationResultDir.get());
-      stepsBuilder.add(
-          CopyStep.forDirectory(
-              getProjectFilesystem(),
-              compilationResultDirPath.getPath(),
-              resourcesDestinationPath,
-              CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
-
-    if (maybeCoreDataModelCompilationResultDir.isPresent()) {
-      stepsBuilder.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(),
-                  getProjectFilesystem(),
-                  resourcesDestinationPath)));
+    for (SourcePath directorySourcePath : directoriesWithBundleResourceContent) {
+      Path directoryPath =
+          context.getSourcePathResolver().getRelativePath(directorySourcePath).getPath();
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
-              context
-                  .getSourcePathResolver()
-                  .getRelativePath(maybeCoreDataModelCompilationResultDir.get())
-                  .getPath(),
-              resourcesDestinationPath,
-              CopyStep.DirectoryMode.CONTENTS_ONLY));
-    }
-
-    if (maybeSceneKitAssetsCompilationResultDir.isPresent()) {
-      stepsBuilder.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(),
-                  getProjectFilesystem(),
-                  resourcesDestinationPath)));
-      stepsBuilder.add(
-          CopyStep.forDirectory(
-              getProjectFilesystem(),
-              context
-                  .getSourcePathResolver()
-                  .getRelativePath(maybeSceneKitAssetsCompilationResultDir.get())
-                  .getPath(),
+              directoryPath,
               resourcesDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
