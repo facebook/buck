@@ -159,9 +159,6 @@ def buck_build_target(args, cwd, targets, log_as_perftest=True):
     env = os.environ.copy()
     # Force buck to pretend it's repo is clean.
     env.update({"BUCK_REPOSITORY_DIRTY": "0"})
-    if log_as_perftest:
-        with open(".buckjavaargs.local", "a") as f:
-            f.write("-Dbuck.perftest_side=new\n")
     start = datetime.now()
     tmpFile = tempfile.TemporaryFile()
     try:
