@@ -84,14 +84,14 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), temp)));
 
-    Path payloadDir = temp.resolve("Payload");
+    RelPath payloadDir = temp.resolveRel("Payload");
     commands.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), payloadDir)));
 
     // Recursively copy the .app directory into the Payload folder
-    Path bundleOutputPath =
+    RelPath bundleOutputPath =
         context
             .getSourcePathResolver()
             .getRelativePath(Objects.requireNonNull(bundle.getSourcePathToOutput()));
@@ -125,7 +125,7 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
             temp.getPath()));
 
     buildableContext.recordArtifact(
-        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getPath());
 
     return commands.build();
   }

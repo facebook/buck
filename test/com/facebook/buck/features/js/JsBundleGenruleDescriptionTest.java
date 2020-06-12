@@ -710,7 +710,8 @@ public class JsBundleGenruleDescriptionTest {
             .get();
     SourcePath outputPath = setup.genrule().getSourcePathToOutput();
     Path resolvedPath =
-        BuildPaths.removeHashFrom(sourcePathResolver().getRelativePath(outputPath), setup.target)
+        BuildPaths.removeHashFrom(
+                sourcePathResolver().getRelativePath(outputPath).getPath(), setup.target)
             .get();
 
     assertThat(resolvedPath, equalTo(targetOutputPath));

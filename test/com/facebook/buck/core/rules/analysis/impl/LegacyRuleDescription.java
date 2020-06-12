@@ -23,6 +23,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.BuildRule;
@@ -108,7 +109,7 @@ public class LegacyRuleDescription
         SortedSet<BuildRule> depRules = getBuildDeps();
         List<Object> deps = new ArrayList<>();
         data.put("dep", deps);
-        Path output = context1.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+        RelPath output = context1.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
         data.put("outputs", ImmutableList.of(output));
 
         ImmutableList<Path> toRead =

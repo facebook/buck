@@ -89,10 +89,14 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
         getJobArgs(
             sourcePathResolverAdapter, jsOutputDir, sourceMapFile, resourcesDir, miscDirPath);
 
-    buildableContext.recordArtifact(sourcePathResolverAdapter.getRelativePath(jsOutputDir));
-    buildableContext.recordArtifact(sourcePathResolverAdapter.getRelativePath(sourceMapFile));
-    buildableContext.recordArtifact(sourcePathResolverAdapter.getRelativePath(resourcesDir));
-    buildableContext.recordArtifact(sourcePathResolverAdapter.getRelativePath(miscDirPath));
+    buildableContext.recordArtifact(
+        sourcePathResolverAdapter.getRelativePath(jsOutputDir).getPath());
+    buildableContext.recordArtifact(
+        sourcePathResolverAdapter.getRelativePath(sourceMapFile).getPath());
+    buildableContext.recordArtifact(
+        sourcePathResolverAdapter.getRelativePath(resourcesDir).getPath());
+    buildableContext.recordArtifact(
+        sourcePathResolverAdapter.getRelativePath(miscDirPath).getPath());
 
     return ImmutableList.<Step>builder()
         .addAll(

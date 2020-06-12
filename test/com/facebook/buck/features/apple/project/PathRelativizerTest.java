@@ -33,7 +33,11 @@ public class PathRelativizerTest {
     pathRelativizer =
         new PathRelativizer(
             Paths.get("output0/output1"),
-            new TestActionGraphBuilder().getSourcePathResolver()::getRelativePath);
+            sourcePath ->
+                new TestActionGraphBuilder()
+                    .getSourcePathResolver()
+                    .getRelativePath(sourcePath)
+                    .getPath());
   }
 
   @Test

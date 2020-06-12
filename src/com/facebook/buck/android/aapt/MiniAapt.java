@@ -273,7 +273,7 @@ public class MiniAapt implements Step {
   private void collectResources(ProjectFilesystemView filesystemView, BuckEventBus eventBus)
       throws IOException, ResourceParseException {
     Collection<Path> contents =
-        filesystemView.getDirectoryContents(resolver.getRelativePath(resDirectory));
+        filesystemView.getDirectoryContents(resolver.getRelativePath(resDirectory).getPath());
     for (Path dir : contents) {
       if (!filesystem.isDirectory(dir) && !filesystem.isIgnored(RelPath.of(dir))) {
         if (!shouldIgnoreFile(dir, filesystem)) {
@@ -516,7 +516,7 @@ public class MiniAapt implements Step {
       ProjectFilesystemView filesystemView, ImmutableSet.Builder<RDotTxtEntry> references)
       throws IOException, XPathExpressionException, ResourceParseException {
     AbsPath absoluteResDir = resolver.getAbsolutePath(resDirectory);
-    Path relativeResDir = resolver.getRelativePath(resDirectory);
+    RelPath relativeResDir = resolver.getRelativePath(resDirectory);
     for (Path path :
         filesystemView.getFilesUnderPath(
             absoluteResDir.getPath(),

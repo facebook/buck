@@ -25,6 +25,7 @@ import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -61,7 +62,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -420,9 +420,9 @@ public class JsLibraryDescription
     ImmutableBiMap.Builder<Either<SourcePath, Pair<SourcePath, String>>, Flavor> builder =
         ImmutableBiMap.builder();
     for (Either<SourcePath, Pair<SourcePath, String>> source : sources) {
-      Path relativePath =
+      RelPath relativePath =
           source.transform(
-              sourcePathResolverAdapter::getRelativePath, pair -> Paths.get(pair.getSecond()));
+              sourcePathResolverAdapter::getRelativePath, pair -> RelPath.get(pair.getSecond()));
       builder.put(source, JsFlavors.fileFlavorForSourcePath(relativePath));
     }
     return builder.build();

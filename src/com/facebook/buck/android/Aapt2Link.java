@@ -164,12 +164,14 @@ public class Aapt2Link extends AbstractBuildRule {
     List<Path> compiledResourcePaths =
         Lists.reverse(compileRules).stream()
             .map(Aapt2Compile::getSourcePathToOutput)
-            .map(context.getSourcePathResolver()::getRelativePath)
+            .map(
+                sourcePath -> context.getSourcePathResolver().getRelativePath(sourcePath).getPath())
             .collect(Collectors.toList());
 
     List<Path> compiledApkPaths =
         dependencyResourceApks.stream()
-            .map(context.getSourcePathResolver()::getRelativePath)
+            .map(
+                sourcePath -> context.getSourcePathResolver().getRelativePath(sourcePath).getPath())
             .collect(Collectors.toList());
     steps.add(new Aapt2LinkArgsStep(getProjectFilesystem(), getArgsPath(), compiledResourcePaths));
 

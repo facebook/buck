@@ -448,16 +448,16 @@ public class PrebuiltCxxLibraryDescriptionTest {
             TARGET
                 .getCellRelativeBasePath()
                 .getPath()
-                .toPathDefaultFileSystem()
-                .resolve("libs/PLATFORM1/libtest-PLATFORM1.a")));
+                .toRelPathDefaultFilesystem()
+                .resolveRel("libs/PLATFORM1/libtest-PLATFORM1.a")));
     assertThat(
         pathResolver.getRelativePath(library.getStaticLibrary(platform2, graphBuilder).get()),
         Matchers.equalTo(
             TARGET
                 .getCellRelativeBasePath()
                 .getPath()
-                .toPathDefaultFileSystem()
-                .resolve("libs/PLATFORM2/libtest-PLATFORM2.a")));
+                .toRelPathDefaultFilesystem()
+                .resolveRel("libs/PLATFORM2/libtest-PLATFORM2.a")));
   }
 
   @Test

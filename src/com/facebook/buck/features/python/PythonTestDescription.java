@@ -154,11 +154,11 @@ public class PythonTestDescription
   }
 
   @VisibleForTesting
-  protected static Path getTestMainPath(
+  protected static RelPath getTestMainPath(
       SourcePathResolverAdapter resolver, Optional<PythonTestRunner> testRunner) {
     return testRunner
         .map(runner -> resolver.getRelativePath(runner.getSrc()))
-        .orElse(Paths.get(DEFAULT_TEST_MAIN_NAME));
+        .orElse(RelPath.get(DEFAULT_TEST_MAIN_NAME));
   }
 
   @VisibleForTesting
@@ -345,7 +345,7 @@ public class PythonTestDescription
     graphBuilder.addToIndex(testModulesBuildRule);
 
     Optional<PythonTestRunner> testRunner = maybeGetTestRunner(args, graphBuilder);
-    Path testMainName = getTestMainPath(graphBuilder.getSourcePathResolver(), testRunner);
+    RelPath testMainName = getTestMainPath(graphBuilder.getSourcePathResolver(), testRunner);
     String mainModule =
         testRunner
             .map(runner -> runner.getMainModule())
@@ -358,7 +358,7 @@ public class PythonTestDescription
         ImmutableSortedMap.<Path, SourcePath>naturalOrder()
             .put(getTestModulesListName(), testModulesBuildRule.getSourcePathToOutput())
             .put(
-                testMainName,
+                testMainName.getPath(),
                 testRunner
                     .map(runner -> runner.getSrc())
                     .orElseGet(() -> requireTestMain(buildTarget, projectFilesystem, graphBuilder)))

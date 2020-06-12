@@ -25,6 +25,7 @@ import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -127,7 +128,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
     return targetNode
         .getConstructorArg()
         .getProguardConfig()
-        .map(this::getRelativePathAndRecordRule);
+        .map(sourcePath -> getRelativePathAndRecordRule(sourcePath).getPath());
   }
 
   @Override
@@ -169,7 +170,8 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
     }
     if (arg.getAssets().get().isLeft()) {
       // Left is a simple source path
-      return Optional.of(sourcePathResolver.getRelativePath(arg.getAssets().get().getLeft()));
+      return Optional.of(
+          sourcePathResolver.getRelativePath(arg.getAssets().get().getLeft()).getPath());
     } else {
       // Right is a mapped set of paths, so we need the symlink tree
       return Optional.of(
@@ -230,7 +232,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
         .configure(buildTarget.getTargetConfiguration());
   }
 
-  private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
+  private RelPath getRelativePathAndRecordRule(SourcePath sourcePath) {
     SourcePathResolver resolver = sourcePathResolver.getResolver();
     Preconditions.checkState(
         resolver instanceof IjProjectSourcePathResolver,

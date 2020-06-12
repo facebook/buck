@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -40,9 +41,9 @@ public class PathSourcePathTest {
     PathSourcePath path = FakeSourcePath.of(projectFilesystem, "cheese");
 
     SourcePathResolverAdapter resolver = new TestActionGraphBuilder().getSourcePathResolver();
-    Path resolved = resolver.getRelativePath(path);
+    RelPath resolved = resolver.getRelativePath(path);
 
-    assertEquals(Paths.get("cheese"), resolved);
+    assertEquals(RelPath.get("cheese"), resolved);
   }
 
   @Test

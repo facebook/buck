@@ -102,7 +102,7 @@ public class DefaultIjLibraryFactoryTest {
         new IjLibraryFactoryResolver() {
           @Override
           public Path getPath(SourcePath path) {
-            return sourcePathResolverAdapter.getRelativePath(path);
+            return sourcePathResolverAdapter.getRelativePath(path).getPath();
           }
 
           @Override

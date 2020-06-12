@@ -107,7 +107,7 @@ public class ExportFileTest {
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
-        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolve("example.html"),
+        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolveRel("example.html"),
         pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 
@@ -136,7 +136,7 @@ public class ExportFileTest {
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
-        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolve("fish"),
+        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolveRel("fish"),
         pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 
@@ -168,7 +168,7 @@ public class ExportFileTest {
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
-        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolve("fish"),
+        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolveRel("fish"),
         pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 

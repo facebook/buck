@@ -228,7 +228,8 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
           this.setSourcePathDirectly(input);
         } else {
           if (depFilePossiblePaths.contains(
-              DependencyFileEntry.getPathToFile(ruleFinder.getSourcePathResolver(), input))) {
+              DependencyFileEntry.getPathToFile(ruleFinder.getSourcePathResolver(), input)
+                  .getPath())) {
             // 2,3,4: This input path is covered by the dep-file
             DependencyFileEntry entry =
                 DependencyFileEntry.fromSourcePath(input, ruleFinder.getSourcePathResolver());

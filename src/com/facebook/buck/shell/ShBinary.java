@@ -275,7 +275,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     for (SourcePath sourcePath : resources) {
       Path linkPath = deriveLinkPath(resolver, sourcePath);
       if (!linkPaths.containsKey(linkPath)) {
-        linkPaths.put(linkPath, resolver.getRelativePath(sourcePath));
+        linkPaths.put(linkPath, resolver.getRelativePath(sourcePath).getPath());
       } else {
         conflicts.add(
             String.format(
@@ -306,7 +306,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   .toPathDefaultFileSystem()
                   .resolve(resolver.getSourcePathName(target, sourcePath)));
     } else if (sourcePath instanceof PathSourcePath) {
-      return Paths.get(ROOT_CELL_LINK_NAME).resolve(resolver.getRelativePath(sourcePath));
+      return Paths.get(ROOT_CELL_LINK_NAME).resolve(resolver.getRelativePath(sourcePath).getPath());
     } else {
       throw new RuntimeException(
           "unknown source path: " + sourcePath + "for sh_binary " + this.getBuildTarget());

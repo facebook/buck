@@ -289,7 +289,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
     SourcePathResolverAdapter resolver = context.getSourcePathResolver();
     Path pchOutput =
         canPrecompile()
-            ? resolver.getRelativePath(getSourcePathToOutput())
+            ? resolver.getRelativePath(getSourcePathToOutput()).getPath()
             : Platform.detect().getNullDevicePath();
 
     return new CxxPreprocessAndCompileStep(

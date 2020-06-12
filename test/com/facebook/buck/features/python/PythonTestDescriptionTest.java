@@ -104,7 +104,7 @@ public class PythonTestDescriptionTest {
         Matchers.hasItem(PythonTestDescription.getTestModulesListName()));
     assertThat(
         components.getAllModules().keySet(),
-        Matchers.hasItem(PythonTestDescription.getTestMainPath(null, Optional.empty())));
+        Matchers.hasItem(PythonTestDescription.getTestMainPath(null, Optional.empty()).getPath()));
     assertThat(
         binRule.getMainModule(),
         Matchers.equalTo(

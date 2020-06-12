@@ -73,7 +73,8 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
     SourcePath outputFile = getSourcePathToOutput();
     ObjectBuilder jobArgs = getJobArgs(sourcePathResolverAdapter, outputFile);
 
-    buildableContext.recordArtifact(sourcePathResolverAdapter.getRelativePath(outputFile));
+    buildableContext.recordArtifact(
+        sourcePathResolverAdapter.getRelativePath(outputFile).getPath());
 
     return ImmutableList.<Step>builder()
         .add(

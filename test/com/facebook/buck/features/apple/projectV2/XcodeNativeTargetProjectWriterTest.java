@@ -106,7 +106,7 @@ public class XcodeNativeTargetProjectWriterTest {
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
-            sourcePathResolverAdapter::getRelativePath,
+            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath(),
             projectExcludeResolver,
             true,
             newCellPathResolver,
@@ -132,7 +132,7 @@ public class XcodeNativeTargetProjectWriterTest {
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
-            sourcePathResolverAdapter::getRelativePath,
+            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath(),
             projectExcludeResolver,
             false,
             newCellPathResolver,
@@ -170,7 +170,7 @@ public class XcodeNativeTargetProjectWriterTest {
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
-            sourcePathResolverAdapter::getRelativePath,
+            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath(),
             projectExcludeResolver,
             false,
             newCellPathResolver,
@@ -204,7 +204,7 @@ public class XcodeNativeTargetProjectWriterTest {
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
-            sourcePathResolverAdapter::getRelativePath,
+            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath(),
             projectExcludeResolver,
             false,
             newCellPathResolver,
@@ -225,7 +225,7 @@ public class XcodeNativeTargetProjectWriterTest {
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
-            sourcePathResolverAdapter::getRelativePath,
+            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath(),
             projectExcludeResolver,
             false,
             newCellPathResolver,
@@ -258,7 +258,7 @@ public class XcodeNativeTargetProjectWriterTest {
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
-            sourcePathResolverAdapter::getRelativePath,
+            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath(),
             projectExcludeResolver,
             false,
             newCellPathResolver,
@@ -287,7 +287,7 @@ public class XcodeNativeTargetProjectWriterTest {
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
-            sourcePathResolverAdapter::getRelativePath,
+            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath(),
             projectExcludeResolver,
             false,
             newCellPathResolver,

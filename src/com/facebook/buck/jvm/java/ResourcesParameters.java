@@ -90,7 +90,8 @@ public abstract class ResourcesParameters implements AddsToRuleKey {
       // Therefore, some path-wrangling is required to produce the correct string.
 
       Optional<BuildRule> underlyingRule = ruleFinder.getRule(rawResource);
-      Path relativePathToResource = ruleFinder.getSourcePathResolver().getRelativePath(rawResource);
+      RelPath relativePathToResource =
+          ruleFinder.getSourcePathResolver().getRelativePath(rawResource);
 
       String resource;
 
@@ -111,11 +112,10 @@ public abstract class ResourcesParameters implements AddsToRuleKey {
               BuildTargetPaths.getGenPath(filesystem, underlyingTarget, "%s").getParent();
           RelPath scratchOutputParent =
               BuildTargetPaths.getScratchPath(filesystem, underlyingTarget, "%s").getParent();
-          Optional<Path> outputPath =
-              MorePaths.stripPrefix(relativePathToResource, genOutputParent.getPath())
+          Optional<RelPath> outputPath =
+              MorePaths.stripPrefix(relativePathToResource, genOutputParent)
                   .map(Optional::of)
-                  .orElse(
-                      MorePaths.stripPrefix(relativePathToResource, scratchOutputParent.getPath()));
+                  .orElse(MorePaths.stripPrefix(relativePathToResource, scratchOutputParent));
           Preconditions.checkState(
               outputPath.isPresent(),
               "%s is used as a resource but does not output to a default output directory",
@@ -126,7 +126,7 @@ public abstract class ResourcesParameters implements AddsToRuleKey {
                       .getCellRelativeBasePath()
                       .getPath()
                       .toPath(filesystem.getFileSystem())
-                      .resolve(outputPath.get()));
+                      .resolve(outputPath.get().getPath()));
         }
       } else {
         resource = PathFormatter.pathWithUnixSeparators(relativePathToResource);

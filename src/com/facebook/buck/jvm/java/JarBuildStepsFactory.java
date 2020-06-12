@@ -353,7 +353,7 @@ public class JarBuildStepsFactory
       ProjectFilesystem filesystem,
       RecordArtifactVerifier buildableContext,
       BuildTarget buildTarget,
-      Path pathToClassHashes) {
+      RelPath pathToClassHashes) {
     Preconditions.checkArgument(buildTarget.equals(libraryTarget));
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
@@ -377,9 +377,8 @@ public class JarBuildStepsFactory
         filesystem.getIgnoredPaths(),
         steps,
         Optional.ofNullable(getSourcePathToOutput(buildTarget, filesystem))
-            .map(context.getSourcePathResolver()::getRelativePath)
-            .map(RelPath::of),
-        RelPath.of(pathToClassHashes));
+            .map(sourcePath -> context.getSourcePathResolver().getRelativePath(sourcePath)),
+        pathToClassHashes);
 
     return steps.build();
   }
@@ -389,7 +388,7 @@ public class JarBuildStepsFactory
       ProjectFilesystem filesystem,
       RecordArtifactVerifier buildableContext,
       JavacPipelineState state,
-      Path pathToClassHashes) {
+      RelPath pathToClassHashes) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
@@ -406,9 +405,8 @@ public class JarBuildStepsFactory
         filesystem.getIgnoredPaths(),
         steps,
         Optional.ofNullable(getSourcePathToOutput(libraryTarget, filesystem))
-            .map(context.getSourcePathResolver()::getRelativePath)
-            .map(RelPath::of),
-        RelPath.of(pathToClassHashes));
+            .map(sourcePath -> context.getSourcePathResolver().getRelativePath(sourcePath)),
+        pathToClassHashes);
 
     return steps.build();
   }

@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
@@ -90,9 +91,10 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    Path output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
-    Optional<Path> input = pathToRDotJavaDir.map(context.getSourcePathResolver()::getRelativePath);
-    buildableContext.recordArtifact(output);
+    RelPath output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+    Optional<RelPath> input =
+        pathToRDotJavaDir.map(context.getSourcePathResolver()::getRelativePath);
+    buildableContext.recordArtifact(output.getPath());
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
@@ -114,10 +116,10 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   private class PerformTrimStep implements Step {
-    private final Path pathToOutput;
-    private final Optional<Path> pathToInput;
+    private final RelPath pathToOutput;
+    private final Optional<RelPath> pathToInput;
 
-    public PerformTrimStep(Path pathToOutput, Optional<Path> pathToInput) {
+    public PerformTrimStep(RelPath pathToOutput, Optional<RelPath> pathToInput) {
       this.pathToOutput = pathToOutput;
       this.pathToInput = pathToInput;
     }
@@ -132,7 +134,7 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
       ProjectFilesystem projectFilesystem = getProjectFilesystem();
       try (CustomZipOutputStream output =
-          ZipOutputStreams.newOutputStream(projectFilesystem.resolve(pathToOutput))) {
+          ZipOutputStreams.newOutputStream(projectFilesystem.resolve(pathToOutput).getPath())) {
         if (!pathToInput.isPresent()) {
           // dx fails if its input contains no classes.  Rather than add empty input handling
           // to DxStep, the dex merger, and every other step of this chain, just generate a
@@ -145,7 +147,7 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         } else {
           Preconditions.checkState(projectFilesystem.exists(pathToInput.get()));
           projectFilesystem.walkRelativeFileTree(
-              pathToInput.get(),
+              pathToInput.get().getPath(),
               new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)

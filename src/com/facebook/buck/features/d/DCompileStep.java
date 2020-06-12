@@ -18,19 +18,19 @@ package com.facebook.buck.features.d;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 
 public class DCompileStep extends ShellStep {
 
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> compiler;
   private final ImmutableList<String> flags;
-  private final Path output;
+  private final RelPath output;
   private final ImmutableCollection<AbsPath> inputs;
 
   public DCompileStep(
@@ -38,7 +38,7 @@ public class DCompileStep extends ShellStep {
       ImmutableMap<String, String> environment,
       ImmutableList<String> compiler,
       ImmutableList<String> flags,
-      Path output,
+      RelPath output,
       ImmutableCollection<AbsPath> inputs,
       boolean withDownwardApi) {
     super(workingDirectory, withDownwardApi);

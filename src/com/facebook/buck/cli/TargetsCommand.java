@@ -1281,7 +1281,7 @@ public class TargetsCommand extends AbstractCommand {
               .getGeneratedAnnotationSourcePath()
               .map(sourcePathResolverAdapter::getRelativePath)
               .map(rule.getProjectFilesystem()::resolve)
-              .map(path -> pathToString(path, params))
+              .map(path -> pathToString(path.getPath(), params))
               .ifPresent(builder::setGeneratedSourcePath);
         }
       }

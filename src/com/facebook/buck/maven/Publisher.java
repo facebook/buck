@@ -16,6 +16,7 @@
 
 package com.facebook.buck.maven;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -125,7 +126,7 @@ public class Publisher {
                   publishable.getMavenCoords().get(),
                   "No maven coordinates specified for published rule ",
                   publishable));
-      Path relativePathToOutput =
+      RelPath relativePathToOutput =
           pathResolver.getRelativePath(
               Preconditions.checkNotNull(
                   publishable.getSourcePathToOutput(),

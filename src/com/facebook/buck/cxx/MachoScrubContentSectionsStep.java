@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.google.common.collect.ImmutableList;
@@ -28,7 +29,7 @@ public class MachoScrubContentSectionsStep extends ShellStep {
   private final ImmutableList<String> stripToolPrefix;
 
   private final ProjectFilesystem inputFilesystem;
-  private final Path inputDylib;
+  private final RelPath inputDylib;
 
   private final ProjectFilesystem outputFilesystem;
   private final Path outputDylib;
@@ -36,7 +37,7 @@ public class MachoScrubContentSectionsStep extends ShellStep {
   public MachoScrubContentSectionsStep(
       ImmutableList<String> stripToolPrefix,
       ProjectFilesystem inputFilesystem,
-      Path inputDylib,
+      RelPath inputDylib,
       ProjectFilesystem outputFilesystem,
       Path outputDylib,
       boolean withDownwardApi) {

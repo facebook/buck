@@ -37,6 +37,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -1518,10 +1519,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   private void writeAbiJar(
-      ProjectFilesystem filesystem, Path abiJarPath, String fileName, String fileContents)
+      ProjectFilesystem filesystem, RelPath abiJarPath, String fileName, String fileContents)
       throws IOException {
     try (CustomJarOutputStream jar =
-        ZipOutputStreams.newJarOutputStream(filesystem.newFileOutputStream(abiJarPath))) {
+        ZipOutputStreams.newJarOutputStream(filesystem.newFileOutputStream(abiJarPath.getPath()))) {
       jar.setEntryHashingEnabled(true);
       jar.writeEntry(
           fileName, new ByteArrayInputStream(fileContents.getBytes(StandardCharsets.UTF_8)));

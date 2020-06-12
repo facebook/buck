@@ -72,7 +72,7 @@ public class DirectHeaderMapTest {
   private SourcePathResolverAdapter pathResolver;
   private ImmutableMap<Path, SourcePath> links;
   private RelPath symlinkTreeRoot;
-  private Path headerMapPath;
+  private RelPath headerMapPath;
   private AbsPath file1;
   private AbsPath file2;
 
@@ -142,7 +142,7 @@ public class DirectHeaderMapTest {
                     buildContext.getBuildCellRootPath(), projectFilesystem, headerMapPath)),
             new HeaderMapStep(
                 projectFilesystem,
-                headerMapPath,
+                headerMapPath.getPath(),
                 ImmutableMap.of(
                     Paths.get("file"), includeRoot.relativize(file1).getPath(),
                     Paths.get("directory/then/file"), includeRoot.relativize(file2).getPath()),

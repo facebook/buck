@@ -246,7 +246,12 @@ public class PythonSymlinkTreeTest {
         resolvedDuplicates.inverse(),
         Matchers.equalTo(
             FluentIterable.from(sourcePaths)
-                .uniqueIndex(ruleResolver.getSourcePathResolver()::getRelativePath)));
+                .uniqueIndex(
+                    sourcePath ->
+                        ruleResolver
+                            .getSourcePathResolver()
+                            .getRelativePath(sourcePath)
+                            .getPath())));
   }
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();

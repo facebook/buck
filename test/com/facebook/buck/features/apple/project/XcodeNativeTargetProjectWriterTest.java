@@ -97,14 +97,17 @@ public class XcodeNativeTargetProjectWriterTest {
     buildRuleResolver = new TestActionGraphBuilder();
     sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
     pathRelativizer =
-        new PathRelativizer(Paths.get("_output"), sourcePathResolverAdapter::getRelativePath);
+        new PathRelativizer(
+            Paths.get("_output"),
+            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath());
   }
 
   @Test
   public void shouldCreateTargetAndTargetGroup() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(
-            pathRelativizer, sourcePathResolverAdapter::getRelativePath);
+            pathRelativizer,
+            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath());
     mutator
         .setTargetName("TestTarget")
         .setProduct(ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
@@ -118,7 +121,8 @@ public class XcodeNativeTargetProjectWriterTest {
   public void shouldCreateTargetAndCustomTargetGroup() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(
-            pathRelativizer, sourcePathResolverAdapter::getRelativePath);
+            pathRelativizer,
+            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath());
     mutator
         .setTargetName("TestTarget")
         .setTargetGroupPath(ImmutableList.of("Grandparent", "Parent"))
@@ -135,7 +139,8 @@ public class XcodeNativeTargetProjectWriterTest {
   public void shouldCreateTargetAndNoGroup() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(
-            pathRelativizer, sourcePathResolverAdapter::getRelativePath);
+            pathRelativizer,
+            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath());
     NewNativeTargetProjectMutator.Result result =
         mutator
             .setTargetName("TestTarget")
@@ -524,13 +529,17 @@ public class XcodeNativeTargetProjectWriterTest {
 
   private NewNativeTargetProjectMutator mutator(SourcePathResolverAdapter pathResolver) {
     return mutator(
-        pathResolver, new PathRelativizer(Paths.get("_output"), pathResolver::getRelativePath));
+        pathResolver,
+        new PathRelativizer(
+            Paths.get("_output"),
+            sourcePath -> pathResolver.getRelativePath(sourcePath).getPath()));
   }
 
   private NewNativeTargetProjectMutator mutator(
       SourcePathResolverAdapter pathResolver, PathRelativizer relativizer) {
     NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(relativizer, pathResolver::getRelativePath);
+        new NewNativeTargetProjectMutator(
+            relativizer, sourcePath -> pathResolver.getRelativePath(sourcePath).getPath());
     mutator
         .setTargetName("TestTarget")
         .setProduct(

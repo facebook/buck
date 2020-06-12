@@ -109,8 +109,7 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
-    RelPath pathToOutput = RelPath.of(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
+    RelPath pathToOutput = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
     MkdirStep mkOutputDirStep =
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -119,7 +118,8 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         new JarDirectoryStep(
             JarParameters.builder()
                 .setJarPath(pathToOutput)
-                .setEntriesToJar(toOutputPaths(sourcePathResolver, traversedDeps.packagedDeps))
+                .setEntriesToJar(
+                    toOutputPaths(context.getSourcePathResolver(), traversedDeps.packagedDeps))
                 .setMergeManifests(true)
                 .build());
     return ImmutableList.of(mkOutputDirStep, mergeOutputsStep);

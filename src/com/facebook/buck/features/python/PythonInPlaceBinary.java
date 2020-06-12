@@ -48,7 +48,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -184,8 +183,8 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    Path binPath = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
-    buildableContext.recordArtifact(binPath);
+    RelPath binPath = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+    buildableContext.recordArtifact(binPath.getPath());
     return ImmutableList.of(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(

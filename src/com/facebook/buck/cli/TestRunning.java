@@ -765,7 +765,7 @@ public class TestRunning {
       if (classesItem == null || !filesystem.isDirectory(classesItem)) {
         SourcePath path = rule.getSourcePathToOutput();
         if (path != null) {
-          classesItem = RelPath.of(ruleFinder.getSourcePathResolver().getRelativePath(path));
+          classesItem = ruleFinder.getSourcePathResolver().getRelativePath(path);
         }
       }
       if (classesItem == null) {
@@ -809,7 +809,7 @@ public class TestRunning {
         continue;
       }
 
-      Path javaSrcRelativePath = ruleFinder.getSourcePathResolver().getRelativePath(javaSrcPath);
+      RelPath javaSrcRelativePath = ruleFinder.getSourcePathResolver().getRelativePath(javaSrcPath);
 
       // If the source path is already under a known source folder, then we can skip this
       // source path.

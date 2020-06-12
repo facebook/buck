@@ -18,6 +18,7 @@ package com.facebook.buck.core.sourcepath.resolver.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -29,7 +30,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -125,22 +125,16 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
   }
 
   /**
-   * @return The {@link Path} instances the {@code sourcePath} refers to, relative to its owning
+   * @return The {@link RelPath} instances the {@code sourcePath} refers to, relative to its owning
    *     {@link ProjectFilesystem}.
    */
   @Override
-  public ImmutableSortedSet<Path> getRelativePath(SourcePath sourcePath) {
+  public ImmutableSortedSet<RelPath> getRelativePath(SourcePath sourcePath) {
     ImmutableSortedSet<Path> toReturns = getPathPrivateImpl(sourcePath);
 
-    toReturns.forEach(
-        toReturn ->
-            Preconditions.checkState(
-                !toReturn.isAbsolute(),
-                "Expected path to be relative, not absolute: %s (from %s)",
-                toReturn,
-                sourcePath));
-
-    return toReturns;
+    return toReturns.stream()
+        .map(RelPath::of)
+        .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
   }
 
   /**

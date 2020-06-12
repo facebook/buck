@@ -18,6 +18,7 @@ package com.facebook.buck.features.d;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -32,7 +33,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Objects;
 
 /** A build rule for invoking the D compiler. */
@@ -67,11 +67,11 @@ public class DCompileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    Path output =
+    RelPath output =
         context
             .getSourcePathResolver()
             .getRelativePath(Objects.requireNonNull(getSourcePathToOutput()));
-    buildableContext.recordArtifact(output);
+    buildableContext.recordArtifact(output.getPath());
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(

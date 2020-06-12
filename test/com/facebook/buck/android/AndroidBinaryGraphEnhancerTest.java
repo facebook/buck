@@ -828,7 +828,7 @@ public class AndroidBinaryGraphEnhancerTest {
         ImmutableSet.of(
             BuildTargetPaths.getGenPath(
                     projectFilesystem, enhancedBuildConfigTarget, "lib__%s__output")
-                .resolve(enhancedBuildConfigTarget.getShortNameAndFlavorPostfix() + ".jar")),
+                .resolveRel(enhancedBuildConfigTarget.getShortNameAndFlavorPostfix() + ".jar")),
         result.getClasspathEntriesToDex().stream()
             .map(graphBuilder.getSourcePathResolver()::getRelativePath)
             .collect(ImmutableSet.toImmutableSet()));

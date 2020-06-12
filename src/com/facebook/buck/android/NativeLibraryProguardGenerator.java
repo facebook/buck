@@ -120,7 +120,7 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclare
         for (SourcePath path : nativeLibsDirs) {
           ProjectFilesystem pathFilesystem = pathResolver.getFilesystem(path);
           pathFilesystem.walkRelativeFileTree(
-              pathResolver.getRelativePath(path),
+              pathResolver.getRelativePath(path).getPath(),
               new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)

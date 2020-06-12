@@ -20,6 +20,7 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -63,7 +64,7 @@ public class AndroidAppModularity extends AbstractBuildRule {
       BuildContext buildContext, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    Path metadataFile =
+    RelPath metadataFile =
         buildContext.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
 
     steps.add(
@@ -94,7 +95,7 @@ public class AndroidAppModularity extends AbstractBuildRule {
 
     steps.add(
         WriteAppModuleMetadataStep.writeModuleMetadata(
-            metadataFile,
+            metadataFile.getPath(),
             additionalDexStoreToJarPathMapBuilder.build(),
             result.getModulesToSharedLibraries(),
             apkModuleGraph,
@@ -104,7 +105,7 @@ public class AndroidAppModularity extends AbstractBuildRule {
             /*skipProguard*/ true,
             shouldIncludeClasses));
 
-    buildableContext.recordArtifact(metadataFile);
+    buildableContext.recordArtifact(metadataFile.getPath());
 
     return steps.build();
   }

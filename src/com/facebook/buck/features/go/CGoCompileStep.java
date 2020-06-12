@@ -18,6 +18,7 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -31,7 +32,7 @@ public class CGoCompileStep extends ShellStep {
   private final ImmutableList<String> cppCommandPrefix;
   private final ImmutableList<String> cgoCompilerFlags;
   private final ImmutableList<String> cxxCompilerFlags;
-  private final ImmutableList<Path> srcs;
+  private final ImmutableList<RelPath> srcs;
   private final GoPlatform platform;
   private final Path outputDir;
 
@@ -42,7 +43,7 @@ public class CGoCompileStep extends ShellStep {
       ImmutableList<String> cppCommandPrefix,
       ImmutableList<String> cgoCompilerFlags,
       ImmutableList<String> cxxCompilerFlags,
-      ImmutableList<Path> srcs,
+      ImmutableList<RelPath> srcs,
       GoPlatform platform,
       Path outputDir,
       boolean withDownwardApi) {
@@ -67,7 +68,7 @@ public class CGoCompileStep extends ShellStep {
         .addAll(cgoCompilerFlags)
         .add("--")
         .addAll(cxxCompilerFlags)
-        .addAll(srcs.stream().map(Object::toString).iterator())
+        .addAll(srcs.stream().map(RelPath::toString).iterator())
         .build();
   }
 

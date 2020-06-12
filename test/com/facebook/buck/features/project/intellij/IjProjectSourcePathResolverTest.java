@@ -31,6 +31,7 @@ import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
@@ -77,7 +78,6 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
@@ -327,12 +327,12 @@ public class IjProjectSourcePathResolverTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePath sourcePathToOutput =
         graphBuilder.requireRule(node.getBuildTarget()).getSourcePathToOutput();
-    Path realPath = graphBuilder.getSourcePathResolver().getRelativePath(sourcePathToOutput);
+    RelPath realPath = graphBuilder.getSourcePathResolver().getRelativePath(sourcePathToOutput);
 
     // Find the guessed path
     SourcePathResolverAdapter projectSourcePathResolver =
         new SourcePathResolverAdapter(new IjProjectSourcePathResolver(targetGraph));
-    Path guessedPath = projectSourcePathResolver.getRelativePath(toResolve);
+    RelPath guessedPath = projectSourcePathResolver.getRelativePath(toResolve);
 
     assertEquals(realPath, guessedPath);
   }

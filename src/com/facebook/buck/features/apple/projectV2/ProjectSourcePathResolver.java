@@ -19,6 +19,7 @@ package com.facebook.buck.features.apple.projectV2;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -32,7 +33,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.google.common.base.Preconditions;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -75,11 +75,10 @@ public class ProjectSourcePathResolver {
    * @param sourcePath Source path to resolve.
    * @return A path relative to the cell.
    */
-  public Path resolveSourcePath(SourcePath sourcePath) {
+  public RelPath resolveSourcePath(SourcePath sourcePath) {
     if (sourcePath instanceof PathSourcePath) {
-      return projectFilesystem
-          .relativize(pathSourcePathResolverAdapter.getAbsolutePath(sourcePath))
-          .getPath();
+      return projectFilesystem.relativize(
+          pathSourcePathResolverAdapter.getAbsolutePath(sourcePath));
     }
     Preconditions.checkArgument(sourcePath instanceof BuildTargetSourcePath);
     BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
@@ -95,7 +94,7 @@ public class ProjectSourcePathResolver {
             "The target '%s' does not have an output.", node.getBuildTarget());
       }
 
-      return projectFilesystem.relativize(output).getPath();
+      return projectFilesystem.relativize(output);
     }
 
     Optional<SourcePath> src = exportFileNode.get().getConstructorArg().getSrc();
@@ -108,7 +107,7 @@ public class ProjectSourcePathResolver {
                       .getPath()
                       .toPath(projectFilesystem.getFileSystem()))
               .resolve(buildTarget.getShortNameAndFlavorPostfix());
-      return projectFilesystem.relativize(output).getPath();
+      return projectFilesystem.relativize(output);
     }
 
     return resolveSourcePath(src.get());

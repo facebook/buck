@@ -137,8 +137,8 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
       return ImmutableList.<Step>builder()
           .add(
               new SplitResourcesStep(
-                  RelPath.of(sourcePathResolverAdapter.getRelativePath(pathToAaptResources)),
-                  RelPath.of(sourcePathResolverAdapter.getRelativePath(pathToOriginalRDotTxt)),
+                  sourcePathResolverAdapter.getRelativePath(pathToAaptResources),
+                  sourcePathResolverAdapter.getRelativePath(pathToOriginalRDotTxt),
                   outputPathResolver.resolvePath(primaryResourcesOutputPath),
                   RelPath.of(getUnalignedExoPath(filesystem)),
                   outputPathResolver.resolvePath(rDotTxtOutputPath)))

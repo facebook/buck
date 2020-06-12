@@ -392,7 +392,7 @@ public class ProjectGenerator {
         XcodeNativeTargetProjectWriter nativeTargetProjectWriter =
             new XcodeNativeTargetProjectWriter(
                 pathRelativizer,
-                projectSourcePathResolver::resolveSourcePath,
+                sourcePath -> projectSourcePathResolver.resolveSourcePath(sourcePath).getPath(),
                 projectExcludeResolver,
                 options.shouldUseShortNamesForTargets(),
                 projectCell.getNewCellPathResolver(),

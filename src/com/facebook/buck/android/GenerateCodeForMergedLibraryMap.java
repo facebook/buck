@@ -49,7 +49,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -92,8 +91,8 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    Path output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
-    buildableContext.recordArtifact(output);
+    RelPath output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+    buildableContext.recordArtifact(output.getPath());
     buildableContext.recordArtifact(getMappingPath().getPath());
     buildableContext.recordArtifact(getTargetsPath().getPath());
     return new ImmutableList.Builder<Step>()

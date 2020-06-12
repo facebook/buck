@@ -111,7 +111,9 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     assertThat(copyNativeLibraries.getStrippedObjectDescriptions(), Matchers.empty());
     assertThat(
         copyNativeLibraries.getNativeLibDirectories().stream()
-            .map(graphBuilder.getSourcePathResolver()::getRelativePath)
+            .map(
+                sourcePath ->
+                    graphBuilder.getSourcePathResolver().getRelativePath(sourcePath).getPath())
             .collect(ImmutableList.toImmutableList()),
         Matchers.contains(ndkLibrary.getLibraryPath()));
   }

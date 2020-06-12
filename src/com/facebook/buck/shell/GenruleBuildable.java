@@ -506,13 +506,13 @@ public class GenruleBuildable implements Buildable {
     // To preserve legacy behavior, we allow duplicate targets and just ignore all but the
     // last.
     Set<Path> seenTargets = new HashSet<>();
-    Path basePath =
-        buildTarget.getCellRelativeBasePath().getPath().toPath(filesystem.getFileSystem());
+    RelPath basePath =
+        buildTarget.getCellRelativeBasePath().getPath().toRelPath(filesystem.getFileSystem());
     ImmutableList.copyOf(srcs)
         .reverse()
         .forEach(
             src -> {
-              Path relativePath = pathResolver.getRelativePath(src);
+              RelPath relativePath = pathResolver.getRelativePath(src);
               AbsPath absolutePath = pathResolver.getAbsolutePath(src);
               AbsPath canonicalPath = absolutePath.normalize();
 
@@ -524,12 +524,12 @@ public class GenruleBuildable implements Buildable {
               Path localPath;
               if (absolutePath.equals(canonicalPath)) {
                 if (relativePath.startsWith(basePath) || basePath.toString().isEmpty()) {
-                  localPath = MorePaths.relativize(basePath, relativePath);
+                  localPath = MorePaths.relativize(basePath, relativePath).getPath();
                 } else {
                   localPath = canonicalPath.getFileName();
                 }
               } else {
-                localPath = relativePath;
+                localPath = relativePath.getPath();
               }
 
               RelPath target = filesystem.relativize(absolutePath);

@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.cxx.toolchain.Archiver;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.ConsoleEvent;
@@ -52,7 +53,7 @@ class ArchiveStep implements Step {
   private final ImmutableList<String> archiverFlags;
   private final ImmutableList<String> archiverExtraFlags;
   private final Path output;
-  private final ImmutableList<Path> inputs;
+  private final ImmutableList<RelPath> inputs;
   private final Archiver archiver;
   private final Path scratchDir;
   private final boolean withDownwardApi;
@@ -64,17 +65,16 @@ class ArchiveStep implements Step {
       ImmutableList<String> archiverFlags,
       ImmutableList<String> archiverExtraFlags,
       Path output,
-      ImmutableList<Path> inputs,
+      ImmutableList<RelPath> inputs,
       Archiver archiver,
       Path scratchDir,
       boolean withDownwardApi) {
     this.withDownwardApi = withDownwardApi;
     Preconditions.checkArgument(!output.isAbsolute());
+
     // Our current support for thin archives requires that all the inputs are relative paths from
     // the same cell as the output.
-    for (Path input : inputs) {
-      Preconditions.checkArgument(!input.isAbsolute());
-    }
+
     this.filesystem = filesystem;
     this.environment = environment;
     this.archiverCommand = archiverCommand;
@@ -91,13 +91,13 @@ class ArchiveStep implements Step {
 
     // Inputs can either be files or directories.  In the case of the latter, we add all files
     // found from a recursive search.
-    for (Path input : inputs) {
+    for (RelPath input : inputs) {
       if (filesystem.isDirectory(input)) {
         // We make sure to sort the files we find under the directories so that we get
         // deterministic output.
         Set<String> dirFiles = new TreeSet<>();
         filesystem.walkFileTree(
-            filesystem.resolve(input),
+            filesystem.resolve(input).getPath(),
             new SimpleFileVisitor<Path>() {
               @Override
               public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {

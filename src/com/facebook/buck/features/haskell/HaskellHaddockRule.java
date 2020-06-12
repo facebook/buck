@@ -48,7 +48,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.nio.file.Path;
 import java.util.function.Supplier;
 
 public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
@@ -119,8 +118,8 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
   }
 
-  private Path getHaddockOuptutDir() {
-    return getOutputDir().resolve("ALL");
+  private RelPath getHaddockOuptutDir() {
+    return getOutputDir().resolveRel("ALL");
   }
 
   @Override
@@ -146,7 +145,7 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     steps.add(new HaddockStep(getProjectFilesystem().getRootPath(), context, withDownwardApi));
 
     // Copy the generated data from dependencies into our output directory
-    Path haddockOutputDir = getHaddockOuptutDir();
+    RelPath haddockOutputDir = getHaddockOuptutDir();
     for (SourcePath odir : outputDirs) {
       steps.add(
           CopyStep.forDirectory(

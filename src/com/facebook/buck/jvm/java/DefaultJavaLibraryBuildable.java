@@ -126,7 +126,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
             filesystem,
             ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
             buildTarget,
-            outputPathResolver.resolvePath(pathToClassHashesOutputPath).getPath());
+            outputPathResolver.resolvePath(pathToClassHashesOutputPath));
 
     ImmutableList<IsolatedStep> isolatedSteps =
         getIsolatedSteps(buildContext, outputPathResolver, filesystem);
@@ -151,7 +151,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
             filesystem,
             ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
             state,
-            outputPathResolver.resolvePath(pathToClassHashesOutputPath).getPath());
+            outputPathResolver.resolvePath(pathToClassHashesOutputPath));
 
     ImmutableList<IsolatedStep> isolatedSteps =
         getIsolatedSteps(buildContext, outputPathResolver, filesystem);

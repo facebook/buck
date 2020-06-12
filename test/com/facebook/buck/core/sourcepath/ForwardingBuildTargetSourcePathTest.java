@@ -18,6 +18,7 @@ package com.facebook.buck.core.sourcepath;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -25,8 +26,6 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,7 +43,7 @@ public class ForwardingBuildTargetSourcePathTest {
   @Test
   public void forwardsToPathSourcePath() {
     BuildTarget target = BuildTargetFactory.newInstance("//package:name");
-    Path relativePath = Paths.get("foo/bar");
+    RelPath relativePath = RelPath.get("foo/bar");
     ForwardingBuildTargetSourcePath sourcePath =
         com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
             target, PathSourcePath.of(new FakeProjectFilesystem(), relativePath));
@@ -62,7 +61,7 @@ public class ForwardingBuildTargetSourcePathTest {
         com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
             target, DefaultBuildTargetSourcePath.of(target));
     assertEquals(target, sourcePath.getTarget());
-    assertEquals(rule.getOutputFile(), pathResolver.getRelativePath(sourcePath));
+    assertEquals(rule.getOutputFile(), pathResolver.getRelativePath(sourcePath).getPath());
   }
 
   @Test
@@ -70,7 +69,7 @@ public class ForwardingBuildTargetSourcePathTest {
     BuildTarget target = BuildTargetFactory.newInstance("//package:name");
     FakeBuildRule rule = new FakeBuildRule(target);
     graphBuilder.addToIndex(rule);
-    Path relativePath = Paths.get("foo/bar");
+    RelPath relativePath = RelPath.get("foo/bar");
     ForwardingBuildTargetSourcePath sourcePath =
         com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
             target, ExplicitBuildTargetSourcePath.of(target, relativePath));
@@ -88,7 +87,7 @@ public class ForwardingBuildTargetSourcePathTest {
     FakeBuildRule rule2 = new FakeBuildRule(target2);
     graphBuilder.addToIndex(rule2);
 
-    Path relativePath = Paths.get("foo/bar");
+    RelPath relativePath = RelPath.get("foo/bar");
 
     ForwardingBuildTargetSourcePath sourcePath =
         com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(

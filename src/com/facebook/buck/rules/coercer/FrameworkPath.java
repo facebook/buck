@@ -106,8 +106,7 @@ public abstract class FrameworkPath implements Comparable<FrameworkPath>, AddsTo
       case SOURCE_TREE_PATH:
         return Paths.get(input.getSourceTreePath().get().toString());
       case SOURCE_PATH:
-        return relativizer.apply(
-            Objects.requireNonNull(resolver.apply(input.getSourcePath().get())));
+        return relativizer.apply(resolver.apply(input.getSourcePath().get()));
       default:
         throw new RuntimeException("Unhandled type: " + input.getType());
     }

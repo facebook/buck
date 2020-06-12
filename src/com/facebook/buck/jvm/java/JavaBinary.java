@@ -170,7 +170,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
               .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.COMPARATOR));
     }
 
-    RelPath outputFile = RelPath.of(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
+    RelPath outputFile = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
     RelPath manifestPath =
         manifestFile == null
             ? null

@@ -292,7 +292,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     @Override
     public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-      Path src = resolver.getRelativePath(lib).toRealPath();
+      Path src = resolver.getRelativePath(lib).getPath().toRealPath();
       Path dest = symlinkDir.resolve(name);
       return SymlinkFileStep.of(getProjectFilesystem(), src, dest).execute(context);
     }
@@ -318,7 +318,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     String name = getBuildTarget().getShortName();
     RelPath dir = getOutputDir();
-    Path so = resolver.getRelativePath(omnibusSharedObject.getSourcePathToOutput());
+    RelPath so = resolver.getRelativePath(omnibusSharedObject.getSourcePathToOutput());
     Path binDir = dir.resolve(name + ".bin");
     Path packagesDir = dir.resolve(name + ".packages");
     Path symlinkDir = dir.resolve(HaskellGhciDescription.getSoLibsRelDir(getBuildTarget()));
@@ -339,7 +339,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   context.getBuildCellRootPath(), getProjectFilesystem(), subdir)));
     }
 
-    steps.add(SymlinkFileStep.of(getProjectFilesystem(), so, dir.resolve(so.getFileName())));
+    steps.add(
+        SymlinkFileStep.of(getProjectFilesystem(), so.getPath(), dir.resolve(so.getFileName())));
 
     symlinkLibs(resolver, symlinkDir, steps, solibs);
     symlinkLibs(resolver, symlinkPreloadDir, steps, preloadLibs);
@@ -347,7 +348,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableSet.Builder<String> pkgdirs = ImmutableSet.builder();
     for (HaskellPackage pkg : prebuiltHaskellPackages) {
       try {
-        pkgdirs.add(resolver.getRelativePath(pkg.getPackageDb()).toRealPath().toString());
+        pkgdirs.add(resolver.getRelativePath(pkg.getPackageDb()).getPath().toRealPath().toString());
       } catch (IOException ex) {
         throw new RuntimeException(ex);
       }
@@ -361,9 +362,9 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     for (HaskellPackage pkg : haskellPackages) {
       Path pkgdir = Paths.get(pkg.getInfo().getName());
 
-      Path pkgDbSrc = resolver.getRelativePath(pkg.getPackageDb());
+      RelPath pkgDbSrc = resolver.getRelativePath(pkg.getPackageDb());
       Path pkgDbLink = pkgdir.resolve(pkgDbSrc.getFileName());
-      putLink.accept(pkgDbLink, pkgDbSrc);
+      putLink.accept(pkgDbLink, pkgDbSrc.getPath());
       pkgdirs.add("${DIR}/" + dir.relativize(packagesDir.resolve(pkgDbLink)));
 
       ImmutableSet.Builder<SourcePath> artifacts = ImmutableSet.builder();
@@ -378,10 +379,11 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       artifacts.addAll(pkg.getInterfaces());
 
       for (SourcePath artifact : artifacts.build()) {
-        Path source = resolver.getRelativePath(artifact);
+        RelPath source = resolver.getRelativePath(artifact);
         Path destination =
-            pkgdir.resolve(source.subpath(source.getNameCount() - 2, source.getNameCount()));
-        putLink.accept(destination, source);
+            pkgdir.resolve(
+                source.subpath(source.getNameCount() - 2, source.getNameCount()).getPath());
+        putLink.accept(destination, source.getPath());
       }
     }
 
@@ -459,7 +461,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       try {
         startGhciContents.append('\n');
         List<String> lines =
-            Files.readAllLines(resolver.getRelativePath(ghciInit.get()), StandardCharsets.UTF_8);
+            Files.readAllLines(
+                resolver.getRelativePath(ghciInit.get()).getPath(), StandardCharsets.UTF_8);
         startGhciContents.append(Joiner.on('\n').join(lines));
       } catch (IOException ex) {
         throw new RuntimeException(ex);
@@ -486,7 +489,9 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         Path bin = binDir.resolve("ghci");
         SourcePath sp = ghciBinDep.get();
 
-        steps.add(SymlinkFileStep.of(getProjectFilesystem(), resolver.getRelativePath(sp), bin));
+        steps.add(
+            SymlinkFileStep.of(
+                getProjectFilesystem(), resolver.getRelativePath(sp).getPath(), bin));
 
         ghcPath = "${DIR}/" + dir.relativize(bin) + " -B" + ghciLib.toRealPath();
       } else {

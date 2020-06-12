@@ -361,14 +361,14 @@ public class AppleBundle extends AbstractBuildRule
                   context.getBuildCellRootPath(),
                   getProjectFilesystem(),
                   resourcesDestinationPath)));
-      Path compilationResultDirPath =
+      RelPath compilationResultDirPath =
           context
               .getSourcePathResolver()
               .getRelativePath(maybeAssetCatalogCompilationResultDir.get());
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
-              compilationResultDirPath,
+              compilationResultDirPath.getPath(),
               resourcesDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
@@ -385,7 +385,8 @@ public class AppleBundle extends AbstractBuildRule
               getProjectFilesystem(),
               context
                   .getSourcePathResolver()
-                  .getRelativePath(coreDataModel.get().getSourcePathToOutput()),
+                  .getRelativePath(coreDataModel.get().getSourcePathToOutput())
+                  .getPath(),
               resourcesDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
@@ -402,7 +403,8 @@ public class AppleBundle extends AbstractBuildRule
               getProjectFilesystem(),
               context
                   .getSourcePathResolver()
-                  .getRelativePath(sceneKitAssets.get().getSourcePathToOutput()),
+                  .getRelativePath(sceneKitAssets.get().getSourcePathToOutput())
+                  .getPath(),
               resourcesDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
@@ -424,10 +426,12 @@ public class AppleBundle extends AbstractBuildRule
               /* executable */ false));
     }
 
-    Path infoPlistOutputPath = context.getSourcePathResolver().getRelativePath(processedInfoPlist);
+    RelPath infoPlistOutputPath =
+        context.getSourcePathResolver().getRelativePath(processedInfoPlist);
     Path infoPlistBundlePath = getInfoPlistPath();
     stepsBuilder.add(
-        CopyStep.forFile(getProjectFilesystem(), infoPlistOutputPath, infoPlistBundlePath));
+        CopyStep.forFile(
+            getProjectFilesystem(), infoPlistOutputPath.getPath(), infoPlistBundlePath));
 
     if (hasBinary) {
       appendCopyBinarySteps(stepsBuilder, context);
@@ -661,7 +665,7 @@ public class AppleBundle extends AbstractBuildRule
 
     // Ensure the bundle directory is archived so we can fetch it later.
     buildableContext.recordArtifact(
-        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getPath());
 
     return stepsBuilder.build();
   }
@@ -736,10 +740,10 @@ public class AppleBundle extends AbstractBuildRule
     binariesBuilder.put(bundleBinaryPath, binaryOutputPath.getPath());
 
     for (BuildRule extraBinary : extraBinaries) {
-      Path outputPath =
+      RelPath outputPath =
           context.getSourcePathResolver().getRelativePath(extraBinary.getSourcePathToOutput());
       Path bundlePath = getBundleBinaryPathForBuildRule(extraBinary);
-      binariesBuilder.put(bundlePath, outputPath);
+      binariesBuilder.put(bundlePath, outputPath.getPath());
     }
 
     copyBinariesIntoBundle(stepsBuilder, context, binariesBuilder.build());
@@ -845,7 +849,7 @@ public class AppleBundle extends AbstractBuildRule
     Preconditions.checkArgument(hasBinary && appleDsym.isPresent());
 
     // rename dSYM bundle to match bundle name
-    Path dsymPath =
+    RelPath dsymPath =
         buildContext
             .getSourcePathResolver()
             .getRelativePath(appleDsym.get().getSourcePathToOutput());

@@ -150,7 +150,7 @@ class HeaderPathNormalizer {
       Optional<Pair<Path, ImmutableList<Path>>> vals =
           MorePaths.splitOnCommonPrefix(
               headerMap.values().stream()
-                  .map(pathResolver::getRelativePath)
+                  .map(sourcePath -> pathResolver.getRelativePath(sourcePath).getPath())
                   .collect(Collectors.toList()));
       if (keys.isPresent()
           && vals.isPresent()

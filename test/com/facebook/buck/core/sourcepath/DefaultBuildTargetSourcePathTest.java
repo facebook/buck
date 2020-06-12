@@ -20,13 +20,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Test;
 
 public class DefaultBuildTargetSourcePathTest {
@@ -58,9 +57,9 @@ public class DefaultBuildTargetSourcePathTest {
 
     SourcePath path = rule.getSourcePathToOutput();
 
-    Path resolved = graphBuilder.getSourcePathResolver().getRelativePath(path);
+    RelPath resolved = graphBuilder.getSourcePathResolver().getRelativePath(path);
 
-    assertEquals(Paths.get("cheese"), resolved);
+    assertEquals(RelPath.get("cheese"), resolved);
   }
 
   @Test

@@ -22,6 +22,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -73,7 +74,7 @@ public class ArchiveStepIntegrationTest {
     Archiver archiver =
         platform.getAr().resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE);
     Path output = filesystem.getPath("output.a");
-    Path input = filesystem.getPath("input.dat");
+    RelPath input = RelPath.of(filesystem.getPath("input.dat"));
     filesystem.writeContentsToPath("blah", input);
     Preconditions.checkState(filesystem.resolve(input).toFile().setExecutable(true));
     ImmutableList<String> archiverCmd =
@@ -182,7 +183,7 @@ public class ArchiveStepIntegrationTest {
     Archiver archiver =
         platform.getAr().resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE);
     Path output = filesystem.getPath("output.a");
-    Path input = filesystem.getPath("foo/blah.dat");
+    RelPath input = RelPath.of(filesystem.getPath("foo/blah.dat"));
     filesystem.mkdirs(input.getParent());
     filesystem.writeContentsToPath("blah", input);
 
@@ -236,14 +237,14 @@ public class ArchiveStepIntegrationTest {
     filesystem.mkdirs(output.getParent());
 
     // Create a really large input file so it's obvious that the archive is thin.
-    Path input = filesystem.getPath("bar/blah.dat");
+    RelPath input = RelPath.of(filesystem.getPath("bar/blah.dat"));
     filesystem.mkdirs(input.getParent());
     byte[] largeInputFile = new byte[1024 * 1024];
     byte[] fillerToRepeat = "hello\n".getBytes(StandardCharsets.UTF_8);
     for (int i = 0; i < largeInputFile.length; i++) {
       largeInputFile[i] = fillerToRepeat[i % fillerToRepeat.length];
     }
-    filesystem.writeBytesToPath(largeInputFile, input);
+    filesystem.writeBytesToPath(largeInputFile, input.getPath());
 
     // Build an archive step.
     ArchiveStep archiveStep =
@@ -287,7 +288,8 @@ public class ArchiveStepIntegrationTest {
 
       // Verify that the input names are relative paths from the outputs parent dir.
       assertThat(
-          entry.getName(), Matchers.equalTo(output.getParent().relativize(input).toString()));
+          entry.getName(),
+          Matchers.equalTo(output.getParent().relativize(input.getPath()).toString()));
     }
   }
 

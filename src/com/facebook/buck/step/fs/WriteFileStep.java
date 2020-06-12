@@ -80,6 +80,14 @@ public class WriteFileStep implements Step {
   }
 
   public WriteFileStep(
+      ProjectFilesystem filesystem,
+      Supplier<String> content,
+      RelPath outputPath,
+      boolean executable) {
+    this(filesystem, content, outputPath.getPath(), executable);
+  }
+
+  public WriteFileStep(
       ProjectFilesystem projectFilesystem, String content, RelPath outputPath, boolean executable) {
     this(projectFilesystem, content, outputPath.getPath(), executable);
   }

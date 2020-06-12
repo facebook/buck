@@ -457,8 +457,9 @@ class HeaderSearchPaths {
       } else {
         headerMapBuilder.add(
             entry.getKey().toString(),
-            projectFilesystem.resolve(
-                projectSourcePathResolver.resolveSourcePath(entry.getValue())));
+            projectFilesystem
+                .resolve(projectSourcePathResolver.resolveSourcePath(entry.getValue()))
+                .getPath());
       }
     }
 
@@ -475,10 +476,10 @@ class HeaderSearchPaths {
         ImmutableSortedMap.naturalOrder();
     for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
       Path link = headerSymlinkTreeRoot.resolve(entry.getKey());
-      Path existing =
+      AbsPath existing =
           projectFilesystem.resolve(projectSourcePathResolver.resolveSourcePath(entry.getValue()));
       sourcePathsToBuildBuilder.add(entry.getValue());
-      resolvedContentsBuilder.put(link, existing);
+      resolvedContentsBuilder.put(link, existing.getPath());
     }
     for (Map.Entry<Path, Path> entry : nonSourcePaths.entrySet()) {
       Path link = headerSymlinkTreeRoot.resolve(entry.getKey());

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -36,7 +37,6 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
-import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -75,7 +75,7 @@ public class OutputMacroExpanderTest {
     String transformedString = coerceAndStringify(originalCmd, rule);
 
     // Verify that the correct cmd was created.
-    Path absolutePath =
+    RelPath absolutePath =
         graphBuilder
             .getSourcePathResolver()
             .getRelativePath(rule.getSourcePathToSupplementaryOutput("one"));

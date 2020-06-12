@@ -61,7 +61,7 @@ public class SourcePathResolverAdapterTest {
     // Only tests the methods that adds some sort of assertion in the adapter and doesn't test
     // one-liner delegating methods
     EasyMock.expect(mockResolver.getAbsolutePath(mockSourcePath)).andReturn(getMockAbsPaths(1, 50));
-    EasyMock.expect(mockResolver.getRelativePath(mockSourcePath)).andReturn(getMockPaths(1, 90));
+    EasyMock.expect(mockResolver.getRelativePath(mockSourcePath)).andReturn(getMockRelPaths(1, 90));
     EasyMock.expect(mockResolver.getIdeallyRelativePath(mockSourcePath))
         .andReturn(getMockPaths(1, -10));
     EasyMock.expect(mockResolver.getRelativePath(projectFilesystem, mockSourcePath))
@@ -75,7 +75,9 @@ public class SourcePathResolverAdapterTest {
     assertThat(
         testAdapter.getAbsolutePath(mockSourcePath).getPath().toString(),
         Matchers.endsWith("path50"));
-    assertThat(testAdapter.getRelativePath(mockSourcePath), Matchers.contains(Paths.get("path90")));
+    assertThat(
+        testAdapter.getRelativePath(mockSourcePath).getPath().toString(),
+        Matchers.endsWith("path90"));
     assertThat(
         testAdapter.getIdeallyRelativePath(mockSourcePath),
         Matchers.contains(Paths.get("path-10")));
@@ -102,7 +104,7 @@ public class SourcePathResolverAdapterTest {
   public void getRelativePathThrowsIfNotOneElement() {
     exception.expect(Matchers.instanceOf(IllegalArgumentException.class));
     exception.expectMessage("expected one element but was: <path90, path91>");
-    EasyMock.expect(mockResolver.getRelativePath(mockSourcePath)).andReturn(getMockPaths(2, 90));
+    EasyMock.expect(mockResolver.getRelativePath(mockSourcePath)).andReturn(getMockRelPaths(2, 90));
     EasyMock.replay(mockResolver);
     testAdapter.getRelativePath(mockSourcePath);
   }
@@ -146,6 +148,15 @@ public class SourcePathResolverAdapterTest {
         ImmutableSortedSet.orderedBy(AbsPath.comparator());
     for (int i = 0; i < size; i++) {
       builder.add(RelPath.get("path" + startIndex++).toAbsolutePath());
+    }
+    return builder.build();
+  }
+
+  private static ImmutableSortedSet<RelPath> getMockRelPaths(int size, int startIndex) {
+    ImmutableSortedSet.Builder<RelPath> builder =
+        ImmutableSortedSet.orderedBy(RelPath.comparator());
+    for (int i = 0; i < size; i++) {
+      builder.add(RelPath.get("path" + startIndex++));
     }
     return builder.build();
   }

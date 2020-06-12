@@ -1127,9 +1127,9 @@ public class ProjectGenerator {
 
   private static String sourceNameRelativeToOutput(
       SourcePath source, SourcePathResolverAdapter pathResolver, Path outputDirectory) {
-    Path pathRelativeToCell = pathResolver.getRelativePath(source);
+    RelPath pathRelativeToCell = pathResolver.getRelativePath(source);
     Path pathRelativeToOutput =
-        MorePaths.relativizeWithDotDotSupport(outputDirectory, pathRelativeToCell);
+        MorePaths.relativizeWithDotDotSupport(outputDirectory, pathRelativeToCell.getPath());
     return pathRelativeToOutput.toString();
   }
 
@@ -2583,7 +2583,7 @@ public class ProjectGenerator {
       exportedHeadersBuilder.putAll(
           AppleDescriptions.convertHeadersToPublicCxxHeaders(
               targetNode.getBuildTarget(),
-              sourcePath -> resolveSourcePath(sourcePath).getPath(),
+              this::resolveSourcePath,
               headerPathPrefix,
               arg.getExportedHeaders()));
 
@@ -2592,7 +2592,7 @@ public class ProjectGenerator {
         exportedHeadersBuilder.putAll(
             AppleDescriptions.convertHeadersToPublicCxxHeaders(
                 targetNode.getBuildTarget(),
-                sourcePath -> resolveSourcePath(sourcePath).getPath(),
+                this::resolveSourcePath,
                 headerPathPrefix,
                 patternMatchedHeader.getSecond()));
       }
@@ -2640,7 +2640,7 @@ public class ProjectGenerator {
       fullHeadersBuilder.putAll(
           AppleDescriptions.convertHeadersToPrivateCxxHeaders(
               targetNode.getBuildTarget(),
-              sourcePath -> resolveSourcePath(sourcePath).getPath(),
+              this::resolveSourcePath,
               headerPathPrefix,
               arg.getHeaders(),
               arg.getExportedHeaders()));
@@ -2650,7 +2650,7 @@ public class ProjectGenerator {
         fullHeadersBuilder.putAll(
             AppleDescriptions.convertHeadersToPrivateCxxHeaders(
                 targetNode.getBuildTarget(),
-                sourcePath -> resolveSourcePath(sourcePath).getPath(),
+                this::resolveSourcePath,
                 headerPathPrefix,
                 SourceSortedSet.ofNamedSources(ImmutableSortedMap.of()),
                 patternMatchedHeader.getSecond()));
@@ -2661,7 +2661,7 @@ public class ProjectGenerator {
         fullHeadersBuilder.putAll(
             AppleDescriptions.convertHeadersToPrivateCxxHeaders(
                 targetNode.getBuildTarget(),
-                sourcePath -> resolveSourcePath(sourcePath).getPath(),
+                this::resolveSourcePath,
                 headerPathPrefix,
                 patternMatchedHeader.getSecond(),
                 SourceSortedSet.ofNamedSources(ImmutableSortedMap.of())));

@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -50,7 +51,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
@@ -94,7 +94,7 @@ public class HaskellLibraryDescriptionTest {
                     HaskellLibraryDescription.Type.SHARED.getFlavor()))
             .build(graphBuilder);
 
-    ImmutableList<Path> outputs =
+    ImmutableList<RelPath> outputs =
         ImmutableList.of(
                 Objects.requireNonNull(staticLib.getSourcePathToOutput()),
                 Objects.requireNonNull(sharedLib.getSourcePathToOutput()))

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -28,7 +29,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
 
@@ -67,9 +67,9 @@ public class BuildTargetSourcePathTest {
 
     DefaultBuildTargetSourcePath path = DefaultBuildTargetSourcePath.of(rule.getBuildTarget());
 
-    Path resolved = graphBuilder.getSourcePathResolver().getRelativePath(path);
+    RelPath resolved = graphBuilder.getSourcePathResolver().getRelativePath(path);
 
-    assertEquals(Paths.get("cheese"), resolved);
+    assertEquals(RelPath.get("cheese"), resolved);
   }
 
   @Test
@@ -85,7 +85,7 @@ public class BuildTargetSourcePathTest {
     SourcePathResolverAdapter pathResolver = new TestActionGraphBuilder().getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(target);
-    Path path = Paths.get("blah");
+    RelPath path = RelPath.get("blah");
     ExplicitBuildTargetSourcePath buildTargetSourcePath =
         com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath.of(
             rule.getBuildTarget(), path);
@@ -98,7 +98,7 @@ public class BuildTargetSourcePathTest {
     SourcePathResolverAdapter pathResolver = new TestActionGraphBuilder().getSourcePathResolver();
     FakeBuildRule rule1 = new FakeBuildRule(BuildTargetFactory.newInstance("//foo/bar:baz"));
     FakeBuildRule rule2 = new FakeBuildRule(BuildTargetFactory.newInstance("//foo/bar:waz"));
-    Path path = Paths.get("blah");
+    RelPath path = RelPath.get("blah");
 
     ExplicitBuildTargetSourcePath sourcePath1 =
         com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath.of(
@@ -117,7 +117,7 @@ public class BuildTargetSourcePathTest {
     SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     FakeBuildRule rule1 = new FakeBuildRule(BuildTargetFactory.newInstance("//foo/bar:baz"));
     graphBuilder.addToIndex(rule1);
-    Path path = Paths.get("blah");
+    RelPath path = RelPath.get("blah");
     rule1.setOutputFile(path.toString());
     FakeBuildRule rule2 = new FakeBuildRule(BuildTargetFactory.newInstance("//foo/bar:waz"));
     graphBuilder.addToIndex(rule2);

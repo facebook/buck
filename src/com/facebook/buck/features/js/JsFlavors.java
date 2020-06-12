@@ -17,6 +17,7 @@
 package com.facebook.buck.features.js;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.FlavorSet;
@@ -31,7 +32,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -99,7 +99,8 @@ public class JsFlavors {
     return allowableFlavors.build().containsAll(flavors);
   }
 
-  public static Flavor fileFlavorForSourcePath(Path path) {
+  /** Get the flavor for file path. */
+  public static Flavor fileFlavorForSourcePath(RelPath path) {
     String hash =
         Hashing.sha1()
             .hashString(PathFormatter.pathWithUnixSeparators(path), StandardCharsets.UTF_8)

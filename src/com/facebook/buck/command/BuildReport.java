@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
@@ -276,8 +277,8 @@ public class BuildReport {
 
   private RelPath relativizeSourcePathToProjectRoot(
       ProjectFilesystem projectFilesystem, SourcePath sourcePath) {
-    Path relativeOutputPath = pathResolver.getRelativePath(sourcePath);
-    Path absoluteOutputPath = projectFilesystem.resolve(relativeOutputPath);
+    RelPath relativeOutputPath = pathResolver.getRelativePath(sourcePath);
+    AbsPath absoluteOutputPath = projectFilesystem.resolve(relativeOutputPath);
     return rootCell.getFilesystem().relativize(absoluteOutputPath);
   }
 }

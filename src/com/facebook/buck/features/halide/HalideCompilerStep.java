@@ -18,11 +18,11 @@ package com.facebook.buck.features.halide;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 import java.util.Optional;
 
 public class HalideCompilerStep extends ShellStep {
@@ -33,7 +33,7 @@ public class HalideCompilerStep extends ShellStep {
   private final ImmutableList<String> compilerPrefix;
 
   // The output directory in which to write the generated shader code.
-  private final Path outputDir;
+  private final RelPath outputDir;
 
   // The name of the function (or pipeline) to compile.
   private final String funcName;
@@ -48,7 +48,7 @@ public class HalideCompilerStep extends ShellStep {
       AbsPath workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> compilerPrefix,
-      Path outputDir,
+      RelPath outputDir,
       String funcName,
       String halideTarget,
       Optional<ImmutableList<String>> compilerInvocationFlags,

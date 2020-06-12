@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.keys.RuleKeyScopedHasher.ContainerScope;
 import static com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Container;
 import static com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Wrapper;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -164,14 +165,14 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
   final RuleKeyBuilder<RULE_KEY> setSourcePathDirectly(SourcePath sourcePath) throws IOException {
     SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
     if (sourcePath instanceof BuildTargetSourcePath) {
-      Path relativePath = resolver.getRelativePath(sourcePath);
+      RelPath relativePath = resolver.getRelativePath(sourcePath);
       Optional<HashCode> precomputedHash =
           ((BuildTargetSourcePath) sourcePath).getPrecomputedHash();
       if (precomputedHash.isPresent()) {
-        hasher.putPath(relativePath, precomputedHash.get());
+        hasher.putPath(relativePath.getPath(), precomputedHash.get());
         return this;
       }
-      return setPath(resolver.getFilesystem(sourcePath), relativePath);
+      return setPath(resolver.getFilesystem(sourcePath), relativePath.getPath());
     } else if (sourcePath instanceof PathSourcePath) {
       Path ideallyRelativePath = resolver.getIdeallyRelativePath(sourcePath);
       if (ideallyRelativePath.isAbsolute()) {
@@ -208,17 +209,16 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
 
   private RuleKeyBuilder<RULE_KEY> setArchiveMemberSourcePath(
       ArchiveMemberSourcePath archiveSourcePath) throws IOException {
-    Path relativeArchivePath =
+    RelPath relativeArchivePath =
         ruleFinder
             .getSourcePathResolver()
             .getRelativePath(archiveSourcePath.getArchiveSourcePath());
-    Preconditions.checkArgument(!relativeArchivePath.isAbsolute());
     hasher.putArchiveMemberPath(
-        relativeArchivePath,
+        relativeArchivePath.getPath(),
         archiveSourcePath.getMemberPath(),
         hashLoader.getForArchiveMember(
             ruleFinder.getSourcePathResolver().getFilesystem(archiveSourcePath),
-            relativeArchivePath,
+            relativeArchivePath.getPath(),
             archiveSourcePath.getMemberPath()));
     return this;
   }
@@ -252,15 +252,15 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
   final RuleKeyBuilder<RULE_KEY> setNonHashingSourcePathDirectly(SourcePath sourcePath) {
     SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
     if (sourcePath instanceof BuildTargetSourcePath) {
-      hasher.putNonHashingPath(resolver.getRelativePath(sourcePath));
+      hasher.putNonHashingPath(resolver.getRelativePath(sourcePath).getPath());
     } else if (sourcePath instanceof PathSourcePath) {
-      hasher.putNonHashingPath(resolver.getRelativePath(sourcePath));
+      hasher.putNonHashingPath(resolver.getRelativePath(sourcePath).getPath());
     } else if (sourcePath instanceof ArchiveMemberSourcePath) {
       ArchiveMemberSourcePath archiveSourcePath = (ArchiveMemberSourcePath) sourcePath;
-      Path relativeArchivePath = resolver.getRelativePath(archiveSourcePath.getArchiveSourcePath());
-      Preconditions.checkArgument(!relativeArchivePath.isAbsolute());
+      RelPath relativeArchivePath =
+          resolver.getRelativePath(archiveSourcePath.getArchiveSourcePath());
       hasher.putArchiveMemberPath(
-          relativeArchivePath, archiveSourcePath.getMemberPath(), HashCode.fromInt(0));
+          relativeArchivePath.getPath(), archiveSourcePath.getMemberPath(), HashCode.fromInt(0));
     } else {
       throw new UnsupportedOperationException(
           "Unrecognized SourcePath implementation: " + sourcePath.getClass());

@@ -16,12 +16,12 @@
 
 package com.facebook.buck.features.apple.projectV2;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.file.MorePaths;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -36,9 +36,9 @@ final class PathRelativizer {
   private static final Path CURRENT_DIRECTORY = Paths.get(".");
 
   private final Path outputDirectory;
-  private final Function<SourcePath, Path> resolver;
+  private final Function<SourcePath, RelPath> resolver;
 
-  public PathRelativizer(Path outputDirectory, Function<SourcePath, Path> resolver) {
+  public PathRelativizer(Path outputDirectory, Function<SourcePath, RelPath> resolver) {
     this.outputDirectory = outputDirectory;
     this.resolver = resolver;
   }
@@ -60,6 +60,6 @@ final class PathRelativizer {
 
   /** Map a SourcePath to one that's relative to the output directory. */
   public Path outputPathToSourcePath(SourcePath sourcePath) {
-    return outputDirToRootRelative(Objects.requireNonNull(resolver.apply(sourcePath)));
+    return outputDirToRootRelative(resolver.apply(sourcePath).getPath());
   }
 }

@@ -117,7 +117,7 @@ public class ManifestTest {
                 key,
                 ImmutableMap.of(
                     ArchiveMemberPath.of(
-                            RESOLVER.getRelativePath(input.getArchiveSourcePath()),
+                            RESOLVER.getRelativePath(input.getArchiveSourcePath()).getPath(),
                             input.getMemberPath())
                         .toString(),
                     hashCode))));

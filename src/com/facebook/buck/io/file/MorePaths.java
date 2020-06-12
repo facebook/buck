@@ -312,6 +312,10 @@ public class MorePaths {
     return Optional.of(p.subpath(prefix.getNameCount(), p.getNameCount()));
   }
 
+  public static Optional<RelPath> stripPrefix(RelPath p, RelPath prefix) {
+    return stripPrefix(p.getPath(), prefix.getPath()).map(RelPath::of);
+  }
+
   public static Function<String, Path> toPathFn(FileSystem fileSystem) {
     return input -> fileSystem.getPath(input);
   }

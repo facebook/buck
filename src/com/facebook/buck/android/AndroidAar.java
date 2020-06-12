@@ -111,7 +111,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         CopyStep.forFile(
             getProjectFilesystem(),
             context.getSourcePathResolver().getRelativePath(manifest.getSourcePathToOutput()),
-            temp.resolve("AndroidManifest.xml")));
+            temp.resolveRel("AndroidManifest.xml")));
 
     // put R.txt into tmp folder
     commands.add(
@@ -128,13 +128,13 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         CopyStep.forDirectory(
             getProjectFilesystem(),
             context.getSourcePathResolver().getRelativePath(assembledResourceDirectory),
-            temp.resolve("res"),
+            temp.resolveRel("res"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
     commands.add(
         CopyStep.forDirectory(
             getProjectFilesystem(),
             context.getSourcePathResolver().getRelativePath(assembledAssetsDirectory),
-            temp.resolve("assets"),
+            temp.resolveRel("assets"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
 
     // Create our Uber-jar, and place it in the tmp folder.
@@ -156,7 +156,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
           CopyStep.forDirectory(
               getProjectFilesystem(),
               context.getSourcePathResolver().getRelativePath(assembledNativeLibs.get()),
-              temp.resolve("jni"),
+              temp.resolveRel("jni"),
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
 
@@ -166,7 +166,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
           CopyStep.forDirectory(
               getProjectFilesystem(),
               context.getSourcePathResolver().getRelativePath(assembledNativeLibsAssets.get()),
-              temp.resolve("assets").resolve("lib"),
+              temp.resolveRel("assets").resolveRel("lib"),
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
 

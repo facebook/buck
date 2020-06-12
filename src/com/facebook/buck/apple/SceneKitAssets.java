@@ -132,7 +132,7 @@ public class SceneKitAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       }
     }
     buildableContext.recordArtifact(
-        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getPath());
     return stepsBuilder.build();
   }
 

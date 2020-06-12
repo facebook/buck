@@ -133,7 +133,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Create a clean directory where the .zip file will be written.
-    Path workingDirectory =
+    RelPath workingDirectory =
         context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getParent();
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     steps.addAll(
@@ -193,7 +193,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     steps.add(javaStep);
 
     buildableContext.recordArtifact(
-        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getPath());
 
     return steps.build();
   }

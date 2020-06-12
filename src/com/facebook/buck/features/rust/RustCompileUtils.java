@@ -733,7 +733,7 @@ public class RustCompileUtils {
         Stream.concat(
             srcs.stream()
                 .map(src -> CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform, src))
-                .map(sp -> resolver.getRelativePath(sp)),
+                .map(sp -> resolver.getRelativePath(sp).getPath()),
             mappedSrcs.values().stream()
                 .map(
                     path ->

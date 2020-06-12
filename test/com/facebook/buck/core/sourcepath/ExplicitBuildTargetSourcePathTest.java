@@ -19,12 +19,12 @@ package com.facebook.buck.core.sourcepath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
 
@@ -35,7 +35,7 @@ public class ExplicitBuildTargetSourcePathTest {
     SourcePathResolverAdapter pathResolver = new TestActionGraphBuilder().getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(target);
-    Path path = Paths.get("blah");
+    RelPath path = RelPath.get("blah");
     ExplicitBuildTargetSourcePath buildTargetSourcePath =
         com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath.of(
             rule.getBuildTarget(), path);

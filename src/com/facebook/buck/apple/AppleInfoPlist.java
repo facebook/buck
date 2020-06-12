@@ -161,7 +161,8 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
               filesystem,
               tempInfoPlistPath,
               maybeAssetCatalogPlistSourcePath.map(
-                  sourcePath -> buildContext.getSourcePathResolver().getRelativePath(sourcePath)),
+                  sourcePath ->
+                      buildContext.getSourcePathResolver().getRelativePath(sourcePath).getPath()),
               outputPath.getPath(),
               getInfoPlistAdditionalKeys(),
               getInfoPlistOverrideKeys(),

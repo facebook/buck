@@ -166,17 +166,19 @@ public class Manifest {
       ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) path;
       return fileHashLoader.getForArchiveMember(
           resolver.getFilesystem(path),
-          resolver.getRelativePath(archiveMemberSourcePath.getArchiveSourcePath()),
+          resolver.getRelativePath(archiveMemberSourcePath.getArchiveSourcePath()).getPath(),
           archiveMemberSourcePath.getMemberPath());
     } else {
-      return fileHashLoader.get(resolver.getFilesystem(path), resolver.getRelativePath(path));
+      return fileHashLoader.get(
+          resolver.getFilesystem(path), resolver.getRelativePath(path).getPath());
     }
   }
 
   private static ArchiveMemberPath getArchiveMemberPath(
       SourcePathResolverAdapter resolver, ArchiveMemberSourcePath archivePath) {
     return ArchiveMemberPath.of(
-        resolver.getRelativePath(archivePath.getArchiveSourcePath()), archivePath.getMemberPath());
+        resolver.getRelativePath(archivePath.getArchiveSourcePath()).getPath(),
+        archivePath.getMemberPath());
   }
 
   private boolean hashesMatch(

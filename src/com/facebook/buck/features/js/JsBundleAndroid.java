@@ -21,6 +21,7 @@ import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -35,7 +36,6 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 
 /** Represents a combination of a JavaScript bundle *and* Android resources. */
 public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
@@ -62,18 +62,18 @@ public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
     SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
 
     buildableContext.recordArtifact(
-        sourcePathResolverAdapter.getRelativePath(getSourcePathToOutput()));
+        sourcePathResolverAdapter.getRelativePath(getSourcePathToOutput()).getPath());
     buildableContext.recordArtifact(
-        sourcePathResolverAdapter.getRelativePath(getSourcePathToSourceMap()));
+        sourcePathResolverAdapter.getRelativePath(getSourcePathToSourceMap()).getPath());
     buildableContext.recordArtifact(
-        sourcePathResolverAdapter.getRelativePath(getSourcePathToResources()));
+        sourcePathResolverAdapter.getRelativePath(getSourcePathToResources()).getPath());
     buildableContext.recordArtifact(
-        sourcePathResolverAdapter.getRelativePath(getSourcePathToMisc()));
+        sourcePathResolverAdapter.getRelativePath(getSourcePathToMisc()).getPath());
 
-    Path jsDir = sourcePathResolverAdapter.getRelativePath(getSourcePathToOutput());
-    Path resourcesDir = sourcePathResolverAdapter.getRelativePath(getSourcePathToResources());
-    Path sourceMapFile = sourcePathResolverAdapter.getRelativePath(getSourcePathToSourceMap());
-    Path miscDirPath = sourcePathResolverAdapter.getRelativePath(getSourcePathToMisc());
+    RelPath jsDir = sourcePathResolverAdapter.getRelativePath(getSourcePathToOutput());
+    RelPath resourcesDir = sourcePathResolverAdapter.getRelativePath(getSourcePathToResources());
+    RelPath sourceMapFile = sourcePathResolverAdapter.getRelativePath(getSourcePathToSourceMap());
+    RelPath miscDirPath = sourcePathResolverAdapter.getRelativePath(getSourcePathToMisc());
 
     return ImmutableList.<Step>builder()
         .addAll(
@@ -108,26 +108,26 @@ public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 sourcePathResolverAdapter
                     .getAbsolutePath(delegate.getSourcePathToOutput())
                     .getPath(),
-                jsDir.getParent(),
+                jsDir.getPath().getParent(),
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS),
             CopyStep.forDirectory(
                 getProjectFilesystem(),
                 sourcePathResolverAdapter
                     .getAbsolutePath(delegate.getSourcePathToResources())
                     .getPath(),
-                resourcesDir.getParent(),
+                resourcesDir.getPath().getParent(),
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS),
             CopyStep.forDirectory(
                 getProjectFilesystem(),
                 sourcePathResolverAdapter
                     .getAbsolutePath(delegate.getSourcePathToSourceMap())
                     .getPath(),
-                sourceMapFile.getParent(),
+                sourceMapFile.getPath().getParent(),
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS),
             CopyStep.forDirectory(
                 getProjectFilesystem(),
                 sourcePathResolverAdapter.getAbsolutePath(delegate.getSourcePathToMisc()).getPath(),
-                miscDirPath.getParent(),
+                miscDirPath.getPath().getParent(),
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS))
         .build();
   }

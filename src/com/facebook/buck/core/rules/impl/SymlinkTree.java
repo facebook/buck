@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules.impl;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -142,25 +143,25 @@ public class SymlinkTree extends AbstractBuildRule
     List<SourcePath> conflicts = new ArrayList<>();
 
     for (SourcePath sourcePath : sourcePaths) {
-      Path relativePath = resolver.getRelativePath(sourcePath);
-      if (!assignedPaths.contains(relativePath)) {
-        builder.put(sourcePath, relativePath);
-        assignedPaths.add(relativePath);
+      RelPath relativePath = resolver.getRelativePath(sourcePath);
+      if (!assignedPaths.contains(relativePath.getPath())) {
+        builder.put(sourcePath, relativePath.getPath());
+        assignedPaths.add(relativePath.getPath());
       } else {
         conflicts.add(sourcePath);
       }
     }
 
     for (SourcePath conflict : conflicts) {
-      Path relativePath = resolver.getRelativePath(conflict);
-      Path parent = MorePaths.getParentOrEmpty(relativePath);
+      RelPath relativePath = resolver.getRelativePath(conflict);
+      RelPath parent = MorePaths.getParentOrEmpty(relativePath);
       String extension = MorePaths.getFileExtension(relativePath);
       String name = MorePaths.getNameWithoutExtension(relativePath);
 
       while (true) {
         StringBuilder candidateName = new StringBuilder(name);
         candidateName.append('-');
-        int suffix = assignedPaths.count(relativePath);
+        int suffix = assignedPaths.count(relativePath.getPath());
         candidateName.append(suffix);
         if (!extension.isEmpty()) {
           candidateName.append('.');
@@ -173,7 +174,7 @@ public class SymlinkTree extends AbstractBuildRule
           builder.put(conflict, candidate);
           break;
         } else {
-          assignedPaths.add(relativePath);
+          assignedPaths.add(relativePath.getPath());
         }
       }
     }

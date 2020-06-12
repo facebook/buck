@@ -176,7 +176,8 @@ public class GenruleTest {
 
     // Verify all of the observers of the Genrule.
     assertEquals(
-        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve("AndroidManifest.xml"),
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+            .resolveRel("AndroidManifest.xml"),
         pathResolver.getRelativePath(genrule.getSourcePathToOutput()));
 
     SourcePath outputSourcePath = genrule.getSourcePathToOutput();
@@ -1104,6 +1105,7 @@ public class GenruleTest {
     return sourcePaths.stream()
         .map(sourcePathResolver::getRelativePath)
         .flatMap(Set::stream)
+        .map(RelPath::getPath)
         .collect(ImmutableSet.toImmutableSet());
   }
 }

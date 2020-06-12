@@ -49,7 +49,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.stream.Stream;
 
 public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
@@ -144,8 +143,8 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       String sourcePathName = resolver.getSourcePathName(getBuildTarget(), resource);
       // outputResourcePath is the full path to buck-out/gen/targetdir...
       // buck-out/gen/test-with-resources-2directory-2resources#test-main/testdata/level2
-      Path outputResourcePath = output.getParent().resolve(sourcePathName);
-      buildableContext.recordArtifact(outputResourcePath);
+      RelPath outputResourcePath = output.getParent().resolveRel(sourcePathName);
+      buildableContext.recordArtifact(outputResourcePath.getPath());
       if (Files.isDirectory(resolver.getAbsolutePath(resource).getPath())) {
         steps.add(
             MkdirStep.of(
@@ -211,7 +210,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             externalLinkerFlags.build(),
             ImmutableList.of(linkTree.getRoot()),
             platform,
-            resolver.getRelativePath(mainObject.getSourcePathToOutput()),
+            resolver.getRelativePath(mainObject.getSourcePathToOutput()).getPath(),
             GoLinkStep.BuildMode.EXECUTABLE,
             linkMode,
             output.getPath(),

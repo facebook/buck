@@ -45,7 +45,7 @@ public class RuleUtilsTest {
     SourcePathResolverAdapter resolver = new TestActionGraphBuilder().getSourcePathResolver();
     ImmutableList<GroupedSource> sources =
         RuleUtils.createGroupsFromSourcePaths(
-            resolver::getRelativePath,
+            sourcePath -> resolver.getRelativePath(sourcePath).getPath(),
             input,
             /* extraXcodeSources */ ImmutableSortedSet.of(),
             /* extraXcodeFiles */ ImmutableSortedSet.of(),
@@ -125,7 +125,7 @@ public class RuleUtilsTest {
     SourcePathResolverAdapter resolver = new TestActionGraphBuilder().getSourcePathResolver();
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
-            resolver::getRelativePath,
+            sourcePath -> resolver.getRelativePath(sourcePath).getPath(),
             ImmutableList.of(),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
@@ -160,7 +160,7 @@ public class RuleUtilsTest {
     SourcePathResolverAdapter resolver = new TestActionGraphBuilder().getSourcePathResolver();
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
-            resolver::getRelativePath,
+            sourcePath -> resolver.getRelativePath(sourcePath).getPath(),
             ImmutableList.of(),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
@@ -180,7 +180,7 @@ public class RuleUtilsTest {
     SourcePathResolverAdapter resolver = new TestActionGraphBuilder().getSourcePathResolver();
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
-            resolver::getRelativePath,
+            sourcePath -> resolver.getRelativePath(sourcePath).getPath(),
             ImmutableList.of(),
             ImmutableList.of(),
             ImmutableList.of(),
@@ -197,7 +197,7 @@ public class RuleUtilsTest {
     SourcePathResolverAdapter resolver = new TestActionGraphBuilder().getSourcePathResolver();
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
-            resolver::getRelativePath,
+            sourcePath -> resolver.getRelativePath(sourcePath).getPath(),
             ImmutableList.of(),
             ImmutableList.of(),
             ImmutableList.of(),
@@ -281,7 +281,8 @@ public class RuleUtilsTest {
         RuleUtils.createGroupsFromEntryMaps(
             subgroups,
             entries,
-            new RuleUtils.GroupedSourceNameComparator(resolver::getRelativePath),
+            new RuleUtils.GroupedSourceNameComparator(
+                sourcePath -> resolver.getRelativePath(sourcePath).getPath()),
             Paths.get("root"),
             Paths.get("root"));
 
@@ -333,7 +334,8 @@ public class RuleUtilsTest {
         RuleUtils.createGroupsFromEntryMaps(
             subgroups,
             entries,
-            new RuleUtils.GroupedSourceNameComparator(resolver::getRelativePath),
+            new RuleUtils.GroupedSourceNameComparator(
+                sourcePath -> resolver.getRelativePath(sourcePath).getPath()),
             Paths.get("root"),
             Paths.get("root"));
 
@@ -355,7 +357,8 @@ public class RuleUtilsTest {
         RuleUtils.createGroupsFromEntryMaps(
             subgroups,
             entries,
-            new RuleUtils.GroupedSourceNameComparator(resolver::getRelativePath),
+            new RuleUtils.GroupedSourceNameComparator(
+                sourcePath -> resolver.getRelativePath(sourcePath).getPath()),
             Paths.get("root"),
             Paths.get("root"));
 
@@ -374,7 +377,8 @@ public class RuleUtilsTest {
         RuleUtils.createGroupsFromEntryMaps(
             subgroups,
             entries,
-            new RuleUtils.GroupedSourceNameComparator(resolver::getRelativePath),
+            new RuleUtils.GroupedSourceNameComparator(
+                sourcePath -> resolver.getRelativePath(sourcePath).getPath()),
             Paths.get("root"),
             Paths.get("root"));
 

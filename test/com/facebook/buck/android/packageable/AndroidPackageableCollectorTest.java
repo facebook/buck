@@ -451,7 +451,7 @@ public class AndroidPackageableCollectorTest {
         ImmutableSet.of(
             BuildTargetPaths.getGenPath(
                     androidBinary.getProjectFilesystem(), androidLibraryTarget, "lib__%s__output")
-                .resolve(androidLibraryTarget.getShortNameAndFlavorPostfix() + ".jar")),
+                .resolveRel(androidLibraryTarget.getShortNameAndFlavorPostfix() + ".jar")),
         packageableCollection.getClasspathEntriesToDex().stream()
             .map(graphBuilder.getSourcePathResolver()::getRelativePath)
             .collect(ImmutableSet.toImmutableSet()));

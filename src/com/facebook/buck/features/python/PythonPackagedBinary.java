@@ -18,6 +18,7 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -42,7 +43,6 @@ import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -119,7 +119,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    Path binPath = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+    RelPath binPath = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
 
     // Make sure the parent directory exists.
     steps.add(
@@ -147,14 +147,14 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
                 .build(),
             pythonEnvironment.getPythonPath(),
             pythonEnvironment.getPythonVersion(),
-            binPath,
+            binPath.getPath(),
             mainModule,
             getComponents().resolve(resolver),
             preloadLibraries,
             withDownwardApi));
 
     // Record the executable package for caching.
-    buildableContext.recordArtifact(binPath);
+    buildableContext.recordArtifact(binPath.getPath());
 
     return steps.build();
   }

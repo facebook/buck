@@ -241,7 +241,7 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
       SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
       return new Pair<>(
           sourcePathResolverAdapter.getFilesystem(input),
-          sourcePathResolverAdapter.getRelativePath(input));
+          sourcePathResolverAdapter.getRelativePath(input).getPath());
     }
   }
 

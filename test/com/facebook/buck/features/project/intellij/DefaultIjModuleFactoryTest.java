@@ -648,7 +648,7 @@ public class DefaultIjModuleFactoryTest {
         new IjLibraryFactoryResolver() {
           @Override
           public Path getPath(SourcePath path) {
-            return sourcePathResolverAdapter.getRelativePath(path);
+            return sourcePathResolverAdapter.getRelativePath(path).getPath();
           }
 
           @Override
@@ -665,7 +665,8 @@ public class DefaultIjModuleFactoryTest {
     assertTrue(library.isPresent());
     assertEquals(
         library.get().getBinaryJars(),
-        ImmutableSet.of(sourcePathResolverAdapter.getRelativePath(androidSupportBinaryPath)));
+        ImmutableSet.of(
+            sourcePathResolverAdapter.getRelativePath(androidSupportBinaryPath).getPath()));
     assertEquals(library.get().getSourceJars(), ImmutableSet.of(androidSupportSourcesPath));
     assertEquals(library.get().getJavadocUrls(), ImmutableSet.of(androidSupportJavadocUrl));
   }

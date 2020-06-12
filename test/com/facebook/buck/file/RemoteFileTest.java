@@ -78,7 +78,10 @@ public class RemoteFileTest {
 
     BuildableContext buildableContext = new FakeBuildableContext();
     buildableContext.recordArtifact(
-        graphBuilder.getSourcePathResolver().getRelativePath(remoteFile.getSourcePathToOutput()));
+        graphBuilder
+            .getSourcePathResolver()
+            .getRelativePath(remoteFile.getSourcePathToOutput())
+            .getPath());
     remoteFile.getBuildSteps(
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
         buildableContext);

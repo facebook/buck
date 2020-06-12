@@ -250,7 +250,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
                                       .toPath(filesystem.getFileSystem())
                                       .resolve(ent.getValue().get());
                             } else {
-                              path = resolver.getRelativePath(ent.getKey());
+                              path = resolver.getRelativePath(ent.getKey()).getPath();
                             }
                             return path;
                           },

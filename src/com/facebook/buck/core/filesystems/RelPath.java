@@ -95,4 +95,13 @@ public interface RelPath extends PathWrapper {
   default RelPath relativize(RelPath path) {
     return relativize(path.getPath());
   }
+
+  default boolean startsWith(RelPath path) {
+    return getPath().startsWith(path.getPath());
+  }
+
+  /** We cannot implement {@link java.lang.Comparable} directly. */
+  static Comparator<RelPath> comparator() {
+    return Comparator.comparing(RelPath::getPath);
+  }
 }

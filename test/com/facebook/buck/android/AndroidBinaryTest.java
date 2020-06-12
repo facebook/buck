@@ -123,7 +123,7 @@ public class AndroidBinaryTest {
         .get()
         .addProguardCommands(
             packageableCollection.getClasspathEntriesToDex().stream()
-                .map(pathResolver::getRelativePath)
+                .map(sourcePath -> pathResolver.getRelativePath(sourcePath).getPath())
                 .collect(ImmutableSet.toImmutableSet()),
             pathResolver.getAllAbsolutePaths(packageableCollection.getProguardConfigs()).stream()
                 .map(AbsPath::getPath)
@@ -262,8 +262,7 @@ public class AndroidBinaryTest {
             .build(graphBuilder);
     assertEquals(
         BuildTargetPaths.getGenPath(
-                ruleInRootDirectory.getProjectFilesystem(), targetInRootDirectory, "%s.apk")
-            .getPath(),
+            ruleInRootDirectory.getProjectFilesystem(), targetInRootDirectory, "%s.apk"),
         pathResolver.getRelativePath(ruleInRootDirectory.getApkInfo().getApkPath()));
 
     BuildTarget targetInNonRootDirectory =
@@ -275,8 +274,7 @@ public class AndroidBinaryTest {
             .build(graphBuilder);
     assertEquals(
         BuildTargetPaths.getGenPath(
-                ruleInNonRootDirectory.getProjectFilesystem(), targetInNonRootDirectory, "%s.apk")
-            .getPath(),
+            ruleInNonRootDirectory.getProjectFilesystem(), targetInNonRootDirectory, "%s.apk"),
         pathResolver.getRelativePath(ruleInNonRootDirectory.getApkInfo().getApkPath()));
   }
 

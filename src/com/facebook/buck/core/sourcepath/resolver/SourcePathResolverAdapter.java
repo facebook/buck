@@ -17,6 +17,7 @@
 package com.facebook.buck.core.sourcepath.resolver;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -49,10 +50,10 @@ public class SourcePathResolverAdapter {
   }
 
   /**
-   * Returns the {@link Path} associated with the given {@link SourcePath} relative to its owning
+   * Returns the {@link RelPath} associated with the given {@link SourcePath} relative to its owning
    * {@link ProjectFilesystem}.
    */
-  public Path getRelativePath(SourcePath sourcePath) {
+  public RelPath getRelativePath(SourcePath sourcePath) {
     return Iterables.getOnlyElement(resolver.getRelativePath(sourcePath));
   }
 

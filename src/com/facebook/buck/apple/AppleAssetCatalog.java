@@ -201,7 +201,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
     ArrayList<String> errors = new ArrayList<>();
 
     for (SourcePath assetCatalogDir : assetCatalogDirs) {
-      Path catalogPath = sourcePathResolverAdapter.getRelativePath(assetCatalogDir);
+      RelPath catalogPath = sourcePathResolverAdapter.getRelativePath(assetCatalogDir);
       if (!catalogPath.getFileName().toString().endsWith(".xcassets")) {
         errors.add(
             String.format(
@@ -229,13 +229,13 @@ public class AppleAssetCatalog extends AbstractBuildRule {
    * Perform strict validation, guarding against missing Contents.json and duplicate image names.
    */
   private static void strictlyValidateAssetCatalog(
-      Path catalogPath,
+      RelPath catalogPath,
       Map<String, Path> catalogPathsForImageNames,
       List<String> errors,
       ProjectFilesystem projectFilesystem)
       throws HumanReadableException {
     try {
-      for (Path asset : projectFilesystem.getDirectoryContents(catalogPath)) {
+      for (Path asset : projectFilesystem.getDirectoryContents(catalogPath.getPath())) {
         String assetName = asset.getFileName().toString();
         if (assetName.equals("Contents.json")) {
           continue;
@@ -265,7 +265,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
           String filenameKey = filename.toLowerCase();
           if (catalogPathsForImageNames.containsKey(filenameKey)) {
             Path existingCatalogPath = catalogPathsForImageNames.get(filenameKey);
-            if (catalogPath.equals(existingCatalogPath)) {
+            if (catalogPath.getPath().equals(existingCatalogPath)) {
               continue;
             } else {
               // All asset catalogs (.xcassets directories) get merged into a single directory per
@@ -279,7 +279,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
                       assetContentPath.getFileName(), catalogPath, existingCatalogPath));
             }
           } else {
-            catalogPathsForImageNames.put(filenameKey, catalogPath);
+            catalogPathsForImageNames.put(filenameKey, catalogPath.getPath());
           }
         }
 

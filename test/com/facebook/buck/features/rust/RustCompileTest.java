@@ -264,7 +264,8 @@ public class RustCompileTest {
               ruleFinder.getSourcePathResolver(),
               buildTarget.getShortName(),
               ImmutableSet.of("main.rs", "lib.rs"),
-              srcs.stream().map(sp -> ruleFinder.getSourcePathResolver().getRelativePath(sp)));
+              srcs.stream()
+                  .map(sp -> ruleFinder.getSourcePathResolver().getRelativePath(sp).getPath()));
 
       if (!root.isPresent()) {
         throw new HumanReadableException("No crate root source identified");

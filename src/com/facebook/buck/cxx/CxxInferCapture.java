@@ -138,9 +138,9 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
     ImmutableList<String> frontendCommand = getFrontendCommand();
 
     buildableContext.recordArtifact(
-        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
+        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getPath());
 
-    Path inputRelativePath = context.getSourcePathResolver().getRelativePath(input);
+    RelPath inputRelativePath = context.getSourcePathResolver().getRelativePath(input);
     return ImmutableList.<Step>builder()
         .add(
             MkdirStep.of(
@@ -201,7 +201,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
               preprocessorDelegate.getHeaderPathNormalizer(context),
               HeaderVerification.of(HeaderVerification.Mode.IGNORE),
               getDepFilePath(),
-              context.getSourcePathResolver().getRelativePath(input),
+              context.getSourcePathResolver().getRelativePath(input).getPath(),
               output.getPath(),
               DependencyTrackingMode.MAKEFILE,
               false);
@@ -238,6 +238,10 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
     public WriteArgFileStep(SourcePathResolverAdapter pathResolver, Path inputRelativePath) {
       this.pathResolver = pathResolver;
       this.inputRelativePath = inputRelativePath;
+    }
+
+    public WriteArgFileStep(SourcePathResolverAdapter pathResolver, RelPath inputRelativePath) {
+      this(pathResolver, inputRelativePath.getPath());
     }
 
     @Override

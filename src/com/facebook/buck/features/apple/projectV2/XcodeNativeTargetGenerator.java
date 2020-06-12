@@ -699,7 +699,7 @@ public class XcodeNativeTargetGenerator {
     Iterable<Path> compilerSrcFiles =
         Iterables.transform(
             targetNode.getConstructorArg().getSrcs(),
-            input -> resolveSourcePath(input.getSourcePath()));
+            input -> resolveSourcePath(input.getSourcePath()).getPath());
     halideCompilerSrcs = Joiner.on(" ").join(compilerSrcFiles);
     defaultSettingsBuilder.put("HALIDE_COMPILER_SRCS", halideCompilerSrcs);
     String halideCompilerFlags;
@@ -799,7 +799,7 @@ public class XcodeNativeTargetGenerator {
       TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode,
       Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode)
       throws IOException {
-    Path infoPlistPath =
+    RelPath infoPlistPath =
         Objects.requireNonNull(resolveSourcePath(targetNode.getConstructorArg().getInfoPlist()));
 
     RecursiveDependenciesMode mode =
@@ -846,7 +846,7 @@ public class XcodeNativeTargetGenerator {
             Optional.of(targetNode),
             binaryNode,
             "%s." + getExtensionString(targetNode.getConstructorArg().getExtension()),
-            Optional.of(infoPlistPath),
+            Optional.of(infoPlistPath.getPath()),
             /* includeFrameworks */ true,
             AppleResources.collectDirectResources(targetGraph, targetNode),
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
@@ -966,9 +966,9 @@ public class XcodeNativeTargetGenerator {
 
   private static String sourceNameRelativeToOutput(
       SourcePath source, SourcePathResolverAdapter pathResolver, Path outputDirectory) {
-    Path pathRelativeToCell = pathResolver.getRelativePath(source);
+    RelPath pathRelativeToCell = pathResolver.getRelativePath(source);
     Path pathRelativeToOutput =
-        MorePaths.relativizeWithDotDotSupport(outputDirectory, pathRelativeToCell);
+        MorePaths.relativizeWithDotDotSupport(outputDirectory, pathRelativeToCell.getPath());
     return pathRelativeToOutput.toString();
   }
 
@@ -1425,7 +1425,8 @@ public class XcodeNativeTargetGenerator {
     }
     if (arg.getBridgingHeader().isPresent()) {
       Path bridgingHeaderPath =
-          pathRelativizer.outputDirToRootRelative(resolveSourcePath(arg.getBridgingHeader().get()));
+          pathRelativizer.outputDirToRootRelative(
+              resolveSourcePath(arg.getBridgingHeader().get()).getPath());
       extraSettingsBuilder.put(
           "SWIFT_OBJC_BRIDGING_HEADER",
           Joiner.on('/').join("$(SRCROOT)", bridgingHeaderPath.toString()));
@@ -1459,8 +1460,9 @@ public class XcodeNativeTargetGenerator {
     Optional<SourcePath> prefixHeaderOptional =
         getPrefixHeaderSourcePath(targetNode.getConstructorArg());
     if (prefixHeaderOptional.isPresent()) {
-      Path prefixHeaderRelative = resolveSourcePath(prefixHeaderOptional.get());
-      Path prefixHeaderPath = pathRelativizer.outputDirToRootRelative(prefixHeaderRelative);
+      RelPath prefixHeaderRelative = resolveSourcePath(prefixHeaderOptional.get());
+      Path prefixHeaderPath =
+          pathRelativizer.outputDirToRootRelative(prefixHeaderRelative.getPath());
       extraSettingsBuilder.put("GCC_PREFIX_HEADER", prefixHeaderPath.toString());
       extraSettingsBuilder.put("GCC_PRECOMPILE_PREFIX_HEADER", "YES");
     }
@@ -2112,7 +2114,10 @@ public class XcodeNativeTargetGenerator {
                   .map(
                       frameworkPath ->
                           FrameworkPath.getUnexpandedSearchPath(
-                                  projectSourcePathResolver::resolveSourcePath,
+                                  sourcePath ->
+                                      projectSourcePathResolver
+                                          .resolveSourcePath(sourcePath)
+                                          .getPath(),
                                   pathRelativizer::outputDirToRootRelative,
                                   frameworkPath)
                               .toString())
@@ -2123,7 +2128,10 @@ public class XcodeNativeTargetGenerator {
                   .map(
                       libraryPath ->
                           FrameworkPath.getUnexpandedSearchPath(
-                                  projectSourcePathResolver::resolveSourcePath,
+                                  sourcePath ->
+                                      projectSourcePathResolver
+                                          .resolveSourcePath(sourcePath)
+                                          .getPath(),
                                   pathRelativizer::outputDirToRootRelative,
                                   libraryPath)
                               .toString())
@@ -2389,7 +2397,7 @@ public class XcodeNativeTargetGenerator {
         && arg.getExtension().getLeft().equals(AppleBundleExtension.FRAMEWORK);
   }
 
-  private Path resolveSourcePath(SourcePath sourcePath) {
+  private RelPath resolveSourcePath(SourcePath sourcePath) {
     return projectSourcePathResolver.resolveSourcePath(sourcePath);
   }
 

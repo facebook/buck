@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
@@ -141,9 +140,9 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
   class GenerateCompilationCommandsJson extends AbstractExecutionStep {
 
     private final BuildContext context;
-    private final Path outputRelativePath;
+    private final RelPath outputRelativePath;
 
-    public GenerateCompilationCommandsJson(BuildContext context, Path outputRelativePath) {
+    public GenerateCompilationCommandsJson(BuildContext context, RelPath outputRelativePath) {
       super("generate compile_commands.json");
       this.context = context;
       this.outputRelativePath = outputRelativePath;
@@ -152,7 +151,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
     @Override
     public StepExecutionResult execute(StepExecutionContext context) throws IOException {
       try (OutputStream outputStream =
-          getProjectFilesystem().newFileOutputStream(outputRelativePath)) {
+          getProjectFilesystem().newFileOutputStream(outputRelativePath.getPath())) {
         try (JsonGenerator jsonGen = ObjectMappers.createGenerator(outputStream)) {
           jsonGen.writeStartArray();
           for (Iterator<CxxCompilationDatabaseEntry> entry = createEntries().iterator();

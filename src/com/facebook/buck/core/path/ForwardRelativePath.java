@@ -220,6 +220,10 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
     return RelPath.of(toPath(fileSystem));
   }
 
+  public RelPath toRelPathDefaultFilesystem() {
+    return toRelPath(FileSystems.getDefault());
+  }
+
   @Override
   public String toString() {
     if (segments.length == 0) {

@@ -257,7 +257,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     // This matches the implementation in ExportFileDescription
     // If the mode is REFERENCE we need to return the relative path to the real underlying file
     if (arg.getMode().map(mode -> mode == ExportFileDescription.Mode.REFERENCE).orElse(false)) {
-      return arg.getSrc().map(adapter::getRelativePath);
+      return arg.getSrc().map(sourcePath -> adapter.getRelativePath(sourcePath).getPath());
     }
     // Otherwise, we resolve the generated path for the COPY
     String name = arg.getOut().orElse(buildTarget.getShortNameAndFlavorPostfix());

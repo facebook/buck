@@ -30,6 +30,7 @@ import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -139,7 +140,7 @@ public class AppleDescriptions {
 
   public static ImmutableSortedMap<String, SourcePath> convertAppleHeadersToPublicCxxHeaders(
       BuildTarget buildTarget,
-      Function<SourcePath, Path> pathResolver,
+      Function<SourcePath, RelPath> pathResolver,
       Path headerPathPrefix,
       CxxLibraryDescription.CommonArg arg) {
     // The exported headers in the populated cxx constructor arg will contain exported headers from
@@ -151,7 +152,7 @@ public class AppleDescriptions {
   /** @returns Apple headers converted to public cxx headers */
   public static ImmutableSortedMap<String, SourcePath> convertHeadersToPublicCxxHeaders(
       BuildTarget buildTarget,
-      Function<SourcePath, Path> pathResolver,
+      Function<SourcePath, RelPath> pathResolver,
       Path headerPathPrefix,
       SourceSortedSet sourceSet) {
     // The exported headers in the populated cxx constructor arg will contain exported headers from
@@ -162,7 +163,7 @@ public class AppleDescriptions {
 
   public static ImmutableSortedMap<String, SourcePath> convertAppleHeadersToPrivateCxxHeaders(
       BuildTarget buildTarget,
-      Function<SourcePath, Path> pathResolver,
+      Function<SourcePath, RelPath> pathResolver,
       Path headerPathPrefix,
       CxxLibraryDescription.CommonArg arg) {
     // The private headers will contain exported headers with the private include style and private
@@ -193,7 +194,7 @@ public class AppleDescriptions {
   /** @returns Apple headers converted to private cxx headers */
   public static ImmutableSortedMap<String, SourcePath> convertHeadersToPrivateCxxHeaders(
       BuildTarget buildTarget,
-      Function<SourcePath, Path> pathResolver,
+      Function<SourcePath, RelPath> pathResolver,
       Path headerPathPrefix,
       SourceSortedSet privateSourceSet,
       SourceSortedSet publicSourceSet) {
@@ -226,7 +227,7 @@ public class AppleDescriptions {
   @VisibleForTesting
   static ImmutableSortedMap<String, SourcePath> parseAppleHeadersForUseFromOtherTargets(
       BuildTarget buildTarget,
-      Function<SourcePath, Path> pathResolver,
+      Function<SourcePath, RelPath> pathResolver,
       Path headerPathPrefix,
       SourceSortedSet headers) {
     return headers.match(
@@ -251,7 +252,9 @@ public class AppleDescriptions {
 
   @VisibleForTesting
   static ImmutableSortedMap<String, SourcePath> parseAppleHeadersForUseFromTheSameTarget(
-      BuildTarget buildTarget, Function<SourcePath, Path> pathResolver, SourceSortedSet headers) {
+      BuildTarget buildTarget,
+      Function<SourcePath, RelPath> pathResolver,
+      SourceSortedSet headers) {
     return headers.match(
         new SourceSortedSet.Matcher<ImmutableSortedMap<String, SourcePath>>() {
           @Override
@@ -284,7 +287,7 @@ public class AppleDescriptions {
   static ImmutableSortedMap<String, SourcePath> convertToFlatCxxHeaders(
       BuildTarget buildTarget,
       Path headerPathPrefix,
-      Function<SourcePath, Path> sourcePathResolver,
+      Function<SourcePath, RelPath> sourcePathResolver,
       Set<SourcePath> headerPaths) {
     Set<String> includeToFile = new HashSet<String>(headerPaths.size());
     ImmutableSortedMap.Builder<String, SourcePath> builder = ImmutableSortedMap.naturalOrder();

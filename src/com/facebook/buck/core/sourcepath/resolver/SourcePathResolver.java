@@ -17,6 +17,7 @@
 package com.facebook.buck.core.sourcepath.resolver;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -38,7 +39,7 @@ public interface SourcePathResolver {
 
   ImmutableSortedSet<AbsPath> getAllAbsolutePaths(Collection<? extends SourcePath> sourcePaths);
 
-  ImmutableSortedSet<Path> getRelativePath(SourcePath sourcePath);
+  ImmutableSortedSet<RelPath> getRelativePath(SourcePath sourcePath);
 
   ImmutableSortedSet<Path> getIdeallyRelativePath(SourcePath sourcePath);
 
