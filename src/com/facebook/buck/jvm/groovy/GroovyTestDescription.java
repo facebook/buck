@@ -62,6 +62,7 @@ public class GroovyTestDescription
   private final JavaBuckConfig javaBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final Function<TargetConfiguration, JavaOptions> javaOptionsForTests;
+  private final Function<TargetConfiguration, JavaOptions> java11OptionsForTests;
 
   public GroovyTestDescription(
       ToolchainProvider toolchainProvider,
@@ -73,6 +74,8 @@ public class GroovyTestDescription
     this.javaBuckConfig = javaBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
+    this.java11OptionsForTests =
+        JavaOptionsProvider.getDefaultJava11OptionsForTests(toolchainProvider);
   }
 
   @Override
@@ -131,6 +134,12 @@ public class GroovyTestDescription
             cellRoots.getCellNameResolver(),
             graphBuilder,
             JavaTestDescription.MACRO_EXPANDERS);
+
+    Function<TargetConfiguration, JavaOptions> javaRuntimeConfig =
+        javacOptions.getLanguageLevelOptions().getTargetLevel().equals("11")
+            ? java11OptionsForTests
+            : javaOptionsForTests;
+
     return new JavaTest(
         buildTarget,
         projectFilesystem,
@@ -141,7 +150,7 @@ public class GroovyTestDescription
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),
         javacOptions.getLanguageLevelOptions().getTargetLevel(),
-        javaOptionsForTests
+        javaRuntimeConfig
             .apply(buildTarget.getTargetConfiguration())
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
         Lists.transform(args.getVmArgs(), macrosConverter::convert),

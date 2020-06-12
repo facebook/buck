@@ -35,7 +35,10 @@ public class JavaOptionsProviderFactory implements ToolchainFactory<JavaOptionsP
     JavaBuckConfig javaConfig = context.getBuckConfig().getView(JavaBuckConfig.class);
     JavaOptions defaultJavaOptions = javaConfig.getDefaultJavaOptions();
     JavaOptions defaultJavaOptionsForTests = javaConfig.getDefaultJavaOptionsForTests();
+    JavaOptions defaultJava11OptionsForTests = javaConfig.getDefaultJava11OptionsForTests();
 
-    return Optional.of(JavaOptionsProvider.of(defaultJavaOptions, defaultJavaOptionsForTests));
+    return Optional.of(
+        JavaOptionsProvider.of(
+            defaultJavaOptions, defaultJavaOptionsForTests, defaultJava11OptionsForTests));
   }
 }

@@ -94,14 +94,23 @@ public class JavaBuckConfigTest {
         javaForTestsOptions
             .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(PATH_RESOLVER));
+
+    JavaOptions java11ForTestsOptions = config.getDefaultJava11OptionsForTests();
+    assertEquals(
+        ImmutableList.of("java"),
+        java11ForTestsOptions
+            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
+            .getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test
   public void whenJavaExistsAndIsExecutableThenItIsReturned() throws IOException {
     Path java = temporaryFolder.newExecutableFile().getPath();
     Path javaForTests = temporaryFolder.newExecutableFile().getPath();
+    Path java11ForTests = temporaryFolder.newExecutableFile().getPath();
     String javaCommand = java.toString();
     String javaForTestsCommand = javaForTests.toString();
+    String java11ForTestsCommand = java11ForTests.toString();
     JavaBuckConfig config =
         FakeBuckConfig.builder()
             .setFilesystem(defaultFilesystem)
@@ -109,8 +118,12 @@ public class JavaBuckConfigTest {
                 ImmutableMap.of(
                     "tools",
                     ImmutableMap.of(
-                        "java", javaCommand,
-                        "java_for_tests", javaForTestsCommand)))
+                        "java",
+                        javaCommand,
+                        "java_for_tests",
+                        javaForTestsCommand,
+                        "java11_for_tests",
+                        java11ForTestsCommand)))
             .build()
             .getView(JavaBuckConfig.class);
 
@@ -125,6 +138,13 @@ public class JavaBuckConfigTest {
     assertEquals(
         ImmutableList.of(javaForTestsCommand),
         javaForTestsOptions
+            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
+            .getCommandPrefix(PATH_RESOLVER));
+
+    JavaOptions java11ForTestsOptions = config.getDefaultJava11OptionsForTests();
+    assertEquals(
+        ImmutableList.of(java11ForTestsCommand),
+        java11ForTestsOptions
             .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(PATH_RESOLVER));
   }
@@ -163,6 +183,33 @@ public class JavaBuckConfigTest {
     assertEquals(
         ImmutableList.of(javaCommand),
         options
+            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
+            .getCommandPrefix(PATH_RESOLVER));
+
+    JavaOptions java11options = config.getDefaultJava11OptionsForTests();
+    assertEquals(
+        ImmutableList.of(javaCommand),
+        java11options
+            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
+            .getCommandPrefix(PATH_RESOLVER));
+  }
+
+  @Test
+  public void whenJava11ForTestsIsNotSetThenJavaForTestsIsReturned() throws IOException {
+    Path javaForTests = temporaryFolder.newExecutableFile().getPath();
+    String javaForTestsCommand = javaForTests.toString();
+    JavaBuckConfig config =
+        FakeBuckConfig.builder()
+            .setFilesystem(defaultFilesystem)
+            .setSections(
+                ImmutableMap.of("tools", ImmutableMap.of("java_for_tests", javaForTestsCommand)))
+            .build()
+            .getView(JavaBuckConfig.class);
+
+    JavaOptions java11options = config.getDefaultJava11OptionsForTests();
+    assertEquals(
+        ImmutableList.of(javaForTestsCommand),
+        java11options
             .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(PATH_RESOLVER));
   }

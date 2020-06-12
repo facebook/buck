@@ -54,7 +54,8 @@ public class JavaTestBuilder
                     JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
                 .withToolchain(
                     JavaOptionsProvider.DEFAULT_NAME,
-                    JavaOptionsProvider.of(DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
+                    JavaOptionsProvider.of(
+                        DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
                 .withToolchain(
                     JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
                 .build(),

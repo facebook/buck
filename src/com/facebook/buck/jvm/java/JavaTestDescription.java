@@ -84,6 +84,7 @@ public class JavaTestDescription
   private final JavaBuckConfig javaBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final Function<TargetConfiguration, JavaOptions> javaOptionsForTests;
+  private final Function<TargetConfiguration, JavaOptions> java11OptionsForTests;
   private final JavacFactory javacFactory;
 
   public JavaTestDescription(
@@ -94,6 +95,8 @@ public class JavaTestDescription
     this.javaBuckConfig = javaBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
+    this.java11OptionsForTests =
+        JavaOptionsProvider.getDefaultJava11OptionsForTests(toolchainProvider);
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
 
@@ -183,6 +186,11 @@ public class JavaTestDescription
             buildTarget, cellRoots.getCellNameResolver(), graphBuilder, MACRO_EXPANDERS);
     List<Arg> vmArgs = Lists.transform(args.getVmArgs(), macrosConverter::convert);
 
+    Function<TargetConfiguration, JavaOptions> javaRuntimeConfig =
+        javacOptions.getLanguageLevelOptions().getTargetLevel().equals("11")
+            ? java11OptionsForTests
+            : javaOptionsForTests;
+
     Optional<BuildTarget> runner = args.getRunner();
     Optional<TestRunnerSpec> runnerSpecs = args.getSpecs();
     if (runnerSpecs.isPresent()) {
@@ -212,7 +220,7 @@ public class JavaTestDescription
               buildTarget.withFlavors(InternalFlavor.of("bin")),
               projectFilesystem,
               params.copyAppendingExtraDeps(transitiveClasspathDeps),
-              javaOptionsForTests
+              javaRuntimeConfig
                   .apply(buildTarget.getTargetConfiguration())
                   .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
               testRunner.getMainClass(),
@@ -252,7 +260,7 @@ public class JavaTestDescription
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),
         javacOptions.getLanguageLevelOptions().getTargetLevel(),
-        javaOptionsForTests
+        javaRuntimeConfig
             .apply(buildTarget.getTargetConfiguration())
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
         vmArgs,

@@ -105,7 +105,8 @@ public class AndroidInstrumentationApkDescriptionTest {
             AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
         .withToolchain(
             JavaOptionsProvider.DEFAULT_NAME,
-            JavaOptionsProvider.of(DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
+            JavaOptionsProvider.of(
+                DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
         .withToolchain(
             JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
         .build();

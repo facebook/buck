@@ -61,7 +61,7 @@ public class JavaBinaryRuleBuilder
                     JavaCxxPlatformProvider.of(defaultCxxPlatform))
                 .withToolchain(
                     JavaOptionsProvider.DEFAULT_NAME,
-                    JavaOptionsProvider.of(javaOptions, javaOptions))
+                    JavaOptionsProvider.of(javaOptions, javaOptions, javaOptions))
                 .withToolchain(
                     JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(javacOptions))
                 .withToolchain(

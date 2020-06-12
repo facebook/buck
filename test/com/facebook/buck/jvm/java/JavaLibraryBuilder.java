@@ -185,7 +185,8 @@ public class JavaLibraryBuilder
         .withToolchain(JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
         .withToolchain(
             JavaOptionsProvider.DEFAULT_NAME,
-            JavaOptionsProvider.of(DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
+            JavaOptionsProvider.of(
+                DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
         .build();
   }
 }

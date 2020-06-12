@@ -366,7 +366,8 @@ public class AndroidBinaryGraphEnhancerTest {
             AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
         .withToolchain(
             JavaOptionsProvider.DEFAULT_NAME,
-            JavaOptionsProvider.of(DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
+            JavaOptionsProvider.of(
+                DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
         .build();
   }
 

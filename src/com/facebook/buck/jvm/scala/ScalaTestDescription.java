@@ -65,6 +65,7 @@ public class ScalaTestDescription
   private final JavaBuckConfig javaBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final Function<TargetConfiguration, JavaOptions> javaOptionsForTests;
+  private final Function<TargetConfiguration, JavaOptions> java11OptionsForTests;
   private final JavacFactory javacFactory;
 
   public ScalaTestDescription(
@@ -76,6 +77,8 @@ public class ScalaTestDescription
     this.config = config;
     this.javaBuckConfig = javaBuckConfig;
     this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
+    this.java11OptionsForTests =
+        JavaOptionsProvider.getDefaultJava11OptionsForTests(toolchainProvider);
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.downwardApiConfig = downwardApiConfig;
   }
@@ -148,6 +151,11 @@ public class ScalaTestDescription
             JavaTestDescription.MACRO_EXPANDERS);
     JavaLibrary testsLibrary = graphBuilder.addToIndex(scalaLibraryBuilder.buildLibrary());
 
+    Function<TargetConfiguration, JavaOptions> javaRuntimeConfig =
+        javacOptions.getLanguageLevelOptions().getTargetLevel().equals("11")
+            ? java11OptionsForTests
+            : javaOptionsForTests;
+
     return new JavaTest(
         buildTarget,
         projectFilesystem,
@@ -158,7 +166,7 @@ public class ScalaTestDescription
         args.getContacts(),
         args.getTestType().isPresent() ? args.getTestType().get() : TestType.JUNIT,
         javacOptions.getLanguageLevelOptions().getTargetLevel(),
-        javaOptionsForTests
+        javaRuntimeConfig
             .apply(buildTarget.getTargetConfiguration())
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
         Lists.transform(args.getVmArgs(), macrosConverter::convert),

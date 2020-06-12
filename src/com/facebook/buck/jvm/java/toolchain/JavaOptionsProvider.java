@@ -37,6 +37,8 @@ public abstract class JavaOptionsProvider implements Toolchain {
 
   abstract JavaOptions getJavaOptionsForTests();
 
+  abstract JavaOptions getJava11OptionsForTests();
+
   private static JavaOptionsProvider getDefault(
       ToolchainProvider provider, TargetConfiguration toolchainTargetConfiguration) {
     return provider.getByName(
@@ -53,7 +55,14 @@ public abstract class JavaOptionsProvider implements Toolchain {
     return MoreFunctions.memoize(c -> getDefault(provider, c).getJavaOptionsForTests());
   }
 
-  public static JavaOptionsProvider of(JavaOptions javaOptions, JavaOptions javaOptionsForTests) {
-    return ImmutableJavaOptionsProvider.ofImpl(javaOptions, javaOptionsForTests);
+  public static Function<TargetConfiguration, JavaOptions> getDefaultJava11OptionsForTests(
+      ToolchainProvider provider) {
+    return MoreFunctions.memoize(c -> getDefault(provider, c).getJava11OptionsForTests());
+  }
+
+  public static JavaOptionsProvider of(
+      JavaOptions javaOptions, JavaOptions javaOptionsForTests, JavaOptions java11OptionsForTests) {
+    return ImmutableJavaOptionsProvider.ofImpl(
+        javaOptions, javaOptionsForTests, java11OptionsForTests);
   }
 }

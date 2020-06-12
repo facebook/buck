@@ -91,6 +91,13 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         .orElseGet(this::getDefaultJavaOptions);
   }
 
+  public JavaOptions getDefaultJava11OptionsForTests() {
+    return getToolForExecutable("java11_for_tests")
+        .map(ConstantToolProvider::new)
+        .map(JavaOptions::of)
+        .orElseGet(this::getDefaultJavaOptionsForTests);
+  }
+
   public JavacLanguageLevelOptions getJavacLanguageLevelOptions() {
     JavacLanguageLevelOptions.Builder builder = JavacLanguageLevelOptions.builder();
     delegate.getValue(SECTION, "source_level").map(builder::setSourceLevel);

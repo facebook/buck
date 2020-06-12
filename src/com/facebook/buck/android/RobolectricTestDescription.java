@@ -93,6 +93,7 @@ public class RobolectricTestDescription
   private final DownwardApiConfig downwardApiConfig;
   private final AndroidLibraryCompilerFactory compilerFactory;
   private final Function<TargetConfiguration, JavaOptions> javaOptionsForTests;
+  private final Function<TargetConfiguration, JavaOptions> java11OptionsForTests;
   private final LoadingCache<TargetConfiguration, JavacOptions> defaultJavacOptions;
   private final JavacFactory javacFactory;
 
@@ -106,6 +107,8 @@ public class RobolectricTestDescription
     this.downwardApiConfig = downwardApiConfig;
     this.compilerFactory = compilerFactory;
     this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
+    this.java11OptionsForTests =
+        JavaOptionsProvider.getDefaultJava11OptionsForTests(toolchainProvider);
     this.defaultJavacOptions =
         CacheBuilder.newBuilder()
             .build(
@@ -370,6 +373,11 @@ public class RobolectricTestDescription
                 .buildLibrary());
     params = params.copyAppendingExtraDeps(ImmutableSortedSet.of(testsLibrary));
 
+    Function<TargetConfiguration, JavaOptions> javaRuntimeConfig =
+        javacOptions.getLanguageLevelOptions().getTargetLevel().equals("11")
+            ? java11OptionsForTests
+            : javaOptionsForTests;
+
     Optional<BuildTarget> runner = args.getRunner();
     Optional<TestRunnerSpec> runnerSpecs = args.getSpecs();
     if (runnerSpecs.isPresent()) {
@@ -399,7 +407,7 @@ public class RobolectricTestDescription
               buildTarget.withFlavors(InternalFlavor.of("bin")),
               projectFilesystem,
               params.copyAppendingExtraDeps(transitiveClasspathDeps),
-              javaOptionsForTests
+              javaRuntimeConfig
                   .apply(buildTarget.getTargetConfiguration())
                   .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
               testRunner.getMainClass(),
@@ -468,7 +476,7 @@ public class RobolectricTestDescription
         javaBuckConfig
             .getDelegate()
             .getBooleanValue("test", "pass_robolectric_directories_in_file", false),
-        javaOptionsForTests
+        javaRuntimeConfig
             .apply(buildTarget.getTargetConfiguration())
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
         downwardApiConfig.isEnabledForTests());
