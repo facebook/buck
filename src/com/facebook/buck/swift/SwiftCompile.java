@@ -108,7 +108,8 @@ public class SwiftCompile extends AbstractBuildRule implements SupportsInputBase
   private final Path headerPath;
   @AddToRuleKey private final ImmutableSet<FrameworkPath> frameworks;
   @AddToRuleKey private final AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath;
-  @AddToRuleKey private final Flavor flavor;
+  @AddToRuleKey(stringify = true)
+  private final Flavor flavor;
 
   @AddToRuleKey private final boolean enableObjcInterop;
   @AddToRuleKey private final Optional<SourcePath> bridgingHeader;
