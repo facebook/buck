@@ -33,8 +33,8 @@ public class DefaultOutputPathResolver implements OutputPathResolver {
   }
 
   @Override
-  public Path getTempPath() {
-    return scratchRoot.getPath();
+  public RelPath getTempPath() {
+    return scratchRoot;
   }
 
   @Override

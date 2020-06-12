@@ -17,6 +17,7 @@
 package com.facebook.buck.infer;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -308,7 +309,7 @@ public final class InferJava extends ModernBuildRule<InferJava.Impl> {
 
       SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
 
-      Path scratchDir = filesystem.resolve(outputPathResolver.getTempPath());
+      AbsPath scratchDir = filesystem.resolve(outputPathResolver.getTempPath());
       RelPath argFilePath = filesystem.relativize(scratchDir.resolve("args.txt"));
       RelPath inferOutPath = filesystem.relativize(scratchDir.resolve(INFER_DEFAULT_RESULT_DIR));
 

@@ -188,14 +188,15 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      Path scratchDir = filesystem.resolve(outputPathResolver.getTempPath());
-      Path argFilePath = scratchDir.resolve("linker.argsfile");
-      Path fileListPath = scratchDir.resolve("filelist.txt");
+      AbsPath scratchDir = filesystem.resolve(outputPathResolver.getTempPath());
+      AbsPath argFilePath = scratchDir.resolve("linker.argsfile");
+      AbsPath fileListPath = scratchDir.resolve("filelist.txt");
 
       Path outputPath = outputPathResolver.resolvePath(output);
 
       boolean requiresPostprocessing = postprocessor.isPresent();
-      Path linkOutput = requiresPostprocessing ? scratchDir.resolve("link-output") : outputPath;
+      Path linkOutput =
+          requiresPostprocessing ? scratchDir.resolve("link-output").getPath() : outputPath;
 
       ImmutableMap<Path, Path> cellRootMap =
           this.relativeCellRoots.stream()
@@ -210,8 +211,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
               .add(MkdirStep.of(buildCellPathFactory.from(outputPath.getParent())))
               .addAll(
                   CxxPrepareForLinkStep.create(
-                      argFilePath,
-                      fileListPath,
+                      argFilePath.getPath(),
+                      fileListPath.getPath(),
                       linker.fileList(fileListPath),
                       linkOutput,
                       args,
@@ -224,8 +225,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                       filesystem.getRootPath(),
                       linker.getEnvironment(context.getSourcePathResolver()),
                       linker.getCommandPrefix(context.getSourcePathResolver()),
-                      argFilePath,
-                      scratchDir,
+                      argFilePath.getPath(),
+                      scratchDir.getPath(),
                       withDownwardApi))
               .addAll(
                   postprocessor

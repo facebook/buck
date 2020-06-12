@@ -183,7 +183,7 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
           context.getSourcePathResolver(),
           HeaderPathNormalizer.empty(),
           sanitizer,
-          outputPathResolver.getTempPath(),
+          outputPathResolver.getTempPath().getPath(),
           useArgfile,
           compilerDelegate.getPreArgfileArgs(),
           compilerDelegate.getCompiler(),

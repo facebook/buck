@@ -22,7 +22,7 @@ import java.nio.file.Path;
 /** Provides Buildable's a way to construct Paths to outputs. */
 public interface OutputPathResolver {
   /** Returns a relative path to the root directory for intermediate build outputs. */
-  Path getTempPath();
+  RelPath getTempPath();
 
   default Path getTempPath(String file) {
     return getTempPath().resolve(file);

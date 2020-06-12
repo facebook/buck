@@ -419,7 +419,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
               // directory,
               // as the temp directory may be deleted after the rule is run.
               if (path instanceof PublicOutputPath
-                  && path.getPath().startsWith(outputPathResolver.getTempPath())) {
+                  && path.getPath().startsWith(outputPathResolver.getTempPath().getPath())) {
                 throw new IllegalStateException(
                     "PublicOutputPath should not be inside rule temporary directory. Path: "
                         + path);

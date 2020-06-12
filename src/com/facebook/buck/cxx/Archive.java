@@ -208,7 +208,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
                       .map(resolver::getRelativePath)
                       .collect(ImmutableList.toImmutableList()),
                   archiver,
-                  outputPathResolver.getTempPath(),
+                  outputPathResolver.getTempPath().getPath(),
                   withDownwardApi));
 
       if (archiver.isRanLibStepRequired()) {

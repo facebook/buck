@@ -154,7 +154,7 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
           .build();
     }
 
-    private Path getScratchDirectory(ProjectFilesystem filesystem) {
+    private RelPath getScratchDirectory(ProjectFilesystem filesystem) {
       return new DefaultOutputPathResolver(filesystem, buildTarget).getTempPath();
     }
 

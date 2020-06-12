@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -121,9 +122,9 @@ public class CxxThinLTOIndex extends ModernBuildRule<CxxThinLTOIndex.Impl>
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      Path scratchDir = filesystem.resolve(outputPathResolver.getTempPath());
-      Path argFilePath = scratchDir.resolve("linker.argsfile");
-      Path fileListPath = scratchDir.resolve("filelist.txt");
+      AbsPath scratchDir = filesystem.resolve(outputPathResolver.getTempPath());
+      AbsPath argFilePath = scratchDir.resolve("linker.argsfile");
+      AbsPath fileListPath = scratchDir.resolve("filelist.txt");
 
       Path outputPath = outputPathResolver.resolvePath(output);
       Path linkOutput = outputPath.getParent().resolve("thinlto.objects");
@@ -134,8 +135,8 @@ public class CxxThinLTOIndex extends ModernBuildRule<CxxThinLTOIndex.Impl>
               .add(MkdirStep.of(buildCellPathFactory.from(outputPath)))
               .addAll(
                   CxxPrepareForLinkStep.create(
-                      argFilePath,
-                      fileListPath,
+                      argFilePath.getPath(),
+                      fileListPath.getPath(),
                       linker.fileList(fileListPath),
                       linkOutput,
                       args,
@@ -148,8 +149,8 @@ public class CxxThinLTOIndex extends ModernBuildRule<CxxThinLTOIndex.Impl>
                       filesystem.getRootPath(),
                       linker.getEnvironment(context.getSourcePathResolver()),
                       linker.getCommandPrefix(context.getSourcePathResolver()),
-                      argFilePath,
-                      scratchDir,
+                      argFilePath.getPath(),
+                      scratchDir.getPath(),
                       withDownwardApi));
 
       if (linkerMapPath.isPresent()) {

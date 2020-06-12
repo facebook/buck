@@ -143,9 +143,9 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
                   buildContext.getBuildCellRootPath(), filesystem, resolvedOutput.getParent())));
 
       // Write compile command to argfile
-      Path scratchDir = filesystem.resolve(outputPathResolver.getTempPath());
+      AbsPath scratchDir = filesystem.resolve(outputPathResolver.getTempPath());
       AbsPath sourceInputPath = buildContext.getSourcePathResolver().getAbsolutePath(input);
-      Path argFilePath =
+      AbsPath argFilePath =
           addWriteCommandToArgFileStep(
               buildContext, filesystem, sourceInputPath.getPath(), scratchDir, steps);
 
@@ -154,7 +154,7 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
           new CxxExtractDiagnosticFromCompileCommand(
               filesystem,
               buildContext.getSourcePathResolver(),
-              argFilePath,
+              argFilePath.getPath(),
               diagnosticTool,
               diagnosticName,
               sourceInputPath.getPath(),
@@ -164,14 +164,14 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
       return steps.build();
     }
 
-    private Path addWriteCommandToArgFileStep(
+    private AbsPath addWriteCommandToArgFileStep(
         BuildContext context,
         ProjectFilesystem filesystem,
         Path inputPath,
-        Path scratchDir,
+        AbsPath scratchDir,
         ImmutableList.Builder<Step> steps) {
-      Path argFilePath = scratchDir.resolve("compile_command.argsfile");
-      Path objectFilePath = scratchDir.resolve("object.o");
+      AbsPath argFilePath = scratchDir.resolve("compile_command.argsfile");
+      AbsPath objectFilePath = scratchDir.resolve("object.o");
 
       SourcePathResolverAdapter resolver = context.getSourcePathResolver();
       CxxToolFlags preprocessorDelegateFlags = getCxxToolFlags(resolver);
@@ -187,10 +187,10 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
               sanitizer,
               filesystem,
               getHeaderPathNormalizer(context),
-              objectFilePath,
-              getDepFile(objectFilePath),
+              objectFilePath.getPath(),
+              getDepFile(objectFilePath.getPath()),
               inputPath);
-      steps.add(new CxxWriteCompileCommandToArgFile(argFilePath, arguments));
+      steps.add(new CxxWriteCompileCommandToArgFile(argFilePath.getPath(), arguments));
       return argFilePath;
     }
   }

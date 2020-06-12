@@ -222,7 +222,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         BuildCellRelativePathFactory buildCellPathFactory) {
       RelPath outputdir = getOutputDir(buildTarget, filesystem);
       Path outputPath = outputPathResolver.resolvePath(output);
-      Path scratchDir = outputPathResolver.getTempPath();
+      RelPath scratchDir = outputPathResolver.getTempPath();
 
       SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
@@ -236,7 +236,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
           new SymlinkTreeStep(
               "rust_sources",
               filesystem,
-              scratchDir,
+              scratchDir.getPath(),
               mappedSources.entrySet().stream()
                   .collect(
                       ImmutableMap.toImmutableMap(

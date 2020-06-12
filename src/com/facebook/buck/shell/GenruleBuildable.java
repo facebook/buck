@@ -390,7 +390,7 @@ public class GenruleBuildable implements Buildable {
 
     // If we use the OutputPathResolver's temp path, we don't need to create the directory; it will
     // be automatically created for us.
-    Path tmpPath = outputPathResolver.getTempPath();
+    RelPath tmpPath = outputPathResolver.getTempPath();
 
     // Create a directory to hold all the source files. Ideally this would be under the temp path,
     // but there exist tools (namely the Protobuf compiler) that have a hard dependency on the
@@ -407,7 +407,7 @@ public class GenruleBuildable implements Buildable {
     if (this.isWorkerGenrule) {
       commands.add(
           createWorkerShellStep(
-              buildContext, outputPathResolver, filesystem, srcPath.getPath(), tmpPath));
+              buildContext, outputPathResolver, filesystem, srcPath.getPath(), tmpPath.getPath()));
     } else {
       commands.add(
           createGenruleStep(
@@ -415,7 +415,7 @@ public class GenruleBuildable implements Buildable {
               outputPathResolver,
               filesystem,
               srcPath.getPath(),
-              tmpPath,
+              tmpPath.getPath(),
               createProgramRunner(),
               withDownwardApi));
     }
