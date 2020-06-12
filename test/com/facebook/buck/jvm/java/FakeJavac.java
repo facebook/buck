@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
@@ -25,7 +26,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
-import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 /** Fake implementation of {@link com.facebook.buck.jvm.java.Javac} for tests. */
@@ -48,9 +48,9 @@ public class FakeJavac implements Javac {
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
       ImmutableList<JavacPluginJsr199Fields> javacPlugins,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList,
-      Path workingDirectory,
+      ImmutableSortedSet<RelPath> javaSourceFilePaths,
+      RelPath pathToSrcsList,
+      RelPath workingDirectory,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
       @Nullable JarParameters abiJarParameters,
@@ -91,8 +91,8 @@ public class FakeJavac implements Javac {
   @Override
   public String getDescription(
       ImmutableList<String> options,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList) {
+      ImmutableSortedSet<RelPath> javaSourceFilePaths,
+      RelPath pathToSrcsList) {
     return String.format("%sDelimiter%sDelimiter%s", options, javaSourceFilePaths, pathToSrcsList);
   }
 

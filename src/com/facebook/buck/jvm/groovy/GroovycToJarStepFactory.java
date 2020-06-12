@@ -31,7 +31,6 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Optional;
 
 class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
@@ -61,10 +60,10 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
       Builder<Step> steps,
       BuildableContext buildableContext) {
 
-    ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
-    ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
+    ImmutableSortedSet<RelPath> declaredClasspathEntries = parameters.getClasspathEntries();
+    ImmutableSortedSet<RelPath> sourceFilePaths = parameters.getSourceFilePaths();
     RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
-    Path pathToSrcsList = parameters.getOutputPaths().getPathToSourcesList();
+    RelPath pathToSrcsList = parameters.getOutputPaths().getPathToSourcesList();
 
     steps.add(
         new GroovycStep(

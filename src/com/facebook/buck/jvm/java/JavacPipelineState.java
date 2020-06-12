@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
@@ -29,14 +30,12 @@ import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -210,7 +209,7 @@ public class JavacPipelineState implements RulePipelineState {
   @VisibleForTesting
   ImmutableList<String> getOptions(
       StepExecutionContext context,
-      ImmutableSortedSet<Path> buildClasspathEntries,
+      ImmutableSortedSet<RelPath> buildClasspathEntries,
       ProjectFilesystem filesystem,
       SourcePathResolverAdapter resolver) {
     return getOptions(
@@ -228,9 +227,9 @@ public class JavacPipelineState implements RulePipelineState {
       ProjectFilesystem filesystem,
       SourcePathResolverAdapter pathResolver,
       RelPath outputDirectory,
-      Path generatedCodeDirectory,
+      RelPath generatedCodeDirectory,
       StepExecutionContext context,
-      ImmutableSortedSet<Path> buildClasspathEntries) {
+      ImmutableSortedSet<RelPath> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     javacOptions.appendOptionsTo(
@@ -276,7 +275,11 @@ public class JavacPipelineState implements RulePipelineState {
 
     // Build up and set the classpath.
     if (!buildClasspathEntries.isEmpty()) {
-      String classpath = Joiner.on(File.pathSeparator).join(buildClasspathEntries);
+      String classpath =
+          buildClasspathEntries.stream()
+              .map(filesystem::resolve)
+              .map(AbsPath::toString)
+              .collect(Collectors.joining(File.pathSeparator));
       builder.add("-classpath", classpath);
     } else {
       builder.add("-classpath", "''");

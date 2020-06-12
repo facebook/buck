@@ -17,6 +17,8 @@
 package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -35,8 +37,8 @@ public class ScalacStep extends ShellStep {
   private final ImmutableList<String> extraArguments;
   private final SourcePathResolverAdapter resolver;
   private final Path outputDirectory;
-  private final ImmutableSortedSet<Path> sourceFilePaths;
-  private final ImmutableSortedSet<Path> classpathEntries;
+  private final ImmutableSortedSet<RelPath> sourceFilePaths;
+  private final ImmutableSortedSet<RelPath> classpathEntries;
   private final ProjectFilesystem filesystem;
 
   ScalacStep(
@@ -44,8 +46,8 @@ public class ScalacStep extends ShellStep {
       ImmutableList<String> extraArguments,
       SourcePathResolverAdapter resolver,
       Path outputDirectory,
-      ImmutableSortedSet<Path> sourceFilePaths,
-      ImmutableSortedSet<Path> classpathEntries,
+      ImmutableSortedSet<RelPath> sourceFilePaths,
+      ImmutableSortedSet<RelPath> classpathEntries,
       ProjectFilesystem filesystem,
       boolean withDownwardApi) {
     super(filesystem.getRootPath(), withDownwardApi);
@@ -82,14 +84,14 @@ public class ScalacStep extends ShellStep {
     String classpath =
         classpathEntries.stream()
             .map(filesystem::resolve)
-            .map(Path::toString)
+            .map(AbsPath::toString)
             .collect(Collectors.joining(File.pathSeparator));
     if (classpath.isEmpty()) {
       commandBuilder.add("-classpath", "''");
     } else {
       commandBuilder.add("-classpath", classpath);
     }
-    commandBuilder.addAll(sourceFilePaths.stream().map(Object::toString).iterator());
+    commandBuilder.addAll(sourceFilePaths.stream().map(RelPath::toString).iterator());
 
     return commandBuilder.build();
   }

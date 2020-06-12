@@ -83,6 +83,7 @@ import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.collect.CollectionUtils;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.zip.CustomJarOutputStream;
@@ -121,6 +122,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   private String annotationScenarioGenPath;
   private ActionGraphBuilder graphBuilder;
   private JavaBuckConfig testJavaBuckConfig;
+  private AbsPath rootPath;
 
   @Before
   public void setUp() {
@@ -130,6 +132,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
+    rootPath = filesystem.getRootPath();
 
     annotationScenarioGenPath =
         filesystem
@@ -138,7 +141,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                         BuildTargetFactory.newInstance("//android/java/src/com/facebook:fb"),
                         filesystem)
                     .getAnnotationPath())
-            .toAbsolutePath()
             .toString();
   }
 
@@ -150,14 +152,14 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     tmp.newFolder(folder.split("/"));
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//" + folder + ":fb");
 
-    Path src = Paths.get(folder, "Main.java");
+    RelPath src = RelPath.get(folder, "Main.java");
     tmp.newFile(src.toString());
 
     BuildContext context = createBuildContext();
 
     List<Step> steps =
         AndroidLibraryBuilder.createBuilder(buildTarget)
-            .addSrc(src)
+            .addSrc(src.getPath())
             .build(graphBuilder)
             .getBuildSteps(context, new FakeBuildableContext());
 
@@ -165,7 +167,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     JavacStep javac = getJavacStep(steps);
     assertEquals(
         "Should compile Main.java rather than generated R.java.",
-        ImmutableSet.of(src),
+        CollectionUtils.toSortedSet(src),
         javac.getSrcs());
   }
 
@@ -317,7 +319,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     AbsPath classpath = resolveClasspathPath(rule);
 
     ImmutableList<String> parameters =
-        scenario.buildAndGetCompileParameters(ImmutableSortedSet.of(classpath.getPath()));
+        scenario.buildAndGetCompileParameters(
+            CollectionUtils.toSortedSet(rootPath.relativize(classpath)));
 
     assertHasClasspath(parameters, classpath.toString());
     assertEquals(
@@ -573,11 +576,11 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     String expectedName = expectedRule.getFullyQualifiedName();
     assertEquals(
         "The classpath for the javac step to compile //:libtwo should contain only " + expectedName,
-        ImmutableSet.of(
-            graphBuilder
-                .getSourcePathResolver()
-                .getAbsolutePath(expectedRule.getSourcePathToOutput())
-                .getPath()),
+        CollectionUtils.toSortedSet(
+            RelPath.of(
+                graphBuilder
+                    .getSourcePathResolver()
+                    .getRelativePath(expectedRule.getSourcePathToOutput()))),
         javacStep.getClasspathEntries());
   }
 
@@ -1652,7 +1655,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     }
 
     public ImmutableList<String> buildAndGetCompileParameters(
-        ImmutableSortedSet<Path> buildClasspath) throws IOException, NoSuchBuildTargetException {
+        ImmutableSortedSet<RelPath> buildClasspath) throws IOException, NoSuchBuildTargetException {
       ProjectFilesystem projectFilesystem =
           TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
       DefaultJavaLibrary javaLibrary = createJavaLibraryRule(projectFilesystem);

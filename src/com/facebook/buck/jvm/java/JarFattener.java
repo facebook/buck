@@ -42,6 +42,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
+import com.facebook.buck.util.collect.CollectionUtils;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Preconditions;
@@ -49,7 +50,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
 import java.io.ByteArrayInputStream;
@@ -57,7 +57,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 
@@ -146,14 +145,16 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(writeFatJarInfo(fatJarInfo, sonameToResourceMap));
 
     // Build up the resource and src collections.
-    ImmutableSortedSet.Builder<Path> javaSourceFilePaths =
-        new ImmutableSortedSet.Builder<>(Ordering.natural());
+    ImmutableSortedSet.Builder<RelPath> javaSourceFilePaths =
+        new ImmutableSortedSet.Builder<>(RelPath.COMPARATOR);
     for (String srcResource : FAT_JAR_SRC_RESOURCES) {
-      Path fatJarSource = outputDir.resolve(Paths.get(srcResource).getFileName());
+      RelPath fileName = RelPath.of(RelPath.get(srcResource).getFileName());
+      RelPath fatJarSource = outputDir.resolve(fileName);
       javaSourceFilePaths.add(fatJarSource);
       steps.add(writeFromResource(fatJarSource, srcResource));
     }
-    Path fatJarMainSource = outputDir.resolve(Paths.get(FAT_JAR_MAIN_SRC_RESOURCE).getFileName());
+    RelPath fileName = RelPath.of(RelPath.get(FAT_JAR_MAIN_SRC_RESOURCE).getFileName());
+    RelPath fatJarMainSource = outputDir.resolve(fileName);
     javaSourceFilePaths.add(fatJarMainSource);
     steps.add(writeFromResource(fatJarMainSource, FAT_JAR_MAIN_SRC_RESOURCE));
 
@@ -216,7 +217,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     JarParameters jarParameters =
         JarParameters.builder()
             .setJarPath(output)
-            .setEntriesToJar(ImmutableSortedSet.orderedBy(RelPath.COMPARATOR).add(zipped).build())
+            .setEntriesToJar(CollectionUtils.toSortedSet(zipped))
             .setMainClass(Optional.of(FatJarMain.class.getName()))
             .setMergeManifests(true)
             .build();
@@ -249,7 +250,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   /** @return a {@link Step} that writes the final from the resource named {@code name}. */
-  private Step writeFromResource(Path destination, String name) {
+  private Step writeFromResource(RelPath destination, String name) {
     return new WriteFileStep(
         getProjectFilesystem(),
         Resources.asByteSource(Resources.getResource(name)),

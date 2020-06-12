@@ -26,13 +26,13 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.util.collect.CollectionUtils;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -46,11 +46,8 @@ public class CompileToJarStepFactoryTest {
     ImmutableList<String> postprocessClassesCommands = ImmutableList.of("tool arg1", "tool2");
     RelPath outputDirectory =
         filesystem.getBuckPaths().getScratchDir().resolveRel("android/java/lib__java__classes");
-    ImmutableSortedSet<Path> classpathEntries =
-        ImmutableSortedSet.<Path>naturalOrder()
-            .add(filesystem.resolve("rt.jar").getPath())
-            .add(filesystem.resolve("dep.jar").getPath())
-            .build();
+    ImmutableSortedSet<RelPath> classpathEntries =
+        CollectionUtils.toSortedSet(RelPath.get("rt.jar"), RelPath.get("dep.jar"));
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
     Platform platform = executionContext.getPlatform();
 

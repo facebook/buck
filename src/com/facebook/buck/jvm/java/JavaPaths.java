@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
@@ -41,16 +42,16 @@ public class JavaPaths {
   static ImmutableList<Path> extractArchivesAndGetPaths(
       ProjectFilesystem projectFilesystem,
       ProjectFilesystemFactory projectFilesystemFactory,
-      ImmutableSet<Path> javaSourceFilePaths,
-      Path workingDirectory)
-      throws InterruptedException, IOException {
+      ImmutableSet<RelPath> javaSourceFilePaths,
+      RelPath workingDirectory)
+      throws IOException {
 
     // Add sources file or sources list to command
     ImmutableList.Builder<Path> sources = ImmutableList.builder();
-    for (Path path : javaSourceFilePaths) {
+    for (RelPath path : javaSourceFilePaths) {
       String pathString = path.toString();
       if (pathString.endsWith(".java")) {
-        sources.add(path);
+        sources.add(path.getPath());
       } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
         // For a Zip of .java files, create a JavaFileObject for each .java entry.
         ImmutableList<Path> zipPaths =
@@ -58,8 +59,8 @@ public class JavaPaths {
                 .getUnarchiver()
                 .extractArchive(
                     projectFilesystemFactory,
-                    projectFilesystem.resolve(path),
-                    projectFilesystem.resolve(workingDirectory),
+                    projectFilesystem.resolve(path).getPath(),
+                    projectFilesystem.resolve(workingDirectory).getPath(),
                     ExistingFileMode.OVERWRITE);
         sources.addAll(
             zipPaths.stream().filter(input -> input.toString().endsWith(".java")).iterator());

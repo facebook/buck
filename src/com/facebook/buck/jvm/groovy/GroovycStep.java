@@ -20,6 +20,8 @@ import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
@@ -48,9 +50,9 @@ class GroovycStep implements Step {
   private final JavacOptions javacOptions;
   private final SourcePathResolverAdapter resolver;
   private final Path outputDirectory;
-  private final ImmutableSortedSet<Path> sourceFilePaths;
-  private final Path pathToSrcsList;
-  private final ImmutableSortedSet<Path> declaredClasspathEntries;
+  private final ImmutableSortedSet<RelPath> sourceFilePaths;
+  private final RelPath pathToSrcsList;
+  private final ImmutableSortedSet<RelPath> declaredClasspathEntries;
   private final ProjectFilesystem filesystem;
   private final boolean withDownwardApi;
 
@@ -60,9 +62,9 @@ class GroovycStep implements Step {
       JavacOptions javacOptions,
       SourcePathResolverAdapter resolver,
       Path outputDirectory,
-      ImmutableSortedSet<Path> sourceFilePaths,
-      Path pathToSrcsList,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
+      ImmutableSortedSet<RelPath> sourceFilePaths,
+      RelPath pathToSrcsList,
+      ImmutableSortedSet<RelPath> declaredClasspathEntries,
       ProjectFilesystem filesystem,
       boolean withDownwardApi) {
     this.groovyc = groovyc;
@@ -127,10 +129,11 @@ class GroovycStep implements Step {
     return command.build();
   }
 
-  private void writePathToSourcesList(Iterable<Path> expandedSources) throws IOException {
+  private void writePathToSourcesList(Iterable<RelPath> expandedSources) throws IOException {
     filesystem.writeLinesToPath(
         FluentIterable.from(expandedSources)
-            .transform(Object::toString)
+            .transform(filesystem::resolve)
+            .transform(AbsPath::toString)
             .transform(Javac.ARGFILES_ESCAPER::apply),
         pathToSrcsList);
   }

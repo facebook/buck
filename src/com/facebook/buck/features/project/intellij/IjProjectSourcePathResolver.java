@@ -283,19 +283,17 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       }
     }
     if (JavaAbis.isSourceAbiTarget(buildTarget) || JavaAbis.isSourceOnlyAbiTarget(buildTarget)) {
-      return Optional.of(CompilerOutputPaths.getAbiJarPath(buildTarget, projectFilesystem));
+      return Optional.of(
+          CompilerOutputPaths.getAbiJarPath(buildTarget, projectFilesystem).getPath());
     } else if (JavaAbis.isLibraryTarget(buildTarget)) {
-      return Optional.of(CompilerOutputPaths.getOutputJarPath(buildTarget, projectFilesystem));
+      return Optional.of(
+          CompilerOutputPaths.getOutputJarPath(buildTarget, projectFilesystem).getPath());
     } else {
       return Optional.empty();
     }
   }
 
-  /**
-   * Calculate the output path for a PrebuiltJar from information in the Arg
-   *
-   * @return
-   */
+  /** Calculate the output path for a PrebuiltJar from information in the Arg */
   private Optional<RelPath> getOutputPathForPrebuiltJar(
       PrebuiltJarDescriptionArg constructorArg,
       BuildTarget buildTarget,

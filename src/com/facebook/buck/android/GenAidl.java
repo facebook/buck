@@ -37,6 +37,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
+import com.facebook.buck.util.collect.CollectionUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -154,8 +155,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         new JarDirectoryStep(
             JarParameters.builder()
                 .setJarPath(output)
-                .setEntriesToJar(
-                    ImmutableSortedSet.orderedBy(RelPath.COMPARATOR).add(outputDirectory).build())
+                .setEntriesToJar(CollectionUtils.toSortedSet(outputDirectory))
                 .setMergeManifests(true)
                 .build()));
     buildableContext.recordArtifact(output.getPath());

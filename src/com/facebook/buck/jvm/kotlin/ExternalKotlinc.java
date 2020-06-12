@@ -20,6 +20,7 @@ import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -105,9 +106,9 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
       StepExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
-      ImmutableSortedSet<Path> kotlinSourceFilePaths,
-      Path pathToSrcsList,
-      Optional<Path> workingDirectory,
+      ImmutableSortedSet<RelPath> kotlinSourceFilePaths,
+      RelPath pathToSrcsList,
+      Optional<RelPath> workingDirectory,
       ProjectFilesystem projectFilesystem,
       boolean withDownwardApi)
       throws InterruptedException {
@@ -170,8 +171,8 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
   @Override
   public String getDescription(
       ImmutableList<String> options,
-      ImmutableSortedSet<Path> kotlinSourceFilePaths,
-      Path pathToSrcsList) {
+      ImmutableSortedSet<RelPath> kotlinSourceFilePaths,
+      RelPath pathToSrcsList) {
     StringBuilder builder = new StringBuilder(getShortName());
     builder.append(" ");
     Joiner.on(" ").appendTo(builder, options);

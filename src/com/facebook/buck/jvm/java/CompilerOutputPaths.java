@@ -23,75 +23,78 @@ import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.google.common.base.Preconditions;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /** Provides access to the various output paths for a java library. */
 @BuckStyleValueWithBuilder
 public abstract class CompilerOutputPaths {
+
   public abstract RelPath getClassesDir();
 
-  public abstract Path getOutputJarDirPath();
+  public abstract RelPath getOutputJarDirPath();
 
-  public abstract Optional<Path> getAbiJarPath();
+  public abstract Optional<RelPath> getAbiJarPath();
 
-  public abstract Path getAnnotationPath();
+  public abstract RelPath getAnnotationPath();
 
-  public abstract Path getPathToSourcesList();
+  public abstract RelPath getPathToSourcesList();
 
-  public abstract Path getWorkingDirectory();
+  public abstract RelPath getWorkingDirectory();
 
-  public abstract Optional<Path> getOutputJarPath();
+  public abstract Optional<RelPath> getOutputJarPath();
 
+  /** Creates {@link CompilerOutputPaths} */
   public static CompilerOutputPaths of(BuildTarget target, ProjectFilesystem filesystem) {
     RelPath genRoot = BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__output");
     RelPath scratchRoot = BuildTargetPaths.getScratchPath(filesystem, target, "lib__%s__scratch");
 
     return ImmutableCompilerOutputPaths.builder()
         .setClassesDir(scratchRoot.resolveRel("classes"))
-        .setOutputJarDirPath(genRoot.getPath())
+        .setOutputJarDirPath(genRoot)
         .setAbiJarPath(
             hasAbiJar(target)
-                ? Optional.of(genRoot.resolve(String.format("%s-abi.jar", target.getShortName())))
+                ? Optional.of(
+                    genRoot.resolveRel(String.format("%s-abi.jar", target.getShortName())))
                 : Optional.empty())
         .setOutputJarPath(
             isLibraryJar(target)
                 ? Optional.of(
-                    genRoot.resolve(String.format("%s.jar", target.getShortNameAndFlavorPostfix())))
+                    genRoot.resolveRel(
+                        String.format("%s.jar", target.getShortNameAndFlavorPostfix())))
                 : Optional.empty())
-        .setAnnotationPath(
-            BuildTargetPaths.getAnnotationPath(filesystem, target, "__%s_gen__").getPath())
-        .setPathToSourcesList(
-            BuildTargetPaths.getGenPath(filesystem, target, "__%s__srcs").getPath())
+        .setAnnotationPath(BuildTargetPaths.getAnnotationPath(filesystem, target, "__%s_gen__"))
+        .setPathToSourcesList(BuildTargetPaths.getGenPath(filesystem, target, "__%s__srcs"))
         .setWorkingDirectory(
-            BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__working_directory").getPath())
+            BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__working_directory"))
         .build();
   }
 
-  public static Path getDepFilePath(BuildTarget target, ProjectFilesystem filesystem) {
+  /** Returns a path to a file that contains dependencies used in the compilation */
+  public static RelPath getDepFilePath(BuildTarget target, ProjectFilesystem filesystem) {
     return CompilerOutputPaths.of(target, filesystem)
         .getOutputJarDirPath()
-        .resolve("used-classes.json");
+        .resolveRel("used-classes.json");
   }
 
   public static RelPath getClassesDir(BuildTarget target, ProjectFilesystem filesystem) {
     return CompilerOutputPaths.of(target, filesystem).getClassesDir();
   }
 
-  public static Path getOutputJarDirPath(BuildTarget target, ProjectFilesystem filesystem) {
+  public static RelPath getOutputJarDirPath(BuildTarget target, ProjectFilesystem filesystem) {
     return CompilerOutputPaths.of(target, filesystem).getOutputJarDirPath();
   }
 
-  public static Optional<Path> getAnnotationPath(ProjectFilesystem filesystem, BuildTarget target) {
+  public static Optional<RelPath> getAnnotationPath(
+      ProjectFilesystem filesystem, BuildTarget target) {
     return Optional.of(CompilerOutputPaths.of(target, filesystem).getAnnotationPath());
   }
 
-  public static Path getAbiJarPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+  public static RelPath getAbiJarPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     Preconditions.checkArgument(hasAbiJar(buildTarget));
     return CompilerOutputPaths.of(buildTarget, filesystem).getAbiJarPath().get();
   }
 
-  public static Path getOutputJarPath(BuildTarget target, ProjectFilesystem filesystem) {
+  public static RelPath getOutputJarPath(BuildTarget target, ProjectFilesystem filesystem) {
     return CompilerOutputPaths.of(target, filesystem).getOutputJarPath().get();
   }
 

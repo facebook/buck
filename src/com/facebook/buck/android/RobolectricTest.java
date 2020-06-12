@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -127,7 +128,8 @@ public class RobolectricTest extends JavaTest {
 
   @Override
   protected ImmutableSet<Path> getBootClasspathEntries() {
-    return ImmutableSet.copyOf(androidPlatformTarget.getBootclasspathEntries());
+    return ImmutableSet.copyOf(
+        androidPlatformTarget.getBootclasspathEntries().stream().map(AbsPath::getPath).iterator());
   }
 
   @Override

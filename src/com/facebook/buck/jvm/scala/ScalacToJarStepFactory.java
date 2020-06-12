@@ -35,14 +35,13 @@ import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.nio.file.Path;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Iterator;
 
 public class ScalacToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
 
@@ -53,7 +52,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
   @AddToRuleKey private final ImmutableList<String> configCompilerFlags;
   @AddToRuleKey private final ImmutableList<String> extraArguments;
   @AddToRuleKey private final ImmutableSet<SourcePath> compilerPlugins;
-  @AddToRuleKey private final ExtraClasspathProvider extraClassPath;
+  @AddToRuleKey private final ExtraClasspathProvider extraClassPathProvider;
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final boolean withDownwardApi;
@@ -76,7 +75,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
             .collect(ImmutableSet.toImmutableSet());
     this.javac = javac;
     this.javacOptions = javacOptions;
-    this.extraClassPath = extraClassPath;
+    this.extraClassPathProvider = extraClassPath;
     this.withDownwardApi = withDownwardApi;
   }
 
@@ -90,11 +89,16 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
       Builder<Step> steps,
       BuildableContext buildableContext) {
 
-    ImmutableSortedSet<Path> classpathEntries = parameters.getClasspathEntries();
-    ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
+    ImmutableSortedSet<RelPath> classpathEntries = parameters.getClasspathEntries();
+    ImmutableSortedSet<RelPath> sourceFilePaths = parameters.getSourceFilePaths();
     RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
 
-    if (sourceFilePaths.stream().anyMatch(SCALA_PATH_MATCHER::matches)) {
+    Iterator<RelPath> extraClasspath =
+        RichStream.from(extraClassPathProvider.getExtraClasspath())
+            .map(projectFilesystem::relativize)
+            .iterator();
+
+    if (sourceFilePaths.stream().anyMatch(p -> SCALA_PATH_MATCHER.matches(p.getPath()))) {
       steps.add(
           new ScalacStep(
               scalac,
@@ -110,21 +114,21 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
               context.getSourcePathResolver(),
               outputDirectory.getPath(),
               sourceFilePaths,
-              ImmutableSortedSet.<Path>naturalOrder()
-                  .addAll(
-                      Optional.ofNullable(extraClassPath.getExtraClasspath())
-                          .orElse(ImmutableList.of()))
+              ImmutableSortedSet.orderedBy(RelPath.COMPARATOR)
+                  .addAll(extraClasspath)
                   .addAll(classpathEntries)
                   .build(),
               projectFilesystem,
               withDownwardApi));
     }
 
-    ImmutableSortedSet<Path> javaSourceFiles =
-        ImmutableSortedSet.copyOf(
-            sourceFilePaths.stream()
-                .filter(JAVA_PATH_MATCHER::matches)
-                .collect(Collectors.toSet()));
+    ImmutableSortedSet<RelPath> javaSourceFiles =
+        ImmutableSortedSet.orderedBy(RelPath.COMPARATOR)
+            .addAll(
+                sourceFilePaths.stream()
+                    .filter(p -> JAVA_PATH_MATCHER.matches(p.getPath()))
+                    .iterator())
+            .build();
 
     // Don't invoke javac if we don't have any java files.
     if (!javaSourceFiles.isEmpty()) {
@@ -132,16 +136,14 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
           CompilerParameters.builder()
               .from(parameters)
               .setClasspathEntries(
-                  ImmutableSortedSet.<Path>naturalOrder()
-                      .add(outputDirectory.getPath())
-                      .addAll(
-                          Optional.ofNullable(extraClassPath.getExtraClasspath())
-                              .orElse(ImmutableList.of()))
+                  ImmutableSortedSet.orderedBy(RelPath.COMPARATOR)
+                      .add(outputDirectory)
+                      .addAll(extraClasspath)
                       .addAll(classpathEntries)
                       .build())
               .setSourceFilePaths(javaSourceFiles)
               .build();
-      new JavacToJarStepFactory(javac, javacOptions, extraClassPath, withDownwardApi)
+      new JavacToJarStepFactory(javac, javacOptions, extraClassPathProvider, withDownwardApi)
           .createCompileStep(
               context, projectFilesystem, invokingRule, javacParameters, steps, buildableContext);
     }

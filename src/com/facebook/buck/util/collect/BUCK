@@ -6,6 +6,7 @@ java_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/filesystems:filesystems",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
     ],

@@ -88,7 +88,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<SourcePath> transitiveClasspaths;
 
   private final boolean cache;
-  private Level duplicatesLogLevel;
+  private final Level duplicatesLogLevel;
 
   public JavaBinary(
       BuildTarget buildTarget,
@@ -161,7 +161,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
               .addAll(
                   sourcePathResolver.getAllAbsolutePaths(getTransitiveClasspaths()).stream()
                       .map(rootPath::relativize)
-                      .collect(ImmutableList.toImmutableList()))
+                      .iterator())
               .build();
     } else {
       includePaths =

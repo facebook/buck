@@ -20,6 +20,7 @@ import static com.facebook.buck.jvm.java.JavacOptions.SpoolMode;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -35,7 +36,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
-import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -86,13 +86,13 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       Builder<Step> steps,
       BuildableContext buildableContext,
       BuildContext buildContext) {
-    Path annotationGenFolder =
+    RelPath annotationGenFolder =
         CompilerOutputPaths.getAnnotationPath(filesystem, invokingTarget).get();
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(), filesystem, annotationGenFolder)));
-    buildableContext.recordArtifact(annotationGenFolder);
+    buildableContext.recordArtifact(annotationGenFolder.getPath());
   }
 
   @Override
@@ -148,9 +148,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
             ? pipeline.getLibraryJarParameters()
             : pipeline.getAbiJarParameters();
 
-    if (jarParameters.isPresent()) {
-      addJarSetupSteps(projectFilesystem, context, jarParameters.get(), steps);
-    }
+    jarParameters.ifPresent(
+        parameters -> addJarSetupSteps(projectFilesystem, context, parameters, steps));
 
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
@@ -161,9 +160,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       createPipelinedCompileStep(context, projectFilesystem, pipeline, target, steps);
     }
 
-    if (jarParameters.isPresent()) {
-      addJarCreationSteps(compilerParameters, steps, buildableContext, jarParameters.get());
-    }
+    jarParameters.ifPresent(
+        parameters -> addJarCreationSteps(compilerParameters, steps, buildableContext, parameters));
   }
 
   @Override
@@ -255,8 +253,11 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
               projectFilesystem,
               CompilerOutputPaths.getAnnotationPath(
                       projectFilesystem, JavaAbis.getSourceAbiJar(invokingRule))
-                  .get(),
-              CompilerOutputPaths.getAnnotationPath(projectFilesystem, invokingRule).get()));
+                  .get()
+                  .getPath(),
+              CompilerOutputPaths.getAnnotationPath(projectFilesystem, invokingRule)
+                  .get()
+                  .getPath()));
     }
 
     steps.add(

@@ -20,6 +20,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
@@ -195,12 +196,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(javaRuntimeLauncher);
-    if (proguardAgentPath.isPresent()) {
-      args.add("-agentpath:" + proguardAgentPath.get());
-    }
-    if (proguardJvmArgs.isPresent()) {
-      args.addAll(proguardJvmArgs.get());
-    }
+    proguardAgentPath.ifPresent(s -> args.add("-agentpath:" + s));
+    proguardJvmArgs.ifPresent(args::addAll);
     args.add("-Xmx" + proguardMaxHeapSize)
         .add("-jar")
         .add(proguardJar.toString())
@@ -363,11 +360,15 @@ public final class ProGuardObfuscateStep extends ShellStep {
       }
 
       // -libraryjars
-      Iterable<Path> bootclasspathPaths = androidPlatformTarget.getBootclasspathEntries();
+      Iterable<Path> bootclasspathPaths =
+          () ->
+              androidPlatformTarget.getBootclasspathEntries().stream()
+                  .map(AbsPath::getPath)
+                  .iterator();
       Iterable<Path> libraryJars =
           Iterables.concat(bootclasspathPaths, additionalLibraryJarsForProguard);
 
-      Character separator = File.pathSeparatorChar;
+      char separator = File.pathSeparatorChar;
       args.add("-libraryjars").add(Joiner.on(separator).join(libraryJars));
 
       // -dump

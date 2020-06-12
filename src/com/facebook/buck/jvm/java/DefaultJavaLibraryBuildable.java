@@ -132,7 +132,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         getIsolatedSteps(buildContext, outputPathResolver, filesystem);
 
     ImmutableList.Builder<Step> steps =
-        ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + 1 + isolatedSteps.size());
+        ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + isolatedSteps.size());
     steps.addAll(factoryBuildSteps);
     steps.addAll(isolatedSteps);
     return steps.build();
@@ -157,7 +157,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         getIsolatedSteps(buildContext, outputPathResolver, filesystem);
 
     ImmutableList.Builder<Step> steps =
-        ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + 1 + isolatedSteps.size());
+        ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + isolatedSteps.size());
     steps.addAll(factoryBuildSteps);
     steps.addAll(isolatedSteps);
     return steps.build();

@@ -127,7 +127,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
         toSourcePath(
             projectFilesystem,
             buildTarget,
-            CompilerOutputPaths.getDepFilePath(buildTarget, projectFilesystem));
+            CompilerOutputPaths.getDepFilePath(buildTarget, projectFilesystem).getPath());
   }
 
   private SourcePath toSourcePath(
