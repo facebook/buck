@@ -40,12 +40,6 @@ The general algorithm is:
 def createArgParser():
     parser = argparse.ArgumentParser(description="Run the buck performance test")
     parser.add_argument(
-        "--perftest_id",
-        action="store",
-        type=str,
-        help="The identifier of this performance test",
-    )
-    parser.add_argument(
         "--revisions_to_go_back",
         action="store",
         type=int,
@@ -167,7 +161,6 @@ def buck_build_target(args, cwd, targets, log_as_perftest=True):
     env.update({"BUCK_REPOSITORY_DIRTY": "0"})
     if log_as_perftest:
         with open(".buckjavaargs.local", "a") as f:
-            f.write("-Dbuck.perftest_id=%s\n" % (args.perftest_id,))
             f.write("-Dbuck.perftest_side=new\n")
     start = datetime.now()
     tmpFile = tempfile.TemporaryFile()
