@@ -835,9 +835,7 @@ public class AppleBundleIntegrationTest {
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
             filesystem,
-            target.withAppendedFlavors(
-                AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
-                AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+            target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
   }
 
