@@ -924,7 +924,6 @@ public class AppleBundleIntegrationTest {
             filesystem,
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s");
-    workspace.verify(RelPath.get("DemoApp_output.expected"), outputPath);
     Path appPath = outputPath.resolve(target.getShortName() + ".app");
     assertTrue(Files.exists(workspace.getPath(appPath.resolve("Assets.car"))));
 
