@@ -577,10 +577,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertEquals(
         "The classpath for the javac step to compile //:libtwo should contain only " + expectedName,
         CollectionUtils.toSortedSet(
-            RelPath.of(
-                graphBuilder
-                    .getSourcePathResolver()
-                    .getRelativePath(expectedRule.getSourcePathToOutput()))),
+            graphBuilder
+                .getSourcePathResolver()
+                .getRelativePath(expectedRule.getSourcePathToOutput())),
         javacStep.getClasspathEntries());
   }
 
