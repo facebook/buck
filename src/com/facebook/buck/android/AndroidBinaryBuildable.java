@@ -767,6 +767,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     ImmutableList<Step> redexSteps =
         ReDexStep.createSteps(
             getProjectFilesystem(),
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
             androidSdkLocation,
             resolver,
             redexOptions.get(),

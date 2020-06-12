@@ -77,7 +77,7 @@ public class MiniAapt implements Step {
 
   private static final String GRAYSCALE_SUFFIX = "_g.png";
 
-  /** See {@link com.facebook.buck.android.AaptStep} for a list of files that we ignore. */
+  /** See {@link AaptStep} for a list of files that we ignore. */
   public static final ImmutableList<String> IGNORED_FILE_EXTENSIONS = ImmutableList.of("orig");
 
   private static final String ID_DEFINITION_PREFIX = "@+id/";

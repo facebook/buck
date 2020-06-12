@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -34,13 +35,14 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.coercer.ManifestEntries;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.base.Joiner;
@@ -181,6 +183,8 @@ public class Aapt2Link extends AbstractBuildRule {
             context.getSourcePathResolver(),
             getArgsPath(),
             compiledApkPaths,
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
             withDownwardApi));
 
     if (resourceIdBlocklist.isPresent()) {
@@ -190,7 +194,12 @@ public class Aapt2Link extends AbstractBuildRule {
     steps.add(ZipScrubberStep.of(getProjectFilesystem().resolve(getResourceApkPath())));
 
     if (!extraFilteredResources.isEmpty()) {
-      steps.add(new ExtraFilterResourcesStep(getProjectFilesystem(), withDownwardApi));
+      steps.add(
+          new ExtraFilterResourcesStep(
+              getProjectFilesystem(),
+              ProjectFilesystemUtils.relativize(
+                  getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
+              withDownwardApi));
     }
 
     buildableContext.recordArtifact(getFinalManifestPath().getPath());
@@ -257,11 +266,12 @@ public class Aapt2Link extends AbstractBuildRule {
    * <p>This is a faster filtering step that just uses zip -d to remove entries from the archive.
    * It's also superbly dangerous.
    */
-  class ExtraFilterResourcesStep extends ShellStep {
+  class ExtraFilterResourcesStep extends IsolatedShellStep {
     private static final int ZIP_NOTHING_TO_DO_EXIT_CODE = 12;
 
-    ExtraFilterResourcesStep(ProjectFilesystem filesystem, boolean withDownwardApi) {
-      super(filesystem.getRootPath(), withDownwardApi);
+    ExtraFilterResourcesStep(
+        ProjectFilesystem filesystem, RelPath cellPath, boolean withDownwardApi) {
+      super(filesystem.getRootPath(), cellPath, withDownwardApi);
     }
 
     @Override
@@ -270,7 +280,7 @@ public class Aapt2Link extends AbstractBuildRule {
     }
 
     @Override
-    protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+    protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       builder.add("zip");
       builder.add("-d");
@@ -282,7 +292,7 @@ public class Aapt2Link extends AbstractBuildRule {
     }
 
     @Override
-    protected int getExitCodeFromResult(ProcessExecutor.Result result) {
+    public int getExitCodeFromResult(ProcessExecutor.Result result) {
       // If there's nothing to do (i.e. no matches), print a warning, but don't fail.
       int realExitCode = result.getExitCode();
       if (realExitCode == ZIP_NOTHING_TO_DO_EXIT_CODE) {
@@ -295,7 +305,7 @@ public class Aapt2Link extends AbstractBuildRule {
     }
   }
 
-  class Aapt2LinkStep extends ShellStep {
+  class Aapt2LinkStep extends IsolatedShellStep {
     private final ProjectFilesystem filesystem;
     private final SourcePathResolverAdapter pathResolver;
     private final Path argsFile;
@@ -306,8 +316,9 @@ public class Aapt2Link extends AbstractBuildRule {
         SourcePathResolverAdapter pathResolver,
         Path argsFile,
         List<Path> compiledResourceApkPaths,
+        RelPath cellPath,
         boolean withDownwardApi) {
-      super(filesystem.getRootPath(), withDownwardApi);
+      super(filesystem.getRootPath(), cellPath, withDownwardApi);
       this.filesystem = filesystem;
       this.pathResolver = pathResolver;
       this.argsFile = argsFile;
@@ -320,7 +331,7 @@ public class Aapt2Link extends AbstractBuildRule {
     }
 
     @Override
-    protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+    protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       builder.addAll(aapt2Tool.getCommandPrefix(pathResolver));
 

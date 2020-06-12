@@ -18,7 +18,7 @@ package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -36,11 +36,12 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
@@ -242,6 +243,8 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     steps.add(
         new GhcPkgStep(
             context.getSourcePathResolver(),
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
             ImmutableList.of("init", packageDb.toString()),
             ImmutableMap.of(),
             withDownwardApi));
@@ -259,6 +262,8 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     steps.add(
         new GhcPkgStep(
             context.getSourcePathResolver(),
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
             ghcPkgCmd,
             ImmutableMap.of(
                 "GHC_PACKAGE_PATH",
@@ -295,7 +300,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         .build();
   }
 
-  private class GhcPkgStep extends ShellStep {
+  private class GhcPkgStep extends IsolatedShellStep {
 
     private final SourcePathResolverAdapter resolver;
     private final ImmutableList<String> args;
@@ -303,22 +308,24 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     public GhcPkgStep(
         SourcePathResolverAdapter resolver,
+        RelPath buildCellPath,
         ImmutableList<String> args,
         ImmutableMap<String, String> env,
         boolean withDownwardApi) {
-      super(getProjectFilesystem().getRootPath(), withDownwardApi);
+      super(getProjectFilesystem().getRootPath(), buildCellPath, withDownwardApi);
       this.resolver = resolver;
       this.args = args;
       this.env = env;
     }
 
     @Override
-    protected boolean shouldPrintStderr(Verbosity verbosity) {
+    public boolean shouldPrintStderr(Verbosity verbosity) {
       return !verbosity.isSilent();
     }
 
     @Override
-    protected final ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+    protected final ImmutableList<String> getShellCommandInternal(
+        IsolatedExecutionContext context) {
       return ImmutableList.<String>builder()
           .addAll(ghcPkg.getCommandPrefix(resolver))
           .addAll(args)

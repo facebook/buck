@@ -91,7 +91,7 @@ public class GoListStep extends ShellStep {
   }
 
   @Override
-  protected void addOptions(ImmutableSet.Builder<Option> options) {
+  public void addOptions(ImmutableSet.Builder<Option> options) {
     super.addOptions(options);
     options.add(Option.EXPECTING_STD_OUT);
   }

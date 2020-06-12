@@ -32,6 +32,7 @@ import com.facebook.buck.cxx.toolchain.Archiver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -220,6 +221,8 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
                 tool.getCommandPrefix(resolver),
                 Arg.stringify(ranlibFlags, resolver),
                 outputPath.getPath(),
+                ProjectFilesystemUtils.relativize(
+                    filesystem.getRootPath(), buildContext.getBuildCellRootPath()),
                 withDownwardApi));
       }
 

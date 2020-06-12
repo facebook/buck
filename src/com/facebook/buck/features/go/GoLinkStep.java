@@ -16,8 +16,9 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -25,7 +26,7 @@ import java.nio.file.Path;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class GoLinkStep extends ShellStep {
+public class GoLinkStep extends IsolatedShellStep {
 
   enum BuildMode {
     EXECUTABLE("exe");
@@ -84,8 +85,9 @@ public class GoLinkStep extends ShellStep {
       BuildMode buildMode,
       LinkMode linkMode,
       Path output,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(workingDirectory, withDownwardApi);
+    super(workingDirectory, cellPath, withDownwardApi);
     this.environment = environment;
     this.cxxLinkCommandPrefix = cxxLinkCommandPrefix;
     this.linkCommandPrefix = linkCommandPrefix;
@@ -100,7 +102,7 @@ public class GoLinkStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> command =
         ImmutableList.<String>builder()
             .addAll(linkCommandPrefix)

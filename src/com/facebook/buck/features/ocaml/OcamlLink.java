@@ -27,6 +27,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -162,6 +163,8 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                           context.getSourcePathResolver().getAbsolutePath(sourcePath).getPath())
                   .collect(ImmutableList.toImmutableList()),
               ocamlInput,
+              ProjectFilesystemUtils.relativize(
+                  getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
               withDownwardApi));
     }
     return steps.build();

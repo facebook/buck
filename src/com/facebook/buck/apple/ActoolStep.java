@@ -17,9 +17,10 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -29,7 +30,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.SortedSet;
 
-class ActoolStep extends ShellStep {
+class ActoolStep extends IsolatedShellStep {
 
   private final String applePlatformName;
   private final String targetSDKVersion;
@@ -54,8 +55,9 @@ class ActoolStep extends ShellStep {
       Optional<String> appIcon,
       Optional<String> launchImage,
       AppleAssetCatalogsCompilationOptions compilationOptions,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(workingDirectory, withDownwardApi);
+    super(workingDirectory, cellPath, withDownwardApi);
     this.applePlatformName = applePlatformName;
     this.targetSDKVersion = targetSDKVersion;
     this.environment = environment;
@@ -69,7 +71,7 @@ class ActoolStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
 
     commandBuilder.addAll(actoolCommand);

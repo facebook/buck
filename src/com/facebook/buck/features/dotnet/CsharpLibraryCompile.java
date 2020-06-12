@@ -16,10 +16,11 @@
 
 package com.facebook.buck.features.dotnet;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
@@ -29,7 +30,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
-public class CsharpLibraryCompile extends ShellStep {
+public class CsharpLibraryCompile extends IsolatedShellStep {
   private final Tool csharpCompiler;
   private final SourcePathResolverAdapter pathResolver;
   private final Path output;
@@ -48,8 +49,9 @@ public class CsharpLibraryCompile extends ShellStep {
       ImmutableListMultimap<Path, String> resources,
       FrameworkVersion version,
       ImmutableList<String> compilerFlags,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(output.getParent(), withDownwardApi);
+    super(output.getParent(), cellPath, withDownwardApi);
     this.pathResolver = pathResolver;
     this.csharpCompiler = csharpCompiler;
     this.references = references;
@@ -63,7 +65,7 @@ public class CsharpLibraryCompile extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     DotnetFramework netFramework = DotnetFramework.resolveFramework(version);
 
     ImmutableList.Builder<String> args = ImmutableList.builder();

@@ -19,17 +19,20 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.annotations.VisibleForTesting;
@@ -49,7 +52,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 
-public final class ProGuardObfuscateStep extends ShellStep {
+public final class ProGuardObfuscateStep extends IsolatedShellStep {
   public static final int DEFAULT_OPTIMIZATION_PASSES = 1;
 
   enum SdkProguardType {
@@ -131,6 +134,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
               proguardMaxHeapSize,
               proguardJvmArgs,
               proguardAgentPath,
+              ProjectFilesystemUtils.relativize(
+                  filesystem.getRootPath(), buildContext.getBuildCellRootPath()),
               withDownwardApi);
 
       buildableContext.recordArtifact(commandLineHelperStep.getConfigurationTxt());
@@ -165,8 +170,9 @@ public final class ProGuardObfuscateStep extends ShellStep {
       String proguardMaxHeapSize,
       Optional<List<String>> proguardJvmArgs,
       Optional<String> proguardAgentPath,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(filesystem.getRootPath(), withDownwardApi);
+    super(filesystem.getRootPath(), cellPath, withDownwardApi);
     this.androidPlatformTarget = androidPlatformTarget;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.filesystem = filesystem;
@@ -185,7 +191,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     // Run ProGuard as a standalone executable JAR file.
     Path proguardJar;
     if (proguardJarOverride.isPresent()) {
@@ -206,9 +212,9 @@ public final class ProGuardObfuscateStep extends ShellStep {
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context)
+  public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
-    StepExecutionResult executionResult = super.execute(context);
+    StepExecutionResult executionResult = super.executeIsolatedStep(context);
 
     // proguard has a peculiar behaviour when multiple -injars/outjars pairs are specified in which
     // any -injars that would have been fully stripped away will not produce their matching -outjars
@@ -222,7 +228,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     return executionResult;
   }
 
-  private int ensureAllOutputsExist(StepExecutionContext context) {
+  private int ensureAllOutputsExist(IsolatedExecutionContext context) {
     for (Path outputJar : inputAndOutputEntries.values()) {
       if (!Files.exists(outputJar)) {
         try {

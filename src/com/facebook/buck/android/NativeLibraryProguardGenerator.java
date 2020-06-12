@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
@@ -34,9 +34,10 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -100,20 +101,26 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclare
             MakeCleanDirectoryStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)))
-        .add(new RunConfigGenStep(context.getSourcePathResolver(), withDownwardApi))
+        .add(
+            new RunConfigGenStep(
+                context.getSourcePathResolver(),
+                ProjectFilesystemUtils.relativize(
+                    getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
+                withDownwardApi))
         .build();
   }
 
-  private class RunConfigGenStep extends ShellStep {
+  private class RunConfigGenStep extends IsolatedShellStep {
     private final SourcePathResolverAdapter pathResolver;
 
-    RunConfigGenStep(SourcePathResolverAdapter resolverAdapter, boolean withDownwardApi) {
-      super(getProjectFilesystem().getRootPath(), withDownwardApi);
+    RunConfigGenStep(
+        SourcePathResolverAdapter resolverAdapter, RelPath cellPath, boolean withDownwardApi) {
+      super(getProjectFilesystem().getRootPath(), cellPath, withDownwardApi);
       this.pathResolver = resolverAdapter;
     }
 
     @Override
-    protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+    protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
       ImmutableList.Builder<Path> libPaths = ImmutableList.builder();
       ProjectFilesystem rootFilesystem = getProjectFilesystem();
       try {

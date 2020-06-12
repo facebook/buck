@@ -28,6 +28,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
@@ -119,6 +120,8 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
                   .addAll(classpathEntries)
                   .build(),
               projectFilesystem,
+              ProjectFilesystemUtils.relativize(
+                  projectFilesystem.getRootPath(), context.getBuildCellRootPath()),
               withDownwardApi));
     }
 

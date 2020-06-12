@@ -40,6 +40,7 @@ import com.facebook.buck.cxx.CxxPrepareForLinkStep;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
@@ -214,6 +215,8 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             GoLinkStep.BuildMode.EXECUTABLE,
             linkMode,
             output.getPath(),
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
             withDownwardApi));
     return steps.build();
   }

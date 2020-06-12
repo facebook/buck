@@ -25,6 +25,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.Step;
@@ -334,6 +335,8 @@ public class OcamlBuildStep implements Step {
       Step compileStep =
           new OcamlMLCompileStep(
               workingDirectory,
+              ProjectFilesystemUtils.relativize(
+                  filesystem.getRootPath(), buildContext.getBuildCellRootPath()),
               withDownwardApi,
               getResolver(),
               new OcamlMLCompileStep.Args(
@@ -386,6 +389,8 @@ public class OcamlBuildStep implements Step {
       Step compileBytecodeStep =
           new OcamlMLCompileStep(
               workingDirectory,
+              ProjectFilesystemUtils.relativize(
+                  filesystem.getRootPath(), buildContext.getBuildCellRootPath()),
               withDownwardApi,
               getResolver(),
               new OcamlMLCompileStep.Args(
@@ -444,6 +449,8 @@ public class OcamlBuildStep implements Step {
                   ocamlContext.getLexCompiler().get(),
                   getResolver().getAbsolutePath(output).getPath(),
                   getResolver().getAbsolutePath(lexSource).getPath()),
+              ProjectFilesystemUtils.relativize(
+                  filesystem.getRootPath(), buildContext.getBuildCellRootPath()),
               withDownwardApi);
       StepExecutionResult lexExecutionResult = lexStep.execute(context);
       if (!lexExecutionResult.isSuccess()) {

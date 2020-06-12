@@ -16,16 +16,16 @@
 
 package com.facebook.buck.features.d;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class DCompileStep extends ShellStep {
+public class DCompileStep extends IsolatedShellStep {
 
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> compiler;
@@ -40,8 +40,9 @@ public class DCompileStep extends ShellStep {
       ImmutableList<String> flags,
       RelPath output,
       ImmutableCollection<AbsPath> inputs,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(workingDirectory, withDownwardApi);
+    super(workingDirectory, cellPath, withDownwardApi);
     this.environment = environment;
     this.compiler = compiler;
     this.flags = flags;
@@ -50,7 +51,7 @@ public class DCompileStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     return ImmutableList.<String>builder()
         .addAll(compiler)
         .addAll(flags)

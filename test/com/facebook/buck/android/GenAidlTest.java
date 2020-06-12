@@ -47,11 +47,11 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.collect.ImmutableSortedSet;
@@ -148,7 +148,7 @@ public class GenAidlTest {
                 buildContext.getBuildCellRootPath(), stubFilesystem, outputDirectory)),
         steps.get(3));
 
-    ShellStep aidlStep = (ShellStep) steps.get(4);
+    IsolatedShellStep aidlStep = (IsolatedShellStep) steps.get(4);
     assertEquals(
         "gen_aidl() should use the aidl binary to write .java files.",
         String.format(

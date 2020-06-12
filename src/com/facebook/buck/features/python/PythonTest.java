@@ -40,6 +40,7 @@ import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -178,6 +179,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 options.getTestSelectorList(),
                 testRuleTimeoutMs,
                 getProjectFilesystem().resolve(getPathToTestOutputResult()),
+                ProjectFilesystemUtils.relativize(
+                    getProjectFilesystem().getRootPath(), buildContext.getBuildCellRootPath()),
                 withDownwardApi))
         .build();
   }

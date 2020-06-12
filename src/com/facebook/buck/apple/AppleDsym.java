@@ -40,6 +40,7 @@ import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -156,6 +157,8 @@ public class AppleDsym extends AbstractBuildRule
             dsymutil.getCommandPrefix(context.getSourcePathResolver()),
             unstrippedBinaryPath.getPath(),
             dsymOutputPath,
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
             withDownwardApi),
         new MoveStep(
             getProjectFilesystem(),

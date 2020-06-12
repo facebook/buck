@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -27,14 +27,15 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.HasBrokenInputBasedRuleKey;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -101,6 +102,8 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
               aapt2ExecutableTool.getCommandPrefix(sourcePathResolverAdapter),
               sourcePathResolverAdapter.getRelativePath(resDir).getPath(),
               outputPath.getPath(),
+              ProjectFilesystemUtils.relativize(
+                  filesystem.getRootPath(), buildContext.getBuildCellRootPath()),
               skipCrunchPngs,
               failOnLegacyErrors,
               withDownwardApi);
@@ -109,7 +112,7 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
     }
   }
 
-  private static class Aapt2CompileStep extends ShellStep {
+  private static class Aapt2CompileStep extends IsolatedShellStep {
     private final ImmutableList<String> commandPrefix;
     private final Path resDirPath;
     private final Path outputPath;
@@ -121,10 +124,11 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
         ImmutableList<String> commandPrefix,
         Path resDirPath,
         Path outputPath,
+        RelPath cellPath,
         boolean skipCrunchPngs,
         boolean failOnLegacyErrors,
         boolean withDownwardApi) {
-      super(workingDirectory, withDownwardApi);
+      super(workingDirectory, cellPath, withDownwardApi);
       this.commandPrefix = commandPrefix;
       this.resDirPath = resDirPath;
       this.outputPath = outputPath;
@@ -138,7 +142,7 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
     }
 
     @Override
-    protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+    protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       builder.addAll(commandPrefix);
       builder.add("compile");

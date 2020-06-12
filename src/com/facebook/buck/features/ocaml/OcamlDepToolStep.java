@@ -57,7 +57,7 @@ public class OcamlDepToolStep extends ShellStep {
   }
 
   @Override
-  protected void addOptions(ImmutableSet.Builder<ProcessExecutor.Option> options) {
+  public void addOptions(ImmutableSet.Builder<ProcessExecutor.Option> options) {
     // We need this else we get output with color codes which confuses parsing
     options.add(ProcessExecutor.Option.EXPECTING_STD_ERR);
     options.add(ProcessExecutor.Option.EXPECTING_STD_OUT);

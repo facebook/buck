@@ -16,13 +16,13 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -122,13 +122,6 @@ public class JUnitStep extends ShellStep {
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context)
-      throws InterruptedException, IOException {
-    ensureClasspathArgfile();
-    return super.execute(context);
-  }
-
-  @Override
   public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     env.putAll(this.env);
@@ -137,17 +130,17 @@ public class JUnitStep extends ShellStep {
     return env.build();
   }
 
-  private void warnUser(StepExecutionContext context, String message) {
+  private void warnUser(IsolatedExecutionContext context, String message) {
     context.getStdErr().println(context.getAnsi().asWarningText(message));
   }
 
   @Override
-  protected Optional<Long> getTimeout() {
+  public Optional<Long> getTimeout() {
     return testRuleTimeoutMs;
   }
 
   @Override
-  protected Optional<Consumer<Process>> getTimeoutHandler(StepExecutionContext context) {
+  public Optional<Consumer<Process>> getTimeoutHandler(StepExecutionContext context) {
     return Optional.of(
         process -> {
           Optional<Long> pid = Optional.empty();
@@ -230,7 +223,7 @@ public class JUnitStep extends ShellStep {
   }
 
   @Override
-  protected int getExitCodeFromResult(ProcessExecutor.Result result) {
+  public int getExitCodeFromResult(ProcessExecutor.Result result) {
     int exitCode = result.getExitCode();
 
     // If we timed out, force the exit code to 0 just so that the step itself doesn't fail,

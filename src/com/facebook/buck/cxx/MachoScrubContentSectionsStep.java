@@ -16,15 +16,15 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 /** Uses the strip tool to remove the contents (i.e., compiled code) from a dylib. */
-public class MachoScrubContentSectionsStep extends ShellStep {
+public class MachoScrubContentSectionsStep extends IsolatedShellStep {
 
   private final ImmutableList<String> stripToolPrefix;
 
@@ -40,8 +40,9 @@ public class MachoScrubContentSectionsStep extends ShellStep {
       RelPath inputDylib,
       ProjectFilesystem outputFilesystem,
       Path outputDylib,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(outputFilesystem.getRootPath(), withDownwardApi);
+    super(outputFilesystem.getRootPath(), cellPath, withDownwardApi);
     this.stripToolPrefix = stripToolPrefix;
     this.inputFilesystem = inputFilesystem;
     this.inputDylib = inputDylib;
@@ -50,7 +51,7 @@ public class MachoScrubContentSectionsStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(stripToolPrefix);
     args.add("-x");

@@ -16,10 +16,11 @@
 
 package com.facebook.buck.features.ocaml;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -35,7 +36,7 @@ import java.util.Optional;
  * <p>`.cmxs` files are generally used as dynamically-linked plugins for native-compiled ocaml. See
  * the built-in `Dynlink` ocaml module for more info.
  */
-public class OcamlNativePluginStep extends ShellStep {
+public class OcamlNativePluginStep extends IsolatedShellStep {
 
   public final ImmutableMap<String, String> environment;
   public final ImmutableList<String> cxxCompiler;
@@ -59,8 +60,9 @@ public class OcamlNativePluginStep extends ShellStep {
       ImmutableList<Arg> cDepInput,
       ImmutableList<Path> input,
       ImmutableList<String> ocamlInput,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(workingDirectory, withDownwardApi);
+    super(workingDirectory, cellPath, withDownwardApi);
     this.environment = environment;
     this.ocamlCompilerCommandPrefix = ocamlCompilerCommandPrefix;
     this.cxxCompiler = cxxCompiler;
@@ -78,7 +80,7 @@ public class OcamlNativePluginStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> cmd =
         ImmutableList.<String>builder()
             .addAll(ocamlCompilerCommandPrefix)

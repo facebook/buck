@@ -18,6 +18,7 @@ package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -40,12 +41,13 @@ import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.MoreSuppliers;
@@ -272,12 +274,16 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     }
   }
 
-  private class HaddockStep extends ShellStep {
+  private class HaddockStep extends IsolatedShellStep {
 
     private BuildContext buildContext;
 
     public HaddockStep(AbsPath rootPath, boolean withDownwardApi, BuildContext buildContext) {
-      super(rootPath, withDownwardApi);
+      super(
+          rootPath,
+          ProjectFilesystemUtils.relativize(
+              getProjectFilesystem().getRootPath(), buildContext.getBuildCellRootPath()),
+          withDownwardApi);
       this.buildContext = buildContext;
     }
 
@@ -305,12 +311,12 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     }
 
     @Override
-    protected boolean shouldPrintStderr(Verbosity verbosity) {
+    public boolean shouldPrintStderr(Verbosity verbosity) {
       return !verbosity.isSilent();
     }
 
     @Override
-    protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+    protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
       SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
       ImmutableList.Builder<String> cmdArgs = ImmutableList.builder();

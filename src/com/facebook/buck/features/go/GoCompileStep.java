@@ -16,9 +16,10 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -29,7 +30,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
-public class GoCompileStep extends ShellStep {
+public class GoCompileStep extends IsolatedShellStep {
 
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> compilerCommandPrefix;
@@ -61,8 +62,9 @@ public class GoCompileStep extends ShellStep {
       GoPlatform platform,
       Optional<Path> asmSymabisPath,
       Path output,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(workingDirectory, withDownwardApi);
+    super(workingDirectory, cellPath, withDownwardApi);
     this.environment = environment;
     this.compilerCommandPrefix = compilerCommandPrefix;
     this.flags = flags;
@@ -79,7 +81,7 @@ public class GoCompileStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ArrayList<String> pathStrings = new ArrayList<>();
     for (Path path : srcs) {
       pathStrings.add(path.toString());

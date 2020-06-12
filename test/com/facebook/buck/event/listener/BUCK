@@ -189,6 +189,7 @@ java_test(
         "//src/com/facebook/buck/skylark/parser:parser",
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/step/isolatedsteps/shell:shell_steps",
         "//src/com/facebook/buck/support/bgtasks:bgtasks",
         "//src/com/facebook/buck/support/build/report:report",
         "//src/com/facebook/buck/support/jvm:jvm",

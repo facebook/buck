@@ -19,14 +19,15 @@ package com.facebook.buck.android.redex;
 import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -38,7 +39,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /** Runs <a href="https://github.com/facebook/redex">ReDex</a> on an APK. */
-public class ReDexStep extends ShellStep {
+public class ReDexStep extends IsolatedShellStep {
   private final AndroidSdkLocation androidSdkLocation;
   private final ImmutableList<String> redexBinaryArgs;
   private final ImmutableMap<String, String> redexEnvironmentVariables;
@@ -55,6 +56,7 @@ public class ReDexStep extends ShellStep {
   @VisibleForTesting
   ReDexStep(
       AbsPath workingDirectory,
+      RelPath cellPath,
       AndroidSdkLocation androidSdkLocation,
       List<String> redexBinaryArgs,
       Map<String, String> redexEnvironmentVariables,
@@ -68,7 +70,7 @@ public class ReDexStep extends ShellStep {
       Path seeds,
       SourcePathResolverAdapter pathResolver,
       boolean withDownwardApi) {
-    super(workingDirectory, withDownwardApi);
+    super(workingDirectory, cellPath, withDownwardApi);
     this.androidSdkLocation = androidSdkLocation;
     this.redexBinaryArgs = ImmutableList.copyOf(redexBinaryArgs);
     this.redexEnvironmentVariables = ImmutableMap.copyOf(redexEnvironmentVariables);
@@ -85,6 +87,7 @@ public class ReDexStep extends ShellStep {
 
   public static ImmutableList<Step> createSteps(
       ProjectFilesystem filesystem,
+      RelPath cellPath,
       AndroidSdkLocation androidSdkLocation,
       SourcePathResolverAdapter resolver,
       RedexOptions redexOptions,
@@ -100,6 +103,7 @@ public class ReDexStep extends ShellStep {
     ReDexStep redexStep =
         new ReDexStep(
             filesystem.getRootPath(),
+            cellPath,
             androidSdkLocation,
             redexBinary.getCommandPrefix(resolver),
             redexBinary.getEnvironment(resolver),
@@ -129,7 +133,7 @@ public class ReDexStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
     // In practice, redexBinaryArgs is likely to be a single argument, which is the path to the

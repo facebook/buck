@@ -34,6 +34,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreSuppliers;
@@ -112,6 +113,8 @@ public class CGoGenImport extends AbstractBuildRule {
             MoreSuppliers.memoize(listStep::getRawOutput),
             pathResolver.getAbsolutePath(cgoBin).getPath(),
             outputFile,
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
             withDownwardApi));
 
     buildableContext.recordArtifact(outputFile);

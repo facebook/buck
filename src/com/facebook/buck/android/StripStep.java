@@ -16,16 +16,17 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /** Run strip on a binary. */
-public class StripStep extends ShellStep {
+public class StripStep extends IsolatedShellStep {
 
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> stripCommandPrefix;
@@ -40,8 +41,9 @@ public class StripStep extends ShellStep {
       ImmutableList<String> flags,
       AbsPath source,
       AbsPath destination,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(workingDirectory, withDownwardApi);
+    super(workingDirectory, cellPath, withDownwardApi);
     this.environment = environment;
     this.stripCommandPrefix = stripCommandPrefix;
     this.flags = flags;
@@ -50,7 +52,7 @@ public class StripStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     // flavors embedded in the output path can make the path very very long
     String outputPath;
     if (context.getPlatform() == Platform.WINDOWS) {

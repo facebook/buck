@@ -25,6 +25,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
@@ -91,6 +92,8 @@ public class StripLinkable extends ModernBuildRule<StripLinkable.Impl> {
               ImmutableList.of("--strip-unneeded"),
               sourcePathResolverAdapter.getAbsolutePath(sourcePathToStrip),
               filesystem.resolve(destination),
+              ProjectFilesystemUtils.relativize(
+                  filesystem.getRootPath(), buildContext.getBuildCellRootPath()),
               withDownwardApi));
     }
   }

@@ -16,16 +16,16 @@
 
 package com.facebook.buck.features.halide;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
-public class HalideCompilerStep extends ShellStep {
+public class HalideCompilerStep extends IsolatedShellStep {
   // The list of environment variables needed to run our generated compiler.
   private final ImmutableMap<String, String> environment;
 
@@ -52,8 +52,9 @@ public class HalideCompilerStep extends ShellStep {
       String funcName,
       String halideTarget,
       Optional<ImmutableList<String>> compilerInvocationFlags,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(workingDirectory, withDownwardApi);
+    super(workingDirectory, cellPath, withDownwardApi);
     this.environment = environment;
     this.compilerPrefix = compilerPrefix;
     this.outputDir = outputDir;
@@ -63,7 +64,7 @@ public class HalideCompilerStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.addAll(compilerPrefix);
     builder.add("-h");

@@ -30,6 +30,7 @@ import com.facebook.buck.cxx.toolchain.elf.ElfDynamicSection;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
@@ -145,6 +146,8 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
               input.getSecond(),
               filesystem,
               outputScratch.getPath(),
+              ProjectFilesystemUtils.relativize(
+                  filesystem.getRootPath(), buildContext.getBuildCellRootPath()),
               withDownwardApi),
           ImmutableElfSymbolTableScrubberStep.ofImpl(
               filesystem,

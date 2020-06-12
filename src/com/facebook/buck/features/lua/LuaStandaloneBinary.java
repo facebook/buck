@@ -18,7 +18,7 @@ package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -29,10 +29,11 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -105,10 +106,14 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
     SourcePathResolverAdapter resolver = context.getSourcePathResolver();
 
     steps.add(
-        new ShellStep(getProjectFilesystem().getRootPath(), withDownwardApi) {
+        new IsolatedShellStep(
+            getProjectFilesystem().getRootPath(),
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
+            withDownwardApi) {
 
           @Override
-          protected Optional<String> getStdin() {
+          public Optional<String> getStdin() {
             try {
               return Optional.of(
                   ObjectMappers.WRITER.writeValueAsString(
@@ -131,7 +136,8 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
           }
 
           @Override
-          protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+          protected ImmutableList<String> getShellCommandInternal(
+              IsolatedExecutionContext context) {
             ImmutableList.Builder<String> command = ImmutableList.builder();
             command.addAll(builder.getCommandPrefix(resolver));
             command.add("--entry-point", mainModule);

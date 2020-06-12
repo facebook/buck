@@ -20,11 +20,16 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -84,6 +89,13 @@ public class ElfExtractSectionsStepTest {
             filesystem.getPath("libfoo.so"),
             filesystem,
             output,
+            ProjectFilesystemUtils.relativize(
+                filesystem.getRootPath(),
+                FakeBuildContext.withSourcePathResolver(
+                        new SourcePathResolverAdapter(
+                            DefaultSourcePathResolver.from(new TestActionGraphBuilder())),
+                        filesystem)
+                    .getBuildCellRootPath()),
             false);
     step.execute(TestExecutionContext.newInstanceWithRealProcessExecutor());
 

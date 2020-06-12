@@ -46,7 +46,7 @@ public class AaptStep extends ShellStep {
   public static final String IGNORE_ASSETS_PATTERN = DEFAULT_IGNORE_ASSETS_PATTERN + ":*.orig";
   /**
    * Determines whether the default AAPT ignore pattern in {@link
-   * com.facebook.buck.android.AaptStep#DEFAULT_IGNORE_ASSETS_PATTERN} would silently ignore a file.
+   * AaptStep#DEFAULT_IGNORE_ASSETS_PATTERN} would silently ignore a file.
    *
    * @param path The path of the file we are interested in.
    * @return Whether the file would be silently ignored.

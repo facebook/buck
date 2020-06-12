@@ -34,6 +34,7 @@ import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -207,6 +208,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                     .build(),
                 platform,
                 asmSymabisPath.get(),
+                ProjectFilesystemUtils.relativize(
+                    getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
                 withDownwardApi));
       }
 
@@ -235,6 +238,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               platform,
               asmSymabisPath,
               output.getPath(),
+              ProjectFilesystemUtils.relativize(
+                  getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
               withDownwardApi));
     }
 
@@ -269,6 +274,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                   .build(),
               platform,
               asmOutputPath,
+              ProjectFilesystemUtils.relativize(
+                  getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
               withDownwardApi));
       asmOutputs.add(asmOutputPath);
     }
@@ -288,6 +295,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                   .build(),
               filteredAsmSrcs,
               output.getPath(),
+              ProjectFilesystemUtils.relativize(
+                  getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
               withDownwardApi));
     }
 

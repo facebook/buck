@@ -16,15 +16,16 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 
-public class GoPackStep extends ShellStep {
+public class GoPackStep extends IsolatedShellStep {
   public enum Operation {
     CREATE("c"),
     APPEND("r"),
@@ -56,8 +57,9 @@ public class GoPackStep extends ShellStep {
       ImmutableList<Path> srcs,
       Iterable<Path> filteredAsmSrcs,
       Path output,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(workingDirectory, withDownwardApi);
+    super(workingDirectory, cellPath, withDownwardApi);
     this.environment = environment;
     this.packCommandPrefix = packCommandPrefix;
     this.op = op;
@@ -67,7 +69,7 @@ public class GoPackStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     if (shouldSkipPacking()) {
       return ImmutableList.of();
     }

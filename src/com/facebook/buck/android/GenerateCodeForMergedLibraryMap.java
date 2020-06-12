@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -34,11 +35,12 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -102,7 +104,12 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
                     context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
         .add(new WriteMapDataStep())
         .add(new WriteTargetsFileStep())
-        .add(new RunCodeGenStep(context.getSourcePathResolver(), withDownwardApi))
+        .add(
+            new RunCodeGenStep(
+                context.getSourcePathResolver(),
+                ProjectFilesystemUtils.relativize(
+                    getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
+                withDownwardApi))
         .build();
   }
 
@@ -194,16 +201,17 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
     }
   }
 
-  private class RunCodeGenStep extends ShellStep {
+  private class RunCodeGenStep extends IsolatedShellStep {
     private final SourcePathResolverAdapter pathResolver;
 
-    RunCodeGenStep(SourcePathResolverAdapter pathResolver, boolean withDownwardApi) {
-      super(getProjectFilesystem().getRootPath(), withDownwardApi);
+    RunCodeGenStep(
+        SourcePathResolverAdapter pathResolver, RelPath cellPath, boolean withDownwardApi) {
+      super(getProjectFilesystem().getRootPath(), cellPath, withDownwardApi);
       this.pathResolver = pathResolver;
     }
 
     @Override
-    protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+    protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
       Preconditions.checkState(
           GenerateCodeForMergedLibraryMap.this.codeGenerator instanceof BinaryBuildRule);
       String executableCommand =

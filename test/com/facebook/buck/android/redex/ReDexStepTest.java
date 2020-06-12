@@ -20,9 +20,13 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.TestExecutionContext;
@@ -58,12 +62,15 @@ public class ReDexStepTest {
     Path seeds =
         Paths.get(
             "buck-out/gen/app/__proshouldEmitGFlagIfProguardConfigPresentshouldEmitGFlagIfProguardConfigPresentshouldEmitGFlagIfProguardConfigPresentguard__/seeds.txt");
-
     Path sdkDirectory = Paths.get("/Users/user/android-sdk-macosx");
+    SourcePathResolverAdapter resolver = new TestActionGraphBuilder().getSourcePathResolver();
 
     ReDexStep redex =
         new ReDexStep(
             workingDirectory,
+            ProjectFilesystemUtils.relativize(
+                new FakeProjectFilesystem().getRootPath(),
+                FakeBuildContext.withSourcePathResolver(resolver).getBuildCellRootPath()),
             AndroidSdkLocation.of(sdkDirectory),
             redexBinaryArgs,
             redexEnvironmentVariables,
@@ -75,7 +82,7 @@ public class ReDexStepTest {
             proguardMap,
             proguardConfig,
             seeds,
-            new TestActionGraphBuilder().getSourcePathResolver(),
+            resolver,
             false);
 
     assertEquals("redex", redex.getShortName());

@@ -32,6 +32,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -129,6 +130,8 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             context.getSourcePathResolver().getAbsolutePath(aidlFilePath).getPath(),
             ImmutableSet.of(importPath),
             outputDirectory.getPath(),
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
             withDownwardApi);
     commands.add(command);
 

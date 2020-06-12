@@ -17,13 +17,14 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -31,7 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 
-public class AidlStep extends ShellStep {
+public class AidlStep extends IsolatedShellStep {
 
   private final ProjectFilesystem filesystem;
   private final ToolchainProvider toolchainProvider;
@@ -47,8 +48,9 @@ public class AidlStep extends ShellStep {
       Path aidlFilePath,
       Set<String> importDirectoryPaths,
       Path destinationDirectory,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(filesystem.getRootPath(), withDownwardApi);
+    super(filesystem.getRootPath(), cellPath, withDownwardApi);
 
     this.filesystem = filesystem;
     this.toolchainProvider = toolchainProvider;
@@ -59,7 +61,7 @@ public class AidlStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
     // The arguments passed to aidl are based off of what I observed when running Ant in verbose
@@ -104,7 +106,7 @@ public class AidlStep extends ShellStep {
   }
 
   @Override
-  protected boolean shouldPrintStderr(Verbosity verbosity) {
+  public boolean shouldPrintStderr(Verbosity verbosity) {
     return verbosity.shouldPrintStandardInformation();
   }
 

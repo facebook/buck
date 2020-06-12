@@ -16,17 +16,18 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.function.Supplier;
 
-public class CGoGenerateImportStep extends ShellStep {
+public class CGoGenerateImportStep extends IsolatedShellStep {
   @AddToRuleKey private final ImmutableList<String> cgoCommandPrefix;
   @AddToRuleKey private final GoPlatform platform;
 
@@ -41,8 +42,9 @@ public class CGoGenerateImportStep extends ShellStep {
       Supplier<String> packageName,
       Path bin,
       Path outputFile,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(workingDirectory, withDownwardApi);
+    super(workingDirectory, cellPath, withDownwardApi);
     this.cgoCommandPrefix = cgoCommandPrefix;
     this.packageName = packageName;
     this.bin = bin;
@@ -51,7 +53,7 @@ public class CGoGenerateImportStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     return ImmutableList.<String>builder()
         .addAll(cgoCommandPrefix)
         .add("-dynpackage", packageName.get())

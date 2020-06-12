@@ -16,16 +16,17 @@
 
 package com.facebook.buck.features.ocaml;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 /** Runs ocamllex to generate .ml files from .mll */
-public class OcamlLexStep extends ShellStep {
+public class OcamlLexStep extends IsolatedShellStep {
 
   public static class Args {
     public final Tool lexCompiler;
@@ -46,8 +47,9 @@ public class OcamlLexStep extends ShellStep {
       AbsPath workingDirectory,
       SourcePathResolverAdapter resolver,
       Args args,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(workingDirectory, withDownwardApi);
+    super(workingDirectory, cellPath, withDownwardApi);
     this.resolver = resolver;
     this.args = args;
   }
@@ -58,7 +60,7 @@ public class OcamlLexStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     return ImmutableList.<String>builder()
         .addAll(args.lexCompiler.getCommandPrefix(resolver))
         .add("-o", args.output.toString())

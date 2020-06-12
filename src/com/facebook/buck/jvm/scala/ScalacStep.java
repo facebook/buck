@@ -16,13 +16,13 @@
 
 package com.facebook.buck.jvm.scala;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +32,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.stream.Collectors;
 
-public class ScalacStep extends ShellStep {
+public class ScalacStep extends IsolatedShellStep {
   private final Tool scalac;
   private final ImmutableList<String> extraArguments;
   private final SourcePathResolverAdapter resolver;
@@ -49,8 +49,9 @@ public class ScalacStep extends ShellStep {
       ImmutableSortedSet<RelPath> sourceFilePaths,
       ImmutableSortedSet<RelPath> classpathEntries,
       ProjectFilesystem filesystem,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(filesystem.getRootPath(), withDownwardApi);
+    super(filesystem.getRootPath(), cellPath, withDownwardApi);
 
     this.scalac = scalac;
     this.extraArguments = extraArguments;
@@ -67,7 +68,7 @@ public class ScalacStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> commandBuilder =
         ImmutableList.<String>builder()
             .addAll(scalac.getCommandPrefix(resolver))

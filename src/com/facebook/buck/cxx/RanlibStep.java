@@ -16,16 +16,17 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 
-class RanlibStep extends ShellStep {
+class RanlibStep extends IsolatedShellStep {
 
   private final ImmutableMap<String, String> ranlibEnv;
   private final ImmutableList<String> ranlibPrefix;
@@ -38,8 +39,9 @@ class RanlibStep extends ShellStep {
       ImmutableList<String> ranlibPrefix,
       ImmutableList<String> ranlibFlags,
       Path output,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(filesystem.getRootPath(), withDownwardApi);
+    super(filesystem.getRootPath(), cellPath, withDownwardApi);
     Preconditions.checkArgument(!output.isAbsolute());
     this.ranlibEnv = ranlibEnv;
     this.ranlibPrefix = ranlibPrefix;
@@ -53,7 +55,7 @@ class RanlibStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     return ImmutableList.<String>builder()
         .addAll(ranlibPrefix)
         .addAll(ranlibFlags)

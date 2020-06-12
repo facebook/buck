@@ -16,14 +16,16 @@
 
 package com.facebook.buck.features.python;
 
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.test.selectors.TestDescription;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.ProcessExecutor;
@@ -52,6 +54,7 @@ public class PythonRunTestsStep implements Step {
   private final TestSelectorList testSelectorList;
   private final Optional<Long> testRuleTimeoutMs;
   private final Path resultsOutputPath;
+  private final RelPath cellPath;
   private final boolean withDownwardApi;
 
   private final Consumer<Process> timeoutHandler =
@@ -69,6 +72,7 @@ public class PythonRunTestsStep implements Step {
       TestSelectorList testSelectorList,
       Optional<Long> testRuleTimeoutMs,
       Path resultsOutputPath,
+      RelPath cellPath,
       boolean withDownwardApi) {
     this.workingDirectory = workingDirectory;
     this.testName = testName;
@@ -77,6 +81,7 @@ public class PythonRunTestsStep implements Step {
     this.testSelectorList = testSelectorList;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.resultsOutputPath = resultsOutputPath;
+    this.cellPath = cellPath;
     this.withDownwardApi = withDownwardApi;
     this.timedOut = false;
   }
@@ -98,7 +103,7 @@ public class PythonRunTestsStep implements Step {
   private StepExecutionResult doExecute(StepExecutionContext context)
       throws IOException, InterruptedException {
     if (testSelectorList.isEmpty()) {
-      return getShellStepWithArgs("-o", resultsOutputPath.toString()).execute(context);
+      return getShellStepWithArgs("-o", resultsOutputPath.toString()).executeIsolatedStep(context);
     }
 
     ProcessExecutorParams params =
@@ -187,12 +192,12 @@ public class PythonRunTestsStep implements Step {
         .getDescription(context);
   }
 
-  private ShellStep getShellStepWithArgs(String... args) {
-    return new ShellStep(workingDirectory, withDownwardApi) {
+  private IsolatedShellStep getShellStepWithArgs(String... args) {
+    return new IsolatedShellStep(workingDirectory, cellPath, withDownwardApi) {
       @Override
-      public StepExecutionResult execute(StepExecutionContext context)
+      public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
           throws InterruptedException, IOException {
-        StepExecutionResult executionResult = super.execute(context);
+        StepExecutionResult executionResult = super.executeIsolatedStep(context);
         // The test runner returns 0 if all tests passed, or
         // TEST_FAILURES_EXIT_CODE if some tests failed.  Either of these
         // return codes indicates that we succeeded in running the tests.
@@ -204,7 +209,7 @@ public class PythonRunTestsStep implements Step {
       }
 
       @Override
-      protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+      protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
         return ImmutableList.<String>builder().addAll(commandPrefix).add(args).build();
       }
 
@@ -219,12 +224,12 @@ public class PythonRunTestsStep implements Step {
       }
 
       @Override
-      protected Optional<Long> getTimeout() {
+      public Optional<Long> getTimeout() {
         return testRuleTimeoutMs;
       }
 
       @Override
-      protected Optional<Consumer<Process>> getTimeoutHandler(StepExecutionContext context) {
+      public Optional<Consumer<Process>> getTimeoutHandler(IsolatedExecutionContext context) {
         return Optional.of(timeoutHandler);
       }
     };

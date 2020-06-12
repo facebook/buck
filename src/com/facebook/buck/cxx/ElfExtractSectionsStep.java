@@ -16,15 +16,16 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 
 /** A step which extracts specific sections from an ELF file into a new ELF file. */
-class ElfExtractSectionsStep extends ShellStep {
+class ElfExtractSectionsStep extends IsolatedShellStep {
 
   private final ImmutableList<String> objcopyPrefix;
   private final ImmutableSet<String> sections;
@@ -40,8 +41,9 @@ class ElfExtractSectionsStep extends ShellStep {
       Path input,
       ProjectFilesystem outputFilesystem,
       Path output,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(outputFilesystem.getRootPath(), withDownwardApi);
+    super(outputFilesystem.getRootPath(), cellPath, withDownwardApi);
     this.objcopyPrefix = objcopyPrefix;
     this.sections = sections;
     this.inputFilesystem = inputFilesystem;
@@ -51,7 +53,7 @@ class ElfExtractSectionsStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(objcopyPrefix);
     for (String section : sections) {

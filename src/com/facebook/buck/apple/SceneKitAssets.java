@@ -19,7 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -33,10 +33,11 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -92,10 +93,14 @@ public class SceneKitAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
       if (copySceneKitAssets.isPresent()) {
         stepsBuilder.add(
-            new ShellStep(getProjectFilesystem().getRootPath(), withDownwardApi) {
+            new IsolatedShellStep(
+                getProjectFilesystem().getRootPath(),
+                ProjectFilesystemUtils.relativize(
+                    getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
+                withDownwardApi) {
               @Override
               protected ImmutableList<String> getShellCommandInternal(
-                  StepExecutionContext executionContext) {
+                  IsolatedExecutionContext executionContext) {
                 ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
                 commandBuilder.addAll(
                     copySceneKitAssets.get().getCommandPrefix(context.getSourcePathResolver()));

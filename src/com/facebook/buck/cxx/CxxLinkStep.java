@@ -69,7 +69,7 @@ class CxxLinkStep extends ShellStep {
   }
 
   @Override
-  protected boolean shouldPrintStderr(Verbosity verbosity) {
+  public boolean shouldPrintStderr(Verbosity verbosity) {
     // Always print warnings and errors
     return true;
   }

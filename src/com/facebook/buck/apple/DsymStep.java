@@ -16,9 +16,10 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -38,7 +39,7 @@ import java.util.List;
  * @see <a href="http://wiki.dwarfstd.org/index.php?title=Apple%27s_%22Lazy%22_DWARF_Scheme">
  *     Information on DWARF and DSYM on Macs</a>
  */
-class DsymStep extends ShellStep {
+class DsymStep extends IsolatedShellStep {
 
   private final ProjectFilesystem filesystem;
   private final ImmutableMap<String, String> environment;
@@ -52,8 +53,9 @@ class DsymStep extends ShellStep {
       List<String> command,
       Path input,
       Path output,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(filesystem.getRootPath(), withDownwardApi);
+    super(filesystem.getRootPath(), cellPath, withDownwardApi);
 
     this.filesystem = filesystem;
     this.environment = environment;
@@ -63,7 +65,7 @@ class DsymStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
 
     commandBuilder.addAll(command);

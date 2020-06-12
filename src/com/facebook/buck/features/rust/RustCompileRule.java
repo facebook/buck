@@ -17,7 +17,7 @@
 package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -35,15 +35,16 @@ import com.facebook.buck.cxx.CxxPrepareForLinkStep;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.features.rust.RustBuckConfig.RemapSrcPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -268,11 +269,15 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
               resolver));
 
       steps.add(
-          new ShellStep(filesystem.getRootPath(), withDownwardApi) {
+          new IsolatedShellStep(
+              filesystem.getRootPath(),
+              ProjectFilesystemUtils.relativize(
+                  filesystem.getRootPath(), buildContext.getBuildCellRootPath()),
+              withDownwardApi) {
 
             @Override
             protected ImmutableList<String> getShellCommandInternal(
-                StepExecutionContext executionContext) {
+                IsolatedExecutionContext executionContext) {
               ImmutableList<String> linkerCmd = linker.getCommandPrefix(resolver);
               ImmutableList.Builder<String> cmd = ImmutableList.builder();
 
@@ -319,7 +324,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
              * Regardless, respect requests for silence.
              */
             @Override
-            protected boolean shouldPrintStderr(Verbosity verbosity) {
+            public boolean shouldPrintStderr(Verbosity verbosity) {
               return !verbosity.isSilent();
             }
 

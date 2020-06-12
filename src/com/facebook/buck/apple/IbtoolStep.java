@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -27,8 +28,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * {@link ShellStep} implementation which invokes Apple's {@code ibtool} utility to compile {@code
- * XIB} files to {@code NIB} files.
+ * {@link IsolatedShellStep} implementation which invokes Apple's {@code ibtool} utility to compile
+ * {@code XIB} files to {@code NIB} files.
  */
 class IbtoolStep extends ShellStep {
 

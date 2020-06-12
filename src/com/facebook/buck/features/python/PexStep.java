@@ -87,7 +87,7 @@ public class PexStep extends ShellStep {
    * occasionally get extremely large, and surpass exec/shell limits on arguments.
    */
   @Override
-  protected Optional<String> getStdin() throws IOException {
+  public Optional<String> getStdin() throws IOException {
     // Convert the map of paths to a map of strings before converting to JSON.
     ImmutableMap.Builder<String, String> modulesBuilder = ImmutableMap.builder();
     components.forEachModule((dest, src) -> modulesBuilder.put(dest.toString(), src.toString()));

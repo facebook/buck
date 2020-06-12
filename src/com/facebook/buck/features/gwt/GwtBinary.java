@@ -18,7 +18,7 @@ package com.facebook.buck.features.gwt;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -33,11 +33,12 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -149,7 +150,11 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 context.getBuildCellRootPath(), getProjectFilesystem(), deployDirectory)));
 
     Step javaStep =
-        new ShellStep(projectFilesystem.getRootPath(), withDownwardApi) {
+        new IsolatedShellStep(
+            projectFilesystem.getRootPath(),
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
+            withDownwardApi) {
           @Override
           public String getShortName() {
             return "gwt-compile";
@@ -157,7 +162,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
           @Override
           protected ImmutableList<String> getShellCommandInternal(
-              StepExecutionContext executionContext) {
+              IsolatedExecutionContext executionContext) {
             ImmutableList.Builder<String> javaArgsBuilder = ImmutableList.builder();
             javaArgsBuilder.addAll(
                 javaRuntimeLauncher.getCommandPrefix(context.getSourcePathResolver()));

@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
@@ -230,7 +231,7 @@ class XctoolRunTestsStep implements Step {
     return "xctool-run-tests";
   }
 
-  public ImmutableMap<String, String> getEnv(StepExecutionContext context) {
+  public ImmutableMap<String, String> getEnv(IsolatedExecutionContext context) {
     Map<String, String> environment = new HashMap<>(context.getEnvironment());
     Optional<Path> xcodeDeveloperDir =
         appleDeveloperDirectoryForTestsProvider.map(

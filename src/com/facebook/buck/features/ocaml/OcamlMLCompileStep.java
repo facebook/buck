@@ -16,14 +16,15 @@
 
 package com.facebook.buck.features.ocaml;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
@@ -36,7 +37,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /** A compilation step for .ml and .mli files */
-public class OcamlMLCompileStep extends ShellStep {
+public class OcamlMLCompileStep extends IsolatedShellStep {
 
   public static class Args implements AddsToRuleKey {
 
@@ -99,10 +100,11 @@ public class OcamlMLCompileStep extends ShellStep {
 
   public OcamlMLCompileStep(
       AbsPath workingDirectory,
+      RelPath cellPath,
       boolean withDownwardApi,
       SourcePathResolverAdapter resolver,
       Args args) {
-    super(workingDirectory, withDownwardApi);
+    super(workingDirectory, cellPath, withDownwardApi);
     this.resolver = resolver;
     this.args = args;
   }
@@ -113,7 +115,7 @@ public class OcamlMLCompileStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> cmd =
         ImmutableList.<String>builder()
             .addAll(args.ocamlCompiler.getCommandPrefix(resolver))

@@ -18,6 +18,7 @@ package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -40,12 +41,13 @@ import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.MoreSuppliers;
@@ -295,12 +297,13 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     }
   }
 
-  private class GhcStep extends ShellStep {
+  private class GhcStep extends IsolatedShellStep {
 
     private BuildContext buildContext;
 
-    public GhcStep(AbsPath rootPath, boolean withDownwardApi, BuildContext buildContext) {
-      super(rootPath, withDownwardApi);
+    public GhcStep(
+        AbsPath rootPath, RelPath cellPath, boolean withDownwardApi, BuildContext buildContext) {
+      super(rootPath, cellPath, withDownwardApi);
       this.buildContext = buildContext;
     }
 
@@ -313,12 +316,12 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     }
 
     @Override
-    protected boolean shouldPrintStderr(Verbosity verbosity) {
+    public boolean shouldPrintStderr(Verbosity verbosity) {
       return !verbosity.isSilent();
     }
 
     @Override
-    protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+    protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
       return ImmutableList.<String>builder()
           .addAll(compiler.getCommandPrefix(buildContext.getSourcePathResolver()))
           .addAll(getCompilerArguments(buildContext.getSourcePathResolver()))
@@ -345,7 +348,13 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         .add(prepareOutputDir("interface", getInterfaceDir(), getInterfaceSuffix()))
         .add(prepareOutputDir("stub", getStubDir(), "h"))
         .add(new WriteArgsfileStep(buildContext))
-        .add(new GhcStep(getProjectFilesystem().getRootPath(), withDownwardApi, buildContext));
+        .add(
+            new GhcStep(
+                getProjectFilesystem().getRootPath(),
+                ProjectFilesystemUtils.relativize(
+                    getProjectFilesystem().getRootPath(), buildContext.getBuildCellRootPath()),
+                withDownwardApi,
+                buildContext));
 
     return steps.build();
   }

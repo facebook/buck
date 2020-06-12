@@ -18,15 +18,16 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 /**
  * Command that makes it possible to run an arbitrary command in Bash. Whenever possible, a more
- * specific subclass of {@link ShellStep} should be preferred. BashCommand should be reserved for
- * cases where the expressiveness of Bash (often in the form of *-shell-expansion) makes the command
- * considerably easier to implement.
+ * specific subclass of {@link IsolatedShellStep} should be preferred. BashCommand should be
+ * reserved for cases where the expressiveness of Bash (often in the form of *-shell-expansion)
+ * makes the command considerably easier to implement.
  */
 public class BashStep extends ShellStep {
 

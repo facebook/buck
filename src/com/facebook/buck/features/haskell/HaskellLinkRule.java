@@ -18,6 +18,7 @@ package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -32,13 +33,14 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.Verbosity;
@@ -147,7 +149,11 @@ public class HaskellLinkRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               }
             })
         .add(
-            new ShellStep(getProjectFilesystem().getRootPath(), withDownwardApi) {
+            new IsolatedShellStep(
+                getProjectFilesystem().getRootPath(),
+                ProjectFilesystemUtils.relativize(
+                    getProjectFilesystem().getRootPath(), buildContext.getBuildCellRootPath()),
+                withDownwardApi) {
 
               @Override
               public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
@@ -159,7 +165,7 @@ public class HaskellLinkRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
               @Override
               protected ImmutableList<String> getShellCommandInternal(
-                  StepExecutionContext context) {
+                  IsolatedExecutionContext context) {
                 ImmutableList.Builder<String> builder = ImmutableList.builder();
                 builder
                     .addAll(linker.getCommandPrefix(buildContext.getSourcePathResolver()))
@@ -174,7 +180,7 @@ public class HaskellLinkRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               }
 
               @Override
-              protected boolean shouldPrintStderr(Verbosity verbosity) {
+              public boolean shouldPrintStderr(Verbosity verbosity) {
                 return !verbosity.isSilent();
               }
 

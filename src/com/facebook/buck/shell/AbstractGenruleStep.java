@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -107,7 +108,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
     return super.execute(context);
   }
 
-  private ImmutableList<String> getCommandLine(StepExecutionContext context) {
+  private ImmutableList<String> getCommandLine(IsolatedExecutionContext context) {
     ExecutionArgsAndCommand executionArgsAndCommand =
         getExecutionArgsAndCommand(context.getPlatform());
     ImmutableList.Builder<String> commandLineBuilder = ImmutableList.builder();
@@ -154,12 +155,12 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   @Override
-  protected boolean shouldPrintStderr(Verbosity verbosity) {
+  public boolean shouldPrintStderr(Verbosity verbosity) {
     return true;
   }
 
   @VisibleForTesting
-  public String getScriptFileContents(StepExecutionContext context) {
+  public String getScriptFileContents(IsolatedExecutionContext context) {
     Platform platform = context.getPlatform();
     ExecutionArgsAndCommand executionArgsAndCommand = getExecutionArgsAndCommand(platform);
     if (platform == Platform.WINDOWS) {
@@ -171,7 +172,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   @VisibleForTesting
-  public Path getScriptFilePath(StepExecutionContext context) throws IOException {
+  public Path getScriptFilePath(IsolatedExecutionContext context) throws IOException {
     try {
       return scriptFilePath.get(context.getPlatform());
     } catch (Exception e) {

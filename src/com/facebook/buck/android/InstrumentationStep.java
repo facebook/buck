@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
@@ -63,11 +64,11 @@ public class InstrumentationStep extends ShellStep {
   }
 
   @Override
-  protected Optional<Long> getTimeout() {
+  public Optional<Long> getTimeout() {
     return testRuleTimeoutMs;
   }
 
-  private void warnUser(StepExecutionContext context, String message) {
+  private void warnUser(IsolatedExecutionContext context, String message) {
     context.getStdErr().println(context.getAnsi().asWarningText(message));
   }
 }
