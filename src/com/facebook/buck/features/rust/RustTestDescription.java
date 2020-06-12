@@ -113,6 +113,8 @@ public class RustTestDescription
 
     Stream<Arg> testarg = args.isFramework() ? Stream.of(StringArg.of("--test")) : Stream.empty();
 
+    ImmutableSortedMap<String, Arg> envs =
+        ImmutableSortedMap.copyOf(Maps.transformValues(args.getEnv(), converter::convert));
     BinaryWrapperRule testExeBuild =
         (BinaryWrapperRule)
             graphBuilder.computeIfAbsent(
@@ -129,8 +131,7 @@ public class RustTestDescription
                         args.getCrate(),
                         args.getEdition(),
                         args.getFeatures(),
-                        ImmutableSortedMap.copyOf(
-                            Maps.transformValues(args.getEnv(), converter::convert)),
+                        envs,
                         Stream.of(
                                 testarg,
                                 rustPlatform.getRustTestFlags().stream().map(x -> (Arg) x),
@@ -163,6 +164,7 @@ public class RustTestDescription
         buildTarget,
         projectFilesystem,
         testParams,
+        envs,
         testExeBuild,
         args.getLabels(),
         args.getContacts(),

@@ -39,6 +39,7 @@ import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.AbstractTestStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -48,6 +49,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -78,20 +80,22 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private static final Pattern FAILURES_LIST_PATTERN = Pattern.compile("^failures:$");
   private final Path testOutputFile;
   private final Path testStdoutFile;
+  private final ImmutableMap<String, Arg> env;
 
   protected RustTest(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
+      ImmutableMap<String, Arg> env,
       BinaryBuildRule testExeBuild,
       ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
-
     this.testExeBuild = testExeBuild;
     this.labels = labels;
     this.contacts = contacts;
+    this.env = env;
     this.withDownwardApi = withDownwardApi;
     this.testOutputFile = getProjectFilesystem().resolve(getPathToTestResults());
     this.testStdoutFile = getProjectFilesystem().resolve(getPathToTestStdout());
@@ -103,20 +107,22 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       TestRunningOptions options,
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
-    Path workingDirectory = getProjectFilesystem().resolve(getPathToTestOutputDirectory());
+    ProjectFilesystem filesystem = getProjectFilesystem();
+    SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
+
+    Path workingDirectory = filesystem.resolve(getPathToTestOutputDirectory());
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), getProjectFilesystem(), workingDirectory)))
+                    buildContext.getBuildCellRootPath(), filesystem, workingDirectory)))
         .add(
             new AbstractTestStep(
                 "rust test",
-                getProjectFilesystem(),
+                filesystem,
                 Optional.of(workingDirectory),
-                getTestCommand(
-                    buildContext.getSourcePathResolver(), "--logfile", testOutputFile.toString()),
-                Optional.empty(), // TODO(stash): environment
+                getTestCommand(sourcePathResolver, "--logfile", testOutputFile.toString()),
+                Optional.of(getEnv(sourcePathResolver)),
                 workingDirectory.resolve("exitcode"),
                 Optional.empty(),
                 testStdoutFile,
@@ -171,23 +177,22 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       StepExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
+    SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
     return ExternalTestRunnerTestSpec.builder()
         .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())
         .setType("rust")
-        .addAllCommand(getTestCommand(buildContext.getSourcePathResolver()))
+        .addAllCommand(getTestCommand(sourcePathResolver))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
+        .setEnv(getEnv(sourcePathResolver))
         .build();
   }
 
   private ImmutableList<String> getTestCommand(
       SourcePathResolverAdapter pathResolver, String... additionalArgs) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.addAll(
-        testExeBuild
-            .getExecutableCommand(OutputLabel.defaultLabel())
-            .getCommandPrefix(pathResolver));
+    args.addAll(getExecutableCommand().getCommandPrefix(pathResolver));
     args.add(additionalArgs);
     return args.build();
   }
@@ -278,6 +283,10 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Tool getExecutableCommand(OutputLabel outputLabel) {
+    return getExecutableCommand();
+  }
+
+  private Tool getExecutableCommand() {
     return testExeBuild.getExecutableCommand(OutputLabel.defaultLabel());
   }
 
@@ -300,5 +309,12 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             BuildableSupport.getDeps(
                 getExecutableCommand(OutputLabel.defaultLabel()), buildRuleResolver))
         .map(BuildRule::getBuildTarget);
+  }
+
+  private ImmutableMap<String, String> getEnv(SourcePathResolverAdapter pathResolver) {
+    return new ImmutableMap.Builder<String, String>()
+        .putAll(getExecutableCommand().getEnvironment(pathResolver))
+        .putAll(Arg.stringify(env, pathResolver))
+        .build();
   }
 }
