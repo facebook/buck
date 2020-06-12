@@ -51,7 +51,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   private final SourcePathResolverAdapter sourcePathResolver;
   private final ProjectFilesystem projectFilesystem;
   private final Optional<Set<BuildTarget>> requiredBuildTargets;
-  private final TargetGraph targetGraph;
+  private TargetGraph targetGraph;
 
   DefaultIjModuleFactoryResolver(
       IjProjectSourcePathResolver sourcePathResolver,
@@ -192,8 +192,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
         && constructorArg.getAnnotationProcessors().isEmpty()) {
       return Optional.empty();
     }
-    return CompilerOutputPaths.getAnnotationPath(projectFilesystem, targetNode.getBuildTarget())
-        .map(RelPath::getPath);
+    return CompilerOutputPaths.getAnnotationPath(projectFilesystem, targetNode.getBuildTarget());
   }
 
   @Override
@@ -219,7 +218,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
         buildTargetPatchCell(buildTarget, projectFilesystem.getBuckPaths().getCellName());
 
     Path compilerOutputPath =
-        CompilerOutputPaths.getOutputJarPath(buildTargetPatchedCell, projectFilesystem).getPath();
+        CompilerOutputPaths.getOutputJarPath(buildTargetPatchedCell, projectFilesystem);
     return Optional.of(compilerOutputPath);
   }
 

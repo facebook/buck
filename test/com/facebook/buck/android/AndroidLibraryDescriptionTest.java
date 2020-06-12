@@ -20,7 +20,6 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -45,19 +44,17 @@ import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.rules.query.Query;
-import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
-  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
   private JavaBuckConfig javaBuckConfig;
 
   @Before
@@ -211,12 +208,11 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
   @Test
   public void androidClasspathFromContextFunctionAddsLibsFromAndroidPlatformTarget() {
-    AbsPath absPath = tmpFolder.getRoot();
-    ImmutableList<AbsPath> entries =
+    ImmutableList<Path> entries =
         ImmutableList.of(
-            absPath.resolve("add-ons/addon-google_apis-google-15/libs/effects.jar"),
-            absPath.resolve("add-ons/addon-google_apis-google-15/libs/maps.jar"),
-            absPath.resolve("add-ons/addon-google_apis-google-15/libs/usb.jar"));
+            Paths.get("add-ons/addon-google_apis-google-15/libs/effects.jar"),
+            Paths.get("add-ons/addon-google_apis-google-15/libs/maps.jar"),
+            Paths.get("add-ons/addon-google_apis-google-15/libs/usb.jar"));
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTarget.of(
             "android",
@@ -250,16 +246,12 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
             .build();
     JavacOptions updated = options.withBootclasspathFromContext(extraClasspathProvider);
 
-    String root = absPath.toString() + File.separator;
     assertEquals(
         Optional.of(
-            (root
-                    + "add-ons/addon-google_apis-google-15/libs/effects.jar"
+            ("add-ons/addon-google_apis-google-15/libs/effects.jar"
                     + File.pathSeparatorChar
-                    + root
                     + "add-ons/addon-google_apis-google-15/libs/maps.jar"
                     + File.pathSeparatorChar
-                    + root
                     + "add-ons/addon-google_apis-google-15/libs/usb.jar")
                 .replace("/", File.separator)),
         updated.getBootclasspath());

@@ -16,16 +16,15 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.google.common.collect.ImmutableList;
+import java.nio.file.Path;
+import java.util.Collections;
 
 /** Used to provide extra classpath entries to a compiler. */
 public interface ExtraClasspathProvider extends AddsToRuleKey {
 
-  /** @return extra classpath entries as {@link AbsPath}s */
-  Iterable<AbsPath> getExtraClasspath();
+  Iterable<Path> getExtraClasspath();
 
   ExtraClasspathProvider EMPTY = new EmptyExtraClasspathProvider();
 
@@ -35,8 +34,8 @@ public interface ExtraClasspathProvider extends AddsToRuleKey {
     private EmptyExtraClasspathProvider() {}
 
     @Override
-    public Iterable<AbsPath> getExtraClasspath() {
-      return ImmutableList.of();
+    public Iterable<Path> getExtraClasspath() {
+      return Collections.emptyList();
     }
   }
 }

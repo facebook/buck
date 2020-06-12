@@ -399,7 +399,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
 
               String bootclasspath =
                   androidPlatformTarget.getBootclasspathEntries().stream()
-                      .map(AbsPath::toString)
+                      .map(projectFilesystem::resolve)
+                      .map(Path::toString)
                       .collect(Collectors.joining(":"));
 
               environmentVariablesBuilder.put("ANDROID_BOOTCLASSPATH", bootclasspath);

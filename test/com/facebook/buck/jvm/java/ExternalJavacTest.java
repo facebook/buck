@@ -22,7 +22,6 @@ import static org.junit.Assert.assertNotEquals;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.OutputLabel;
@@ -52,7 +51,6 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.collect.CollectionUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -70,9 +68,9 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class ExternalJavacTest extends EasyMockSupport {
-  private static final RelPath PATH_TO_SRCS_LIST = RelPath.get("srcs_list");
-  public static final ImmutableSortedSet<RelPath> SOURCE_PATHS =
-      CollectionUtils.toSortedSet(RelPath.get("foobar.java"));
+  private static final Path PATH_TO_SRCS_LIST = Paths.get("srcs_list");
+  public static final ImmutableSortedSet<Path> SOURCE_PATHS =
+      ImmutableSortedSet.of(Paths.get("foobar.java"));
 
   @Rule public TemporaryPaths root = new TemporaryPaths();
 

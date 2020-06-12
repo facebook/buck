@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -25,6 +24,7 @@ import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.util.Escaper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -41,9 +41,9 @@ public interface Javac extends Tool {
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
       ImmutableList<JavacPluginJsr199Fields> javacPlugins,
-      ImmutableSortedSet<RelPath> javaSourceFilePaths,
-      RelPath pathToSrcsList,
-      RelPath workingDirectory,
+      ImmutableSortedSet<Path> javaSourceFilePaths,
+      Path pathToSrcsList,
+      Path workingDirectory,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
       @Nullable JarParameters abiJarParameters,
@@ -54,8 +54,8 @@ public interface Javac extends Tool {
 
   String getDescription(
       ImmutableList<String> options,
-      ImmutableSortedSet<RelPath> javaSourceFilePaths,
-      RelPath pathToSrcsList);
+      ImmutableSortedSet<Path> javaSourceFilePaths,
+      Path pathToSrcsList);
 
   String getShortName();
 

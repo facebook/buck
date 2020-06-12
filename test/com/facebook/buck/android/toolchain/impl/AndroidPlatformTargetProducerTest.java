@@ -26,7 +26,6 @@ import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.file.MorePathsForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -81,9 +80,7 @@ public class AndroidPlatformTargetProducerTest {
     assertEquals(name, androidPlatformTarget.getPlatformName());
     assertEquals(
         ImmutableList.of(
-            AbsPath.of(
-                MorePathsForTests.rootRelativePath(
-                    "home/android/platforms/android-16/android.jar"))),
+            MorePathsForTests.rootRelativePath("home/android/platforms/android-16/android.jar")),
         androidPlatformTarget.getBootclasspathEntries());
     assertEquals(
         MorePathsForTests.rootRelativePath("home/android/platforms/android-16/android.jar"),
@@ -151,17 +148,17 @@ public class AndroidPlatformTargetProducerTest {
     assertTrue(
         androidPlatformTarget
             .getBootclasspathEntries()
-            .contains(AbsPath.of(addOnsLibsDir2.toPath().resolve("effects.jar").toAbsolutePath())));
+            .contains(addOnsLibsDir2.toPath().resolve("effects.jar").toAbsolutePath()));
     assertFalse(
         androidPlatformTarget
             .getBootclasspathEntries()
-            .contains(AbsPath.of(addOnsLibsDir3.toPath().resolve("ignored.jar").toAbsolutePath())));
+            .contains(addOnsLibsDir3.toPath().resolve("ignored.jar").toAbsolutePath()));
   }
 
   @Test
   public void testLooksForOptionalLibraries() throws IOException {
     File androidSdkDir = tempDir.newFolder();
-    AbsPath pathToAndroidSdkDir = AbsPath.of(androidSdkDir.toPath());
+    Path pathToAndroidSdkDir = androidSdkDir.toPath();
     File buildToolsDir = new File(new File(androidSdkDir, "build-tools"), "23.0.1");
     buildToolsDir.mkdirs();
     File optionalLibsDir = new File(androidSdkDir, "platforms/android-23/optional");
@@ -201,7 +198,7 @@ public class AndroidPlatformTargetProducerTest {
         androidPlatformTarget.getBootclasspathEntries());
     assertEquals(
         pathToAndroidSdkDir.resolve("platforms/android-23/android.jar"),
-        AbsPath.of(androidPlatformTarget.getAndroidJar()));
+        androidPlatformTarget.getAndroidJar());
   }
 
   @Test
@@ -236,7 +233,7 @@ public class AndroidPlatformTargetProducerTest {
   @Test
   public void testLooksForGoogleLibsOnlyWhenGoogleApiTarget() throws IOException {
     File androidSdkDir = tempDir.newFolder();
-    AbsPath pathToAndroidSdkDir = AbsPath.of(androidSdkDir.toPath());
+    Path pathToAndroidSdkDir = androidSdkDir.toPath();
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
     buildToolsDir = new File(buildToolsDir, "android-4.2.2");

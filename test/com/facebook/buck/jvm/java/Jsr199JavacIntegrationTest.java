@@ -21,8 +21,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -41,7 +39,6 @@ import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.MockClassLoader;
-import com.facebook.buck.util.collect.CollectionUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -73,17 +70,15 @@ import org.junit.Test;
 
 public class Jsr199JavacIntegrationTest {
 
-  public static final ImmutableSortedSet<RelPath> SOURCE_PATHS =
-      CollectionUtils.toSortedSet(RelPath.get("Example.java"));
+  public static final ImmutableSortedSet<Path> SOURCE_PATHS =
+      ImmutableSortedSet.of(Paths.get("Example.java"));
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private AbsPath root;
-  private RelPath pathToSrcsList;
+  private Path pathToSrcsList;
 
   @Before
   public void setUp() {
-    pathToSrcsList = RelPath.get("srcs_list");
-    root = tmp.getRoot();
+    pathToSrcsList = tmp.getRoot().resolve("srcs_list").getPath();
   }
 
   @Test
@@ -146,7 +141,7 @@ public class Jsr199JavacIntegrationTest {
                 ImmutableList.of(),
                 SOURCE_PATHS,
                 pathToSrcsList,
-                RelPath.get("working"),
+                Paths.get("working"),
                 false,
                 false,
                 null,
@@ -157,12 +152,11 @@ public class Jsr199JavacIntegrationTest {
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
-    Path pathToSrcListPath = root.resolve(pathToSrcsList).getPath();
-    assertTrue(Files.exists(pathToSrcListPath));
-    assertTrue(Files.isRegularFile(pathToSrcListPath));
+    assertTrue(Files.exists(pathToSrcsList));
+    assertTrue(Files.isRegularFile(pathToSrcsList));
     assertEquals(
         "Example.java",
-        new String(Files.readAllBytes(pathToSrcListPath), StandardCharsets.UTF_8).trim());
+        new String(Files.readAllBytes(pathToSrcsList), StandardCharsets.UTF_8).trim());
   }
 
   /**
@@ -202,7 +196,7 @@ public class Jsr199JavacIntegrationTest {
                 ImmutableList.of(),
                 SOURCE_PATHS,
                 pathToSrcsList,
-                RelPath.get("working"),
+                Paths.get("working"),
                 false,
                 false,
                 null,
@@ -213,12 +207,11 @@ public class Jsr199JavacIntegrationTest {
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
-    Path pathToSrcListPath = root.resolve(pathToSrcsList).getPath();
-    assertTrue(Files.exists(pathToSrcListPath));
-    assertTrue(Files.isRegularFile(pathToSrcListPath));
+    assertTrue(Files.exists(pathToSrcsList));
+    assertTrue(Files.isRegularFile(pathToSrcsList));
     assertEquals(
         "Example.java",
-        new String(Files.readAllBytes(pathToSrcListPath), StandardCharsets.UTF_8).trim());
+        new String(Files.readAllBytes(pathToSrcsList), StandardCharsets.UTF_8).trim());
   }
 
   public static final class MockJavac implements JavaCompiler {
@@ -312,7 +305,7 @@ public class Jsr199JavacIntegrationTest {
               ImmutableList.of(),
               SOURCE_PATHS,
               pathToSrcsList,
-              RelPath.get("working"),
+              Paths.get("working"),
               false,
               false,
               null,
@@ -406,7 +399,7 @@ public class Jsr199JavacIntegrationTest {
             ImmutableList.of(),
             SOURCE_PATHS,
             pathToSrcsList,
-            RelPath.get("working"),
+            Paths.get("working"),
             false,
             false,
             null,

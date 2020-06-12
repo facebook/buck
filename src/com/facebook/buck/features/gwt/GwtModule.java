@@ -36,7 +36,6 @@ import com.facebook.buck.jvm.java.ResourcesParameters;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
-import com.facebook.buck.util.collect.CollectionUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
@@ -101,7 +100,8 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         new JarDirectoryStep(
             JarParameters.builder()
                 .setJarPath(RelPath.of(outputFile.getPath()))
-                .setEntriesToJar(CollectionUtils.toSortedSet(tempJarFolder))
+                .setEntriesToJar(
+                    ImmutableSortedSet.orderedBy(RelPath.COMPARATOR).add(tempJarFolder).build())
                 .setMergeManifests(true)
                 .build()));
 

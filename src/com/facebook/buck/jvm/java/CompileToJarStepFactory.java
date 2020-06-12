@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -169,8 +170,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       CompilerParameters compilerParameters,
       BuildableContext buildableContext) {
     if (compilerParameters.shouldTrackClassUsage()) {
-      RelPath depFilePath = CompilerOutputPaths.getDepFilePath(buildTarget, filesystem);
-      buildableContext.recordArtifact(depFilePath.getPath());
+      Path depFilePath = CompilerOutputPaths.getDepFilePath(buildTarget, filesystem);
+      buildableContext.recordArtifact(depFilePath);
     }
   }
 
@@ -257,20 +258,22 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       ProjectFilesystem filesystem,
       List<String> postprocessClassesCommands,
       RelPath outputDirectory,
-      ImmutableSortedSet<RelPath> declaredClasspathEntries,
+      ImmutableSortedSet<Path> declaredClasspathEntries,
       Optional<String> bootClasspath,
       boolean withDownwardApi) {
     if (postprocessClassesCommands.isEmpty()) {
       return ImmutableList.of();
     }
 
-    ImmutableList.Builder<Step> commands = new ImmutableList.Builder<>();
+    ImmutableList.Builder<Step> commands = new ImmutableList.Builder<Step>();
     ImmutableMap.Builder<String, String> envVarBuilder = ImmutableMap.builder();
     envVarBuilder.put(
         "COMPILATION_CLASSPATH",
         Joiner.on(':').join(Iterables.transform(declaredClasspathEntries, filesystem::resolve)));
 
-    bootClasspath.ifPresent(s -> envVarBuilder.put("COMPILATION_BOOTCLASSPATH", s));
+    if (bootClasspath.isPresent()) {
+      envVarBuilder.put("COMPILATION_BOOTCLASSPATH", bootClasspath.get());
+    }
     ImmutableMap<String, String> envVars = envVarBuilder.build();
 
     for (String postprocessClassesCommand : postprocessClassesCommands) {

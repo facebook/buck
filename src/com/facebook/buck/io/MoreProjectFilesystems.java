@@ -16,7 +16,6 @@
 
 package com.facebook.buck.io;
 
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.io.IOException;
@@ -44,20 +43,18 @@ public class MoreProjectFilesystems {
    * @param projectFilesystem the projectFileSystem.
    * @return Path to the newly created symlink (relative path on Unix absolute path on Windows).
    */
-  public static RelPath createRelativeSymlink(
-      RelPath pathToDesiredLinkUnderProjectRoot,
-      RelPath pathToExistingFileUnderProjectRoot,
+  public static Path createRelativeSymlink(
+      Path pathToDesiredLinkUnderProjectRoot,
+      Path pathToExistingFileUnderProjectRoot,
       ProjectFilesystem projectFilesystem)
       throws IOException {
 
-    RelPath target =
+    Path target =
         MorePaths.getRelativePath(
             pathToExistingFileUnderProjectRoot, pathToDesiredLinkUnderProjectRoot.getParent());
 
     projectFilesystem.createSymLink(
-        projectFilesystem.getRootPath().resolve(pathToDesiredLinkUnderProjectRoot),
-        target.getPath(),
-        false);
+        projectFilesystem.getRootPath().resolve(pathToDesiredLinkUnderProjectRoot), target, false);
 
     return target;
   }

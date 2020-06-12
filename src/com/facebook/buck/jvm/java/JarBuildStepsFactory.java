@@ -45,7 +45,6 @@ import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueVisitor;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.collect.CollectionUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -417,7 +416,7 @@ public class JarBuildStepsFactory
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
     return CompilerParameters.builder()
         .setClasspathEntriesSourcePaths(
-            dependencyInfos.getCompileTimeClasspathSourcePaths(), filesystem, sourcePathResolver)
+            dependencyInfos.getCompileTimeClasspathSourcePaths(), sourcePathResolver)
         .setSourceFileSourcePaths(srcs, filesystem, sourcePathResolver)
         .setScratchPaths(buildTarget, filesystem)
         .setShouldTrackClassUsage(trackClassUsage)
@@ -459,10 +458,12 @@ public class JarBuildStepsFactory
       CompilerParameters compilerParameters) {
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
     RelPath classesDir = compilerParameters.getOutputPaths().getClassesDir();
-    ImmutableSortedSet<RelPath> entriesToJar = CollectionUtils.toSortedSet(classesDir);
+    ImmutableSortedSet<RelPath> entriesToJar =
+        ImmutableSortedSet.orderedBy(RelPath.COMPARATOR).add(classesDir).build();
     Optional<RelPath> manifestRelFile =
         manifestFile.map(sourcePathResolver::getAbsolutePath).map(filesystem::relativize);
     return getOutputJarPath(buildTarget, filesystem)
+        .map(RelPath::of)
         .map(
             output ->
                 JarParameters.builder()
@@ -487,8 +488,7 @@ public class JarBuildStepsFactory
         getDepOutputPathToAbiSourcePath(context.getSourcePathResolver(), ruleFinder));
   }
 
-  private Optional<RelPath> getOutputJarPath(
-      BuildTarget buildTarget, ProjectFilesystem filesystem) {
+  private Optional<Path> getOutputJarPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     if (!producesJar()) {
       return Optional.empty();
     }
@@ -502,7 +502,7 @@ public class JarBuildStepsFactory
     }
   }
 
-  private Optional<RelPath> getGeneratedAnnotationPath(
+  private Optional<Path> getGeneratedAnnotationPath(
       BuildTarget buildTarget, ProjectFilesystem filesystem) {
     if (!hasAnnotationProcessing()) {
       return Optional.empty();

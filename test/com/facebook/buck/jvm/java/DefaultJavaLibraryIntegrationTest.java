@@ -149,7 +149,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:no_srcs");
     ProcessResult buildResult = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     buildResult.assertSuccess("Successful build should exit with 0.");
-    RelPath outputPath =
+    Path outputPath =
         CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getOutputJarPath().get();
     Path outputFile = workspace.getPath(outputPath);
     assertTrue(Files.exists(outputFile));

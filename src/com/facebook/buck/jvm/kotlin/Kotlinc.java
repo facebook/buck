@@ -20,7 +20,6 @@ import static com.facebook.buck.jvm.java.JavaPaths.SRC_JAR;
 import static com.facebook.buck.jvm.java.JavaPaths.SRC_ZIP;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -44,17 +43,17 @@ public interface Kotlinc extends Tool {
       StepExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
-      ImmutableSortedSet<RelPath> kotlinSourceFilePaths,
-      RelPath pathToSrcsList,
-      Optional<RelPath> workingDirectory,
+      ImmutableSortedSet<Path> kotlinSourceFilePaths,
+      Path pathToSrcsList,
+      Optional<Path> workingDirectory,
       ProjectFilesystem fileSystem,
       boolean withDownwardApi)
       throws InterruptedException;
 
   String getDescription(
       ImmutableList<String> options,
-      ImmutableSortedSet<RelPath> kotlinSourceFilePaths,
-      RelPath pathToSrcsList);
+      ImmutableSortedSet<Path> kotlinSourceFilePaths,
+      Path pathToSrcsList);
 
   String getShortName();
 
@@ -68,18 +67,18 @@ public interface Kotlinc extends Tool {
   default ImmutableList<Path> getExpandedSourcePaths(
       ProjectFilesystem projectFilesystem,
       ProjectFilesystemFactory projectFilesystemFactory,
-      ImmutableSet<RelPath> kotlinSourceFilePaths,
-      Optional<RelPath> workingDirectory)
-      throws IOException {
+      ImmutableSet<Path> kotlinSourceFilePaths,
+      Optional<Path> workingDirectory)
+      throws InterruptedException, IOException {
 
     // Add sources file or sources list to command
     ImmutableList.Builder<Path> sources = ImmutableList.builder();
-    for (RelPath path : kotlinSourceFilePaths) {
+    for (Path path : kotlinSourceFilePaths) {
       String pathString = path.toString();
       if (pathString.endsWith(".kt")
           || pathString.endsWith(".kts")
           || pathString.endsWith(".java")) {
-        sources.add(projectFilesystem.resolve(path).getPath());
+        sources.add(path);
       } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
         // For a Zip of .java files, create a JavaFileObject for each .java entry.
         ImmutableList<Path> zipPaths =
@@ -87,8 +86,8 @@ public interface Kotlinc extends Tool {
                 .getUnarchiver()
                 .extractArchive(
                     projectFilesystemFactory,
-                    projectFilesystem.resolve(path).getPath(),
-                    projectFilesystem.resolve(workingDirectory.orElse(path)).getPath(),
+                    projectFilesystem.resolve(path),
+                    projectFilesystem.resolve(workingDirectory.orElse(path)),
                     ExistingFileMode.OVERWRITE);
         sources.addAll(
             zipPaths.stream()

@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.kotlin;
 import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -46,28 +45,28 @@ public class KotlincStep implements Step {
   private static final String VERBOSE = "-verbose";
 
   private final Kotlinc kotlinc;
-  private final ImmutableSortedSet<RelPath> combinedClassPathEntries;
+  private final ImmutableSortedSet<Path> combinedClassPathEntries;
   private final Path outputDirectory;
   private final ImmutableList<String> extraArguments;
   private final ImmutableList<String> verboseModeOnlyExtraArguments;
-  private final ImmutableSortedSet<RelPath> sourceFilePaths;
+  private final ImmutableSortedSet<Path> sourceFilePaths;
   private final ProjectFilesystem filesystem;
-  private final RelPath pathToSrcsList;
+  private final Path pathToSrcsList;
   private final BuildTarget invokingRule;
-  private final Optional<RelPath> workingDirectory;
+  private final Optional<Path> workingDirectory;
   private final boolean withDownwardApi;
 
   KotlincStep(
       BuildTarget invokingRule,
       Path outputDirectory,
-      ImmutableSortedSet<RelPath> sourceFilePaths,
-      RelPath pathToSrcsList,
-      ImmutableSortedSet<RelPath> combinedClassPathEntries,
+      ImmutableSortedSet<Path> sourceFilePaths,
+      Path pathToSrcsList,
+      ImmutableSortedSet<Path> combinedClassPathEntries,
       Kotlinc kotlinc,
       ImmutableList<String> extraArguments,
       ImmutableList<String> verboseModeOnlyExtraArguments,
       ProjectFilesystem filesystem,
-      Optional<RelPath> workingDirectory,
+      Optional<Path> workingDirectory,
       boolean withDownwardApi) {
     this.invokingRule = invokingRule;
     this.outputDirectory = outputDirectory;
@@ -144,7 +143,7 @@ public class KotlincStep implements Step {
    */
   @VisibleForTesting
   ImmutableList<String> getOptions(
-      StepExecutionContext context, ImmutableSortedSet<RelPath> buildClasspathEntries) {
+      StepExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     if (outputDirectory != null) {
@@ -155,7 +154,10 @@ public class KotlincStep implements Step {
       builder.add(
           CLASSPATH_FLAG,
           Joiner.on(File.pathSeparator)
-              .join(transform(buildClasspathEntries, path -> filesystem.resolve(path).toString())));
+              .join(
+                  transform(
+                      buildClasspathEntries,
+                      path -> filesystem.resolve(path).toAbsolutePath().toString())));
     }
 
     builder.add(INCLUDE_RUNTIME_FLAG);
@@ -184,12 +186,12 @@ public class KotlincStep implements Step {
 
   /** @return The classpath entries used to invoke javac. */
   @VisibleForTesting
-  ImmutableSortedSet<RelPath> getClasspathEntries() {
+  ImmutableSortedSet<Path> getClasspathEntries() {
     return combinedClassPathEntries;
   }
 
   @VisibleForTesting
-  ImmutableSortedSet<RelPath> getSrcs() {
+  ImmutableSortedSet<Path> getSrcs() {
     return sourceFilePaths;
   }
 }

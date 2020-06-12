@@ -17,11 +17,11 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
+import java.nio.file.Path;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -38,7 +38,7 @@ public class AndroidClasspathProvider implements ExtraClasspathProvider {
   }
 
   @Override
-  public Iterable<AbsPath> getExtraClasspath() {
+  public Iterable<Path> getExtraClasspath() {
     return Objects.requireNonNull(androidPlatformTarget).getBootclasspathEntries();
   }
 }

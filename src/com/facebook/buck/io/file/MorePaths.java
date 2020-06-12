@@ -94,12 +94,14 @@ public class MorePaths {
    *     may be null if referencing the same directory as the path.
    * @return the relative path of path from the directory baseDir.
    */
-  public static RelPath getRelativePath(RelPath path, @Nullable RelPath baseDir) {
+  public static Path getRelativePath(Path path, @Nullable Path baseDir) {
     if (baseDir == null) {
       // This allows callers to use this method with "file.parent()" for files from the project
       // root dir.
       baseDir = emptyOf(path);
     }
+    Preconditions.checkArgument(!path.isAbsolute(), "Path must be relative: %s.", path);
+    Preconditions.checkArgument(!baseDir.isAbsolute(), "Path must be relative: %s.", baseDir);
     return relativize(baseDir, path);
   }
 
@@ -114,9 +116,9 @@ public class MorePaths {
         path1.isAbsolute() == path2.isAbsolute(),
         "Both paths must be absolute or both paths must be relative. (%s is %s, %s is %s)",
         path1,
-        getPathTypeString(path1),
+        path1.isAbsolute() ? "absolute" : "relative",
         path2,
-        getPathTypeString(path2));
+        path2.isAbsolute() ? "absolute" : "relative");
 
     path1 = normalize(path1);
     path2 = normalize(path2);
@@ -126,10 +128,6 @@ public class MorePaths {
       return path2;
     }
     return path1.relativize(path2);
-  }
-
-  private static String getPathTypeString(Path path) {
-    return path.isAbsolute() ? "absolute" : "relative";
   }
 
   public static RelPath relativize(PathWrapper path1, PathWrapper path2) {
@@ -151,18 +149,13 @@ public class MorePaths {
       return basePath.relativize(childPath);
     }
 
-    FileSystem fileSystem = basePath.getFileSystem();
     if (basePath.equals(childPath)) {
-      return fileSystem.getPath("");
+      return basePath.getFileSystem().getPath("");
     }
 
-    Preconditions.checkArgument(
-        basePath.isAbsolute() == childPath.isAbsolute(),
-        "Both paths must be absolute or both paths must be relative. (%s is %s, %s is %s)",
-        basePath,
-        getPathTypeString(basePath),
-        childPath,
-        getPathTypeString(childPath));
+    if (basePath.isAbsolute() != childPath.isAbsolute()) {
+      throw new IllegalArgumentException("Expected paths to be of the same type");
+    }
 
     // Skip past equal prefixes.
     int idx = 0;
@@ -190,7 +183,7 @@ public class MorePaths {
       result.append(childPath.getName(i).toString());
     }
 
-    return fileSystem.getPath(result.toString());
+    return basePath.getFileSystem().getPath(result.toString());
   }
 
   /**
@@ -217,11 +210,6 @@ public class MorePaths {
       return ((BuckUnixPath) path).emptyPath();
     }
     return path.getFileSystem().getPath("");
-  }
-
-  /** Return empty path with the same filesystem as provided path */
-  public static RelPath emptyOf(RelPath path) {
-    return RelPath.of(path.getFileSystem().getPath(""));
   }
 
   /** Return true if provided path is empty path ("") */
@@ -468,7 +456,7 @@ public class MorePaths {
    *     implementations.
    * @param symLink the symlink to create.
    * @param target the target of the symlink.
-   * @throws IOException if an I/O error occurs
+   * @throws IOException
    */
   public static void createSymLink(@Nullable WindowsFS winFS, Path symLink, Path target)
       throws IOException {

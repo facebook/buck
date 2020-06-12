@@ -46,11 +46,11 @@ import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.collect.CollectionUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
@@ -106,7 +106,7 @@ public class DummyRDotJavaTest {
         CompilerOutputPaths.getClassesDir(dummyRDotJava.getBuildTarget(), filesystem);
     RelPath rDotJavaOutputFolder =
         DummyRDotJava.getPathToOutputDir(dummyRDotJava.getBuildTarget(), filesystem);
-    RelPath rDotJavaAnnotationFolder =
+    Path rDotJavaAnnotationFolder =
         CompilerOutputPaths.getAnnotationPath(filesystem, dummyRDotJava.getBuildTarget()).get();
 
     String rDotJavaOutputJar =
@@ -122,16 +122,16 @@ public class DummyRDotJavaTest {
         Stream.of(resourceRule1, resourceRule2)
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList());
-    ImmutableSortedSet<RelPath> javaSourceFiles =
-        CollectionUtils.toSortedSet(rDotJavaSrcFolder.resolveRel("com/facebook/R.java"));
+    ImmutableSortedSet<Path> javaSourceFiles =
+        ImmutableSortedSet.of(rDotJavaSrcFolder.resolve("com/facebook/R.java"));
 
     List<String> expectedStepDescriptions =
         new ImmutableList.Builder<String>()
-            .addAll(makeCleanDirDescription(rDotJavaSrcFolder))
+            .addAll(makeCleanDirDescription(rDotJavaSrcFolder.getPath()))
             .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
             .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
-            .addAll(makeCleanDirDescription(rDotJavaBinFolder))
-            .addAll(makeCleanDirDescription(rDotJavaOutputFolder))
+            .addAll(makeCleanDirDescription(rDotJavaBinFolder.getPath()))
+            .addAll(makeCleanDirDescription(rDotJavaOutputFolder.getPath()))
             .add(String.format("mkdir -p %s", genFolder))
             .addAll(makeCleanDirDescription(rDotJavaAnnotationFolder))
             .add(
@@ -168,9 +168,7 @@ public class DummyRDotJavaTest {
 
     assertEquals(
         ImmutableSet.of(
-            rDotJavaBinFolder.getPath(),
-            Paths.get(rDotJavaOutputJar),
-            rDotJavaAnnotationFolder.getPath()),
+            rDotJavaBinFolder.getPath(), Paths.get(rDotJavaOutputJar), rDotJavaAnnotationFolder),
         buildableContext.getRecordedArtifacts());
   }
 
@@ -199,7 +197,7 @@ public class DummyRDotJavaTest {
         dummyRDotJava.getRDotJavaBinFolder());
   }
 
-  private static ImmutableList<String> makeCleanDirDescription(RelPath dirname) {
+  private static ImmutableList<String> makeCleanDirDescription(Path dirname) {
     return ImmutableList.of(
         String.format("rm -f -r %s", dirname), String.format("mkdir -p %s", dirname));
   }

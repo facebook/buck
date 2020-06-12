@@ -93,8 +93,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final ImmutableList<String> options;
   private final ImmutableList<JavacPluginJsr199Fields> annotationProcessors;
   private final ImmutableList<JavacPluginJsr199Fields> javacPlugins;
-  private final ImmutableSortedSet<RelPath> javaSourceFilePaths;
-  private final RelPath pathToSrcsList;
+  private final ImmutableSortedSet<Path> javaSourceFilePaths;
+  private final Path pathToSrcsList;
   private final AbiGenerationMode abiGenerationMode;
   @Nullable private final JarParameters abiJarParameters;
   @Nullable private final JarParameters libraryJarParameters;
@@ -111,8 +111,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
       ImmutableList<JavacPluginJsr199Fields> javacPlugins,
-      ImmutableSortedSet<RelPath> javaSourceFilePaths,
-      RelPath pathToSrcsList,
+      ImmutableSortedSet<Path> javaSourceFilePaths,
+      Path pathToSrcsList,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
       @Nullable JarParameters abiJarParameters,
@@ -211,7 +211,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     @Nullable private String compilerThreadName;
     @Nullable private JavacPhaseEventLogger phaseEventLogger;
     @Nullable private JavaInMemoryFileManager inMemoryFileManager;
-    @Nullable private final ClassUsageTracker classUsageTracker;
+    @Nullable private ClassUsageTracker classUsageTracker;
     @Nullable private Jsr199TracingBridge tracingBridge;
 
     private CompilerWorker(ListeningExecutorService executor) {
@@ -282,8 +282,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                       .writeFile(
                           classUsageTracker,
                           CompilerOutputPaths.getDepFilePath(
-                                  abiTarget, context.getProjectFilesystem())
-                              .getPath(),
+                              abiTarget, context.getProjectFilesystem()),
                           context.getProjectFilesystem(),
                           context.getCellPathResolver());
                 }
@@ -450,8 +449,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                             .writeFile(
                                 classUsageTracker,
                                 CompilerOutputPaths.getDepFilePath(
-                                        libraryTarget, context.getProjectFilesystem())
-                                    .getPath(),
+                                    libraryTarget, context.getProjectFilesystem()),
                                 context.getProjectFilesystem(),
                                 context.getCellPathResolver());
                       }
@@ -652,12 +650,12 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
     private Iterable<? extends JavaFileObject> createCompilationUnits(
         StandardJavaFileManager fileManager,
-        Function<RelPath, AbsPath> absolutifier,
-        Set<RelPath> javaSourceFilePaths)
+        Function<Path, Path> absolutifier,
+        Set<Path> javaSourceFilePaths)
         throws IOException {
       List<JavaFileObject> compilationUnits = new ArrayList<>();
       boolean seenZipOrJarSources = false;
-      for (RelPath path : javaSourceFilePaths) {
+      for (Path path : javaSourceFilePaths) {
         String pathString = path.toString();
         if (pathString.endsWith(".java")) {
           // For an ordinary .java file, create a corresponding JavaFileObject.

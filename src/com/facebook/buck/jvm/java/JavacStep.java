@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -209,18 +210,18 @@ public class JavacStep implements Step {
    */
   @VisibleForTesting
   ImmutableList<String> getOptions(
-      StepExecutionContext context, ImmutableSortedSet<RelPath> buildClasspathEntries) {
+      StepExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
     return pipeline.getOptions(context, buildClasspathEntries, filesystem, resolver);
   }
 
   /** @return The classpath entries used to invoke javac. */
   @VisibleForTesting
-  ImmutableSortedSet<RelPath> getClasspathEntries() {
+  ImmutableSortedSet<Path> getClasspathEntries() {
     return pipeline.getCompilerParameters().getClasspathEntries();
   }
 
   @VisibleForTesting
-  ImmutableSortedSet<RelPath> getSrcs() {
+  ImmutableSortedSet<Path> getSrcs() {
     return pipeline.getCompilerParameters().getSourceFilePaths();
   }
 

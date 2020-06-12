@@ -37,8 +37,8 @@ import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
-import com.facebook.buck.util.collect.CollectionUtils;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 
 /** Calculates a Source ABI by copying the source ABI output from the library rule into a JAR. */
@@ -94,9 +94,12 @@ public class CalculateSourceAbiFromLibraryTarget
           JarParameters.builder()
               .setJarPath(outputPathResolver.resolvePath(output))
               .setEntriesToJar(
-                  CollectionUtils.toSortedSet(
-                      filesystem.relativize(
-                          JavaAbis.getTmpGenPathForSourceAbi(filesystem, libraryTarget).getPath())))
+                  ImmutableSortedSet.orderedBy(RelPath.COMPARATOR)
+                      .add(
+                          filesystem.relativize(
+                              JavaAbis.getTmpGenPathForSourceAbi(filesystem, libraryTarget)
+                                  .getPath()))
+                      .build())
               .setHashEntries(true)
               .build();
       return ImmutableList.of(new JarDirectoryStep(jarParameters));

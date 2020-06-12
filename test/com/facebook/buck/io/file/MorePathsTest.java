@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -53,21 +52,20 @@ public class MorePathsTest {
   @Test
   public void testGetRelativePath() {
     // Path on base directory.
-    assertEquals(
-        RelPath.get("file"), MorePaths.getRelativePath(RelPath.get("file"), RelPath.get("")));
+    assertEquals(Paths.get("file"), MorePaths.getRelativePath(Paths.get("file"), Paths.get("")));
 
     // Path on base directory (using null).
-    assertEquals(RelPath.get("file"), MorePaths.getRelativePath(RelPath.get("file"), null));
+    assertEquals(Paths.get("file"), MorePaths.getRelativePath(Paths.get("file"), null));
 
     // Path internal to base directory.
     assertEquals(
-        RelPath.get("dir/file"),
-        MorePaths.getRelativePath(RelPath.get("base/dir/file"), RelPath.get("base")));
+        Paths.get("dir/file"),
+        MorePaths.getRelativePath(Paths.get("base/dir/file"), Paths.get("base")));
 
     // Path external to base directory.
     assertEquals(
-        RelPath.get("../dir1/file"),
-        MorePaths.getRelativePath(RelPath.get("dir1/file"), RelPath.get("base")));
+        Paths.get("../dir1/file"),
+        MorePaths.getRelativePath(Paths.get("dir1/file"), Paths.get("base")));
   }
 
   @Test
@@ -94,20 +92,19 @@ public class MorePathsTest {
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     tmp.newFile("biz.txt");
 
-    RelPath pathToDesiredLinkUnderProjectRoot = RelPath.get("gamma.txt");
-    RelPath pathToExistingFileUnderProjectRoot = RelPath.get("biz.txt");
-    RelPath relativePath =
+    Path pathToDesiredLinkUnderProjectRoot = Paths.get("gamma.txt");
+    Path pathToExistingFileUnderProjectRoot = Paths.get("biz.txt");
+    Path relativePath =
         MoreProjectFilesystems.createRelativeSymlink(
             pathToDesiredLinkUnderProjectRoot,
             pathToExistingFileUnderProjectRoot,
             projectFilesystem);
 
-    AbsPath absolutePathToDesiredLinkUnderProjectRoot =
+    Path absolutePathToDesiredLinkUnderProjectRoot =
         projectFilesystem.resolve(pathToDesiredLinkUnderProjectRoot);
-    assertTrue(Files.isSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot.getPath()));
+    assertTrue(Files.isSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot));
 
-    Path targetOfSymbolicLink =
-        Files.readSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot.getPath());
+    Path targetOfSymbolicLink = Files.readSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot);
 
     validateSymlinklTarget(
         pathToExistingFileUnderProjectRoot,
@@ -116,11 +113,11 @@ public class MorePathsTest {
         targetOfSymbolicLink,
         relativePath);
 
-    AbsPath absolutePathToExistingFileUnderProjectRoot =
+    Path absolutePathToExistingFileUnderProjectRoot =
         projectFilesystem.resolve(pathToExistingFileUnderProjectRoot);
-    Files.write(absolutePathToExistingFileUnderProjectRoot.getPath(), "Hello, World!".getBytes());
+    Files.write(absolutePathToExistingFileUnderProjectRoot, "Hello, World!".getBytes());
     String dataReadFromSymlink =
-        new String(Files.readAllBytes(absolutePathToDesiredLinkUnderProjectRoot.getPath()));
+        new String(Files.readAllBytes(absolutePathToDesiredLinkUnderProjectRoot));
     assertEquals("Hello, World!", dataReadFromSymlink);
   }
 
@@ -131,20 +128,19 @@ public class MorePathsTest {
     tmp.newFile("biz.txt");
 
     tmp.newFolder("alpha", "beta");
-    RelPath pathToDesiredLinkUnderProjectRoot = RelPath.get("alpha/beta/gamma.txt");
-    RelPath pathToExistingFileUnderProjectRoot = RelPath.get("biz.txt");
-    RelPath relativePath =
+    Path pathToDesiredLinkUnderProjectRoot = Paths.get("alpha/beta/gamma.txt");
+    Path pathToExistingFileUnderProjectRoot = Paths.get("biz.txt");
+    Path relativePath =
         MoreProjectFilesystems.createRelativeSymlink(
             pathToDesiredLinkUnderProjectRoot,
             pathToExistingFileUnderProjectRoot,
             projectFilesystem);
 
-    AbsPath absolutePathToDesiredLinkUnderProjectRoot =
+    Path absolutePathToDesiredLinkUnderProjectRoot =
         projectFilesystem.resolve(pathToDesiredLinkUnderProjectRoot);
-    assertTrue(Files.isSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot.getPath()));
+    assertTrue(Files.isSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot));
 
-    Path targetOfSymbolicLink =
-        Files.readSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot.getPath());
+    Path targetOfSymbolicLink = Files.readSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot);
 
     validateSymlinklTarget(
         pathToExistingFileUnderProjectRoot,
@@ -153,11 +149,11 @@ public class MorePathsTest {
         targetOfSymbolicLink,
         relativePath);
 
-    AbsPath absolutePathToExistingFileUnderProjectRoot =
+    Path absolutePathToExistingFileUnderProjectRoot =
         projectFilesystem.resolve(pathToExistingFileUnderProjectRoot);
-    Files.write(absolutePathToExistingFileUnderProjectRoot.getPath(), "Hello, World!".getBytes());
+    Files.write(absolutePathToExistingFileUnderProjectRoot, "Hello, World!".getBytes());
     String dataReadFromSymlink =
-        new String(Files.readAllBytes(absolutePathToDesiredLinkUnderProjectRoot.getPath()));
+        new String(Files.readAllBytes(absolutePathToDesiredLinkUnderProjectRoot));
     assertEquals("Hello, World!", dataReadFromSymlink);
   }
 
@@ -169,20 +165,19 @@ public class MorePathsTest {
     tmp.newFile("foo/bar/baz/biz.txt");
 
     tmp.newFolder("alpha", "beta");
-    RelPath pathToDesiredLinkUnderProjectRoot = RelPath.get("alpha/beta/gamma.txt");
-    RelPath pathToExistingFileUnderProjectRoot = RelPath.get("foo/bar/baz/biz.txt");
-    RelPath relativePath =
+    Path pathToDesiredLinkUnderProjectRoot = Paths.get("alpha/beta/gamma.txt");
+    Path pathToExistingFileUnderProjectRoot = Paths.get("foo/bar/baz/biz.txt");
+    Path relativePath =
         MoreProjectFilesystems.createRelativeSymlink(
             pathToDesiredLinkUnderProjectRoot,
             pathToExistingFileUnderProjectRoot,
             projectFilesystem);
 
-    AbsPath absolutePathToDesiredLinkUnderProjectRoot =
+    Path absolutePathToDesiredLinkUnderProjectRoot =
         projectFilesystem.resolve(pathToDesiredLinkUnderProjectRoot);
-    assertTrue(Files.isSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot.getPath()));
+    assertTrue(Files.isSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot));
 
-    Path targetOfSymbolicLink =
-        Files.readSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot.getPath());
+    Path targetOfSymbolicLink = Files.readSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot);
 
     validateSymlinklTarget(
         pathToExistingFileUnderProjectRoot,
@@ -191,11 +186,11 @@ public class MorePathsTest {
         targetOfSymbolicLink,
         relativePath);
 
-    AbsPath absolutePathToExistingFileUnderProjectRoot =
+    Path absolutePathToExistingFileUnderProjectRoot =
         projectFilesystem.resolve(pathToExistingFileUnderProjectRoot);
-    Files.write(absolutePathToExistingFileUnderProjectRoot.getPath(), "Hello, World!".getBytes());
+    Files.write(absolutePathToExistingFileUnderProjectRoot, "Hello, World!".getBytes());
     String dataReadFromSymlink =
-        new String(Files.readAllBytes(absolutePathToDesiredLinkUnderProjectRoot.getPath()));
+        new String(Files.readAllBytes(absolutePathToDesiredLinkUnderProjectRoot));
     assertEquals("Hello, World!", dataReadFromSymlink);
   }
 
@@ -422,24 +417,24 @@ public class MorePathsTest {
   }
 
   private void validateSymlinklTarget(
-      RelPath pathToExistingFileUnderProjectRoot,
-      RelPath pathToDesiredLinkUnderProjectRoot,
-      AbsPath absolutePathToDesiredLinkUnderProjectRoot,
+      Path pathToExistingFileUnderProjectRoot,
+      Path pathToDesiredLinkUnderProjectRoot,
+      Path absolutePathToDesiredLinkUnderProjectRoot,
       Path targetOfSymbolicLink,
-      RelPath relativePath) {
+      Path relativePath) {
     if (Platform.detect() == Platform.WINDOWS) {
       // On Windows Files.readSymbolicLink returns the absolute path to the target.
-      RelPath relToLinkTargetPath =
+      Path relToLinkTargetPath =
           MorePaths.getRelativePath(
               pathToExistingFileUnderProjectRoot, pathToDesiredLinkUnderProjectRoot.getParent());
-      AbsPath absolutePathToTargetUnderProjectRoot =
+      Path absolutePathToTargetUnderProjectRoot =
           absolutePathToDesiredLinkUnderProjectRoot
               .getParent()
               .resolve(relToLinkTargetPath)
               .normalize();
-      assertEquals(absolutePathToTargetUnderProjectRoot, AbsPath.of(targetOfSymbolicLink));
+      assertEquals(absolutePathToTargetUnderProjectRoot, targetOfSymbolicLink);
     } else {
-      assertEquals(relativePath, RelPath.of(targetOfSymbolicLink));
+      assertEquals(relativePath, targetOfSymbolicLink);
     }
   }
 }

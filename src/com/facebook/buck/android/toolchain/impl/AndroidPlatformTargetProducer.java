@@ -21,7 +21,6 @@ import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
@@ -32,6 +31,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.nio.file.Path;
@@ -43,7 +43,6 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class AndroidPlatformTargetProducer {
 
@@ -144,7 +143,7 @@ public class AndroidPlatformTargetProducer {
     }
 
     Path platformDirectory = androidSdkDir.resolve(platformDirectoryPath);
-    AbsPath androidJar = AbsPath.of(platformDirectory.resolve("android.jar"));
+    Path androidJar = platformDirectory.resolve("android.jar");
 
     // Add any libraries found in the optional directory under the Android SDK directory. These
     // go at the head of the bootclasspath before any additional jars.
@@ -162,11 +161,7 @@ public class AndroidPlatformTargetProducer {
       }
     }
 
-    LinkedList<AbsPath> bootclasspathEntries =
-        additionalJarPaths.stream()
-            .map(filesystem::resolve)
-            .map(AbsPath::of)
-            .collect(Collectors.toCollection(LinkedList::new));
+    LinkedList<Path> bootclasspathEntries = Lists.newLinkedList(additionalJarPaths);
 
     // Make sure android.jar is at the front of the bootclasspath.
     bootclasspathEntries.addFirst(androidJar);
@@ -187,7 +182,7 @@ public class AndroidPlatformTargetProducer {
 
     return AndroidPlatformTarget.of(
         name,
-        androidJar.getPath(),
+        androidJar.toAbsolutePath(),
         bootclasspathEntries,
         aaptOverride.orElse(
             () ->

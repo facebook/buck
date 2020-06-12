@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -37,8 +36,8 @@ public class ScalacStep extends IsolatedShellStep {
   private final ImmutableList<String> extraArguments;
   private final SourcePathResolverAdapter resolver;
   private final Path outputDirectory;
-  private final ImmutableSortedSet<RelPath> sourceFilePaths;
-  private final ImmutableSortedSet<RelPath> classpathEntries;
+  private final ImmutableSortedSet<Path> sourceFilePaths;
+  private final ImmutableSortedSet<Path> classpathEntries;
   private final ProjectFilesystem filesystem;
 
   ScalacStep(
@@ -46,8 +45,8 @@ public class ScalacStep extends IsolatedShellStep {
       ImmutableList<String> extraArguments,
       SourcePathResolverAdapter resolver,
       Path outputDirectory,
-      ImmutableSortedSet<RelPath> sourceFilePaths,
-      ImmutableSortedSet<RelPath> classpathEntries,
+      ImmutableSortedSet<Path> sourceFilePaths,
+      ImmutableSortedSet<Path> classpathEntries,
       ProjectFilesystem filesystem,
       RelPath cellPath,
       boolean withDownwardApi) {
@@ -85,14 +84,14 @@ public class ScalacStep extends IsolatedShellStep {
     String classpath =
         classpathEntries.stream()
             .map(filesystem::resolve)
-            .map(AbsPath::toString)
+            .map(Path::toString)
             .collect(Collectors.joining(File.pathSeparator));
     if (classpath.isEmpty()) {
       commandBuilder.add("-classpath", "''");
     } else {
       commandBuilder.add("-classpath", classpath);
     }
-    commandBuilder.addAll(sourceFilePaths.stream().map(RelPath::toString).iterator());
+    commandBuilder.addAll(sourceFilePaths.stream().map(Path::toString).iterator());
 
     return commandBuilder.build();
   }
