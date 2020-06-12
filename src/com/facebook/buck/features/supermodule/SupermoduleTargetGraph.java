@@ -18,6 +18,7 @@ package com.facebook.buck.features.supermodule;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
 import com.facebook.buck.core.model.OutputLabel;
@@ -34,7 +35,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
-import java.nio.file.Path;
 
 /** Rule that outputs a json representation of the target graph with deps and labels. */
 public class SupermoduleTargetGraph extends ModernBuildRule<SupermoduleTargetGraph>
@@ -62,10 +62,11 @@ public class SupermoduleTargetGraph extends ModernBuildRule<SupermoduleTargetGra
       ProjectFilesystem filesystem,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
-    Path outputPath = outputPathResolver.resolvePath(output);
+    RelPath outputPath = outputPathResolver.resolvePath(output);
     return ImmutableList.of(
-        MkdirStep.of(buildCellPathFactory.from(outputPath.getParent())),
-        new GenerateSupermoduleTargetGraphJsonStep(filesystem, outputPath, targetGraphMap));
+        MkdirStep.of(buildCellPathFactory.from(outputPath.getPath().getParent())),
+        new GenerateSupermoduleTargetGraphJsonStep(
+            filesystem, outputPath.getPath(), targetGraphMap));
   }
 
   @Override

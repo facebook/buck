@@ -29,7 +29,7 @@ public interface OutputPathResolver {
   }
 
   /** Returns a relative path to the output. */
-  Path resolvePath(OutputPath outputPath);
+  RelPath resolvePath(OutputPath outputPath);
 
   /** Returns a relative path to the root directory for build outputs. */
   RelPath getRootPath();

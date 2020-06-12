@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -32,7 +32,6 @@ import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 
 /**
  * A BuildRule for stripping (removing inessential information from executable binary programs and
@@ -82,7 +81,7 @@ public class StripLinkable extends ModernBuildRule<StripLinkable.Impl> {
         BuildCellRelativePathFactory buildCellPathFactory) {
 
       SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
-      Path destination = outputPathResolver.resolvePath(output);
+      RelPath destination = outputPathResolver.resolvePath(output);
 
       return ImmutableList.of(
           new StripStep(
@@ -91,7 +90,7 @@ public class StripLinkable extends ModernBuildRule<StripLinkable.Impl> {
               stripTool.getCommandPrefix(sourcePathResolverAdapter),
               ImmutableList.of("--strip-unneeded"),
               sourcePathResolverAdapter.getAbsolutePath(sourcePathToStrip),
-              AbsPath.of(filesystem.resolve(destination)),
+              filesystem.resolve(destination),
               withDownwardApi));
     }
   }

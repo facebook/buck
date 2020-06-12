@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.PathWrapper;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -134,11 +135,11 @@ public class AppleAssetCatalog extends AbstractBuildRule {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getResolvedPlistPath());
   }
 
-  private Path getResolvedPlistPath() {
+  private RelPath getResolvedPlistPath() {
     return outputPathResolver.resolvePath(plistOutputPath);
   }
 
-  private Path getResolvedOutputDirPath() {
+  private RelPath getResolvedOutputDirPath() {
     return outputPathResolver.resolvePath(outputDirPath);
   }
 
@@ -147,13 +148,13 @@ public class AppleAssetCatalog extends AbstractBuildRule {
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
 
-    Path resolvedOutputDirPath = getResolvedOutputDirPath();
+    RelPath resolvedOutputDirPath = getResolvedOutputDirPath();
     stepsBuilder.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), resolvedOutputDirPath)));
 
-    Path resolvedPlistPath = getResolvedPlistPath();
+    RelPath resolvedPlistPath = getResolvedPlistPath();
     stepsBuilder.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -172,15 +173,15 @@ public class AppleAssetCatalog extends AbstractBuildRule {
             absoluteAssetCatalogDirs.stream()
                 .map(PathWrapper::getPath)
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())),
-            getProjectFilesystem().resolve(resolvedOutputDirPath),
-            getProjectFilesystem().resolve(resolvedPlistPath),
+            getProjectFilesystem().resolve(resolvedOutputDirPath).getPath(),
+            getProjectFilesystem().resolve(resolvedPlistPath).getPath(),
             appIcon,
             launchImage,
             compilationOptions,
             withDownwardApi));
 
-    buildableContext.recordArtifact(resolvedOutputDirPath);
-    buildableContext.recordArtifact(resolvedPlistPath);
+    buildableContext.recordArtifact(resolvedOutputDirPath.getPath());
+    buildableContext.recordArtifact(resolvedPlistPath.getPath());
     return stepsBuilder.build();
   }
 

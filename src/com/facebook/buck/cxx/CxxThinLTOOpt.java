@@ -39,7 +39,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /** A build rule which runs the opt phase of an incremental ThinLTO build */
@@ -167,12 +166,12 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
           compilerDelegate.getArguments(CxxToolFlags.of(), filesystem.getRootPath().getPath());
 
       RelPath relativeInputPath = filesystem.relativize(resolver.getAbsolutePath(input));
-      Path resolvedOutput = outputPathResolver.resolvePath(output);
+      RelPath resolvedOutput = outputPathResolver.resolvePath(output);
 
       return new CxxPreprocessAndCompileStep(
           filesystem,
           CxxPreprocessAndCompileStep.Operation.COMPILE,
-          resolvedOutput,
+          resolvedOutput.getPath(),
           Optional.empty(),
           relativeInputPath.getPath(),
           inputType,
@@ -191,7 +190,7 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
               ImmutableCxxLogInfo.ofImpl(
                   Optional.ofNullable(targetName),
                   Optional.ofNullable(relativeInputPath.getPath()),
-                  Optional.ofNullable(resolvedOutput))),
+                  Optional.of(resolvedOutput.getPath()))),
           withDownwardApi);
     }
 
@@ -201,7 +200,7 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      Path resolvedOutput = outputPathResolver.resolvePath(output);
+      RelPath resolvedOutput = outputPathResolver.resolvePath(output);
 
       return new ImmutableList.Builder<Step>()
           .add(

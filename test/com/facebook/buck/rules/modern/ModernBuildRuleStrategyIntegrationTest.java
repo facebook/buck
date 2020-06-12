@@ -26,6 +26,7 @@ import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -58,7 +59,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
@@ -442,10 +442,10 @@ public class ModernBuildRuleStrategyIntegrationTest {
           new AbstractExecutionStep("blah") {
             public void writeOutput(OutputPath path) throws IOException {
               String data = "data";
-              Path resolved = outputPathResolver.resolvePath(path);
+              RelPath resolved = outputPathResolver.resolvePath(path);
               if (outputsAreDirectories) {
                 filesystem.mkdirs(resolved);
-                resolved = resolved.resolve("data");
+                resolved = resolved.resolveRel("data");
               }
               filesystem.writeContentsToPath(data, resolved);
             }

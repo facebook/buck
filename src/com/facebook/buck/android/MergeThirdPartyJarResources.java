@@ -79,7 +79,8 @@ public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdParty
         buildContext.getSourcePathResolver().getAllAbsolutePaths(pathsToThirdPartyJars);
     return ImmutableList.of(
         createMergedThirdPartyJarsStep(
-            thirdPartyJars, filesystem.resolve(outputPathResolver.resolvePath(mergedPath))));
+            thirdPartyJars,
+            filesystem.resolve(outputPathResolver.resolvePath(mergedPath).getPath())));
   }
 
   private Step createMergedThirdPartyJarsStep(

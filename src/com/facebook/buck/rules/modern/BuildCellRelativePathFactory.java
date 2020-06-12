@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import java.nio.file.Path;
 
@@ -24,6 +25,11 @@ import java.nio.file.Path;
 public interface BuildCellRelativePathFactory {
   /** Converts a Path relative to the Buildable's ProjectFilesystem to a BuildCellRelativePath. */
   BuildCellRelativePath from(Path buildableRelativePath);
+
+  /** Safer version of {@link #from(Path)}. */
+  default BuildCellRelativePath from(RelPath buildableRelativePath) {
+    return from(buildableRelativePath.getPath());
+  }
 
   /** Converts an OutputPath to a BuildCellRelativePath. */
   BuildCellRelativePath from(OutputPath outputPath);

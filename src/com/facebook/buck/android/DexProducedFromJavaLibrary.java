@@ -26,6 +26,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -198,7 +199,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
 
       @Nullable DxStep dx;
 
-      Path pathToDex = outputPathResolver.resolvePath(outputDex);
+      RelPath pathToDex = outputPathResolver.resolvePath(outputDex);
       if (hasClassesToDx) {
         AbsPath pathToOutputFile = sourcePathResolverAdapter.getAbsolutePath(javaLibrarySourcePath);
         EstimateDexWeightStep estimate = new EstimateDexWeightStep(filesystem, pathToOutputFile);
@@ -220,7 +221,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
             new DxStep(
                 filesystem,
                 androidPlatformTarget,
-                pathToDex,
+                pathToDex.getPath(),
                 Collections.singleton(pathToOutputFile.getPath()),
                 options,
                 Optional.empty(),
@@ -277,7 +278,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
 
             private void writeMetadataValue(MetadataResource metadataResource, String value)
                 throws IOException {
-              Path path = metadataResource.getMetadataPath(Impl.this, outputPathResolver);
+              RelPath path = metadataResource.getMetadataPath(Impl.this, outputPathResolver);
               filesystem.mkdirs(path.getParent());
               filesystem.writeContentsToPath(value, path);
             }
@@ -302,7 +303,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
     CLASSNAMES_TO_HASHES,
     REFERENCED_RESOURCES;
 
-    Path getMetadataPath(Impl buildable, OutputPathResolver outputPathResolver) {
+    RelPath getMetadataPath(Impl buildable, OutputPathResolver outputPathResolver) {
       OutputPath outputPath;
       switch (this) {
         case WEIGHT_ESTIMATE:
@@ -367,7 +368,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
   }
 
   private Optional<String> readMetadataValue(MetadataResource metadataResource) {
-    Path path = metadataResource.getMetadataPath(getBuildable(), getOutputPathResolver());
+    RelPath path = metadataResource.getMetadataPath(getBuildable(), getOutputPathResolver());
     return getProjectFilesystem().readFileIfItExists(path);
   }
 

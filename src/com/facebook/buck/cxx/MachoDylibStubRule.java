@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.DefaultFieldDeps;
@@ -35,7 +36,6 @@ import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 
 /** Rule which creates a scrubbed dylib stub from a dylib. */
 public class MachoDylibStubRule extends ModernBuildRule<MachoDylibStubRule.DylibStubBuildable> {
@@ -107,7 +107,7 @@ public class MachoDylibStubRule extends ModernBuildRule<MachoDylibStubRule.Dylib
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
 
-      Path output = outputPathResolver.resolvePath(outputPath);
+      RelPath output = outputPathResolver.resolvePath(outputPath);
       ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
       SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
@@ -119,9 +119,9 @@ public class MachoDylibStubRule extends ModernBuildRule<MachoDylibStubRule.Dylib
               sourcePathResolverAdapter.getFilesystem(inputDylib),
               sourcePathResolverAdapter.getRelativePath(inputDylib),
               filesystem,
-              output,
+              output.getPath(),
               withDownwardApi),
-          new MachoDylibStubScrubContentsStep(filesystem, output));
+          new MachoDylibStubScrubContentsStep(filesystem, output.getPath()));
 
       return steps.build();
     }

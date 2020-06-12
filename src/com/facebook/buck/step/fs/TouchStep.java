@@ -17,6 +17,7 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -33,6 +34,10 @@ public class TouchStep implements Step {
   public TouchStep(ProjectFilesystem filesystem, Path fileToTouch) {
     this.filesystem = filesystem;
     this.fileToTouch = fileToTouch;
+  }
+
+  public TouchStep(ProjectFilesystem filesystem, RelPath fileToTouch) {
+    this(filesystem, fileToTouch.getPath());
   }
 
   @Override

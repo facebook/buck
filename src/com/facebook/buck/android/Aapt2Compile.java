@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -91,7 +92,7 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
 
-      Path outputPath = outputPathResolver.resolvePath(output);
+      RelPath outputPath = outputPathResolver.resolvePath(output);
       SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
 
       Aapt2CompileStep aapt2CompileStep =
@@ -99,7 +100,7 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
               filesystem.getRootPath(),
               aapt2ExecutableTool.getCommandPrefix(sourcePathResolverAdapter),
               sourcePathResolverAdapter.getRelativePath(resDir),
-              outputPath,
+              outputPath.getPath(),
               skipCrunchPngs,
               failOnLegacyErrors,
               withDownwardApi);

@@ -135,12 +135,14 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
       // - Write compile command into an argfile
       // - Run diagnostic tool by passing the compile command argfile path
       ImmutableList.Builder<Step> steps = ImmutableList.builder();
-      Path resolvedOutput = filesystem.resolve(outputPathResolver.resolvePath(output));
+      AbsPath resolvedOutput = filesystem.resolve(outputPathResolver.resolvePath(output));
 
       steps.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
-                  buildContext.getBuildCellRootPath(), filesystem, resolvedOutput.getParent())));
+                  buildContext.getBuildCellRootPath(),
+                  filesystem,
+                  resolvedOutput.getPath().getParent())));
 
       // Write compile command to argfile
       AbsPath scratchDir = filesystem.resolve(outputPathResolver.getTempPath());
@@ -158,7 +160,7 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
               diagnosticTool,
               diagnosticName,
               sourceInputPath.getPath(),
-              resolvedOutput,
+              resolvedOutput.getPath(),
               withDownwardApi));
 
       return steps.build();

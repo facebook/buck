@@ -18,6 +18,7 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -49,7 +50,6 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -155,7 +155,7 @@ public class PythonSourceDatabase extends ModernBuildRule<PythonSourceDatabase.I
           RmStep.of(BuildCellRelativePath.of(outputPathResolver.resolvePath(OUTPUT_PATH))),
           new AbstractExecutionStep("write-source-db") {
 
-            private final Path output = outputPathResolver.resolvePath(OUTPUT_PATH);
+            private final RelPath output = outputPathResolver.resolvePath(OUTPUT_PATH);
             private final PythonComponents.Resolved resolvedSources =
                 sources.resolvePythonComponents(buildContext.getSourcePathResolver());
             private final PythonResolvedComponentsGroup resolvedDependencies =
@@ -165,7 +165,8 @@ public class PythonSourceDatabase extends ModernBuildRule<PythonSourceDatabase.I
             public StepExecutionResult execute(StepExecutionContext context) throws IOException {
               try (OutputStream stream =
                   new BufferedOutputStream(
-                      Files.newOutputStream(context.getBuildCellRootPath().resolve(output)))) {
+                      Files.newOutputStream(
+                          context.getBuildCellRootPath().resolve(output.getPath())))) {
                 PythonSourceDatabaseEntry.serialize(
                     resolvedSources,
                     resolvedDependencies,

@@ -49,8 +49,8 @@ public class OutputPath implements AddsToRuleKey {
     return new OutputPath(path.resolve(subPath));
   }
 
-  Path getPath() {
-    return path.getPath();
+  RelPath getPath() {
+    return path;
   }
 
   public static Internals internals() {
@@ -64,7 +64,7 @@ public class OutputPath implements AddsToRuleKey {
   public static class Internals {
     private static final Internals INSTANCE = new Internals();
 
-    public Path getPath(OutputPath outputPath) {
+    public RelPath getPath(OutputPath outputPath) {
       return outputPath.getPath();
     }
   }

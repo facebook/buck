@@ -627,10 +627,10 @@ public class GenruleBuildable implements Buildable {
         }
         if (outputPaths.isPresent()) {
           for (ImmutableSet<OutputPath> paths : outputPaths.get().values()) {
-            paths.forEach(p -> checkPath(filesystem, outputPathResolver.resolvePath(p)));
+            paths.forEach(p -> checkPath(filesystem, outputPathResolver.resolvePath(p).getPath()));
           }
         } else {
-          checkPath(filesystem, outputPathResolver.resolvePath(outputPath.get()));
+          checkPath(filesystem, outputPathResolver.resolvePath(outputPath.get()).getPath());
         }
         return result;
       }

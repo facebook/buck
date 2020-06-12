@@ -17,6 +17,7 @@
 package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -31,7 +32,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.unarchive.UnzipStep;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /** Extract a prebuilt Python library/wheel. */
@@ -66,7 +66,7 @@ class ExtractPrebuiltPythonLibrary extends ModernBuildRule<ExtractPrebuiltPython
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      Path extractedOutput = outputPathResolver.resolvePath(OUTPUT);
+      RelPath extractedOutput = outputPathResolver.resolvePath(OUTPUT);
       return ImmutableList.<Step>builder()
           .addAll(
               MakeCleanDirectoryStep.of(
@@ -75,9 +75,9 @@ class ExtractPrebuiltPythonLibrary extends ModernBuildRule<ExtractPrebuiltPython
               new UnzipStep(
                   filesystem,
                   buildContext.getSourcePathResolver().getAbsolutePath(binarySrc).getPath(),
-                  extractedOutput,
+                  extractedOutput.getPath(),
                   Optional.empty()))
-          .add(new MovePythonWhlDataStep(filesystem, extractedOutput))
+          .add(new MovePythonWhlDataStep(filesystem, extractedOutput.getPath()))
           .build();
     }
   }

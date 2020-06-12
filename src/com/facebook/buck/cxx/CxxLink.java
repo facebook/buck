@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -192,11 +193,13 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       AbsPath argFilePath = scratchDir.resolve("linker.argsfile");
       AbsPath fileListPath = scratchDir.resolve("filelist.txt");
 
-      Path outputPath = outputPathResolver.resolvePath(output);
+      RelPath outputPath = outputPathResolver.resolvePath(output);
 
       boolean requiresPostprocessing = postprocessor.isPresent();
       Path linkOutput =
-          requiresPostprocessing ? scratchDir.resolve("link-output").getPath() : outputPath;
+          requiresPostprocessing
+              ? scratchDir.resolve("link-output").getPath()
+              : outputPath.getPath();
 
       ImmutableMap<Path, Path> cellRootMap =
           this.relativeCellRoots.stream()
@@ -235,9 +238,11 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                               p.getSteps(
                                   context,
                                   filesystem.resolve(linkOutput),
-                                  filesystem.resolve(outputPath)))
+                                  filesystem.resolve(outputPath).getPath()))
                       .orElse(ImmutableList.of()))
-              .add(new FileScrubberStep(filesystem, outputPath, linker.getScrubbers(cellRootMap)));
+              .add(
+                  new FileScrubberStep(
+                      filesystem, outputPath.getPath(), linker.getScrubbers(cellRootMap)));
       if (linkerMapPath.isPresent()) {
         // In some case (when there are no `dll_export`s eg) an import library is not produced by
         // link.exe. An empty file is produced in this case (since an import library was already

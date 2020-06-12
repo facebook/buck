@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -41,7 +42,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -81,7 +81,7 @@ public class CxxDiagnosticAggregationRule
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
 
-      Path outputPath = outputPathResolver.resolvePath(output);
+      RelPath outputPath = outputPathResolver.resolvePath(output);
       Step mkdirStep = MkdirStep.of(buildCellPathFactory.from(outputPath.getParent()));
 
       return ImmutableList.of(
@@ -91,7 +91,8 @@ public class CxxDiagnosticAggregationRule
             public StepExecutionResult execute(StepExecutionContext executionContext)
                 throws IOException {
 
-              try (OutputStream outputStream = filesystem.newFileOutputStream(outputPath)) {
+              try (OutputStream outputStream =
+                  filesystem.newFileOutputStream(outputPath.getPath())) {
                 try (JsonGenerator jsonGen = ObjectMappers.createGenerator(outputStream)) {
                   jsonGen.writeStartArray();
                   for (SourcePath extractionRuleInput : inputs) {

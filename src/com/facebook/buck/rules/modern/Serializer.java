@@ -223,7 +223,7 @@ public class Serializer {
     @Override
     public void visitOutputPath(OutputPath value) throws IOException {
       stream.writeBoolean(value instanceof PublicOutputPath);
-      writeRelativePath(RelPath.of(value.getPath()));
+      writeRelativePath(value.getPath());
     }
 
     private void writeString(String value) throws IOException {

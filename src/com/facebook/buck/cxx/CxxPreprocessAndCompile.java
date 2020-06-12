@@ -169,7 +169,8 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
   }
 
   private Path getDepFilePath() {
-    return Impl.getDepFilePath(getOutputPathResolver().resolvePath(getBuildable().output));
+    return Impl.getDepFilePath(
+        getOutputPathResolver().resolvePath(getBuildable().output).getPath());
   }
 
   private RelPath getRelativeInputPaths(SourcePathResolverAdapter resolver) {
@@ -331,13 +332,13 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
       ImmutableList<Arg> arguments = getArguments(filesystem, preprocessorDelegateFlags);
 
       RelPath relativeInputPath = filesystem.relativize(resolver.getAbsolutePath(input));
-      Path resolvedOutput = outputPathResolver.resolvePath(output);
+      RelPath resolvedOutput = outputPathResolver.resolvePath(output);
 
       return new CxxPreprocessAndCompileStep(
           filesystem,
           getOperation(),
-          resolvedOutput,
-          getDepFile(resolvedOutput),
+          resolvedOutput.getPath(),
+          getDepFile(resolvedOutput.getPath()),
           relativeInputPath.getPath(),
           inputType,
           makeCommand(resolver, arguments),
@@ -352,7 +353,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
               ImmutableCxxLogInfo.ofImpl(
                   Optional.ofNullable(targetName),
                   Optional.ofNullable(relativeInputPath.getPath()),
-                  Optional.ofNullable(resolvedOutput))),
+                  Optional.of(resolvedOutput.getPath()))),
           withDownwardApi);
     }
 
@@ -362,7 +363,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      Path resolvedOutput = outputPathResolver.resolvePath(output);
+      RelPath resolvedOutput = outputPathResolver.resolvePath(output);
       preprocessDelegate
           .flatMap(PreprocessorDelegate::checkConflictingHeaders)
           .ifPresent(result -> result.throwHumanReadableExceptionWithContext(targetName));

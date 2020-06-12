@@ -92,7 +92,7 @@ public class CalculateSourceAbiFromLibraryTarget
         BuildCellRelativePathFactory buildCellPathFactory) {
       JarParameters jarParameters =
           JarParameters.builder()
-              .setJarPath(RelPath.of(outputPathResolver.resolvePath(output)))
+              .setJarPath(outputPathResolver.resolvePath(output))
               .setEntriesToJar(
                   ImmutableSortedSet.orderedBy(RelPath.COMPARATOR)
                       .add(

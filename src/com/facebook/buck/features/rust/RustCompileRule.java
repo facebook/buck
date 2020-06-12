@@ -221,7 +221,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
       RelPath outputdir = getOutputDir(buildTarget, filesystem);
-      Path outputPath = outputPathResolver.resolvePath(output);
+      RelPath outputPath = outputPathResolver.resolvePath(output);
       RelPath scratchDir = outputPathResolver.getTempPath();
 
       SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
@@ -260,7 +260,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
               argFilePath.getPath(),
               fileListPath.getPath(),
               linker.fileList(fileListPath),
-              outputPath,
+              outputPath.getPath(),
               linkerArgs,
               linker,
               buildTarget.getCell(),

@@ -424,7 +424,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
                     "PublicOutputPath should not be inside rule temporary directory. Path: "
                         + path);
               }
-              collector.add(outputPathResolver.resolvePath(path));
+              collector.add(outputPathResolver.resolvePath(path).getPath());
             }));
     // ImmutableSet guarantees that iteration order is unchanged.
     Set<Path> outputs = collector.build().collect(ImmutableSet.toImmutableSet());

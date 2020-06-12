@@ -44,7 +44,6 @@ import com.facebook.buck.step.isolatedsteps.java.MakeMissingOutputsStep;
 import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinderFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -127,7 +126,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
             filesystem,
             ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
             buildTarget,
-            outputPathResolver.resolvePath(pathToClassHashesOutputPath));
+            outputPathResolver.resolvePath(pathToClassHashesOutputPath).getPath());
 
     ImmutableList<IsolatedStep> isolatedSteps =
         getIsolatedSteps(buildContext, outputPathResolver, filesystem);
@@ -152,7 +151,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
             filesystem,
             ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
             state,
-            outputPathResolver.resolvePath(pathToClassHashesOutputPath));
+            outputPathResolver.resolvePath(pathToClassHashesOutputPath).getPath());
 
     ImmutableList<IsolatedStep> isolatedSteps =
         getIsolatedSteps(buildContext, outputPathResolver, filesystem);
@@ -191,10 +190,11 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       OutputPathResolver outputPathResolver, ProjectFilesystem filesystem) {
     AbsPath projectRoot = filesystem.getRootPath();
 
-    Path rootOutput = outputPathResolver.resolvePath(rootOutputPath).toAbsolutePath();
-    Path pathToClassHashes =
+    AbsPath rootOutput = outputPathResolver.resolvePath(rootOutputPath).toAbsolutePath();
+    AbsPath pathToClassHashes =
         outputPathResolver.resolvePath(pathToClassHashesOutputPath).toAbsolutePath();
-    Path annotationsPath = outputPathResolver.resolvePath(annotationsOutputPath).toAbsolutePath();
+    AbsPath annotationsPath =
+        outputPathResolver.resolvePath(annotationsOutputPath).toAbsolutePath();
 
     return new MakeMissingOutputsStep(
         projectRoot.relativize(rootOutput),

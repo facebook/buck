@@ -94,11 +94,11 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
       SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
-      Path outputPath = filesystem.resolve(outputPathResolver.resolvePath(output));
+      AbsPath outputPath = filesystem.resolve(outputPathResolver.resolvePath(output));
       return ImmutableList.of(
           JsUtil.jsonWorkerShellStepAddingFlavors(
               worker,
-              getJobArgs(resolver, outputPath, filesystem),
+              getJobArgs(resolver, outputPath.getPath(), filesystem),
               buildTarget,
               resolver,
               filesystem,

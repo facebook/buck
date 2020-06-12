@@ -26,6 +26,7 @@ import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -154,14 +155,14 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
                           "EXECUTABLE_NAME", binaryName,
                           "PRODUCT_NAME", binaryName))));
 
-      Path outputPath = outputPathResolver.resolvePath(output);
+      RelPath outputPath = outputPathResolver.resolvePath(output);
       Step processStep =
           new PlistProcessStep(
               filesystem,
               tempInfoPlistPath,
               maybeAssetCatalogPlistSourcePath.map(
                   sourcePath -> buildContext.getSourcePathResolver().getRelativePath(sourcePath)),
-              outputPath,
+              outputPath.getPath(),
               getInfoPlistAdditionalKeys(),
               getInfoPlistOverrideKeys(),
               PlistProcessStep.OutputFormat.BINARY);

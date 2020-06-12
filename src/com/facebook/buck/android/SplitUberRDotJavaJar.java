@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -42,7 +43,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closer;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -127,9 +127,9 @@ public class SplitUberRDotJavaJar extends ModernBuildRule<SplitUberRDotJavaJar>
             ImmutableMap.builder();
         for (Entry<String, OutputPath> entry : outputs.entrySet()) {
           String rtype = entry.getKey();
-          Path zipPath =
+          AbsPath zipPath =
               getProjectFilesystem().resolve(outputPathResolver.resolvePath(entry.getValue()));
-          DeterministicZipBuilder zip = new DeterministicZipBuilder(zipPath);
+          DeterministicZipBuilder zip = new DeterministicZipBuilder(zipPath.getPath());
           closer.register(zip);
           zipMapBuilder.put(rtype, zip);
         }

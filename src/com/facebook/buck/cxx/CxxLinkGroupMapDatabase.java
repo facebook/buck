@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -68,10 +69,10 @@ public class CxxLinkGroupMapDatabase extends ModernBuildRule<CxxLinkGroupMapData
         BuildCellRelativePathFactory buildCellPathFactory) {
 
       ImmutableList.Builder<Step> builder = ImmutableList.builder();
-      Path outputPath = outputPathResolver.resolvePath(output);
+      RelPath outputPath = outputPathResolver.resolvePath(output);
       builder
           .add(MkdirStep.of(buildCellPathFactory.from(outputPath.getParent())))
-          .add(new GenerateLinkGroupMapJson(filesystem, outputPath, targets));
+          .add(new GenerateLinkGroupMapJson(filesystem, outputPath.getPath(), targets));
 
       return builder.build();
     }

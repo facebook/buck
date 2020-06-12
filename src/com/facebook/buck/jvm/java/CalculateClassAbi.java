@@ -113,7 +113,7 @@ public class CalculateClassAbi extends ModernBuildRule<CalculateClassAbi.Impl>
           new CalculateClassAbiStep(
               filesystem,
               buildContext.getSourcePathResolver().getAbsolutePath(binaryJar).getPath(),
-              outputPathResolver.resolvePath(output),
+              outputPathResolver.resolvePath(output).getPath(),
               compatibilityMode));
     }
   }

@@ -396,7 +396,7 @@ public class GenruleBuildableTest {
               .toBuildable();
 
       OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, target);
-      Path outputPath =
+      RelPath outputPath =
           outputPathResolver.resolvePath(
               Iterables.getOnlyElement(buildable.getOutputs(OutputLabel.defaultLabel())));
       assertEquals(outputPath, outputPath.normalize());
@@ -428,7 +428,7 @@ public class GenruleBuildableTest {
 
     ImmutableSet<Path> actual =
         buildable.getOutputs(OutputLabel.of("label2")).stream()
-            .map(outputPathResolver::resolvePath)
+            .map(outputPath -> outputPathResolver.resolvePath(outputPath).getPath())
             .collect(ImmutableSet.toImmutableSet());
 
     assertThat(
@@ -462,7 +462,7 @@ public class GenruleBuildableTest {
 
     ImmutableSet<Path> actual =
         buildable.getOutputs(OutputLabel.of("label1")).stream()
-            .map(outputPathResolver::resolvePath)
+            .map(outputPath -> outputPathResolver.resolvePath(outputPath).getPath())
             .collect(ImmutableSet.toImmutableSet());
 
     assertThat(
@@ -532,7 +532,7 @@ public class GenruleBuildableTest {
 
     ImmutableSet<Path> actual =
         buildable.getOutputs(OutputLabel.defaultLabel()).stream()
-            .map(outputPathResolver::resolvePath)
+            .map(outputPath -> outputPathResolver.resolvePath(outputPath).getPath())
             .collect(ImmutableSet.toImmutableSet());
 
     // "out" uses the legacy path that isn't suffixed with "__"
@@ -888,10 +888,12 @@ public class GenruleBuildableTest {
       BuildTarget buildTarget,
       String outputName,
       OutputPathResolver resolver) {
-    return resolver.resolvePath(
-        new PublicOutputPath(
-            BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
-                .resolve(outputName)
-                .normalize()));
+    return resolver
+        .resolvePath(
+            new PublicOutputPath(
+                BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+                    .resolve(outputName)
+                    .normalize()))
+        .getPath();
   }
 }

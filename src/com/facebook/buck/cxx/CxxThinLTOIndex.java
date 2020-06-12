@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -126,7 +127,7 @@ public class CxxThinLTOIndex extends ModernBuildRule<CxxThinLTOIndex.Impl>
       AbsPath argFilePath = scratchDir.resolve("linker.argsfile");
       AbsPath fileListPath = scratchDir.resolve("filelist.txt");
 
-      Path outputPath = outputPathResolver.resolvePath(output);
+      RelPath outputPath = outputPathResolver.resolvePath(output);
       Path linkOutput = outputPath.getParent().resolve("thinlto.objects");
 
       Builder<Step> stepsBuilder =

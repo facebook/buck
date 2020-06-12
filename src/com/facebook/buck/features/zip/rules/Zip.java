@@ -18,6 +18,7 @@ package com.facebook.buck.features.zip.rules;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
 import com.facebook.buck.core.model.OutputLabel;
@@ -73,7 +74,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
       ProjectFilesystem filesystem,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
-    Path outputPath = outputPathResolver.resolvePath(this.output);
+    RelPath outputPath = outputPathResolver.resolvePath(this.output);
 
     SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
     ImmutableMap<Path, AbsPath> entryPathToAbsolutePathMap =
@@ -87,7 +88,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
     return ImmutableList.of(
         new CopyToZipStep(
             filesystem,
-            outputPath,
+            outputPath.getPath(),
             entryPathToAbsolutePathMap.entrySet().stream()
                 .collect(
                     ImmutableMap.toImmutableMap(Map.Entry::getKey, e -> e.getValue().getPath())),

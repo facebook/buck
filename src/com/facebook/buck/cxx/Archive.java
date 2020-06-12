@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -44,7 +45,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -193,9 +193,9 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
       }
 
       ImmutableList.Builder<Step> builder = ImmutableList.builder();
-      Path outputPath = outputPathResolver.resolvePath(output);
+      RelPath outputPath = outputPathResolver.resolvePath(output);
       builder
-          .add(MkdirStep.of(buildCellPathFactory.from(outputPath.getParent())))
+          .add(MkdirStep.of(buildCellPathFactory.from(outputPath.getPath().getParent())))
           .add(
               new ArchiveStep(
                   filesystem,
@@ -203,7 +203,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
                   archiver.getCommandPrefix(resolver),
                   Arg.stringify(archiverFlags, resolver),
                   archiver.getArchiveOptions(contents == ArchiveContents.THIN),
-                  outputPath,
+                  outputPath.getPath(),
                   inputs.stream()
                       .map(resolver::getRelativePath)
                       .collect(ImmutableList.toImmutableList()),
@@ -219,12 +219,13 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
                 tool.getEnvironment(resolver),
                 tool.getCommandPrefix(resolver),
                 Arg.stringify(ranlibFlags, resolver),
-                outputPath,
+                outputPath.getPath(),
                 withDownwardApi));
       }
 
       if (!archiver.getScrubbers().isEmpty()) {
-        builder.add(new FileScrubberStep(filesystem, outputPath, archiver.getScrubbers()));
+        builder.add(
+            new FileScrubberStep(filesystem, outputPath.getPath(), archiver.getScrubbers()));
       }
 
       return builder.build();

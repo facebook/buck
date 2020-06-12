@@ -20,7 +20,6 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.nio.file.Path;
 
 /** Default OutputPathResolver implementation. */
 public class DefaultOutputPathResolver implements OutputPathResolver {
@@ -38,7 +37,7 @@ public class DefaultOutputPathResolver implements OutputPathResolver {
   }
 
   @Override
-  public Path resolvePath(OutputPath outputPath) {
+  public RelPath resolvePath(OutputPath outputPath) {
     if (outputPath instanceof PublicOutputPath) {
       return outputPath.getPath();
     }

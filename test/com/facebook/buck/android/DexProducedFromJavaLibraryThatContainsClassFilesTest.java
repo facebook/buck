@@ -198,7 +198,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     OutputPathResolver outputPathResolver =
         new DefaultOutputPathResolver(projectFilesystem, buildTarget);
     assertEquals(
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s__/dex.jar").getPath(),
+        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s__/dex.jar"),
         outputPathResolver.resolvePath(preDexWithClasses.getPathToDex()));
   }
 }

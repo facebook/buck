@@ -49,6 +49,6 @@ public class DefaultBuildCellRelativePathFactory implements BuildCellRelativePat
     Preconditions.checkState(
         outputPathResolver.isPresent(),
         "Cannot resolve OutputPath if constructed with an empty OutputPathResolver");
-    return from(outputPathResolver.get().resolvePath(outputPath));
+    return from(outputPathResolver.get().resolvePath(outputPath).getPath());
   }
 }

@@ -16,6 +16,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -36,7 +37,6 @@ import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -79,9 +79,9 @@ public class UnitTestOptions extends ModernBuildRule<UnitTestOptions.Impl> {
         BuildCellRelativePathFactory buildCellPathFactory) {
 
       ImmutableList.Builder<Step> steps = ImmutableList.builder();
-      Path outputPath = outputPathResolver.resolvePath(output);
-      Path srcPath = outputPathResolver.resolvePath(src);
-      Path jarPath = outputPathResolver.resolvePath(outputJar);
+      RelPath outputPath = outputPathResolver.resolvePath(output);
+      RelPath srcPath = outputPathResolver.resolvePath(src);
+      RelPath jarPath = outputPathResolver.resolvePath(outputJar);
 
       steps.add(MkdirStep.of(buildCellPathFactory.from(outputPath.getParent())));
 
@@ -95,7 +95,12 @@ public class UnitTestOptions extends ModernBuildRule<UnitTestOptions.Impl> {
       steps.add(RmStep.of(BuildCellRelativePath.of(jarPath)));
       steps.add(
           new ZipStep(
-              filesystem, jarPath, ImmutableSet.of(), false, ZipCompressionLevel.NONE, srcPath));
+              filesystem,
+              jarPath.getPath(),
+              ImmutableSet.of(),
+              false,
+              ZipCompressionLevel.NONE,
+              srcPath.getPath()));
 
       return steps.build();
     }

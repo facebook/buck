@@ -17,6 +17,7 @@
 package com.facebook.buck.features.filegroup;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
 import com.facebook.buck.core.model.OutputLabel;
@@ -36,7 +37,6 @@ import com.facebook.buck.rules.modern.RemoteExecutionEnabled;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 
 /** A build rule that copies inputs provided in {@code srcs} to an output directory. */
 public class Filegroup extends ModernBuildRule<Filegroup> implements HasOutputName, Buildable {
@@ -67,7 +67,7 @@ public class Filegroup extends ModernBuildRule<Filegroup> implements HasOutputNa
       ProjectFilesystem filesystem,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
-    Path outputPath = outputPathResolver.resolvePath(this.outputPath);
+    RelPath outputPath = outputPathResolver.resolvePath(this.outputPath);
 
     FileBundler bundler = new CopyingFileBundler(filesystem, getBuildTarget());
 
@@ -77,7 +77,7 @@ public class Filegroup extends ModernBuildRule<Filegroup> implements HasOutputNa
         filesystem,
         buildCellPathFactory,
         steps,
-        outputPath,
+        outputPath.getPath(),
         srcs,
         buildContext.getSourcePathResolver());
 

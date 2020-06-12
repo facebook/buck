@@ -139,16 +139,16 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
               new SplitResourcesStep(
                   RelPath.of(sourcePathResolverAdapter.getRelativePath(pathToAaptResources)),
                   RelPath.of(sourcePathResolverAdapter.getRelativePath(pathToOriginalRDotTxt)),
-                  RelPath.of(outputPathResolver.resolvePath(primaryResourcesOutputPath)),
+                  outputPathResolver.resolvePath(primaryResourcesOutputPath),
                   RelPath.of(getUnalignedExoPath(filesystem)),
-                  RelPath.of(outputPathResolver.resolvePath(rDotTxtOutputPath))))
+                  outputPathResolver.resolvePath(rDotTxtOutputPath)))
           .add(
               new ZipalignStep(
                   filesystem.getRootPath(),
                   ProjectFilesystemUtils.relativize(
                       filesystem.getRootPath(), buildContext.getBuildCellRootPath()),
                   RelPath.of(getUnalignedExoPath(filesystem)),
-                  RelPath.of(outputPathResolver.resolvePath(exoResourcesOutputPath)),
+                  outputPathResolver.resolvePath(exoResourcesOutputPath),
                   zipalignTool.getCommandPrefix(buildContext.getSourcePathResolver()),
                   withDownwardApi))
           .build();
