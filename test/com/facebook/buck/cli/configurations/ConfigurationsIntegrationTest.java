@@ -622,4 +622,31 @@ public class ConfigurationsIntegrationTest {
             "Cannot use select() expression when target platform is not specified\n"
                 + "    At //:b"));
   }
+
+  @Test
+  public void hostPlatformDetector() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "host_platform_detector", tmp);
+    workspace.setUp();
+
+    // Not specifying target platform and host platform is detected
+    Path result = workspace.buildAndReturnOutput("//:g");
+    String actual = Files.readAllLines(result).get(0);
+    String expected;
+    switch (Platform.detect()) {
+      case LINUX:
+        expected = "lllinux";
+        break;
+      case WINDOWS:
+        expected = "wwwindows";
+        break;
+      case MACOS:
+        expected = "mmmacos";
+        break;
+      default:
+        throw new AssertionError();
+    }
+
+    assertEquals(expected, actual);
+  }
 }

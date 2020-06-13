@@ -1,0 +1,80 @@
+constraint_setting(
+    name = "os",
+)
+
+constraint_value(
+    name = "c-linux",
+    constraint_setting = ":os",
+)
+
+constraint_value(
+    name = "c-windows",
+    constraint_setting = ":os",
+)
+
+constraint_value(
+    name = "c-macos",
+    constraint_setting = ":os",
+)
+
+config_setting(
+    name = "linux",
+    constraint_values = [
+        ":c-linux",
+    ],
+)
+
+config_setting(
+    name = "windows",
+    constraint_values = [
+        ":c-windows",
+    ],
+)
+
+config_setting(
+    name = "macos",
+    constraint_values = [
+        ":c-macos",
+    ],
+)
+
+platform(
+    name = "p-linux",
+    constraint_values = [
+        ":c-linux",
+    ],
+)
+
+platform(
+    name = "p-windows",
+    constraint_values = [
+        ":c-windows",
+    ],
+)
+
+platform(
+    name = "p-macos",
+    constraint_values = [
+        ":c-macos",
+    ],
+)
+
+python_binary(
+    name = "b",
+    main = select({
+        ":linux": "b-linux.py",
+        ":macos": "b-macos.py",
+        ":windows": "b-windows.py",
+    }),
+    compatible_with = [
+        ":linux",
+        ":windows",
+        ":macos",
+    ],
+)
+
+genrule(
+    name = "g",
+    out = "out.txt",
+    cmd = "$(exe :b)> $OUT",
+)

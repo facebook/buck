@@ -352,6 +352,11 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   }
 
   @Value.Lazy
+  public String getHostPlatformDetectorSpec() {
+    return getDelegate().getValue("parser", "host_platform_detector_spec").orElse("");
+  }
+
+  @Value.Lazy
   public boolean getHostConfigurationSwitchEnabled() {
     return getDelegate().getBooleanValue("parser", "host_configuration_switch_enabled", false);
   }

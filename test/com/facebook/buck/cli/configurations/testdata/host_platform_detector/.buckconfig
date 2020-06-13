@@ -1,0 +1,3 @@
+[parser]
+host_configuration_switch_enabled=true
+host_platform_detector_spec=host_os:linux->//:p-linux host_os:windows->//:p-windows host_os:darwin->//:p-macos

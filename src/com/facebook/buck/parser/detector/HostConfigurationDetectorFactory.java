@@ -22,52 +22,65 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.parser.config.ParserConfig;
-import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.stream.Collectors;
 
-/**
- * Utility to create {@link com.facebook.buck.parser.detector.TargetConfigurationDetector} from a
- * spec in buckconfig.
- */
-public class TargetConfigurationDetectorFactory {
-  private TargetConfigurationDetectorFactory() {}
+/** Utility to create {@link TargetConfigurationDetector} */
+public class HostConfigurationDetectorFactory {
+  private HostConfigurationDetectorFactory() {}
+
+  private static Platform parsePlatform(String platformString) {
+    for (Platform platform : Platform.values()) {
+      if (platform.getAutoconfName().equals(platformString)) {
+        return platform;
+      }
+    }
+
+    throw new HumanReadableException(
+        "Unknown platform: %s, possible variants: %s",
+        platformString,
+        Arrays.stream(Platform.values())
+            .map(Platform::getAutoconfName)
+            .collect(Collectors.joining(", ")));
+  }
 
   /** Configure detector using provided {@code .buckconfig} */
-  public static TargetConfigurationDetector fromBuckConfig(
+  public static HostConfigurationDetector fromBuckConfig(
       ParserConfig parserConfig,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory,
       CellNameResolver cellNameResolver) {
+
     TargetConfigurationFactory targetConfigurationFactory =
         new TargetConfigurationFactory(unconfiguredBuildTargetViewFactory, cellNameResolver);
 
-    ImmutableList.Builder<Pair<TargetConfigurationDetector.Matcher, TargetConfiguration>> rules =
-        ImmutableList.builder();
+    EnumMap<Platform, TargetConfiguration> rules = new EnumMap<>(Platform.class);
 
-    String spec = parserConfig.getTargetPlatformDetectorSpec();
-    for (ConfigurationDetectorFactoryCommon.RawRule rawRule :
-        ConfigurationDetectorFactoryCommon.parseRules(spec, targetConfigurationFactory)) {
+    String spec = parserConfig.getHostPlatformDetectorSpec();
 
-      TargetConfigurationDetector.Matcher detectorMatcher;
-      if (rawRule.ruleType.equals(TargetConfigurationDetector.SpecMatcher.TYPE)) {
-        detectorMatcher =
-            new TargetConfigurationDetector.SpecMatcher(
-                SimplePackageSpec.parse(rawRule.ruleArg, cellNameResolver));
+    ImmutableList<ConfigurationDetectorFactoryCommon.RawRule> rawRules =
+        ConfigurationDetectorFactoryCommon.parseRules(spec, targetConfigurationFactory);
+
+    for (ConfigurationDetectorFactoryCommon.RawRule rawRule : rawRules) {
+
+      if (rawRule.ruleType.equals("host_os")) {
+        rules.put(parsePlatform(rawRule.ruleArg), rawRule.targetConfiguration);
       } else {
         throw new HumanReadableException(
             "unknown rule type '%s' in detector rule '%s'", rawRule.ruleType, rawRule);
       }
-
-      rules.add(new Pair<>(detectorMatcher, rawRule.targetConfiguration));
     }
 
-    return new TargetConfigurationDetector(rules.build());
+    return new HostConfigurationDetector(rules);
   }
 
-  private static final TargetConfigurationDetector EMPTY =
-      new TargetConfigurationDetector(ImmutableList.of());
+  private static final HostConfigurationDetector EMPTY =
+      new HostConfigurationDetector(new EnumMap<>(Platform.class));
 
   /** Target configuration that detects to none */
-  public static TargetConfigurationDetector empty() {
+  public static HostConfigurationDetector empty() {
     return EMPTY;
   }
 }

@@ -35,6 +35,7 @@ import com.facebook.buck.core.cell.InvalidCellOverrideException;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
@@ -139,6 +140,8 @@ import com.facebook.buck.parser.ParserFactory;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.parser.config.ParserConfig;
+import com.facebook.buck.parser.detector.HostConfigurationDetector;
+import com.facebook.buck.parser.detector.HostConfigurationDetectorFactory;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
@@ -882,7 +885,8 @@ public final class MainRunner {
       Optional<TargetConfiguration> targetConfiguration =
           createTargetConfiguration(command, buckConfig, targetConfigurationFactory);
       Optional<TargetConfiguration> hostConfiguration =
-          createHostConfiguration(command, targetConfigurationFactory);
+          createHostConfiguration(
+              command, buckConfig, buildTargetFactory, cellPathResolver.getCellNameResolver());
 
       ExecutableFinder executableFinder = new ExecutableFinder();
 
@@ -1689,9 +1693,25 @@ public final class MainRunner {
   }
 
   private Optional<TargetConfiguration> createHostConfiguration(
-      Command command, TargetConfigurationFactory targetConfigurationFactory) {
+      Command command,
+      BuckConfig buckConfig,
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory,
+      CellNameResolver cellNameResolver) {
     if (command.getHostPlatform().isPresent()) {
+      TargetConfigurationFactory targetConfigurationFactory =
+          new TargetConfigurationFactory(unconfiguredBuildTargetViewFactory, cellNameResolver);
       return Optional.of(targetConfigurationFactory.create(command.getHostPlatform().get()));
+    }
+
+    HostConfigurationDetector hostConfigurationDetector =
+        HostConfigurationDetectorFactory.fromBuckConfig(
+            buckConfig.getView(ParserConfig.class),
+            unconfiguredBuildTargetViewFactory,
+            cellNameResolver);
+    Optional<TargetConfiguration> hostPlatform =
+        hostConfigurationDetector.detectHostConfiguration(Platform.detect());
+    if (hostPlatform.isPresent()) {
+      return hostPlatform;
     }
 
     return Optional.empty();
