@@ -459,13 +459,29 @@ public class Machos {
     return Optional.empty();
   }
 
-  private static boolean bytesStartsWith(byte[] haystack, int haystackOffset, byte[] needle) {
-    if (haystackOffset + needle.length > haystack.length) {
+  /**
+   * Checks whether {@code needle} can be found in {@code haystack} starting at {@code
+   * haystackOffset}.
+   */
+  public static boolean bytesStartsWith(byte[] haystack, int haystackOffset, byte[] needle) {
+    return bytesStartsWith(haystack, haystackOffset, needle, 0, needle.length);
+  }
+
+  /**
+   * Checks whether a subrange of {@code needle}, starting at {@code needleOffset} of length {@code
+   * needleLength}, can be found in {@code haystack} starting at {@code haystackOffset}.
+   */
+  public static boolean bytesStartsWith(
+      byte[] haystack, int haystackOffset, byte[] needle, int needleOffset, int needleLength) {
+    Preconditions.checkState(needleOffset >= 0 && haystackOffset >= 0);
+    Preconditions.checkState(needleOffset + needleLength <= needle.length);
+
+    if (haystackOffset + needleLength > haystack.length) {
       return false;
     }
 
-    for (int i = 0; i < needle.length; i++) {
-      if (haystack[haystackOffset + i] != needle[i]) {
+    for (int i = 0; i < needleLength; i++) {
+      if (haystack[haystackOffset + i] != needle[needleOffset + i]) {
         return false;
       }
     }

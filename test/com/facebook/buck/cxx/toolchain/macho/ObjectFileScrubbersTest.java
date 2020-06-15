@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.toolchain.macho;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -35,6 +36,43 @@ import java.util.Optional;
 import org.junit.Test;
 
 public class ObjectFileScrubbersTest {
+  @Test
+  public void testNeedleHaystackSearches() {
+    String theQuickBrownFox = "The quick brown fox";
+    String quick = "quick";
+
+    byte[] theQuickBrownFoxBytes = theQuickBrownFox.getBytes(StandardCharsets.UTF_8);
+    byte[] quickBytes = quick.getBytes(StandardCharsets.UTF_8);
+    int quickOffset = theQuickBrownFox.indexOf(quick);
+    assertThat(quickOffset, not(equalTo(-1)));
+
+    // Test simple positive + negative cases
+    assertTrue(Machos.bytesStartsWith(theQuickBrownFoxBytes, quickOffset, quickBytes));
+    assertFalse(Machos.bytesStartsWith(theQuickBrownFoxBytes, 0, quickBytes));
+
+    // Test offsets + lengths
+    assertFalse(
+        Machos.bytesStartsWith(
+            theQuickBrownFoxBytes,
+            theQuickBrownFoxBytes.length - 1,
+            quickBytes,
+            0,
+            quickBytes.length));
+    assertFalse(
+        Machos.bytesStartsWith(theQuickBrownFoxBytes, 0, quickBytes, 2, quickBytes.length - 2));
+
+    // Test positive + negative cases, all params
+    assertTrue(
+        Machos.bytesStartsWith(
+            theQuickBrownFoxBytes, quickOffset, quickBytes, 0, quickBytes.length));
+    assertTrue(
+        Machos.bytesStartsWith(
+            theQuickBrownFoxBytes, quickOffset, quickBytes, 0, quickBytes.length - 2));
+    assertFalse(
+        Machos.bytesStartsWith(
+            theQuickBrownFoxBytes, quickOffset + 1, quickBytes, 0, quickBytes.length));
+  }
+
   @Test
   public void testEmptyCString() {
     byte[] emptyCString = new byte[] {0};
