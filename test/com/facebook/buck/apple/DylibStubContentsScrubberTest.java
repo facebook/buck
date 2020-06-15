@@ -97,11 +97,11 @@ public class DylibStubContentsScrubberTest {
           MachoDyldInfoCommandReader.read(dylibByteBuffer);
       assertTrue(maybeDyldInfo.isPresent());
 
-      dylibByteBuffer.position(maybeDyldInfo.get().getExportInfoOffset());
-      ByteBuffer exportInfoBuffer = dylibByteBuffer.slice();
-      exportInfoBuffer.limit(maybeDyldInfo.get().getExportInfoSize());
-
-      Optional<MachoExportTrieNode> maybeRoot = MachoExportTrieReader.read(exportInfoBuffer);
+      Optional<MachoExportTrieNode> maybeRoot =
+          MachoExportTrieReader.readFromExecutable(
+              dylibByteBuffer,
+              maybeDyldInfo.get().getExportInfoOffset(),
+              maybeDyldInfo.get().getExportInfoSize());
       assertTrue(maybeRoot.isPresent());
 
       List<MachoExportTrieNode> exportedSymbols = maybeRoot.get().collectNodesWithExportInfo();

@@ -125,7 +125,7 @@ public class MachoFormatTest {
     ByteBuffer exportTrieByteBuffer = dylibBuffer.slice();
     exportTrieByteBuffer.limit(dyldInfoCommand.getExportInfoSize());
 
-    return MachoExportTrieReader.read(exportTrieByteBuffer);
+    return MachoExportTrieReader.readFromExportTrieRegion(exportTrieByteBuffer);
   }
 
   @Test
@@ -174,7 +174,8 @@ public class MachoFormatTest {
     assertThat(writeBuffer.position(), not(equalTo(0)));
 
     writeBuffer.rewind();
-    Optional<MachoExportTrieNode> maybeWrittenRoot = MachoExportTrieReader.read(writeBuffer);
+    Optional<MachoExportTrieNode> maybeWrittenRoot =
+        MachoExportTrieReader.readFromExportTrieRegion(writeBuffer);
     assertTrue(maybeWrittenRoot.isPresent());
 
     List<MachoExportTrieNode> writtenNodesWithExportInfo =

@@ -98,7 +98,8 @@ public class DylibStubContentsScrubber implements FileContentsScrubber {
     machoBuffer.limit(dyldInfoCommand.getExportInfoOffset() + dyldInfoCommand.getExportInfoSize());
 
     ByteBuffer exportInfoBuffer = machoBuffer.slice();
-    Optional<MachoExportTrieNode> tree = MachoExportTrieReader.read(exportInfoBuffer);
+    Optional<MachoExportTrieNode> tree =
+        MachoExportTrieReader.readFromExportTrieRegion(exportInfoBuffer);
     if (tree.isPresent()) {
       resetSymbolAddressesInTree(tree.get());
 

@@ -26,8 +26,37 @@ import java.util.Optional;
  */
 public class MachoExportTrieReader {
 
-  public static Optional<MachoExportTrieNode> read(ByteBuffer byteBuffer) {
-    return readTreeNode(byteBuffer);
+  /**
+   * Reads the export trie from a Mach-O file. The provided {@code byteBuffer} is not modified. To
+   * compute the offset and size, use {@link MachoDyldInfoCommandReader#read(ByteBuffer)}.
+   */
+  public static Optional<MachoExportTrieNode> readFromExecutable(
+      ByteBuffer byteBuffer, int offset, int size) {
+    if (size == 0) {
+      return Optional.empty();
+    }
+
+    int savedPosition = byteBuffer.position();
+    int savedLimit = byteBuffer.limit();
+
+    byteBuffer.position(offset);
+    byteBuffer.limit(offset + size);
+    ByteBuffer exportTrieBuffer = byteBuffer.slice();
+
+    byteBuffer.position(savedPosition);
+    byteBuffer.limit(savedLimit);
+
+    return readTreeNode(exportTrieBuffer);
+  }
+
+  /**
+   * Reads the export trie from a buffer which begins at the trie offset and it's limited by the
+   * size of the trie. {@code exportTrieRegion} position will be modified and left in an undefined
+   * state.
+   */
+  public static Optional<MachoExportTrieNode> readFromExportTrieRegion(
+      ByteBuffer exportTrieRegion) {
+    return readTreeNode(exportTrieRegion);
   }
 
   private static Optional<MachoExportTrieNode> readTreeNode(ByteBuffer byteBuffer) {
