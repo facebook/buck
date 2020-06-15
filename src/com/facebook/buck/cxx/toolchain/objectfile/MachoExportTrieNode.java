@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.objectfile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -87,6 +88,43 @@ public class MachoExportTrieNode {
 
   void setAddress(long address) {
     exportInfo.map(info -> info.address = address);
+  }
+
+  /** Searches the trie starting at the current node and returns true if the symbol is exported, */
+  public boolean containsSymbol(String symbol) {
+    byte[] symbolBytes = symbol.getBytes(StandardCharsets.UTF_8);
+    return containsSymbol(symbolBytes, 0);
+  }
+
+  private boolean containsSymbol(byte[] symbolBytes, int position) {
+    // Precondition: all bytes < `position` already match the path to `currentNode`
+
+    int remainingBytes = symbolBytes.length - position;
+    if (getExportInfo().isPresent() && remainingBytes == 0) {
+      // If the current node represents an exported symbol and if the path matches exactly,
+      // that means the symbol is present.
+      return true;
+    }
+
+    MachoExportTrieEdge[] edges = getEdges();
+    if (remainingBytes > 0 && edges.length > 0) {
+      for (MachoExportTrieEdge edge : edges) {
+        int edgeStringSize = edge.substring.length - 1; // exclude terminating NULL char
+        if (edgeStringSize > remainingBytes) {
+          // The path along the edge is longer than what we're searching for, so we cannot go
+          // down the tree along that edge.
+          continue;
+        }
+
+        if (Machos.bytesStartsWith(symbolBytes, position, edge.substring, 0, edgeStringSize)) {
+          // No two edges at the same node are prefixes of each other, so once we find a matching
+          // edge, we go down the tree along that edge without any backtracking.
+          return edge.node.containsSymbol(symbolBytes, position + edgeStringSize);
+        }
+      }
+    }
+
+    return false;
   }
 
   /**

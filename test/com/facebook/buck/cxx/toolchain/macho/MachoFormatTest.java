@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.macho;
 
+import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
@@ -126,6 +127,28 @@ public class MachoFormatTest {
     exportTrieByteBuffer.limit(dyldInfoCommand.getExportInfoSize());
 
     return MachoExportTrieReader.readFromExportTrieRegion(exportTrieByteBuffer);
+  }
+
+  @Test
+  public void testExportTrieSymbolSearches() throws IOException {
+    Optional<MachoExportTrieNode> maybeRoot = readExportTrieFromHelloLib();
+    assertTrue(maybeRoot.isPresent());
+
+    // The dylib contains two exported symbols: `_hello` and `_goodbye`.
+    MachoExportTrieNode root = maybeRoot.get();
+
+    // Test contained symbols
+    assertTrue(root.containsSymbol("_hello"));
+    assertTrue(root.containsSymbol("_goodbye"));
+
+    // Test prefixes
+    assertFalse(root.containsSymbol(""));
+    assertFalse(root.containsSymbol("_"));
+    assertFalse(root.containsSymbol("_he"));
+    assertFalse(root.containsSymbol("_good"));
+
+    // Test unrelated
+    assertFalse(root.containsSymbol("_house"));
   }
 
   @Test
