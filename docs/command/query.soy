@@ -62,19 +62,15 @@ buck query "testsof(deps('//java/com/example/app:amazing'))"
 <h2>Query Language</h2>
 
 <p>
-The Buck query language was inspired by
-the <a href="http://bazel.io/docs/query.html"> Bazel Query Language</a>.
-Buck's query language uses the same parser, so the lexical syntax is similar.
-Buck's query language supports a <em>subset</em> of Bazel's query functionality
-but also adds a few operators, such as <code>attrfilter</code>, <code>inputs</code>,
-and <code>owner</code>.
+See the main article at <a href="{ROOT}about/query_language.html">The Buck Query Language</a>{sp}
+for a detailed description of the query language and how to use it.
 </p>
 
-<h3>Operators</h3>
+<h2>Operators</h2>
 
 <p>
-  Buck's query language supports the following operators. The name of
-  the operator below is linked to a section that provides more detail
+  The <code>buck query</code> command supports the following operators. The
+  name of the operator below is linked to a section that provides more detail
   about that operator's functionality and syntax.
 </p>
 
@@ -85,238 +81,18 @@ and <code>owner</code>.
     <li><a href="#buildfile"><code>buildfile</code></a>: Build files of targets</li>
     <li><a href="#config"><code>config</code></a>: Targets in a specific configuration</li>
     <li><a href="#deps"><code>deps and first-order-deps</code></a>: Transitive closure of dependencies</li>
-    <li><a href="#set-operations"><code>except</code></a>: Set difference</li>
+    <li><a href="{ROOT}about/query_language.html#set-operations"><code>except</code></a>: Set difference</li>
     <li><a href="#filter"><code>filter</code></a>: Filter targets by name</li>
     <li><a href="#inputs"><code>inputs</code></a>: Direct input files</li>
-    <li><a href="#set-operations"><code>intersect</code></a>: Set intersection</li>
+    <li><a href="{ROOT}about/query_language.html#set-operations"><code>intersect</code></a>: Set intersection</li>
     <li><a href="#kind"><code>kind</code></a>: Filter targets by rule type</li>
     <li><a href="#labels"><code>labels</code></a>: Extract content of rule attributes</li>
     <li><a href="#owner"><code>owner</code></a>: Find targets that own specified files</li>
     <li><a href="#rdeps"><code>rdeps</code></a>: Transitive closure of reverse dependencies</li>
-    <li><a href="#set"><code>set</code></a>: Group targets</li>
+    <li><a href="{ROOT}about/query_language.html#set"><code>set</code></a>: Group targets</li>
     <li><a href="#testsof"><code>testsof</code></a>: List the tests of the specified targets</li>
-    <li><a href="#set-operations"><code>union</code></a>: Set union</li>
+    <li><a href="{ROOT}about/query_language.html#set-operations"><code>union</code></a>: Set union</li>
 </ul>
-
-<h3>Parameters to operators</h3>
-
-<p>
-The most common parameter for a Buck query operator is an expression that
-evaluates to a build target or collection of build targets. Such an
-expression could be an explicit {call buck.build_target /}, a {call
-buck.build_target_pattern /}, an {call buckconfig.alias /},
-or <em>the set of targets returned by another Buck query operator</em>.
-</p>
-
-<p>
-<strong>Tip:</strong> You can pass an alias directly to
-the <code>buck query</code> command line to see what it resolves to.
-For example:
-</p>
-
-<p>
-<pre>
-{literal}
-$ buck query app
-//apps/myapp:app
-{/literal}
-</pre>
-</p>
-
-<h4>Non-target parameters</h4>
-
-<p>
-In addition to target parameters, some Buck query operators take string
-parameters such as filenames (<a href="#owner"><code>owner()</code></a>) or
-regular expressions (<a href="#filter"><code>filter()</code></a>).
-</p>
-
-<p>
-<strong>Note:</strong> You can hover over the parameters in the syntax
-blocks for the query operators (later in this topic) to obtain short
-tool-tip descriptions of the parameters.
-</p>
-
-<h4>Quoting of arguments</h4>
-
-  <p>
-    It is not necessary to quote arguments if they
-    adhere to certain conditions. That is, they comprise sequences of characters drawn
-    from the alphabet, numerals, forward slash (<code>/</code>),
-    colon (<code>:</code>), period (<code>.</code>), hyphen (<code>-</code>),
-    underscore (<code>_</code>), or asterisk (<code>*</code>)&mdash;and
-    they do not start with a hyphen or period.
-    For example, quoting <code>java_test</code> is unnecessary.
-  </p>
-
-  <p>
-    All that said, we <em>do</em> recommend that you quote arguments as a
-    best practice even when Buck doesn't require it.
-  </p>
-
-  <p>
-    You should always use quotes when writing scripts that
-    construct <code>buck query</code> expressions <em>from user-supplied values</em>.
-  </p>
-
-  <p>
-    Note that argument quoting for <code>buck query</code> is in
-    addition to any quoting that your shell requires.  In the following
-    example, double-quotes are used for the shell and
-    single-quotes are used for the <code>build target</code> expression.
-  </p>
-
-<pre>
-{literal}
-buck query "'//foo:bar=wiz'"
-{/literal}
-</pre>
-
-</ul>
-
-
-{call .section}
-{param anchor: 'set-operations' /}
-{param title: 'Algebraic set operations: intersection, union, set difference'/}
-{/call}
-
-<table>
-  <tr>
-    <th>Nominal</th>
-    <th>Symbolic</th>
-  </tr>
-  <tr>
-    <td>
-      <code class="not-inline">intersect</code>
-    </td>
-    <td style="text-align:center">
-      <code class="not-inline">^</code>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <code class="not-inline">union</code>
-    </td>
-    <td style="text-align:center">
-      <code class="not-inline">+</code>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <code class="not-inline">except</code>
-    </td>
-    <td style="text-align:center">
-      <code class="not-inline">-</code>
-    </td>
-  </tr>
-</table>
-
-<p>
-These three operators compute the corresponding set operations over their arguments.
-Each operator has two forms, a nominal form, such as <code>intersect</code>,
-and a symbolic form, such as <code>^</code>.
-the two forms are equivalent; the symbolic forms are just faster to type. For example,
-</p>
-
-<p>
-<pre>
-buck query "deps('//foo:bar') intersect deps('//baz:lib')"
-</pre>
-</p>
-
-<p>
-and
-</p>
-
-<p>
-<pre>
-buck query "deps('//foo:bar') ^ deps('//baz:lib')"
-</pre>
-</p>
-
-<p>
-both return the targets that appear in the
-{sp}<a href="https://en.wikipedia.org/wiki/Transitive_closure">transitive closure</a>{sp}
-of <code>//foo:bar</code> and <code>//baz:lib</code>.
-</p>
-<p>
-The <code>intersect</code> (<code>^</code>)
-and <code>union</code> (<code>+</code>) operators are commutative.
-The <code>except</code> (<code>-</code>) operator is not commutative.
-</p>
-
-<p>
-The parser treats all three operators as left-associative and of equal
-precedence, so we recommend that you use parentheses if you
-need to ensure a specific order of evaluation. A parenthesized
-expression resolves to the value of the expression it encloses.  For
-example, the first two expressions are equivalent, but the third is not:
-</p>
-
-<p>
-</p>
-
-<p>
-<pre>
-{literal}
-x intersect y union z
-(x intersect y) union z
-x intersect (y union z)
-{/literal}
-</pre>
-</p>
-
-
-{call .section}
-{param anchor: 'set' /}
-{param title: 'Group targets: set'/}
-{/call}
-
-<p>
-<b>Syntax</b>
-<pre>
-{literal}
-set(<em><span title="target expression">a:expr</span></em> <em title="target expression">b:expr</em> <em title="target expression">c:expr</em> ...)
-{/literal}
-</pre>
-</p>
-
-<p>
-The <code>set(<em>a</em> <em>b</em> <em>c</em> ...)</code> operator
-computes the union of a set of zero or more target expressions. Separate the
-targets with white space (not commas).  Quote the targets to ensure that
-they are parsed correctly.
-</p>
-
-<p>
-If you want to invoke <code>buck query</code> on a list of targets,
-then <code>set()</code> is a way to group this list in a query.
-</p>
-
-<p>
-<b>Example:</b>
-</p>
-
-{call buckquery.example_multiple_targets /}
-
-<p>
-<b>Example:</b>
-</p>
-
-<p>
-The following command line returns the merged set (union) of
-dependencies for the targets: <code>main</code> and <code>subs</code> in
-the build file in the root of the Buck project.
-</p>
-
-<p>
-<pre>
-{literal}
-buck query "deps( set( '//:main' '//:subs' ) )"
-{/literal}
-</pre>
-</p>
-
 
 
 {call .section}
@@ -1059,7 +835,7 @@ up in the result set</em>.
 <p>
 If you wanted to constrain the result set to only those targets beneath
 {sp}<code>foo/bar</code>, you could use
-the <a href="#set-operations"><code>intersect</code></a> operator:
+the <a href="{ROOT}about/query_language.html#set-operations"><code>intersect</code></a> operator:
 </p>
 
 <p>
@@ -1127,153 +903,6 @@ first finds the transitive closure of <code>//foo:bar</code>,
 and then lists all the tests associated with the targets in this transitive closure.
 </p>
 
-
-<h2>Executing multiple queries at once</h2>
-
-<p>
-Suppose you want to know the tests associated with a set of targets.
-This can be done by combining
-the <code>testsof</code>, <code>deps</code> and <code>set</code> operators.
-For example,
-</p>
-
-<p>
-<pre>
-{literal}
-buck query "testsof(deps(set('target1' 'target2' 'target3')))"
-{/literal}
-</pre>
-</p>
-
-<p>
-Suppose you now want to know the tests for <em>each</em> of these targets;
-the above command returns the union of the tests.
-Instead of executing one query for the entire set of targets, <code>buck query</code> provides
-a way to repeat a query with different targets using a single command.
-To do this, first define the query expression format and then list the input targets,
-separated by spaces. For example,
-</p>
-
-<p>
-<pre>
-{literal}
-buck query "testsof(deps( %s ))" target1 target2 target3
-{/literal}
-</pre>
-</p>
-
-<p>
-The <code>%s</code> in the query expression is replaced by each of
-the listed targets, and for each target, the resulting query expression is evaluated.
-If you add the <code>--output-format json</code> parameter, the result of
-the command is grouped by input target; otherwise, as in the previous
-example using <code>set()</code>, the command merges the results and
-returns the union of the queries.
-</p>
-
-<p>
-This syntax is also useful for subcommands
-that take arguments that are not targets,
-such as <code>owner()</code>.
-Recall that the <code>set()</code> operator works only with targets,
-but the <code>owner()</code> operator takes a filename as its argument.
-</p>
-
-<p>
-<pre>
-{literal}
-buck query "owner( %s )" main.cpp myclass.cpp myclass.h
-{/literal}
-</pre>
-</p>
-
-<h2>Referencing Args Files</h2>
-
-<p>
-When running queries, arguments can be stored in external files, one argument per line, and
-referenced with the <code>@</code> symbol. This is convenient when the number of arguments is long
-or when you want to persist the query input in source control.
-</p>
-
-<p>
-<pre>
-buck query "testsof(deps(%s))" @/path/to/args-file
-</pre>
-</p>
-
-<p>
-If you want to include all the targets in the <code>@</code>-file in a
-single query execution, you can use the following alternative syntax.
-Note the addition of the capital "<code>S</code>" in "<code>%Ss</code>".
-</p>
-
-<p>
-<pre>
-buck query "testsof(deps(%Ss))" @/path/to/args-file
-</pre>
-</p>
-
-<p>
-In the example above, the lines of the file are converted to a set and
-substituted for the <code>%Ss</code>. In addition, each line's contents
-are singly quoted.  In the example above, if the args file contains the following:
-</p>
-
-<p>
-<pre>
-{literal}
-//foo:bar
-//foo:baz
-{/literal}
-</pre>
-</p>
-
-<p>
-Then the query expression is equivalent to:
-</p>
-
-<p>
-<pre>
-{literal}
-buck query "testsof(deps(set('//foo:bar' '//foo:baz')))"
-{/literal}
-</pre>
-</p>
-
-
-<p>
-If you use multiple <code>%Ss</code> operators in a single query, you
-can specify which lines in the <code>@</code>-file should be used
-for each instance of <code>%Ss</code> in the query expression:
-use <code>--</code> to separate elements that go in different sets.
-For example:
-</p>
-
-<p>
-<pre>
-buck query "testsof(deps(%Ss)) union deps(%Ss)" @path/to/args-file
-</pre>
-</p>
-
-<p>
-<pre>
-{literal}
-//foo:foo
---
-//bar:bar
-{/literal}
-</pre>
-</p>
-
-<p>
-is equivalent to running the following:
-</p>
-
-<p>
-<pre>
-buck query "testsof(deps(set('//foo:foo'))) union deps(set('//bar:bar'))"
-</pre>
-</p>
 
 {/param}
 
