@@ -22,12 +22,12 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.console.ConsoleBuckEventListener;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -85,11 +85,18 @@ public class OutOfProcessIsolatedBuilder {
   }
 
   private static void handleException(Thread thread, Console console, Throwable throwable) {
+    //  TODO: LOG.error goes to the console anyway. And we don't actually do file-based logging on
+    // the worker yet. So we can't log the whole stacktrace into the log.
+    // TODO: This isn't correct, it won't integrate with buck's printing of
+    // errors correctly. We should actually serialize the exception in a way
+    // that buck can recreate and create a correct exception chain on the client
+    // side. For now, at least we get a reasonable message.
+    String errorMessage = ErrorLogger.getUserFriendlyMessage(throwable);
     console.printErrorText(
         "Cannot execute a rule out of process. On RE worker. Thread: "
             + thread
             + System.lineSeparator()
-            + Throwables.getStackTraceAsString(throwable));
+            + errorMessage);
     System.exit(1);
   }
 
