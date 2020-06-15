@@ -185,11 +185,6 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
 
   /** The set of {@code ForwardRelativePath}`s that are used as input for {@code node} */
   public ImmutableSet<ForwardRelativePath> getInputPathsForNode(UnconfiguredTargetNode node) {
-    // TODO(srice): At one point we knew these were `CellRelativePath`s, but we turned them into
-    // `QueryFileTarget`s losing a bunch of information in the process. I don't think there is any
-    // possibility of a QueryFileTarget that isn't a `PathSourcePath` here, nor is it possible for
-    // the inner path to be anything but ForwardRelativePath. If that's the case then we should
-    // store them in their original state to not lose this information.
     return getTraversalResult(node).getInputs();
   }
 
