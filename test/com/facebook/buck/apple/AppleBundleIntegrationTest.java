@@ -470,7 +470,7 @@ public class AppleBundleIntegrationTest {
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     workspace.assertFilesEqual(
-        RelPath.get("DemoApp.xcent.expected"),
+        RelPath.get("DemoAppViaSubstitutions.xcent.expected"),
         BuildTargetPaths.getScratchPath(
             filesystem,
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
