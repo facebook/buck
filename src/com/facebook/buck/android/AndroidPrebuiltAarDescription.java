@@ -134,15 +134,6 @@ public class AndroidPrebuiltAarDescription
         buildTarget);
     UnzipAar unzipAar = (UnzipAar) unzipAarRule;
 
-    if (JavaAbis.isClassAbiTarget(buildTarget)) {
-      return CalculateClassAbi.of(
-          buildTarget,
-          graphBuilder,
-          projectFilesystem,
-          ExplicitBuildTargetSourcePath.of(
-              unzipAar.getBuildTarget(), unzipAar.getPathToClassesJar()));
-    }
-
     Iterable<PrebuiltJar> javaDeps =
         Iterables.concat(
             Iterables.filter(graphBuilder.getAllRules(args.getDeps()), PrebuiltJar.class),
@@ -152,11 +143,21 @@ public class AndroidPrebuiltAarDescription
                 AndroidPrebuiltAar::getPrebuiltJar));
 
     if (flavors.contains(AAR_PREBUILT_JAR_FLAVOR)) {
+      SourcePath prebuiltJarSourcePath =
+          ExplicitBuildTargetSourcePath.of(
+              unzipAar.getBuildTarget(), unzipAar.getPathToClassesJar());
+
+      if (JavaAbis.isClassAbiTarget(buildTarget)) {
+        return CalculateClassAbi.of(
+            buildTarget, graphBuilder, projectFilesystem, prebuiltJarSourcePath);
+      }
+
       Preconditions.checkState(
           flavors.getSet().size() == 1,
           "Expected only flavor to be %s but also found %s",
           AAR_PREBUILT_JAR_FLAVOR,
           flavors);
+
       BuildRuleParams buildRuleParams =
           params
               .withDeclaredDeps(ImmutableSortedSet.copyOf(javaDeps))
@@ -166,8 +167,7 @@ public class AndroidPrebuiltAarDescription
           projectFilesystem,
           /* params */ buildRuleParams,
           graphBuilder.getSourcePathResolver(),
-          /* binaryJar */ ExplicitBuildTargetSourcePath.of(
-              unzipAar.getBuildTarget(), unzipAar.getPathToClassesJar()),
+          /* binaryJar */ prebuiltJarSourcePath,
           /* sourceJar */ Optional.empty(),
           /* gwtJar */ Optional.empty(),
           /* javadocUrl */ Optional.empty(),
@@ -178,6 +178,8 @@ public class AndroidPrebuiltAarDescription
           /* neverMarkAsUnusedDependency */ false);
     }
 
+    Preconditions.checkState(
+        !JavaAbis.isAbiTarget(buildTarget), "Shouldn't create an ABI for the remaining flavors!");
     if (flavors.contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
       AndroidPlatformTarget androidPlatformTarget =
           toolchainProvider.getByName(
