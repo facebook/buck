@@ -88,8 +88,11 @@ class BuckPackage(BuckTool):
 
         if self._resource_subdir is None:
             buck_version_uid = self._get_buck_version_uid()
+            java_version = self.get_buck_compiled_java_version()
             resource_dir = self._get_resource_dir()
-            subdir = os.path.join(resource_dir, buck_version_uid)
+            subdir = os.path.join(
+                resource_dir, buck_version_uid, "java-" + str(java_version)
+            )
             self._lock_file = try_subdir(subdir)
             if self._lock_file:
                 self._resource_subdir = subdir
