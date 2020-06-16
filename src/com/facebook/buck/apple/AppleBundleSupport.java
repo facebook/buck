@@ -17,18 +17,15 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.core.rules.BuildRule;
-import java.util.Optional;
 
 /** Utility functions helpful when implementing AppleBundle build rule & friends */
 public class AppleBundleSupport {
   private AppleBundleSupport() {}
 
   /** Returns whether binary is a legacy watchOS application */
-  public static boolean isLegacyWatchApp(String extension, Optional<BuildRule> maybeBinary) {
+  public static boolean isLegacyWatchApp(String extension, BuildRule binary) {
     return extension.equals(AppleBundleExtension.APP.toFileExtension())
-        && maybeBinary.isPresent()
-        && maybeBinary
-            .get()
+        && binary
             .getBuildTarget()
             .getFlavors()
             .contains(AppleBinaryDescription.LEGACY_WATCH_FLAVOR);

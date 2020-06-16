@@ -113,7 +113,7 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final Optional<SourcePath> entitlementsFile;
 
-  @AddToRuleKey private final Optional<BuildRule> binary;
+  @AddToRuleKey private final BuildRule binary;
 
   @AddToRuleKey private final Boolean isLegacyWatchApp;
 
@@ -171,7 +171,6 @@ public class AppleBundle extends AbstractBuildRule
   private final boolean ibtoolModuleFlag;
   private final ImmutableList<String> ibtoolFlags;
 
-  private final boolean hasBinary;
   private final boolean cacheable;
   private final boolean verifyResources;
 
@@ -190,7 +189,7 @@ public class AppleBundle extends AbstractBuildRule
       Optional<String> productName,
       SourcePath processedInfoPlist,
       Map<String, String> infoPlistSubstitutions,
-      Optional<BuildRule> binary,
+      BuildRule binary,
       Optional<AppleDsym> appleDsym,
       ImmutableSet<BuildRule> extraBinaries,
       AppleBundleDestinations destinations,
@@ -223,12 +222,10 @@ public class AppleBundle extends AbstractBuildRule
     this.binary = binary;
     this.withDownwardApi = withDownwardApi;
     Optional<SourcePath> entitlementsFile = Optional.empty();
-    if (binary.isPresent()) {
-      Optional<HasEntitlementsFile> hasEntitlementsFile =
-          graphBuilder.requireMetadata(binary.get().getBuildTarget(), HasEntitlementsFile.class);
-      if (hasEntitlementsFile.isPresent()) {
-        entitlementsFile = hasEntitlementsFile.get().getEntitlementsFile();
-      }
+    Optional<HasEntitlementsFile> hasEntitlementsFile =
+        graphBuilder.requireMetadata(binary.getBuildTarget(), HasEntitlementsFile.class);
+    if (hasEntitlementsFile.isPresent()) {
+      entitlementsFile = hasEntitlementsFile.get().getEntitlementsFile();
     }
     this.entitlementsFile = entitlementsFile;
     this.isLegacyWatchApp = AppleBundleSupport.isLegacyWatchApp(extension, binary);
@@ -256,7 +253,6 @@ public class AppleBundle extends AbstractBuildRule
     this.ibtoolFlags = ibtoolFlags;
 
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
-    hasBinary = binary.isPresent() && binary.get().getSourcePathToOutput() != null;
 
     if (needCodeSign() && !adHocCodeSignIsSufficient()) {
       this.provisioningProfileStore = provisioningProfileStore;
@@ -283,6 +279,10 @@ public class AppleBundle extends AbstractBuildRule
 
     this.sliceAppPackageSwiftRuntime = sliceAppPackageSwiftRuntime;
     this.sliceAppBundleSwiftRuntime = sliceAppBundleSwiftRuntime;
+  }
+
+  private boolean hasBinary() {
+    return binary.getSourcePathToOutput() != null;
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -320,10 +320,6 @@ public class AppleBundle extends AbstractBuildRule
     return platform.getName();
   }
 
-  public Optional<BuildRule> getBinary() {
-    return binary;
-  }
-
   public Optional<AppleDsym> getAppleDsym() {
     return appleDsym;
   }
@@ -354,7 +350,7 @@ public class AppleBundle extends AbstractBuildRule
         CopyStep.forFile(
             getProjectFilesystem(), infoPlistOutputPath.getPath(), infoPlistBundlePath));
 
-    if (hasBinary) {
+    if (hasBinary()) {
       appendCopyBinarySteps(stepsBuilder, context);
       appendCopyDsymStep(stepsBuilder, buildableContext, context);
     }
@@ -647,12 +643,12 @@ public class AppleBundle extends AbstractBuildRule
 
   private void appendCopyBinarySteps(
       ImmutableList.Builder<Step> stepsBuilder, BuildContext context) {
-    Preconditions.checkArgument(hasBinary);
+    Preconditions.checkArgument(hasBinary());
 
     AbsPath binaryOutputPath =
         context
             .getSourcePathResolver()
-            .getAbsolutePath(Objects.requireNonNull(binary.get().getSourcePathToOutput()));
+            .getAbsolutePath(Objects.requireNonNull(binary.getSourcePathToOutput()));
 
     ImmutableMap.Builder<Path, Path> binariesBuilder = ImmutableMap.builder();
     binariesBuilder.put(bundleBinaryPath, binaryOutputPath.getPath());
@@ -730,8 +726,7 @@ public class AppleBundle extends AbstractBuildRule
 
   private void copyAnotherCopyOfWatchKitStub(
       ImmutableList.Builder<Step> stepsBuilder, BuildContext context, Path binaryOutputPath) {
-    if ((isLegacyWatchApp || platform.getName().contains("watch"))
-        && binary.get() instanceof WriteFile) {
+    if ((isLegacyWatchApp || platform.getName().contains("watch")) && binary instanceof WriteFile) {
       Path watchKitStubDir = bundleRoot.resolve("_WatchKitStub");
       stepsBuilder.add(
           MkdirStep.of(
@@ -764,7 +759,7 @@ public class AppleBundle extends AbstractBuildRule
       ImmutableList.Builder<Step> stepsBuilder,
       BuildableContext buildableContext,
       BuildContext buildContext) {
-    Preconditions.checkArgument(hasBinary && appleDsym.isPresent());
+    Preconditions.checkArgument(hasBinary() && appleDsym.isPresent());
 
     // rename dSYM bundle to match bundle name
     RelPath dsymPath =
@@ -825,11 +820,8 @@ public class AppleBundle extends AbstractBuildRule
       return true;
     }
 
-    if (binary.isPresent()) {
-      BuildRule binaryRule = binary.get();
-      if (binaryRule instanceof NativeTestable) {
-        return ((NativeTestable) binaryRule).isTestedBy(testRule);
-      }
+    if (binary instanceof NativeTestable) {
+      return ((NativeTestable) binary).isTestedBy(testRule);
     }
 
     return false;
@@ -838,12 +830,8 @@ public class AppleBundle extends AbstractBuildRule
   @Override
   public CxxPreprocessorInput getPrivateCxxPreprocessorInput(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    if (binary.isPresent()) {
-      BuildRule binaryRule = binary.get();
-      if (binaryRule instanceof NativeTestable) {
-        return ((NativeTestable) binaryRule)
-            .getPrivateCxxPreprocessorInput(cxxPlatform, graphBuilder);
-      }
+    if (binary instanceof NativeTestable) {
+      return ((NativeTestable) binary).getPrivateCxxPreprocessorInput(cxxPlatform, graphBuilder);
     }
     return CxxPreprocessorInput.of();
   }
@@ -854,27 +842,23 @@ public class AppleBundle extends AbstractBuildRule
 
   // .framework bundles will be code-signed when they're copied into the containing bundle.
   private boolean needCodeSign() {
-    return binary.isPresent()
-        && ApplePlatform.needsCodeSign(platform.getName())
+    return ApplePlatform.needsCodeSign(platform.getName())
         && !extension.equals(FRAMEWORK_EXTENSION);
   }
 
   @Override
   public BuildRule getBinaryBuildRule() {
-    return binary.get();
+    return binary;
   }
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     // When "running" an app bundle, ensure debug symbols are available.
-    if (binary.get() instanceof HasAppleDebugSymbolDeps) {
+    if (binary instanceof HasAppleDebugSymbolDeps) {
       List<BuildRule> symbolDeps =
-          ((HasAppleDebugSymbolDeps) binary.get())
-              .getAppleDebugSymbolDeps()
-              .collect(Collectors.toList());
+          ((HasAppleDebugSymbolDeps) binary).getAppleDebugSymbolDeps().collect(Collectors.toList());
       if (!symbolDeps.isEmpty()) {
-        return Stream.concat(Stream.of(binary.get()), symbolDeps.stream())
-            .map(BuildRule::getBuildTarget);
+        return Stream.concat(Stream.of(binary), symbolDeps.stream()).map(BuildRule::getBuildTarget);
       }
     }
     return Stream.empty();

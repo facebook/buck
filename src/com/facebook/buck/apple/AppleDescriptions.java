@@ -952,8 +952,7 @@ public class AppleDescriptions {
     ImmutableMap<SourcePath, String> extensionBundlePaths =
         collectFirstLevelAppleDependencyBundles(params.getBuildDeps(), destinations);
 
-    Optional<BuildRule> maybeBinary =
-        Optional.of(getBinaryFromBuildRuleWithBinary(flavoredBinaryRule));
+    BuildRule unwrappedBinary = getBinaryFromBuildRuleWithBinary(flavoredBinaryRule);
 
     BuildTarget infoPlistBuildTarget =
         buildTarget.withoutFlavors().withAppendedFlavors(AppleInfoPlist.FLAVOR);
@@ -968,7 +967,7 @@ public class AppleDescriptions {
                         graphBuilder,
                         infoPlistSourcePath,
                         assetCatalog.map(AppleAssetCatalog::getSourcePathToPlist),
-                        maybeBinary,
+                        unwrappedBinary,
                         productName,
                         unwrappedExtension,
                         appleCxxPlatform,
@@ -983,7 +982,7 @@ public class AppleDescriptions {
         productName,
         infoPlist.getSourcePathToOutput(),
         infoPlistSubstitutions,
-        maybeBinary,
+        unwrappedBinary,
         appleDsym,
         extraBinaries,
         destinations,
@@ -1321,7 +1320,7 @@ public class AppleDescriptions {
       SourcePathRuleFinder ruleFinder,
       SourcePath unprocessedInfoPlistPath,
       Optional<SourcePath> maybeAssetCatalogPlistPath,
-      Optional<BuildRule> maybeBinary,
+      BuildRule binary,
       Optional<String> maybeProductName,
       String extension,
       AppleCxxPlatform appleCxxPlatform,
@@ -1332,7 +1331,7 @@ public class AppleDescriptions {
         ruleFinder,
         unprocessedInfoPlistPath,
         maybeAssetCatalogPlistPath,
-        AppleBundleSupport.isLegacyWatchApp(extension, maybeBinary),
+        AppleBundleSupport.isLegacyWatchApp(extension, binary),
         maybeProductName,
         extension,
         appleCxxPlatform,

@@ -159,16 +159,29 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
     for (BuildRule rule : bundle.getBuildDeps()) {
       if (rule instanceof AppleBundle) {
         AppleBundle appleBundle = (AppleBundle) rule;
-        if (appleBundle.getBinary().isPresent()) {
-          BuildRule binary = appleBundle.getBinary().get();
-          if (binary instanceof WriteFile && appleBundle.getPlatformName().startsWith("watch")) {
-            commands.add(
-                MkdirStep.of(
-                    BuildCellRelativePath.fromCellRelativePath(
-                        context.getBuildCellRootPath(),
-                        getProjectFilesystem(),
-                        temp.resolve("Symbols"))));
-            Path watchKitSupportDir = temp.resolve("WatchKitSupport2");
+        BuildRule binary = appleBundle.getBinaryBuildRule();
+        if (binary instanceof WriteFile && appleBundle.getPlatformName().startsWith("watch")) {
+          commands.add(
+              MkdirStep.of(
+                  BuildCellRelativePath.fromCellRelativePath(
+                      context.getBuildCellRootPath(),
+                      getProjectFilesystem(),
+                      temp.resolve("Symbols"))));
+          Path watchKitSupportDir = temp.resolve("WatchKitSupport2");
+          commands.add(
+              MkdirStep.of(
+                  BuildCellRelativePath.fromCellRelativePath(
+                      context.getBuildCellRootPath(), getProjectFilesystem(), watchKitSupportDir)));
+          commands.add(
+              new WriteFileStep(
+                  getProjectFilesystem(),
+                  ByteSource.wrap(((WriteFile) binary).getFileContents()),
+                  watchKitSupportDir.resolve("WK"),
+                  true /* executable */));
+        } else {
+          Optional<WriteFile> legacyWatchStub = getLegacyWatchStubFromDeps(appleBundle);
+          if (legacyWatchStub.isPresent()) {
+            Path watchKitSupportDir = temp.resolve("WatchKitSupport");
             commands.add(
                 MkdirStep.of(
                     BuildCellRelativePath.fromCellRelativePath(
@@ -178,26 +191,9 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
             commands.add(
                 new WriteFileStep(
                     getProjectFilesystem(),
-                    ByteSource.wrap(((WriteFile) binary).getFileContents()),
+                    ByteSource.wrap(legacyWatchStub.get().getFileContents()),
                     watchKitSupportDir.resolve("WK"),
                     true /* executable */));
-          } else {
-            Optional<WriteFile> legacyWatchStub = getLegacyWatchStubFromDeps(appleBundle);
-            if (legacyWatchStub.isPresent()) {
-              Path watchKitSupportDir = temp.resolve("WatchKitSupport");
-              commands.add(
-                  MkdirStep.of(
-                      BuildCellRelativePath.fromCellRelativePath(
-                          context.getBuildCellRootPath(),
-                          getProjectFilesystem(),
-                          watchKitSupportDir)));
-              commands.add(
-                  new WriteFileStep(
-                      getProjectFilesystem(),
-                      ByteSource.wrap(legacyWatchStub.get().getFileContents()),
-                      watchKitSupportDir.resolve("WK"),
-                      true /* executable */));
-            }
           }
         }
       }
@@ -217,11 +213,9 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
               .getFlavors()
               .contains(AppleBinaryDescription.LEGACY_WATCH_FLAVOR)) {
         AppleBundle legacyWatchApp = (AppleBundle) rule;
-        if (legacyWatchApp.getBinary().isPresent()) {
-          BuildRule legacyWatchStub = legacyWatchApp.getBinary().get();
-          if (legacyWatchStub instanceof WriteFile) {
-            return Optional.of((WriteFile) legacyWatchStub);
-          }
+        BuildRule legacyWatchStub = legacyWatchApp.getBinaryBuildRule();
+        if (legacyWatchStub instanceof WriteFile) {
+          return Optional.of((WriteFile) legacyWatchStub);
         }
       }
     }

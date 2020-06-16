@@ -817,7 +817,7 @@ public class AppleTestDescription
 
     ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
         NativeLinkableGroups.getNativeLinkableRoots(
-            testHostWithTargetApp.getBinary().get().getBuildDeps(),
+            testHostWithTargetApp.getBinaryBuildRule().getBuildDeps(),
             r ->
                 !(r instanceof NativeLinkableGroup)
                     ? Optional.of(r.getBuildDeps())
