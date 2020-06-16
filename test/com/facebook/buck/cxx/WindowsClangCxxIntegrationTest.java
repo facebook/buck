@@ -441,18 +441,7 @@ public class WindowsClangCxxIntegrationTest {
         workspace.runBuckCommand("run", "implib_prebuilt_cell2//:app#windows-x86_64");
     runResult.assertSuccess();
 
-    ProcessResult logResult = workspace.runBuckCommand("build", "implib_prebuilt_cell2//:log");
-    logResult.assertSuccess();
-    Path outputPath =
-        workspace
-            .resolve("implib_prebuilt/cell2/buck-out/gen")
-            .resolve(
-                BuildTargetPaths.getBasePath(
-                        workspace.getProjectFileSystem(),
-                        BuildTargetFactory.newInstance("implib_prebuilt_cell2//:log"),
-                        "%s")
-                    .toString())
-            .resolve("log.txt");
+    Path outputPath = workspace.buildAndReturnOutput("implib_prebuilt_cell2//:log");
     assertThat(workspace.getFileContents(outputPath), Matchers.containsString("a + (a * b)"));
   }
 
