@@ -20,8 +20,8 @@ import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
-import com.facebook.buck.apple.AppleBundleDestination;
 import com.facebook.buck.apple.AppleHeaderVisibilities;
+import com.facebook.buck.apple.AppleResourceBundleDestination;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.AppleWrapperResourceArg;
 import com.facebook.buck.apple.GroupedSource;
@@ -592,22 +592,22 @@ class NewNativeTargetProjectMutator {
 
   private void addCopyResourcesToNonStdDestinationPhases(
       PBXNativeTarget target, PBXGroup targetGroup) {
-    List<AppleBundleDestination> allNonStandardDestinations =
+    List<AppleResourceBundleDestination> allNonStandardDestinations =
         recursiveResources.stream()
             .map(AppleResourceDescriptionArg::getDestination)
             .filter(Optional::isPresent)
             .map(Optional::get)
             .distinct()
-            .filter(e -> e != AppleBundleDestination.RESOURCES)
+            .filter(e -> e != AppleResourceBundleDestination.RESOURCES)
             .sorted(Comparator.naturalOrder())
             .collect(Collectors.toList());
-    for (AppleBundleDestination destination : allNonStandardDestinations) {
+    for (AppleResourceBundleDestination destination : allNonStandardDestinations) {
       addCopyResourcesToNonStdDestinationPhase(target, targetGroup, destination);
     }
   }
 
   private void addCopyResourcesToNonStdDestinationPhase(
-      PBXNativeTarget target, PBXGroup targetGroup, AppleBundleDestination destination) {
+      PBXNativeTarget target, PBXGroup targetGroup, AppleResourceBundleDestination destination) {
     CopyFilePhaseDestinationSpec destinationSpec =
         CopyFilePhaseDestinationSpec.of(pbxCopyPhaseDestination(destination));
     PBXCopyFilesBuildPhase phase = new PBXCopyFilesBuildPhase(destinationSpec);
@@ -615,7 +615,8 @@ class NewNativeTargetProjectMutator {
         recursiveResources.stream()
             .filter(
                 e ->
-                    e.getDestination().orElse(AppleBundleDestination.defaultValue()) == destination)
+                    e.getDestination().orElse(AppleResourceBundleDestination.defaultValue())
+                        == destination)
             .collect(Collectors.toSet());
     addResourcePathsToBuildPhase(
         phase,
@@ -632,7 +633,7 @@ class NewNativeTargetProjectMutator {
   }
 
   private PBXCopyFilesBuildPhase.Destination pbxCopyPhaseDestination(
-      AppleBundleDestination destination) {
+      AppleResourceBundleDestination destination) {
     switch (destination) {
       case FRAMEWORKS:
         return PBXCopyFilesBuildPhase.Destination.FRAMEWORKS;
@@ -644,9 +645,8 @@ class NewNativeTargetProjectMutator {
         return PBXCopyFilesBuildPhase.Destination.PLUGINS;
       case XPCSERVICES:
         return PBXCopyFilesBuildPhase.Destination.XPC;
-      default:
-        throw new IllegalStateException("Unhandled AppleBundleDestination " + destination);
     }
+    throw new IllegalStateException("Unhandled AppleResourceBundleDestination " + destination);
   }
 
   private void addResourcesBuildPhase(PBXNativeTarget target, PBXGroup targetGroup) {
@@ -655,8 +655,8 @@ class NewNativeTargetProjectMutator {
         recursiveResources.stream()
             .filter(
                 e ->
-                    e.getDestination().orElse(AppleBundleDestination.defaultValue())
-                        == AppleBundleDestination.RESOURCES)
+                    e.getDestination().orElse(AppleResourceBundleDestination.defaultValue())
+                        == AppleResourceBundleDestination.RESOURCES)
             .collect(Collectors.toSet());
     addResourcePathsToBuildPhase(
         phase, targetGroup, standardDestinationResources, recursiveAssetCatalogs, wrapperResources);

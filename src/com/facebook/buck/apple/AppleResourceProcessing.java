@@ -373,7 +373,7 @@ public class AppleResourceProcessing {
       verifyResourceConflicts(resources, context.getSourcePathResolver());
     }
 
-    for (AppleBundleDestination bundleDestination : resources.getAllDestinations()) {
+    for (AppleResourceBundleDestination bundleDestination : resources.getAllDestinations()) {
       Path bundleDestinationPath = dirRoot.resolve(bundleDestination.getPath(destinations));
       stepsBuilder.add(
           MkdirStep.of(
@@ -441,7 +441,7 @@ public class AppleResourceProcessing {
       AppleBundleResources resources, SourcePathResolverAdapter resolver) {
     // Ensure there are no resources that will overwrite each other
     // TODO: handle ResourceDirsContainingResourceDirs
-    for (AppleBundleDestination destination : resources.getAllDestinations()) {
+    for (AppleResourceBundleDestination destination : resources.getAllDestinations()) {
       Set<Path> resourcePaths = new HashSet<>();
       for (SourcePath path :
           Iterables.concat(

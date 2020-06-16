@@ -23,8 +23,8 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /**
  * Simple type representing a {@link com.facebook.buck.core.sourcepath.SourcePath} and a destination
- * {@link com.facebook.buck.apple.AppleBundleDestination} in a resulting bundle where a file or a
- * directory with this path should be copied.
+ * {@link AppleResourceBundleDestination} in a resulting bundle where a file or a directory with
+ * this path should be copied.
  */
 @BuckStyleValue
 public abstract class SourcePathWithAppleBundleDestination
@@ -34,7 +34,7 @@ public abstract class SourcePathWithAppleBundleDestination
   public abstract SourcePath getSourcePath();
 
   @AddToRuleKey
-  public abstract AppleBundleDestination getDestination();
+  public abstract AppleResourceBundleDestination getDestination();
 
   @AddToRuleKey
   public abstract boolean getCodesignOnCopy();
@@ -47,16 +47,16 @@ public abstract class SourcePathWithAppleBundleDestination
    * @return An immutable SourcePathWithAppleBundleDestination instance
    */
   public static SourcePathWithAppleBundleDestination of(SourcePath sourcePath) {
-    return of(sourcePath, AppleBundleDestination.defaultValue());
+    return of(sourcePath, AppleResourceBundleDestination.defaultValue());
   }
 
   public static SourcePathWithAppleBundleDestination of(
-      SourcePath sourcePath, AppleBundleDestination destination) {
+      SourcePath sourcePath, AppleResourceBundleDestination destination) {
     return of(sourcePath, destination, false);
   }
 
   public static SourcePathWithAppleBundleDestination of(
-      SourcePath sourcePath, AppleBundleDestination destination, boolean codesignOnCopy) {
+      SourcePath sourcePath, AppleResourceBundleDestination destination, boolean codesignOnCopy) {
     return ImmutableSourcePathWithAppleBundleDestination.ofImpl(
         sourcePath, destination, codesignOnCopy);
   }

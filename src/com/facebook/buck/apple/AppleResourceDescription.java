@@ -74,8 +74,8 @@ public class AppleResourceDescription
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver) {
     AppleResourceDescriptionArg appleResource = targetNode.getConstructorArg();
-    AppleBundleDestination destination =
-        appleResource.getDestination().orElse(AppleBundleDestination.defaultValue());
+    AppleResourceBundleDestination destination =
+        appleResource.getDestination().orElse(AppleResourceBundleDestination.defaultValue());
     Supplier<SortedSet<SourcePathWithAppleBundleDestination>> supplier = TreeSet::new;
     builder.addAllResourceDirs(
         appleResource.getDirs().stream()
@@ -91,7 +91,7 @@ public class AppleResourceDescription
                         sourcePath, destination, appleResource.getCodesignOnCopy()))
             .collect(Collectors.toCollection(supplier)));
     ImmutableSet<SourcePath> variants = appleResource.getVariants();
-    if (!variants.isEmpty() && destination != AppleBundleDestination.RESOURCES) {
+    if (!variants.isEmpty() && destination != AppleResourceBundleDestination.RESOURCES) {
       throw new HumanReadableException(
           String.format(
               ("Resource \"%s\" contains localization variants, but destination \"%s\" is "
@@ -112,7 +112,7 @@ public class AppleResourceDescription
 
     ImmutableSet<BuildTarget> getResourcesFromDeps();
 
-    Optional<AppleBundleDestination> getDestination();
+    Optional<AppleResourceBundleDestination> getDestination();
 
     @Value.Default
     default boolean getCodesignOnCopy() {

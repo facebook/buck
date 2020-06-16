@@ -55,17 +55,18 @@ public abstract class AppleBundleResources implements AddsToRuleKey {
   @AddToRuleKey
   public abstract ImmutableSet<SourcePath> getResourceVariantFiles();
 
-  public Set<SourcePath> getResourceDirsForDestination(AppleBundleDestination destination) {
+  public Set<SourcePath> getResourceDirsForDestination(AppleResourceBundleDestination destination) {
     return extractSourcePathsForDestination(getResourceDirs(), destination);
   }
 
-  public Set<SourcePath> getResourceFilesForDestination(AppleBundleDestination destination) {
+  public Set<SourcePath> getResourceFilesForDestination(
+      AppleResourceBundleDestination destination) {
     return extractSourcePathsForDestination(getResourceFiles(), destination);
   }
 
   private static Set<SourcePath> extractSourcePathsForDestination(
       ImmutableSet<SourcePathWithAppleBundleDestination> sourcePathWithAppleBundleDestinations,
-      AppleBundleDestination destination) {
+      AppleResourceBundleDestination destination) {
     return sourcePathWithAppleBundleDestinations.stream()
         .filter(pathWithDestination -> destination == pathWithDestination.getDestination())
         .map(SourcePathWithAppleBundleDestination::getSourcePath)
@@ -73,14 +74,14 @@ public abstract class AppleBundleResources implements AddsToRuleKey {
   }
 
   /** All kinds of destinations that are used by paths in this object. */
-  public SortedSet<AppleBundleDestination> getAllDestinations() {
-    Stream<AppleBundleDestination> result =
+  public SortedSet<AppleResourceBundleDestination> getAllDestinations() {
+    Stream<AppleResourceBundleDestination> result =
         getResourcesWithDestinationStream()
             .map(SourcePathWithAppleBundleDestination::getDestination);
     if (!getResourceVariantFiles().isEmpty()) {
-      result = Stream.concat(result, Stream.of(AppleBundleDestination.RESOURCES));
+      result = Stream.concat(result, Stream.of(AppleResourceBundleDestination.RESOURCES));
     }
-    Supplier<SortedSet<AppleBundleDestination>> supplier = TreeSet::new;
+    Supplier<SortedSet<AppleResourceBundleDestination>> supplier = TreeSet::new;
     return result.collect(Collectors.toCollection(supplier));
   }
 

@@ -37,7 +37,7 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
-import com.facebook.buck.apple.AppleBundleDestination;
+import com.facebook.buck.apple.AppleResourceBundleDestination;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
 import com.facebook.buck.apple.XcodePrebuildScriptBuilder;
@@ -282,7 +282,7 @@ public class XcodeNativeTargetProjectWriterTest {
         AppleResourceDescriptionArg.builder()
             .setName("resources")
             .setFiles(ImmutableSet.of(FakeSourcePath.of("foo.png")))
-            .setDestination(AppleBundleDestination.RESOURCES)
+            .setDestination(AppleResourceBundleDestination.RESOURCES)
             .build();
 
     mutator.setRecursiveResources(ImmutableSet.of(arg));
@@ -302,7 +302,7 @@ public class XcodeNativeTargetProjectWriterTest {
         AppleResourceDescriptionArg.builder()
             .setName("resources")
             .setFiles(ImmutableSet.of(FakeSourcePath.of("foo.png")))
-            .setDestination(AppleBundleDestination.FRAMEWORKS)
+            .setDestination(AppleResourceBundleDestination.FRAMEWORKS)
             .build();
 
     mutator.setRecursiveResources(ImmutableSet.of(arg));

@@ -20,16 +20,18 @@ import java.nio.file.Path;
 
 /**
  * Abstraction of a place in a resulting bundle where resource will be copied. Actual value of path
- * relative to bundle root depends on a platform.
+ * relative to bundle root depends on a platform. Resource stands for `apple_resource` content,
+ * which means this class is exposed to the end user.
  */
-public enum AppleBundleDestination {
+public enum AppleResourceBundleDestination {
   RESOURCES,
   FRAMEWORKS,
   EXECUTABLES,
   PLUGINS,
-  XPCSERVICES;
+  XPCSERVICES,
+  ;
 
-  public static AppleBundleDestination defaultValue() {
+  public static AppleResourceBundleDestination defaultValue() {
     return RESOURCES;
   }
 
@@ -49,8 +51,7 @@ public enum AppleBundleDestination {
         return destinations.getPlugInsPath();
       case XPCSERVICES:
         return destinations.getXPCServicesPath();
-      default:
-        throw new IllegalStateException("Unhandled AppleBundleDestination " + this);
     }
+    throw new IllegalStateException("Unhandled AppleResourceBundleDestination " + this);
   }
 }
