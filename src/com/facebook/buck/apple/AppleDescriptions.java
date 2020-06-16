@@ -899,6 +899,23 @@ public class AppleDescriptions {
             defaultPlatform,
             graphBuilder);
 
+    String unwrappedExtension =
+        extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
+
+    if (ApplePkgInfo.isPkgInfoNeeded(unwrappedExtension)) {
+      BuildTarget pkgInfoBuildTarget =
+          buildTarget.withoutFlavors().withAppendedFlavors(ApplePkgInfo.FLAVOR);
+      ApplePkgInfo pkgInfo =
+          (ApplePkgInfo)
+              graphBuilder.computeIfAbsent(
+                  pkgInfoBuildTarget,
+                  pkgInfoTarget ->
+                      new ApplePkgInfo(pkgInfoBuildTarget, projectFilesystem, graphBuilder));
+      collectedResourcesBuilder.addResourceFiles(
+          SourcePathWithAppleBundleDestination.of(
+              pkgInfo.getSourcePathToOutput(), AppleBundleDestination.METADATA, false));
+    }
+
     collectedResourcesBuilder.addAllDirsContainingResourceDirs(
         Stream.of(
                 assetCatalog.map(AppleAssetCatalog::getSourcePathToOutput),
@@ -937,9 +954,6 @@ public class AppleDescriptions {
 
     Optional<BuildRule> maybeBinary =
         Optional.of(getBinaryFromBuildRuleWithBinary(flavoredBinaryRule));
-
-    String unwrappedExtension =
-        extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
 
     BuildTarget infoPlistBuildTarget =
         buildTarget.withoutFlavors().withAppendedFlavors(AppleInfoPlist.FLAVOR);

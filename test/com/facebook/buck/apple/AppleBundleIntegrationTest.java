@@ -1017,7 +1017,7 @@ public class AppleBundleIntegrationTest {
         AppleDescriptions.INCLUDE_FRAMEWORKS.getFlavors();
     ImmutableSet<Flavor>
         expectedInternalFlavorsForSameBaseNameAsBundleExclusiveToIncludeFrameworkFlavors =
-            ImmutableSet.of(AppleInfoPlist.FLAVOR);
+            ImmutableSet.of(AppleInfoPlist.FLAVOR, ApplePkgInfo.FLAVOR);
 
     for (BuildTarget builtTarget : buckBuildLog.getAllTargets()) {
       ImmutableSet<Flavor> allFlavors = builtTarget.getFlavors().getSet();

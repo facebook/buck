@@ -63,7 +63,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -343,22 +342,10 @@ public class AppleBundle extends AbstractBuildRule
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot)));
 
-    Path metadataPath = getMetadataPath();
-
     stepsBuilder.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), metadataPath)));
-
-    if (needsPkgInfoFile()) {
-      // TODO(bhamiltoncx): This is only appropriate for .app bundles.
-      stepsBuilder.add(
-          new WriteFileStep(
-              getProjectFilesystem(),
-              "APPLWRUN",
-              metadataPath.resolve("PkgInfo"),
-              /* executable */ false));
-    }
+                context.getBuildCellRootPath(), getProjectFilesystem(), getMetadataPath())));
 
     RelPath infoPlistOutputPath =
         context.getSourcePathResolver().getRelativePath(processedInfoPlist);
@@ -656,11 +643,6 @@ public class AppleBundle extends AbstractBuildRule
               });
     }
     return entitlementsPlist;
-  }
-
-  private boolean needsPkgInfoFile() {
-    return !(extension.equals(AppleBundleExtension.XPC.toFileExtension())
-        || extension.equals(AppleBundleExtension.QLGENERATOR.toFileExtension()));
   }
 
   private void appendCopyBinarySteps(
