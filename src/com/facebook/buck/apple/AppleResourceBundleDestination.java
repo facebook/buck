@@ -16,8 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import java.nio.file.Path;
-
 /**
  * Abstraction of a place in a resulting bundle where resource will be copied. Actual value of path
  * relative to bundle root depends on a platform. Resource stands for `apple_resource` content,
@@ -35,22 +33,19 @@ public enum AppleResourceBundleDestination {
     return RESOURCES;
   }
 
-  /**
-   * @param destinations Platform-specific set of concrete path values in a bundle.
-   * @return Value of path relative to bundle root where resource will be copied.
-   */
-  public Path getPath(AppleBundleDestinations destinations) {
+  /** Returns corresponding non-specific bundle destination */
+  public AppleBundleDestination asGenericDestination() {
     switch (this) {
       case RESOURCES:
-        return destinations.getResourcesPath();
-      case EXECUTABLES:
-        return destinations.getExecutablesPath();
+        return AppleBundleDestination.RESOURCES;
       case FRAMEWORKS:
-        return destinations.getFrameworksPath();
+        return AppleBundleDestination.FRAMEWORKS;
+      case EXECUTABLES:
+        return AppleBundleDestination.EXECUTABLES;
       case PLUGINS:
-        return destinations.getPlugInsPath();
+        return AppleBundleDestination.PLUGINS;
       case XPCSERVICES:
-        return destinations.getXPCServicesPath();
+        return AppleBundleDestination.XPCSERVICES;
     }
     throw new IllegalStateException("Unhandled AppleResourceBundleDestination " + this);
   }

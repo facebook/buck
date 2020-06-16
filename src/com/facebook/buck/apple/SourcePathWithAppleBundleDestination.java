@@ -23,8 +23,8 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /**
  * Simple type representing a {@link com.facebook.buck.core.sourcepath.SourcePath} and a destination
- * {@link AppleResourceBundleDestination} in a resulting bundle where a file or a directory with
- * this path should be copied.
+ * {@link AppleBundleDestination} in a resulting bundle where a file or a directory with this path
+ * should be copied.
  */
 @BuckStyleValue
 public abstract class SourcePathWithAppleBundleDestination
@@ -34,29 +34,29 @@ public abstract class SourcePathWithAppleBundleDestination
   public abstract SourcePath getSourcePath();
 
   @AddToRuleKey
-  public abstract AppleResourceBundleDestination getDestination();
+  public abstract AppleBundleDestination getDestination();
 
   @AddToRuleKey
   public abstract boolean getCodesignOnCopy();
 
   /**
    * Construct a new immutable {@code SourcePathWithAppleBundleDestination} instance with default
-   * value of apple bundle destination.
+   * value of apple resource bundle destination.
    *
    * @param sourcePath The value for the {@code sourcePath} attribute
    * @return An immutable SourcePathWithAppleBundleDestination instance
    */
   public static SourcePathWithAppleBundleDestination of(SourcePath sourcePath) {
-    return of(sourcePath, AppleResourceBundleDestination.defaultValue());
+    return of(sourcePath, AppleResourceBundleDestination.defaultValue().asGenericDestination());
   }
 
   public static SourcePathWithAppleBundleDestination of(
-      SourcePath sourcePath, AppleResourceBundleDestination destination) {
+      SourcePath sourcePath, AppleBundleDestination destination) {
     return of(sourcePath, destination, false);
   }
 
   public static SourcePathWithAppleBundleDestination of(
-      SourcePath sourcePath, AppleResourceBundleDestination destination, boolean codesignOnCopy) {
+      SourcePath sourcePath, AppleBundleDestination destination, boolean codesignOnCopy) {
     return ImmutableSourcePathWithAppleBundleDestination.ofImpl(
         sourcePath, destination, codesignOnCopy);
   }

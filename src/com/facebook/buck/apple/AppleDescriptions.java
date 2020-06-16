@@ -909,7 +909,7 @@ public class AppleDescriptions {
             .map(
                 sourcePath ->
                     SourcePathWithAppleBundleDestination.of(
-                        sourcePath, AppleResourceBundleDestination.RESOURCES, false))
+                        sourcePath, AppleBundleDestination.RESOURCES, false))
             .collect(Collectors.toSet()));
     AppleBundleResources collectedResources = collectedResourcesBuilder.build();
 

@@ -81,14 +81,17 @@ public class AppleResourceDescription
         appleResource.getDirs().stream()
             .map(
                 sourcePath ->
-                    SourcePathWithAppleBundleDestination.of(sourcePath, destination, false))
+                    SourcePathWithAppleBundleDestination.of(
+                        sourcePath, destination.asGenericDestination(), false))
             .collect(Collectors.toCollection(supplier)));
     builder.addAllResourceFiles(
         appleResource.getFiles().stream()
             .map(
                 sourcePath ->
                     SourcePathWithAppleBundleDestination.of(
-                        sourcePath, destination, appleResource.getCodesignOnCopy()))
+                        sourcePath,
+                        destination.asGenericDestination(),
+                        appleResource.getCodesignOnCopy()))
             .collect(Collectors.toCollection(supplier)));
     ImmutableSet<SourcePath> variants = appleResource.getVariants();
     if (!variants.isEmpty() && destination != AppleResourceBundleDestination.RESOURCES) {
