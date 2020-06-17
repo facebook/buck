@@ -79,6 +79,11 @@ public abstract class LogBuckConfig implements ConfigView<BuckConfig> {
     return getDelegate().getBooleanValue(LOG_SECTION, "log_build_id_to_console_enabled", false);
   }
 
+  @Value.Lazy
+  public boolean isUseScribedEnabled() {
+    return getDelegate().getBooleanValue(LOG_SECTION, "use_scribed", false);
+  }
+
   public Optional<String> getBuildDetailsTemplate() {
     return getDelegate().getValue(LOG_SECTION, "build_details_template");
   }

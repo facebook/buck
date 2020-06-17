@@ -3485,6 +3485,17 @@ or the value could be a custom platform flavor:
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'log' /}
+  {param name: 'use_scribed' /}
+  {param example_value: 'true' /}
+  {param description}
+    <code>true</code> if Buck should upload logs using a scribed or scribble process. If <code>
+    false</code> then logs are written to the URL store in the <code>log.slb_server_pool</code>
+     in the buckconfig. Defaults to <code>False</code>
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'lua' /}
   {param description}
