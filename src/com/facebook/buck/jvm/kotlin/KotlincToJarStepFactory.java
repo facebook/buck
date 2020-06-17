@@ -90,7 +90,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @AddToRuleKey private final ImmutableMap<String, String> kaptApOptions;
   @AddToRuleKey private final Optional<String> jvmTarget;
   @AddToRuleKey private final ExtraClasspathProvider extraClassPath;
-  @AddToRuleKey private final boolean kaptUseAnnotationProcessorParams;
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final boolean withDownwardApi;
@@ -132,7 +131,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       AnnotationProcessingTool annotationProcessingTool,
       ImmutableMap<String, String> kaptApOptions,
       Optional<String> jvmTarget,
-      boolean kaptUseAnnotationProcessorParams,
       ExtraClasspathProvider extraClassPath,
       Javac javac,
       JavacOptions javacOptions,
@@ -146,7 +144,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     this.annotationProcessingTool = annotationProcessingTool;
     this.kaptApOptions = kaptApOptions;
     this.jvmTarget = jvmTarget;
-    this.kaptUseAnnotationProcessorParams = kaptUseAnnotationProcessorParams;
     this.extraClassPath = extraClassPath;
     this.javac = javac;
     this.javacOptions = Objects.requireNonNull(javacOptions);
@@ -245,14 +242,12 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
         ImmutableMap.Builder<String, String> apOptions =
             new ImmutableMap.Builder<String, String>().putAll(kaptApOptions);
-        if (kaptUseAnnotationProcessorParams) {
-          ImmutableSortedSet<String> javacAnnotationProcessorParams =
-              javacOptions.getJavaAnnotationProcessorParams().getParameters();
-          for (String param : javacAnnotationProcessorParams) {
-            String[] splitParam = param.split("=");
-            Preconditions.checkState(splitParam.length == 2);
-            apOptions.put(splitParam[0], splitParam[1]);
-          }
+        ImmutableSortedSet<String> javacAnnotationProcessorParams =
+            javacOptions.getJavaAnnotationProcessorParams().getParameters();
+        for (String param : javacAnnotationProcessorParams) {
+          String[] splitParam = param.split("=");
+          Preconditions.checkState(splitParam.length == 2);
+          apOptions.put(splitParam[0], splitParam[1]);
         }
 
         ImmutableList<String> kaptPluginOptions =

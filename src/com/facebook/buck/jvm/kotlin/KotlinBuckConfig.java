@@ -87,10 +87,6 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
         .orElse(AbiGenerationMode.CLASS);
   }
 
-  public boolean hasKaptUseAnnotationProcessorParams() {
-    return delegate.getBooleanValue(SECTION, "kapt_use_annotation_processor_params", false);
-  }
-
   Path getPathToCompilerBinary() {
     Path compilerPath = getKotlinHome().resolve("kotlinc");
     if (!Files.isExecutable(compilerPath)) {
