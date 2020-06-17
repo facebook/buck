@@ -90,7 +90,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @AddToRuleKey private final ImmutableMap<String, String> kaptApOptions;
   @AddToRuleKey private final Optional<String> jvmTarget;
   @AddToRuleKey private final ExtraClasspathProvider extraClassPath;
-  @AddToRuleKey private final boolean kaptExplicitlySpecifyAnnotationProcessors;
   @AddToRuleKey private final boolean kaptUseAnnotationProcessorParams;
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final JavacOptions javacOptions;
@@ -133,7 +132,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       AnnotationProcessingTool annotationProcessingTool,
       ImmutableMap<String, String> kaptApOptions,
       Optional<String> jvmTarget,
-      boolean kaptExplicitlySpecifyAnnotationProcessors,
       boolean kaptUseAnnotationProcessorParams,
       ExtraClasspathProvider extraClassPath,
       Javac javac,
@@ -148,7 +146,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     this.annotationProcessingTool = annotationProcessingTool;
     this.kaptApOptions = kaptApOptions;
     this.jvmTarget = jvmTarget;
-    this.kaptExplicitlySpecifyAnnotationProcessors = kaptExplicitlySpecifyAnnotationProcessors;
     this.kaptUseAnnotationProcessorParams = kaptUseAnnotationProcessorParams;
     this.extraClassPath = extraClassPath;
     this.javac = javac;
@@ -227,14 +224,12 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
       if (generatingCode && annotationProcessingTool.equals(AnnotationProcessingTool.KAPT)) {
         ImmutableList<String> annotationProcessors =
-            !kaptExplicitlySpecifyAnnotationProcessors
-                ? ImmutableList.of()
-                : ImmutableList.copyOf(
-                    javacOptions.getJavaAnnotationProcessorParams().getPluginProperties().stream()
-                        .map(ResolvedJavacPluginProperties::getProcessorNames)
-                        .flatMap(Set::stream)
-                        .map(name -> AP_PROCESSORS_ARG + name)
-                        .collect(Collectors.toList()));
+            ImmutableList.copyOf(
+                javacOptions.getJavaAnnotationProcessorParams().getPluginProperties().stream()
+                    .map(ResolvedJavacPluginProperties::getProcessorNames)
+                    .flatMap(Set::stream)
+                    .map(name -> AP_PROCESSORS_ARG + name)
+                    .collect(Collectors.toList()));
 
         ImmutableList<String> apClassPaths =
             ImmutableList.copyOf(

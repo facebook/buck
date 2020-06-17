@@ -94,7 +94,6 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         kotlinArgs.getAnnotationProcessingTool().orElse(AnnotationProcessingTool.KAPT),
         kotlinArgs.getKaptApOptions(),
         kotlinArgs.getTarget().map(target -> getKotlincCompatibleTarget(target)),
-        kotlinBuckConfig.hasKaptExplicitlySpecifiedAnnotationProcessors(),
         kotlinBuckConfig.hasKaptUseAnnotationProcessorParams(),
         extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration),
         getJavac(buildRuleResolver, args, targetConfiguration),
