@@ -1,0 +1,10 @@
+python_library(
+    name = "buck_result_lib",
+    srcs = [
+        "buck_result.py",
+    ],
+    base_module = "",
+    visibility = [
+        "PUBLIC",
+    ],
+)

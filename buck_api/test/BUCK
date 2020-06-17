@@ -1,0 +1,12 @@
+load("//tools/build_rules:python_rules.bzl", "pytest_test")
+
+pytest_test(
+    name = "buck_result_test",
+    srcs = [
+        "buck_result_test.py",
+    ],
+    deps = [
+        "//buck_api/srcs:buck_result_lib",
+        "//third-party/py/pytest-asyncio:pytest-asyncio",
+    ],
+)
