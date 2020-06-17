@@ -65,8 +65,8 @@ import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -365,8 +365,8 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
 
   @SuppressWarnings("unchecked")
   private NodeAttributeTraversalResult computeTraversalResult(UnconfiguredTargetNode node) {
-    ImmutableMap.Builder<ParamName, ImmutableSet<UnconfiguredQueryTarget>> targetsByParamBuilder =
-        ImmutableMap.builder();
+    ImmutableSetMultimap.Builder<ParamName, UnconfiguredQueryTarget> targetsByParamBuilder =
+        ImmutableSetMultimap.builder();
     ImmutableSet.Builder<UnconfiguredBuildTarget> declaredDepsBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<UnconfiguredBuildTarget> extraDepsBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<UnconfiguredBuildTarget> targetGraphOnlyDepsBuilder =
@@ -377,8 +377,6 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
 
     ParamsInfo paramsInfo = lookupParamsInfoForRule(node.getBuildTarget(), node.getRuleType());
     for (ParamName name : attributes.keySet()) {
-      ImmutableSet.Builder<UnconfiguredQueryTarget> attributeResult = ImmutableSet.builder();
-
       ParamInfo<?> info = paramsInfo.getByName(name);
       TypeCoercer<Object, ?> coercer = (TypeCoercer<Object, ?>) info.getTypeCoercer();
 
@@ -415,17 +413,21 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
                         UnconfiguredBuildTarget unconfiguredBuildTarget =
                             target.getUnconfiguredBuildTarget();
                         finalBuildTargetBuilder.ifPresent(b -> b.add(unconfiguredBuildTarget));
-                        attributeResult.add(
-                            UnconfiguredQueryBuildTarget.of(unconfiguredBuildTarget));
+                        targetsByParamBuilder.put(
+                            name, UnconfiguredQueryBuildTarget.of(unconfiguredBuildTarget));
                       });
               collectQueryTargetsFromCoercerTraversal(
-                  attributeResult, finalBuildTargetBuilder, fileBuilder, coercer, selectorValue);
+                  targetsByParamBuilder,
+                  finalBuildTargetBuilder,
+                  fileBuilder,
+                  name,
+                  coercer,
+                  selectorValue);
             });
       } else {
         collectQueryTargetsFromCoercerTraversal(
-            attributeResult, buildTargetBuilder, fileBuilder, coercer, value);
+            targetsByParamBuilder, buildTargetBuilder, fileBuilder, name, coercer, value);
       }
-      targetsByParamBuilder.put(name, attributeResult.build());
     }
     return ImmutableNodeAttributeTraversalResult.ofImpl(
         targetsByParamBuilder.build(),
@@ -445,9 +447,10 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
   }
 
   private void collectQueryTargetsFromCoercerTraversal(
-      ImmutableSet.Builder<UnconfiguredQueryTarget> attributeResultBuilder,
+      ImmutableSetMultimap.Builder<ParamName, UnconfiguredQueryTarget> targetsByParamBuilder,
       Optional<ImmutableSet.Builder<UnconfiguredBuildTarget>> buildTargetResultBuilder,
       Optional<ImmutableSet.Builder<ForwardRelativePath>> inputResultBuilder,
+      ParamName name,
       TypeCoercer<Object, ?> coercer,
       Object value) {
     coercer.traverseUnconfigured(
@@ -457,12 +460,13 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
           if (object instanceof UnconfiguredBuildTarget) {
             UnconfiguredBuildTarget objectAsBuildTarget = (UnconfiguredBuildTarget) object;
             buildTargetResultBuilder.ifPresent(b -> b.add(objectAsBuildTarget));
-            attributeResultBuilder.add(UnconfiguredQueryBuildTarget.of(objectAsBuildTarget));
+            targetsByParamBuilder.put(name, UnconfiguredQueryBuildTarget.of(objectAsBuildTarget));
           } else if (object instanceof UnflavoredBuildTarget) {
             UnconfiguredBuildTarget unconfiguredBuildTarget =
                 UnconfiguredBuildTarget.of((UnflavoredBuildTarget) object);
             buildTargetResultBuilder.ifPresent(b -> b.add(unconfiguredBuildTarget));
-            attributeResultBuilder.add(UnconfiguredQueryBuildTarget.of(unconfiguredBuildTarget));
+            targetsByParamBuilder.put(
+                name, UnconfiguredQueryBuildTarget.of(unconfiguredBuildTarget));
           } else if (object instanceof UnconfiguredSourcePath) {
             ((UnconfiguredSourcePath) object)
                 .match(
@@ -475,7 +479,7 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
                         PathSourcePath psp = PathSourcePath.of(pathFilesystem, path.getPath());
 
                         inputResultBuilder.ifPresent(b -> b.add(path.getPath()));
-                        attributeResultBuilder.add(QueryFileTarget.of(psp));
+                        targetsByParamBuilder.put(name, QueryFileTarget.of(psp));
                         return Unit.UNIT;
                       }
 
@@ -485,7 +489,7 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
                         UnconfiguredBuildTarget target = targetWithOutputs.getBuildTarget();
 
                         buildTargetResultBuilder.ifPresent(b -> b.add(target));
-                        attributeResultBuilder.add(UnconfiguredQueryBuildTarget.of(target));
+                        targetsByParamBuilder.put(name, UnconfiguredQueryBuildTarget.of(target));
                         return Unit.UNIT;
                       }
                     });
@@ -511,8 +515,7 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
   /** Value object representing the data we collected when traversing the attributes of the node. */
   @BuckStyleValue
   public abstract static class NodeAttributeTraversalResult {
-    public abstract ImmutableMap<ParamName, ImmutableSet<UnconfiguredQueryTarget>>
-        getTargetsByParam();
+    public abstract ImmutableSetMultimap<ParamName, UnconfiguredQueryTarget> getTargetsByParam();
 
     // The categorization of these four elements is taken straight from TargetNode, which organizes
     // it's build targets a similar way. The criteria for what fits each of these elements is

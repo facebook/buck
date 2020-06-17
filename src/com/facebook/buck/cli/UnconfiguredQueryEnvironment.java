@@ -309,10 +309,7 @@ public class UnconfiguredQueryEnvironment
   public ImmutableSet<UnconfiguredQueryTarget> getTargetsInAttribute(
       UnconfiguredQueryTarget target, ParamName attribute) throws QueryException {
     UnconfiguredTargetNode node = getNode((UnconfiguredQueryBuildTarget) target);
-    return targetGraph
-        .getTraversalResult(node)
-        .getTargetsByParam()
-        .getOrDefault(attribute, ImmutableSet.of());
+    return targetGraph.getTraversalResult(node).getTargetsByParam().get(attribute);
   }
 
   @Override
