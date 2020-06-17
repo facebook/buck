@@ -126,7 +126,7 @@ public class UnconfiguredQueryEnvironment
             params.getClientWorkingDir(),
             params.getBuckConfig());
     UnconfiguredTargetGraph targetGraph =
-        new UnconfiguredTargetGraph(
+        UnconfiguredTargetGraph.from(
             parser,
             perBuildState,
             rootCell,

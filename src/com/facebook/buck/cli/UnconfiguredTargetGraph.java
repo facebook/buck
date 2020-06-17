@@ -22,19 +22,12 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.path.ForwardRelativePath;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
-import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
-import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
 import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
@@ -53,17 +46,13 @@ import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.UnconfiguredQueryBuildTarget;
 import com.facebook.buck.query.UnconfiguredQueryTarget;
 import com.facebook.buck.rules.coercer.ParamInfo;
-import com.facebook.buck.rules.coercer.ParamsInfo;
-import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.util.MoreExceptions;
-import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Functions;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -99,8 +88,7 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
   private final Parser parser;
   private final PerBuildState perBuildState;
   private final Cell rootCell;
-  private final KnownRuleTypesProvider knownRuleTypesProvider;
-  private final TypeCoercerFactory typeCoercerFactory;
+  private final UnconfiguredTargetNodeAttributeTraverser attributeTraverser;
 
   // Query execution is single threaded, however the buildTransitiveClosure implementation
   // traverses the graph in parallel.
@@ -115,13 +103,24 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
       Parser parser,
       PerBuildState perBuildState,
       Cell rootCell,
-      KnownRuleTypesProvider knownRuleTypesProvider,
-      TypeCoercerFactory typeCoercerFactory) {
+      UnconfiguredTargetNodeAttributeTraverser attributeTraverser) {
     this.parser = parser;
     this.perBuildState = perBuildState;
     this.rootCell = rootCell;
-    this.knownRuleTypesProvider = knownRuleTypesProvider;
-    this.typeCoercerFactory = typeCoercerFactory;
+    this.attributeTraverser = attributeTraverser;
+  }
+
+  /** Constructor */
+  public static UnconfiguredTargetGraph from(
+      Parser parser,
+      PerBuildState perBuildState,
+      Cell rootCell,
+      KnownRuleTypesProvider knownRuleTypesProvider,
+      TypeCoercerFactory typeCoercerFactory) {
+    UnconfiguredTargetNodeAttributeTraverser attributeTraverser =
+        new UnconfiguredTargetNodeAttributeTraverser(
+            rootCell, knownRuleTypesProvider, typeCoercerFactory);
+    return new UnconfiguredTargetGraph(parser, perBuildState, rootCell, attributeTraverser);
   }
 
   @Override
@@ -275,29 +274,9 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
    * Traverses the object hiearchy for {@code attribute} on {@code node}, returning a set of all
    * objects where {@code predicate} returns true.
    */
-  @SuppressWarnings("unchecked")
   public ImmutableSet<Object> filterAttributeContents(
       UnconfiguredTargetNode node, ParamName attribute, Predicate<Object> predicate) {
-    Object value = node.getAttributes().get(attribute);
-    if (value == null) {
-      // Ignore if the field does not exist on this target.
-      return ImmutableSet.of();
-    }
-
-    ParamInfo<?> info =
-        lookupParamsInfoForRule(node.getBuildTarget(), node.getRuleType()).getByName(attribute);
-    Preconditions.checkState(
-        info != null,
-        "Attributes not supported by the rule shouldn't have a value: %s + %s",
-        node.getRuleType(),
-        attribute);
-
-    TypeCoercer<Object, ?> coercer = (TypeCoercer<Object, ?>) info.getTypeCoercer();
-    ImmutableSet.Builder<Object> result = ImmutableSet.builder();
-
-    SelectorList.traverseSelectorListValuesOrValue(
-        value, v -> collectMatchingObjectsFromCoercerTraversal(result, coercer, predicate, v));
-    return result.build();
+    return attributeTraverser.traverseAndCollectMatchingObjects(node, attribute, predicate);
   }
 
   public NodeAttributeTraversalResult getTraversalResult(UnconfiguredTargetNode node) {
@@ -363,7 +342,6 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
         });
   }
 
-  @SuppressWarnings("unchecked")
   private NodeAttributeTraversalResult computeTraversalResult(UnconfiguredTargetNode node) {
     ImmutableSetMultimap.Builder<ParamName, UnconfiguredQueryTarget> targetsByParamBuilder =
         ImmutableSetMultimap.builder();
@@ -373,62 +351,34 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
         ImmutableSet.builder();
     ImmutableSet.Builder<ForwardRelativePath> inputsBuilder = ImmutableSet.builder();
 
-    TwoArraysImmutableHashMap<ParamName, Object> attributes = node.getAttributes();
+    attributeTraverser.traverseAttributes(
+        node,
+        (info) -> {
+          ParamName name = info.getName();
+          Optional<ImmutableSet.Builder<UnconfiguredBuildTarget>> buildTargetBuilder =
+              builderForParamCategory(
+                  info, declaredDepsBuilder, extraDepsBuilder, targetGraphOnlyDepsBuilder);
 
-    ParamsInfo paramsInfo = lookupParamsInfoForRule(node.getBuildTarget(), node.getRuleType());
-    for (ParamName name : attributes.keySet()) {
-      ParamInfo<?> info = paramsInfo.getByName(name);
-      TypeCoercer<Object, ?> coercer = (TypeCoercer<Object, ?>) info.getTypeCoercer();
+          return (target) -> {
+            buildTargetBuilder.ifPresent(b -> b.add(target));
+            targetsByParamBuilder.put(name, UnconfiguredQueryBuildTarget.of(target));
+          };
+        },
+        (info) -> {
+          ParamName name = info.getName();
+          Optional<ImmutableSet.Builder<ForwardRelativePath>> fileBuilder =
+              info.isInput() ? Optional.of(inputsBuilder) : Optional.empty();
 
-      // The logic around "which builder should we use for the values in this attribute" is
-      // mirroring
-      // what is done in TargetNodeFactory for configured targets.
-      Optional<ImmutableSet.Builder<UnconfiguredBuildTarget>> buildTargetBuilder = Optional.empty();
-      if (CommonParamNames.DEPS.equals(name)) {
-        buildTargetBuilder = Optional.of(declaredDepsBuilder);
-      } else if (info.isDep() && info.isInput()) {
-        buildTargetBuilder =
-            Optional.of(
-                info.isTargetGraphOnlyDep() ? targetGraphOnlyDepsBuilder : extraDepsBuilder);
-      }
-      // This is silly but Java doesn't want us to use a variable that gets modified post assignment
-      // in a lambda, so we just make a new identical variable pointing to the same object.
-      Optional<ImmutableSet.Builder<UnconfiguredBuildTarget>> finalBuildTargetBuilder =
-          buildTargetBuilder;
+          return (path) -> {
+            // We might not actually want to use `SourcePath` to represent our paths...
+            ProjectFilesystem pathFilesystem = rootCell.getCell(path.getCellName()).getFilesystem();
+            PathSourcePath psp = PathSourcePath.of(pathFilesystem, path.getPath());
 
-      Optional<ImmutableSet.Builder<ForwardRelativePath>> fileBuilder =
-          info.isInput() ? Optional.of(inputsBuilder) : Optional.empty();
+            fileBuilder.ifPresent(b -> b.add(path.getPath()));
+            targetsByParamBuilder.put(name, QueryFileTarget.of(psp));
+          };
+        });
 
-      Object value = attributes.get(name);
-      // `selects` play a bit of a funny role, because our `ParamsInfo` _says_ that an attribute
-      // should be of type X, but instead it's a `SelectorList<X>`. Handle this case explicitly.
-      if (value instanceof SelectorList) {
-        SelectorList<Object> valueAsSelectorList = (SelectorList<Object>) value;
-        valueAsSelectorList.traverseSelectors(
-            (selectorKey, selectorValue) -> {
-              selectorKey
-                  .getBuildTarget()
-                  .ifPresent(
-                      target -> {
-                        UnconfiguredBuildTarget unconfiguredBuildTarget =
-                            target.getUnconfiguredBuildTarget();
-                        finalBuildTargetBuilder.ifPresent(b -> b.add(unconfiguredBuildTarget));
-                        targetsByParamBuilder.put(
-                            name, UnconfiguredQueryBuildTarget.of(unconfiguredBuildTarget));
-                      });
-              collectQueryTargetsFromCoercerTraversal(
-                  targetsByParamBuilder,
-                  finalBuildTargetBuilder,
-                  fileBuilder,
-                  name,
-                  coercer,
-                  selectorValue);
-            });
-      } else {
-        collectQueryTargetsFromCoercerTraversal(
-            targetsByParamBuilder, buildTargetBuilder, fileBuilder, name, coercer, value);
-      }
-    }
     return ImmutableNodeAttributeTraversalResult.ofImpl(
         targetsByParamBuilder.build(),
         declaredDepsBuilder.build(),
@@ -437,79 +387,24 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
         inputsBuilder.build());
   }
 
-  private ParamsInfo lookupParamsInfoForRule(UnflavoredBuildTarget buildTarget, RuleType ruleType) {
-    Cell cell = rootCell.getCell(buildTarget.getCell());
-    KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
-    RuleDescriptor<?> descriptor = knownRuleTypes.getDescriptorByName(ruleType.getName());
-    return typeCoercerFactory
-        .getNativeConstructorArgDescriptor(descriptor.getConstructorArgType())
-        .getParamsInfo();
-  }
-
-  private void collectQueryTargetsFromCoercerTraversal(
-      ImmutableSetMultimap.Builder<ParamName, UnconfiguredQueryTarget> targetsByParamBuilder,
-      Optional<ImmutableSet.Builder<UnconfiguredBuildTarget>> buildTargetResultBuilder,
-      Optional<ImmutableSet.Builder<ForwardRelativePath>> inputResultBuilder,
-      ParamName name,
-      TypeCoercer<Object, ?> coercer,
-      Object value) {
-    coercer.traverseUnconfigured(
-        rootCell.getCellNameResolver(),
-        value,
-        object -> {
-          if (object instanceof UnconfiguredBuildTarget) {
-            UnconfiguredBuildTarget objectAsBuildTarget = (UnconfiguredBuildTarget) object;
-            buildTargetResultBuilder.ifPresent(b -> b.add(objectAsBuildTarget));
-            targetsByParamBuilder.put(name, UnconfiguredQueryBuildTarget.of(objectAsBuildTarget));
-          } else if (object instanceof UnflavoredBuildTarget) {
-            UnconfiguredBuildTarget unconfiguredBuildTarget =
-                UnconfiguredBuildTarget.of((UnflavoredBuildTarget) object);
-            buildTargetResultBuilder.ifPresent(b -> b.add(unconfiguredBuildTarget));
-            targetsByParamBuilder.put(
-                name, UnconfiguredQueryBuildTarget.of(unconfiguredBuildTarget));
-          } else if (object instanceof UnconfiguredSourcePath) {
-            ((UnconfiguredSourcePath) object)
-                .match(
-                    new UnconfiguredSourcePath.Matcher<Unit>() {
-                      @Override
-                      public Unit path(CellRelativePath path) {
-                        // We might not actually want to use `SourcePath` to represent our paths...
-                        ProjectFilesystem pathFilesystem =
-                            rootCell.getCell(path.getCellName()).getFilesystem();
-                        PathSourcePath psp = PathSourcePath.of(pathFilesystem, path.getPath());
-
-                        inputResultBuilder.ifPresent(b -> b.add(path.getPath()));
-                        targetsByParamBuilder.put(name, QueryFileTarget.of(psp));
-                        return Unit.UNIT;
-                      }
-
-                      @Override
-                      public Unit buildTarget(
-                          UnconfiguredBuildTargetWithOutputs targetWithOutputs) {
-                        UnconfiguredBuildTarget target = targetWithOutputs.getBuildTarget();
-
-                        buildTargetResultBuilder.ifPresent(b -> b.add(target));
-                        targetsByParamBuilder.put(name, UnconfiguredQueryBuildTarget.of(target));
-                        return Unit.UNIT;
-                      }
-                    });
-          }
-        });
-  }
-
-  private void collectMatchingObjectsFromCoercerTraversal(
-      ImmutableSet.Builder<Object> result,
-      TypeCoercer<Object, ?> coercer,
-      Predicate<Object> predicate,
-      Object value) {
-    coercer.traverseUnconfigured(
-        rootCell.getCellNameResolver(),
-        value,
-        object -> {
-          if (predicate.test(object)) {
-            result.add(object);
-          }
-        });
+  private Optional<ImmutableSet.Builder<UnconfiguredBuildTarget>> builderForParamCategory(
+      ParamInfo<?> info,
+      ImmutableSet.Builder<UnconfiguredBuildTarget> declaredDepsBuilder,
+      ImmutableSet.Builder<UnconfiguredBuildTarget> extraDepsBuilder,
+      ImmutableSet.Builder<UnconfiguredBuildTarget> targetGraphOnlyDepsBuilder) {
+    // This logic around "which builder should we use for the values in this attribute" is
+    //   mirroring what is done in TargetNodeFactory for configured targets.
+    if (CommonParamNames.DEPS.equals(info.getName())) {
+      return Optional.of(declaredDepsBuilder);
+    } else if (info.isDep() && info.isInput()) {
+      if (info.isTargetGraphOnlyDep()) {
+        return Optional.of(targetGraphOnlyDepsBuilder);
+      } else {
+        return Optional.of(extraDepsBuilder);
+      }
+    } else {
+      return Optional.empty();
+    }
   }
 
   /** Value object representing the data we collected when traversing the attributes of the node. */
