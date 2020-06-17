@@ -40,6 +40,6 @@ public class RustDescriptionsProvider implements DescriptionProvider {
         new RustBinaryDescription(toolchainProvider, rustBuckConfig, downwardApiConfig),
         new RustLibraryDescription(toolchainProvider, rustBuckConfig, downwardApiConfig),
         new RustTestDescription(toolchainProvider, rustBuckConfig, downwardApiConfig),
-        new PrebuiltRustLibraryDescription());
+        new PrebuiltRustLibraryDescription(rustBuckConfig));
   }
 }

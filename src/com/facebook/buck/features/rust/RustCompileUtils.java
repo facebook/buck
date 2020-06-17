@@ -245,7 +245,13 @@ public class RustCompileUtils {
         .forEach(
             rule -> {
               addDependencyArgs(
-                  rule, rustPlatform, crateType, depArgs, revAliasMap, rustDepType, true);
+                  rule,
+                  rustPlatform,
+                  crateType,
+                  depArgs,
+                  revAliasMap,
+                  rustDepType,
+                  Optional.of(target));
             });
 
     // Second pass - indirect deps
@@ -261,7 +267,7 @@ public class RustCompileUtils {
           deps = ((RustLinkable) rule).getRustLinakbleDeps(rustPlatform);
 
           addDependencyArgs(
-              rule, rustPlatform, crateType, depArgs, revAliasMap, rustDepType, false);
+              rule, rustPlatform, crateType, depArgs, revAliasMap, rustDepType, Optional.empty());
         }
         return deps;
       }
@@ -330,7 +336,7 @@ public class RustCompileUtils {
       ImmutableList.Builder<Arg> depArgs,
       Multimap<BuildTarget, String> revAliasMap,
       LinkableDepType rustDepType,
-      boolean direct) {
+      Optional<BuildTarget> directDependent) {
     Collection<String> coll = revAliasMap.get(rule.getBuildTarget());
     Stream<Optional<String>> aliases;
     if (coll.isEmpty()) {
@@ -342,7 +348,8 @@ public class RustCompileUtils {
         .map(
             alias ->
                 ((RustLinkable) rule)
-                    .getLinkerArg(direct, crateType.isCheck(), rustPlatform, rustDepType, alias))
+                    .getLinkerArg(
+                        directDependent, crateType.isCheck(), rustPlatform, rustDepType, alias))
         .forEach(depArgs::add);
   }
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -26,24 +27,50 @@ import com.facebook.buck.rules.args.HasSourcePath;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-/** Generate linker command line for Rust library when used as a dependency. */
+/**
+ * Generate linker command line for Rust library when used as a dependency.
+ *
+ * <p>Rust distinguished between direct and indirect (transitive) dependencies. Direct dependencies
+ * have to be specified with the `--extern` option, which also provides the name that crate can be
+ * referenced by. Indirect dependencies are not explicitly enumerated; instead the `-Ldependency`
+ * option adds a search directory in which dependencies can be found (in practice with Buck builds,
+ * there's one directory per dependency).
+ *
+ * <p>We also keep the target name we're adding the dependency for, and the target a dependent crate
+ * comes from. This is so we can pass an `--extern-location` option to rustc which allows compiler
+ * diagnostics for unused dependencies to directly reference the dependency which needs to be
+ * removed.
+ */
 @BuckStyleValue
 public abstract class RustLibraryArg implements Arg, HasSourcePath {
+  /// Target the dependency is for
+  @AddToRuleKey
+  public abstract BuildTarget getTarget();
+
+  /// Local crate name of the dependency
   @AddToRuleKey
   public abstract String getCrate();
 
+  /// Path to a dependency's .rlib (or whatever) file
   @AddToRuleKey
   public abstract SourcePath getRlib();
 
+  /// Present if this is a direct dependency, containing the
+  /// target by which the dependency is specified.
   @AddToRuleKey
-  public abstract boolean getDirect();
+  public abstract Optional<BuildTarget> getDirectDependent();
 
+  /// True if the `extern_locations` option is set.
   @AddToRuleKey
-  public abstract Optional<String> getAlias();
+  public abstract boolean getExternLoc();
 
   public static RustLibraryArg of(
-      String crate, SourcePath rlib, boolean direct, Optional<String> alias) {
-    return ImmutableRustLibraryArg.ofImpl(crate, rlib, direct, alias);
+      BuildTarget target,
+      String crate,
+      SourcePath rlib,
+      Optional<BuildTarget> directDependent,
+      boolean extern_loc) {
+    return ImmutableRustLibraryArg.ofImpl(target, crate, rlib, directDependent, extern_loc);
   }
 
   @Override
@@ -58,8 +85,19 @@ public abstract class RustLibraryArg implements Arg, HasSourcePath {
     AbsPath path = pathResolver.getAbsolutePath(getRlib());
     // NOTE: each of these logical args must be put on the command line as a single parameter
     // (otherwise dedup might just remove one piece of it)
-    if (getDirect()) {
-      consumer.accept(String.format("--extern=%s=%s", getAlias().orElse(getCrate()), path));
+    Optional<BuildTarget> directDep = getDirectDependent();
+    if (directDep.isPresent()) {
+      String crate = getCrate();
+      consumer.accept(String.format("--extern=%s=%s", crate, path));
+      if (getExternLoc()) {
+        // assume targets never need json string quoting
+        consumer.accept(
+            String.format(
+                "--extern-location=%s=json:{\"target\":\"%s\",\"dep\":\"%s\"}",
+                crate,
+                directDep.get().withoutFlavors().getFullyQualifiedName(),
+                getTarget().getFullyQualifiedName()));
+      }
     } else {
       consumer.accept(String.format("-Ldependency=%s", path.getParent()));
     }

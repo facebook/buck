@@ -38,6 +38,11 @@ import org.immutables.value.Value;
 public class PrebuiltRustLibraryDescription
     implements DescriptionWithTargetGraph<PrebuiltRustLibraryDescriptionArg>,
         VersionPropagator<PrebuiltRustLibraryDescriptionArg> {
+  private final RustBuckConfig rustBuckConfig;
+
+  public PrebuiltRustLibraryDescription(RustBuckConfig rustBuckConfig) {
+    this.rustBuckConfig = rustBuckConfig;
+  }
 
   @Override
   public Class<PrebuiltRustLibraryDescriptionArg> getConstructorArgType() {
@@ -58,12 +63,17 @@ public class PrebuiltRustLibraryDescription
         buildTarget, context.getProjectFilesystem(), params, args.getRlib()) {
       @Override
       public com.facebook.buck.rules.args.Arg getLinkerArg(
-          boolean direct,
+          Optional<BuildTarget> directDependent,
           boolean isCheck,
           RustPlatform rustPlatform,
           Linker.LinkableDepType depType,
           Optional<String> alias) {
-        return RustLibraryArg.of(args.getCrate(), args.getRlib(), direct, alias);
+        return RustLibraryArg.of(
+            buildTarget,
+            alias.orElse(args.getCrate()),
+            args.getRlib(),
+            directDependent,
+            rustBuckConfig.getExternLocations());
       }
 
       @Override

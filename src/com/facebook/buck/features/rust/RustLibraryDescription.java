@@ -244,7 +244,7 @@ public class RustLibraryDescription
       // RustLinkable
       @Override
       public Arg getLinkerArg(
-          boolean direct,
+          Optional<BuildTarget> directDependent,
           boolean isCheck,
           RustPlatform rustPlatform,
           LinkableDepType depType,
@@ -315,7 +315,12 @@ public class RustLibraryDescription
                 allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
                 args.getNamedDeps());
         SourcePath rlib = rule.getSourcePathToOutput();
-        return RustLibraryArg.of(crate, rlib, direct, alias);
+        return RustLibraryArg.of(
+            buildTarget,
+            alias.orElse(crate),
+            rlib,
+            directDependent,
+            rustBuckConfig.getExternLocations());
       }
 
       @Override
