@@ -90,7 +90,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @AddToRuleKey private final ImmutableMap<String, String> kaptApOptions;
   @AddToRuleKey private final Optional<String> jvmTarget;
   @AddToRuleKey private final ExtraClasspathProvider extraClassPath;
-  @AddToRuleKey private final boolean kaptCorrectErrorTypes;
   @AddToRuleKey private final boolean kaptExplicitlySpecifyAnnotationProcessors;
   @AddToRuleKey private final boolean kaptUseAnnotationProcessorParams;
   @AddToRuleKey private final Javac javac;
@@ -134,7 +133,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       AnnotationProcessingTool annotationProcessingTool,
       ImmutableMap<String, String> kaptApOptions,
       Optional<String> jvmTarget,
-      boolean kaptCorrectErrorTypes,
       boolean kaptExplicitlySpecifyAnnotationProcessors,
       boolean kaptUseAnnotationProcessorParams,
       ExtraClasspathProvider extraClassPath,
@@ -150,7 +148,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     this.annotationProcessingTool = annotationProcessingTool;
     this.kaptApOptions = kaptApOptions;
     this.jvmTarget = jvmTarget;
-    this.kaptCorrectErrorTypes = kaptCorrectErrorTypes;
     this.kaptExplicitlySpecifyAnnotationProcessors = kaptExplicitlySpecifyAnnotationProcessors;
     this.kaptUseAnnotationProcessorParams = kaptUseAnnotationProcessorParams;
     this.extraClassPath = extraClassPath;
@@ -281,7 +278,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                             projectFilesystem.resolve(kaptGeneratedOutput).toString()))
                 .add(JAVAC_ARG + encodeOptions(Collections.emptyMap()))
                 .add(LIGHT_ANALYSIS + "true") // TODO: Provide value as argument
-                .add(CORRECT_ERROR_TYPES + kaptCorrectErrorTypes)
+                .add(CORRECT_ERROR_TYPES + "true")
                 .build();
 
         annotationProcessingOptionsBuilder

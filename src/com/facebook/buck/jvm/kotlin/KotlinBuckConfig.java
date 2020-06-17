@@ -87,10 +87,6 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
         .orElse(AbiGenerationMode.CLASS);
   }
 
-  public boolean hasKaptCorrectErrorTypes() {
-    return delegate.getBooleanValue(SECTION, "kapt_correct_error_types", false);
-  }
-
   public boolean hasKaptExplicitlySpecifiedAnnotationProcessors() {
     return delegate.getBooleanValue(
         SECTION, "kapt_explicitly_specified_annotation_processors", false);
