@@ -47,4 +47,7 @@ public interface HasClasspathEntries {
    *     exported deps.
    */
   ImmutableSet<SourcePath> getOutputClasspaths();
+
+  /** @return Classpath entries that are given to the classpath in order to compile this rule. */
+  ImmutableSet<SourcePath> getCompileTimeClasspathSourcePaths();
 }

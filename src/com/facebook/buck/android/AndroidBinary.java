@@ -408,4 +408,9 @@ public class AndroidBinary extends AbstractBuildRule
   public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
     return ImmutableSortedSet.copyOf(getTransitiveClasspathDeps());
   }
+
+  @Override
+  public ImmutableSet<SourcePath> getCompileTimeClasspathSourcePaths() {
+    return enhancementResult.getClasspathEntriesToDex();
+  }
 }

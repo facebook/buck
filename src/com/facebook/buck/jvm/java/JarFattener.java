@@ -300,4 +300,9 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableSet<SourcePath> getOutputClasspaths() {
     return innerJarRule.getOutputClasspaths();
   }
+
+  @Override
+  public ImmutableSet<SourcePath> getCompileTimeClasspathSourcePaths() {
+    return innerJarRule.getCompileTimeClasspathSourcePaths();
+  }
 }

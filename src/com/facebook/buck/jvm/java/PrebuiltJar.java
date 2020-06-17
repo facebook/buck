@@ -230,6 +230,11 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public ImmutableSet<SourcePath> getCompileTimeClasspathSourcePaths() {
+    return ImmutableSet.of();
+  }
+
+  @Override
   public ImmutableSortedSet<SourcePath> getJavaSrcs() {
     return ImmutableSortedSet.of();
   }

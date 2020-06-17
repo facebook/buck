@@ -512,6 +512,11 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public ImmutableSet<SourcePath> getCompileTimeClasspathSourcePaths() {
+    return compiledTestsLibrary.getCompileTimeClasspathSourcePaths();
+  }
+
+  @Override
   public SortedSet<BuildRule> getExportedDeps() {
     return ImmutableSortedSet.of(compiledTestsLibrary);
   }

@@ -217,6 +217,11 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return ImmutableSet.of();
   }
 
+  @Override
+  public ImmutableSet<SourcePath> getCompileTimeClasspathSourcePaths() {
+    return ImmutableSet.of();
+  }
+
   private RelPath getOutputDirectory() {
     return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s").getParent();
   }

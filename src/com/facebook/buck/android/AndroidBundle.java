@@ -342,4 +342,9 @@ public class AndroidBundle extends AbstractBuildRule
         .map(BuildRule::getBuildTarget)
         .concat(HasInstallableApkSupport.getRuntimeDepsForInstallableApk(this, buildRuleResolver));
   }
+
+  @Override
+  public ImmutableSet<SourcePath> getCompileTimeClasspathSourcePaths() {
+    return enhancementResult.getClasspathEntriesToDex();
+  }
 }

@@ -215,4 +215,9 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // The aar has no exported deps or classpath contributions of its own
     return ImmutableSet.of();
   }
+
+  @Override
+  public ImmutableSortedSet<SourcePath> getCompileTimeClasspathSourcePaths() {
+    return classpathsToIncludeInJar;
+  }
 }

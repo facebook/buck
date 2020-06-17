@@ -100,6 +100,11 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
+  public ImmutableSet<SourcePath> getCompileTimeClasspathSourcePaths() {
+    return ImmutableSet.of();
+  }
+
+  @Override
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(),

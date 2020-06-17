@@ -147,6 +147,11 @@ public final class ApkGenrule extends BaseGenrule<ApkGenrule.Buildable>
     return ImmutableSet.of();
   }
 
+  @Override
+  public ImmutableSet<SourcePath> getCompileTimeClasspathSourcePaths() {
+    return ImmutableSet.of();
+  }
+
   static class Buildable extends GenruleBuildable {
     @AddToRuleKey private final SourcePath apkPath;
 
