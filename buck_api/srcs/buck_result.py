@@ -19,20 +19,23 @@ from asyncio import subprocess
 class BuckResult:
     """ Represents a Buck process that has finished running """
 
-    def __init__(self, process: subprocess.Process, encoding="utf-8") -> None:
+    def __init__(
+        self, process: subprocess.Process, stdout, stderr, encoding="utf-8"
+    ) -> None:
         self.process = process
         self.encoding = encoding
+        self.stdout = stdout
+        self.stderr = stderr
 
-    async def get_exit_code(self) -> int:
+    def get_exit_code(self) -> int:
         """ Returns the exit code of a Buck Result when it exits """
-        await self.process.communicate()
         return self.process.returncode
 
-    async def get_stderr(self) -> str:
+    def get_stderr(self) -> str:
         """ Returns the standard error of the Buck Result instance """
-        return str((await self.process.communicate())[1], self.encoding)
+        return str(self.stderr, self.encoding)
 
-    async def get_stdout(self) -> str:
+    def get_stdout(self) -> str:
         """ Returns the standard error that is redirected into standard output
             of the Buck Result instance """
-        return str((await self.process.communicate())[0], self.encoding)
+        return str(self.stdout, self.encoding)

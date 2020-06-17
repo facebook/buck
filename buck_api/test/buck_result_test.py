@@ -24,8 +24,9 @@ async def test_get_out():
     process = await subprocess.create_subprocess_shell(
         "echo hello", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    br = BuckResult(process)
-    assert (await br.get_stdout()) == "hello\n"
+    stdout, stderr = await process.communicate()
+    br: BuckResult = BuckResult(process, stdout, stderr)
+    assert br.get_stdout() == "hello\n"
 
 
 @pytest.mark.asyncio
@@ -33,14 +34,42 @@ async def test_get_err():
     process = await subprocess.create_subprocess_shell(
         '>&2 echo "hello"', stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    br = BuckResult(process)
-    assert (await br.get_stderr()) == "hello\n"
+    stdout, stderr = await process.communicate()
+    br: BuckResult = BuckResult(process, stdout, stderr)
+    assert br.get_stderr() == "hello\n"
 
 
 @pytest.mark.asyncio
-async def test_get_err():
+async def test_get_exit_code():
     process = await subprocess.create_subprocess_shell(
         "exit 3", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    br = BuckResult(process)
-    assert (await br.get_exit_code()) == 3
+    stdout, stderr = await process.communicate()
+    br: BuckResult = BuckResult(process, stdout, stderr)
+    assert br.get_exit_code() == 3
+
+
+@pytest.mark.asyncio
+async def test_get_out_stored():
+    process = await subprocess.create_subprocess_shell(
+        "echo hello", stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    stdout, stderr = await process.communicate()
+    br: BuckResult = BuckResult(process, stdout, stderr)
+    assert br.get_stdout() == "hello\n"
+    assert br.get_stdout() == "hello\n"
+    assert br.get_stdout() == "hello\n"
+    assert br.get_stdout() == "hello\n"
+
+
+@pytest.mark.asyncio
+async def test_get_err_stored():
+    process = await subprocess.create_subprocess_shell(
+        '>&2 echo "hello"', stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    stdout, stderr = await process.communicate()
+    br: BuckResult = BuckResult(process, stdout, stderr)
+    assert br.get_stderr() == "hello\n"
+    assert br.get_stderr() == "hello\n"
+    assert br.get_stderr() == "hello\n"
+    assert br.get_stderr() == "hello\n"
