@@ -77,7 +77,8 @@ public abstract class ClasspathTraversal {
         return new FileTraversalAdapter(path);
       }
     } else {
-      throw new IllegalArgumentException("Unsupported classpath traversal input: " + path);
+      throw new IllegalArgumentException(
+          "Unsupported classpath traversal input: " + path + ". Root: " + rootPath);
     }
   }
 

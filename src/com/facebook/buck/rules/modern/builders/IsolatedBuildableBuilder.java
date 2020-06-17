@@ -103,7 +103,7 @@ import org.pf4j.PluginWrapper;
 public abstract class IsolatedBuildableBuilder {
   private static final Logger LOG = Logger.get(IsolatedBuildableBuilder.class);
   private final BuildContext buildContext;
-  private final StepExecutionContext executionContext;
+  private final StepExecutionContext.Builder executionContextBuilder;
   private final Function<Optional<String>, ProjectFilesystem> filesystemFunction;
   private final Deserializer.ClassFinder classFinder;
   private final Path dataRoot;
@@ -208,7 +208,7 @@ public abstract class IsolatedBuildableBuilder {
 
     this.eventBus = createEventBus(console);
 
-    this.executionContext =
+    this.executionContextBuilder =
         StepExecutionContext.builder()
             .setConsole(console)
             .setBuckEventBus(eventBus)
@@ -217,9 +217,7 @@ public abstract class IsolatedBuildableBuilder {
             .setCellPathResolver(cellPathResolver)
             .setBuildCellRootPath(canonicalProjectRoot.getPath())
             .setProcessExecutor(processExecutor)
-            .setProjectFilesystemFactory(projectFilesystemFactory)
-            .setRuleCellRoot(rootPath)
-            .build();
+            .setProjectFilesystemFactory(projectFilesystemFactory);
 
     this.buildContext =
         BuildContext.of(
@@ -353,6 +351,8 @@ public abstract class IsolatedBuildableBuilder {
               new java.util.Date(),
               deserializationComplete.minusMillis(start.toEpochMilli()).toEpochMilli()));
 
+      StepExecutionContext executionContext =
+          executionContextBuilder.setRuleCellRoot(filesystem.getRootPath()).build();
       for (Step step :
           ModernBuildRule.stepsForBuildable(
               buildContext, reconstructed.buildable, filesystem, reconstructed.target)) {
