@@ -62,21 +62,21 @@ buck query "set( '//:main' '//myclass:' )"
 <p>
 In order to find the build file associated with a source file, combine the <code>owner</code>
 {sp}operator with <code>buildfile</code>.
-For example, 
+For example,
 </p>
 
 <p>
 <pre>
 {literal}
-buck query "buildfile(owner('foo/bar/main.cpp'))" 
+buck query "buildfile(owner('foo/bar/main.cpp'))"
 {/literal}
 </pre>
 </p>
 
 <p>
-first finds the targets that <em>own</em> <code>foo/bar/main.cpp</code> and 
-then returns the build files, such as <code>foo/bar/BUCK</code>, that define 
-those targets. 
+first finds the targets that <em>own</em> <code>foo/bar/main.cpp</code> and
+then returns the build files, such as <code>foo/bar/BUCK</code>, that define
+those targets.
 </p>
 {/template}
 
@@ -85,8 +85,8 @@ those targets.
 {template .example_macro_query_targets_deps}
 
 <p>
-The following example adds an <code>apk_genrule</code> to the BUCK file that is used in 
-the <a href="https://github.com/fbsamples/bucksamples">cross-platform Buck sample</a> from 
+The following example adds an <code>apk_genrule</code> to the BUCK file that is used in
+the <a href="https://github.com/fbsamples/bucksamples">cross-platform Buck sample</a> from
 GitHub. The genrule, <code>string_param</code>, writes the transitive closure of dependencies
 for the android_binary rule, <code>demo-app</code>, to the file <code>deps.txt</code>.
 </p>
@@ -121,9 +121,9 @@ apk_genrule(
 {template .example_rdeps}
 
 <p>
-The following example, returns the targets in the 
+The following example, returns the targets in the
 {sp}<a href="https://en.wikipedia.org/wiki/Transitive_closure">transitive closure</a>{sp}
-of <code>//foo:bar</code> that depend directly on <code>//example:baz</code>. 
+of <code>//foo:bar</code> that depend directly on <code>//example:baz</code>.
 </p>
 
 <p>
@@ -135,5 +135,3 @@ buck query "rdeps('//foo:bar', '//example:baz', 1)"
 </p>
 
 {/template}
-
-
