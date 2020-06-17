@@ -42,10 +42,15 @@ public abstract class PythonResolvedComponentsGroup {
   abstract ImmutableMultimap<BuildTarget, PythonComponents.Resolved> getComponents();
 
   private static HumanReadableException createDuplicateError(
-      String type, Path destination, BuildTarget sourceA, BuildTarget sourceB) {
+      String type,
+      Path destination,
+      BuildTarget sourceA,
+      Path pathA,
+      BuildTarget sourceB,
+      Path pathB) {
     return new HumanReadableException(
-        "found duplicate entries for %s %s when creating python package (%s and %s)",
-        type, destination, sourceA, sourceB);
+        "found duplicate entries for %s %s when creating python package, %s (from %s) and %s (from %s)",
+        type, destination, pathA, sourceA, pathB, sourceB);
   }
 
   // Return whether two files are identical.
@@ -109,7 +114,9 @@ public abstract class PythonResolvedComponentsGroup {
                       type,
                       destination,
                       entry.getKey(),
-                      Objects.requireNonNull(sources.get(destination)));
+                      source,
+                      Objects.requireNonNull(sources.get(destination)),
+                      existing);
                 }
               });
     }
