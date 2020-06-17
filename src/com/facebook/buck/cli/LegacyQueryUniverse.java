@@ -128,9 +128,10 @@ public class LegacyQueryUniverse implements TargetUniverse {
       return Optional.of(node);
     }
 
-    // TODO(srice): `getTargetNodeAssertCompatible` appears to return a nonnull value, but it's hard
-    // to be sure. We have little to lose by using `ofNullable`, but it may not be necessary.
-    return Optional.ofNullable(
+    // If the target doesn't exist then {@code getTargetNodeAssertCompatible}
+    // will throw a {@code BuildFileParseException}, so if we get a result
+    // then we know the target exists.
+    return Optional.of(
         parser.getTargetNodeAssertCompatible(
             parserState, buildTarget, DependencyStack.top(buildTarget)));
   }
