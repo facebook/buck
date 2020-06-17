@@ -20,6 +20,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.AbstractAction;
 import com.facebook.buck.core.rules.actions.Action;
@@ -95,6 +96,7 @@ public class TestActionExecutionRunner {
         new BuckEventBusForTests.CapturingConsoleEventListener();
     testEventBus.register(consoleEventListener);
 
+    AbsPath rootPath = projectFilesystem.getRootPath();
     StepExecutionResult executionResult =
         step.execute(
             StepExecutionContext.builder()
@@ -103,10 +105,10 @@ public class TestActionExecutionRunner {
                 .setPlatform(Platform.UNKNOWN)
                 .setEnvironment(ImmutableMap.of())
                 .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
-                .setBuildCellRootPath(projectFilesystem.getRootPath().getPath())
+                .setBuildCellRootPath(rootPath.getPath())
                 .setProcessExecutor(processExecutor)
                 .setProjectFilesystemFactory(projectFilesystemFactory)
-                .setRuleCellRoot(projectFilesystem.getRootPath())
+                .setRuleCellRoot(rootPath)
                 .build());
 
     return ImmutableExecutionDetails.ofImpl(action, executionResult);

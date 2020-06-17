@@ -39,6 +39,7 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
 
   /** Creates {@link StepExecutionContext} from {@link ExecutionContext} and {@code ruleCellRoot} */
   public static StepExecutionContext from(ExecutionContext executionContext, AbsPath ruleCellRoot) {
+
     return StepExecutionContext.builder()
         .setConsole(executionContext.getConsole())
         .setBuckEventBus(executionContext.getBuckEventBus())

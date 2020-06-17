@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.step.isolatedsteps.common;
+package com.facebook.buck.step.isolatedsteps.common.cellpathextractor;
 
 import com.facebook.buck.core.cell.CellPathExtractor;
 import com.facebook.buck.core.cell.exception.UnknownCellException;

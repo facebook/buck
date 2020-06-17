@@ -32,22 +32,21 @@ import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.modern.CellNameResolverSerialization;
-import com.facebook.buck.step.isolatedsteps.common.IsolatedCellPathExtractor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Map.Entry;
+import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
@@ -62,43 +61,32 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
   @AddToRuleKey private final boolean doUltralightChecking;
 
   @ExcludeFromRuleKey(
-      reason = "includes source paths",
       serialization = DefaultFieldSerialization.class,
       inputs = DefaultFieldInputs.class)
   private final ImmutableList<DependencyAndExportedDeps> deps;
 
   @ExcludeFromRuleKey(
-      reason = "includes source paths",
       serialization = DefaultFieldSerialization.class,
       inputs = DefaultFieldInputs.class)
   private final ImmutableList<DependencyAndExportedDeps> providedDeps;
 
   @ExcludeFromRuleKey(
-      reason = "not required",
       serialization = DefaultFieldSerialization.class,
       inputs = DefaultFieldInputs.class)
   private final ImmutableList<String> exportedDeps;
-
-  @ExcludeFromRuleKey(
-      reason = "includes source paths",
-      serialization = DefaultFieldSerialization.class,
-      inputs = DefaultFieldInputs.class)
-  private final SourcePath depFileSourcePath;
-
-  @ExcludeFromRuleKey(
-      reason = "includes source paths",
-      serialization = DefaultFieldSerialization.class,
-      inputs = DefaultFieldInputs.class)
-  private final ImmutableMap<String, SourcePath> cellsToSourcePathMapping;
 
   @ExcludeFromRuleKey(
       serialization = CellNameResolverSerialization.class,
       inputs = IgnoredFieldInputs.class)
   private final CellNameResolver cellNameResolver;
 
+  @ExcludeFromRuleKey(
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  private final ImmutableMap<String, RelPath> cellToPathMappings;
+
   public UnusedDependenciesFinderFactory(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
+      AbsPath ruleCellRoot,
       Optional<String> buildozerPath,
       boolean onlyPrintCommands,
       boolean doUltralightChecking,
@@ -114,26 +102,17 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
         getDependencies(buildRuleResolver, buildRuleResolver.getAllRules(providedDeps));
     this.exportedDeps = exportedDeps;
     this.doUltralightChecking = doUltralightChecking;
-    this.cellsToSourcePathMapping =
-        cellPathResolver.getCellPathsByRootCellExternalName().entrySet().stream()
-            .collect(
-                toImmutableMap(
-                    Entry::getKey,
-                    e -> toSourcePath(projectFilesystem, buildTarget, e.getValue().getPath())));
-
     this.cellNameResolver = cellPathResolver.getCellNameResolver();
-
-    this.depFileSourcePath =
-        toSourcePath(
-            projectFilesystem,
-            buildTarget,
-            CompilerOutputPaths.getDepFilePath(buildTarget, projectFilesystem));
+    this.cellToPathMappings = getCellToMapMappings(ruleCellRoot, cellPathResolver);
   }
 
-  private SourcePath toSourcePath(
-      ProjectFilesystem projectFilesystem, BuildTarget buildTarget, Path path) {
-    RelPath relPath = projectFilesystem.relativize(projectFilesystem.resolve(path));
-    return ExplicitBuildTargetSourcePath.of(buildTarget, relPath);
+  private ImmutableMap<String, RelPath> getCellToMapMappings(
+      AbsPath ruleCellRoot, CellPathResolver cellPathResolver) {
+    return cellPathResolver.getCellPathsByRootCellExternalName().entrySet().stream()
+        .collect(
+            toImmutableMap(
+                Map.Entry::getKey,
+                e -> ProjectFilesystemUtils.relativize(ruleCellRoot, e.getValue().getPath())));
   }
 
   private ImmutableList<DependencyAndExportedDeps> getDependencies(
@@ -231,9 +210,8 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
       SourcePathResolverAdapter resolver,
       JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction) {
 
-    AbsPath cellRootPath = filesystem.getRootPath();
-    IsolatedCellPathExtractor isolatedCellPathExtractor =
-        IsolatedCellPathExtractor.of(cellRootPath, toCellToPathMapping(resolver, filesystem));
+    Path depFilePath = CompilerOutputPaths.getDepFilePath(buildTarget, filesystem);
+
     return ImmutableUnusedDependenciesFinder.ofImpl(
         buildTarget,
         convert(deps, resolver, filesystem),
@@ -242,17 +220,10 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
         unusedDependenciesAction,
         buildozerPath,
         onlyPrintCommands,
-        isolatedCellPathExtractor,
         cellNameResolver,
-        toRelativePath(depFileSourcePath, resolver, filesystem),
+        cellToPathMappings,
+        filesystem.relativize(filesystem.resolve(depFilePath)),
         doUltralightChecking);
-  }
-
-  private ImmutableMap<String, RelPath> toCellToPathMapping(
-      SourcePathResolverAdapter resolver, ProjectFilesystem filesystem) {
-    return cellsToSourcePathMapping.entrySet().stream()
-        .collect(
-            toImmutableMap(Entry::getKey, e -> toRelativePath(e.getValue(), resolver, filesystem)));
   }
 
   private ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> convert(

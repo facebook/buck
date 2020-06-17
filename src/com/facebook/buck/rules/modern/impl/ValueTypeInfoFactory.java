@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -159,6 +160,8 @@ public class ValueTypeInfoFactory {
         return HashCodeValueTypeInfo.INSTANCE;
       } else if (OutputLabel.class.isAssignableFrom(rawClass)) {
         return OutputLabelValueTypeInfo.INSTANCE;
+      } else if (RelPath.class.isAssignableFrom(rawClass)) {
+        return RelPathValueTypeInfo.INSTANCE;
       }
     } else if (type instanceof ParameterizedType) {
       // This is a parameterized type where one of the parameters requires special handling (i.e.

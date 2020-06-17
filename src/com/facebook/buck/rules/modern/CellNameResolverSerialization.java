@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 /** This can be used for serialization/deserialization of {@link CellNameResolver}. */
 public class CellNameResolverSerialization implements CustomFieldSerialization<CellNameResolver> {
 
-  static final ValueTypeInfo<Optional<String>> TYPE_INFO =
+  private static final ValueTypeInfo<Optional<String>> TYPE_INFO =
       ValueTypeInfoFactory.forTypeToken(new TypeToken<Optional<String>>() {});
 
   @Override

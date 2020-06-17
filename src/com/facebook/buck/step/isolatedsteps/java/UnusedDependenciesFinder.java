@@ -32,10 +32,11 @@ import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
-import com.facebook.buck.step.isolatedsteps.common.IsolatedCellPathExtractor;
+import com.facebook.buck.step.isolatedsteps.common.cellpathextractor.IsolatedCellPathExtractor;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import java.util.Set;
@@ -71,9 +72,9 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
 
   public abstract boolean isOnlyPrintCommands();
 
-  public abstract IsolatedCellPathExtractor getCellPathExtractor();
-
   public abstract CellNameResolver getCellNameResolver();
+
+  public abstract ImmutableMap<String, RelPath> getCellToPathMappings();
 
   public abstract RelPath getDepFile();
 
@@ -84,8 +85,11 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
     Preconditions.checkState(getUnusedDependenciesAction() != UnusedDependenciesAction.IGNORE);
 
     AbsPath ruleCellRoot = context.getRuleCellRoot();
+    CellPathExtractor cellPathExtractor =
+        IsolatedCellPathExtractor.of(ruleCellRoot, getCellToPathMappings());
+
     ImmutableSet<AbsPath> usedJars =
-        loadUsedJarPaths(ruleCellRoot, getCellPathExtractor(), getCellNameResolver());
+        loadUsedJarPaths(ruleCellRoot, cellPathExtractor, getCellNameResolver());
     MessageHandler messageHandler = chooseMessageHandler(context);
 
     findUnusedDependenciesAndProcessMessages(ruleCellRoot, messageHandler, usedJars);

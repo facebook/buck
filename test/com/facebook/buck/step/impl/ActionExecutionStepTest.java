@@ -25,6 +25,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -202,6 +203,7 @@ public class ActionExecutionStepTest {
 
   private StepExecutionContext.Builder getCommonExecutionContentBuilder(
       ProjectFilesystem projectFilesystem, Path baseCell, BuckEventBus testEventBus) {
+    AbsPath rootPath = projectFilesystem.getRootPath();
     return StepExecutionContext.builder()
         .setConsole(Console.createNullConsole())
         .setBuckEventBus(testEventBus)
@@ -211,6 +213,6 @@ public class ActionExecutionStepTest {
         .setBuildCellRootPath(baseCell)
         .setProcessExecutor(new FakeProcessExecutor())
         .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
-        .setRuleCellRoot(projectFilesystem.getRootPath());
+        .setRuleCellRoot(rootPath);
   }
 }

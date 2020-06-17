@@ -416,8 +416,6 @@ public abstract class DefaultJavaLibraryRules {
     Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory =
         getUnusedDependenciesFinderFactory(
             unusedDependenciesAction,
-            buildTarget,
-            projectFilesystem,
             actionGraphBuilder,
             javaLibraryDeps,
             configuredCompilerFactory);
@@ -454,8 +452,6 @@ public abstract class DefaultJavaLibraryRules {
 
   private Optional<UnusedDependenciesFinderFactory> getUnusedDependenciesFinderFactory(
       UnusedDependenciesAction unusedDependenciesAction,
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       ActionGraphBuilder actionGraphBuilder,
       JavaLibraryDeps javaLibraryDeps,
       ConfiguredCompilerFactory configuredCompilerFactory) {
@@ -464,8 +460,7 @@ public abstract class DefaultJavaLibraryRules {
       JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
       return Optional.of(
           new UnusedDependenciesFinderFactory(
-              buildTarget,
-              projectFilesystem,
+              getProjectFilesystem().getRootPath(),
               javaBuckConfig.getUnusedDependenciesBuildozerString(),
               javaBuckConfig.isUnusedDependenciesOnlyPrintCommands(),
               javaBuckConfig.isUnusedDependenciesUltralightChecking(),
