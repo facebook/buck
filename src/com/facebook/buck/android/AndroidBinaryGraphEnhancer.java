@@ -977,7 +977,7 @@ public class AndroidBinaryGraphEnhancer {
           graphBuilder.computeIfAbsent(
               javaLibrary.getBuildTarget().withAppendedFlavors(getDexFlavor(dexTool)),
               preDexTarget -> {
-                ImmutableSortedSet<BuildRule> desugarDeps =
+                ImmutableSortedSet<SourcePath> desugarDeps =
                     dexTool.equals(DxStep.D8)
                             && javaLibrary.isDesugarEnabled()
                             && javaLibrary.isInterfaceMethodsDesugarEnabled()
@@ -1006,18 +1006,29 @@ public class AndroidBinaryGraphEnhancer {
    * <p>These are the deps that are required for full desugaring of default and static interface
    * methods
    */
-  private static ImmutableSortedSet<BuildRule> getDesugarDeps(
+  private ImmutableSortedSet<SourcePath> getDesugarDeps(
       JavaLibrary javaLibrary, Function<BuildTarget, BuildRule> targetToRule) {
-    ImmutableSortedSet.Builder<BuildRule> resultBuilder = ImmutableSortedSet.naturalOrder();
-    for (JavaLibrary library :
-        JavaLibraryClasspathProvider.getTransitiveClasspathDeps(javaLibrary)) {
-      if (javaLibrary != library && library.isDesugarEnabled()) {
-        library
-            .getAbiJar()
-            .ifPresent(buildTarget -> resultBuilder.add(targetToRule.apply(buildTarget)));
+    if (javaBuckConfig.useCompileTimeClasspathForD8Desugaring())
+      return ImmutableSortedSet.copyOf(javaLibrary.getCompileTimeClasspathSourcePaths());
+    else {
+      ImmutableSortedSet.Builder<SourcePath> resultBuilder = ImmutableSortedSet.naturalOrder();
+      for (JavaLibrary library :
+          JavaLibraryClasspathProvider.getTransitiveClasspathDeps(javaLibrary)) {
+        if (javaLibrary != library && library.isDesugarEnabled()) {
+          library
+              .getAbiJar()
+              .ifPresent(
+                  buildTarget -> {
+                    SourcePath sourcePath = targetToRule.apply(buildTarget).getSourcePathToOutput();
+                    if (sourcePath != null) {
+                      resultBuilder.add(sourcePath);
+                    }
+                  });
+        }
       }
+
+      return resultBuilder.build();
     }
-    return resultBuilder.build();
   }
 
   private NonPreDexedDexBuildable createNonPredexedDexBuildable(

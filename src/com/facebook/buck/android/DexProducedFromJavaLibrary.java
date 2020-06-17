@@ -99,7 +99,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
       JavaLibrary javaLibrary,
       String dexTool,
       int weightFactor,
-      ImmutableSortedSet<BuildRule> desugarDeps,
+      ImmutableSortedSet<SourcePath> desugarDeps,
       boolean withDownwardApi) {
     super(
         buildTarget,
@@ -109,7 +109,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
             projectFilesystem,
             dexTool,
             weightFactor,
-            getDesugarClassPaths(desugarDeps),
+            desugarDeps,
             androidPlatformTarget,
             javaLibrary,
             withDownwardApi));
@@ -325,17 +325,6 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
     public String toString() {
       return name().toLowerCase();
     }
-  }
-
-  private static ImmutableSortedSet<SourcePath> getDesugarClassPaths(
-      Collection<BuildRule> desugarDeps) {
-    if (desugarDeps == null) {
-      return ImmutableSortedSet.of();
-    }
-    return desugarDeps.stream()
-        .map(BuildRule::getSourcePathToOutput)
-        .filter(Objects::nonNull)
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
   }
 
   @Override

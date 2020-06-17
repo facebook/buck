@@ -258,6 +258,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getValue(SECTION, "default_cxx_platform");
   }
 
+  public boolean useCompileTimeClasspathForD8Desugaring() {
+    return delegate.getBooleanValue(SECTION, "use_compile_time_classpath_for_d8_desugaring", false);
+  }
+
   public UnusedDependenciesConfig getUnusedDependenciesAction() {
     return delegate
         .getEnum(SECTION, "unused_dependencies_action", UnusedDependenciesConfig.class)
