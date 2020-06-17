@@ -467,11 +467,9 @@ public abstract class DefaultJavaLibraryRules {
               actionGraphBuilder,
               javaLibraryDeps.getDepTargets(),
               javaLibraryDeps.getProvidedDepTargets(),
-              javaBuckConfig.isUnusedDependenciesExportedDepsAsFirstOrderDeps()
-                  ? Objects.requireNonNull(javaLibraryDeps.getExportedDepTargets()).stream()
-                      .map(bt -> bt.getUnconfiguredBuildTarget().toString())
-                      .collect(ImmutableList.toImmutableList())
-                  : ImmutableList.of(),
+              Objects.requireNonNull(javaLibraryDeps.getExportedDepTargets()).stream()
+                  .map(bt -> bt.getUnconfiguredBuildTarget().toString())
+                  .collect(ImmutableList.toImmutableList()),
               getCellPathResolver()));
     }
     return Optional.empty();

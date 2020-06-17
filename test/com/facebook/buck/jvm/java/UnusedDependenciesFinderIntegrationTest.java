@@ -352,8 +352,6 @@ public class UnusedDependenciesFinderIntegrationTest {
             "build",
             "-c",
             "java.unused_dependencies_action=fail",
-            "-c",
-            "java.unused_dependencies_exported_deps_as_first_order_deps=true",
             ":barmeh_with_unused_dep_as_already_exported");
 
     processResult.assertFailure();
@@ -364,19 +362,6 @@ public class UnusedDependenciesFinderIntegrationTest {
                 "Target //:barmeh_with_unused_dep_as_already_exported is declared with unused targets in deps:"),
             Matchers.containsString(
                 "buildozer 'remove deps //:dep_with_exported_dep' //:barmeh_with_unused_dep_as_already_exported")));
-  }
-
-  @Test
-  public void
-      testSucceedBuildForDepThatHasExportedDepThatIsAFirstOrderExportedDepAnywayWithoutConfigOption() {
-    ProcessResult processResult =
-        workspace.runBuckCommand(
-            "build",
-            "-c",
-            "java.unused_dependencies_action=fail",
-            ":barmeh_with_unused_dep_as_already_exported");
-
-    processResult.assertSuccess();
   }
 
   @Test
