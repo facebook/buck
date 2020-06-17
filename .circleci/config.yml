@@ -1197,6 +1197,17 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Make sure Python3 exists
+          command: |
+            $pythonpath=(Split-Path((Get-Command python).Path))
+            If (Test-Path -Path ${pythonpath}\python3.exe) {
+              echo "using ${pythonpath}\python3.exe"
+            }
+            else {
+              cmd /c mklink ${pythonpath}\python3.exe ${pythonpath}\python.exe
+            }
+          shell: powershell.exe
+      - run:
           name: Upgrade pip
           command: python3 -m pip install --upgrade pip
       - run:
