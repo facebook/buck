@@ -30,6 +30,7 @@ import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -973,6 +974,40 @@ public class AppleDescriptions {
                         appleCxxPlatform,
                         infoPlistSubstitutions));
 
+    Optional<HasEntitlementsFile> maybeHasEntitlementsFile =
+        graphBuilder.requireMetadata(unwrappedBinary.getBuildTarget(), HasEntitlementsFile.class);
+    Optional<SourcePath> maybeEntitlements =
+        maybeHasEntitlementsFile.flatMap(HasEntitlementsFile::getEntitlementsFile);
+    // If entitlements are provided via binary's `entitlements_file` parameter use it directly
+    if (!maybeEntitlements.isPresent()) {
+      // Fall back to getting CODE_SIGN_ENTITLEMENTS from info_plist_substitutions
+      Optional<AbsPath> maybeEntitlementsPathInSubstitutions =
+          AppleEntitlementsFromSubstitutions.entitlementsPathInSubstitutions(
+              projectFilesystem,
+              buildTarget,
+              appleCxxPlatform.getAppleSdk().getApplePlatform(),
+              infoPlistSubstitutions);
+      if (maybeEntitlementsPathInSubstitutions.isPresent()) {
+        BuildTarget entitlementFromSubstitutionBuildTarget =
+            buildTarget
+                .withoutFlavors()
+                .withAppendedFlavors(AppleEntitlementsFromSubstitutions.FLAVOR);
+        AppleEntitlementsFromSubstitutions entitlementsFromSubstitutions =
+            (AppleEntitlementsFromSubstitutions)
+                graphBuilder.computeIfAbsent(
+                    entitlementFromSubstitutionBuildTarget,
+                    target ->
+                        new AppleEntitlementsFromSubstitutions(
+                            target,
+                            projectFilesystem,
+                            graphBuilder,
+                            infoPlistSubstitutions,
+                            maybeEntitlementsPathInSubstitutions.get()));
+        maybeEntitlements =
+            Optional.ofNullable(entitlementsFromSubstitutions.getSourcePathToOutput());
+      }
+    }
+
     return new AppleBundle(
         buildTarget,
         projectFilesystem,
@@ -1005,7 +1040,8 @@ public class AppleDescriptions {
         useEntitlementsWhenAdhocCodeSigning,
         sliceAppPackageSwiftRuntime,
         sliceAppBundleSwiftRuntime,
-        withDownwardApi);
+        withDownwardApi,
+        maybeEntitlements);
   }
 
   /**

@@ -58,7 +58,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
-import com.facebook.buck.step.fs.FindAndReplaceStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.MoveStep;
@@ -76,7 +75,6 @@ import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -212,7 +210,8 @@ public class AppleBundle extends AbstractBuildRule
       boolean useEntitlementsWhenAdhocCodeSigning,
       boolean sliceAppPackageSwiftRuntime,
       boolean sliceAppBundleSwiftRuntime,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      Optional<SourcePath> entitlementsFile) {
     super(buildTarget, projectFilesystem);
     this.buildRuleParams = params;
     this.extension = extension;
@@ -221,12 +220,6 @@ public class AppleBundle extends AbstractBuildRule
     this.infoPlistSubstitutions = ImmutableMap.copyOf(infoPlistSubstitutions);
     this.binary = binary;
     this.withDownwardApi = withDownwardApi;
-    Optional<SourcePath> entitlementsFile = Optional.empty();
-    Optional<HasEntitlementsFile> hasEntitlementsFile =
-        graphBuilder.requireMetadata(binary.getBuildTarget(), HasEntitlementsFile.class);
-    if (hasEntitlementsFile.isPresent()) {
-      entitlementsFile = hasEntitlementsFile.get().getEntitlementsFile();
-    }
     this.entitlementsFile = entitlementsFile;
     this.isLegacyWatchApp = AppleBundleSupport.isLegacyWatchApp(extension, binary);
     this.appleDsym = appleDsym;
@@ -407,9 +400,13 @@ public class AppleBundle extends AbstractBuildRule
       Optional<Path> signingEntitlementsTempPath = Optional.empty();
       Supplier<CodeSignIdentity> codeSignIdentitySupplier;
 
+      Optional<Path> entitlementsPlist =
+          entitlementsFile.map(
+              sourcePath -> context.getSourcePathResolver().getAbsolutePath(sourcePath).getPath());
+
       if (adHocCodeSignIsSufficient()) {
         if (useEntitlementsWhenAdhocCodeSigning) {
-          signingEntitlementsTempPath = prepareEntitlementsPlistFile(context, stepsBuilder);
+          signingEntitlementsTempPath = entitlementsPlist;
         }
         CodeSignIdentity identity =
             codesignIdentitySubjectName
@@ -418,7 +415,6 @@ public class AppleBundle extends AbstractBuildRule
         codeSignIdentitySupplier = () -> identity;
       } else {
         // Copy the .mobileprovision file if the platform requires it, and sign the executable.
-        Optional<Path> entitlementsPlist = prepareEntitlementsPlistFile(context, stepsBuilder);
         signingEntitlementsTempPath =
             Optional.of(
                 BuildTargetPaths.getScratchPath(
@@ -587,58 +583,6 @@ public class AppleBundle extends AbstractBuildRule
         context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getPath());
 
     return stepsBuilder.build();
-  }
-
-  private Optional<Path> prepareEntitlementsPlistFile(
-      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
-
-    Optional<Path> entitlementsPlist;
-
-    // Try to use the entitlements file specified in the bundle's binary first.
-    entitlementsPlist =
-        entitlementsFile.map(p -> context.getSourcePathResolver().getAbsolutePath(p).getPath());
-
-    // Fall back to getting CODE_SIGN_ENTITLEMENTS from info_plist_substitutions.
-    if (!entitlementsPlist.isPresent()) {
-      AbsPath srcRoot =
-          getProjectFilesystem()
-              .getRootPath()
-              .resolve(
-                  getBuildTarget()
-                      .getCellRelativeBasePath()
-                      .getPath()
-                      .toPath(getProjectFilesystem().getFileSystem()));
-      Optional<String> entitlementsPlistString =
-          InfoPlistSubstitution.getVariableExpansionForPlatform(
-              CODE_SIGN_ENTITLEMENTS,
-              platform.getName(),
-              InfoPlistSubstitution.variableExpansionWithDefaults(
-                  infoPlistSubstitutions,
-                  ImmutableMap.of(
-                      "SOURCE_ROOT", srcRoot.toString(),
-                      "SRCROOT", srcRoot.toString())));
-      entitlementsPlist =
-          entitlementsPlistString.map(
-              entitlementsPlistName -> {
-                ProjectFilesystem filesystem = getProjectFilesystem();
-                AbsPath originalEntitlementsPlist =
-                    srcRoot.resolve(Paths.get(entitlementsPlistName));
-                RelPath entitlementsPlistWithSubstitutions =
-                    BuildTargetPaths.getScratchPath(
-                        filesystem, getBuildTarget(), "%s-Entitlements.plist");
-
-                stepsBuilder.add(
-                    new FindAndReplaceStep(
-                        filesystem,
-                        originalEntitlementsPlist,
-                        entitlementsPlistWithSubstitutions.getPath(),
-                        InfoPlistSubstitution.createVariableExpansionFunction(
-                            infoPlistSubstitutions)));
-
-                return filesystem.resolve(entitlementsPlistWithSubstitutions).getPath();
-              });
-    }
-    return entitlementsPlist;
   }
 
   private void appendCopyBinarySteps(
