@@ -1170,6 +1170,8 @@ jobs:
     steps:
       - checkout
       - run:
+          <<: *install_python
+      - run:
           name: Upgrade pip
           command: python3 -m pip install --upgrade pip
       - run:
@@ -1253,6 +1255,12 @@ workflows:
             branches:
               ignore: /.*/
       - linux_publish_release:
+          filters:
+            tags:
+              only: /^v20.*/
+            branches:
+              ignore: /.*/
+      - windows_publish_release:
           filters:
             tags:
               only: /^v20.*/
