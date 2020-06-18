@@ -1016,7 +1016,6 @@ public class AppleDescriptions {
         unwrappedExtension,
         productName,
         infoPlist.getSourcePathToOutput(),
-        infoPlistSubstitutions,
         unwrappedBinary,
         appleDsym,
         extraBinaries,
