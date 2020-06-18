@@ -118,7 +118,7 @@ dependencies between nodes. For example, the value of
 <p>
 <pre>
 {literal}
-buck query "allpaths('//foo:bar', '//foo/bar/lib:baz')"
+allpaths('//foo:bar', '//foo/bar/lib:baz')
 {/literal}
 </pre>
 <p>
@@ -136,7 +136,7 @@ For example, the command:
 <p>
 <pre>
 {literal}
-buck query "allpaths(kind(java_library, '//...'), '//foo:bar')"
+allpaths(kind(java_library, '//...'), '//foo:bar')
 {/literal}
 </pre>
 </p>
@@ -205,7 +205,7 @@ For example,
 <p>
 <pre>
 {literal}
-buck query "attrfilter(deps, '//foo:bar', '//...')"
+attrfilter(deps, '//foo:bar', '//...')
 {/literal}
 </pre>
 </p>
@@ -244,7 +244,7 @@ Your <code>attrfilter()</code> clause should be:
 <p>
 <pre>
 {literal}
-buck query "attrfilter( deps, '//:myclass', '//...' )"
+attrfilter( deps, '//:myclass', '//...' )
 {/literal}
 </pre>
 </p>
@@ -369,15 +369,15 @@ For example, the value of
 <p>
 <pre>
 {literal}
-buck query "deps('//foo:bar')"
+deps('//foo:bar')
 {/literal}
 </pre>
 </p>
 
 <p>
-is the dependency graph rooted at the target node <code>//foo:bar</code>.
-It includes all of the dependencies of <code>//foo:bar</code>.
-It also includes <code>//foo:bar</code> itself.
+is the dependency graph rooted at the target node for <code>//foo:bar</code>.
+It includes all of the dependencies of that node, along with the node for{sp}
+<code>//foo:bar</code> itself.
 </p>
 
 <p>
@@ -429,7 +429,7 @@ For example, the query,
 <p>
 <pre>
 {literal}
-buck query "deps('//foo:bar', 1, first_order_deps())"
+deps('//foo:bar', 1, first_order_deps())
 {/literal}
 </pre>
 </p>
@@ -441,7 +441,7 @@ is equivalent to
 <p>
 <pre>
 {literal}
-buck query "deps('//foo:bar', 1)"
+deps('//foo:bar', 1)
 {/literal}
 </pre>
 </p>
@@ -483,7 +483,7 @@ For example,
 <p>
 <pre>
 {literal}
-buck query "filter('library', deps('//foo:bar'))"
+filter('library', deps('//foo:bar'))
 {/literal}
 </pre>
 </p>
@@ -501,7 +501,7 @@ So, both of the following clauses would match a target with the name <code>main<
 <p>
 <pre>
 {literal}
-buck query "filter( 'main', '//...' )"
+filter( 'main', '//...' )
 {/literal}
 </pre>
 </p>
@@ -509,7 +509,7 @@ buck query "filter( 'main', '//...' )"
 <p>
 <pre>
 {literal}
-buck query "filter( 'mai', '//...' )"
+filter( 'mai', '//...' )
 {/literal}
 </pre>
 </p>
@@ -521,7 +521,7 @@ Another example:
 <p>
 <pre>
 {literal}
-buck query "filter('.*\.java$', labels(srcs, '//foo:bar'))"
+filter('.*\.java$', labels(srcs, '//foo:bar'))
 {/literal}
 </pre>
 </p>
@@ -595,7 +595,7 @@ specified <code><em>regex</em></code>.  For example,
 <p>
 <pre>
 {literal}
-buck query "kind('java_library', deps('//foo:bar'))"
+kind('java_library', deps('//foo:bar'))
 {/literal}
 </pre>
 </p>
@@ -612,7 +612,7 @@ The specified <code><em>pattern</em></code> can be a regular expression. For exa
 <p>
 <pre>
 {literal}
-buck query "kind('.*_test', '//...')"
+kind('.*_test', '//...')
 {/literal}
 </pre>
 </p>
@@ -678,7 +678,7 @@ file in the current directory.
 
 <p> <pre>
 {literal}
-buck query "labels( 'srcs', ':' )"
+labels( 'srcs', ':' )
 {/literal}
 </pre>
 </p>
@@ -697,7 +697,7 @@ target <code>//foo:bar</code>.
 
 <p> <pre>
 {literal}
-buck query "labels('deps', testsof('//foo:bar'))"
+labels('deps', testsof('//foo:bar'))
 {/literal}
 </pre>
 </p>
@@ -736,7 +736,7 @@ to be inverses of each other.
 <p>
 <pre>
 {literal}
-buck query "owner('examples/1.txt')"
+owner('examples/1.txt')
 {/literal}
 </pre>
 </p>
@@ -788,7 +788,7 @@ the nodes from the argument set <code><em>argset</em></code> itself.
 The <code>rdeps</code> operator accepts an optional third argument,
 which is an integer literal specifying an upper bound on the depth of
 the search.  A value of one (<code>1</code>) specifies
-that <code>buck query</code> should return only direct dependencies.
+that the query should return only direct dependencies.
 If the <code><em>depth</em></code> parameter is omitted, the search is unbounded.
 </p>
 
@@ -808,7 +808,7 @@ the result set of
 <p>
 <pre>
 {literal}
-buck query "rdeps('//foo/bar/...', '//fuga:baz', 1)"
+rdeps('//foo/bar/...', '//fuga:baz', 1)
 {/literal}
 </pre>
 </p>
@@ -841,7 +841,7 @@ the <a href="{ROOT}about/query_language.html#set-operations"><code>intersect</co
 <p>
 <pre>
 {literal}
-buck query "rdeps('//foo/bar/...', '//fuga:baz', 1) ^ '//foo/bar/...'"
+rdeps('//foo/bar/...', '//fuga:baz', 1) ^ '//foo/bar/...'
 {/literal}
 </pre>
 </p>
@@ -875,7 +875,7 @@ For example,
 <p>
 <pre>
 {literal}
-buck query "testsof(set('//foo:bar' '//baz:app+lib')"
+testsof(set('//foo:bar' '//baz:app+lib'))
 {/literal}
 </pre>
 </p>
@@ -893,7 +893,7 @@ the <code>deps()</code> operator. For example,
 <p>
 <pre>
 {literal}
-buck query "testsof(deps('//foo:bar'))"
+testsof(deps('//foo:bar'))
 {/literal}
 </pre>
 </p>
