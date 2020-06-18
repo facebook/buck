@@ -91,8 +91,10 @@ public class CriticalPathEventListener implements BuckEventListener {
     LOG.debug(
         "RemoteBuildRuleExecutionEvent %s took: %s",
         event.getBuildRule().getFullyQualifiedName(), event.getExecutionDurationMs());
-    criticalPathBuilder.onBuildRuleCompletedExecution(
-        event.getBuildRule(), event.getExecutionDurationMs());
+    if (!event.isActionCacheHit()) {
+      criticalPathBuilder.onBuildRuleCompletedExecution(
+          event.getBuildRule(), event.getExecutionDurationMs());
+    }
   }
 
   @Subscribe

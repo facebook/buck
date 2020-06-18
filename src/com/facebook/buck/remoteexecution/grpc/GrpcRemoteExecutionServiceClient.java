@@ -123,8 +123,7 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
 
         resultFuture.set(
             getExecutionResult(
-                operation.getResponse().unpack(ExecuteResponse.class).getResult(),
-                executedMetadata));
+                operation.getResponse().unpack(ExecuteResponse.class), executedMetadata));
       } catch (StatusRuntimeException e) {
         resultFuture.setException(e);
       } catch (Exception e) {
@@ -235,7 +234,8 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
   }
 
   private ExecutionResult getExecutionResult(
-      ActionResult actionResult, RemoteExecutionMetadata remoteExecutionMetadata) {
+      ExecuteResponse executionResponse, RemoteExecutionMetadata remoteExecutionMetadata) {
+    ActionResult actionResult = executionResponse.getResult();
     if (actionResult.getExitCode() != 0) {
       LOG.debug(
           "Got failed action from worker %s", actionResult.getExecutionMetadata().getWorker());
@@ -319,6 +319,11 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
           throw new RuntimeException(e);
         }
         return data.data.toStringUtf8();
+      }
+
+      @Override
+      public boolean cachedResult() {
+        return executionResponse.getCachedResult();
       }
     };
   }

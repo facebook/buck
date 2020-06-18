@@ -140,6 +140,11 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
                       public ExecutedActionMetadata getActionMetadata() {
                         return ExecutedActionMetadata.getDefaultInstance();
                       }
+
+                      @Override
+                      public boolean cachedResult() {
+                        return false;
+                      }
                     });
             return new ExecutionHandle() {
               @Override

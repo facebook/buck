@@ -49,6 +49,9 @@ public interface RemoteExecutionServiceClient {
     Digest getActionResultDigest();
 
     ExecutedActionMetadata getActionMetadata();
+
+    /** True if this request was served from the action cache, false otherwise. */
+    boolean cachedResult();
   }
 
   /** Handle for an execution in progress. */

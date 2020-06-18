@@ -26,12 +26,14 @@ public class RemoteBuildRuleExecutionEvent extends AbstractBuckEvent {
 
   private final BuildRule buildRule;
   private final long executionDurationMs;
+  private final boolean actionCacheHit;
 
   private RemoteBuildRuleExecutionEvent(
-      EventKey eventKey, BuildRule buildRule, long executionDurationMs) {
+      EventKey eventKey, BuildRule buildRule, long executionDurationMs, boolean actionCacheHit) {
     super(eventKey);
     this.buildRule = buildRule;
     this.executionDurationMs = executionDurationMs;
+    this.actionCacheHit = actionCacheHit;
   }
 
   public BuildRule getBuildRule() {
@@ -40,6 +42,10 @@ public class RemoteBuildRuleExecutionEvent extends AbstractBuckEvent {
 
   public long getExecutionDurationMs() {
     return executionDurationMs;
+  }
+
+  public boolean isActionCacheHit() {
+    return actionCacheHit;
   }
 
   @Override
@@ -54,13 +60,18 @@ public class RemoteBuildRuleExecutionEvent extends AbstractBuckEvent {
 
   /** Posts event of type RemoteBuildRuleExecutionEvent into {@link BuckEventBus} */
   public static void postEvent(
-      BuckEventBus buckEventBus, BuildRule buildRule, long executionDurationMs) {
+      BuckEventBus buckEventBus,
+      BuildRule buildRule,
+      long executionDurationMs,
+      boolean actionCacheHit) {
     buckEventBus.post(
-        new RemoteBuildRuleExecutionEvent(EventKey.unique(), buildRule, executionDurationMs));
+        new RemoteBuildRuleExecutionEvent(
+            EventKey.unique(), buildRule, executionDurationMs, actionCacheHit));
   }
 
   public static RemoteBuildRuleExecutionEvent createEvent(
-      BuildRule buildRule, long executionDurationMs) {
-    return new RemoteBuildRuleExecutionEvent(EventKey.unique(), buildRule, executionDurationMs);
+      BuildRule buildRule, long executionDurationMs, boolean actionCacheHit) {
+    return new RemoteBuildRuleExecutionEvent(
+        EventKey.unique(), buildRule, executionDurationMs, actionCacheHit);
   }
 }

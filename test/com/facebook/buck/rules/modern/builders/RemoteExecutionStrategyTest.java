@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import build.bazel.remote.execution.v2.ExecuteOperationMetadata;
 import build.bazel.remote.execution.v2.ExecutedActionMetadata;
+import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -276,6 +277,42 @@ public class RemoteExecutionStrategyTest {
     strategyBuildResult.getBuildResult().get(2, TimeUnit.SECONDS);
   }
 
+  @Test
+  public void testActionCacheHitSetsStrategyResult() throws Exception {
+    clients =
+        new SimpleRemoteExecutionClients() {
+          @Override
+          public boolean shouldHitActionCache() {
+            return true;
+          }
+        };
+
+    StrategyBuildResult strategyBuildResult = beginBuild();
+    Optional<BuildResult> optBuildResult = strategyBuildResult.getBuildResult().get();
+    assertTrue(optBuildResult.isPresent());
+    BuildResult buildResult = optBuildResult.get();
+    assertTrue(buildResult.getStrategyResult().isPresent());
+    assertEquals(buildResult.getStrategyResult().get(), "hit action cache");
+  }
+
+  @Test
+  public void testActionCacheMissSetsStrategyResult() throws Exception {
+    clients =
+        new SimpleRemoteExecutionClients() {
+          @Override
+          public boolean shouldHitActionCache() {
+            return false;
+          }
+        };
+
+    StrategyBuildResult strategyBuildResult = beginBuild();
+    Optional<BuildResult> optBuildResult = strategyBuildResult.getBuildResult().get();
+    assertTrue(optBuildResult.isPresent());
+    BuildResult buildResult = optBuildResult.get();
+    assertTrue(buildResult.getStrategyResult().isPresent());
+    assertEquals(buildResult.getStrategyResult().get(), "built remotely");
+  }
+
   private static class TestRemoteExecutionConfig implements RemoteExecutionStrategyConfig {
 
     @Override
@@ -428,6 +465,11 @@ public class RemoteExecutionStrategyTest {
                 public ExecutedActionMetadata getActionMetadata() {
                   return ExecutedActionMetadata.newBuilder().build();
                 }
+
+                @Override
+                public boolean cachedResult() {
+                  return SimpleRemoteExecutionClients.this.shouldHitActionCache();
+                }
               });
         }
 
@@ -450,6 +492,10 @@ public class RemoteExecutionStrategyTest {
     }
 
     public boolean containsDigest(Digest digest) {
+      return false;
+    }
+
+    public boolean shouldHitActionCache() {
       return false;
     }
 

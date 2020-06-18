@@ -225,10 +225,11 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                               .contains(
                                   ModernBuildRuleRemoteExecutionHelper.METADATA_PATH.toString()))
                   .forEach(output -> recordArtifact(rule, strategyContext, output));
+              String strategyResult = result.cachedResult() ? "hit action cache" : "built remotely";
               return Futures.immediateFuture(
                   Optional.of(
                       strategyContext.createBuildResult(
-                          BuildRuleSuccessType.BUILT_LOCALLY, Optional.of("built remotely"))));
+                          BuildRuleSuccessType.BUILT_LOCALLY, Optional.of(strategyResult))));
             },
             MoreExecutors.directExecutor());
 
@@ -576,7 +577,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         guardContext.enterState(State.MATERIALIZING_OUTPUTS, Optional.of(actionDigest));
 
     List<Protocol.OutputFile> files = new ArrayList<>();
-    ListenableFuture<Unit> metadata = stripMetadata(result.getOutputFiles(), files, buildRule);
+    ListenableFuture<Unit> metadata =
+        stripMetadata(result.getOutputFiles(), files, buildRule, result.cachedResult());
     ListenableFuture<Unit> materializationFuture =
         executionClients
             .getContentAddressedStorage()
@@ -590,7 +592,10 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   }
 
   private ListenableFuture<Unit> stripMetadata(
-      List<Protocol.OutputFile> outputFiles, List<Protocol.OutputFile> files, BuildRule buildRule) {
+      List<Protocol.OutputFile> outputFiles,
+      List<Protocol.OutputFile> files,
+      BuildRule buildRule,
+      boolean cachedResult) {
     Digest metadataDigest = null;
     for (Protocol.OutputFile file : outputFiles) {
       if (file.getPath().contains(ModernBuildRuleRemoteExecutionHelper.METADATA_PATH.toString())) {
@@ -604,7 +609,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           executionClients.getContentAddressedStorage().fetch(metadataDigest),
           bytes -> {
             long duration = Long.parseLong(StandardCharsets.UTF_8.decode(bytes).toString());
-            RemoteBuildRuleExecutionEvent.postEvent(eventBus, buildRule, duration);
+            RemoteBuildRuleExecutionEvent.postEvent(eventBus, buildRule, duration, cachedResult);
             return null;
           },
           MoreExecutors.directExecutor());
