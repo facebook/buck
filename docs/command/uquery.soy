@@ -1,0 +1,490 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+{namespace buck.uquery}
+
+/**
+ * @param anchor
+ * @param title
+ */
+{template .section}
+  <h4 id="{$anchor}">{$title}</h4>
+  <p>
+{/template}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'buck uquery' /}
+    {param navid: 'command_query' /}
+    {param prettify: true /}
+    {param description}
+      Provide facilities to query information about the unconfigured target graph.
+    {/param}
+    {param content}
+
+{call buck.command}
+{param overview}
+<p>
+The <code>buck uquery</code> command provides functionality to query
+the <em>unconfigured</em> target graph ("target graph") and return the build
+targets that satisfy the query expression.
+</p>
+
+<p>
+The query language enables you to combine multiple operators in a single
+command.  For example, to retrieve a list of all the tests for a build
+target, you can combine the <code>deps()</code> and <code>testsof()</code> operators
+into a single call to <code>buck uquery</code>.
+</p>
+
+<p>
+<pre>
+{literal}
+buck uquery "testsof(deps('//java/com/example/app:amazing'))"
+{/literal}
+</pre>
+</p>
+
+<h2>Query Language</h2>
+
+<p>
+See the main article at <a href="{ROOT}about/query_language.html">The Buck Query Language</a>{sp}
+for a detailed description of the query language and how to use it.
+</p>
+
+<h2>Operators</h2>
+
+<p>
+  The <code>buck uquery</code> command supports the following operators. The
+  name of the operator below is linked to a section that provides more detail
+  about that operator's functionality and syntax.
+</p>
+
+<ul style="line-height:0.5em">
+    <li><a href="#allpaths"><code>allpaths</code></a>: All dependency paths</li>
+    <li><a href="#attrfilter"><code>attrfilter</code></a>: Rule attribute filtering</li>
+    <li><a href="#attrregexfilter"><code>attrregexfilter</code></a>: Rule attribute filtering with regex</li>
+    <li><a href="#buildfile"><code>buildfile</code></a>: Build files of targets</li>
+    <li><a href="#deps"><code>deps and first-order-deps</code></a>: Transitive closure of dependencies</li>
+    <li><a href="{ROOT}about/query_language.html#set-operations"><code>except</code></a>: Set difference</li>
+    <li><a href="#filter"><code>filter</code></a>: Filter targets by name</li>
+    <li><a href="#inputs"><code>inputs</code></a>: Direct input files</li>
+    <li><a href="{ROOT}about/query_language.html#set-operations"><code>intersect</code></a>: Set intersection</li>
+    <li><a href="#kind"><code>kind</code></a>: Filter targets by rule type</li>
+    <li><a href="#labels"><code>labels</code></a>: Extract content of rule attributes</li>
+    <li><a href="#owner"><code>owner</code></a>: Find targets that own specified files</li>
+    <li><a href="#rdeps"><code>rdeps</code></a>: Transitive closure of reverse dependencies</li>
+    <li><a href="{ROOT}about/query_language.html#set"><code>set</code></a>: Group targets</li>
+    <li><a href="#testsof"><code>testsof</code></a>: List the tests of the specified targets</li>
+    <li><a href="{ROOT}about/query_language.html#set-operations"><code>union</code></a>: Set union</li>
+</ul>
+
+
+{call buckquery.common_function_allpaths}
+  {param extras: '' /}
+{/call}
+
+{call buckquery.common_function_attrfilter}
+  {param extras: '' /}
+{/call}
+
+{call buckquery.common_function_attrregexfilter}
+  {param extras: '' /}
+{/call}
+
+{call buckquery.common_function_buildfile}
+  {param extras: '' /}
+{/call}
+
+{call buckquery.common_function_deps}
+  {param extras: '' /}
+{/call}
+
+{call buckquery.common_function_filter}
+  {param extras: '' /}
+{/call}
+
+{call buckquery.common_function_inputs}
+  {param extras: '' /}
+{/call}
+
+{call buckquery.common_function_kind}
+  {param extras: '' /}
+{/call}
+
+{call buckquery.common_function_labels}
+  {param extras: '' /}
+{/call}
+
+{call buckquery.common_function_owner}
+  {param extras: '' /}
+{/call}
+
+{call buckquery.common_function_rdeps}
+  {param extras: '' /}
+{/call}
+
+{call buckquery.common_function_testsof}
+  {param extras: '' /}
+{/call}
+
+{/param}
+
+{param params}
+
+{call buck.param}
+  {param name: 'output-format dot'  /}
+  {param desc}
+  <p>
+  Outputs the digraph representing the query results in <a href=
+  "https://en.wikipedia.org/wiki/DOT_(graph_description_language)#Directed_graphs">
+  dot format</a>.
+  The nodes will be colored according to their type.
+  See <a href="http://www.graphviz.org/doc/info/colors.html">graphviz.org</a> for color definitions.
+<p><pre class="prettyprint lang-py">
+{literal}
+android_aar          : springgreen2
+android_library      : springgreen3
+android_resource     : springgreen1
+android_prebuilt_aar : olivedrab3
+java_library         : indianred1
+prebuilt_jar         : mediumpurple1
+{/literal}
+</pre>
+</p>
+
+  Example usage:
+  </p>
+
+<p><pre class="prettyprint lang-py">
+{literal}
+$ buck uquery "allpaths('//foo:bar', '//path/to:other')" --output-format dot --output-file graph.dot
+$ dot -Tpng graph.dot -o graph.png
+{/literal}
+</pre>
+</p>
+
+  <p>Then, open <code>graph.png</code> to visualize the graph.</p>
+
+  {/param}
+{/call}
+
+{call buck.param}
+    {param name: 'output-format dot_bfs'  /}
+    {param desc}
+      <p>
+        Outputs the digraph representing the query results in <a href="https://en.wikipedia.org/wiki/DOT_(graph_description_language)#Directed_graphs">dot format</a> in bfs order.
+        The nodes will be colored according to their type.
+      </p>
+
+      Example usage:
+      <p><pre class="prettyprint lang-py">
+          {literal}
+$ buck uquery "allpaths('//foo:bar', '//path/to:other')" --output-format dot_bfs --output-file graph.dot
+$ dot -Tpng graph.dot -o graph.png
+          {/literal}
+      </pre>
+      </p>
+
+      <p>Then, open <code>graph.png</code> to visualize the graph.</p>
+
+    {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'output-format json' /}
+  {param desc}
+    <p>
+      Outputs the results as JSON.
+    </p>
+  {/param}
+{/call}
+
+{call buck.param}
+    {param name: 'output-format thrift' /}
+    {param desc}
+      <p>
+        Outputs the results as thrift binary.
+      </p>
+    {/param}
+{/call}
+
+{call buck.param}
+    {param name: 'output-file' /}
+    {param desc}
+      <p>
+      Outputs the results into file path specified.
+      </p>
+      Example usage:
+      <p><pre class="prettyprint lang-py">
+          {literal}
+$ buck uquery "allpaths('//foo:bar', '//path/to:other')" --output-format dot --output-file graph.dot
+$ dot -Tpng graph.dot -o graph.png
+          {/literal}
+      </pre>
+      </p>
+    {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'output-attribute <attribute>' /}
+  {param desc}
+  <div id="output-attributes">
+  <p>
+  Outputs the results as a JSON dictionary
+  {sp}<code>build target -> attributes map</code>. The attributes map is a
+  dictionary mapping the specified attributes to their values for the build
+  target. Attributes are regular expressions (e.g. '.*' matches all attributes).
+  If an attribute (e.g. <code>srcs</code>) is not defined for a build target,
+  it is not present in the output.
+
+  <br />
+  <br />
+  Multiple attributes may be specified by providing the --output-attribute
+  option multiple times.
+
+  Example:
+  </p>
+
+<p><pre class="prettyprint lang-py">
+{literal}
+$ buck uquery '//example/...' --output-attribute buck.type --output-attribute name --output-attribute srcs
+{
+  "//example/foo:bar" : {
+    "buck.type" : "cxx_library",
+    "name" : "foobar",
+    "srcs" : [ "example/foo/bar.cc", "example/foo/lib/lib.cc" ]
+  }
+  "//example/foo:main" : {
+    "buck.type" : "cxx_binary",
+    "name" : "main"
+  }
+}
+{/literal}
+</pre>
+</p>
+
+</div>
+
+  {/param}
+{/call}
+{/param}
+
+
+{param examples}
+
+<pre class="prettyprint lang-py">
+{literal}
+#
+# For the following examples, assume this BUCK file exists in
+# the `examples` directory.
+#
+cxx_library(
+  name = 'one',
+  srcs = [ '1.cpp' ],
+  deps = [
+    ':two',
+    ':three',
+  ],
+)
+
+cxx_library(
+  name = 'two',
+  srcs = [ '2.cpp' ],
+  deps = [
+    ':four',
+  ],
+  tests = [ ':two-tests' ]
+)
+
+cxx_library(
+  name = 'three',
+  srcs = [ '3.cpp' ],
+  deps = [
+    ':four',
+    ':five',
+  ],
+  tests = [ ':three-tests' ],
+)
+
+cxx_library(
+  name = 'four',
+  srcs = [ '4.cpp' ],
+  deps = [
+    ':five',
+  ]
+)
+
+cxx_library(
+  name = 'five',
+  srcs = [ '5.cpp' ],
+)
+
+cxx_test(
+  name = 'two-tests',
+  srcs = [ '2-test.cpp' ],
+  deps = [ ':two' ],
+)
+
+cxx_test(
+  name = 'three-tests',
+  srcs = [ '3-test.cpp' ],
+  deps = [ ':three' ],
+)
+{/literal}
+</pre>
+
+<p>
+<b>Example</b>: List <em>all</em> the targets in the repository.
+</p>
+
+<p>
+<pre>buck uquery "//..."</pre>
+<pre>
+{literal}
+//examples:five
+//examples:four
+//examples:one
+//examples:three
+//examples:three-tests
+//examples:two
+//examples:two-tests
+{/literal}
+</pre>
+</p>
+
+
+<p>
+<b>Example</b>: Resolve multiple aliases.
+</p>
+
+<p>
+Suppose <code>.buckconfig</code> contains the following aliases:
+</p>
+
+<p>
+<pre>
+{literal}
+app = //apps/myapp:app
+lib = //libraries/mylib:lib
+{/literal}
+</pre>
+</p>
+
+<p>
+Then the following query
+</p>
+
+<p>
+<pre>
+{literal}
+buck uquery "%s" app lib --output-format json
+{/literal}
+</pre>
+</p>
+
+
+<p>
+returns
+</p>
+
+<pre class="prettyprint lang-js">
+{literal}
+{
+  "app": ["//apps/myapp:app"],
+  "lib": ["//libraries/mylib:lib"]
+}
+{/literal}
+</pre>
+</p>
+
+<p>
+<b>Example</b>: List all of the targets on which
+the <code>one</code> library <em>directly</em> depends.
+</p>
+
+<p>
+<pre>
+{literal}
+$ buck uquery "deps(//examples:one, 1)"
+//examples:one
+//examples:three
+//examples:two
+{/literal}
+</pre>
+</p>
+
+
+<p>
+<b>Example</b>: Display a JSON representation of the transitive closure of the targets
+on which the <code>one</code> library depends.
+</p>
+
+<p>
+<pre>
+{literal}
+$ buck uquery --output-format json "deps(//examples:one)"
+[
+  "//examples:five",
+  "//examples:four",
+  "//examples:one",
+  "//examples:three",
+  "//examples:two"
+]
+{/literal}
+</pre>
+</p>
+
+
+<p>
+<b>Example</b>: Display a JSON representation of the tests associated with
+the{sp} <code>one</code> and <code>three</code> libraries.
+</p>
+
+<p>
+<pre>
+{literal}
+$ buck uquery --output-format json "testsof(deps('%s'))" //examples:one //examples:three
+{
+  "//examples:one": ["//examples:two-tests"],
+  "//examples:three": ["//examples:three-tests"]
+}
+{/literal}
+</pre>
+</p>
+
+<p>
+<b>Example</b>: Display the build file that contains the target which is
+the owner of the source file, <code>examples/1.cpp</code>.
+</p>
+
+<p>
+<pre>
+{literal}
+$ buck uquery "buildfile(owner('examples/1.cpp'))"
+example/BUCK
+{/literal}
+</pre>
+</p>
+
+{/param}
+
+{/call}
+
+    {/param}  // content
+  {/call} // buck.page
+{/template}
