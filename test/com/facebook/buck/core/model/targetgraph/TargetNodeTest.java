@@ -66,6 +66,7 @@ import com.facebook.buck.rules.macros.UnconfiguredQueryOutputsMacro;
 import com.facebook.buck.rules.macros.UnconfiguredStringWithMacros;
 import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.query.UnconfiguredQuery;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -212,6 +213,7 @@ public class TargetNodeTest {
             .createFromObject(
                 description,
                 createPopulatedConstructorArg(buildTarget, ImmutableMap.of("name", "bar")),
+                TwoArraysImmutableHashMap.of(),
                 filesystem,
                 buildTarget,
                 DependencyStack.root(),
@@ -293,6 +295,7 @@ public class TargetNodeTest {
         .createFromObject(
             description,
             createPopulatedConstructorArg(buildTarget, rawNode),
+            TwoArraysImmutableHashMap.of(),
             filesystem,
             buildTarget,
             DependencyStack.root(),

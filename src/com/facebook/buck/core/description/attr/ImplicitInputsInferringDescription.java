@@ -18,6 +18,8 @@ package com.facebook.buck.core.description.attr;
 
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.rules.param.ParamName;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -25,8 +27,8 @@ import com.google.common.collect.ImmutableSet;
  * absent (e.g. src field). Any {@link com.facebook.buck.core.description.Description} that
  * implements this interface can modify its implicit inputs by poking at the raw build rule params.
  */
-public interface ImplicitInputsInferringDescription<T> {
+public interface ImplicitInputsInferringDescription {
 
-  ImmutableSet<ForwardRelativePath> inferInputsFromConstructorArgs(
-      UnflavoredBuildTarget buildTarget, T constructorArg);
+  ImmutableSet<ForwardRelativePath> inferInputsFromAttributes(
+      UnflavoredBuildTarget buildTarget, TwoArraysImmutableHashMap<ParamName, Object> attributes);
 }

@@ -42,6 +42,7 @@ import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityError;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatternParser;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -258,6 +259,7 @@ public class TargetNodeVisibilityTest {
         .createFromObject(
             description,
             arg,
+            TwoArraysImmutableHashMap.of(),
             filesystem,
             buildTarget,
             DependencyStack.root(),

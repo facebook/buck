@@ -41,8 +41,10 @@ import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.ParamsInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.util.collect.MoreSets;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -86,6 +88,7 @@ public class TargetNodeFactory implements NodeCopier {
   public <T extends ConstructorArg, U extends BaseDescription<T>> TargetNode<T> createFromObject(
       U description,
       Object constructorArg,
+      TwoArraysImmutableHashMap<ParamName, Object> rawAttributes,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
@@ -98,6 +101,7 @@ public class TargetNodeFactory implements NodeCopier {
     return create(
         description,
         (T) constructorArg,
+        rawAttributes,
         filesystem,
         buildTarget,
         dependencyStack,
@@ -108,10 +112,10 @@ public class TargetNodeFactory implements NodeCopier {
         ruleType);
   }
 
-  @SuppressWarnings("unchecked")
   private <T extends ConstructorArg, U extends BaseDescription<T>> TargetNode<T> create(
       U description,
       T constructorArg,
+      TwoArraysImmutableHashMap<ParamName, Object> rawAttributes,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
@@ -125,9 +129,8 @@ public class TargetNodeFactory implements NodeCopier {
     ImmutableSet<ForwardRelativePath> implicitInputs = ImmutableSet.of();
     if (description instanceof ImplicitInputsInferringDescription) {
       implicitInputs =
-          ((ImplicitInputsInferringDescription<T>) description)
-              .inferInputsFromConstructorArgs(
-                  buildTarget.getUnflavoredBuildTarget(), constructorArg);
+          ((ImplicitInputsInferringDescription) description)
+              .inferInputsFromAttributes(buildTarget.getUnflavoredBuildTarget(), rawAttributes);
     }
 
     return createWithPreviouslyComputedAttributes(

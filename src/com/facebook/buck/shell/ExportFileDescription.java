@@ -30,12 +30,14 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.param.ParamName;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
 public class ExportFileDescription
     implements DescriptionWithTargetGraph<ExportFileDescriptionArg>,
-        ImplicitInputsInferringDescription<ExportFileDescriptionArg> {
+        ImplicitInputsInferringDescription {
 
   @Override
   public Class<ExportFileDescriptionArg> getConstructorArgType() {
@@ -110,10 +112,10 @@ public class ExportFileDescription
 
   /** If the src field is absent, add the name field to the list of inputs. */
   @Override
-  public ImmutableSet<ForwardRelativePath> inferInputsFromConstructorArgs(
-      UnflavoredBuildTarget buildTarget, ExportFileDescriptionArg constructorArg) {
+  public ImmutableSet<ForwardRelativePath> inferInputsFromAttributes(
+      UnflavoredBuildTarget buildTarget, TwoArraysImmutableHashMap<ParamName, Object> attributes) {
     ImmutableSet.Builder<ForwardRelativePath> inputs = ImmutableSet.builder();
-    if (!constructorArg.getSrc().isPresent()) {
+    if (!attributes.containsKey(ParamName.bySnakeCase("src"))) {
       inputs.add(
           buildTarget.getCellRelativeBasePath().getPath().resolve(buildTarget.getLocalName()));
     }

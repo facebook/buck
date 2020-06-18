@@ -54,6 +54,7 @@ import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.parser.temporarytargetuniquenesschecker.TemporaryUnconfiguredTargetToTargetUniquenessChecker;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.CloseableResource;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -113,6 +114,7 @@ public class OwnersReportTest {
           .createFromObject(
               description,
               arg,
+              TwoArraysImmutableHashMap.of(),
               filesystem,
               buildTarget,
               DependencyStack.root(),

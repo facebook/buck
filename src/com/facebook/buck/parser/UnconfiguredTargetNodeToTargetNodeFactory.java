@@ -171,6 +171,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
         targetNodeFactory.createFromObject(
             description.getDescription(),
             constructorArg,
+            unconfiguredTargetNode.getAttributes(),
             targetCell.getFilesystem(),
             target,
             dependencyStack,

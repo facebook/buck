@@ -68,6 +68,7 @@ import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -175,6 +176,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
         nodeCopier.createFromObject(
             description,
             FakeTargetNodeArg.builder().setName("name").build(),
+            TwoArraysImmutableHashMap.of(),
             projectFilesystem,
             target,
             DependencyStack.root(),

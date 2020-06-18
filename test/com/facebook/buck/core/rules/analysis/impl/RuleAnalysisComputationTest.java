@@ -44,6 +44,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -79,6 +80,7 @@ public class RuleAnalysisComputationTest {
         targetNodeFactory.createFromObject(
             ruleDescription,
             FakeRuleDescriptionArg.builder().setName("target").build(),
+            TwoArraysImmutableHashMap.of(),
             projectFilesystem,
             buildTarget,
             DependencyStack.root(),
@@ -121,6 +123,7 @@ public class RuleAnalysisComputationTest {
         targetNodeFactory.createFromObject(
             ruleDescription,
             FakeRuleDescriptionArg.builder().setName("target1").build(),
+            TwoArraysImmutableHashMap.of(),
             projectFilesystem,
             buildTarget1,
             DependencyStack.root(),
@@ -133,6 +136,7 @@ public class RuleAnalysisComputationTest {
         targetNodeFactory.createFromObject(
             ruleDescription,
             FakeRuleDescriptionArg.builder().setName("target2").build(),
+            TwoArraysImmutableHashMap.of(),
             projectFilesystem,
             buildTarget2,
             DependencyStack.root(),
@@ -145,6 +149,7 @@ public class RuleAnalysisComputationTest {
         targetNodeFactory.createFromObject(
             ruleDescription,
             FakeRuleDescriptionArg.builder().setName("target3").build(),
+            TwoArraysImmutableHashMap.of(),
             projectFilesystem,
             buildTarget3,
             DependencyStack.root(),
@@ -197,6 +202,7 @@ public class RuleAnalysisComputationTest {
         targetNodeFactory.createFromObject(
             ruleDescription,
             FakeRuleDescriptionArg.builder().setName("target").build(),
+            TwoArraysImmutableHashMap.of(),
             projectFilesystem,
             buildTarget,
             DependencyStack.root(),
@@ -267,6 +273,7 @@ public class RuleAnalysisComputationTest {
         targetNodeFactory.createFromObject(
             ruleDescription,
             FakeRuleDescriptionArg.builder().setName("target").build(),
+            TwoArraysImmutableHashMap.of(),
             projectFilesystem,
             buildTarget,
             DependencyStack.root(),
@@ -279,6 +286,7 @@ public class RuleAnalysisComputationTest {
         targetNodeFactory.createFromObject(
             ruleDescription2,
             FakeRuleDescriptionArg.builder().setName("target2").build(),
+            TwoArraysImmutableHashMap.of(),
             projectFilesystem,
             buildTarget2,
             DependencyStack.root(),

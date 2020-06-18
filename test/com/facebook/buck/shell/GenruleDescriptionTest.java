@@ -67,6 +67,7 @@ import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxConfig;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -163,6 +164,7 @@ public class GenruleDescriptionTest {
             .createFromObject(
                 genruleDescription,
                 constructorArg,
+                TwoArraysImmutableHashMap.copyOf(instance),
                 projectFilesystem,
                 buildTarget,
                 DependencyStack.root(),
