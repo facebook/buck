@@ -65,6 +65,9 @@ public interface TargetNode<T extends ConstructorArg>
   /** Cell root-relative paths. */
   ImmutableSet<ForwardRelativePath> getInputs();
 
+  /** The subset of inputs that were implicitly computed */
+  ImmutableSet<ForwardRelativePath> getImplicitInputs();
+
   ImmutableSet<BuildTarget> getDeclaredDeps();
 
   ImmutableSortedSet<BuildTarget> getExtraDeps();

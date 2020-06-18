@@ -122,6 +122,51 @@ public class TargetNodeFactory implements NodeCopier {
       RuleType ruleType)
       throws NoSuchBuildTargetException {
 
+    ImmutableSet<ForwardRelativePath> implicitInputs = ImmutableSet.of();
+    if (description instanceof ImplicitInputsInferringDescription) {
+      implicitInputs =
+          ((ImplicitInputsInferringDescription<T>) description)
+              .inferInputsFromConstructorArgs(
+                  buildTarget.getUnflavoredBuildTarget(), constructorArg);
+    }
+
+    return createWithPreviouslyComputedAttributes(
+        description,
+        constructorArg,
+        filesystem,
+        buildTarget,
+        dependencyStack,
+        declaredDeps,
+        configurationDeps,
+        implicitInputs,
+        visibilityPatterns,
+        withinViewPatterns,
+        ruleType);
+  }
+
+  /**
+   * This function exists entirely because a previously created TargetNode (as we would get from
+   * {@code copyWithFlavors}) will already have information computed that we can reuse. The
+   * "entirely new" codepath is entered by the {@code createFromObject} method, while the copy
+   * codepath is entered (obviously) from {@code copyWithFlavors}. They meet at this method to
+   * create the final result.
+   */
+  @SuppressWarnings("unchecked")
+  private <T extends ConstructorArg, U extends BaseDescription<T>>
+      TargetNode<T> createWithPreviouslyComputedAttributes(
+          U description,
+          T constructorArg,
+          ProjectFilesystem filesystem,
+          BuildTarget buildTarget,
+          DependencyStack dependencyStack,
+          ImmutableSet<BuildTarget> declaredDeps,
+          ImmutableSortedSet<BuildTarget> configurationDeps,
+          ImmutableSet<ForwardRelativePath> implicitInputs,
+          ImmutableSet<VisibilityPattern> visibilityPatterns,
+          ImmutableSet<VisibilityPattern> withinViewPatterns,
+          RuleType ruleType)
+          throws NoSuchBuildTargetException {
+
     boolean isConfigurationRule = description instanceof ConfigurationRuleDescription<?, ?>;
 
     if (buildTarget
@@ -181,12 +226,7 @@ public class TargetNodeFactory implements NodeCopier {
               targetGraphOnlyDepsBuilder);
     }
 
-    if (description instanceof ImplicitInputsInferringDescription) {
-      pathsBuilder.addAll(
-          ((ImplicitInputsInferringDescription<T>) description)
-              .inferInputsFromConstructorArgs(
-                  buildTarget.getUnflavoredBuildTarget(), constructorArg));
-    }
+    pathsBuilder.addAll(implicitInputs);
 
     ImmutableSet<BuildTarget> configurationDepsFromArg =
         description.getConfigurationDeps(constructorArg);
@@ -219,6 +259,7 @@ public class TargetNodeFactory implements NodeCopier {
         constructorArg,
         filesystem,
         MoreSets.union(paths, filePaths, dirPaths),
+        implicitInputs,
         declaredDeps,
         extraDepsBuilder.build(),
         targetGraphOnlyDepsBuilder.build(),
@@ -300,7 +341,7 @@ public class TargetNodeFactory implements NodeCopier {
   public <T extends ConstructorArg> TargetNode<T> copyNodeWithFlavors(
       TargetNode<T> originalNode, ImmutableSet<Flavor> flavors) {
     try {
-      return create(
+      return createWithPreviouslyComputedAttributes(
           originalNode.getDescription(),
           originalNode.getConstructorArg(),
           originalNode.getFilesystem(),
@@ -308,6 +349,7 @@ public class TargetNodeFactory implements NodeCopier {
           DependencyStack.top(originalNode.getBuildTarget()),
           originalNode.getDeclaredDeps(),
           originalNode.getConfigurationDeps(),
+          originalNode.getImplicitInputs(),
           originalNode.getVisibilityPatterns(),
           originalNode.getWithinViewPatterns(),
           originalNode.getRuleType());

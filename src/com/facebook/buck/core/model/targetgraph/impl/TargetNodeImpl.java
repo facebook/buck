@@ -82,6 +82,9 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
   public abstract ImmutableSet<ForwardRelativePath> getInputs();
 
   @Override
+  public abstract ImmutableSet<ForwardRelativePath> getImplicitInputs();
+
+  @Override
   public abstract ImmutableSet<BuildTarget> getDeclaredDeps();
 
   @Override
@@ -169,6 +172,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getConstructorArg(),
         getFilesystem(),
         getInputs(),
+        getImplicitInputs(),
         getDeclaredDeps(),
         getExtraDeps(),
         getTargetGraphOnlyDeps(),
@@ -188,6 +192,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getConstructorArg(),
         getFilesystem(),
         getInputs(),
+        getImplicitInputs(),
         getDeclaredDeps(),
         getExtraDeps(),
         getTargetGraphOnlyDeps(),
@@ -207,6 +212,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         constructorArg,
         getFilesystem(),
         getInputs(),
+        getImplicitInputs(),
         getDeclaredDeps(),
         getExtraDeps(),
         getTargetGraphOnlyDeps(),
@@ -226,6 +232,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getConstructorArg(),
         getFilesystem(),
         getInputs(),
+        getImplicitInputs(),
         declaredDeps,
         getExtraDeps(),
         getTargetGraphOnlyDeps(),
@@ -245,6 +252,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getConstructorArg(),
         getFilesystem(),
         getInputs(),
+        getImplicitInputs(),
         getDeclaredDeps(),
         extraDeps,
         getTargetGraphOnlyDeps(),
@@ -265,6 +273,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getConstructorArg(),
         getFilesystem(),
         getInputs(),
+        getImplicitInputs(),
         getDeclaredDeps(),
         getExtraDeps(),
         targetGraphOnlyDeps,
@@ -285,6 +294,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getConstructorArg(),
         getFilesystem(),
         getInputs(),
+        getImplicitInputs(),
         getDeclaredDeps(),
         getExtraDeps(),
         getTargetGraphOnlyDeps(),
@@ -302,6 +312,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
       T constructorArg,
       ProjectFilesystem filesystem,
       ImmutableSet<ForwardRelativePath> inputs,
+      ImmutableSet<ForwardRelativePath> implicitInputs,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSortedSet<BuildTarget> extraDeps,
       ImmutableSortedSet<BuildTarget> targetGraphOnlyDeps,
@@ -317,6 +328,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         constructorArg,
         filesystem,
         inputs,
+        implicitInputs,
         declaredDeps,
         extraDeps,
         targetGraphOnlyDeps,
