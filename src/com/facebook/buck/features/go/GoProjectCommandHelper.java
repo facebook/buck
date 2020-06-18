@@ -176,21 +176,22 @@ public class GoProjectCommandHelper {
    */
   private ExitCode initGoWorkspace(TargetGraphCreationResult targetGraphCreationResult)
       throws Exception {
-    Map<BuildTargetSourcePath, Path> generatedPackages =
+    Map<SourcePath, Path> generatedPackages =
         findCodeGenerationTargets(targetGraphCreationResult.getTargetGraph());
     if (generatedPackages.isEmpty()) {
       return ExitCode.SUCCESS;
     }
-    // Run code generation targets
+    // Run code generation targets on build targets only
     ExitCode exitCode =
         runBuild(
-            generatedPackages.keySet().stream()
+            filterBuildTargets(generatedPackages.keySet())
                 .map(BuildTargetSourcePath::getTarget)
                 .collect(ImmutableSet.toImmutableSet()));
     if (exitCode != ExitCode.SUCCESS) {
       return exitCode;
     }
 
+    // copy generated and moved code
     copyGeneratedGoCode(targetGraphCreationResult, generatedPackages);
     return ExitCode.SUCCESS;
   }
@@ -202,8 +203,7 @@ public class GoProjectCommandHelper {
    * expensive and unreliable (e.g., what if there are multiple src directory?).
    */
   private void copyGeneratedGoCode(
-      TargetGraphCreationResult targetGraphCreationResult,
-      Map<BuildTargetSourcePath, Path> generatedPackages)
+      TargetGraphCreationResult targetGraphCreationResult, Map<SourcePath, Path> generatedPackages)
       throws IOException {
     Path vendorPath;
     ProjectFilesystem projectFilesystem = cells.getRootCell().getFilesystem();
@@ -219,9 +219,20 @@ public class GoProjectCommandHelper {
     ActionGraphAndBuilder result =
         Objects.requireNonNull(getActionGraph(targetGraphCreationResult));
 
+    Path rootPath = cells.getRootCell().getRoot().getPath();
+
     // cleanup files from previous runs
-    for (BuildTargetSourcePath sourcePath : generatedPackages.keySet()) {
+    for (SourcePath sourcePath : generatedPackages.keySet()) {
       Path desiredPath = vendorPath.resolve(generatedPackages.get(sourcePath));
+
+      AbsPath generatedSrc =
+          result.getActionGraphBuilder().getSourcePathResolver().getAbsolutePath(sourcePath);
+      Path toPath =
+          rootPath.resolve(generatedPackages.get(sourcePath)).resolve(generatedSrc.getFileName());
+      // if file will be in same place relative to project root directory, skip it
+      if (sourcePath.toString().equals(toPath.toString())) {
+        continue;
+      }
 
       if (projectFilesystem.isDirectory(desiredPath)) {
         for (Path path : projectFilesystem.getDirectoryContents(desiredPath)) {
@@ -234,11 +245,20 @@ public class GoProjectCommandHelper {
       }
     }
 
-    // copy files generated in current run
-    for (BuildTargetSourcePath sourcePath : generatedPackages.keySet()) {
+    // copy files generated in current run + files that need to be placed in different location.
+    // for example, if target has different project_name, it's code needs to be copied according to
+    // this name
+    for (SourcePath sourcePath : generatedPackages.keySet()) {
       Path desiredPath = vendorPath.resolve(generatedPackages.get(sourcePath));
       AbsPath generatedSrc =
           result.getActionGraphBuilder().getSourcePathResolver().getAbsolutePath(sourcePath);
+
+      Path toPath =
+          rootPath.resolve(generatedPackages.get(sourcePath)).resolve(generatedSrc.getFileName());
+      // if file will be in same place relative to project root directory, skip it
+      if (sourcePath.toString().equals(toPath.toString())) {
+        continue;
+      }
 
       if (projectFilesystem.isDirectory(generatedSrc)) {
         projectFilesystem.copyFolder(generatedSrc.getPath(), desiredPath);
@@ -259,8 +279,8 @@ public class GoProjectCommandHelper {
    * which indicates that the cxx_library is in the same package as the cgo_library. In such case,
    * the srcs and headers of the cxx_library that are Buck targets are also copied.
    */
-  private Map<BuildTargetSourcePath, Path> findCodeGenerationTargets(TargetGraph targetGraph) {
-    Map<BuildTargetSourcePath, Path> generatedPackages = new HashMap<>();
+  private Map<SourcePath, Path> findCodeGenerationTargets(TargetGraph targetGraph) {
+    Map<SourcePath, Path> generatedPackages = new HashMap<>();
     for (TargetNode<?> targetNode : targetGraph.getNodes()) {
       Object constructorArg = targetNode.getConstructorArg();
       BuildTarget buildTarget = targetNode.getBuildTarget();
@@ -269,7 +289,7 @@ public class GoProjectCommandHelper {
         Optional<String> packageNameArg = goArgs.getPackageName();
         Path pkgName =
             packageNameArg.map(Paths::get).orElse(goBuckConfig.getDefaultPackageName(buildTarget));
-        generatedPackages.putAll(getSrcsMap(filterBuildTargets(goArgs.getSrcs()), pkgName));
+        generatedPackages.putAll(getSrcsMap(goArgs.getSrcs().stream(), pkgName));
       } else if (constructorArg instanceof AbstractCgoLibraryDescriptionArg) {
         AbstractCgoLibraryDescriptionArg cgoArgs =
             (AbstractCgoLibraryDescriptionArg) constructorArg;
@@ -277,7 +297,7 @@ public class GoProjectCommandHelper {
         Path pkgName =
             packageNameArg.map(Paths::get).orElse(goBuckConfig.getDefaultPackageName(buildTarget));
         generatedPackages.putAll(getSrcsMap(getSrcAndHeaderTargets(cgoArgs), pkgName));
-        generatedPackages.putAll(getSrcsMap(filterBuildTargets(cgoArgs.getGoSrcs()), pkgName));
+        generatedPackages.putAll(getSrcsMap(cgoArgs.getGoSrcs().stream(), pkgName));
         List<CxxConstructorArg> cxxLibs =
             cgoArgs.getCxxDeps().getDeps().stream()
                 .filter(
@@ -295,19 +315,16 @@ public class GoProjectCommandHelper {
     return generatedPackages;
   }
 
-  private Map<BuildTargetSourcePath, Path> getSrcsMap(
-      Stream<BuildTargetSourcePath> targetPaths, Path pkgName) {
+  private Map<SourcePath, Path> getSrcsMap(Stream<SourcePath> targetPaths, Path pkgName) {
     return targetPaths.collect(Collectors.toMap(src -> src, src -> pkgName));
   }
 
-  private Stream<BuildTargetSourcePath> getSrcAndHeaderTargets(CxxConstructorArg constructorArg) {
-    List<BuildTargetSourcePath> targets = new ArrayList<>();
+  private Stream<SourcePath> getSrcAndHeaderTargets(CxxConstructorArg constructorArg) {
+    List<SourcePath> targets = new ArrayList<>();
     targets.addAll(
-        filterBuildTargets(
-                constructorArg.getSrcs().stream()
-                    .map(srcWithFlags -> srcWithFlags.getSourcePath())
-                    .collect(Collectors.toSet()))
-            .collect(Collectors.toList()));
+        constructorArg.getSrcs().stream()
+            .map(srcWithFlags -> srcWithFlags.getSourcePath())
+            .collect(Collectors.toSet()));
     constructorArg
         .getHeaders()
         .match(
@@ -325,8 +342,7 @@ public class GoProjectCommandHelper {
                 return Optional.of(unnamed);
               }
             })
-        .ifPresent(
-            headers -> targets.addAll(filterBuildTargets(headers).collect(Collectors.toList())));
+        .ifPresent(headers -> targets.addAll(headers));
     return targets.stream();
   }
 
