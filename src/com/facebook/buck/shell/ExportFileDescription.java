@@ -30,7 +30,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
 public class ExportFileDescription
@@ -110,9 +110,9 @@ public class ExportFileDescription
 
   /** If the src field is absent, add the name field to the list of inputs. */
   @Override
-  public ImmutableList<ForwardRelativePath> inferInputsFromConstructorArgs(
+  public ImmutableSet<ForwardRelativePath> inferInputsFromConstructorArgs(
       UnflavoredBuildTarget buildTarget, ExportFileDescriptionArg constructorArg) {
-    ImmutableList.Builder<ForwardRelativePath> inputs = ImmutableList.builder();
+    ImmutableSet.Builder<ForwardRelativePath> inputs = ImmutableSet.builder();
     if (!constructorArg.getSrc().isPresent()) {
       inputs.add(
           buildTarget.getCellRelativeBasePath().getPath().resolve(buildTarget.getLocalName()));

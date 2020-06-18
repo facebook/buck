@@ -18,7 +18,7 @@ package com.facebook.buck.core.description.attr;
 
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * While building up the target graph, we infer implicit inputs of a rule if certain fields are
@@ -27,6 +27,6 @@ import com.google.common.collect.ImmutableList;
  */
 public interface ImplicitInputsInferringDescription<T> {
 
-  ImmutableList<ForwardRelativePath> inferInputsFromConstructorArgs(
+  ImmutableSet<ForwardRelativePath> inferInputsFromConstructorArgs(
       UnflavoredBuildTarget buildTarget, T constructorArg);
 }
