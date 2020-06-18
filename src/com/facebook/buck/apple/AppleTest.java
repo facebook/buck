@@ -42,6 +42,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
@@ -57,6 +58,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -117,7 +119,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final String testLogDirectoryEnvironmentVariable;
   private final String testLogLevelEnvironmentVariable;
   private final String testLogLevel;
-  private final Optional<ImmutableMap<String, String>> testSpecificEnvironmentVariables;
+  private final Optional<ImmutableMap<String, Arg>> testSpecificEnvironmentVariables;
   private final boolean useIdb;
   private final Path idbPath;
 
@@ -222,7 +224,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Long> testRuleTimeoutMs,
       boolean isUiTest,
       Optional<Either<SourcePath, String>> snapshotReferenceImagesPath,
-      Optional<ImmutableMap<String, String>> testSpecificEnvironmentVariables,
+      Optional<ImmutableMap<String, Arg>> testSpecificEnvironmentVariables,
       boolean useIdb,
       Path idbPath,
       boolean withDownwardApi) {
@@ -316,7 +318,10 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableMap<String, String> testEnvironmentOverrides =
         ImmutableMap.<String, String>builder()
             .putAll(options.getEnvironmentOverrides())
-            .putAll(this.testSpecificEnvironmentVariables.orElse(ImmutableMap.of()))
+            .putAll(
+                Maps.transformValues(
+                    this.testSpecificEnvironmentVariables.orElse(ImmutableMap.of()),
+                    v -> Arg.stringify(v, buildContext.getSourcePathResolver())))
             .build();
 
     ImmutableSet.Builder<Path> requiredPathsBuilder = ImmutableSet.builder();

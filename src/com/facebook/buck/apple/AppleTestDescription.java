@@ -81,8 +81,10 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -101,6 +103,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;
@@ -384,6 +387,13 @@ public class AppleTestDescription
     Optional<SourcePath> xctool =
         getXctool(projectFilesystem, params, targetConfiguration, graphBuilder);
 
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.of(
+            buildTarget,
+            context.getCellPathResolver().getCellNameResolver(),
+            graphBuilder,
+            ImmutableList.of(LocationMacroExpander.INSTANCE, AbsoluteOutputMacroExpander.INSTANCE));
+
     if (args.getSpecs().isPresent()) {
       UserVerify.verify(
           args.getRunner().isPresent(),
@@ -394,14 +404,6 @@ public class AppleTestDescription
           "runner should be an external_test_runner for apple_test");
 
       ExternalTestRunner runner = (ExternalTestRunner) runnerRule;
-
-      StringWithMacrosConverter macrosConverter =
-          StringWithMacrosConverter.of(
-              buildTarget,
-              context.getCellPathResolver().getCellNameResolver(),
-              graphBuilder,
-              ImmutableList.of(
-                  LocationMacroExpander.INSTANCE, AbsoluteOutputMacroExpander.INSTANCE));
 
       return new AppleTestX(
           runner.getBinary(),
@@ -429,6 +431,11 @@ public class AppleTestDescription
           appleConfig.useIdb(),
           appleConfig.getIdbPath());
     }
+
+    ImmutableMap<String, Arg> testEnv =
+        ImmutableMap.copyOf(
+            Maps.transformValues(
+                args.getEnv().orElse(ImmutableMap.of()), macrosConverter::convert));
 
     return new AppleTest(
         xctool,
@@ -463,7 +470,7 @@ public class AppleTestDescription
                     .getDefaultTestRuleTimeoutMs()),
         args.getIsUiTest(),
         args.getSnapshotReferenceImagesPath(),
-        args.getEnv(),
+        Optional.of(testEnv),
         appleConfig.useIdb(),
         appleConfig.getIdbPath(),
         downwardApiConfig.isEnabledForApple());
@@ -948,7 +955,7 @@ public class AppleTestDescription
     ImmutableMap<String, String> getDestinationSpecifier();
 
     // Environment variables to set during the test run
-    Optional<ImmutableMap<String, String>> getEnv();
+    Optional<ImmutableMap<String, StringWithMacros>> getEnv();
 
     @Override
     default Either<AppleBundleExtension, String> getExtension() {
