@@ -16,15 +16,6 @@
 
 {namespace buck.query_language}
 
-/**
- * @param anchor
- * @param title
- */
-{template .section}
-  <h4 id="{$anchor}">{$title}</h4>
-  <p>
-{/template}
-
 /***/
 {template .soyweb}
   {call buck.page}
@@ -138,7 +129,7 @@ buck query "'//foo:bar=wiz'"
 </ul>
 
 
-{call .section}
+{call buckquery.section}
 {param anchor: 'set-operations' /}
 {param title: 'Algebraic set operations: intersection, union, set difference'/}
 {/call}
@@ -230,7 +221,7 @@ x intersect (y union z)
 </p>
 
 
-{call .section}
+{call buckquery.section}
 {param anchor: 'set' /}
 {param title: 'Group targets: set'/}
 {/call}

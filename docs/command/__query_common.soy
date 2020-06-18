@@ -17,6 +17,936 @@
 {namespace buckquery}
 
 /**
+ * @param anchor
+ * @param title
+ */
+{template .section}
+  <h4 id="{$anchor}">{$title}</h4>
+  <p>
+{/template}
+
+/**
+ * Syntax and argument documentation for the `allpaths` function
+ * @param extras Any extra information to be included at the end
+ */
+{template .common_function_allpaths}
+
+{call .section}
+{param anchor: 'allpaths' /}
+{param title: 'All dependency paths: allpaths'/}
+{/call}
+
+<p>
+<b>Syntax</b>
+<pre>
+{literal}
+allpaths(<em title="target expression">from:expr</em>, <em title="target expression">to:expr</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>allpaths(<em>from</em>, <em>to</em>)</code> operator evaluates to the graph formed by
+paths between the target expressions <code><em>from</em></code> and <code><em>to</em></code>, following the
+dependencies between nodes.</p>
+
+<p>
+For example, the value of
+</p>
+
+<p>
+<pre>
+{literal}
+allpaths('//foo:bar', '//foo/bar/lib:baz')
+{/literal}
+</pre>
+<p>
+
+<p>
+is the dependency graph rooted at the single target node <code>//foo:bar</code>,
+that includes all target nodes that depend on <code>//foo/bar/lib:baz</code>.
+</p>
+
+<p>
+The two arguments to <code>allpaths()</code> can themselves be expressions.
+For example, the command:
+</p>
+
+<p>
+<pre>
+{literal}
+allpaths(kind(java_library, '//...'), '//foo:bar')
+{/literal}
+</pre>
+</p>
+
+<p>
+shows all the paths between any <code>java_library</code> in
+the repository and the target <code>//foo:bar</code>.
+</p>
+
+{$extras|noAutoescape}
+
+{/template}
+
+/**
+ * Syntax and argument documentation for the `attrfilter` function
+ * @param extras Any extra information to be included at the end
+ */
+{template .common_function_attrfilter}
+
+{call .section}
+{param anchor: 'attrfilter' /}
+{param title: 'Rule attribute filtering: attrfilter'/}
+{/call}
+
+<p>
+<b>Syntax</b>
+<pre>
+{literal}
+attrfilter(<em title="build rule attribute">attribute</em>, <em title="attribute value">value</em>, <em title="target expression">expr</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>attrfilter(<em>attribute</em>, <em>value</em>, <em>expr</em>)</code> operator
+evaluates the given target expression and filters the resulting build targets
+to those where the specified <code><em>attribute</em></code> contains the
+specified <code><em>value</em></code>.
+</p>
+
+<p>
+In this context, the term <code><em>attribute</em></code> refers to an argument in a build rule,
+such as <code>name</code>, <code>headers</code>, <code>srcs</code>, or <code>deps</code>.
+</p>
+
+<p>
+If the attribute is a single value, say <code>name</code>, it is compared to the
+specified <code><em>value</em></code>, and the target is returned if
+they match.
+If the attribute is a list, the target is returned if that list contains the specified <code><em>value</em></code>.
+If the attribute is a dictionary, the target is returned if the <code><em>value</em></code> exists in either the keys or the values of the dictionary.
+</p>
+
+<p>
+For example,
+<p>
+
+<p>
+<pre>
+{literal}
+attrfilter(deps, '//foo:bar', '//...')
+{/literal}
+</pre>
+</p>
+
+<p>
+returns the build targets in the repository that depend on <code>//foo:bar</code>&mdash;or
+more precisely: those build targets that include <code>//foo:bar</code> in
+their <code>deps</code> argument list.
+</p>
+
+<p>
+The match performed by <code>attrfilter()</code> is semantic rather than textual.
+So, for example, if you have the following <code>deps</code> argument in
+your build file:
+
+<p>
+<pre>
+{literal}
+cxx_binary(
+  name = 'main',
+  srcs = [
+    'main.cpp'
+  ],
+  deps = [
+    ':myclass',
+  ],
+)
+{/literal}
+</pre>
+</p>
+
+<p>
+Your <code>attrfilter()</code> clause should be:
+</p>
+
+<p>
+<pre>
+{literal}
+attrfilter( deps, '//:myclass', '//...' )
+{/literal}
+</pre>
+</p>
+
+<p>
+Note the double forward slash (<code>//</code>) before the second
+argument to <code>attrfilter()</code>.
+</p>
+
+{$extras|noAutoescape}
+
+{/template}
+
+/**
+ * Syntax and argument documentation for the `attrregexfilter` function
+ * @param extras Any extra information to be included at the end
+ */
+{template .common_function_attrregexfilter}
+
+{call .section}
+{param anchor: 'attrregexfilter' /}
+{param title: 'Rule attribute filtering with regex: attrregexfilter'/}
+{/call}
+
+<p>
+<b>Syntax</b>
+<pre>
+{literal}
+attrregexfilter(<em title="build rule attribute">attribute</em>, <em title="attribute regex pattern">pattern</em>, <em title="target expression">expr</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>attrregexfilter(<em>attribute</em>, <em>pattern</em>, <em>expr</em>)</code> operator
+is identical to the <code>attrfilter(<em>attribute</em>, <em>value</em>, <em>expr</em>)</code> operator
+except that it takes a regular expression as the second argument.
+It evaluates the given target expression and filters the resulting build targets
+to those where the specified <code><em>attribute</em></code> matches the
+specified <code><em>pattern</em></code>.
+</p>
+
+<p>
+In this context, the term <code><em>attribute</em></code> refers to an argument in a build rule,
+such as <code>name</code>, <code>headers</code>, <code>srcs</code>, or <code>deps</code>.
+</p>
+
+<p>
+If the attribute is a single value, say <code>name</code>, it is matched against the
+specified <code><em>pattern</em></code>, and the target is returned if
+they match.
+If the attribute is a list, the target is returned if that list contains a value that matches the specified <code><em>pattern</em></code>.
+If the attribute is a dictionary, the target is returned if the <code><em>pattern</em></code> match is found in either the keys or the values of the dictionary.
+</p>
+
+{$extras|noAutoescape}
+
+{/template}
+
+
+/**
+ * Syntax and argument documentation for the `buildfile` function
+ * @param extras Any extra information to be included at the end
+ */
+{template .common_function_buildfile}
+
+{call .section}
+{param anchor: 'buildfile' /}
+{param title: 'Build files of targets: buildfile'/}
+{/call}
+
+<p>
+<b>Syntax</b>
+<pre>
+{literal}
+buildfile(<em title="target expression">expr</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>buildfile(<em>expr</em>)</code> operator evaluates to those build
+files that define the targets that result from the evaluation
+of the target expression, <code><em>expr</em></code>.
+</p>
+
+{$extras|noAutoescape}
+
+{/template}
+
+/**
+ * Syntax and argument documentation for the `config` function
+ * @param extras Any extra information to be included at the end
+ */
+{template .common_function_config}
+
+{call .section}
+{param anchor: 'config' /}
+{param title: 'Targets in a specific configuration: config'/}
+{/call}
+
+<p>
+<b>Syntax</b>
+<pre>
+{literal}
+config(<em title="target expression">expr</em>)
+config(<em title="target expression">expr</em>, <em title="configuration">configuration</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>config(<em>expr</em>, <em>configuration</em>)</code> operator evaluates to
+those targets with the same label as those in the target expression <code><em>expr</em></code>{sp}
+but all configured for the configuration <code><em>configuration</em></code>.
+</p>
+
+<p>
+When <code><em>configuration</em></code> is not provided, the targets are configured in their
+default target platform instead.
+</p>
+
+{$extras|noAutoescape}
+
+{/template}
+
+
+/**
+ * Syntax and argument documentation for the `deps` function
+ * @param extras Any extra information to be included at the end
+ */
+{template .common_function_deps}
+
+{call .section}
+{param anchor: 'deps' /}
+{param title: 'Transitive closure of dependencies: deps and first-order-deps'/}
+{/call}
+
+<p>
+<b>Syntax</b>
+<pre>
+{literal}
+deps(<em title="target expression">argset:expr</em>)
+deps(<em title="target expression">argset:expr</em>, <em title="integer expression">depth:int</em>)
+deps(<em title="target expression">argset:expr</em>, <em title="integer expression">depth:int</em>, <em title="filter target expression">filter:expr</em>)
+deps(<em title="target expression">argset:expr</em>, <em title="integer expression">depth:int</em>, first_order_deps())
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>deps(<em>x</em>)</code> operator evaluates to the graph formed by the
+{sp}<a href="https://en.wikipedia.org/wiki/Transitive_closure">transitive closure</a>{sp}
+of the dependencies of its argument set, <i>x</i>,
+including the nodes from the argument set itself.
+
+<p>
+For example, the value of
+</p>
+
+<p>
+<pre>
+{literal}
+deps('//foo:bar')
+{/literal}
+</pre>
+</p>
+
+<p>
+is the dependency graph rooted at the target node for <code>//foo:bar</code>.
+It includes all of the dependencies of that node, along with the node for{sp}
+<code>//foo:bar</code> itself.
+</p>
+
+<p>
+The <code>deps</code> operator accepts an optional second argument, which is
+an integer literal specifying an upper bound on the depth of the search.  So,
+</p>
+
+<p>
+<pre>
+{literal}
+deps('//foo:bar', 1)
+{/literal}
+</pre>
+</p>
+
+<p>
+evaluates to the direct dependencies of the target <code>//foo:bar</code>, and
+</p>
+
+<p>
+<pre>
+{literal}
+deps('//foo:bar', 2)
+{/literal}
+</pre>
+</p>
+
+<p>
+further includes the nodes directly reachable from the nodes
+in <code>deps('//foo:bar', 1)</code>, and so on. If the depth parameter is
+omitted, the search is unbounded, that is, it computes the entire transitive
+closure of dependencies.
+</p>
+
+<h4>Filter expressions and first_order_deps()</h4>
+<p>
+The <code>deps()</code> operator also accepts an optional third argument, which is
+a filter expression that is evaluated for each node and returns the
+child nodes to recurse on when collecting transitive dependencies.
+</p>
+
+<p>
+This filter expression can use the <code>first_order_deps()</code> operator
+which returns a set that contains the first-order dependencies of the current
+node&mdash;which is equivalent to <code>deps(&lt;node&gt;, 1)</code>.
+For example, the query,
+</p>
+
+<p>
+<pre>
+{literal}
+deps('//foo:bar', 1, first_order_deps())
+{/literal}
+</pre>
+</p>
+
+<p>
+is equivalent to
+</p>
+
+<p>
+<pre>
+{literal}
+deps('//foo:bar', 1)
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>first_order_deps()</code> operator can be used only
+as an argument passed to <code>deps()</code>.
+<p>
+
+<p>
+Note that because <code>deps()</code> uses positional parameters,
+you must specify the second argument in order to specify the third. In
+this scenario, if you want the search to be unbounded, we recommend that
+you use <code>2147483647</code> which corresponds to Java's <code>Integer.MAX_VALUE</code>.
+</p>
+
+{$extras|noAutoescape}
+
+{/template}
+
+
+/**
+ * Syntax and argument documentation for the `filter` function
+ * @param extras Any extra information to be included at the end
+ */
+{template .common_function_filter}
+
+{call .section}
+{param anchor: 'filter' /}
+{param title: 'Filter targets by name: filter'/}
+{/call}
+
+<p>
+<b>Syntax</b>
+<pre>
+{literal}
+filter(<em title="regular expression">regex</em>, <em title="target expression">expr</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>filter(<em>regex</em>, <em>expr</em>)</code> operator evaluates the
+specified target expression, <code><em>expr</em></code>, and returns the targets that have a
+name attribute that matches the specified regular expression <code><em>regex</em></code>.
+For example,
+</p>
+
+<p>
+<pre>
+{literal}
+filter('library', deps('//foo:bar'))
+{/literal}
+</pre>
+</p>
+
+<p>
+returns the targets in the transitive closure of <code>//foo:bar</code>
+that contain the string {sp}<code>library</code> in their name attribute.
+</p>
+
+<p>
+The <code>filter()</code> operator performs a <em>partial</em> match.
+So, both of the following clauses would match a target with the name <code>main</code>.
+</p>
+
+<p>
+<pre>
+{literal}
+filter( 'main', '//...' )
+{/literal}
+</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+filter( 'mai', '//...' )
+{/literal}
+</pre>
+</p>
+
+<p>
+Another example:
+</p>
+
+<p>
+<pre>
+{literal}
+filter('.*\.java$', labels(srcs, '//foo:bar'))
+{/literal}
+</pre>
+</p>
+
+<p>
+returns the <code>java</code> files used to build
+{sp}<code>//foo:bar</code>.
+</p>
+
+<p>
+You often need to quote the pattern to ensure that regular expressions,
+such as <code>.*xpto</code>, are parsed correctly.
+</p>
+
+{$extras|noAutoescape}
+
+{/template}
+
+
+/**
+ * Syntax and argument documentation for the `inputs` function
+ * @param extras Any extra information to be included at the end
+ */
+{template .common_function_inputs}
+
+{call .section}
+{param anchor: 'inputs' /}
+{param title: 'Direct input files: inputs'/}
+{/call}
+
+<p>
+<b>Syntax</b>
+<pre>
+{literal}
+inputs(<em title="target expression">expr</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>inputs(<em>expr</em>)</code> operator returns the files that are inputs
+to the target expression, <code><em>expr</em></code>, ignoring all dependencies.
+Note that it does not include any files required for parsing, such as
+the BUCK file. Rather, it returns only the files required to actually
+run the build after parsing has been performed.
+</p>
+
+<p>
+Note also that <code>inputs()</code> returns only those input files indicated
+by the <em>target graph</em>. Input files that are present in the <em>action graph</em> but
+not in the target graph are not returned by <code>inputs()</code>.
+</p>
+
+<p>
+You could consider the <code>inputs()</code> and <code>owner()</code> operators
+to be inverses of each other.
+</p>
+
+{$extras|noAutoescape}
+
+{/template}
+
+
+/**
+ * Syntax and argument documentation for the `kind` function
+ * @param extras Any extra information to be included at the end
+ */
+{template .common_function_kind}
+
+{call .section}
+{param anchor: 'kind' /}
+{param title: 'Filter targets by rule type: kind'/}
+{/call}
+
+<p>
+<b>Syntax</b>
+<pre>
+{literal}
+kind(<em title="regular expression">regex</em>, <em title="target expression">expr</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>kind(<em>regex</em>, <em>expr</em>)</code> operator
+evaluates the specified target expression, <code><em>expr</em></code>, and
+returns the targets where the rule type matches the
+specified <code><em>regex</em></code>.  For example,
+</p>
+
+<p>
+<pre>
+{literal}
+kind('java_library', deps('//foo:bar'))
+{/literal}
+</pre>
+</p>
+
+<p>
+returns all <code>java_library</code> targets in the transitive dependencies
+of <code>//foo:bar</code>.
+</p>
+
+<p>
+The specified <code><em>pattern</em></code> can be a regular expression. For example,
+</p>
+
+<p>
+<pre>
+{literal}
+kind('.*_test', '//...')
+{/literal}
+</pre>
+</p>
+
+<p>
+returns all targets in the repository with a rule type that ends
+with <code>_test</code>, such as <code>java_test</code> and <code>cxx_test</code>.
+</p>
+
+<p>
+You often need to quote the pattern to ensure that regular expressions,
+such as <code>.*xpto</code>, are parsed correctly.
+</p>
+
+<p>
+To get a list of the available rule types in a given set of targets, you could use
+a command such as the following:
+</p>
+
+<p>
+<pre>
+{literal}
+buck query : --output-attribute buck.type
+{/literal}
+</pre>
+</p>
+
+<p>
+which prints all the rule types in the build file in the current
+directory (<code>:</code>)&mdash;in JSON format.
+See <code>--output-attribute</code> described in the <b>Parameters</b> section
+below for more information.
+</p>
+
+{$extras|noAutoescape}
+
+{/template}
+
+
+/**
+ * Syntax and argument documentation for the `labels` function
+ * @param extras Any extra information to be included at the end
+ */
+{template .common_function_labels}
+
+{call .section}
+{param anchor: 'labels' /}
+{param title: 'Extract content of rule attributes: labels'/}
+{/call}
+
+<p>
+<b>Syntax</b>
+<pre>
+{literal}
+labels(<em title="srcs | headers | deps">attribute</em>, <em title="target expression">expr</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>labels(<em>attribute</em>, <em>expr</em>)</code> operator returns the
+set of build targets and file paths listed in the
+attribute specified by the <code><em>attribute</em></code> parameter, in the targets that result from the
+evaluation of target expression, <code><em>expr</em></code>.
+Valid values for <em>attribute</em> include <code>srcs</code>, <code>headers</code>, and <code>deps</code>.
+</p>
+
+<p>
+<b>Example</b>: Get all build targets and file paths specified in
+the <code>srcs</code> attribute for <em>all the rules</em> in the build
+file in the current directory.
+</p>
+
+<p> <pre>
+{literal}
+labels( 'srcs', ':' )
+{/literal}
+</pre>
+</p>
+
+<p>
+In performing this operation, Buck validates that any source
+files referenced in these attributes do, in fact, exist; Buck generates
+an error if they do not.
+</p>
+
+<p>
+<strong>Example</strong>: Get all the build targets and file paths specified in
+the <code>deps</code> arguments in the <em>tests of</em> the
+target <code>//foo:bar</code>.
+</p>
+
+<p> <pre>
+{literal}
+labels('deps', testsof('//foo:bar'))
+{/literal}
+</pre>
+</p>
+
+<p>
+Note that <code>deps</code> must be quoted because, in addition to being
+a build-file attribute, it is itself a reserved keyword of the query language.
+</p>
+
+{$extras|noAutoescape}
+
+{/template}
+
+
+/**
+ * Syntax and argument documentation for the `owner` function
+ * @param extras Any extra information to be included at the end
+ */
+{template .common_function_owner}
+
+{call .section}
+{param anchor: 'owner' /}
+{param title: 'Find targets that own specified files: owner'/}
+{/call}
+
+<p>
+<b>Syntax</b>
+<pre>
+{literal}
+owner(<em title="input file to build rule">inputfile</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>owner(<em>inputfile</em>)</code> operator returns the targets that own the
+specified <code><em>inputfile</em></code>. In this context, <em>own</em> means that the
+target has the specified file as an input. You could consider
+the <code>owner()</code> and <code>inputs()</code> operators
+to be inverses of each other.
+</p>
+
+<p>
+<b>Example</b>:
+</p>
+
+<p>
+<pre>
+{literal}
+owner('examples/1.txt')
+{/literal}
+</pre>
+</p>
+
+<p>
+returns the targets that owns the file <code>examples/1.txt</code>,
+which could be a value such as <code>//examples:one</code>.
+</p>
+
+<p>
+It is possible for the specified file to have multiple owners, in which
+case, <code>owner()</code> returns a set of targets.
+</p>
+
+<p>
+If no owner for the file is found, <code>owner()</code> outputs the message:
+<pre>
+{literal}
+No owner was found for &lt;file&gt;
+{/literal}
+</pre>
+</p>
+
+{$extras|noAutoescape}
+
+{/template}
+
+
+/**
+ * Syntax and argument documentation for the `rdeps` function
+ * @param extras Any extra information to be included at the end
+ */
+{template .common_function_rdeps}
+
+{call .section}
+{param anchor: 'rdeps' /}
+{param title: 'Transitive closure of reverse dependencies: rdeps'/}
+{/call}
+
+<p>
+<b>Syntax</b>
+<pre>
+{literal}
+rdeps(<em title="target expression">universe:expr</em>, <em title="target expression">argset:expr</em>)</code>
+rdeps(<em title="target expression">universe:expr</em>, <em title="target expression">argset:expr</em>, <em title="integer value">depth:int</em>)</code>
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>rdeps(universe, argset)</code> operator returns the reverse dependencies
+of the argument set <code><em>argset</em></code> within the
+{sp}<a href="https://en.wikipedia.org/wiki/Transitive_closure">transitive closure</a>{sp}
+of the set <code><em>universe</em></code> (the <em>universe</em>). The returned values include
+the nodes from the argument set <code><em>argset</em></code> itself.
+</p>
+
+<p>
+The <code>rdeps</code> operator accepts an optional third argument,
+which is an integer literal specifying an upper bound on the depth of
+the search.  A value of one (<code>1</code>) specifies
+that the query should return only direct dependencies.
+If the <code><em>depth</em></code> parameter is omitted, the search is unbounded.
+</p>
+
+<b>Example</b>
+
+<p>
+The <em>universe:expr</em> parameter includes the <em>entire</em> transitive
+closure of the target pattern specified. So some of these targets might be
+outside the directory structure indicated by that target pattern.  For example,
+the result set of
+</p>
+
+<p>
+<pre>
+{literal}
+rdeps('//foo/bar/...', '//fuga:baz', 1)
+{/literal}
+</pre>
+</p>
+
+<p>
+might contain targets outside the directory structure beneath
+</p>
+
+<p>
+<pre>
+{literal}
+foo/bar/
+{/literal}
+</pre>
+</p>
+
+<p>
+To say it another way, if a target in <code>//foo/bar/...</code> depends
+on, say, <code>//hoge,</code> which in turn depends on
+{sp}<code>//fuga:baz,</code> <em>then <code>//hoge</code> would show
+up in the result set</em>.
+</p>
+
+<p>
+If you wanted to constrain the result set to only those targets beneath
+{sp}<code>foo/bar</code>, you could use
+the <a href="{ROOT}about/query_language.html#set-operations"><code>intersect</code></a> operator:
+</p>
+
+<p>
+<pre>
+{literal}
+rdeps('//foo/bar/...', '//fuga:baz', 1) ^ '//foo/bar/...'
+{/literal}
+</pre>
+</p>
+
+<p>
+The caret (<code>^</code>) is a succinct synonym for <code>intersect</code>.
+</p>
+
+{$extras|noAutoescape}
+
+{/template}
+
+
+/**
+ * Syntax and argument documentation for the `testsof` function
+ * @param extras Any extra information to be included at the end
+ */
+{template .common_function_testsof}
+
+
+{call buckquery.section}
+{param anchor: 'testsof' /}
+{param title: 'List the tests of the specified targets: testsof'/}
+{/call}
+
+<p>
+<b>Syntax</b>
+<pre>
+{literal}
+testsof(<em title="target expression">expr</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>testsof(<em>expr</em>)</code> operator returns the tests associated with the
+targets specified by the target expression, <code><em>expr</em></code>.
+For example,
+</p>
+
+
+<p>
+<pre>
+{literal}
+testsof(set('//foo:bar' '//baz:app+lib'))
+{/literal}
+</pre>
+</p>
+
+<p>
+returns the tests associated with <code>//foo:bar</code> and <code>//baz:app+lib</code>.
+</p>
+
+<p>
+To obtain all the tests associated with the target and its dependencies,
+you can combine the <code>testsof()</code> operator with
+the <code>deps()</code> operator. For example,
+</p>
+
+<p>
+<pre>
+{literal}
+testsof(deps('//foo:bar'))
+{/literal}
+</pre>
+</p>
+
+<p>
+first finds the transitive closure of <code>//foo:bar</code>,
+and then lists all the tests associated with the targets in this transitive closure.
+</p>
+
+{$extras|noAutoescape}
+
+{/template}
+
+
+/**
  * @param section The section the entry is in.
  */
 {template .section_link}
