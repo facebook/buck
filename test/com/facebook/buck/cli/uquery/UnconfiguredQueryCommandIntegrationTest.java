@@ -377,6 +377,16 @@ public class UnconfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void inputsFunctionPrintsImplicitInputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implicit_inputs", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("uquery", "inputs(//:foo.txt)");
+    assertOutputMatches("foo.txt", result);
+  }
+
+  @Test
   public void kindFunctionOnlyPrintsTargetsOfSpecificType() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
@@ -416,6 +426,16 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("uquery", "owner(lib/DevtoolsEight.java)");
     assertOutputMatches("//lib:devtools", result);
+  }
+
+  @Test
+  public void ownerFunctionPrintsTargetsThatOwnFileViaImplicitInputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implicit_inputs", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("uquery", "owner(foo.txt)");
+    assertOutputMatches("//:foo.txt\n//:target-that-references-foo-txt-explicitly", result);
   }
 
   @Test

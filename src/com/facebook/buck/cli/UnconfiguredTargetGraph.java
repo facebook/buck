@@ -19,6 +19,8 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.attr.ImplicitInputsInferringDescription;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -88,6 +90,7 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
   private final Parser parser;
   private final PerBuildState perBuildState;
   private final Cell rootCell;
+  private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final UnconfiguredTargetNodeAttributeTraverser attributeTraverser;
 
   // Query execution is single threaded, however the buildTransitiveClosure implementation
@@ -103,10 +106,12 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
       Parser parser,
       PerBuildState perBuildState,
       Cell rootCell,
+      KnownRuleTypesProvider knownRuleTypesProvider,
       UnconfiguredTargetNodeAttributeTraverser attributeTraverser) {
     this.parser = parser;
     this.perBuildState = perBuildState;
     this.rootCell = rootCell;
+    this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.attributeTraverser = attributeTraverser;
   }
 
@@ -120,7 +125,8 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
     UnconfiguredTargetNodeAttributeTraverser attributeTraverser =
         new UnconfiguredTargetNodeAttributeTraverser(
             rootCell, knownRuleTypesProvider, typeCoercerFactory);
-    return new UnconfiguredTargetGraph(parser, perBuildState, rootCell, attributeTraverser);
+    return new UnconfiguredTargetGraph(
+        parser, perBuildState, rootCell, knownRuleTypesProvider, attributeTraverser);
   }
 
   @Override
@@ -379,6 +385,18 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
           };
         });
 
+    BaseDescription<?> description = lookupDescriptionForNode(node);
+
+    if (description instanceof ImplicitInputsInferringDescription) {
+      ImplicitInputsInferringDescription inputsInferringDescription =
+          (ImplicitInputsInferringDescription) description;
+      inputsBuilder.addAll(
+          inputsInferringDescription.inferInputsFromAttributes(
+              node.getBuildTarget(), node.getAttributes()));
+    }
+
+    // TODO(srice): We're missing support for `ImplicitDepsInferringDescription` here.
+
     return ImmutableNodeAttributeTraversalResult.ofImpl(
         targetsByParamBuilder.build(),
         declaredDepsBuilder.build(),
@@ -405,6 +423,13 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
     } else {
       return Optional.empty();
     }
+  }
+
+  private BaseDescription<?> lookupDescriptionForNode(UnconfiguredTargetNode node) {
+    return knownRuleTypesProvider
+        .get(rootCell.getCell(node.getBuildTarget().getCell()))
+        .getDescriptorByName(node.getRuleType().getName())
+        .getDescription();
   }
 
   /** Value object representing the data we collected when traversing the attributes of the node. */

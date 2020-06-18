@@ -1,0 +1,8 @@
+export_file(
+    name = "foo.txt",
+)
+
+export_file(
+    name = "target-that-references-foo-txt-explicitly",
+    src = "foo.txt",
+)
