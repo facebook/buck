@@ -19,6 +19,7 @@ package com.facebook.buck.testutil.integration;
 import static com.facebook.buck.util.MoreStringsForTests.normalizeNewlines;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.testutil.OutputHelper;
 import com.facebook.buck.testutil.ProcessResult;
 import java.io.IOException;
@@ -82,6 +83,16 @@ public final class ProcessOutputAssertions {
     assertEquals(
         sortedExpectedOutput,
         OutputHelper.normalizeOutputLines(normalizeNewlines(result.getStdout())).trim());
+  }
+
+  /**
+   * Asserts that the result succeeded and that the lines printed to stdout are identical to {@code
+   * sortedExpectedOutput} with the exception of path separators. Path separators in the expected
+   * output are converted to the separator for the current platform before being compared to the
+   * stdout of the result.
+   */
+  public static void assertOutputMatchesPaths(String sortedExpectedOutput, ProcessResult result) {
+    assertOutputMatches(MorePaths.pathWithPlatformSeparators(sortedExpectedOutput), result);
   }
 
   /**

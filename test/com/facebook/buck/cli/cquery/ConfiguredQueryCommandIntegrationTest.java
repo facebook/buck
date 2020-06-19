@@ -21,10 +21,10 @@ import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.ass
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesExactly;
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContents;
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContentsExactly;
+import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesPaths;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.ThriftOutputUtils;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraph;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraphNode;
 import com.facebook.buck.testutil.ProcessResult;
@@ -551,7 +551,7 @@ public class ConfiguredQueryCommandIntegrationTest {
     workspace.setUp();
     ProcessResult result = workspace.runBuckCommand("cquery", "buildfile(appletv-app-prod)");
 
-    assertOutputMatches(MorePaths.pathWithPlatformSeparators("apps/apple/BUCK"), result);
+    assertOutputMatchesPaths("apps/apple/BUCK", result);
   }
 
   @Test
@@ -637,7 +637,7 @@ public class ConfiguredQueryCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("cquery", "inputs(//lib:foo)");
-    assertOutputMatches(MorePaths.pathWithPlatformSeparators("lib/foo-ios.m"), result);
+    assertOutputMatchesPaths("lib/foo-ios.m", result);
   }
 
   @Test
@@ -659,8 +659,7 @@ public class ConfiguredQueryCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("cquery", "labels(exported_headers, //libraries/apple/...)");
 
-    assertOutputMatches(
-        MorePaths.pathWithPlatformSeparators("libraries/apple/LanguageUtilities.h"), result);
+    assertOutputMatchesPaths("libraries/apple/LanguageUtilities.h", result);
   }
 
   @Test
