@@ -29,17 +29,22 @@ import java.util.List;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
-public class PatternMatchedCollectionTypeCoercer<T>
-    implements TypeCoercer<Object, PatternMatchedCollection<T>> {
+/** Type coercer for {@code PatternMatchedCollection} */
+public class PatternMatchedCollectionTypeCoercer<U, T>
+    implements TypeCoercer<PatternMatchedCollection<U>, PatternMatchedCollection<T>> {
 
-  TypeCoercer<?, Pattern> patternTypeCoercer;
-  TypeCoercer<?, T> valueTypeCoercer;
+  TypeCoercer<Pattern, Pattern> patternTypeCoercer;
+  TypeCoercer<U, T> valueTypeCoercer;
+  private final TypeToken<PatternMatchedCollection<U>> unconfiguredTypeToken;
   private final TypeToken<PatternMatchedCollection<T>> typeToken;
 
   public PatternMatchedCollectionTypeCoercer(
-      TypeCoercer<?, Pattern> patternTypeCoercer, TypeCoercer<?, T> valueTypeCoercer) {
+      TypeCoercer<Pattern, Pattern> patternTypeCoercer, TypeCoercer<U, T> valueTypeCoercer) {
     this.patternTypeCoercer = patternTypeCoercer;
     this.valueTypeCoercer = valueTypeCoercer;
+    this.unconfiguredTypeToken =
+        new TypeToken<PatternMatchedCollection<U>>() {}.where(
+            new TypeParameter<U>() {}, valueTypeCoercer.getUnconfiguredType());
     this.typeToken =
         new TypeToken<PatternMatchedCollection<T>>() {}.where(
             new TypeParameter<T>() {}, valueTypeCoercer.getOutputType());
@@ -51,8 +56,8 @@ public class PatternMatchedCollectionTypeCoercer<T>
   }
 
   @Override
-  public TypeToken<Object> getUnconfiguredType() {
-    return TypeToken.of(Object.class);
+  public TypeToken<PatternMatchedCollection<U>> getUnconfiguredType() {
+    return unconfiguredTypeToken;
   }
 
   @Override
@@ -66,10 +71,12 @@ public class PatternMatchedCollectionTypeCoercer<T>
   }
 
   @Override
-  public void traverseUnconfigured(CellNameResolver cellRoots, Object object, Traversal traversal) {
-    // TODO(srice): `coerceToUnconfigured` isn't fully implemented for this class, so our
-    //  `traverseUnconfigured` is incorrect as well
-    traversal.traverse(object);
+  public void traverseUnconfigured(
+      CellNameResolver cellRoots, PatternMatchedCollection<U> object, Traversal traversal) {
+    for (Pair<Pattern, U> value : object.getPatternsAndValues()) {
+      traversal.traverse(value.getFirst());
+      valueTypeCoercer.traverseUnconfigured(cellRoots, value.getSecond(), traversal);
+    }
   }
 
   @Override
@@ -82,13 +89,33 @@ public class PatternMatchedCollectionTypeCoercer<T>
   }
 
   @Override
-  public Object coerceToUnconfigured(
+  public PatternMatchedCollection<U> coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    return object;
+    if (!(object instanceof List)) {
+      throw CoerceFailedException.simple(
+          object, getOutputType(), "input object should be a list of pairs");
+    }
+    PatternMatchedCollection.Builder<U> builder = PatternMatchedCollection.builder();
+    List<?> list = (List<?>) object;
+    for (Object element : list) {
+      if (!(element instanceof Collection) || ((Collection<?>) element).size() != 2) {
+        throw CoerceFailedException.simple(
+            object, getOutputType(), "input object should be a list of pairs");
+      }
+      Iterator<?> pair = ((Collection<?>) element).iterator();
+      Pattern platformSelector =
+          patternTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, pair.next());
+      U value =
+          valueTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, pair.next());
+      builder.add(platformSelector, value);
+    }
+    return builder.build();
   }
 
   @Override
@@ -98,36 +125,26 @@ public class PatternMatchedCollectionTypeCoercer<T>
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      PatternMatchedCollection<U> object)
       throws CoerceFailedException {
-    if (!(object instanceof List)) {
-      throw CoerceFailedException.simple(
-          object, getOutputType(), "input object should be a list of pairs");
-    }
     PatternMatchedCollection.Builder<T> builder = PatternMatchedCollection.builder();
-    List<?> list = (List<?>) object;
-    for (Object element : list) {
-      if (!(element instanceof Collection) || ((Collection<?>) element).size() != 2) {
-        throw CoerceFailedException.simple(
-            object, getOutputType(), "input object should be a list of pairs");
-      }
-      Iterator<?> pair = ((Collection<?>) element).iterator();
+    for (Pair<Pattern, U> pair : object.getPatternsAndValues()) {
       Pattern platformSelector =
-          patternTypeCoercer.coerceBoth(
+          patternTypeCoercer.coerce(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
               hostConfiguration,
-              pair.next());
+              pair.getFirst());
       T value =
-          valueTypeCoercer.coerceBoth(
+          valueTypeCoercer.coerce(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
               hostConfiguration,
-              pair.next());
+              pair.getSecond());
       builder.add(platformSelector, value);
     }
     return builder.build();

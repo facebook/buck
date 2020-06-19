@@ -311,6 +311,16 @@ public class UnconfiguredQueryCommandIntegrationTest {
     assertOutputMatchesExactly("", result);
   }
 
+  @Test
+  public void treatsPlatformRulesAsUnionOfAllPossibilities() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "platform_rules", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("uquery", "inputs(//:foo)");
+    assertOutputMatches("foo-android.c\nfoo-iphone.c", result);
+  }
+
   /**
    * =============================================================================================
    * ================================== Function specific tests ==================================

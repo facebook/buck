@@ -1,0 +1,7 @@
+cxx_library(
+    name = "foo",
+    platform_srcs = [
+        ("android.*", ["foo-android.c"]),
+        ("iphone.*", ["foo-iphone.c"]),
+    ],
+)
