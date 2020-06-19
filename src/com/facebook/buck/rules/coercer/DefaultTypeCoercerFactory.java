@@ -408,7 +408,6 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
               new BuildConfigFieldsTypeCoercer(),
               new UriTypeCoercer(),
               new FrameworkPathTypeCoercer(sourcePathTypeCoercer),
-              new SourceWithFlagsListTypeCoercer(stringTypeCoercer, sourceWithFlagsTypeCoercer),
               new SourceSetTypeCoercer(stringTypeCoercer, sourcePathTypeCoercer),
               new SourceSortedSetTypeCoercer(stringTypeCoercer, sourcePathTypeCoercer),
               new LogLevelTypeCoercer(),
