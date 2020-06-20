@@ -18,6 +18,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -32,25 +33,27 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.DefaultShellStep;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.io.ByteSource;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashSet;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -134,71 +137,95 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
       // Cache the symbols file.
       buildableContext.recordArtifact(output.getPath());
 
-      // Run `nm` on the inputs.
-      ShellStep shellStep =
-          new DefaultShellStep(
-              getProjectFilesystem().getRootPath(),
-              withDownwardApi,
-              ImmutableList.<String>builder()
-                  .addAll(nm.getCommandPrefix(context.getSourcePathResolver()))
-                  // Prepend all lines with the name of the input file to which it
-                  // corresponds.  Added only to make parsing the output a bit easier.
-                  .add("-A")
-                  // Generate output in a portable output format.
-                  .add("-P")
-                  // Only list external symbols.
-                  .add("-g")
-                  // Only list undefined symbols.
-                  .add("-u")
-                  .addAll(
-                      StreamSupport.stream(inputs.spliterator(), false)
-                          .map(context.getSourcePathResolver()::getAbsolutePath)
-                          .map(Object::toString)
-                          .iterator())
-                  .build(),
-              nm.getEnvironment(context.getSourcePathResolver())) {
-            @Override
-            protected void addOptions(ImmutableSet.Builder<ProcessExecutor.Option> options) {
-              options.add(ProcessExecutor.Option.EXPECTING_STD_OUT);
-            }
-          };
+      ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
+      // Start with a clean parent dir.
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
 
       // Parse the output from running `nm` and write all symbols to the symbol file.
-      MkdirStep mkdirStep =
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent()));
-      WriteFileStep writeFileStep =
-          new WriteFileStep(
-              getProjectFilesystem(),
-              new ByteSource() {
-                @Override
-                public InputStream openStream() throws IOException {
-                  Set<String> symbols = new LinkedHashSet<>();
-                  Pattern pattern = Pattern.compile("^\\S+: (?<name>\\S+) .*");
-                  try (BufferedReader reader =
-                      new BufferedReader(new StringReader(shellStep.getStdout()))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                      Matcher matcher = pattern.matcher(line);
-                      if (matcher.matches()) {
-                        symbols.add(matcher.group("name"));
-                      }
+      steps.add(
+          new IsolatedStep() {
+
+            private final Path symsFile = context.getBuildCellRootPath().resolve(output.getPath());
+            private final ImmutableMap<String, String> env =
+                nm.getEnvironment(context.getSourcePathResolver());
+            private final ImmutableList<String> cmd =
+                ImmutableList.<String>builder()
+                    .addAll(nm.getCommandPrefix(context.getSourcePathResolver()))
+                    // Prepend all lines with the name of the input file to which it
+                    // corresponds.  Added only to make parsing the output a bit easier.
+                    .add("-A")
+                    // Generate output in a portable output format.
+                    .add("-P")
+                    // Only list external symbols.
+                    .add("-g")
+                    // Only list undefined symbols.
+                    .add("-u")
+                    .addAll(
+                        StreamSupport.stream(inputs.spliterator(), false)
+                            .map(context.getSourcePathResolver()::getAbsolutePath)
+                            .map(Object::toString)
+                            .iterator())
+                    .build();
+
+            @Override
+            public String getIsolatedStepDescription(IsolatedExecutionContext context) {
+              return "Use POSIX nm to read undefined symbols and write them to a file";
+            }
+
+            @Override
+            public String getShortName() {
+              return "generate-undefined-symbols";
+            }
+
+            @Override
+            public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
+                throws IOException, InterruptedException {
+              Pattern pattern = Pattern.compile("^\\S+: (?<name>\\S+) .*");
+
+              ProcessExecutor executor = context.getProcessExecutor();
+              if (withDownwardApi) {
+                executor =
+                    executor.withDownwardAPI(
+                        DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+              }
+
+              try (ProcessExecutor.LaunchedProcess process =
+                      executor.launchProcess(
+                          ProcessExecutorParams.builder()
+                              .setCommand(cmd)
+                              .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
+                              .setEnvironment(env)
+                              .setDirectory(context.getRuleCellRoot().getPath())
+                              .build());
+                  BufferedReader reader =
+                      new BufferedReader(
+                          new InputStreamReader(process.getStdout(), Charsets.UTF_8));
+                  BufferedWriter writer =
+                      new BufferedWriter(
+                          new OutputStreamWriter(
+                              Files.newOutputStream(symsFile), Charsets.UTF_8))) {
+                Set<String> symbols = new HashSet<>();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                  Matcher matcher = pattern.matcher(line);
+                  if (matcher.matches()) {
+                    String symbol = matcher.group("name");
+                    if (symbols.add(symbol)) {
+                      writer.append(symbol);
+                      writer.newLine();
                     }
                   }
-                  StringBuilder builder = new StringBuilder();
-                  for (String symbol : symbols) {
-                    builder.append(symbol);
-                    builder.append(System.lineSeparator());
-                  }
-                  return new ByteArrayInputStream(
-                      builder.toString().getBytes(StandardCharsets.UTF_8));
                 }
-              },
-              output,
-              /* executable */ true);
+                return StepExecutionResult.of(executor.waitForLaunchedProcess(process));
+              }
+            }
+          });
 
-      return ImmutableList.of(shellStep, mkdirStep, writeFileStep);
+      return steps.build();
     }
 
     @Override
