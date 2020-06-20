@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -174,7 +173,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
             isolatedSteps.add(
                 getUnusedDependenciesStep(
                     factory, filesystem, buildContext.getSourcePathResolver())));
-    isolatedSteps.add(getMakeMissingOutputsStep(outputPathResolver, filesystem));
+    isolatedSteps.add(getMakeMissingOutputsStep(outputPathResolver));
 
     return isolatedSteps.build();
   }
@@ -186,20 +185,11 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     return factory.create(buildTarget, filesystem, sourcePathResolver, unusedDependenciesAction);
   }
 
-  private IsolatedStep getMakeMissingOutputsStep(
-      OutputPathResolver outputPathResolver, ProjectFilesystem filesystem) {
-    AbsPath projectRoot = filesystem.getRootPath();
-
-    AbsPath rootOutput = outputPathResolver.resolvePath(rootOutputPath).toAbsolutePath();
-    AbsPath pathToClassHashes =
-        outputPathResolver.resolvePath(pathToClassHashesOutputPath).toAbsolutePath();
-    AbsPath annotationsPath =
-        outputPathResolver.resolvePath(annotationsOutputPath).toAbsolutePath();
-
+  private IsolatedStep getMakeMissingOutputsStep(OutputPathResolver outputPathResolver) {
     return new MakeMissingOutputsStep(
-        projectRoot.relativize(rootOutput),
-        projectRoot.relativize(pathToClassHashes),
-        projectRoot.relativize(annotationsPath));
+        outputPathResolver.resolvePath(rootOutputPath),
+        outputPathResolver.resolvePath(pathToClassHashesOutputPath),
+        outputPathResolver.resolvePath(annotationsOutputPath));
   }
 
   public boolean useDependencyFileRuleKeys() {
