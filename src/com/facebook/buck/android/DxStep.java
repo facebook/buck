@@ -339,7 +339,7 @@ public class DxStep extends ShellStep {
     }
   }
 
-  private int executeInProcess(StepExecutionContext context) {
+  private int executeInProcess(StepExecutionContext context) throws IOException {
     if (D8.equals(dexTool)) {
 
       D8DiagnosticsHandler diagnosticsHandler = new D8DiagnosticsHandler();
@@ -407,17 +407,14 @@ public class DxStep extends ShellStep {
           } else if (e.getCause().getMessage().contains("# fields")) {
             return DEX_FIELD_REFERENCE_OVERFLOW_EXIT_CODE;
           }
-          return FAILURE_EXIT_CODE;
+          throw new IOException(e);
         } else {
           postCompilationFailureToConsole(context, diagnosticsHandler);
-          e.printStackTrace(context.getStdErr());
-          return FAILURE_EXIT_CODE;
+          throw new IOException(e);
         }
       } catch (IOException e) {
         postCompilationFailureToConsole(context, diagnosticsHandler);
-        e.printStackTrace(context.getStdErr());
-
-        return FAILURE_EXIT_CODE;
+        throw e;
       }
     } else if (DX.equals(dexTool)) {
       ImmutableList<String> argv = getShellCommandInternal(context);
