@@ -321,6 +321,16 @@ public class UnconfiguredQueryCommandIntegrationTest {
     assertOutputMatches("foo-android.c\nfoo-iphone.c", result);
   }
 
+  @Test
+  public void considersRawPathsAsInputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "path_traversal", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("uquery", "inputs(//:foo)");
+    assertOutputMatchesPaths("res", result);
+  }
+
   /**
    * =============================================================================================
    * ================================== Function specific tests ==================================

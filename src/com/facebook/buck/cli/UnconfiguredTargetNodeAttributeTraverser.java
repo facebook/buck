@@ -17,12 +17,14 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -37,6 +39,7 @@ import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import java.nio.file.Path;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -79,6 +82,7 @@ public class UnconfiguredTargetNodeAttributeTraverser {
       Function<ParamInfo<?>, Consumer<UnconfiguredBuildTarget>> buildTargetConsumerForParam,
       Function<ParamInfo<?>, Consumer<CellRelativePath>> pathConsumerForParam) {
 
+    CanonicalCellName cellName = node.getBuildTarget().getCell();
     TwoArraysImmutableHashMap<ParamName, Object> attributes = node.getAttributes();
     ParamsInfo paramsInfo = lookupParamsInfoForNode(node);
 
@@ -103,10 +107,11 @@ public class UnconfiguredTargetNodeAttributeTraverser {
                       target -> {
                         buildTargetConsumer.accept(target.getUnconfiguredBuildTarget());
                       });
-              consumeAttributeValue(buildTargetConsumer, pathConsumer, coercer, selectorValue);
+              consumeAttributeValue(
+                  cellName, buildTargetConsumer, pathConsumer, coercer, selectorValue);
             });
       } else {
-        consumeAttributeValue(buildTargetConsumer, pathConsumer, coercer, value);
+        consumeAttributeValue(cellName, buildTargetConsumer, pathConsumer, coercer, value);
       }
     }
   }
@@ -149,6 +154,7 @@ public class UnconfiguredTargetNodeAttributeTraverser {
   }
 
   private void consumeAttributeValue(
+      CanonicalCellName currentCellName,
       Consumer<UnconfiguredBuildTarget> buildTargetConsumer,
       Consumer<CellRelativePath> pathConsumer,
       TypeCoercer<Object, ?> coercer,
@@ -178,6 +184,9 @@ public class UnconfiguredTargetNodeAttributeTraverser {
                         return Unit.UNIT;
                       }
                     });
+          } else if (object instanceof Path) {
+            ForwardRelativePath path = ForwardRelativePath.ofPath((Path) object);
+            pathConsumer.accept(CellRelativePath.of(currentCellName, path));
           }
         });
   }

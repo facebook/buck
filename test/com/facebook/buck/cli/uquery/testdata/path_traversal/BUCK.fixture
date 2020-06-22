@@ -1,0 +1,4 @@
+android_resource(
+    name = "foo",
+    project_res = "res",
+)
