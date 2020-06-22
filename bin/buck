@@ -1,5 +1,7 @@
 #!/bin/bash
 
+KERNEL=$(uname -s 2>/dev/null)
+
 # Resolve symlinks if necessary, otherwise madness will follow.
 # On a GNU system, we could use "-f" to follow all symlinks. BSD based
 # systems don't have this flag. *sigh*
@@ -16,7 +18,21 @@ function abs_script_dir_path {
     echo $DIR
 }
 
-BUCK_DIR=$(abs_script_dir_path "$0")
+# Translate to native paths on CygWin
+function translate_path {
+  [[ $KERNEL != CYGWIN_NT* ]] && echo "$1" && return
+  cygpath -w "$1"
+}
 
-PYTHON=$(command -v python2.7 python2 python | head -1)
-PYTHONPATH="$BUCK_DIR"/../third-party/nailgun:"$BUCK_DIR"/.. exec $PYTHON "$BUCK_DIR"/../programs/buck.py "$@"
+BUCK_BIN_DIR=$(abs_script_dir_path "$0")
+NAILGUN_DIR=$(translate_path "$BUCK_BIN_DIR/../third-party/nailgun")
+BUCK_DIR=$(translate_path "$BUCK_BIN_DIR/..")
+BUCK_PY_PATH=$(translate_path "$BUCK_BIN_DIR/../programs/buck.py")
+if [[ $KERNEL == CYGWIN_NT* ]]; then
+  PY_PATH_SEPARATOR=";"
+else
+  PY_PATH_SEPARATOR=":"
+fi
+
+PYTHON=$(command -v python3 python2.7 python2 python | head -1)
+PYTHONPATH="$NAILGUN_DIR$PY_PATH_SEPARATOR$BUCK_DIR" exec "$PYTHON" "$BUCK_PY_PATH" "$@"
