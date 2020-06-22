@@ -33,6 +33,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
+import org.immutables.value.Value;
 
 /** Matches a {@link TargetNode} that corresponds to a single build target */
 @BuckStyleValue
@@ -46,15 +47,16 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
   }
 
   /** Returns a {@code BuildTargetSpec} with an empty output label. */
-  public static BuildTargetSpec of(
-      UnconfiguredBuildTarget unconfiguredBuildTarget, BuildFileSpec buildFileSpec) {
-    return ImmutableBuildTargetSpec.ofImpl(
-        UnconfiguredBuildTargetWithOutputs.of(unconfiguredBuildTarget, OutputLabel.defaultLabel()),
-        buildFileSpec);
+  public static BuildTargetSpec of(UnconfiguredBuildTarget unconfiguredBuildTarget) {
+    return from(
+        UnconfiguredBuildTargetWithOutputs.of(unconfiguredBuildTarget, OutputLabel.defaultLabel()));
   }
 
+  @Value.Derived
   @Override
-  public abstract BuildFileSpec getBuildFileSpec();
+  public BuildFileSpec getBuildFileSpec() {
+    return BuildFileSpec.fromUnconfiguredBuildTarget(getUnconfiguredBuildTarget());
+  }
 
   /**
    * Returns a new instance of {@link BuildTargetSpec} and automatically resolve {@link
@@ -65,9 +67,7 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
    * @param targetWithOutputs Build target to match
    */
   public static BuildTargetSpec from(UnconfiguredBuildTargetWithOutputs targetWithOutputs) {
-    return ImmutableBuildTargetSpec.ofImpl(
-        targetWithOutputs,
-        BuildFileSpec.fromUnconfiguredBuildTarget(targetWithOutputs.getBuildTarget()));
+    return ImmutableBuildTargetSpec.ofImpl(targetWithOutputs);
   }
 
   /**
@@ -79,7 +79,7 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
    */
   public static BuildTargetSpec from(UnconfiguredBuildTarget target) {
     // TODO(buck_team): use factory to create specs
-    return ImmutableBuildTargetSpec.of(target, BuildFileSpec.fromUnconfiguredBuildTarget(target));
+    return BuildTargetSpec.of(target);
   }
 
   @Override
