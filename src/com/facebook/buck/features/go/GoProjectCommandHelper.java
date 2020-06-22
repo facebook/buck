@@ -181,14 +181,20 @@ public class GoProjectCommandHelper {
     if (generatedPackages.isEmpty()) {
       return ExitCode.SUCCESS;
     }
-    // Run code generation targets on build targets only
-    ExitCode exitCode =
-        runBuild(
-            filterBuildTargets(generatedPackages.keySet())
-                .map(BuildTargetSourcePath::getTarget)
-                .collect(ImmutableSet.toImmutableSet()));
-    if (exitCode != ExitCode.SUCCESS) {
-      return exitCode;
+
+    ImmutableSet<BuildTarget> buildTargets =
+        filterBuildTargets(generatedPackages.keySet())
+            .map(BuildTargetSourcePath::getTarget)
+            .collect(ImmutableSet.toImmutableSet());
+    // we want to run build only if we have build targets,
+    // but we want to copyGeneratedGoCode in any case,
+    // because it might move some files where they should be
+    if (!buildTargets.isEmpty()) {
+      // Run code generation targets on build targets only
+      ExitCode exitCode = runBuild(buildTargets);
+      if (exitCode != ExitCode.SUCCESS) {
+        return exitCode;
+      }
     }
 
     // copy generated and moved code
