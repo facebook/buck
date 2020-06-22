@@ -102,6 +102,11 @@ install_python: &install_python
   name: Install Python 3.6.2
   command: |
     if [ "${PLATFORM}" == "macos" ]; then
+      pyenv --version
+      # The pre-installed pyenv has a bug, re-install it.
+      if [ $? == 0 ]; then
+        brew remove pyenv
+      fi
       brew install pyenv
     fi
     pyenv versions
