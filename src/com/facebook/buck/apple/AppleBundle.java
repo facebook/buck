@@ -514,44 +514,58 @@ public class AppleBundle extends AbstractBuildRule
           continue;
         }
 
+        if (dryRunCodeSigning) {
+          final boolean shouldUseEntitlements = false;
+          stepsBuilder.add(
+              new DryCodeSignStep(
+                  getProjectFilesystem(),
+                  codeSignOnCopyPath,
+                  shouldUseEntitlements,
+                  codeSignIdentitySupplier,
+                  new Pair<>(
+                      codeSignOnCopyPath.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE),
+                      ImmutableList.of())));
+        } else {
+          stepsBuilder.add(
+              new CodeSignStep(
+                  getProjectFilesystem(),
+                  context.getSourcePathResolver(),
+                  codeSignOnCopyPath,
+                  Optional.empty(),
+                  codeSignIdentitySupplier,
+                  codesign,
+                  codesignAllocatePath,
+                  codesignFlags,
+                  codesignTimeout,
+                  withDownwardApi));
+        }
+      }
+
+      if (dryRunCodeSigning) {
+        final boolean shouldUseEntitlements = signingEntitlementsTempPath.isPresent();
+        stepsBuilder.add(
+            new DryCodeSignStep(
+                getProjectFilesystem(),
+                bundleRoot,
+                shouldUseEntitlements,
+                codeSignIdentitySupplier,
+                new Pair<>(
+                    bundleRoot.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE),
+                    extraPathsToSignBuilder.build())));
+      } else {
         stepsBuilder.add(
             new CodeSignStep(
                 getProjectFilesystem(),
                 context.getSourcePathResolver(),
-                codeSignOnCopyPath,
-                Optional.empty(),
+                bundleRoot,
+                signingEntitlementsTempPath,
                 codeSignIdentitySupplier,
                 codesign,
                 codesignAllocatePath,
-                dryRunCodeSigning
-                    ? Optional.of(
-                        new Pair<>(
-                            codeSignOnCopyPath.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE),
-                            ImmutableList.of()))
-                    : Optional.empty(),
                 codesignFlags,
                 codesignTimeout,
                 withDownwardApi));
       }
-
-      stepsBuilder.add(
-          new CodeSignStep(
-              getProjectFilesystem(),
-              context.getSourcePathResolver(),
-              bundleRoot,
-              signingEntitlementsTempPath,
-              codeSignIdentitySupplier,
-              codesign,
-              codesignAllocatePath,
-              dryRunCodeSigning
-                  ? Optional.of(
-                      new Pair<>(
-                          bundleRoot.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE),
-                          extraPathsToSignBuilder.build()))
-                  : Optional.empty(),
-              codesignFlags,
-              codesignTimeout,
-              withDownwardApi));
     } else {
       AppleResourceProcessing.addSwiftStdlibStepIfNeeded(
           context.getSourcePathResolver(),

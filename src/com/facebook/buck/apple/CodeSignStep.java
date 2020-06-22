@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.dd.plist.NSDictionary;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -29,7 +28,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,7 +49,6 @@ class CodeSignStep implements Step {
   private final Supplier<CodeSignIdentity> codeSignIdentitySupplier;
   private final Tool codesign;
   private final Optional<Tool> codesignAllocatePath;
-  private final Optional<Pair<Path, ImmutableList<Path>>> dryRunResultsWithExtraPaths;
   private final ProjectFilesystem filesystem;
   private final ImmutableList<String> codesignFlags;
   private final Duration codesignTimeout;
@@ -65,7 +62,6 @@ class CodeSignStep implements Step {
       Supplier<CodeSignIdentity> codeSignIdentitySupplier,
       Tool codesign,
       Optional<Tool> codesignAllocatePath,
-      Optional<Pair<Path, ImmutableList<Path>>> dryRunResultsWithExtraPaths,
       ImmutableList<String> codesignFlags,
       Duration codesignTimeout,
       boolean withDownwardApi) {
@@ -76,7 +72,6 @@ class CodeSignStep implements Step {
     this.codeSignIdentitySupplier = codeSignIdentitySupplier;
     this.codesign = codesign;
     this.codesignAllocatePath = codesignAllocatePath;
-    this.dryRunResultsWithExtraPaths = dryRunResultsWithExtraPaths;
     this.codesignFlags = codesignFlags;
     this.codesignTimeout = codesignTimeout;
     this.withDownwardApi = withDownwardApi;
@@ -85,28 +80,6 @@ class CodeSignStep implements Step {
   @Override
   public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
-    if (dryRunResultsWithExtraPaths.isPresent()) {
-      Path dryRunResultsPath = dryRunResultsWithExtraPaths.get().getFirst();
-      NSDictionary dryRunResult = new NSDictionary();
-      dryRunResult.put(
-          "relative-path-to-sign", dryRunResultsPath.getParent().relativize(pathToSign).toString());
-      dryRunResult.put("use-entitlements", pathToSigningEntitlements.isPresent());
-      dryRunResult.put("identity", getIdentityArg(codeSignIdentitySupplier.get()));
-
-      ImmutableList<Path> extraPathsToSign = dryRunResultsWithExtraPaths.get().getSecond();
-      if (!extraPathsToSign.isEmpty()) {
-        ImmutableList.Builder<String> extraPathsBuilder = ImmutableList.builder();
-        for (Path extraPath : extraPathsToSign) {
-          extraPathsBuilder.add(dryRunResultsPath.getParent().relativize(extraPath).toString());
-        }
-        ImmutableList<String> extraPaths = extraPathsBuilder.build();
-        dryRunResult.put("extra-paths-to-sign", extraPaths);
-      }
-
-      filesystem.writeContentsToPath(dryRunResult.toXMLPropertyList(), dryRunResultsPath);
-      return StepExecutionResults.SUCCESS;
-    }
-
     ProcessExecutorParams.Builder paramsBuilder = ProcessExecutorParams.builder();
     if (codesignAllocatePath.isPresent()) {
       ImmutableList<String> commandPrefix = codesignAllocatePath.get().getCommandPrefix(resolver);
