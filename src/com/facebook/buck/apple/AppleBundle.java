@@ -500,71 +500,18 @@ public class AppleBundle extends AbstractBuildRule
         codeSignOnCopyPathsBuilder.add(outputPath);
       }
 
-      // It only makes sense to sign files, not directories, via codesign.
-      // However, for dry-runs of codesigning, files can be embedded
-      // as a separate argument to the real codesign; there's no point in
-      // signing these as a result.
-      ImmutableList.Builder<Path> extraPathsToSignBuilder = ImmutableList.builder();
-
-      for (Path codeSignOnCopyPath : codeSignOnCopyPathsBuilder.build()) {
-        // TODO(kelliem) remove this hard-coded check for dylibs once dry-run consumers
-        // are more flexible.
-        if (dryRunCodeSigning && codeSignOnCopyPath.toString().endsWith(".dylib")) {
-          extraPathsToSignBuilder.add(codeSignOnCopyPath);
-          continue;
-        }
-
-        if (dryRunCodeSigning) {
-          final boolean shouldUseEntitlements = false;
-          stepsBuilder.add(
-              new DryCodeSignStep(
-                  getProjectFilesystem(),
-                  codeSignOnCopyPath,
-                  shouldUseEntitlements,
-                  codeSignIdentitySupplier,
-                  new Pair<>(
-                      codeSignOnCopyPath.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE),
-                      ImmutableList.of())));
-        } else {
-          stepsBuilder.add(
-              new CodeSignStep(
-                  getProjectFilesystem(),
-                  context.getSourcePathResolver(),
-                  codeSignOnCopyPath,
-                  Optional.empty(),
-                  codeSignIdentitySupplier,
-                  codesign,
-                  codesignAllocatePath,
-                  codesignFlags,
-                  codesignTimeout,
-                  withDownwardApi));
-        }
-      }
-
+      ImmutableList<Path> codeSignOnCopyPaths = codeSignOnCopyPathsBuilder.build();
       if (dryRunCodeSigning) {
         final boolean shouldUseEntitlements = signingEntitlementsTempPath.isPresent();
-        stepsBuilder.add(
-            new DryCodeSignStep(
-                getProjectFilesystem(),
-                bundleRoot,
-                shouldUseEntitlements,
-                codeSignIdentitySupplier,
-                new Pair<>(
-                    bundleRoot.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE),
-                    extraPathsToSignBuilder.build())));
+        appendDryCodeSignSteps(
+            stepsBuilder, codeSignOnCopyPaths, codeSignIdentitySupplier, shouldUseEntitlements);
       } else {
-        stepsBuilder.add(
-            new CodeSignStep(
-                getProjectFilesystem(),
-                context.getSourcePathResolver(),
-                bundleRoot,
-                signingEntitlementsTempPath,
-                codeSignIdentitySupplier,
-                codesign,
-                codesignAllocatePath,
-                codesignFlags,
-                codesignTimeout,
-                withDownwardApi));
+        appendCodeSignSteps(
+            context,
+            stepsBuilder,
+            codeSignOnCopyPaths,
+            codeSignIdentitySupplier,
+            signingEntitlementsTempPath);
       }
     } else {
       AppleResourceProcessing.addSwiftStdlibStepIfNeeded(
@@ -593,6 +540,78 @@ public class AppleBundle extends AbstractBuildRule
         context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getPath());
 
     return stepsBuilder.build();
+  }
+
+  private void appendDryCodeSignSteps(
+      ImmutableList.Builder<Step> stepsBuilder,
+      ImmutableList<Path> codeSignOnCopyPaths,
+      Supplier<CodeSignIdentity> codeSignIdentitySupplier,
+      boolean shouldUseEntitlements) {
+    // It only makes sense to sign files, not directories, via codesign.
+    // However, for dry-runs of codesigning, files can be embedded
+    // as a separate argument to the real codesign; there's no point in
+    // signing these as a result.
+    ImmutableList.Builder<Path> extraPathsToSignBuilder = ImmutableList.builder();
+
+    for (Path codeSignOnCopyPath : codeSignOnCopyPaths) {
+      // TODO(kelliem) remove this hard-coded check for dylibs once dry-run consumers
+      // are more flexible.
+      if (codeSignOnCopyPath.toString().endsWith(".dylib")) {
+        extraPathsToSignBuilder.add(codeSignOnCopyPath);
+        continue;
+      }
+      final boolean shouldUseEntitlementsForExtraBinary = false;
+      stepsBuilder.add(
+          new DryCodeSignStep(
+              getProjectFilesystem(),
+              codeSignOnCopyPath,
+              shouldUseEntitlementsForExtraBinary,
+              codeSignIdentitySupplier,
+              new Pair<>(
+                  codeSignOnCopyPath.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE), ImmutableList.of())));
+    }
+    stepsBuilder.add(
+        new DryCodeSignStep(
+            getProjectFilesystem(),
+            bundleRoot,
+            shouldUseEntitlements,
+            codeSignIdentitySupplier,
+            new Pair<>(
+                bundleRoot.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE), extraPathsToSignBuilder.build())));
+  }
+
+  private void appendCodeSignSteps(
+      BuildContext context,
+      ImmutableList.Builder<Step> stepsBuilder,
+      ImmutableList<Path> codeSignOnCopyPaths,
+      Supplier<CodeSignIdentity> codeSignIdentitySupplier,
+      Optional<Path> maybeEntitlementsPath) {
+    for (Path codeSignOnCopyPath : codeSignOnCopyPaths) {
+      stepsBuilder.add(
+          new CodeSignStep(
+              getProjectFilesystem(),
+              context.getSourcePathResolver(),
+              codeSignOnCopyPath,
+              Optional.empty(),
+              codeSignIdentitySupplier,
+              codesign,
+              codesignAllocatePath,
+              codesignFlags,
+              codesignTimeout,
+              withDownwardApi));
+    }
+    stepsBuilder.add(
+        new CodeSignStep(
+            getProjectFilesystem(),
+            context.getSourcePathResolver(),
+            bundleRoot,
+            maybeEntitlementsPath,
+            codeSignIdentitySupplier,
+            codesign,
+            codesignAllocatePath,
+            codesignFlags,
+            codesignTimeout,
+            withDownwardApi));
   }
 
   private void appendCopyBinarySteps(
