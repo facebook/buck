@@ -26,10 +26,13 @@ import com.android.tools.r8.utils.AbortException;
 import com.android.tools.r8.utils.InternalOptions;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.isolatedsteps.shell.ShellStepDelegate;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -57,6 +60,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 public class DxStep extends ShellStep {
+  private static final Logger LOG = Logger.get(ShellStep.class);
 
   /** Options to pass to {@code dx}. */
   public enum Option {
@@ -219,7 +223,9 @@ public class DxStep extends ShellStep {
       Optional<String> bucketId,
       Optional<Integer> minSdkVersion,
       boolean withDownwardApi) {
-    super(filesystem.getRootPath(), withDownwardApi);
+    super(
+        getShellStepDelegate(
+            filesystem.getRootPath(), withDownwardApi, options.contains(Option.RUN_IN_PROCESS)));
     this.filesystem = filesystem;
     this.androidPlatformTarget = androidPlatformTarget;
     this.classpathFiles = classpathFiles;
@@ -238,6 +244,31 @@ public class DxStep extends ShellStep {
         "In-process dexing is only supported with custom DX");
     Preconditions.checkArgument(
         !intermediate || dexTool.equals(D8), "Intermediate dexing is only supported with D8");
+  }
+
+  private static ShellStepDelegate getShellStepDelegate(
+      AbsPath workingDirectory, boolean withDownwardApi, boolean inProcess) {
+    if (!inProcess) {
+      return new ShellStepDelegate(workingDirectory.getPath(), withDownwardApi, LOG);
+    }
+    // Avoid Precondition checks that should exist for actual shell steps.
+    // TODO don't use a ShellStep for in process dexing
+    return new ShellStepDelegate(workingDirectory.getPath(), withDownwardApi, LOG) {
+      @Override
+      public long getDuration() {
+        return 0;
+      }
+
+      @Override
+      public String getStdout() {
+        return "";
+      }
+
+      @Override
+      public String getStderr() {
+        return "";
+      }
+    };
   }
 
   @Override

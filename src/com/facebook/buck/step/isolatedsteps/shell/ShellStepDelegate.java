@@ -304,7 +304,7 @@ public class ShellStepDelegate {
   /**
    * @return the stdout of this ShellCommand or throws an exception if the stdout was not recorded
    */
-  public final String getStdout() {
+  public String getStdout() {
     Preconditions.checkState(
         this.stdout.isPresent(),
         "stdout was not set: shouldPrintStdout() must return false and execute() must "
@@ -324,7 +324,7 @@ public class ShellStepDelegate {
   /**
    * @return the stderr of this ShellCommand or throws an exception if the stderr was not recorded
    */
-  public final String getStderr() {
+  public String getStderr() {
     Preconditions.checkState(
         this.stderr.isPresent(),
         "stderr was not set: shouldPrintStdErr() must return false and execute() must "
