@@ -426,7 +426,6 @@ public class AppleBundle extends AbstractBuildRule
                 getProjectFilesystem(),
                 infoPlistBundlePath,
                 platform,
-                Optional.empty(), // Provisioning profile UUID -- find automatically.
                 entitlementsPlist,
                 provisioningProfileStore,
                 resourcesDestinationPath.resolve("embedded.mobileprovision"),

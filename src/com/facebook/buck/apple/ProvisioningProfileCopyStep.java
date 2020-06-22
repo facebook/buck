@@ -66,7 +66,6 @@ class ProvisioningProfileCopyStep implements Step {
   private final ProjectFilesystem filesystem;
   private final ApplePlatform platform;
   private final Optional<Path> entitlementsPlist;
-  private final Optional<String> provisioningProfileUUID;
   private final Path provisioningProfileDestination;
   private final Path signingEntitlementsTempPath;
   private final ProvisioningProfileStore provisioningProfileStore;
@@ -80,8 +79,6 @@ class ProvisioningProfileCopyStep implements Step {
 
   /**
    * @param infoPlist Bundle relative path of the bundle's {@code Info.plist} file.
-   * @param provisioningProfileUUID Optional. If specified, override the {@code .mobileprovision}
-   *     auto-detect and attempt to use {@code UUID.mobileprovision}.
    * @param entitlementsPlist Optional. If specified, use the metadata in this {@code
    *     Entitlements.plist} file to determine app prefix.
    * @param provisioningProfileStore Known provisioning profiles to choose from.
@@ -100,7 +97,6 @@ class ProvisioningProfileCopyStep implements Step {
       ProjectFilesystem filesystem,
       Path infoPlist,
       ApplePlatform platform,
-      Optional<String> provisioningProfileUUID,
       Optional<Path> entitlementsPlist,
       ProvisioningProfileStore provisioningProfileStore,
       Path provisioningProfileDestination,
@@ -111,7 +107,6 @@ class ProvisioningProfileCopyStep implements Step {
     this.provisioningProfileDestination = provisioningProfileDestination;
     this.infoPlist = infoPlist;
     this.platform = platform;
-    this.provisioningProfileUUID = provisioningProfileUUID;
     this.entitlementsPlist = entitlementsPlist;
     this.provisioningProfileStore = provisioningProfileStore;
     this.codeSignIdentitiesSupplier = codeSignIdentitiesSupplier;
@@ -153,24 +148,11 @@ class ProvisioningProfileCopyStep implements Step {
         AppleInfoPlistParsing.getBundleIdFromPlistStream(
                 infoPlist, filesystem.getInputStreamForRelativePath(infoPlist))
             .get();
-    Optional<ProvisioningProfileMetadata> bestProfile;
-    String diagnostics = "";
-    if (provisioningProfileUUID.isPresent()) {
-      bestProfile =
-          provisioningProfileStore.getProvisioningProfileByUUID(provisioningProfileUUID.get());
-      if (!bestProfile.isPresent()) {
-        diagnostics =
-            String.format(
-                "A provisioning profile matching UUID %s was not found",
-                provisioningProfileUUID.get());
-      }
-    } else {
-      StringBuffer diagnosticsBuffer = new StringBuffer();
-      bestProfile =
-          provisioningProfileStore.getBestProvisioningProfile(
-              bundleID, platform, entitlements, identities, diagnosticsBuffer);
-      diagnostics = diagnosticsBuffer.toString();
-    }
+    StringBuffer diagnosticsBuffer = new StringBuffer();
+    Optional<ProvisioningProfileMetadata> bestProfile =
+        provisioningProfileStore.getBestProvisioningProfile(
+            bundleID, platform, entitlements, identities, diagnosticsBuffer);
+    String diagnostics = diagnosticsBuffer.toString();
 
     if (dryRunResultsPath.isPresent()) {
       NSDictionary dryRunResult = new NSDictionary();

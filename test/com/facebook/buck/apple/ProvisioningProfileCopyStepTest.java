@@ -114,7 +114,6 @@ public class ProvisioningProfileCopyStepTest {
             projectFilesystem,
             testdataDir.resolve("Info.plist"),
             ApplePlatform.IPHONEOS,
-            Optional.empty(),
             Optional.of(testdataDir.resolve("Invalid.plist")),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
@@ -137,7 +136,6 @@ public class ProvisioningProfileCopyStepTest {
             projectFilesystem,
             testdataDir.resolve("Invalid.plist"),
             ApplePlatform.IPHONEOS,
-            Optional.empty(),
             Optional.empty(),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
@@ -165,7 +163,6 @@ public class ProvisioningProfileCopyStepTest {
             testdataDir.resolve("Info.plist"),
             ApplePlatform.IPHONEOS,
             Optional.empty(),
-            Optional.empty(),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, emptyDir),
             outputFile.getPath(),
@@ -187,7 +184,6 @@ public class ProvisioningProfileCopyStepTest {
             projectFilesystem,
             testdataDir.resolve("Info.plist"),
             ApplePlatform.IPHONEOS,
-            Optional.empty(),
             Optional.empty(),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, emptyDir),
@@ -221,7 +217,6 @@ public class ProvisioningProfileCopyStepTest {
             testdataDir.resolve("Info.plist"),
             ApplePlatform.IPHONEOS,
             Optional.empty(),
-            Optional.empty(),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
             outputFile.getPath(),
@@ -244,7 +239,6 @@ public class ProvisioningProfileCopyStepTest {
             projectFilesystem,
             testdataDir.resolve("Info.plist"),
             ApplePlatform.IPHONEOS,
-            Optional.of("00000000-0000-0000-0000-000000000000"),
             Optional.empty(),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
@@ -281,7 +275,6 @@ public class ProvisioningProfileCopyStepTest {
             projectFilesystem,
             testdataDir.resolve("Info.plist"),
             ApplePlatform.IPHONEOS,
-            Optional.of("00000000-0000-0000-0000-000000000000"),
             Optional.of(entitlementsFile),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
@@ -318,7 +311,6 @@ public class ProvisioningProfileCopyStepTest {
             projectFilesystem,
             testdataDir.resolve("Info.plist"),
             ApplePlatform.IPHONEOS,
-            Optional.of("00000000-0000-0000-0000-000000000000"),
             Optional.of(entitlementsFile),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
@@ -354,7 +346,6 @@ public class ProvisioningProfileCopyStepTest {
             projectFilesystem,
             testdataDir.resolve("Info.plist"),
             ApplePlatform.IPHONEOS,
-            Optional.of("00000000-0000-0000-0000-000000000000"),
             Optional.of(entitlementsFile),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
@@ -382,7 +373,6 @@ public class ProvisioningProfileCopyStepTest {
             infoPlistPath,
             ApplePlatform.IPHONEOS,
             Optional.empty(),
-            Optional.empty(),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
             outputFile.getPath(),
@@ -407,7 +397,6 @@ public class ProvisioningProfileCopyStepTest {
             infoPlistPath,
             ApplePlatform.IPHONEOS,
             Optional.empty(),
-            Optional.empty(),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
             outputFile.getPath(),
@@ -430,7 +419,6 @@ public class ProvisioningProfileCopyStepTest {
             projectFilesystem,
             infoPlistPath,
             ApplePlatform.IPHONEOS,
-            Optional.empty(),
             Optional.empty(),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
