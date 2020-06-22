@@ -162,7 +162,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
-    RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
+    Path outputDirectory = parameters.getOutputPaths().getClassesDir();
     Path pathToSrcsList = parameters.getOutputPaths().getPathToSourcesList();
 
     boolean generatingCode = !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
@@ -312,7 +312,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             CopyStep.forDirectory(
                 projectFilesystem,
                 classesOutput.getPath(),
-                outputDirectory.getPath(),
+                outputDirectory,
                 DirectoryMode.CONTENTS_ONLY));
 
         sourceBuilder.add(genOutput.getPath());
@@ -348,7 +348,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       steps.add(
           new KotlincStep(
               invokingRule,
-              outputDirectory.getPath(),
+              outputDirectory,
               sourceFilePaths,
               pathToSrcsList,
               allClasspaths,
@@ -394,7 +394,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             .from(parameters)
             .setClasspathEntries(
                 ImmutableSortedSet.<Path>naturalOrder()
-                    .add(projectFilesystem.resolve(outputDirectory).getPath())
+                    .add(projectFilesystem.resolve(outputDirectory))
                     .addAll(
                         Optional.ofNullable(extraClassPath.getExtraClasspath())
                             .orElse(ImmutableList.of()))

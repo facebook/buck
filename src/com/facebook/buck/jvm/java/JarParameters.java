@@ -16,9 +16,9 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.logging.Level;
@@ -41,18 +41,18 @@ public abstract class JarParameters {
     return false;
   }
 
-  public abstract RelPath getJarPath();
+  public abstract Path getJarPath();
 
   @Value.Default
   public Predicate<Object> getRemoveEntryPredicate() {
     return RemoveClassesPatternsMatcher.EMPTY;
   }
 
-  public abstract ImmutableSortedSet<RelPath> getEntriesToJar();
+  public abstract ImmutableSortedSet<Path> getEntriesToJar();
 
   public abstract Optional<String> getMainClass();
 
-  public abstract Optional<RelPath> getManifestFile();
+  public abstract Optional<Path> getManifestFile();
 
   @Value.Default
   public Level getDuplicatesLogLevel() {

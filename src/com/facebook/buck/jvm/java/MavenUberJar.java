@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
@@ -44,6 +43,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
@@ -60,7 +60,6 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<String> mavenCoords;
   private final Optional<SourcePath> mavenPomTemplate;
   private final TraversedDeps traversedDeps;
-  private final AbsPath rootPath;
 
   private MavenUberJar(
       TraversedDeps traversedDeps,
@@ -70,7 +69,6 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> mavenCoords,
       Optional<SourcePath> mavenPomTemplate) {
     super(buildTarget, projectFilesystem, params);
-    this.rootPath = projectFilesystem.getRootPath();
     this.traversedDeps = traversedDeps;
     this.mavenCoords = mavenCoords;
     this.mavenPomTemplate = mavenPomTemplate;
@@ -117,7 +115,7 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     JarDirectoryStep mergeOutputsStep =
         new JarDirectoryStep(
             JarParameters.builder()
-                .setJarPath(pathToOutput)
+                .setJarPath(pathToOutput.getPath())
                 .setEntriesToJar(
                     toOutputPaths(context.getSourcePathResolver(), traversedDeps.packagedDeps))
                 .setMergeManifests(true)
@@ -125,14 +123,13 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return ImmutableList.of(mkOutputDirStep, mergeOutputsStep);
   }
 
-  private ImmutableSortedSet<RelPath> toOutputPaths(
+  private static ImmutableSortedSet<Path> toOutputPaths(
       SourcePathResolverAdapter pathResolver, Iterable<? extends BuildRule> rules) {
     return RichStream.from(rules)
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
         .map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath())
-        .map(p -> rootPath.relativize(p))
-        .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.COMPARATOR));
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override

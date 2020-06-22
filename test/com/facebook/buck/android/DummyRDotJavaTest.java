@@ -102,7 +102,7 @@ public class DummyRDotJavaTest {
 
     RelPath rDotJavaSrcFolder =
         DummyRDotJava.getRDotJavaSrcFolder(dummyRDotJava.getBuildTarget(), filesystem);
-    RelPath rDotJavaBinFolder =
+    Path rDotJavaBinFolder =
         CompilerOutputPaths.getClassesDir(dummyRDotJava.getBuildTarget(), filesystem);
     RelPath rDotJavaOutputFolder =
         DummyRDotJava.getPathToOutputDir(dummyRDotJava.getBuildTarget(), filesystem);
@@ -130,7 +130,7 @@ public class DummyRDotJavaTest {
             .addAll(makeCleanDirDescription(rDotJavaSrcFolder.getPath()))
             .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
             .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
-            .addAll(makeCleanDirDescription(rDotJavaBinFolder.getPath()))
+            .addAll(makeCleanDirDescription(rDotJavaBinFolder))
             .addAll(makeCleanDirDescription(rDotJavaOutputFolder.getPath()))
             .add(String.format("mkdir -p %s", genFolder))
             .addAll(makeCleanDirDescription(rDotJavaAnnotationFolder))
@@ -167,8 +167,7 @@ public class DummyRDotJavaTest {
         TestExecutionContext.newInstance());
 
     assertEquals(
-        ImmutableSet.of(
-            rDotJavaBinFolder.getPath(), Paths.get(rDotJavaOutputJar), rDotJavaAnnotationFolder),
+        ImmutableSet.of(rDotJavaBinFolder, Paths.get(rDotJavaOutputJar), rDotJavaAnnotationFolder),
         buildableContext.getRecordedArtifacts());
   }
 
@@ -191,9 +190,10 @@ public class DummyRDotJavaTest {
             /* skipNonUnionRDotJava */ false);
     assertEquals(
         BuildTargetPaths.getScratchPath(
-            dummyRDotJava.getProjectFilesystem(),
-            dummyRDotJava.getBuildTarget(),
-            "lib__%s__scratch/classes"),
+                dummyRDotJava.getProjectFilesystem(),
+                dummyRDotJava.getBuildTarget(),
+                "lib__%s__scratch/classes")
+            .getPath(),
         dummyRDotJava.getRDotJavaBinFolder());
   }
 

@@ -29,7 +29,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -86,10 +85,10 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             JarParameters.builder()
-                .setJarPath(RelPath.get("output.jar"))
+                .setJarPath(Paths.get("output.jar"))
                 .setEntriesToJar(
-                    toRelPathSortedSet(
-                        RelPath.of(first.getFileName()), RelPath.of(second.getFileName())))
+                    ImmutableSortedSet.of(
+                        first.getPath().getFileName(), second.getPath().getFileName()))
                 .setMainClass(Optional.of("com.example.Main"))
                 .setMergeManifests(true)
                 .build());
@@ -116,19 +115,20 @@ public class JarDirectoryStepTest {
             "com/example/common/Helper.class");
     AbsPath second = createZip(jarDirectory.resolve("b.jar"), "com/example/common/Helper.class");
 
-    RelPath outputPath = RelPath.get("output.jar");
+    Path outputPath = Paths.get("output.jar");
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(jarDirectory);
-    RelPath[] relPaths = {RelPath.of(first.getFileName()), RelPath.of(second.getFileName())};
     JarDirectoryStep step =
         new JarDirectoryStep(
             JarParameters.builder()
                 .setJarPath(outputPath)
-                .setEntriesToJar(toRelPathSortedSet(relPaths))
+                .setEntriesToJar(
+                    ImmutableSortedSet.of(
+                        first.getPath().getFileName(), second.getPath().getFileName()))
                 .setMainClass(Optional.of("com.example.Main"))
                 .setMergeManifests(true)
                 .build());
-
     StepExecutionContext context = TestExecutionContext.newInstance(jarDirectory);
+
     BuckEventBusForTests.CapturingConsoleEventListener listener =
         new BuckEventBusForTests.CapturingConsoleEventListener();
     context.getBuckEventBus().register(listener);
@@ -151,8 +151,8 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             JarParameters.builder()
-                .setJarPath(RelPath.get("output.jar"))
-                .setEntriesToJar(toRelPathSortedSet(RelPath.of(zip.getFileName())))
+                .setJarPath(Paths.get("output.jar"))
+                .setEntriesToJar(ImmutableSortedSet.of(zip.getPath().getFileName()))
                 .setMainClass(Optional.of("com.example.MissingMain"))
                 .setMergeManifests(true)
                 .build());
@@ -182,10 +182,10 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             JarParameters.builder()
-                .setJarPath(RelPath.get("output.jar"))
+                .setJarPath(Paths.get("output.jar"))
                 .setEntriesToJar(
-                    toRelPathSortedSet(
-                        RelPath.of(first.getFileName()), RelPath.of(second.getFileName())))
+                    ImmutableSortedSet.of(
+                        first.getPath().getFileName(), second.getPath().getFileName()))
                 .setMainClass(Optional.of("com.example.Main"))
                 .setMergeManifests(true)
                 .build());
@@ -227,20 +227,20 @@ public class JarDirectoryStepTest {
       manifest.write(out);
     }
 
-    RelPath output = RelPath.get("output.jar");
+    AbsPath output = tmp.resolve("output.jar");
     JarDirectoryStep step =
         new JarDirectoryStep(
             JarParameters.builder()
-                .setJarPath(output)
-                .setEntriesToJar(toRelPathSortedSet(RelPath.get("input.jar")))
-                .setManifestFile(Optional.of(RelPath.get("manifest")))
+                .setJarPath(output.getPath())
+                .setEntriesToJar(ImmutableSortedSet.of(Paths.get("input.jar")))
+                .setManifestFile(Optional.of(tmp.resolve("manifest").getPath()))
                 .setMergeManifests(true)
                 .build());
 
     int returnCode = executeStep(step, tmp);
     assertEquals(0, returnCode);
 
-    try (ZipArchive zipArchive = new ZipArchive(tmp.resolve(output).getPath(), false)) {
+    try (ZipArchive zipArchive = new ZipArchive(tmp.resolve(output.getPath()).getPath(), false)) {
       byte[] rawManifest = zipArchive.readFully("META-INF/MANIFEST.MF");
       manifest = new Manifest(new ByteArrayInputStream(rawManifest));
       String version = manifest.getMainAttributes().getValue(IMPLEMENTATION_VERSION);
@@ -251,8 +251,7 @@ public class JarDirectoryStepTest {
 
   @Test
   public void jarsShouldContainDirectoryEntries() throws IOException {
-    String dirName = "dir-zip";
-    AbsPath zipup = folder.newFolder(dirName);
+    AbsPath zipup = folder.newFolder("dir-zip");
 
     AbsPath subdir = zipup.resolve("dir/subdir");
     Files.createDirectories(subdir.getPath());
@@ -261,8 +260,8 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             JarParameters.builder()
-                .setJarPath(RelPath.get("output.jar"))
-                .setEntriesToJar(toRelPathSortedSet(RelPath.get("")))
+                .setJarPath(Paths.get("output.jar"))
+                .setEntriesToJar(ImmutableSortedSet.of(zipup.getPath()))
                 .setMergeManifests(true)
                 .build());
     int returnCode = executeStep(step, zipup);
@@ -283,7 +282,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldNotMergeManifestsIfRequested() throws IOException, InterruptedException {
+  public void shouldNotMergeManifestsIfRequested() throws InterruptedException, IOException {
     Manifest fromJar = createManifestWithExampleSection(ImmutableMap.of("Not-Seen", "ever"));
     Manifest fromUser = createManifestWithExampleSection(ImmutableMap.of("cake", "cheese"));
 
@@ -345,8 +344,8 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             JarParameters.builder()
-                .setJarPath(RelPath.get("output.jar"))
-                .setEntriesToJar(toRelPathSortedSet(RelPath.of(first.getFileName())))
+                .setJarPath(Paths.get("output.jar"))
+                .setEntriesToJar(ImmutableSortedSet.of(first.getPath().getFileName()))
                 .setMainClass(Optional.of("com.example.Main"))
                 .setMergeManifests(true)
                 .setRemoveEntryPredicate(
@@ -376,8 +375,8 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             JarParameters.builder()
-                .setJarPath(RelPath.get("output.jar"))
-                .setEntriesToJar(toRelPathSortedSet(RelPath.of(first.getFileName())))
+                .setJarPath(Paths.get("output.jar"))
+                .setEntriesToJar(ImmutableSortedSet.of(first.getPath().getFileName()))
                 .setMainClass(Optional.of("com.example.A"))
                 .setMergeManifests(true)
                 .setRemoveEntryPredicate(
@@ -398,29 +397,29 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void timesAreSanitized() throws IOException {
+  public void timesAreSanitized() throws IOException, InterruptedException {
     AbsPath zipup = folder.newFolder("dir-zip");
 
     // Create a jar file with a file and a directory.
     AbsPath subdir = zipup.resolve("dir");
     Files.createDirectories(subdir.getPath());
     Files.write(subdir.resolve("a.txt").getPath(), "cake".getBytes());
-    RelPath outputJar = RelPath.get("output.jar");
+    AbsPath outputJar = folder.getRoot().resolve("output.jar");
     JarDirectoryStep step =
         new JarDirectoryStep(
             JarParameters.builder()
-                .setJarPath(outputJar)
-                .setEntriesToJar(toRelPathSortedSet(RelPath.get("")))
+                .setJarPath(outputJar.getPath())
+                .setEntriesToJar(ImmutableSortedSet.of(zipup.getPath()))
                 .setMergeManifests(true)
                 .build());
-    int returnCode = executeStep(step, zipup);
+    StepExecutionContext context = TestExecutionContext.newInstance();
+    int returnCode = step.execute(context).getExitCode();
     assertEquals(0, returnCode);
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
-    assertTrue(Files.exists(zipup.resolve(outputJar).getPath()));
+    assertTrue(Files.exists(outputJar.getPath()));
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
-    try (ZipInputStream is =
-        new ZipInputStream(new FileInputStream(zipup.resolve(outputJar).toFile()))) {
+    try (ZipInputStream is = new ZipInputStream(new FileInputStream(outputJar.toFile()))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
         assertEquals(entry.getName(), dosEpoch, new Date(entry.getTime()));
       }
@@ -493,8 +492,8 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             JarParameters.builder()
-                .setJarPath(dir.relativize(output))
-                .setEntriesToJar(toRelPathSortedSet(dir.relativize(dir), dir.relativize(inputJar)))
+                .setJarPath(output.getPath())
+                .setEntriesToJar(ImmutableSortedSet.of(dir.getPath(), inputJar.getPath()))
                 .setMergeManifests(true)
                 .build());
 
@@ -525,7 +524,8 @@ public class JarDirectoryStepTest {
   }
 
   private Manifest jarDirectoryAndReadManifest(
-      Manifest fromJar, Manifest fromUser, boolean mergeEntries) throws IOException {
+      Manifest fromJar, Manifest fromUser, boolean mergeEntries)
+      throws IOException, InterruptedException {
     byte[] contents = jarDirectoryAndReadManifestContents(fromJar, fromUser, mergeEntries);
     return new Manifest(new ByteArrayInputStream(contents));
   }
@@ -545,20 +545,20 @@ public class JarDirectoryStepTest {
     }
 
     AbsPath tmp = folder.newFolder();
-    RelPath output = RelPath.get("example.jar");
+    AbsPath output = tmp.resolve("example.jar");
     JarDirectoryStep step =
         new JarDirectoryStep(
             JarParameters.builder()
-                .setJarPath(output)
-                .setEntriesToJar(toRelPathSortedSet(tmp.relativize(originalJar)))
-                .setManifestFile(Optional.of(tmp.relativize(manifestFile)))
+                .setJarPath(output.getPath())
+                .setEntriesToJar(ImmutableSortedSet.of(originalJar.getPath()))
+                .setManifestFile(Optional.of(manifestFile.getPath()))
                 .setMergeManifests(mergeEntries)
                 .setRemoveEntryPredicate(RemoveClassesPatternsMatcher.EMPTY)
                 .build());
 
     executeStep(step, tmp);
 
-    try (JarFile jf = new JarFile(tmp.resolve(output).toFile())) {
+    try (JarFile jf = new JarFile(tmp.resolve(output.getPath()).toFile())) {
       JarEntry manifestEntry = jf.getJarEntry(JarFile.MANIFEST_NAME);
       try (InputStream manifestStream = jf.getInputStream(manifestEntry)) {
         return ByteStreams.toByteArray(manifestStream);
@@ -601,10 +601,6 @@ public class JarDirectoryStepTest {
     try (ZipArchive zip = new ZipArchive(zipFile.getPath(), false)) {
       return zip.getFileNames();
     }
-  }
-
-  private ImmutableSortedSet<RelPath> toRelPathSortedSet(RelPath... relPaths) {
-    return ImmutableSortedSet.orderedBy(RelPath.COMPARATOR).add(relPaths).build();
   }
 
   private int executeStep(JarDirectoryStep step, AbsPath root) throws IOException {

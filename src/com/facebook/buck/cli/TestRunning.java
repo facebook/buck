@@ -755,7 +755,7 @@ public class TestRunning {
       if (!sourceFolderPath.isEmpty()) {
         srcDirectories.addAll(sourceFolderPath);
       }
-      RelPath classesItem = null;
+      Path classesItem = null;
 
       if (useIntermediateClassesDir) {
         classesItem = CompilerOutputPaths.getClassesDir(rule.getBuildTarget(), filesystem);
@@ -765,13 +765,13 @@ public class TestRunning {
       if (classesItem == null || !filesystem.isDirectory(classesItem)) {
         SourcePath path = rule.getSourcePathToOutput();
         if (path != null) {
-          classesItem = ruleFinder.getSourcePathResolver().getRelativePath(path);
+          classesItem = ruleFinder.getSourcePathResolver().getRelativePath(path).getPath();
         }
       }
       if (classesItem == null) {
         continue;
       }
-      pathsToJars.add(classesItem.getPath());
+      pathsToJars.add(classesItem);
     }
 
     return new GenerateCodeCoverageReportStep(

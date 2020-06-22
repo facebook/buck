@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -132,7 +131,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
             context,
             target,
             resourcesParameters,
-            compilerParameters.getOutputPaths().getClassesDir().getPath()));
+            compilerParameters.getOutputPaths().getClassesDir()));
 
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
       steps.add(
@@ -184,7 +183,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
     if (compilerParameters.getSourceFilePaths().isEmpty()) {
       createJarStep(jarParameters, steps);
     }
-    buildableContext.recordArtifact(jarParameters.getJarPath().getPath());
+    buildableContext.recordArtifact(jarParameters.getJarPath());
   }
 
   protected void createCompileToJarStepImpl(
@@ -257,7 +256,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
   static ImmutableList<Step> addPostprocessClassesCommands(
       ProjectFilesystem filesystem,
       List<String> postprocessClassesCommands,
-      RelPath outputDirectory,
+      Path outputDirectory,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Optional<String> bootClasspath,
       boolean withDownwardApi) {

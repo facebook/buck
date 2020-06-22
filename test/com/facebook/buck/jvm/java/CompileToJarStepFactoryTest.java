@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
@@ -44,8 +43,8 @@ public class CompileToJarStepFactoryTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     String androidBootClassPath = filesystem.resolve("android.jar").toString();
     ImmutableList<String> postprocessClassesCommands = ImmutableList.of("tool arg1", "tool2");
-    RelPath outputDirectory =
-        filesystem.getBuckPaths().getScratchDir().resolveRel("android/java/lib__java__classes");
+    Path outputDirectory =
+        filesystem.getBuckPaths().getScratchDir().resolve("android/java/lib__java__classes");
     ImmutableSortedSet<Path> classpathEntries =
         ImmutableSortedSet.<Path>naturalOrder()
             .add(filesystem.resolve("rt.jar").getPath())

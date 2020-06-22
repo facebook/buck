@@ -43,6 +43,7 @@ import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -59,7 +60,6 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final SourcePath assembledAssetsDirectory;
   private final Optional<SourcePath> assembledNativeLibs;
   private final Optional<SourcePath> assembledNativeLibsAssets;
-  private final AbsPath rootPath;
 
   private final ImmutableSortedSet<SourcePath> classpathsToIncludeInJar;
 
@@ -85,7 +85,6 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.assembledNativeLibs = assembledNativeLibs;
     this.assembledNativeLibsAssets = assembledNativeLibsAssets;
     this.classpathsToIncludeInJar = classpathsToIncludeInJar;
-    this.rootPath = projectFilesystem.getRootPath();
   }
 
   @Override
@@ -141,12 +140,13 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     commands.add(
         new JarDirectoryStep(
             JarParameters.builder()
-                .setJarPath(temp.resolveRel("classes.jar"))
+                .setJarPath(temp.resolve("classes.jar"))
                 .setEntriesToJar(
                     context.getSourcePathResolver().getAllAbsolutePaths(classpathsToIncludeInJar)
                         .stream()
-                        .map(rootPath::relativize)
-                        .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.COMPARATOR)))
+                        .map(AbsPath::getPath)
+                        .collect(
+                            ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())))
                 .setMergeManifests(true)
                 .build()));
 

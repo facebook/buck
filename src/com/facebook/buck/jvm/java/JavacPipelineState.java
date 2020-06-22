@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -227,7 +226,7 @@ public class JavacPipelineState implements RulePipelineState {
       JavacOptions javacOptions,
       ProjectFilesystem filesystem,
       SourcePathResolverAdapter pathResolver,
-      RelPath outputDirectory,
+      Path outputDirectory,
       Path generatedCodeDirectory,
       StepExecutionContext context,
       ImmutableSortedSet<Path> buildClasspathEntries) {

@@ -33,7 +33,6 @@ import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -54,6 +53,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
@@ -130,56 +130,53 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     RelPath outputDirectory = getOutputDirectory();
-    ProjectFilesystem filesystem = getProjectFilesystem();
-    AbsPath rootPath = filesystem.getRootPath();
     Step mkdir =
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), filesystem, outputDirectory));
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputDirectory));
     commands.add(mkdir);
 
-    ImmutableSortedSet<RelPath> includePaths;
-    SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
+    ImmutableSortedSet<Path> includePaths;
     if (metaInfDirectory != null) {
-      RelPath stagingRoot = outputDirectory.resolveRel("meta_inf_staging");
-      RelPath stagingTarget = stagingRoot.resolveRel("META-INF");
+      Path stagingRoot = outputDirectory.resolve("meta_inf_staging");
+      Path stagingTarget = stagingRoot.resolve("META-INF");
 
       commands.addAll(
           MakeCleanDirectoryStep.of(
               BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), filesystem, stagingRoot)));
+                  context.getBuildCellRootPath(), getProjectFilesystem(), stagingRoot)));
 
       commands.add(
           SymlinkFileStep.of(
-              filesystem,
-              sourcePathResolver.getAbsolutePath(metaInfDirectory).getPath(),
-              stagingTarget.getPath()));
+              getProjectFilesystem(),
+              context.getSourcePathResolver().getAbsolutePath(metaInfDirectory).getPath(),
+              stagingTarget));
 
       includePaths =
-          ImmutableSortedSet.orderedBy(RelPath.COMPARATOR)
+          ImmutableSortedSet.<Path>naturalOrder()
               .add(stagingRoot)
               .addAll(
-                  sourcePathResolver.getAllAbsolutePaths(getTransitiveClasspaths()).stream()
-                      .map(rootPath::relativize)
+                  context.getSourcePathResolver().getAllAbsolutePaths(getTransitiveClasspaths())
+                      .stream()
+                      .map(AbsPath::getPath)
                       .collect(ImmutableList.toImmutableList()))
               .build();
     } else {
       includePaths =
-          sourcePathResolver.getAllAbsolutePaths(getTransitiveClasspaths()).stream()
-              .map(rootPath::relativize)
-              .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.COMPARATOR));
+          context.getSourcePathResolver().getAllAbsolutePaths(getTransitiveClasspaths()).stream()
+              .map(AbsPath::getPath)
+              .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
     }
 
     RelPath outputFile = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
-    RelPath manifestPath =
+    Path manifestPath =
         manifestFile == null
             ? null
-            : rootPath.relativize(sourcePathResolver.getAbsolutePath(manifestFile).getPath());
-
+            : context.getSourcePathResolver().getAbsolutePath(manifestFile).getPath();
     Step jar =
         new JarDirectoryStep(
             JarParameters.builder()
-                .setJarPath(outputFile)
+                .setJarPath(outputFile.getPath())
                 .setEntriesToJar(includePaths)
                 .setMainClass(Optional.ofNullable(mainClass))
                 .setManifestFile(Optional.ofNullable(manifestPath))

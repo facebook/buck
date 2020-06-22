@@ -70,8 +70,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
         AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(targetNode.getBuildTarget());
     if (willHaveDummyRDotJavaRule(targetNode)) {
       requiredBuildTargets.ifPresent(requiredTargets -> requiredTargets.add(dummyRDotJavaTarget));
-      return Optional.of(
-          DummyRDotJava.getOutputJarPath(dummyRDotJavaTarget, projectFilesystem).getPath());
+      return Optional.of(DummyRDotJava.getOutputJarPath(dummyRDotJavaTarget, projectFilesystem));
     }
     return Optional.empty();
   }

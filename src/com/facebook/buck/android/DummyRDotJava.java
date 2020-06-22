@@ -76,7 +76,7 @@ public class DummyRDotJava extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, InitializableFromDisk<Object>, HasJavaAbi {
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
-  private final RelPath outputJar;
+  private final Path outputJar;
   private final BuildOutputInitializer<Object> buildOutputInitializer;
   private final ImmutableSortedSet<BuildRule> buildDeps;
   @AddToRuleKey JavacToJarStepFactory compileStepFactory;
@@ -238,14 +238,14 @@ public class DummyRDotJava extends AbstractBuildRule
     }
 
     // Clear out the directory where the .class files will be generated.
-    RelPath rDotJavaClassesFolder = getRDotJavaBinFolder();
+    Path rDotJavaClassesFolder = getRDotJavaBinFolder();
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), rDotJavaClassesFolder)));
 
-    RelPath pathToJarOutputDir = outputJar.getParent();
+    Path pathToJarOutputDir = outputJar.getParent();
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
@@ -277,18 +277,17 @@ public class DummyRDotJava extends AbstractBuildRule
         compilerParameters,
         steps,
         buildableContext);
-    buildableContext.recordArtifact(rDotJavaClassesFolder.getPath());
+    buildableContext.recordArtifact(rDotJavaClassesFolder);
 
     JarParameters jarParameters =
         JarParameters.builder()
             .setJarPath(outputJar)
-            .setEntriesToJar(
-                ImmutableSortedSet.orderedBy(RelPath.COMPARATOR).add(rDotJavaClassesFolder).build())
+            .setEntriesToJar(ImmutableSortedSet.of(rDotJavaClassesFolder))
             .setMergeManifests(false)
             .setHashEntries(true)
             .build();
     steps.add(new JarDirectoryStep(jarParameters));
-    buildableContext.recordArtifact(outputJar.getPath());
+    buildableContext.recordArtifact(outputJar);
 
     steps.add(new CheckDummyRJarNotEmptyStep(javaSourceFilePaths));
 
@@ -363,8 +362,7 @@ public class DummyRDotJava extends AbstractBuildRule
     return BuildTargetPaths.getScratchPath(filesystem, buildTarget, "__%s_rdotjava_src__");
   }
 
-  public static RelPath getRDotJavaBinFolder(
-      BuildTarget buildTarget, ProjectFilesystem filesystem) {
+  public static Path getRDotJavaBinFolder(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return CompilerOutputPaths.of(buildTarget, filesystem).getClassesDir();
   }
 
@@ -372,9 +370,9 @@ public class DummyRDotJava extends AbstractBuildRule
     return BuildTargetPaths.getGenPath(filesystem, buildTarget, "__%s_dummyrdotjava_output__");
   }
 
-  public static RelPath getOutputJarPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+  public static Path getOutputJarPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return getPathToOutputDir(buildTarget, filesystem)
-        .resolveRel(String.format("%s.jar", buildTarget.getShortNameAndFlavorPostfix()));
+        .resolve(String.format("%s.jar", buildTarget.getShortNameAndFlavorPostfix()));
   }
 
   @Override
@@ -392,7 +390,7 @@ public class DummyRDotJava extends AbstractBuildRule
     return Optional.of(getBuildTarget());
   }
 
-  public RelPath getRDotJavaBinFolder() {
+  public Path getRDotJavaBinFolder() {
     return getRDotJavaBinFolder(getBuildTarget(), getProjectFilesystem());
   }
 

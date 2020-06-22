@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -81,7 +80,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   // We're just propagating the runtime launcher through `getExecutiable`, so don't add it to the
   // rule key.
   private final Tool javaRuntimeLauncher;
-  private final RelPath output;
+  private final Path output;
   private final JavaBinary innerJarRule;
   @AddToRuleKey private final boolean withDownwardApi;
 
@@ -106,7 +105,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.withDownwardApi = withDownwardApi;
     this.output =
         BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
-            .resolveRel(getBuildTarget().getShortName() + ".jar");
+            .resolve(getBuildTarget().getShortName() + ".jar");
   }
 
   @Override
@@ -115,8 +114,8 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    RelPath outputDir = getOutputDirectory();
-    RelPath fatJarDir = CompilerOutputPaths.getClassesDir(getBuildTarget(), getProjectFilesystem());
+    Path outputDir = getOutputDirectory();
+    Path fatJarDir = CompilerOutputPaths.getClassesDir(getBuildTarget(), getProjectFilesystem());
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -173,16 +172,16 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // Build the final fat JAR from the structure we've layed out above.  We first package the
     // fat jar resources (e.g. native libs) using the "stored" compression level, to avoid
     // expensive compression on builds and decompression on startup.
-    RelPath zipped = outputDir.resolveRel("contents.zip");
+    Path zipped = outputDir.resolve("contents.zip");
 
     Step zipStep =
         new ZipStep(
             getProjectFilesystem(),
-            zipped.getPath(),
+            zipped,
             ImmutableSet.of(),
             false,
             ZipCompressionLevel.NONE,
-            fatJarDir.getPath());
+            fatJarDir);
 
     CompilerParameters compilerParameters =
         CompilerParameters.builder()
@@ -216,13 +215,13 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     JarParameters jarParameters =
         JarParameters.builder()
             .setJarPath(output)
-            .setEntriesToJar(ImmutableSortedSet.orderedBy(RelPath.COMPARATOR).add(zipped).build())
+            .setEntriesToJar(ImmutableSortedSet.of(zipped))
             .setMainClass(Optional.of(FatJarMain.class.getName()))
             .setMergeManifests(true)
             .build();
     steps.add(new JarDirectoryStep(jarParameters));
 
-    buildableContext.recordArtifact(output.getPath());
+    buildableContext.recordArtifact(output);
 
     return steps.build();
   }
@@ -257,7 +256,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         /* executable */ false);
   }
 
-  private RelPath getOutputDirectory() {
+  private Path getOutputDirectory() {
     return output.getParent();
   }
 
