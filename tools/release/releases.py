@@ -65,7 +65,7 @@ def get_current_user(github_token, prefer_fb_email=True):
     response.raise_for_status()
     ret = response.json()
     default_email = ret["email"]
-    if ret["email"] is None or (not ret["email"].endswith("@fb.com") and prefer_fb_email):
+    if default_email is None or (not default_email.endswith("@fb.com") and prefer_fb_email):
         while emails_url:
             response = requests.get(emails_url, headers=headers)
             response.raise_for_status()
