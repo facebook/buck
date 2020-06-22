@@ -44,8 +44,10 @@ public class DexOverflowError {
           + "Use primary dex patterns and/or allow_r_dot_java_in_secondary_dex to exclude classes from the primary dex.";
 
   private static final String SECONDARY_DEX_OVERFLOW_MESSAGE =
-      "Secondary dex size exceeds 64k %s ref limit.\n"
-          + "secondary_dex_weight_limit determines the maximum size in bytes of secondary dexes.\n"
+      "Secondary dex size exceeds 64k %s ref limit.";
+
+  private static final String SECONDARY_DEX_OVERFLOW_PREDEX_REMEDIATION =
+      "secondary_dex_weight_limit determines the maximum size in bytes of secondary dexes.\n"
           + "Reduce secondary_dex_weight_limit until all secondary dexes are small enough.";
 
   /** Type of ref overflow for a failed dex step */
@@ -81,15 +83,6 @@ public class DexOverflowError {
 
   /** Return a detailed error message to show the user */
   public String getErrorMessage() {
-    StringBuilder builder = new StringBuilder();
-    String overflowName = type.name().toLowerCase();
-    if (dxStep.getOutputDexFile().endsWith("classes.dex")) {
-      builder.append(String.format(PRIMARY_DEX_OVERFLOW_MESSAGE, overflowName));
-    } else {
-      builder.append(String.format(SECONDARY_DEX_OVERFLOW_MESSAGE, overflowName));
-    }
-    builder.append(String.format("\nOutput dex file: %s\n", dxStep.getOutputDexFile()));
-
     ImmutableMap<String, Integer> dexInputDetails = null;
     try {
       ImmutableMap.Builder<String, Integer> dexInputsBuilder = ImmutableMap.builder();
@@ -101,10 +94,22 @@ public class DexOverflowError {
       }
       dexInputsBuilder.orderEntriesByValue(Ordering.natural().reversed());
       dexInputDetails = dexInputsBuilder.build();
-    } catch (NoSuchMethodException | IllegalAccessException | IOException e) {
-      e.printStackTrace();
+    } catch (Exception e) {
+      log.debug(e, "Exception counting dex references");
     }
 
+    StringBuilder builder = new StringBuilder();
+    boolean primaryDexOverflow = dxStep.getOutputDexFile().endsWith("classes.dex");
+    String overflowName = type.name().toLowerCase();
+    if (primaryDexOverflow) {
+      builder.append(String.format(PRIMARY_DEX_OVERFLOW_MESSAGE, overflowName));
+    } else {
+      builder.append(String.format(SECONDARY_DEX_OVERFLOW_MESSAGE, overflowName));
+      if (dexInputDetails != null && !dexInputDetails.isEmpty()) {
+        builder.append(SECONDARY_DEX_OVERFLOW_PREDEX_REMEDIATION);
+      }
+    }
+    builder.append(String.format("\nOutput dex file: %s\n", dxStep.getOutputDexFile()));
     if (dexInputDetails != null && !dexInputDetails.isEmpty()) {
       builder.append(
           String.format(
@@ -128,37 +133,25 @@ public class DexOverflowError {
 
   @SuppressWarnings("unchecked")
   private static int countRefs(OverflowType type, AbsPath dexFile)
-      throws IOException, NoSuchMethodException, IllegalAccessException {
+      throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
     Method m = info.persistent.dex.Main.class.getDeclaredMethod("openInputFiles", String.class);
     m.setAccessible(true);
 
-    List<RandomAccessFile> dexFiles = null;
-    try {
-      dexFiles =
-          (List<RandomAccessFile>) m.invoke(new info.persistent.dex.Main(), dexFile.toString());
-    } catch (InvocationTargetException e) {
-      log.debug("Failed to load dex file at " + dexFile);
-    }
+    List<RandomAccessFile> dexFiles =
+        (List<RandomAccessFile>) m.invoke(new info.persistent.dex.Main(), dexFile.toString());
 
     int count = 0;
     if (dexFiles != null) {
       for (RandomAccessFile file : dexFiles) {
-        DexData dexData = null;
-        try {
-          dexData = new DexData(file);
-          dexData.load();
-        } catch (com.android.dexdeps.DexDataException e) {
-          log.debug("Failed to load dex file at " + dexFile);
-        }
-        if (dexData != null) {
-          switch (type) {
-            case FIELD:
-              count += dexData.getFieldRefs().length;
-              break;
-            case METHOD:
-              count += dexData.getMethodRefs().length;
-              break;
-          }
+        DexData dexData = new DexData(file);
+        dexData.load();
+        switch (type) {
+          case FIELD:
+            count += dexData.getFieldRefs().length;
+            break;
+          case METHOD:
+            count += dexData.getMethodRefs().length;
+            break;
         }
       }
     }
