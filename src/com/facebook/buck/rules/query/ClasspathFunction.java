@@ -17,14 +17,12 @@
 package com.facebook.buck.rules.query;
 
 import com.facebook.buck.jvm.core.HasClasspathEntries;
-import com.facebook.buck.query.ConfiguredQueryTarget;
 import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEvaluator;
 import com.facebook.buck.query.QueryException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -37,7 +35,7 @@ import java.util.function.Consumer;
  *
  * <pre>       | CLASSPATH '(' expr ',' INTEGER ')'</pre>
  */
-public class ClasspathFunction implements QueryEnvironment.QueryFunction<ConfiguredQueryTarget> {
+public class ClasspathFunction<T> implements QueryEnvironment.QueryFunction<T> {
   @Override
   public String getName() {
     return "classpath";
@@ -54,27 +52,32 @@ public class ClasspathFunction implements QueryEnvironment.QueryFunction<Configu
         QueryEnvironment.ArgumentType.EXPRESSION, QueryEnvironment.ArgumentType.INTEGER);
   }
 
+  private SupportsClasspathEnvironment<T> assertSupportsClasspath(QueryEnvironment<T> env) {
+    if (!(env instanceof SupportsClasspathEnvironment)) {
+      throw new IllegalStateException(
+          "classpath function used by query environment doesn't support it: " + env);
+    }
+    return (SupportsClasspathEnvironment<T>) env;
+  }
+
   /**
-   * @param graphEnhancementQueryEnvironment must implement {@link GraphEnhancementQueryEnvironment}
-   *     or you will get a runtime {@link ClassCastException}.
+   * @param genericEnv must implement {@link SupportsClasspathEnvironment} or you will get a runtime
+   *     {@link IllegalStateException}.
    */
   @Override
-  public ImmutableSet<ConfiguredQueryTarget> eval(
-      QueryEvaluator<ConfiguredQueryTarget> evaluator,
-      QueryEnvironment<ConfiguredQueryTarget> graphEnhancementQueryEnvironment,
-      ImmutableList<Argument<ConfiguredQueryTarget>> args)
+  public ImmutableSet<T> eval(
+      QueryEvaluator<T> evaluator, QueryEnvironment<T> genericEnv, ImmutableList<Argument<T>> args)
       throws QueryException {
-    GraphEnhancementQueryEnvironment env =
-        (GraphEnhancementQueryEnvironment) graphEnhancementQueryEnvironment;
-    Set<ConfiguredQueryTarget> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
+    SupportsClasspathEnvironment<T> env = assertSupportsClasspath(genericEnv);
+    Set<T> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
 
     int depthBound = args.size() >= 2 ? args.get(1).getInteger() : Integer.MAX_VALUE;
-    Set<ConfiguredQueryTarget> result = new LinkedHashSet<>(argumentSet);
-    Set<ConfiguredQueryTarget> current = argumentSet;
+    Set<T> result = new LinkedHashSet<>(argumentSet);
+    Set<T> current = argumentSet;
 
     for (int i = 0; i < depthBound; i++) {
-      Set<ConfiguredQueryTarget> next = new LinkedHashSet<>();
-      Consumer<? super ConfiguredQueryTarget> consumer =
+      Set<T> next = new LinkedHashSet<>();
+      Consumer<? super T> consumer =
           queryTarget -> {
             boolean added = result.add(queryTarget);
             if (added) {
@@ -88,6 +91,6 @@ public class ClasspathFunction implements QueryEnvironment.QueryFunction<Configu
       current = next;
     }
     return env.restrictToInstancesOf(result, HasClasspathEntries.class)
-        .collect(ImmutableSortedSet.toImmutableSortedSet(ConfiguredQueryTarget::compare));
+        .collect(ImmutableSet.toImmutableSet());
   }
 }

@@ -79,7 +79,9 @@ import java.util.stream.StreamSupport;
  * aliases and other patterns (such as ...) will throw an exception. The $declared_deps macro will
  * evaluate to the declared dependencies passed into the constructor.
  */
-public class GraphEnhancementQueryEnvironment implements QueryEnvironment<ConfiguredQueryTarget> {
+public class GraphEnhancementQueryEnvironment
+    implements QueryEnvironment<ConfiguredQueryTarget>,
+        SupportsClasspathEnvironment<ConfiguredQueryTarget> {
 
   private final Optional<ActionGraphBuilder> graphBuilder;
   private final Optional<TargetGraph> targetGraph;
@@ -223,11 +225,8 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<Config
     return targetGraph.get().get(buildTarget);
   }
 
-  /**
-   * @return a filtered stream of targets where the rules they refer to are instances of the given
-   *     clazz
-   */
-  protected Stream<ConfiguredQueryTarget> restrictToInstancesOf(
+  @Override
+  public Stream<ConfiguredQueryTarget> restrictToInstancesOf(
       Set<ConfiguredQueryTarget> targets, Class<?> clazz) {
     Preconditions.checkArgument(graphBuilder.isPresent());
     return targets.stream()
@@ -243,6 +242,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<Config
         .map(ConfiguredQueryBuildTarget::of);
   }
 
+  @Override
   public Stream<ConfiguredQueryTarget> getFirstOrderClasspath(Set<ConfiguredQueryTarget> targets) {
     Preconditions.checkArgument(graphBuilder.isPresent());
     return targets.stream()
@@ -263,7 +263,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<Config
           ImmutableList.of(
               new AttrFilterFunction<>(),
               new AttrRegexFilterFunction<>(),
-              new ClasspathFunction(),
+              new ClasspathFunction<>(),
               new DepsFunction<>(),
               new DepsFunction.FirstOrderDepsFunction<>(),
               new DepsFunction.LookupFunction<>(),
