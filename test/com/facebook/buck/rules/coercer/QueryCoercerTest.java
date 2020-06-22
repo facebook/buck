@@ -25,12 +25,24 @@ import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.rules.query.UnconfiguredQuery;
 import java.util.ArrayList;
 import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class QueryCoercerTest {
+
+  @Test
+  public void traverseUnconfiguredBuildTargets() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    QueryCoercer coercer = new QueryCoercer();
+    UnconfiguredQuery query = UnconfiguredQuery.of("deps(//:a)", BaseName.ROOT);
+    List<Object> traversed = new ArrayList<>();
+    coercer.traverseUnconfigured(
+        createCellRoots(filesystem).getCellNameResolver(), query, traversed::add);
+    assertThat(traversed, Matchers.contains(BuildTargetFactory.newUnconfiguredInstance("//:a")));
+  }
 
   @Test
   public void traverseBuildTargets() {

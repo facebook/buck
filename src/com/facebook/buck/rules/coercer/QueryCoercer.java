@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.query.QueryException;
@@ -31,6 +32,16 @@ import java.util.stream.Stream;
 
 /** Coercer for {@link Query}s. */
 public class QueryCoercer implements TypeCoercer<UnconfiguredQuery, Query> {
+
+  private Stream<UnconfiguredBuildTarget> extractUnconfiguredBuildTargets(
+      CellNameResolver cellNameResolver, UnconfiguredQuery query) {
+    try {
+      return QueryUtils.extractUnconfiguredBuildTargets(
+          cellNameResolver, query.getBaseName(), query);
+    } catch (QueryException e) {
+      throw new RuntimeException("Error parsing query: " + query.getQuery(), e);
+    }
+  }
 
   private Stream<BuildTarget> extractBuildTargets(CellNameResolver cellNameResolver, Query query) {
     try {
@@ -53,9 +64,7 @@ public class QueryCoercer implements TypeCoercer<UnconfiguredQuery, Query> {
   @Override
   public void traverseUnconfigured(
       CellNameResolver cellRoots, UnconfiguredQuery query, Traversal traversal) {
-    // TODO(srice): This is very wrong. We need to parse the query like we do for configured
-    // traversal.
-    traversal.traverse(query);
+    extractUnconfiguredBuildTargets(cellRoots, query).forEach(traversal::traverse);
   }
 
   @Override

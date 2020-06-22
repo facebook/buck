@@ -37,6 +37,10 @@ public class BuildTargetFactory {
 
   public static BuildTarget newInstance(
       String fullyQualifiedName, TargetConfiguration targetConfiguration) {
+    return newUnconfiguredInstance(fullyQualifiedName).configure(targetConfiguration);
+  }
+
+  public static UnconfiguredBuildTarget newUnconfiguredInstance(String fullyQualifiedName) {
     BuckCellArg arg = BuckCellArg.of(fullyQualifiedName);
     CanonicalCellName cellName = CanonicalCellName.of(arg.getCellName());
     String[] parts = arg.getBasePath().split(":");
@@ -44,14 +48,12 @@ public class BuildTargetFactory {
     String[] nameAndFlavor = parts[1].split("#");
     if (nameAndFlavor.length != 2) {
       return UnconfiguredBuildTarget.of(
-              UnflavoredBuildTarget.of(cellName, BaseName.of(parts[0]), parts[1]),
-              FlavorSet.NO_FLAVORS)
-          .configure(targetConfiguration);
+          UnflavoredBuildTarget.of(cellName, BaseName.of(parts[0]), parts[1]),
+          FlavorSet.NO_FLAVORS);
     }
     return UnconfiguredBuildTarget.of(
-            UnflavoredBuildTarget.of(cellName, BaseName.of(parts[0]), nameAndFlavor[0]),
-            splitFlavors(nameAndFlavor[1]))
-        .configure(targetConfiguration);
+        UnflavoredBuildTarget.of(cellName, BaseName.of(parts[0]), nameAndFlavor[0]),
+        splitFlavors(nameAndFlavor[1]));
   }
 
   private static FlavorSet splitFlavors(String flavors) {

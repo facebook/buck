@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -41,15 +42,19 @@ import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.RdepsFunction;
+import com.facebook.buck.query.UnconfiguredQueryBuildTarget;
+import com.facebook.buck.query.UnconfiguredQueryTarget;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.util.stream.RichStream;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -103,7 +108,7 @@ public class GraphEnhancementQueryEnvironment
     this.typeCoercerFactory = typeCoercerFactory;
     this.cellNameResolver = cellNames;
     this.targetEvaluator =
-        new TargetEvaluator(
+        TargetEvaluator.forConfigured(
             cellNames,
             unconfiguredBuildTargetFactory,
             targetBaseName,
@@ -258,64 +263,98 @@ public class GraphEnhancementQueryEnvironment
         .map(dep -> ConfiguredQueryBuildTarget.of(dep.getBuildTarget()));
   }
 
-  public static final Iterable<QueryEnvironment.QueryFunction<ConfiguredQueryTarget>>
-      QUERY_FUNCTIONS =
-          ImmutableList.of(
-              new AttrFilterFunction<>(),
-              new AttrRegexFilterFunction<>(),
-              new ClasspathFunction<>(),
-              new DepsFunction<>(),
-              new DepsFunction.FirstOrderDepsFunction<>(),
-              new DepsFunction.LookupFunction<>(),
-              new KindFunction<>(),
-              new FilterFunction<>(),
-              new LabelsFunction<>(),
-              new InputsFunction<>(),
-              new RdepsFunction<>());
+  /** The (genericized) set of functions available to this query environment */
+  public static <T> Iterable<QueryEnvironment.QueryFunction<T>> defaultFunctions() {
+    return ImmutableList.of(
+        new AttrFilterFunction<>(),
+        new AttrRegexFilterFunction<>(),
+        new ClasspathFunction<>(),
+        new DepsFunction<>(),
+        new DepsFunction.FirstOrderDepsFunction<>(),
+        new DepsFunction.LookupFunction<>(),
+        new KindFunction<>(),
+        new FilterFunction<>(),
+        new LabelsFunction<>(),
+        new InputsFunction<>(),
+        new RdepsFunction<>());
+  }
 
   @Override
   public Iterable<QueryEnvironment.QueryFunction<ConfiguredQueryTarget>> getFunctions() {
-    return QUERY_FUNCTIONS;
+    return defaultFunctions();
   }
 
   /**
    * Implementation of {@link com.facebook.buck.query.QueryEnvironment.TargetEvaluator} for
    * configured target graph.
    */
-  public static class TargetEvaluator
-      implements QueryEnvironment.TargetEvaluator<ConfiguredQueryTarget> {
+  public static class TargetEvaluator<TNode, TTarget>
+      implements QueryEnvironment.TargetEvaluator<TNode> {
     private final CellNameResolver cellNames;
     private final BaseName targetBaseName;
-    private final ImmutableSet<BuildTarget> declaredDeps;
+    private final ImmutableSet<TTarget> declaredDeps;
     private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
-    private final TargetConfiguration targetConfiguration;
+    private final Function<UnconfiguredBuildTarget, TTarget> targetFunction;
+    private final Function<TTarget, TNode> nodeFunction;
 
-    public TargetEvaluator(
+    /** Creates a TargetEvaluator that generates {@code UnconfiguredQueryTarget}s */
+    public static TargetEvaluator<UnconfiguredQueryTarget, UnconfiguredBuildTarget> forUnconfigured(
+        CellNameResolver cellNames,
+        UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
+        BaseName targetBaseName,
+        Set<UnconfiguredBuildTarget> declaredDeps) {
+      return new TargetEvaluator<>(
+          cellNames,
+          unconfiguredBuildTargetFactory,
+          targetBaseName,
+          declaredDeps,
+          Functions.identity(),
+          UnconfiguredQueryBuildTarget::of);
+    }
+
+    /** Creates a TargetEvaluator that generates {@code ConfiguredQueryTarget}s */
+    public static TargetEvaluator<ConfiguredQueryTarget, BuildTarget> forConfigured(
         CellNameResolver cellNames,
         UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
         BaseName targetBaseName,
         Set<BuildTarget> declaredDeps,
         TargetConfiguration targetConfiguration) {
+      return new TargetEvaluator<>(
+          cellNames,
+          unconfiguredBuildTargetFactory,
+          targetBaseName,
+          declaredDeps,
+          (unconfiguredBuildTarget) -> unconfiguredBuildTarget.configure(targetConfiguration),
+          ConfiguredQueryBuildTarget::of);
+    }
+
+    private TargetEvaluator(
+        CellNameResolver cellNames,
+        UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
+        BaseName targetBaseName,
+        Set<TTarget> declaredDeps,
+        Function<UnconfiguredBuildTarget, TTarget> targetFunction,
+        Function<TTarget, TNode> nodeFunction) {
       this.cellNames = cellNames;
       this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
       this.targetBaseName = targetBaseName;
       this.declaredDeps = ImmutableSet.copyOf(declaredDeps);
-      this.targetConfiguration = targetConfiguration;
+      this.targetFunction = targetFunction;
+      this.nodeFunction = nodeFunction;
     }
 
     @Override
-    public ImmutableSet<ConfiguredQueryTarget> evaluateTarget(String target) throws QueryException {
+    public ImmutableSet<TNode> evaluateTarget(String target) throws QueryException {
       if ("$declared_deps".equals(target) || "$declared".equals(target)) {
         return declaredDeps.stream()
-            .map(ConfiguredQueryBuildTarget::of)
+            .map(nodeFunction::apply)
             .collect(ImmutableSet.toImmutableSet());
       }
       try {
-        BuildTarget buildTarget =
-            unconfiguredBuildTargetFactory
-                .createForBaseName(targetBaseName, target, cellNames)
-                .configure(targetConfiguration);
-        return ImmutableSet.of(ConfiguredQueryBuildTarget.of(buildTarget));
+        UnconfiguredBuildTarget unconfiguredBuildTarget =
+            unconfiguredBuildTargetFactory.createForBaseName(targetBaseName, target, cellNames);
+        TTarget genericBuildTarget = targetFunction.apply(unconfiguredBuildTarget);
+        return ImmutableSet.of(nodeFunction.apply(genericBuildTarget));
       } catch (BuildTargetParseException e) {
         throw new QueryException(e, "Unable to parse pattern %s", target);
       }
