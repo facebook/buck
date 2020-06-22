@@ -71,11 +71,27 @@ public class AuditInputCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_input_no_src", tmp);
     workspace.setUp();
 
-    // Print all of the inputs to thAe rule.
+    // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("audit", "input", "//example:foo.plist");
     result.assertSuccess();
     assertThat(
         workspace.getFileContents(expectedStdout),
         equalToIgnoringPlatformNewlines(result.getStdout()));
+  }
+
+  @Test
+  public void testBuckAuditInputWithSelect() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_input_with_select", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProcessResult result = workspace.runBuckCommand("audit", "input", "//example:foo");
+
+    // TODO: Fix `buck audit input` to handle `select`. Test current fails
+    result.assertFailure();
+    // assertThat(
+    //     workspace.getFileContents(expectedStdout),
+    //     equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 }

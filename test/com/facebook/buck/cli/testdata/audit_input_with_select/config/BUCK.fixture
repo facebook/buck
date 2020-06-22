@@ -1,0 +1,15 @@
+config_setting(
+    name = "A",
+    constraint_values = [
+        "//config/constraints:A",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+config_setting(
+    name = "B",
+    constraint_values = [
+        "//config/constraints:B",
+    ],
+    visibility = ["PUBLIC"],
+)

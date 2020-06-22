@@ -1,0 +1,22 @@
+apple_resource(
+    name = "foo",
+    files = select({
+        "//config:B": ["baz.txt"],
+        "DEFAULT": ["bar.txt"],
+    }),
+    default_target_platform = "//example:A",
+)
+
+platform(
+    name = "A",
+    constraint_values = [
+        "//config/constraints:A",
+    ],
+)
+
+platform(
+    name = "B",
+    constraint_values = [
+        "//config/constraints:B",
+    ],
+)

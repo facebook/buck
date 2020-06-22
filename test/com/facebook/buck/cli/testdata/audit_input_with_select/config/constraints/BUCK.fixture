@@ -1,0 +1,16 @@
+constraint_setting(
+    name = "constraint",
+    visibility = ["PUBLIC"],
+)
+
+constraint_value(
+    name = "A",
+    constraint_setting = ":constraint",
+    visibility = ["PUBLIC"],
+)
+
+constraint_value(
+    name = "B",
+    constraint_setting = ":constraint",
+    visibility = ["PUBLIC"],
+)
