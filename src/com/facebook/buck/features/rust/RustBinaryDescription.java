@@ -155,6 +155,7 @@ public class RustBinaryDescription
 
   protected enum Type implements FlavorConvertible {
     CHECK(RustDescriptionEnhancer.RFCHECK, Linker.LinkableDepType.STATIC_PIC, CrateType.CHECKBIN),
+    DOC(RustDescriptionEnhancer.RFDOC, Linker.LinkableDepType.STATIC_PIC, CrateType.DOCBIN),
     SAVEANALYSIS(
         RustDescriptionEnhancer.RFSAVEANALYSIS,
         Linker.LinkableDepType.STATIC_PIC,
@@ -190,6 +191,10 @@ public class RustBinaryDescription
 
     public boolean isCheck() {
       return flavor == RustDescriptionEnhancer.RFCHECK || this.isSaveAnalysis();
+    }
+
+    public boolean isDoc() {
+      return flavor == RustDescriptionEnhancer.RFDOC;
     }
 
     public boolean isSaveAnalysis() {

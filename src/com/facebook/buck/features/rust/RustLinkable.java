@@ -34,7 +34,7 @@ interface RustLinkable {
    * Return Arg for dependency.
    *
    * @param directDependent true for direct dependency, false for transitive
-   * @param isCheck true if we're generated check builds
+   * @param crateType Contains information about the crate.
    * @param rustPlatform Current platform we're building for.
    * @param depType What kind of linkage we want with the dependency.
    * @param alias
@@ -42,7 +42,7 @@ interface RustLinkable {
    */
   Arg getLinkerArg(
       Optional<BuildTarget> directDependent,
-      boolean isCheck,
+      CrateType crateType,
       RustPlatform rustPlatform,
       Linker.LinkableDepType depType,
       Optional<String> alias);

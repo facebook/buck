@@ -245,12 +245,11 @@ public class RustLibraryDescription
       @Override
       public Arg getLinkerArg(
           Optional<BuildTarget> directDependent,
-          boolean isCheck,
+          CrateType crateType,
           RustPlatform rustPlatform,
           LinkableDepType depType,
           Optional<String> alias) {
         BuildRule rule;
-        CrateType crateType;
 
         // Determine a crate type from preferred linkage and deptype.
         // Procedural Macros (aka, compiler plugins) take priority over check builds
@@ -258,8 +257,6 @@ public class RustLibraryDescription
         // plugin.
         if (isProcMacro()) {
           crateType = CrateType.PROC_MACRO;
-        } else if (isCheck) {
-          crateType = CrateType.CHECK;
         } else {
           switch (args.getPreferredLinkage()) {
             case ANY:

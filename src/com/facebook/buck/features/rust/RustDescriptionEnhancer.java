@@ -40,6 +40,8 @@ public class RustDescriptionEnhancer {
   public static final Flavor RFSAVEANALYSIS =
       UserFlavor.of("save-analysis", "Generate type analysis data");
 
+  public static final Flavor RFDOC = UserFlavor.of("doc", "Generate documentation");
+
   /**
    * Flavor of Rust crate
    *
@@ -56,6 +58,7 @@ public class RustDescriptionEnhancer {
     CHECK(RustDescriptionEnhancer.RFCHECK, CrateType.CHECK),
     SAVEANALYSIS(RustDescriptionEnhancer.RFSAVEANALYSIS, CrateType.SAVEANALYSIS),
     PROC_MACRO(RustDescriptionEnhancer.RFPROC_MACRO, CrateType.PROC_MACRO),
+    DOC(RustDescriptionEnhancer.RFDOC, CrateType.DOC),
     ;
 
     private final Flavor flavor;

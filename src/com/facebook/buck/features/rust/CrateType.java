@@ -36,6 +36,14 @@ public enum CrateType {
       "bin",
       RustDescriptionEnhancer.RFCHECK,
       (target, crate, plat) -> hashed_filename(target, "lib", crate, "rmeta")),
+  DOC(
+      "lib",
+      RustDescriptionEnhancer.RFDOC,
+      (target, crate, plat) -> hashed_filename(target, "lib", crate, "rmeta")),
+  DOCBIN(
+      "bin",
+      RustDescriptionEnhancer.RFDOC,
+      (target, crate, plat) -> hashed_filename(target, "lib", crate, "rmeta")),
   SAVEANALYSIS(
       "lib",
       RustDescriptionEnhancer.RFSAVEANALYSIS,
@@ -163,6 +171,11 @@ public enum CrateType {
    */
   public boolean isCheck() {
     return this == CHECK || this == CHECKBIN || this.isSaveAnalysis();
+  }
+
+  /** Preliminary boolean method for #doc flavor. */
+  public boolean isDoc() {
+    return this == DOC || this == DOCBIN;
   }
 
   /**

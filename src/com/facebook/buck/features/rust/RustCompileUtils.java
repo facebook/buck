@@ -348,8 +348,7 @@ public class RustCompileUtils {
         .map(
             alias ->
                 ((RustLinkable) rule)
-                    .getLinkerArg(
-                        directDependent, crateType.isCheck(), rustPlatform, rustDepType, alias))
+                    .getLinkerArg(directDependent, crateType, rustPlatform, rustDepType, alias))
         .forEach(depArgs::add);
   }
 

@@ -64,7 +64,7 @@ public class PrebuiltRustLibraryDescription
       @Override
       public com.facebook.buck.rules.args.Arg getLinkerArg(
           Optional<BuildTarget> directDependent,
-          boolean isCheck,
+          CrateType crateType,
           RustPlatform rustPlatform,
           Linker.LinkableDepType depType,
           Optional<String> alias) {

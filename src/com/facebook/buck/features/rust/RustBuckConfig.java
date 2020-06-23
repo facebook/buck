@@ -35,6 +35,7 @@ public class RustBuckConfig {
   private static final String RUSTC_BINARY_FLAGS = "rustc_binary_flags";
   private static final String RUSTC_LIBRARY_FLAGS = "rustc_library_flags";
   private static final String RUSTC_CHECK_FLAGS = "rustc_check_flags";
+  private static final String RUSTDOC_FLAGS = "rustdoc_flags";
   private static final String RUSTC_TEST_FLAGS = "rustc_test_flags";
   private static final String UNFLAVORED_BINARIES = "unflavored_binaries";
   private static final String REMAP_SRC_PATHS = "remap_src_paths";
@@ -154,6 +155,14 @@ public class RustBuckConfig {
     return ImmutableList.<String>builder()
         .addAll(getRustCompilerFlags(platform))
         .addAll(getCompilerFlags(platform, RUSTC_CHECK_FLAGS))
+        .build();
+  }
+
+  /** Preliminary: get rustc flags for #doc flavored builds. */
+  public ImmutableList<String> getRustcDocFlags(String platform) {
+    return ImmutableList.<String>builder()
+        .addAll(getRustCompilerFlags(platform))
+        .addAll(getCompilerFlags(platform, RUSTDOC_FLAGS))
         .build();
   }
 
