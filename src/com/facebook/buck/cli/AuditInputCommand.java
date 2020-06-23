@@ -27,14 +27,11 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.parser.spec.BuildTargetSpec;
-import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
@@ -82,16 +79,14 @@ public class AuditInputCommand extends AbstractCommand {
     TargetGraph graph;
     try (CommandThreadManager pool =
         new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()))) {
-      ImmutableList<TargetNodeSpec> targetsSpecs =
-          targets.stream().map(BuildTargetSpec::from).collect(ImmutableList.toImmutableList());
       graph =
           params
               .getParser()
-              .buildTargetGraphWithoutTopLevelConfigurationTargets(
+              .buildTargetGraphFromUnconfiguredTargets(
                   createParsingContext(params.getCells(), pool.getListeningExecutorService())
                       .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                       .withExcludeUnsupportedTargets(false),
-                  targetsSpecs,
+                  targets,
                   params.getTargetConfiguration())
               .getTargetGraph();
     } catch (BuildFileParseException e) {

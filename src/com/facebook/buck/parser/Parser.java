@@ -30,6 +30,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.parser.spec.BuildTargetSpec;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.google.common.collect.ImmutableList;
@@ -98,6 +99,21 @@ public interface Parser {
   TargetGraphCreationResult buildTargetGraph(
       ParsingContext parsingContext, ImmutableSet<BuildTarget> toExplore)
       throws IOException, InterruptedException, BuildFileParseException;
+
+  /**
+   * Create a target graph exploring a set of unconfigured targets, applying configurations to these
+   * unconfigured targets.
+   */
+  default TargetGraphCreationResult buildTargetGraphFromUnconfiguredTargets(
+      ParsingContext parsingContext,
+      ImmutableSet<UnconfiguredBuildTarget> toExplore,
+      Optional<TargetConfiguration> targetConfiguration)
+      throws IOException, InterruptedException, BuildFileParseException {
+    return buildTargetGraphWithTopLevelConfigurationTargets(
+        parsingContext,
+        toExplore.stream().map(BuildTargetSpec::from).collect(ImmutableList.toImmutableList()),
+        targetConfiguration);
+  }
 
   /**
    * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
