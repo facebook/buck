@@ -17,4 +17,13 @@
 package com.facebook.buck.io.watchman;
 
 /** A {@link Watchman} object does not have a necessary {@link ProjectWatch}. */
-public class FileSystemNotWatchedException extends IllegalArgumentException {}
+public class FileSystemNotWatchedException extends IllegalArgumentException {
+  /**
+   * Constructs a <code>FileSystemNotWatchedException</code> with the specified detail message.
+   *
+   * @param s the detail message.
+   */
+  public FileSystemNotWatchedException(String s) {
+    super(s);
+  }
+}

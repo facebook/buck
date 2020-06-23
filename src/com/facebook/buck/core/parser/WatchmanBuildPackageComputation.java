@@ -86,7 +86,11 @@ public class WatchmanBuildPackageComputation
 
     ProjectWatch watch = watchman.getProjectWatches().get(AbsPath.of(filesystemView.getRootPath()));
     if (watch == null) {
-      throw new FileSystemNotWatchedException();
+      String msg =
+          String.format(
+              "Path [%s] is not watched. The list of watched project: [%s]",
+              AbsPath.of(filesystemView.getRootPath()), watchman.getProjectWatches().keySet());
+      throw new FileSystemNotWatchedException(msg);
     }
     this.watch = watch;
   }

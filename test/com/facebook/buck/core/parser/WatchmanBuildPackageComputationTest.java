@@ -122,6 +122,10 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
     ImmutableSet<AbsPath> watchedProjects = ImmutableSet.of(filesystem.getRootPath());
 
     thrown.expect(IsInstanceOf.instanceOf(FileSystemNotWatchedException.class));
+    thrown.expectMessage(
+        String.format(
+            "Path [%s] is not watched. The list of watched project: [[%s]]",
+            projectFilesystemView.getRootPath(), filesystem.getRootPath()));
     getComputationStages("BUCK", projectFilesystemView, watchedProjects);
   }
 
@@ -130,6 +134,12 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
     filesystem.mkdirs(Paths.get("project"));
 
     thrown.expect(IsInstanceOf.instanceOf(FileSystemNotWatchedException.class));
+
+    thrown.expectMessage(
+        String.format(
+            "Path [%s] is not watched. The list of watched project: [%s]",
+            filesystem.getRootPath(), ImmutableList.of()));
+
     new WatchmanBuildPackageComputation("BUCK", filesystem.asView(), WatchmanFactory.NULL_WATCHMAN);
   }
 

@@ -283,7 +283,11 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
     try (WatchmanClient watchmanClient = watchman.createClient()) {
       ProjectWatch watch = watchman.getProjectWatches().get(projectFilesystem.getRootPath());
       if (watch == null) {
-        throw new FileSystemNotWatchedException();
+        String msg =
+            String.format(
+                "Path [%s] is not watched. The list of watched project: [%s]",
+                projectFilesystem.getRootPath(), watchman.getProjectWatches().keySet());
+        throw new FileSystemNotWatchedException(msg);
       }
 
       WatchmanGlobber globber =
