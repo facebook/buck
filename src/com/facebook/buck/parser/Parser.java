@@ -33,6 +33,7 @@ import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.spec.BuildTargetSpec;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.rules.param.ParamNameOrSpecial;
+import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -76,6 +77,15 @@ public interface Parser {
   TargetNode<?> getTargetNodeAssertCompatible(
       PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)
       throws BuildFileParseException;
+
+  default TargetNode<?> getTargetNodeAssertCompatible(
+      PerBuildState perBuildState,
+      UnconfiguredBuildTarget target,
+      Optional<TargetConfiguration> targetConfiguration)
+      throws BuildFileParseException {
+    return MoreFutures.getUncheckedInterruptibly(
+        perBuildState.getRequestedTargetNodeJobAssertCompatible(target, targetConfiguration));
+  }
 
   ListenableFuture<TargetNode<?>> getTargetNodeJobAssertCompatible(
       PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)

@@ -17,10 +17,9 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.event.ConsoleEvent;
@@ -69,7 +68,8 @@ public class AuditFlavorsCommand extends AbstractCommand {
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
-    ImmutableSet<BuildTarget> targets = convertArgumentsToBuildTargets(params, getArguments());
+    ImmutableSet<UnconfiguredBuildTarget> targets =
+        convertArgumentsToUnconfiguredBuildTargets(params, getArguments());
 
     if (targets.isEmpty()) {
       throw new CommandLineException("must specify at least one build target");
@@ -88,11 +88,12 @@ public class AuditFlavorsCommand extends AbstractCommand {
                         .withExcludeUnsupportedTargets(false),
                     params.getParser().getPermState())) {
 
-      for (BuildTarget target : targets) {
+      for (UnconfiguredBuildTarget target : targets) {
         TargetNode<?> targetNode =
             params
                 .getParser()
-                .getTargetNodeAssertCompatible(parserState, target, DependencyStack.top(target));
+                .getTargetNodeAssertCompatible(
+                    parserState, target, params.getTargetConfiguration());
         builder.add(targetNode);
       }
     } catch (BuildFileParseException e) {

@@ -35,6 +35,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.util.Optional;
 
 public class PerBuildState implements AutoCloseable {
@@ -106,6 +107,16 @@ public class PerBuildState implements AutoCloseable {
 
     return targetNodeParsePipeline.getRequestedTargetNodeJob(
         owningCell, target, targetConfiguration);
+  }
+
+  ListenableFuture<TargetNode<?>> getRequestedTargetNodeJobAssertCompatible(
+      UnconfiguredBuildTarget target, Optional<TargetConfiguration> targetConfiguration) {
+    Cell owningCell = cellManager.getCell(target.getCell());
+
+    return Futures.transform(
+        targetNodeParsePipeline.getRequestedTargetNodeJob(owningCell, target, targetConfiguration),
+        node -> node.assertGetTargetNode(DependencyStack.top(target)),
+        MoreExecutors.directExecutor());
   }
 
   ListenableFuture<ImmutableList<TargetNodeMaybeIncompatible>> getRequestedTargetNodesJob(
