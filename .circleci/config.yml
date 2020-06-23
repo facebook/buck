@@ -210,34 +210,34 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - save_cache:
           paths:
             - ~/android-sdk
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - save_cache:
           paths:
             - /opt/circleci/.pyenv
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - save_cache:
           paths:
             - ~/buck/buck-out
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           name: Run Build Tests
           command: |
@@ -259,7 +259,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_lua
       - run:
@@ -272,13 +272,13 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -304,20 +304,20 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -342,7 +342,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -355,7 +355,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -367,7 +367,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -397,7 +397,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_lua
       - run:
@@ -414,7 +414,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -424,7 +424,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -450,7 +450,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -463,7 +463,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -473,7 +473,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -499,7 +499,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -512,7 +512,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -522,7 +522,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -548,7 +548,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -561,7 +561,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -571,7 +571,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -604,7 +604,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -617,7 +617,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -627,7 +627,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -654,34 +654,34 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - save_cache:
           paths:
             - ~/android-sdk
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - save_cache:
           paths:
             - ~/.pyenv
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - save_cache:
           paths:
             - ~/buck/buck-out
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           name: Run Build Tests
           command: |
@@ -703,7 +703,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_lua
       - run:
@@ -716,13 +716,13 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -747,20 +747,20 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -787,7 +787,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_lua
       - run:
@@ -800,7 +800,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -818,7 +818,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -850,7 +850,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_lua
       - run:
@@ -867,7 +867,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -877,7 +877,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -905,7 +905,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -918,7 +918,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -928,7 +928,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -954,7 +954,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -967,7 +967,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -977,7 +977,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -1003,7 +1003,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -1016,7 +1016,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -1026,7 +1026,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -1063,7 +1063,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -1076,7 +1076,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -1086,7 +1086,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
