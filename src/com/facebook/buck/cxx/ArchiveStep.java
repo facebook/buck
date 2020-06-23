@@ -154,17 +154,12 @@ class ArchiveStep implements Step {
     } else {
       ImmutableList<String> outputArgs = archiver.outputArgs(output.toString());
       if (archiver.isArgfileRequired()) {
-        Iterable<String> argfileLines = Iterables.concat(outputArgs, allInputs);
+        Iterable<String> argfileLines =
+            Iterables.concat(archiverFlags, archiverExtraFlags, outputArgs, allInputs);
         Path argfile = getArgfile();
-        filesystem.createParentDirs(argfile);
         filesystem.writeLinesToPath(argfileLines, argfile);
         ImmutableList<String> command =
-            ImmutableList.<String>builder()
-                .addAll(archiverCommand)
-                .addAll(archiverFlags)
-                .addAll(archiverExtraFlags)
-                .add("@" + argfile)
-                .build();
+            ImmutableList.<String>builder().addAll(archiverCommand).add("@" + argfile).build();
         return StepExecutionResult.of(runArchiver(context, command));
       } else {
         ImmutableList<String> archiveCommandPrefix =
@@ -189,12 +184,14 @@ class ArchiveStep implements Step {
   @Override
   public String getDescription(StepExecutionContext context) {
     ImmutableList.Builder<String> command =
-        ImmutableList.<String>builder()
-            .addAll(archiverCommand)
-            .addAll(archiverFlags)
-            .addAll(archiverExtraFlags)
-            .addAll(archiver.outputArgs(output.toString()))
-            .addAll(Iterables.transform(inputs, Object::toString));
+        archiver.isArgfileRequired()
+            ? ImmutableList.<String>builder().addAll(archiverCommand).add("@" + getArgfile())
+            : ImmutableList.<String>builder()
+                .addAll(archiverCommand)
+                .addAll(archiverFlags)
+                .addAll(archiverExtraFlags)
+                .addAll(archiver.outputArgs(output.toString()))
+                .addAll(Iterables.transform(inputs, Object::toString));
     return Joiner.on(' ').join(command.build());
   }
 
