@@ -87,7 +87,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
   @AddToRuleKey private final ImmutableList<SourcePath> friendPaths;
   @AddToRuleKey private final AnnotationProcessingTool annotationProcessingTool;
-  @AddToRuleKey private final ImmutableMap<String, String> kaptApOptions;
   @AddToRuleKey private final Optional<String> jvmTarget;
   @AddToRuleKey private final ExtraClasspathProvider extraClassPath;
   @AddToRuleKey private final Javac javac;
@@ -129,7 +128,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       ImmutableMap<SourcePath, ImmutableMap<String, String>> kotlinCompilerPlugins,
       ImmutableList<SourcePath> friendPaths,
       AnnotationProcessingTool annotationProcessingTool,
-      ImmutableMap<String, String> kaptApOptions,
       Optional<String> jvmTarget,
       ExtraClasspathProvider extraClassPath,
       Javac javac,
@@ -142,7 +140,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     this.kotlinCompilerPlugins = kotlinCompilerPlugins;
     this.friendPaths = friendPaths;
     this.annotationProcessingTool = annotationProcessingTool;
-    this.kaptApOptions = kaptApOptions;
     this.jvmTarget = jvmTarget;
     this.extraClassPath = extraClassPath;
     this.javac = javac;
@@ -240,8 +237,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                     .map(url -> AP_CLASSPATH_ARG + urlToFile(url))
                     .collect(Collectors.toList()));
 
-        ImmutableMap.Builder<String, String> apOptions =
-            new ImmutableMap.Builder<String, String>().putAll(kaptApOptions);
+        ImmutableMap.Builder<String, String> apOptions = new ImmutableMap.Builder<>();
         ImmutableSortedSet<String> javacAnnotationProcessorParams =
             javacOptions.getJavaAnnotationProcessorParams().getParameters();
         for (String param : javacAnnotationProcessorParams) {

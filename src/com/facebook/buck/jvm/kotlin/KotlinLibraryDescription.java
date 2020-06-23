@@ -214,8 +214,6 @@ public class KotlinLibraryDescription
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getFriendPaths();
 
-    ImmutableMap<String, String> getKaptApOptions();
-
     ImmutableMap<SourcePath, ImmutableMap<String, String>> getKotlinCompilerPlugins();
   }
 

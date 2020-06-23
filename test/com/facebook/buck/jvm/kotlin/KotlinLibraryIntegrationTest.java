@@ -206,20 +206,9 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
-  public void shouldPassApoptionsToKapt() {
-    ProcessResult buildResult =
-        workspace.runBuckCommand("build", "//com/example/ap/kapt-apoptions:kotlin");
-    buildResult.assertSuccess("Build should have succeeded.");
-  }
-
-  @Test
   public void shouldPassApoptionsToKaptViaAnnotationProcessorParams() {
     ProcessResult buildResult =
-        workspace.runBuckCommand(
-            "build",
-            "//com/example/ap/kapt-apoptions:kotlin-ap-params",
-            "-c",
-            "kotlin.kapt_use_annotation_processor_params=true");
+        workspace.runBuckCommand("build", "//com/example/ap/kapt-apoptions:kotlin-ap-params");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 
