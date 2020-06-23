@@ -102,7 +102,7 @@ public class AppleSdkDiscoveryTest {
             .setName("macosx")
             .setVersion("10.9")
             .setApplePlatform(ApplePlatform.MACOSX)
-            .addArchitectures("i386", "x86_64")
+            .addArchitectures("i386", "x86_64", "arm64")
             .addAllToolchains(toolchains.values())
             .build();
     AppleSdk macosxDebugSdk =
@@ -110,7 +110,7 @@ public class AppleSdkDiscoveryTest {
             .setName("macosx-Debug")
             .setVersion("10.9")
             .setApplePlatform(ApplePlatform.MACOSX)
-            .addArchitectures("i386", "x86_64")
+            .addArchitectures("i386", "x86_64", "arm64")
             .addAllToolchains(toolchains.values())
             .build();
     AppleSdkPaths macosxReleasePaths =
@@ -165,7 +165,7 @@ public class AppleSdkDiscoveryTest {
             .setName("macosx10.9")
             .setVersion("10.9")
             .setApplePlatform(ApplePlatform.MACOSX)
-            .addArchitectures("i386", "x86_64")
+            .addArchitectures("i386", "x86_64", "arm64")
             .addAllToolchains(toolchains.values())
             .build();
     AppleSdkPaths macosx109Paths =
@@ -208,7 +208,7 @@ public class AppleSdkDiscoveryTest {
             .setName("macosx10.9")
             .setVersion("10.9")
             .setApplePlatform(ApplePlatform.MACOSX)
-            .addArchitectures("i386", "x86_64")
+            .addArchitectures("i386", "x86_64", "arm64")
             .addAllToolchains(toolchains.values())
             .build();
     AppleSdkPaths macosx109Paths =
@@ -282,7 +282,7 @@ public class AppleSdkDiscoveryTest {
             .setName("macosx10.9")
             .setVersion("10.9")
             .setApplePlatform(ApplePlatform.MACOSX)
-            .addArchitectures("i386", "x86_64")
+            .addArchitectures("i386", "x86_64", "arm64")
             .addAllToolchains(toolchains.values())
             .build();
     AppleSdkPaths macosx109Paths =
@@ -324,7 +324,7 @@ public class AppleSdkDiscoveryTest {
             .setName("macosx10.9")
             .setVersion("10.9")
             .setApplePlatform(ApplePlatform.MACOSX)
-            .addArchitectures("i386", "x86_64")
+            .addArchitectures("i386", "x86_64", "arm64")
             .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths macosx109Paths =
@@ -499,7 +499,7 @@ public class AppleSdkDiscoveryTest {
             .setName("macosx10.9")
             .setVersion("10.9")
             .setApplePlatform(ApplePlatform.MACOSX)
-            .addArchitectures("i386", "x86_64")
+            .addArchitectures("i386", "x86_64", "arm64")
             .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths macosx109Paths =
@@ -623,7 +623,7 @@ public class AppleSdkDiscoveryTest {
             .setName("macosx10.9")
             .setVersion("10.9")
             .setApplePlatform(ApplePlatform.MACOSX)
-            .addArchitectures("i386", "x86_64")
+            .addArchitectures("i386", "x86_64", "arm64")
             .addAllToolchains(toolchains.values())
             .build();
     AppleSdkPaths macosx109Paths =
@@ -748,7 +748,7 @@ public class AppleSdkDiscoveryTest {
             .setName("macosx10.9")
             .setVersion("10.9")
             .setApplePlatform(ApplePlatform.MACOSX)
-            .addArchitectures("i386", "x86_64")
+            .addArchitectures("i386", "x86_64", "arm64")
             .addAllToolchains(ImmutableList.of(overrideToolchain1, overrideToolchain2))
             .build();
     AppleSdkPaths macosx109Paths =

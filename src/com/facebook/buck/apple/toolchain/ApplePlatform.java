@@ -80,7 +80,7 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
   public static final ApplePlatform MACOSX =
       ImmutableApplePlatform.builder()
           .setName("macosx")
-          .setArchitectures(ImmutableList.of("i386", "x86_64"))
+          .setArchitectures(ImmutableList.of("i386", "x86_64", "arm64"))
           .setAppIncludesFrameworks(true)
           .build();
   public static final ApplePlatform DRIVERKIT =
