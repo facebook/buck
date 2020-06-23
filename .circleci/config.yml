@@ -641,7 +641,7 @@ jobs:
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
 
-  mac_build_openjdk8:
+  macos_build_openjdk8:
     environment:
       <<: *macos_environment
     working_directory: "/Users/distiller/buck"
@@ -1226,6 +1226,31 @@ jobs:
             python3 ./tools/release/publish_release.py --no-build-deb --no-build-homebrew --github-token ${GITHUB_TOKEN} --chocolatey-token ${CHOCO_TOKEN} --use-existing-release --version ${VERSION} --output-dir artifacts
           shell: bash.exe
 
+  publish_docs:
+    environment:
+      <<: *macos_environment
+    working_directory: "/Users/distiller/buck"
+    macos:
+      xcode: "11.3.1"
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - restore_cache:
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
+      - run:
+          <<: *run_buck_build
+
 workflows:
   version: 2.1
   linux_jobs:
@@ -1243,7 +1268,7 @@ workflows:
 
   macos_jobs:
     jobs:
-      - mac_build_openjdk8
+      - macos_build_openjdk8
       - macos_unit_groovy
       - macos_build_ant
       - macos_test_integration
@@ -1277,3 +1302,4 @@ workflows:
               only: /^v20.*/
             branches:
               ignore: /.*/
+      - publish_docs
