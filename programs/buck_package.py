@@ -130,7 +130,9 @@ class BuckPackage(BuckTool):
         # special case to handle the buck fake version
         # updating resources every time since they could change
         # but fake version remains the same
-        if self.has_fake_version() and os.path.exists(resource_path):
+        if (self.has_fake_version() or self._get_buck_repo_dirty()) and os.path.exists(
+            resource_path
+        ):
             if os.path.isfile(resource_path):
                 os.remove(resource_path)
             elif os.path.isdir(resource_path):
