@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -107,9 +108,9 @@ public final class RunCommand extends AbstractCommand {
           "no target given to run\nuse: buck run <target> <arg1> <arg2>...");
     }
 
-    BuildTarget target =
+    UnconfiguredBuildTarget target =
         Iterables.getOnlyElement(
-            convertArgumentsToBuildTargets(
+            convertArgumentsToUnconfiguredBuildTargets(
                 params, Collections.singletonList(arguments.get().get(0))));
 
     // Make sure the target is built.
