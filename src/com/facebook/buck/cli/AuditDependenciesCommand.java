@@ -122,8 +122,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
                     params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
                 .create(
                     createParsingContext(params.getCells(), pool.getListeningExecutorService())
-                        .withSpeculativeParsing(SpeculativeParsing.ENABLED)
-                        .withExcludeUnsupportedTargets(false),
+                        .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState())) {
       LegacyQueryUniverse targetUniverse = LegacyQueryUniverse.from(params, parserState);
       ConfiguredQueryEnvironment env = ConfiguredQueryEnvironment.from(params, targetUniverse);

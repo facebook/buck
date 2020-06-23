@@ -508,15 +508,6 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
         : Optional.empty();
   }
 
-  public boolean getExcludeIncompatibleTargets() {
-    // Exclude platform-incompatible target because
-    // this is generally what Buck users want.
-    // But keep the function virtual because
-    // `uquery` command (and probably others in the future)
-    // do not need target filtering by design.
-    return true;
-  }
-
   /**
    * Converts target arguments to fully qualified form (including resolving aliases, resolving the
    * implicit package target, etc).
@@ -712,7 +703,6 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   public ParsingContext createParsingContext(Cells cells, ListeningExecutorService executor) {
     return ParsingContext.builder(cells, executor)
         .setProfilingEnabled(getEnableParserProfiling())
-        .setExcludeUnsupportedTargets(getExcludeIncompatibleTargets())
         .setEnableTargetCompatibilityChecks(
             cells.getBuckConfig().getView(ParserConfig.class).getEnableTargetCompatibilityChecks())
         .build();

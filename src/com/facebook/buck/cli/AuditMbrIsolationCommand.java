@@ -86,8 +86,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
                 .getParser()
                 .buildTargetGraph(
                     createParsingContext(params.getCells(), pool.getListeningExecutorService())
-                        .withSpeculativeParsing(SpeculativeParsing.ENABLED)
-                        .withExcludeUnsupportedTargets(false),
+                        .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     targets);
       } catch (BuildFileParseException e) {
         params

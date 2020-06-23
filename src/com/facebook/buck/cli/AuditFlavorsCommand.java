@@ -84,8 +84,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
                 .getPerBuildStateFactory()
                 .create(
                     createParsingContext(params.getCells(), pool.getListeningExecutorService())
-                        .withSpeculativeParsing(SpeculativeParsing.ENABLED)
-                        .withExcludeUnsupportedTargets(false),
+                        .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState())) {
 
       for (UnconfiguredBuildTarget target : targets) {

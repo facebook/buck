@@ -353,7 +353,6 @@ public class TargetsCommand extends AbstractCommand {
                 .getPerBuildStateFactory()
                 .create(
                     createParsingContext(params.getCells(), pool.getListeningExecutorService())
-                        .withExcludeUnsupportedTargets(false)
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState())) {
           ResolveAliasHelper.resolveAlias(params, parserState, arguments);
@@ -994,8 +993,7 @@ public class TargetsCommand extends AbstractCommand {
                 params.getUnconfiguredBuildTargetFactory(),
                 params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
             .create(
-                createParsingContext(params.getCells(), executor)
-                    .withExcludeUnsupportedTargets(false),
+                createParsingContext(params.getCells(), executor),
                 params.getParser().getPermState())) {
 
       JsonAttributeFormat jsonAttributeFormat =
@@ -1321,8 +1319,7 @@ public class TargetsCommand extends AbstractCommand {
               .getParser()
               .buildTargetGraph(
                   createParsingContext(params.getCells(), executor)
-                      .withSpeculativeParsing(SpeculativeParsing.ENABLED)
-                      .withExcludeUnsupportedTargets(false),
+                      .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                   matchingBuildTargetsWithTests)
               .getTargetGraph();
 
@@ -1412,8 +1409,7 @@ public class TargetsCommand extends AbstractCommand {
                 params.getUnconfiguredBuildTargetFactory(),
                 params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
             .create(
-                createParsingContext(params.getCells(), executor)
-                    .withExcludeUnsupportedTargets(false),
+                createParsingContext(params.getCells(), executor),
                 params.getParser().getPermState())) {
       buildTargetHashes =
           new TargetGraphHashing(

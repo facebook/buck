@@ -84,8 +84,7 @@ public class AuditInputCommand extends AbstractCommand {
               .getParser()
               .buildTargetGraphFromUnconfiguredTargets(
                   createParsingContext(params.getCells(), pool.getListeningExecutorService())
-                      .withSpeculativeParsing(SpeculativeParsing.ENABLED)
-                      .withExcludeUnsupportedTargets(false),
+                      .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                   targets,
                   params.getTargetConfiguration())
               .getTargetGraph();

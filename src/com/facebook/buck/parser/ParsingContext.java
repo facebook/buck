@@ -63,9 +63,8 @@ public abstract class ParsingContext {
    * Whether targets with constraints that are not compatible with the target platform should be
    * excluded.
    */
-  @Value.Default
   public boolean excludeUnsupportedTargets() {
-    return false;
+    return true;
   }
 
   /**
@@ -92,13 +91,6 @@ public abstract class ParsingContext {
 
   public final ParsingContext withCells(Cells value) {
     return new Builder().from(this).setCells(value).build();
-  }
-
-  public final ParsingContext withExcludeUnsupportedTargets(boolean value) {
-    if (excludeUnsupportedTargets() == value) {
-      return this;
-    }
-    return new Builder().from(this).setExcludeUnsupportedTargets(value).build();
   }
 
   public final ParsingContext withApplyDefaultFlavorsMode(
