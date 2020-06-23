@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.integration.ProcessOutputAssertions;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
@@ -87,11 +88,6 @@ public class AuditInputCommandIntegrationTest {
 
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("audit", "input", "//example:foo");
-
-    // TODO: Fix `buck audit input` to handle `select`. Test current fails
-    result.assertFailure();
-    // assertThat(
-    //     workspace.getFileContents(expectedStdout),
-    //     equalToIgnoringPlatformNewlines(result.getStdout()));
+    ProcessOutputAssertions.assertOutputMatchesFileContents(expectedStdout, result, workspace);
   }
 }

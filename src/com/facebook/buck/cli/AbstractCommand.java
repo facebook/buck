@@ -525,8 +525,28 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   /**
    * Converts target arguments to fully qualified form (including resolving aliases, resolving the
    * implicit package target, etc).
+   *
+   * @deprecated ignores target configuration
    */
+  @Deprecated
   protected ImmutableSet<BuildTarget> convertArgumentsToBuildTargets(
+      CommandRunnerParams params, List<String> arguments) {
+    return convertArgumentsToUnconfiguredBuildTargets(params, arguments).stream()
+        .map(
+            unconfiguredBuildTarget ->
+                // TODO(nga): ignores default_target_platform and configuration detectors
+                unconfiguredBuildTarget.configure(
+                    params
+                        .getTargetConfiguration()
+                        .orElse(UnconfiguredTargetConfiguration.INSTANCE)))
+        .collect(ImmutableSet.toImmutableSet());
+  }
+
+  /**
+   * Converts target arguments to fully qualified form (including resolving aliases, resolving the
+   * implicit package target, etc).
+   */
+  protected ImmutableSet<UnconfiguredBuildTarget> convertArgumentsToUnconfiguredBuildTargets(
       CommandRunnerParams params, List<String> arguments) {
     UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
         params.getUnconfiguredBuildTargetFactory();
@@ -537,13 +557,6 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             input ->
                 unconfiguredBuildTargetFactory.create(
                     input, params.getCells().getRootCell().getCellNameResolver()))
-        .map(
-            unconfiguredBuildTarget ->
-                // TODO(nga): ignores default_target_platform and configuration detectors
-                unconfiguredBuildTarget.configure(
-                    params
-                        .getTargetConfiguration()
-                        .orElse(UnconfiguredTargetConfiguration.INSTANCE)))
         .collect(ImmutableSet.toImmutableSet());
   }
 

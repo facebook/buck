@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -27,11 +27,14 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.spec.BuildTargetSpec;
+import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
@@ -67,7 +70,8 @@ public class AuditInputCommand extends AbstractCommand {
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // TargetNodes for the specified BuildTargetPaths.
-    ImmutableSet<BuildTarget> targets = convertArgumentsToBuildTargets(params, getArguments());
+    ImmutableSet<UnconfiguredBuildTarget> targets =
+        convertArgumentsToUnconfiguredBuildTargets(params, getArguments());
 
     if (targets.isEmpty()) {
       throw new CommandLineException("must specify at least one build target");
@@ -78,14 +82,17 @@ public class AuditInputCommand extends AbstractCommand {
     TargetGraph graph;
     try (CommandThreadManager pool =
         new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()))) {
+      ImmutableList<TargetNodeSpec> targetsSpecs =
+          targets.stream().map(BuildTargetSpec::from).collect(ImmutableList.toImmutableList());
       graph =
           params
               .getParser()
-              .buildTargetGraph(
+              .buildTargetGraphWithoutTopLevelConfigurationTargets(
                   createParsingContext(params.getCells(), pool.getListeningExecutorService())
                       .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                       .withExcludeUnsupportedTargets(false),
-                  targets)
+                  targetsSpecs,
+                  params.getTargetConfiguration())
               .getTargetGraph();
     } catch (BuildFileParseException e) {
       params
