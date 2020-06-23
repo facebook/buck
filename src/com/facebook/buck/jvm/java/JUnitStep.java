@@ -16,13 +16,13 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -85,6 +85,13 @@ public class JUnitStep extends ShellStep {
   }
 
   @Override
+  public StepExecutionResult execute(StepExecutionContext context)
+      throws InterruptedException, IOException {
+    ensureClasspathArgfile();
+    return super.execute(context);
+  }
+
+  @Override
   public String getShortName() {
     return "junit";
   }
@@ -130,7 +137,7 @@ public class JUnitStep extends ShellStep {
     return env.build();
   }
 
-  private void warnUser(IsolatedExecutionContext context, String message) {
+  private void warnUser(StepExecutionContext context, String message) {
     context.getStdErr().println(context.getAnsi().asWarningText(message));
   }
 
