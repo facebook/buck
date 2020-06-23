@@ -10,3 +10,14 @@ pytest_test(
         "//third-party/py/pytest-asyncio:pytest-asyncio",
     ],
 )
+
+pytest_test(
+    name = "buck_process_test",
+    srcs = [
+        "buck_process_test.py",
+    ],
+    deps = [
+        "//buck_api/srcs:buck_process_lib",
+        "//third-party/py/pytest-asyncio:pytest-asyncio",
+    ],
+)

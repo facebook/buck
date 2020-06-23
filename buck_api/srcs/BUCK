@@ -8,3 +8,17 @@ python_library(
         "PUBLIC",
     ],
 )
+
+python_library(
+    name = "buck_process_lib",
+    srcs = [
+        "buck_process.py",
+    ],
+    base_module = "",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":buck_result_lib",
+    ],
+)
