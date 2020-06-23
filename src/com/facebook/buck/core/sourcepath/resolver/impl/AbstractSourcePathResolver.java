@@ -124,6 +124,14 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
         .collect(ImmutableSortedSet.toImmutableSortedSet(AbsPath.comparator()));
   }
 
+  @Override
+  public ImmutableSortedSet<RelPath> getAllRelativePaths(
+      Collection<? extends SourcePath> sourcePaths) {
+    return sourcePaths.stream()
+        .flatMap(sourcePath -> getRelativePath(sourcePath).stream())
+        .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
+  }
+
   /**
    * @return The {@link RelPath} instances the {@code sourcePath} refers to, relative to its owning
    *     {@link ProjectFilesystem}.

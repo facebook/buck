@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -80,7 +81,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   // We're just propagating the runtime launcher through `getExecutiable`, so don't add it to the
   // rule key.
   private final Tool javaRuntimeLauncher;
-  private final Path output;
+  private final RelPath output;
   private final JavaBinary innerJarRule;
   @AddToRuleKey private final boolean withDownwardApi;
 
@@ -105,7 +106,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.withDownwardApi = withDownwardApi;
     this.output =
         BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
-            .resolve(getBuildTarget().getShortName() + ".jar");
+            .resolveRel(getBuildTarget().getShortName() + ".jar");
   }
 
   @Override
@@ -114,12 +115,13 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    Path outputDir = getOutputDirectory();
-    Path fatJarDir = CompilerOutputPaths.getClassesDir(getBuildTarget(), getProjectFilesystem());
+    RelPath outputDir = getOutputDirectory();
+    ProjectFilesystem filesystem = getProjectFilesystem();
+    RelPath fatJarDir = CompilerOutputPaths.getClassesDir(getBuildTarget(), filesystem);
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)));
+                context.getBuildCellRootPath(), filesystem, outputDir)));
 
     // Map of the system-specific shared library name to it's resource name as a string.
     ImmutableMap.Builder<String, String> sonameToResourceMapBuilder = ImmutableMap.builder();
@@ -130,11 +132,11 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(),
-                  getProjectFilesystem(),
+                  filesystem,
                   fatJarDir.resolve(resource).getParent())));
       steps.add(
           SymlinkFileStep.of(
-              getProjectFilesystem(),
+              filesystem,
               context.getSourcePathResolver().getAbsolutePath(entry.getValue()).getPath(),
               fatJarDir.resolve(resource)));
     }
@@ -161,33 +163,33 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
-                getProjectFilesystem(),
+                filesystem,
                 fatJarDir.resolve(FAT_JAR_INNER_JAR).getParent())));
     steps.add(
         SymlinkFileStep.of(
-            getProjectFilesystem(),
+            filesystem,
             context.getSourcePathResolver().getAbsolutePath(innerJar).getPath(),
             fatJarDir.resolve(FAT_JAR_INNER_JAR)));
 
     // Build the final fat JAR from the structure we've layed out above.  We first package the
     // fat jar resources (e.g. native libs) using the "stored" compression level, to avoid
     // expensive compression on builds and decompression on startup.
-    Path zipped = outputDir.resolve("contents.zip");
+    RelPath zipped = outputDir.resolveRel("contents.zip");
 
     Step zipStep =
         new ZipStep(
-            getProjectFilesystem(),
-            zipped,
+            filesystem,
+            zipped.getPath(),
             ImmutableSet.of(),
             false,
             ZipCompressionLevel.NONE,
-            fatJarDir);
+            fatJarDir.getPath());
 
     CompilerParameters compilerParameters =
         CompilerParameters.builder()
             .setClasspathEntries(ImmutableSortedSet.of())
             .setSourceFilePaths(javaSourceFilePaths.build())
-            .setScratchPaths(getBuildTarget(), getProjectFilesystem())
+            .setScratchPaths(getBuildTarget(), filesystem)
             .build();
 
     Preconditions.checkState(compilerParameters.getOutputPaths().getClassesDir().equals(fatJarDir));
@@ -196,7 +198,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
-                getProjectFilesystem(),
+                filesystem,
                 compilerParameters.getOutputPaths().getPathToSourcesList().getParent())));
 
     JavacToJarStepFactory compileStepFactory =
@@ -204,24 +206,19 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             javac, javacOptions, ExtraClasspathProvider.EMPTY, withDownwardApi);
 
     compileStepFactory.createCompileStep(
-        context,
-        getProjectFilesystem(),
-        getBuildTarget(),
-        compilerParameters,
-        steps,
-        buildableContext);
+        context, filesystem, getBuildTarget(), compilerParameters, steps, buildableContext);
 
     steps.add(zipStep);
     JarParameters jarParameters =
         JarParameters.builder()
             .setJarPath(output)
-            .setEntriesToJar(ImmutableSortedSet.of(zipped))
+            .setEntriesToJar(ImmutableSortedSet.orderedBy(RelPath.comparator()).add(zipped).build())
             .setMainClass(Optional.of(FatJarMain.class.getName()))
             .setMergeManifests(true)
             .build();
     steps.add(new JarDirectoryStep(jarParameters));
 
-    buildableContext.recordArtifact(output);
+    buildableContext.recordArtifact(output.getPath());
 
     return steps.build();
   }
@@ -256,7 +253,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         /* executable */ false);
   }
 
-  private Path getOutputDirectory() {
+  private RelPath getOutputDirectory() {
     return output.getParent();
   }
 

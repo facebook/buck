@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -131,7 +132,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
             context,
             target,
             resourcesParameters,
-            compilerParameters.getOutputPaths().getClassesDir()));
+            compilerParameters.getOutputPaths().getClassesDir().getPath()));
 
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
       steps.add(
@@ -183,7 +184,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
     if (compilerParameters.getSourceFilePaths().isEmpty()) {
       createJarStep(jarParameters, steps);
     }
-    buildableContext.recordArtifact(jarParameters.getJarPath());
+    buildableContext.recordArtifact(jarParameters.getJarPath().getPath());
   }
 
   protected void createCompileToJarStepImpl(
@@ -256,7 +257,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
   static ImmutableList<Step> addPostprocessClassesCommands(
       ProjectFilesystem filesystem,
       List<String> postprocessClassesCommands,
-      Path outputDirectory,
+      RelPath outputDirectory,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Optional<String> bootClasspath,
       boolean withDownwardApi) {
@@ -264,15 +265,13 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       return ImmutableList.of();
     }
 
-    ImmutableList.Builder<Step> commands = new ImmutableList.Builder<Step>();
+    ImmutableList.Builder<Step> commands = new ImmutableList.Builder<>();
     ImmutableMap.Builder<String, String> envVarBuilder = ImmutableMap.builder();
     envVarBuilder.put(
         "COMPILATION_CLASSPATH",
         Joiner.on(':').join(Iterables.transform(declaredClasspathEntries, filesystem::resolve)));
 
-    if (bootClasspath.isPresent()) {
-      envVarBuilder.put("COMPILATION_BOOTCLASSPATH", bootClasspath.get());
-    }
+    bootClasspath.ifPresent(s -> envVarBuilder.put("COMPILATION_BOOTCLASSPATH", s));
     ImmutableMap<String, String> envVars = envVarBuilder.build();
 
     for (String postprocessClassesCommand : postprocessClassesCommands) {

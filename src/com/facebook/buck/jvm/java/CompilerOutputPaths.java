@@ -29,7 +29,7 @@ import java.util.Optional;
 /** Provides access to the various output paths for a java library. */
 @BuckStyleValueWithBuilder
 public abstract class CompilerOutputPaths {
-  public abstract Path getClassesDir();
+  public abstract RelPath getClassesDir();
 
   public abstract Path getOutputJarDirPath();
 
@@ -48,7 +48,7 @@ public abstract class CompilerOutputPaths {
     RelPath scratchRoot = BuildTargetPaths.getScratchPath(filesystem, target, "lib__%s__scratch");
 
     return ImmutableCompilerOutputPaths.builder()
-        .setClassesDir(scratchRoot.resolve("classes"))
+        .setClassesDir(scratchRoot.resolveRel("classes"))
         .setOutputJarDirPath(genRoot.getPath())
         .setAbiJarPath(
             hasAbiJar(target)
@@ -74,7 +74,7 @@ public abstract class CompilerOutputPaths {
         .resolve("used-classes.json");
   }
 
-  public static Path getClassesDir(BuildTarget target, ProjectFilesystem filesystem) {
+  public static RelPath getClassesDir(BuildTarget target, ProjectFilesystem filesystem) {
     return CompilerOutputPaths.of(target, filesystem).getClassesDir();
   }
 

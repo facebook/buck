@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -43,7 +42,6 @@ import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -140,35 +138,31 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     commands.add(
         new JarDirectoryStep(
             JarParameters.builder()
-                .setJarPath(temp.resolve("classes.jar"))
+                .setJarPath(temp.resolveRel("classes.jar"))
                 .setEntriesToJar(
-                    context.getSourcePathResolver().getAllAbsolutePaths(classpathsToIncludeInJar)
-                        .stream()
-                        .map(AbsPath::getPath)
-                        .collect(
-                            ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())))
+                    context.getSourcePathResolver().getAllRelativePaths(classpathsToIncludeInJar))
                 .setMergeManifests(true)
                 .build()));
 
     // move native libs into tmp folder under jni/
-    if (assembledNativeLibs.isPresent()) {
-      commands.add(
-          CopyStep.forDirectory(
-              getProjectFilesystem(),
-              context.getSourcePathResolver().getRelativePath(assembledNativeLibs.get()),
-              temp.resolveRel("jni"),
-              CopyStep.DirectoryMode.CONTENTS_ONLY));
-    }
+    assembledNativeLibs.ifPresent(
+        sourcePath ->
+            commands.add(
+                CopyStep.forDirectory(
+                    getProjectFilesystem(),
+                    context.getSourcePathResolver().getRelativePath(sourcePath),
+                    temp.resolveRel("jni"),
+                    CopyStep.DirectoryMode.CONTENTS_ONLY)));
 
     // move native asset libs into tmp folder under assets/lib
-    if (assembledNativeLibsAssets.isPresent()) {
-      commands.add(
-          CopyStep.forDirectory(
-              getProjectFilesystem(),
-              context.getSourcePathResolver().getRelativePath(assembledNativeLibsAssets.get()),
-              temp.resolveRel("assets").resolveRel("lib"),
-              CopyStep.DirectoryMode.CONTENTS_ONLY));
-    }
+    assembledNativeLibsAssets.ifPresent(
+        sourcePath ->
+            commands.add(
+                CopyStep.forDirectory(
+                    getProjectFilesystem(),
+                    context.getSourcePathResolver().getRelativePath(sourcePath),
+                    temp.resolveRel("assets").resolveRel("lib"),
+                    CopyStep.DirectoryMode.CONTENTS_ONLY)));
 
     // do the zipping
     commands.add(

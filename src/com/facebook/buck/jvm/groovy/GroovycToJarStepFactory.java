@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -62,7 +63,7 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
 
     ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
-    Path outputDirectory = parameters.getOutputPaths().getClassesDir();
+    RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
     Path pathToSrcsList = parameters.getOutputPaths().getPathToSourcesList();
 
     steps.add(
@@ -71,7 +72,7 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
             extraArguments,
             javacOptions,
             buildContext.getSourcePathResolver(),
-            outputDirectory,
+            outputDirectory.getPath(),
             sourceFilePaths,
             pathToSrcsList,
             declaredClasspathEntries,

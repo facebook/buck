@@ -38,7 +38,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -85,7 +84,7 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     // A CopyResourcesStep is needed so that a file that is at java/com/example/resource.txt in the
     // repository will be added as com/example/resource.txt in the resulting JAR (assuming that
     // "/java/" is listed under src_roots in .buckconfig).
-    Path tempJarFolder = workingDirectory.resolve("tmp");
+    RelPath tempJarFolder = workingDirectory.resolveRel("tmp");
     steps.add(
         new CopyResourcesStep(
             getProjectFilesystem(),
@@ -95,13 +94,14 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 ResourcesParameters.getNamedResources(
                     ruleFinder, getProjectFilesystem(), filesForGwtModule),
                 resourcesRoot),
-            tempJarFolder));
+            tempJarFolder.getPath()));
 
     steps.add(
         new JarDirectoryStep(
             JarParameters.builder()
-                .setJarPath(outputFile.getPath())
-                .setEntriesToJar(ImmutableSortedSet.of(tempJarFolder))
+                .setJarPath(outputFile)
+                .setEntriesToJar(
+                    ImmutableSortedSet.orderedBy(RelPath.comparator()).add(tempJarFolder).build())
                 .setMergeManifests(true)
                 .build()));
 

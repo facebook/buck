@@ -21,7 +21,6 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -148,9 +147,15 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
   public void jarWithMetaInfo() throws IOException {
     setUpProjectWorkspaceForScenario("java_binary_with_meta_inf");
     Path jar = workspace.buildAndReturnOutput("//:bin-meta-inf");
-    try (JarFile jarFile = new JarFile(jar.toFile())) {
-      assertNotNull(jarFile.getEntry("META-INF/test.txt"));
-    }
+    ZipInspector zipInspector = new ZipInspector(jar);
+    String testFilePath = "META-INF/test.txt";
+    // Note: 2 copies of `META-INF/test.txt` inside the final jar
+    assertEquals(
+        ImmutableList.of("META-INF/", "META-INF/MANIFEST.MF", testFilePath, testFilePath),
+        zipInspector.getZipFileEntries());
+
+    // Custom meta_inf_directory should override resources from dep's jars
+    zipInspector.assertFileContents(testFilePath, "Test!");
   }
 
   @Test

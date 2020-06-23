@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
@@ -107,7 +106,8 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    RelPath pathToOutput = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+    SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
+    RelPath pathToOutput = sourcePathResolver.getRelativePath(getSourcePathToOutput());
     MkdirStep mkOutputDirStep =
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -115,21 +115,20 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     JarDirectoryStep mergeOutputsStep =
         new JarDirectoryStep(
             JarParameters.builder()
-                .setJarPath(pathToOutput.getPath())
-                .setEntriesToJar(
-                    toOutputPaths(context.getSourcePathResolver(), traversedDeps.packagedDeps))
+                .setJarPath(pathToOutput)
+                .setEntriesToJar(toOutputPaths(sourcePathResolver, traversedDeps.packagedDeps))
                 .setMergeManifests(true)
                 .build());
     return ImmutableList.of(mkOutputDirStep, mergeOutputsStep);
   }
 
-  private static ImmutableSortedSet<Path> toOutputPaths(
-      SourcePathResolverAdapter pathResolver, Iterable<? extends BuildRule> rules) {
+  private ImmutableSortedSet<RelPath> toOutputPaths(
+      SourcePathResolverAdapter sourcePathResolver, Iterable<? extends BuildRule> rules) {
     return RichStream.from(rules)
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
-        .map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath())
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+        .map(sourcePathResolver::getRelativePath)
+        .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
   }
 
   @Override

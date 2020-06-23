@@ -456,20 +456,18 @@ public class JarBuildStepsFactory
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       CompilerParameters compilerParameters) {
+    SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
+    RelPath classesDir = compilerParameters.getOutputPaths().getClassesDir();
+    ImmutableSortedSet<RelPath> entriesToJar =
+        ImmutableSortedSet.orderedBy(RelPath.comparator()).add(classesDir).build();
+    Optional<RelPath> manifestRelFile = manifestFile.map(sourcePathResolver::getRelativePath);
     return getOutputJarPath(buildTarget, filesystem)
         .map(
             output ->
                 JarParameters.builder()
-                    .setEntriesToJar(
-                        ImmutableSortedSet.of(compilerParameters.getOutputPaths().getClassesDir()))
-                    .setManifestFile(
-                        manifestFile.map(
-                            (SourcePath sourcePath) ->
-                                context
-                                    .getSourcePathResolver()
-                                    .getAbsolutePath(sourcePath)
-                                    .getPath()))
-                    .setJarPath(output)
+                    .setEntriesToJar(entriesToJar)
+                    .setManifestFile(manifestRelFile)
+                    .setJarPath(RelPath.of(output))
                     .setRemoveEntryPredicate(classesToRemoveFromJar)
                     .build());
   }

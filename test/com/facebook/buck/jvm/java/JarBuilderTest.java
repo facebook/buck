@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.JarBuilder;
 import com.facebook.buck.util.zip.JarEntryContainer;
@@ -266,7 +267,7 @@ public class JarBuilderTest {
     // Use JarBuilder with toTest
     File outputFile = temporaryFolder.newFile();
     new JarBuilder()
-        .setEntriesToJar(ImmutableList.of(toTest.toPath()))
+        .setEntriesToJar(ImmutableList.of(AbsPath.of(toTest.toPath())))
         .setShouldHashEntries(true)
         .setShouldMergeManifests(true)
         .createJarFile(outputFile.toPath());

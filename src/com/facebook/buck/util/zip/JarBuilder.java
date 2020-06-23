@@ -16,7 +16,10 @@
 
 package com.facebook.buck.util.zip;
 
+import static java.util.Comparator.comparing;
+
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -29,7 +32,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -45,6 +47,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 public class JarBuilder {
+
   public interface Observer {
     Observer IGNORING =
         new Observer() {
@@ -68,22 +71,36 @@ public class JarBuilder {
   private boolean shouldDisallowAllDuplicates;
   private boolean shouldHashEntries;
   private Predicate<? super CustomZipEntry> removeEntryPredicate = entry -> false;
-  private List<JarEntryContainer> sourceContainers = new ArrayList<>();
-  private Set<String> alreadyAddedEntries = new HashSet<>();
-  private Map<String, Set<String>> services = new HashMap<>();
+  private final List<JarEntryContainer> sourceContainers = new ArrayList<>();
+  private final List<JarEntryContainer> overrideSourceContainers = new ArrayList<>();
+  private final Set<String> alreadyAddedEntries = new HashSet<>();
+  private final Map<String, Set<String>> services = new HashMap<>();
 
   public JarBuilder setObserver(Observer observer) {
     this.observer = observer;
     return this;
   }
 
-  public JarBuilder setEntriesToJar(Stream<Path> entriesToJar) {
+  public JarBuilder setOverrideEntriesToJar(Stream<AbsPath> entriesToJar) {
+    return setOverrideEntriesToJar(entriesToJar::iterator);
+  }
+
+  public JarBuilder setOverrideEntriesToJar(Iterable<AbsPath> entriesToJar) {
+    return addToSourceContainers(entriesToJar, overrideSourceContainers);
+  }
+
+  public JarBuilder setEntriesToJar(Stream<AbsPath> entriesToJar) {
     return setEntriesToJar(entriesToJar::iterator);
   }
 
-  public JarBuilder setEntriesToJar(Iterable<Path> entriesToJar) {
+  public JarBuilder setEntriesToJar(Iterable<AbsPath> entriesToJar) {
+    return addToSourceContainers(entriesToJar, sourceContainers);
+  }
+
+  private JarBuilder addToSourceContainers(
+      Iterable<AbsPath> entriesToJar, List<JarEntryContainer> sourceContainers) {
     RichStream.from(entriesToJar)
-        .peek(path -> Preconditions.checkArgument(path.isAbsolute()))
+        .map(AbsPath::getPath)
         .map(JarEntryContainer::of)
         .forEach(sourceContainers::add);
 
@@ -145,10 +162,11 @@ public class JarBuilder {
 
       // Sort entries across all suppliers
       List<JarEntrySupplier> sortedEntries = new ArrayList<>();
-      for (JarEntryContainer sourceContainer : sourceContainers) {
-        sourceContainer.stream().forEach(sortedEntries::add);
-      }
-      sortedEntries.sort(Comparator.comparing(supplier -> supplier.getEntry().getName()));
+      addToEntries(sortedEntries, sourceContainers);
+      sortedEntries.sort(comparing(supplier -> supplier.getEntry().getName()));
+
+      // add override entries
+      addToEntries(sortedEntries, overrideSourceContainers);
 
       addEntriesToJar(sortedEntries, jar);
 
@@ -159,11 +177,24 @@ public class JarBuilder {
       }
 
       // Clean up any open file handles that we may have
-      for (JarEntryContainer sourceContainer : sourceContainers) {
-        sourceContainer.close();
-      }
+      closeSourceContainers(sourceContainers);
+      closeSourceContainers(overrideSourceContainers);
 
       return 0;
+    }
+  }
+
+  private void addToEntries(
+      List<JarEntrySupplier> sortedEntries, List<JarEntryContainer> sourceContainers)
+      throws IOException {
+    for (JarEntryContainer sourceContainer : sourceContainers) {
+      sourceContainer.stream().forEach(sortedEntries::add);
+    }
+  }
+
+  private void closeSourceContainers(List<JarEntryContainer> sourceContainers) throws IOException {
+    for (JarEntryContainer sourceContainer : sourceContainers) {
+      sourceContainer.close();
     }
   }
 

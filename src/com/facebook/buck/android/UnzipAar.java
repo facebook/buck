@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -168,7 +169,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
               new JarBuilder()
                   .setObserver(new LoggingJarBuilderObserver(eventSink))
-                  .setEntriesToJar(entriesToJar.stream().map(filesystem::resolve))
+                  .setEntriesToJar(entriesToJar.stream().map(filesystem::resolve).map(AbsPath::of))
                   .setMainClass(Optional.<String>empty().orElse(null))
                   .setManifestFile(Optional.<Path>empty().orElse(null))
                   .setShouldMergeManifests(true)

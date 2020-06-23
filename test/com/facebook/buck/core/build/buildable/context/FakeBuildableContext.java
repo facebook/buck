@@ -16,15 +16,9 @@
 
 package com.facebook.buck.core.build.buildable.context;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -32,8 +26,6 @@ import java.util.Set;
  * for testing.
  */
 public class FakeBuildableContext implements BuildableContext {
-
-  private final Map<String, Object> metadata = new HashMap<>();
 
   private final Set<Path> artifacts = new HashSet<>();
 
@@ -44,12 +36,5 @@ public class FakeBuildableContext implements BuildableContext {
 
   public ImmutableSet<Path> getRecordedArtifacts() {
     return ImmutableSet.copyOf(artifacts);
-  }
-
-  public void assertContainsMetadataMapping(String key, String value) {
-    assertNotNull(key);
-    assertNotNull(value);
-    assertTrue(metadata.containsKey(key));
-    assertEquals(value, metadata.get(key));
   }
 }

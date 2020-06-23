@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -91,10 +92,11 @@ public class CalculateSourceAbiFromLibraryTarget
         BuildCellRelativePathFactory buildCellPathFactory) {
       JarParameters jarParameters =
           JarParameters.builder()
-              .setJarPath(outputPathResolver.resolvePath(output).getPath())
+              .setJarPath(outputPathResolver.resolvePath(output))
               .setEntriesToJar(
-                  ImmutableSortedSet.of(
-                      JavaAbis.getTmpGenPathForSourceAbi(filesystem, libraryTarget).getPath()))
+                  ImmutableSortedSet.orderedBy(RelPath.comparator())
+                      .add(JavaAbis.getTmpGenPathForSourceAbi(filesystem, libraryTarget))
+                      .build())
               .setHashEntries(true)
               .build();
       return ImmutableList.of(new JarDirectoryStep(jarParameters));

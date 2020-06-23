@@ -39,6 +39,8 @@ public interface SourcePathResolver {
 
   ImmutableSortedSet<AbsPath> getAllAbsolutePaths(Collection<? extends SourcePath> sourcePaths);
 
+  ImmutableSortedSet<RelPath> getAllRelativePaths(Collection<? extends SourcePath> sourcePaths);
+
   ImmutableSortedSet<RelPath> getRelativePath(SourcePath sourcePath);
 
   ImmutableSortedSet<Path> getIdeallyRelativePath(SourcePath sourcePath);

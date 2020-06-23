@@ -82,6 +82,14 @@ public class SourcePathResolverAdapter {
   }
 
   /**
+   * Returns the {@link RelPath} instances associated with the given {@link SourcePath} instances.
+   */
+  public ImmutableSortedSet<RelPath> getAllRelativePaths(
+      Collection<? extends SourcePath> sourcePaths) {
+    return resolver.getAllRelativePaths(sourcePaths);
+  }
+
+  /**
    * Returns a list of values and their associated {@link AbsPath} instances by transforming the
    * given {@link SourcePath} instances into {@link AbsPath} instances.
    */

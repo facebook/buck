@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -92,7 +93,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
 
     ImmutableSortedSet<Path> classpathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
-    Path outputDirectory = parameters.getOutputPaths().getClassesDir();
+    RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
 
     if (sourceFilePaths.stream().anyMatch(SCALA_PATH_MATCHER::matches)) {
       steps.add(
@@ -108,7 +109,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
                               "-Xplugin:" + context.getSourcePathResolver().getRelativePath(input)))
                   .build(),
               context.getSourcePathResolver(),
-              outputDirectory,
+              outputDirectory.getPath(),
               sourceFilePaths,
               ImmutableSortedSet.<Path>naturalOrder()
                   .addAll(
@@ -135,7 +136,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
               .from(parameters)
               .setClasspathEntries(
                   ImmutableSortedSet.<Path>naturalOrder()
-                      .add(outputDirectory)
+                      .add(outputDirectory.getPath())
                       .addAll(
                           Optional.ofNullable(extraClassPath.getExtraClasspath())
                               .orElse(ImmutableList.of()))

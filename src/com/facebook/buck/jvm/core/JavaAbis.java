@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.core;
 
-import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -88,9 +88,8 @@ public class JavaAbis {
         CLASS_ABI_FLAVOR, SOURCE_ABI_FLAVOR, SOURCE_ONLY_ABI_FLAVOR, VERIFIED_SOURCE_ABI_FLAVOR);
   }
 
-  public static AbsPath getTmpGenPathForSourceAbi(
+  public static RelPath getTmpGenPathForSourceAbi(
       ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
-    return projectFilesystem.resolve(
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "__%s_source_abi_tmp__"));
+    return BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "__%s_source_abi_tmp__");
   }
 }

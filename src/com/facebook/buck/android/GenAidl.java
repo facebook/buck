@@ -71,7 +71,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final SourcePath aidlFilePath;
   @AddToRuleKey private final String importPath;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> aidlSrcs;
-  private final Path output;
+  private final RelPath output;
   private final RelPath genPath;
   @AddToRuleKey private final boolean withDownwardApi;
 
@@ -90,7 +90,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.importPath = importPath;
     this.genPath = BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s");
     this.output =
-        genPath.resolve(
+        genPath.resolveRel(
             String.format("lib%s%s", buildTarget.getShortNameAndFlavorPostfix(), SRC_ZIP));
     this.aidlSrcs = aidlSrcs;
     this.withDownwardApi = withDownwardApi;
@@ -157,10 +157,11 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         new JarDirectoryStep(
             JarParameters.builder()
                 .setJarPath(output)
-                .setEntriesToJar(ImmutableSortedSet.of(outputDirectory.getPath()))
+                .setEntriesToJar(
+                    ImmutableSortedSet.orderedBy(RelPath.comparator()).add(outputDirectory).build())
                 .setMergeManifests(true)
                 .build()));
-    buildableContext.recordArtifact(output);
+    buildableContext.recordArtifact(output.getPath());
 
     return commands.build();
   }

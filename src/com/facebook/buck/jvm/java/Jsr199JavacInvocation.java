@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.api.BuckTracing;
@@ -51,7 +52,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
-import java.io.PrintWriter; // NOPMD required by API
+import java.io.PrintWriter; // NOPMD
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -208,7 +209,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     @Nullable private String compilerThreadName;
     @Nullable private JavacPhaseEventLogger phaseEventLogger;
     @Nullable private JavaInMemoryFileManager inMemoryFileManager;
-    @Nullable private ClassUsageTracker classUsageTracker;
+    @Nullable private final ClassUsageTracker classUsageTracker;
     @Nullable private Jsr199TracingBridge tracingBridge;
 
     private CompilerWorker(ListeningExecutorService executor) {
@@ -630,12 +631,19 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     private JarBuilder newJarBuilder(JarParameters jarParameters) {
       JarBuilder jarBuilder = new JarBuilder();
       Objects.requireNonNull(inMemoryFileManager).writeToJar(jarBuilder);
+      AbsPath rootPath = context.getProjectFilesystem().getRootPath();
       return jarBuilder
           .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
-          .setEntriesToJar(
-              jarParameters.getEntriesToJar().stream().map(context.getProjectFilesystem()::resolve))
+          .setEntriesToJar(jarParameters.getEntriesToJar().stream().map(rootPath::resolve))
+          .setOverrideEntriesToJar(
+              jarParameters.getOverrideEntriesToJar().stream().map(rootPath::resolve))
           .setMainClass(jarParameters.getMainClass().orElse(null))
-          .setManifestFile(jarParameters.getManifestFile().orElse(null))
+          .setManifestFile(
+              jarParameters
+                  .getManifestFile()
+                  .map(rootPath::resolve)
+                  .map(AbsPath::getPath)
+                  .orElse(null))
           .setShouldMergeManifests(true)
           .setRemoveEntryPredicate(jarParameters.getRemoveEntryPredicate());
     }

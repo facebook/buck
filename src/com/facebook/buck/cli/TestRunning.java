@@ -33,6 +33,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.event.IndividualTestEvent;
 import com.facebook.buck.core.test.event.TestRunEvent;
 import com.facebook.buck.core.test.event.TestStatusMessageEvent;
@@ -749,13 +750,14 @@ public class TestRunning {
     ImmutableSet.Builder<Path> pathsToJars = ImmutableSet.builder();
 
     // Add all source directories of java libraries that we are testing to -sourcepath.
+    SourcePathResolverAdapter sourcePathResolver = ruleFinder.getSourcePathResolver();
     for (JavaLibrary rule : rulesUnderTest) {
       ImmutableSet<String> sourceFolderPath =
           getPathToSourceFolders(rule, ruleFinder, defaultJavaPackageFinder);
       if (!sourceFolderPath.isEmpty()) {
         srcDirectories.addAll(sourceFolderPath);
       }
-      Path classesItem = null;
+      RelPath classesItem = null;
 
       if (useIntermediateClassesDir) {
         classesItem = CompilerOutputPaths.getClassesDir(rule.getBuildTarget(), filesystem);
@@ -765,17 +767,17 @@ public class TestRunning {
       if (classesItem == null || !filesystem.isDirectory(classesItem)) {
         SourcePath path = rule.getSourcePathToOutput();
         if (path != null) {
-          classesItem = ruleFinder.getSourcePathResolver().getRelativePath(path).getPath();
+          classesItem = sourcePathResolver.getRelativePath(path);
         }
       }
       if (classesItem == null) {
         continue;
       }
-      pathsToJars.add(classesItem);
+      pathsToJars.add(classesItem.getPath());
     }
 
     return new GenerateCodeCoverageReportStep(
-        javaRuntimeLauncher.getCommandPrefix(ruleFinder.getSourcePathResolver()),
+        javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
         filesystem,
         srcDirectories.build(),
         pathsToJars.build(),

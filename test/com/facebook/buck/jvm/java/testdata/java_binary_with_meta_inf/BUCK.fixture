@@ -1,4 +1,12 @@
+prebuilt_jar(
+    name = "clowntown",
+    binary_jar = "clowntown.jar",
+)
+
 java_binary(
     name = "bin-meta-inf",
     meta_inf_directory = "META-INF",
+    deps = [
+        ":clowntown",
+    ],
 )

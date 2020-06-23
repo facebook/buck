@@ -23,8 +23,6 @@ import java.util.Comparator;
 /** Relative path. */
 public interface RelPath extends PathWrapper {
 
-  Comparator<RelPath> COMPARATOR = Comparator.comparing(RelPath::getPath);
-
   /**
    * Construct using {@link java.nio.file.Path} object.
    *

@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
@@ -168,16 +169,16 @@ public class JavacStep implements Step {
 
     if (JavaAbis.isLibraryTarget(invokingRule) && pipeline.getLibraryJarParameters().isPresent()) {
       JarParameters jarParameters = pipeline.getLibraryJarParameters().get();
-      Optional<Path> manifestFile = jarParameters.getManifestFile();
-      ImmutableSortedSet<Path> entriesToJar = jarParameters.getEntriesToJar();
+      Optional<RelPath> manifestFile = jarParameters.getManifestFile();
+      ImmutableSortedSet<RelPath> entriesToJar = jarParameters.getEntriesToJar();
       description =
           description
               + "; "
               + String.format(
                   "jar %s %s %s %s",
-                  manifestFile.isPresent() ? "cfm" : "cf",
+                  manifestFile.map(ignore -> "cfm").orElse("cf"),
                   jarParameters.getJarPath(),
-                  manifestFile.isPresent() ? manifestFile.get() : "",
+                  manifestFile.map(RelPath::toString).orElse(""),
                   Joiner.on(' ').join(entriesToJar));
     }
 
