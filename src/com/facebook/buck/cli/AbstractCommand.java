@@ -178,11 +178,6 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
               + "log and trace.")
   private boolean enableParserProfiling = false;
 
-  @Option(
-      name = GlobalCliOptions.EXCLUDE_INCOMPATIBLE_TARGETS_LONG_ARG,
-      usage = "This option is ignored")
-  private boolean excludeIncompatibleTargets = false;
-
   @Option(name = GlobalCliOptions.HELP_LONG_ARG, usage = "Prints the available options and exits.")
   private boolean help = false;
 

@@ -36,8 +36,6 @@ public class GlobalCliOptions {
   public static final String VERBOSE_SHORT_ARG = "-v";
   public static final String HOST_PLATFORM_LONG_ARG = "--host-platform";
   public static final String TARGET_PLATFORMS_LONG_ARG = "--target-platforms";
-  public static final String EXCLUDE_INCOMPATIBLE_TARGETS_LONG_ARG =
-      "--exclude-incompatible-targets";
   public static final String REUSE_CURRENT_CONFIG_ARG = "--reuse-current-config";
   public static final String COMMAND_ARGS_FILE_LONG_ARG = "--command-args-file";
   public static final String ONCALL_ARG = "--oncall";
@@ -64,7 +62,6 @@ public class GlobalCliOptions {
           VERBOSE_LONG_ARG,
           SKYLARK_PROFILE_LONG_ARG,
           TARGET_PLATFORMS_LONG_ARG,
-          EXCLUDE_INCOMPATIBLE_TARGETS_LONG_ARG,
           REUSE_CURRENT_CONFIG_ARG,
           ONCALL_ARG,
           WRITE_BUILD_ID_ARG);
