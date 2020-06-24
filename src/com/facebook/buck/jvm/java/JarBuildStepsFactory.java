@@ -460,7 +460,8 @@ public class JarBuildStepsFactory
     RelPath classesDir = compilerParameters.getOutputPaths().getClassesDir();
     ImmutableSortedSet<RelPath> entriesToJar =
         ImmutableSortedSet.orderedBy(RelPath.comparator()).add(classesDir).build();
-    Optional<RelPath> manifestRelFile = manifestFile.map(sourcePathResolver::getRelativePath);
+    Optional<RelPath> manifestRelFile =
+        manifestFile.map(sourcePath -> sourcePathResolver.getRelativePath(filesystem, sourcePath));
     return getOutputJarPath(buildTarget, filesystem)
         .map(
             output ->

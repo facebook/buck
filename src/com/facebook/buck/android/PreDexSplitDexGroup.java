@@ -152,10 +152,11 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
       BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    ProjectFilesystem filesystem = getProjectFilesystem();
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), getPrimaryDexRoot())));
+                context.getBuildCellRootPath(), filesystem, getPrimaryDexRoot())));
 
     Path primaryDexDir = getPrimaryDexRoot();
     Path primaryDexInputHashesPath = getPrimaryDexInputHashesPath();
@@ -166,17 +167,17 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), outputHashDir)));
+                context.getBuildCellRootPath(), filesystem, outputHashDir)));
     // Do not clear existing directory which might contain secondary dex files that are not
     // re-merged (since their contents did not change).
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), secondaryDexDir)));
+                context.getBuildCellRootPath(), filesystem, secondaryDexDir)));
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), canaryDir)));
+                context.getBuildCellRootPath(), filesystem, canaryDir)));
 
     buildableContext.recordArtifact(primaryDexDir);
     buildableContext.recordArtifact(primaryDexInputHashesPath);
@@ -198,7 +199,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
             secondaryDexDir,
             groupIndex);
     PreDexedFilesSorter.Result result =
-        preDexedFilesSorter.sortIntoPrimaryAndSecondaryDexes(getProjectFilesystem(), steps);
+        preDexedFilesSorter.sortIntoPrimaryAndSecondaryDexes(filesystem, steps);
 
     if (dexSplitMode.getDexStore() == DexStore.RAW) {
       Preconditions.checkState(
@@ -218,12 +219,12 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), primaryDexDir)));
+                context.getBuildCellRootPath(), filesystem, primaryDexDir)));
 
     result.primaryDexInputs.forEach(
         (key, value) -> {
-          Path input = sourcePathResolverAdapter.getRelativePath(getProjectFilesystem(), value);
-          steps.add(CopyStep.forFile(getProjectFilesystem(), input, primaryDexDir.resolve(key)));
+          Path input = sourcePathResolverAdapter.getRelativePath(filesystem, value).getPath();
+          steps.add(CopyStep.forFile(filesystem, input, primaryDexDir.resolve(key)));
         });
 
     steps.add(
@@ -252,7 +253,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
         new SmartDexingStep(
             androidPlatformTarget,
             context,
-            getProjectFilesystem(),
+            filesystem,
             Optional.empty(),
             Optional.empty(),
             Optional.of(secondaryDexDir),
@@ -261,8 +262,9 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
                     Multimaps.transformValues(
                         aggregatedOutputToInputs.build(),
                         path ->
-                            sourcePathResolverAdapter.getRelativePath(
-                                getProjectFilesystem(), path)))),
+                            sourcePathResolverAdapter
+                                .getRelativePath(filesystem, path)
+                                .getPath()))),
             () -> dexInputHashes,
             outputHashDir,
             PreDexMerge.DX_MERGE_OPTIONS,
@@ -288,12 +290,12 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
               Path pathToSecondaryDex = entry.getKey();
               String containedClass = Iterables.get(entry.getValue().getClassNames(), 0);
               containedClass = containedClass.replace('/', '.');
-              Sha1HashCode hash = getProjectFilesystem().computeSha1(pathToSecondaryDex);
+              Sha1HashCode hash = filesystem.computeSha1(pathToSecondaryDex);
               lines.add(
                   String.format(
                       "%s %s %s", pathToSecondaryDex.getFileName(), hash, containedClass));
             }
-            getProjectFilesystem().writeLinesToPath(lines, metadataTxtPath);
+            filesystem.writeLinesToPath(lines, metadataTxtPath);
             return StepExecutionResults.SUCCESS;
           }
         });
@@ -361,9 +363,10 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
       SourcePathResolverAdapter sourcePathResolverAdapter,
       ImmutableMap<SourcePath, Sha1HashCode> dexInputHashes) {
     ImmutableMap.Builder<Path, Sha1HashCode> dexInputHashesBuilder = ImmutableMap.builder();
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
     for (Map.Entry<SourcePath, Sha1HashCode> entry : dexInputHashes.entrySet()) {
       dexInputHashesBuilder.put(
-          sourcePathResolverAdapter.getRelativePath(getProjectFilesystem(), entry.getKey()),
+          sourcePathResolverAdapter.getRelativePath(projectFilesystem, entry.getKey()).getPath(),
           entry.getValue());
     }
     return dexInputHashesBuilder.build();

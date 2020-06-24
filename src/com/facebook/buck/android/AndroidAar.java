@@ -25,6 +25,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
@@ -42,6 +43,7 @@ import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -88,34 +90,35 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
+    ProjectFilesystem filesystem = getProjectFilesystem();
+    SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
+    Path buildCellRootPath = context.getBuildCellRootPath();
+
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Create temp folder to store the files going to be zipped
-
     commands.addAll(
         MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), temp)));
+            BuildCellRelativePath.fromCellRelativePath(buildCellRootPath, filesystem, temp)));
 
     // Remove the output .aar file
     commands.add(
         RmStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), pathToOutputFile)));
+                buildCellRootPath, filesystem, pathToOutputFile)));
 
     // put manifest into tmp folder
     commands.add(
         CopyStep.forFile(
-            getProjectFilesystem(),
-            context.getSourcePathResolver().getRelativePath(manifest.getSourcePathToOutput()),
+            filesystem,
+            sourcePathResolver.getRelativePath(manifest.getSourcePathToOutput()),
             temp.resolveRel("AndroidManifest.xml")));
 
     // put R.txt into tmp folder
     commands.add(
         CopyStep.forFile(
-            getProjectFilesystem(),
-            context
-                .getSourcePathResolver()
+            filesystem,
+            sourcePathResolver
                 .getAbsolutePath(Objects.requireNonNull(androidResource.getPathToTextSymbolsFile()))
                 .getPath(),
             temp.resolve("R.txt")));
@@ -123,14 +126,14 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // put res/ and assets/ into tmp folder
     commands.add(
         CopyStep.forDirectory(
-            getProjectFilesystem(),
-            context.getSourcePathResolver().getRelativePath(assembledResourceDirectory),
+            filesystem,
+            sourcePathResolver.getRelativePath(assembledResourceDirectory),
             temp.resolveRel("res"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
     commands.add(
         CopyStep.forDirectory(
-            getProjectFilesystem(),
-            context.getSourcePathResolver().getRelativePath(assembledAssetsDirectory),
+            filesystem,
+            sourcePathResolver.getRelativePath(assembledAssetsDirectory),
             temp.resolveRel("assets"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
 
@@ -140,7 +143,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             JarParameters.builder()
                 .setJarPath(temp.resolveRel("classes.jar"))
                 .setEntriesToJar(
-                    context.getSourcePathResolver().getAllRelativePaths(classpathsToIncludeInJar))
+                    sourcePathResolver.getAllRelativePaths(filesystem, classpathsToIncludeInJar))
                 .setMergeManifests(true)
                 .build()));
 
@@ -149,8 +152,8 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         sourcePath ->
             commands.add(
                 CopyStep.forDirectory(
-                    getProjectFilesystem(),
-                    context.getSourcePathResolver().getRelativePath(sourcePath),
+                    filesystem,
+                    sourcePathResolver.getRelativePath(sourcePath),
                     temp.resolveRel("jni"),
                     CopyStep.DirectoryMode.CONTENTS_ONLY)));
 
@@ -159,8 +162,8 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         sourcePath ->
             commands.add(
                 CopyStep.forDirectory(
-                    getProjectFilesystem(),
-                    context.getSourcePathResolver().getRelativePath(sourcePath),
+                    filesystem,
+                    sourcePathResolver.getRelativePath(sourcePath),
                     temp.resolveRel("assets").resolveRel("lib"),
                     CopyStep.DirectoryMode.CONTENTS_ONLY)));
 
@@ -168,12 +171,10 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     commands.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                pathToOutputFile.getParent())));
+                buildCellRootPath, filesystem, pathToOutputFile.getParent())));
     commands.add(
         new ZipStep(
-            getProjectFilesystem(),
+            filesystem,
             pathToOutputFile.getPath(),
             ImmutableSet.of(),
             false,

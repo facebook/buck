@@ -141,21 +141,23 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
     if (!arg.getRes().isPresent()) {
       return Optional.empty();
     }
+    ProjectFilesystem filesystem = targetNode.getFilesystem();
     if (arg.getRes().get().isLeft()) {
       // Left is a simple source path
       return Optional.of(
-          sourcePathResolver.getRelativePath(
-              targetNode.getFilesystem(), arg.getRes().get().getLeft()));
+          sourcePathResolver.getRelativePath(filesystem, arg.getRes().get().getLeft()).getPath());
     } else {
       // Right is a mapped set of paths, so we need the symlink tree
       return Optional.of(
-          sourcePathResolver.getRelativePath(
-              targetNode.getFilesystem(),
-              DefaultBuildTargetSourcePath.of(
-                  targetNode
-                      .getBuildTarget()
-                      .withAppendedFlavors(
-                          AndroidResourceDescription.RESOURCES_SYMLINK_TREE_FLAVOR))));
+          sourcePathResolver
+              .getRelativePath(
+                  filesystem,
+                  DefaultBuildTargetSourcePath.of(
+                      targetNode
+                          .getBuildTarget()
+                          .withAppendedFlavors(
+                              AndroidResourceDescription.RESOURCES_SYMLINK_TREE_FLAVOR)))
+              .getPath());
     }
   }
 
@@ -175,13 +177,15 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
     } else {
       // Right is a mapped set of paths, so we need the symlink tree
       return Optional.of(
-          sourcePathResolver.getRelativePath(
-              targetNode.getFilesystem(),
-              DefaultBuildTargetSourcePath.of(
-                  targetNode
-                      .getBuildTarget()
-                      .withAppendedFlavors(
-                          AndroidResourceDescription.ASSETS_SYMLINK_TREE_FLAVOR))));
+          sourcePathResolver
+              .getRelativePath(
+                  targetNode.getFilesystem(),
+                  DefaultBuildTargetSourcePath.of(
+                      targetNode
+                          .getBuildTarget()
+                          .withAppendedFlavors(
+                              AndroidResourceDescription.ASSETS_SYMLINK_TREE_FLAVOR)))
+              .getPath());
     }
   }
 

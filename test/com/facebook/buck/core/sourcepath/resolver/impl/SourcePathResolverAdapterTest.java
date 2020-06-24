@@ -65,7 +65,7 @@ public class SourcePathResolverAdapterTest {
     EasyMock.expect(mockResolver.getIdeallyRelativePath(mockSourcePath))
         .andReturn(getMockPaths(1, -10));
     EasyMock.expect(mockResolver.getRelativePath(projectFilesystem, mockSourcePath))
-        .andReturn(getMockPaths(1, 100));
+        .andReturn(getMockRelPaths(1, 100));
     EasyMock.expect(
             mockResolver.getMappedPaths(
                 ImmutableMap.of("tee", mockSourcePath, "hee", mockSourcePath)))
@@ -82,7 +82,7 @@ public class SourcePathResolverAdapterTest {
         testAdapter.getIdeallyRelativePath(mockSourcePath),
         Matchers.contains(Paths.get("path-10")));
     assertThat(
-        testAdapter.getRelativePath(projectFilesystem, mockSourcePath),
+        testAdapter.getRelativePath(projectFilesystem, mockSourcePath).getPath(),
         Matchers.contains(Paths.get("path100")));
     assertThat(
         testAdapter.getMappedPaths(ImmutableMap.of("tee", mockSourcePath, "hee", mockSourcePath)),
@@ -125,7 +125,7 @@ public class SourcePathResolverAdapterTest {
     exception.expect(Matchers.instanceOf(IllegalArgumentException.class));
     exception.expectMessage("expected one element but was: <path100, path101>");
     EasyMock.expect(mockResolver.getRelativePath(projectFilesystem, mockSourcePath))
-        .andReturn(getMockPaths(2, 100));
+        .andReturn(getMockRelPaths(2, 100));
     EasyMock.replay(mockResolver);
     testAdapter.getRelativePath(projectFilesystem, mockSourcePath);
   }

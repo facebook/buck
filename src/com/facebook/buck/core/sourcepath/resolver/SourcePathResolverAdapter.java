@@ -66,10 +66,10 @@ public class SourcePathResolverAdapter {
   }
 
   /**
-   * Returns the {@link Path} associated with the given {@link SourcePath} relative to the given
+   * Returns the {@link RelPath} associated with the given {@link SourcePath} relative to the given
    * {@link ProjectFilesystem}.
    */
-  public Path getRelativePath(ProjectFilesystem projectFilesystem, SourcePath sourcePath) {
+  public RelPath getRelativePath(ProjectFilesystem projectFilesystem, SourcePath sourcePath) {
     return Iterables.getOnlyElement(resolver.getRelativePath(projectFilesystem, sourcePath));
   }
 
@@ -82,11 +82,12 @@ public class SourcePathResolverAdapter {
   }
 
   /**
-   * Returns the {@link RelPath} instances associated with the given {@link SourcePath} instances.
+   * Returns the {@link RelPath} instances associated with the given {@link SourcePath} instances
+   * relative to the given {@link ProjectFilesystem}.
    */
   public ImmutableSortedSet<RelPath> getAllRelativePaths(
-      Collection<? extends SourcePath> sourcePaths) {
-    return resolver.getAllRelativePaths(sourcePaths);
+      ProjectFilesystem projectFilesystem, Collection<? extends SourcePath> sourcePaths) {
+    return resolver.getAllRelativePaths(projectFilesystem, sourcePaths);
   }
 
   /**

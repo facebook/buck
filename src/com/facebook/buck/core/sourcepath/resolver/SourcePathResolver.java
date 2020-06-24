@@ -39,7 +39,12 @@ public interface SourcePathResolver {
 
   ImmutableSortedSet<AbsPath> getAllAbsolutePaths(Collection<? extends SourcePath> sourcePaths);
 
-  ImmutableSortedSet<RelPath> getAllRelativePaths(Collection<? extends SourcePath> sourcePaths);
+  /**
+   * Returns the {@link RelPath} instances associated with the given {@link SourcePath} instances
+   * relative to the given {@link ProjectFilesystem}.
+   */
+  ImmutableSortedSet<RelPath> getAllRelativePaths(
+      ProjectFilesystem projectFilesystem, Collection<? extends SourcePath> sourcePaths);
 
   ImmutableSortedSet<RelPath> getRelativePath(SourcePath sourcePath);
 
@@ -60,10 +65,10 @@ public interface SourcePathResolver {
   ImmutableCollection<Path> filterInputsToCompareToOutput(Iterable<? extends SourcePath> sources);
 
   /**
-   * @return {@link Path} instances to the given {@link SourcePath} that is relative to the given
+   * @return {@link RelPath} instances to the given {@link SourcePath} that is relative to the given
    *     {@link ProjectFilesystem}
    */
-  ImmutableSortedSet<Path> getRelativePath(
+  ImmutableSortedSet<RelPath> getRelativePath(
       ProjectFilesystem projectFilesystem, SourcePath sourcePath);
 
   /**

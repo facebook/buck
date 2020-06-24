@@ -107,27 +107,31 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
-    RelPath pathToOutput = sourcePathResolver.getRelativePath(getSourcePathToOutput());
+    ProjectFilesystem filesystem = getProjectFilesystem();
+    RelPath pathToOutput = sourcePathResolver.getRelativePath(filesystem, getSourcePathToOutput());
     MkdirStep mkOutputDirStep =
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), pathToOutput.getParent()));
+                context.getBuildCellRootPath(), filesystem, pathToOutput.getParent()));
     JarDirectoryStep mergeOutputsStep =
         new JarDirectoryStep(
             JarParameters.builder()
                 .setJarPath(pathToOutput)
-                .setEntriesToJar(toOutputPaths(sourcePathResolver, traversedDeps.packagedDeps))
+                .setEntriesToJar(
+                    toOutputPaths(sourcePathResolver, filesystem, traversedDeps.packagedDeps))
                 .setMergeManifests(true)
                 .build());
     return ImmutableList.of(mkOutputDirStep, mergeOutputsStep);
   }
 
   private ImmutableSortedSet<RelPath> toOutputPaths(
-      SourcePathResolverAdapter sourcePathResolver, Iterable<? extends BuildRule> rules) {
+      SourcePathResolverAdapter sourcePathResolver,
+      ProjectFilesystem filesystem,
+      Iterable<? extends BuildRule> rules) {
     return RichStream.from(rules)
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
-        .map(sourcePathResolver::getRelativePath)
+        .map(s -> sourcePathResolver.getRelativePath(filesystem, s))
         .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
   }
 

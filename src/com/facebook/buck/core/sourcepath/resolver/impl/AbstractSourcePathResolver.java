@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -126,9 +125,9 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
 
   @Override
   public ImmutableSortedSet<RelPath> getAllRelativePaths(
-      Collection<? extends SourcePath> sourcePaths) {
+      ProjectFilesystem projectFilesystem, Collection<? extends SourcePath> sourcePaths) {
     return sourcePaths.stream()
-        .flatMap(sourcePath -> getRelativePath(sourcePath).stream())
+        .flatMap(sourcePath -> getRelativePath(projectFilesystem, sourcePath).stream())
         .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
   }
 
@@ -245,11 +244,11 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
   }
 
   @Override
-  public ImmutableSortedSet<Path> getRelativePath(
+  public ImmutableSortedSet<RelPath> getRelativePath(
       ProjectFilesystem projectFilesystem, SourcePath sourcePath) {
     return getAbsolutePath(sourcePath).stream()
-        .map(path -> projectFilesystem.relativize(path).getPath())
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+        .map(path -> projectFilesystem.relativize(path))
+        .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
   }
 
   @Override
