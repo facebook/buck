@@ -90,9 +90,9 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   public ImmutableMap<String, ? extends Object> getDetailsForLogging() {
     return ImmutableMap.<String, Object>builder()
         .put("filesystem", "eden")
-        .put("eden.filesystem", true)
-        .put("eden.mountPoint", mount.getProjectRoot().toString())
-        .put("eden.disableSha1FastPath", disableSha1FastPath)
+        .put("eden_filesystem", true)
+        .put("eden_mountpoint", mount.getProjectRoot().toString())
+        .put("eden_disablesha1fastpath", disableSha1FastPath)
         .build();
   }
 
