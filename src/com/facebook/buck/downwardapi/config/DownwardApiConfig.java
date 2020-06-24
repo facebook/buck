@@ -19,6 +19,7 @@ package com.facebook.buck.downwardapi.config;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.util.environment.Platform;
 import org.immutables.value.Value;
 
 /** Downward API specific buck config */
@@ -26,6 +27,8 @@ import org.immutables.value.Value;
 public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
 
   private static final String SECTION = "downward_api";
+
+  private static final boolean IS_WINDOWS = Platform.detect() == Platform.WINDOWS;
 
   @Override
   public abstract BuckConfig getDelegate();
@@ -36,106 +39,118 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
 
   @Value.Lazy
   public boolean isEnabledForCxx() {
-    return getDelegate().getBooleanValue(SECTION, "cxx_enabled", false);
+    return isEnabled("cxx_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForGenrule() {
-    return getDelegate().getBooleanValue(SECTION, "genrule_enabled", false);
+    return isEnabled("genrule_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForAndroid() {
-    return getDelegate().getBooleanValue(SECTION, "android_enabled", false);
+    return isEnabled("android_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForApple() {
-    return getDelegate().getBooleanValue(SECTION, "apple_enabled", false);
+    return isEnabled("apple_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForJava() {
-    return getDelegate().getBooleanValue(SECTION, "java_enabled", false);
+    return isEnabled("java_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForGroovy() {
-    return getDelegate().getBooleanValue(SECTION, "groovy_enabled", false);
+    return isEnabled("groovy_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForKotlin() {
-    return getDelegate().getBooleanValue(SECTION, "kotlin_enabled", false);
+    return isEnabled("kotlin_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForScala() {
-    return getDelegate().getBooleanValue(SECTION, "scala_enabled", false);
+    return isEnabled("scala_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForInfer() {
-    return getDelegate().getBooleanValue(SECTION, "infer_enabled", false);
+    return isEnabled("infer_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForD() {
-    return getDelegate().getBooleanValue(SECTION, "d_enabled", false);
+    return isEnabled("d_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForCSharp() {
-    return getDelegate().getBooleanValue(SECTION, "csharp_enabled", false);
+    return isEnabled("csharp_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForGo() {
-    return getDelegate().getBooleanValue(SECTION, "go_enabled", false);
+    return isEnabled("go_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForHalide() {
-    return getDelegate().getBooleanValue(SECTION, "halide_enabled", false);
+    return isEnabled("halide_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForHaskell() {
-    return getDelegate().getBooleanValue(SECTION, "haskell_enabled", false);
+    return isEnabled("haskell_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForLua() {
-    return getDelegate().getBooleanValue(SECTION, "lua_enabled", false);
+    return isEnabled("lua_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForOCaml() {
-    return getDelegate().getBooleanValue(SECTION, "ocaml_enabled", false);
+    return isEnabled("ocaml_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForRust() {
-    return getDelegate().getBooleanValue(SECTION, "rust_enabled", false);
+    return isEnabled("rust_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForPython() {
-    return getDelegate().getBooleanValue(SECTION, "python_enabled", false);
+    return isEnabled("python_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForJs() {
-    return getDelegate().getBooleanValue(SECTION, "js_enabled", false);
+    return isEnabled("js_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForTests() {
-    return getDelegate().getBooleanValue(SECTION, "tests_enabled", false);
+    return isEnabled("tests_enabled");
   }
 
   @Value.Lazy
   public boolean isEnabledForRuleAnalysis() {
-    return getDelegate().getBooleanValue(SECTION, "rule_analysis_enabled", false);
+    return isEnabled("rule_analysis_enabled");
+  }
+
+  private boolean isEnabled(String configKey) {
+    if (IS_WINDOWS && !isEnabledForWindows()) {
+      return false;
+    }
+    return getDelegate().getBooleanValue(SECTION, configKey, false);
+  }
+
+  @Value.Lazy
+  public boolean isEnabledForWindows() {
+    return getDelegate().getBooleanValue(SECTION, "windows_enabled", false);
   }
 }
