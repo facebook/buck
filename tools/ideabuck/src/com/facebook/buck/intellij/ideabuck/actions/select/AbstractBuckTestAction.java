@@ -47,7 +47,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class AbstractBuckTestAction extends AnAction {
 
   /** Use the same truncating strategy as the JUnit method action. */
-  private static String truncateName(String name) {
+  protected static String truncateName(String name) {
     if (name.length() >= 21) {
       name = name.substring(0, 18) + "...";
     }
@@ -55,7 +55,7 @@ public abstract class AbstractBuckTestAction extends AnAction {
   }
 
   /** If true, use the debugger to run the tests. */
-  abstract boolean isDebug();
+  protected abstract boolean isDebug();
 
   /** Updates the given presentation based on the given class/method. */
   protected void updatePresentation(
@@ -106,7 +106,7 @@ public abstract class AbstractBuckTestAction extends AnAction {
    *     test.
    * @param containingFile {@link VirtualFile} the file that containing the impacted tests.
    */
-  private void createTestConfigurationFromContext(
+  protected void createTestConfigurationFromContext(
       String name, String testSelectors, Project project, VirtualFile containingFile) {
     AtomicReference<RunnerAndConfigurationSettings> settingsReference = new AtomicReference<>();
     BuckBuildManager buildManager = BuckBuildManager.getInstance(project);

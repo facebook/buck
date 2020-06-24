@@ -1,0 +1,17 @@
+kotlin_test(
+    name = "select",
+    srcs = glob(["*.kt"]),
+    source = "1.8",
+    target = "1.8",
+    deps = [
+        "//third-party/java/guava:guava",
+        "//third-party/java/guava:guava-testlib",
+        "//third-party/java/intellij:intellij-plugin-sdk",
+        "//third-party/java/junit:junit",
+        "//third-party/java/kotlin:kotlin-compiler",
+        "//third-party/java/kotlin:kotlin-plugin",
+        "//third-party/java/kotlin:kotlin-reflect",
+        "//tools/ideabuck:api",
+        "//tools/ideabuck:ideabuck-lib",
+    ],
+)

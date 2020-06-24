@@ -16,8 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.actions.select;
 
-import static org.junit.Assert.*;
-
+import com.facebook.buck.intellij.ideabuck.actions.select.detectors.BuckTestDetector;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMethod;

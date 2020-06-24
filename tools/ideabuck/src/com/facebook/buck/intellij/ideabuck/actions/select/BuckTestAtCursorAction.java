@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.actions.select;
 
+import com.facebook.buck.intellij.ideabuck.actions.select.detectors.BuckTestDetector;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.LangDataKeys;
@@ -118,7 +119,7 @@ public abstract class BuckTestAtCursorAction extends AbstractBuckTestAction {
   /** Runs the test method/class at the cursor using {@code buck test}. */
   public static class Run extends BuckTestAtCursorAction {
     @Override
-    boolean isDebug() {
+    protected boolean isDebug() {
       return false;
     }
   }
@@ -126,7 +127,7 @@ public abstract class BuckTestAtCursorAction extends AbstractBuckTestAction {
   /** Debugs the test method/class at the cursor using {@code buck test}. */
   public static class Debug extends BuckTestAtCursorAction {
     @Override
-    boolean isDebug() {
+    protected boolean isDebug() {
       return true;
     }
   }

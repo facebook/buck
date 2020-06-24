@@ -16,6 +16,14 @@ prebuilt_jar(
 )
 
 prebuilt_jar(
+    name = "kotlin-plugin",
+    binary_jar = "kotlin-plugin.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+prebuilt_jar(
     name = "kotlin-compiler",
     binary_jar = "kotlin-compiler.jar",
     source_jar = "kotlin-compiler-sources.jar",

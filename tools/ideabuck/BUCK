@@ -9,7 +9,10 @@ API_SOURCE_FILES = glob([
 
 # Implementation classes that should not be used by other plugins.
 PLUGIN_SOURCE_FILES = glob(
-    ["src/**/*.java"],
+    [
+        "src/**/*.java",
+        "src/**/*.kt",
+    ],
     exclude = API_SOURCE_FILES,
 )
 
@@ -36,11 +39,13 @@ java_library(
     ],
 )
 
-java_library(
+kotlin_library(
     name = "ideabuck-lib",
     srcs = PLUGIN_SOURCE_FILES,
     provided_deps = [
         "//third-party/java/intellij:intellij-plugin-sdk",
+        "//third-party/java/kotlin:kotlin-compiler",
+        "//third-party/java/kotlin:kotlin-plugin",
     ],
     source = "1.8",
     target = "1.8",
@@ -84,6 +89,7 @@ filegroup(
     srcs = [
         "resources/META-INF/plugin.xml",
         "resources/META-INF/plugin-core.xml",
+        "resources/META-INF/plugin-kotlin.xml",
     ],
     visibility = ["PUBLIC"],
 )

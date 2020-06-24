@@ -1,0 +1,6 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <runLineMarkerContributor language = "kotlin"
+            implementationClass="com.facebook.buck.intellij.ideabuck.actions.select.KotlinRunLineMarkerContributor"/>
+    </extensions>
+</idea-plugin>

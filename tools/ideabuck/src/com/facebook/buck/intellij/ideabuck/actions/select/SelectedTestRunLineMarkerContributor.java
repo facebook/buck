@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.actions.select;
 
+import com.facebook.buck.intellij.ideabuck.actions.select.detectors.BuckTestDetector;
 import com.intellij.execution.lineMarker.RunLineMarkerContributor;
 import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -83,7 +84,7 @@ public class SelectedTestRunLineMarkerContributor extends RunLineMarkerContribut
     }
 
     @Override
-    boolean isDebug() {
+    protected boolean isDebug() {
       return debug;
     }
 
