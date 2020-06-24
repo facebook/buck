@@ -46,7 +46,7 @@ import javax.annotation.Nullable;
  */
 public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
 
-  @VisibleForTesting static String SYNTAX_MARKER_START = "# BUILD FILE SYNTAX: ";
+  @VisibleForTesting static final String SYNTAX_MARKER_START = "# BUILD FILE SYNTAX: ";
 
   private ImmutableMap<Syntax, ProjectBuildFileParser> parsers;
   private final Syntax defaultSyntax;
