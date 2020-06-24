@@ -92,7 +92,12 @@ public class RuleFunctionFactory {
           throws EvalException, InterruptedException {
 
         // sanity check; Starlark has already validated signature
-        Preconditions.checkArgument(args.isEmpty());
+        Preconditions.checkArgument(
+            args.isEmpty(),
+            "When calling rule: %s with args: %s kwargs: %s",
+            getName(),
+            args,
+            kwargs);
 
         ParseContext parseContext = ParseContext.getParseContext(thread, loc, name);
         String basePath =
