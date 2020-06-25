@@ -1240,7 +1240,7 @@ jobs:
           # We do not want to build buck, install the latest release instead.
           name: Install Buck
           command: |
-	    url=`curl -sH "Authorization: token ${GITHUB_TOKEN}" https://api.github.com/repos/facebook/buck/releases/latest |grep "browser_download_url.*deb" |awk '{gsub("\"", "", $2); print $2}'`
+            url=`curl -sH "Authorization: token ${GITHUB_TOKEN}" https://api.github.com/repos/facebook/buck/releases/latest |grep "browser_download_url.*deb" |awk '{gsub("\"", "", $2); print $2}'`
             curl -L -O $url
             filename=`basename ${url}`
             sudo dpkg -i ${filename} || echo "Warning: Buck installed without dependencies."
