@@ -87,7 +87,6 @@ def pollForServerReady():
             return
         time.sleep(1)
     print("Server failed to start after %s seconds." % SERVER_START_POLL)
-URL_ROOT = "http://localhost:9814/"
 
 if __name__ == "__main__":
     output_dir = sys.argv[1]
