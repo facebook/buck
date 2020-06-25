@@ -1234,11 +1234,13 @@ jobs:
       image: ubuntu-1604:201903-01
     steps:
       - checkout
-      - run: 
-          <<: *install_python
+      - run:
+          <<: *install_openjdk8
       - run:
           # android_sdk needed to build java docs.
           <<: *install_android_sdk
+      - run:
+          <<: *install_python
       - run:
           # We do not want to build buck, install the latest release instead.
           name: Install Buck
