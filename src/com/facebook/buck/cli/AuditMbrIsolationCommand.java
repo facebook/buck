@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
@@ -72,9 +73,11 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
     try {
       // Create a TargetGraph that is composed of the transitive closure of all of the dependent
       // BuildRules for the specified BuildTargetPaths.
-      ImmutableSet<BuildTarget> targets = convertArgumentsToBuildTargets(params, getArguments());
+      ImmutableSet<UnconfiguredBuildTarget> unconfiguredTargets =
+          convertArgumentsToUnconfiguredBuildTargets(params, getArguments());
+      ImmutableSet<BuildTarget> targets;
 
-      if (targets.isEmpty()) {
+      if (unconfiguredTargets.isEmpty()) {
         throw new CommandLineException("must specify at least one build target");
       }
 
@@ -84,10 +87,12 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
         targetGraph =
             params
                 .getParser()
-                .buildTargetGraph(
+                .buildTargetGraphFromUnconfiguredTargets(
                     createParsingContext(params.getCells(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
-                    targets);
+                    unconfiguredTargets,
+                    params.getTargetConfiguration());
+        targets = targetGraph.getBuildTargets();
       } catch (BuildFileParseException e) {
         params
             .getBuckEventBus()

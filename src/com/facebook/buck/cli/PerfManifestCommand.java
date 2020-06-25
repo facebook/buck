@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.engine.manifest.Manifest;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -93,13 +94,16 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
     try {
       // Create a TargetGraph that is composed of the transitive closure of all of the dependent
       // BuildRules for the specified BuildTargetPaths.
-      ImmutableSet<BuildTarget> targets = convertArgumentsToBuildTargets(params, getArguments());
+      ImmutableSet<UnconfiguredBuildTarget> unconfiguredTargets =
+          convertArgumentsToUnconfiguredBuildTargets(params, getArguments());
 
-      if (targets.isEmpty()) {
+      if (unconfiguredTargets.isEmpty()) {
         throw new CommandLineException("must specify at least one build target");
       }
 
-      TargetGraphCreationResult targetGraph = getTargetGraph(params, targets);
+      TargetGraphCreationResult targetGraph =
+          getTargetGraphFromUnconfiguredTargets(params, unconfiguredTargets);
+      ImmutableSet<BuildTarget> targets = targetGraph.getBuildTargets();
 
       // Get a fresh action graph since we might unsafely run init from disks...
       // Also, we don't measure speed of this part.

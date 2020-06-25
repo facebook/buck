@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
@@ -506,26 +505,6 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     return hostPlatform != null && !hostPlatform.isEmpty()
         ? Optional.of(hostPlatform)
         : Optional.empty();
-  }
-
-  /**
-   * Converts target arguments to fully qualified form (including resolving aliases, resolving the
-   * implicit package target, etc).
-   *
-   * @deprecated ignores target configuration
-   */
-  @Deprecated
-  protected ImmutableSet<BuildTarget> convertArgumentsToBuildTargets(
-      CommandRunnerParams params, List<String> arguments) {
-    return convertArgumentsToUnconfiguredBuildTargets(params, arguments).stream()
-        .map(
-            unconfiguredBuildTarget ->
-                // TODO(nga): ignores default_target_platform and configuration detectors
-                unconfiguredBuildTarget.configure(
-                    params
-                        .getTargetConfiguration()
-                        .orElse(UnconfiguredTargetConfiguration.INSTANCE)))
-        .collect(ImmutableSet.toImmutableSet());
   }
 
   /**

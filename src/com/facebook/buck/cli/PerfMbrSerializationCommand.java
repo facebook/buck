@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -49,13 +50,16 @@ public class PerfMbrSerializationCommand
   PreparedState prepareTest(CommandRunnerParams params) throws Exception {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // BuildRules for the specified BuildTargetPaths.
-    ImmutableSet<BuildTarget> targets = convertArgumentsToBuildTargets(params, arguments);
+    ImmutableSet<UnconfiguredBuildTarget> unconfiguredTargets =
+        convertArgumentsToUnconfiguredBuildTargets(params, arguments);
 
-    if (targets.isEmpty()) {
+    if (unconfiguredTargets.isEmpty()) {
       throw new CommandLineException("must specify at least one build target");
     }
 
-    TargetGraphCreationResult targetGraph = getTargetGraph(params, targets);
+    TargetGraphCreationResult targetGraph =
+        getTargetGraphFromUnconfiguredTargets(params, unconfiguredTargets);
+    ImmutableSet<BuildTarget> targets = targetGraph.getBuildTargets();
 
     // Get a fresh action graph since we might unsafely run init from disks...
     // Also, we don't measure speed of this part.

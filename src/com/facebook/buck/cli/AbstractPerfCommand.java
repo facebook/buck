@@ -166,28 +166,6 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
   }
 
   /** Most of our perf tests require a target graph, this helps them get it concisely. */
-  protected TargetGraphCreationResult getTargetGraph(
-      CommandRunnerParams params, ImmutableSet<BuildTarget> targets)
-      throws InterruptedException, IOException, VersionException {
-    TargetGraphCreationResult targetGraph;
-    try (CommandThreadManager pool =
-        new CommandThreadManager("Perf", getConcurrencyLimit(params.getBuckConfig()))) {
-      targetGraph =
-          params
-              .getParser()
-              .buildTargetGraph(
-                  createParsingContext(params.getCells(), pool.getListeningExecutorService()),
-                  targets);
-    } catch (BuildFileParseException e) {
-      throw new BuckUncheckedExecutionException(e);
-    }
-    if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
-      targetGraph = toVersionedTargetGraph(params, targetGraph);
-    }
-    return targetGraph;
-  }
-
-  /** Most of our perf tests require a target graph, this helps them get it concisely. */
   protected TargetGraphCreationResult getTargetGraphFromUnconfiguredTargets(
       CommandRunnerParams params, ImmutableSet<UnconfiguredBuildTarget> targets)
       throws InterruptedException, IOException, VersionException {
