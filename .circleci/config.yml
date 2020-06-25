@@ -1234,22 +1234,21 @@ jobs:
       xcode: "11.3.1"
     steps:
       - checkout
-      - run:
-          <<: *install_openjdk8
-      - restore_cache:
-          # Change this key when upgrading sdk.
-          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
-      - restore_cache:
-          # Change this key when upgrading python.
-          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
-      - run:
+      - run: 
           <<: *install_python
       - run:
-          <<: *run_ant_build
-      - restore_cache:
-          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
+          # We do not want to build buck, install the latest release instead.
+          name: Install Buck
+          command: |
+	    url=`curl -sH "Authorization: token ${GITHUB_TOKEN}" https://api.github.com/repos/facebook/buck/releases/latest |grep "browser_download_url.*deb" |awk '{gsub("\"", "", $2); print $2}'`
+            curl -L -O $url
+            filename=`basename ${url}`
+            sudo dpkg -i ${filename} || echo "Warning: Buck installed without dependencies."
       - run:
-          <<: *run_buck_build
+          name: Publish docs
+          command: |
+            cd docs
+            #./publish.sh --start-soyweb
 
 workflows:
   version: 2.1
