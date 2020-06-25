@@ -33,7 +33,7 @@ public enum POSIXNamedPipeFactory implements NamedPipeFactory {
 
   @Override
   public NamedPipe create() throws IOException {
-    Path namedPathName = Paths.get(TMP_DIR, "pipe", UUID.randomUUID().toString());
+    Path namedPathName = Paths.get(TMP_DIR, "pipe", "buck-" + UUID.randomUUID());
     createNamedPipe(namedPathName);
     return new POSIXNamedPipe(namedPathName);
   }

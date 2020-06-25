@@ -32,17 +32,25 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
 
   private static final int BUFFER_SIZE = 512;
 
+  private static final String WINDOWS_PATH_DELIMITER = "\\";
+
   @Override
   public NamedPipe create() throws IOException {
-    String namedPipePath = "\\\\.\\pipe\\" + UUID.randomUUID().toString();
+    String namedPipePath =
+        String.join(
+            WINDOWS_PATH_DELIMITER,
+            WINDOWS_PATH_DELIMITER,
+            ".",
+            "pipe",
+            "buck-" + UUID.randomUUID());
     Path path = Paths.get(namedPipePath);
     return new WindowsNamedPipe(path, createNamedPipe(namedPipePath));
   }
 
-  private static WinNT.HANDLE createNamedPipe(String pipeName) throws IOException {
+  private static WinNT.HANDLE createNamedPipe(String namedPipePath) throws IOException {
     WinNT.HANDLE namedPipeHandler =
         Kernel32.INSTANCE.CreateNamedPipe(
-            /* lpName */ pipeName,
+            /* lpName */ namedPipePath,
             /* dwOpenMode */ WinBase.PIPE_ACCESS_DUPLEX,
             /* dwPipeMode */ WinBase.PIPE_TYPE_BYTE
                 | WinBase.PIPE_READMODE_BYTE
@@ -57,7 +65,7 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
       throw new IOException(
           String.format(
               "Can't create named pipe: %s with CreateNamedPipe() command. Error code: %s",
-              pipeName, Kernel32.INSTANCE.GetLastError()));
+              namedPipePath, Kernel32.INSTANCE.GetLastError()));
     }
     return namedPipeHandler;
   }
