@@ -31,6 +31,8 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
   INSTANCE;
 
   private static final int KB_IN_BYTES = 1024;
+  // Linux has 64K buffer, MacOS 16K.
+  // Set buffer size to 32K (the number in the middle of Linux and MacOs sizes).
   private static final int BUFFER_SIZE = 32 * KB_IN_BYTES;
 
   private static final String WINDOWS_PATH_DELIMITER = "\\";
@@ -55,6 +57,8 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
             /* dwOpenMode */ WinBase.PIPE_ACCESS_DUPLEX,
             /* dwPipeMode */ WinBase.PIPE_TYPE_BYTE
                 | WinBase.PIPE_READMODE_BYTE
+                // do not allow remote clients
+                | WinBase.PIPE_REJECT_REMOTE_CLIENTS
                 | WinBase.PIPE_WAIT,
             /* nMaxInstances */ WinBase.PIPE_UNLIMITED_INSTANCES,
             /* nOutBufferSize */ BUFFER_SIZE,
