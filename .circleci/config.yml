@@ -1254,7 +1254,7 @@ jobs:
           command: |
             export ANDROID_HOME="${ANDROID_SDK}"
             cd docs
-            #./publish.sh --start-soyweb
+            ./publish.sh --start-soyweb
 
 workflows:
   version: 2.1
@@ -1307,4 +1307,9 @@ workflows:
               only: /^v20.*/
             branches:
               ignore: /.*/
-      - publish_docs
+      - publish_docs:
+          filters:
+            tags:
+              only: /^v20.*/
+            branches:
+              ignore: /.*/
