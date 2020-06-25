@@ -1228,10 +1228,10 @@ jobs:
 
   publish_docs:
     environment:
-      <<: *macos_environment
-    working_directory: "/Users/distiller/buck"
-    macos:
-      xcode: "11.3.1"
+      <<: *linux_environment
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
     steps:
       - checkout
       - run: 
