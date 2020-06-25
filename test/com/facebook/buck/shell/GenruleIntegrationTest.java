@@ -50,6 +50,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.junit.Rule;
@@ -514,6 +515,84 @@ public class GenruleIntegrationTest {
             "genrule_rulekey", temporaryFolder.newFolder(), targetWithSuffix("//:bar"));
 
     assertEquals(rulekey1, rulekey2);
+  }
+
+  /**
+   * Test scenario: If top level directory is in default outs, we do not emit warning on undeclared
+   * file created in the output path
+   */
+  @Test
+  public void testGenruleWithUndeclaredOutputFileAndDeclaredOutputPath() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_undeclared_out", temporaryFolder);
+    workspace.setUp();
+
+    String targetName = "//:declared_top_level_outs[output]";
+    ProcessResult processResult = workspace.runBuckBuild(targetName);
+    processResult.assertSuccess();
+
+    assertFalse(
+        "Unexpected file identified as undeclared in: " + processResult.getStderr(),
+        Pattern.compile("Untracked artifact found: (\\S)*\\bundeclared\\b*")
+            .matcher(processResult.getStderr())
+            .find());
+  }
+
+  /**
+   * Test scenario: If top-level directory is not in default outs, and there's an empty directory in
+   * the output path, we emit warning
+   */
+  @Test
+  public void testGenruleWithUndeclaredEmptySubDir() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_undeclared_out", temporaryFolder);
+    workspace.setUp();
+
+    String targetName = "//:undeclared_empty_dir_outs[output]";
+    ProcessResult processResult = workspace.runBuckBuild(targetName);
+    processResult.assertSuccess();
+
+    assertTrue(
+        "Undeclared directory not identified in: " + processResult.getStderr(),
+        Pattern.compile("Untracked artifact found: (\\S)*\\bempty\\b")
+            .matcher(processResult.getStderr())
+            .find());
+  }
+
+  /**
+   * Tests that we emit warning in the event bus when we find undeclared output files under the
+   * output root directory.
+   */
+  @Test
+  public void testGenruleWithUndeclaredOutputFileUnderOutputPath() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_undeclared_out", temporaryFolder);
+    workspace.setUp();
+
+    String targetName = "//:undeclared_nested_file_outs[output]";
+    ProcessResult processResult = workspace.runBuckBuild(targetName);
+    processResult.assertSuccess();
+
+    Files.exists(getOutputPath(workspace, targetName, "hello"));
+    Files.exists(getOutputPath(workspace, targetName, "undeclared"));
+    assertFalse(
+        "Unexpected file identified as undeclared in: " + processResult.getStderr(),
+        Pattern.compile("Untracked artifact found: (\\S)*\\bhello\\b")
+            .matcher(processResult.getStderr())
+            .find());
+    assertTrue(
+        "Undeclared directory not identified in: " + processResult.getStderr(),
+        Pattern.compile("Untracked artifact found: (\\S)*\\btest\\b")
+            .matcher(processResult.getStderr())
+            .find());
+    assertTrue(
+        "Undeclared file not identified in: " + processResult.getStderr(),
+        Pattern.compile("Untracked artifact found: (\\S)*\\bundeclared\\b")
+            .matcher(processResult.getStderr())
+            .find());
   }
 
   /**

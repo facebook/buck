@@ -1,0 +1,31 @@
+genrule(
+    name = "declared_top_level_outs",
+    outs = {
+        "output": [".", "hello"],
+    },
+    default_outs = ["."],
+    bash = "touch $OUT/hello && touch $OUT/undeclared",
+    cmd_exe = "powershell New-Item -ItemType file -Path ${OUT}\\hello, ${OUT}\\undeclared",
+)
+
+genrule(
+    name = "undeclared_empty_dir_outs",
+    outs = {
+        "output": ["hello"],
+    },
+    default_outs = ["hello"],
+    bash = "mkdir $OUT/empty && touch $OUT/hello",
+    cmd_exe = "mkdir -p ${OUT}\\empty && powershell New-Item -ItemType file -Path ${OUT}\\hello",
+)
+
+# Test scenario: If top-level directory is not in default outs, and there's a nested file
+# in the output path, we emit warning
+genrule(
+    name = "undeclared_nested_file_outs",
+    outs = {
+        "output": ["hello"],
+    },
+    default_outs = ["hello"],
+    bash = "mkdir $OUT/test && touch $OUT/hello && touch $OUT/test/undeclared",
+    cmd_exe = "mkdir -p ${OUT}\\test && powershell New-Item -ItemType file -Path ${OUT}\\hello, ${OUT}\\test\\undeclared",
+)

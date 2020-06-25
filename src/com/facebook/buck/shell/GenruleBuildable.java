@@ -30,6 +30,7 @@ import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -72,7 +73,10 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -625,12 +629,57 @@ public class GenruleBuildable implements Buildable {
         if (result.getExitCode() != StepExecutionResults.SUCCESS_EXIT_CODE) {
           return result;
         }
+        ImmutableSet.Builder<Path> outputPathsBuilder = ImmutableSet.builder();
         if (outputPaths.isPresent()) {
           for (ImmutableSet<OutputPath> paths : outputPaths.get().values()) {
             paths.forEach(p -> checkPath(filesystem, outputPathResolver.resolvePath(p).getPath()));
+            outputPathsBuilder.addAll(
+                paths.stream()
+                    .map(p -> filesystem.resolve(outputPathResolver.resolvePath(p).getPath()))
+                    .collect(Collectors.toSet()));
           }
         } else {
           checkPath(filesystem, outputPathResolver.resolvePath(outputPath.get()).getPath());
+          outputPath.ifPresent(
+              outputPath ->
+                  outputPathsBuilder.add(
+                      filesystem.resolve(outputPathResolver.resolvePath(outputPath).getPath())));
+        }
+        RelPath genPath = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s");
+        ImmutableSet<Path> expectedOutputPaths = outputPathsBuilder.build();
+
+        if (!expectedOutputPaths.contains(filesystem.resolve(genPath).getPath())) {
+          // If the list of outputs contains the output directory, skip looking any further
+          filesystem.walkFileTree(
+              filesystem.resolve(genPath).getPath(),
+              new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attrs) {
+                  if (expectedOutputPaths.contains(path)) {
+                    // Skip pruning if the directory is in the declared outputs
+                    return FileVisitResult.SKIP_SUBTREE;
+                  }
+                  // Skip emitting warning for output path
+                  if (!filesystem.resolve(genPath).getPath().equals(path)) {
+                    emitUndeclaredArtifactWarning(path);
+                  }
+                  return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                  if (!expectedOutputPaths.contains(file)) {
+                    emitUndeclaredArtifactWarning(file);
+                  }
+                  return FileVisitResult.CONTINUE;
+                }
+
+                private void emitUndeclaredArtifactWarning(Path path) {
+                  context
+                      .getBuckEventBus()
+                      .post(ConsoleEvent.warning("Untracked artifact found: %s", path.toString()));
+                }
+              });
         }
         return result;
       }
