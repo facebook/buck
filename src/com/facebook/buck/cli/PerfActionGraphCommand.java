@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.cli.PerfActionGraphCommand.PreparedState;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.util.CommandLineException;
 import com.google.common.collect.ImmutableSet;
@@ -34,13 +34,15 @@ public class PerfActionGraphCommand extends AbstractPerfCommand<PreparedState> {
   @Override
   PreparedState prepareTest(CommandRunnerParams params) {
     try {
-      ImmutableSet<BuildTarget> targets = convertArgumentsToBuildTargets(params, arguments);
+      ImmutableSet<UnconfiguredBuildTarget> targets =
+          convertArgumentsToUnconfiguredBuildTargets(params, arguments);
 
       if (targets.isEmpty()) {
         throw new CommandLineException("must specify at least one build target");
       }
 
-      TargetGraphCreationResult targetGraph = getTargetGraph(params, targets);
+      TargetGraphCreationResult targetGraph =
+          getTargetGraphFromUnconfiguredTargets(params, targets);
 
       return new PreparedState(targetGraph);
     } catch (Exception e) {

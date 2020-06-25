@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -177,6 +178,29 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
               .buildTargetGraph(
                   createParsingContext(params.getCells(), pool.getListeningExecutorService()),
                   targets);
+    } catch (BuildFileParseException e) {
+      throw new BuckUncheckedExecutionException(e);
+    }
+    if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
+      targetGraph = toVersionedTargetGraph(params, targetGraph);
+    }
+    return targetGraph;
+  }
+
+  /** Most of our perf tests require a target graph, this helps them get it concisely. */
+  protected TargetGraphCreationResult getTargetGraphFromUnconfiguredTargets(
+      CommandRunnerParams params, ImmutableSet<UnconfiguredBuildTarget> targets)
+      throws InterruptedException, IOException, VersionException {
+    TargetGraphCreationResult targetGraph;
+    try (CommandThreadManager pool =
+        new CommandThreadManager("Perf", getConcurrencyLimit(params.getBuckConfig()))) {
+      targetGraph =
+          params
+              .getParser()
+              .buildTargetGraphFromUnconfiguredTargets(
+                  createParsingContext(params.getCells(), pool.getListeningExecutorService()),
+                  targets,
+                  params.getTargetConfiguration());
     } catch (BuildFileParseException e) {
       throw new BuckUncheckedExecutionException(e);
     }
