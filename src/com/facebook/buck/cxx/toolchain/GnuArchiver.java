@@ -57,6 +57,6 @@ public class GnuArchiver extends DelegatingTool implements Archiver {
 
   @Override
   public boolean isArgfileRequired() {
-    return false;
+    return true;
   }
 }
