@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
@@ -92,7 +93,8 @@ public class AuditClasspathCommand extends AbstractCommand {
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // BuildRules for the specified BuildTargetPaths.
-    ImmutableSet<BuildTarget> targets = convertArgumentsToBuildTargets(params, getArguments());
+    ImmutableSet<UnconfiguredBuildTarget> targets =
+        convertArgumentsToUnconfiguredBuildTargets(params, getArguments());
 
     if (targets.isEmpty()) {
       throw new CommandLineException("must specify at least one build target");
@@ -104,10 +106,11 @@ public class AuditClasspathCommand extends AbstractCommand {
       targetGraph =
           params
               .getParser()
-              .buildTargetGraph(
+              .buildTargetGraphFromUnconfiguredTargets(
                   createParsingContext(params.getCells(), pool.getListeningExecutorService())
                       .withSpeculativeParsing(SpeculativeParsing.ENABLED),
-                  targets);
+                  targets,
+                  params.getTargetConfiguration());
     } catch (BuildFileParseException e) {
       params
           .getBuckEventBus()
