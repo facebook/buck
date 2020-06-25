@@ -44,8 +44,10 @@ import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -342,6 +344,93 @@ public class WatchmanGlobberTest {
                     "RootResolveError: unable to resolve root %s: directory %s not watched",
                     queryRoot, queryRoot))));
     globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false);
+  }
+
+  @Test
+  public void testGlobberRunWithExtraFields() throws IOException, InterruptedException {
+    tmp.newFile("foo.txt");
+
+    Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> globberMap =
+        globber.runWithExtraFields(
+            Collections.singleton("foo.txt"),
+            Collections.emptySet(),
+            EnumSet.noneOf(WatchmanGlobber.Option.class),
+            TimeUnit.SECONDS.toNanos(30),
+            TimeUnit.SECONDS.toNanos(10),
+            ImmutableList.of("name", "type"));
+
+    ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes> expected =
+        ImmutableMap.of(
+            "foo.txt",
+            new WatchmanGlobber.WatchmanFileAttributes(
+                ImmutableMap.of("name", "foo.txt", "type", "f")));
+
+    assertThat(globberMap, equalTo(Optional.of(expected)));
+  }
+
+  @Test
+  public void testGlobberWildcardRunWithExtraFields() throws IOException, InterruptedException {
+    tmp.newFile("foo.txt");
+    tmp.newFile("bar.txt");
+
+    Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> globberMap =
+        globber.runWithExtraFields(
+            Collections.singleton("*.txt"),
+            Collections.emptySet(),
+            EnumSet.noneOf(WatchmanGlobber.Option.class),
+            TimeUnit.SECONDS.toNanos(30),
+            TimeUnit.SECONDS.toNanos(10),
+            ImmutableList.of("name", "type"));
+    ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes> expected =
+        ImmutableMap.of(
+            "foo.txt",
+            new WatchmanGlobber.WatchmanFileAttributes(
+                ImmutableMap.of("name", "foo.txt", "type", "f")),
+            "bar.txt",
+            new WatchmanGlobber.WatchmanFileAttributes(
+                ImmutableMap.of("name", "bar.txt", "type", "f")));
+
+    assertThat(globberMap, equalTo(Optional.of(expected)));
+  }
+
+  @Test
+  public void testGlobberRunWithExtraFieldsNoMatch() throws IOException, InterruptedException {
+    tmp.newFile("foo.txt");
+
+    Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> globberMap =
+        globber.runWithExtraFields(
+            Collections.singleton("bar.txt"),
+            Collections.emptySet(),
+            EnumSet.noneOf(WatchmanGlobber.Option.class),
+            TimeUnit.SECONDS.toNanos(30),
+            TimeUnit.SECONDS.toNanos(10),
+            ImmutableList.of("name", "type"));
+
+    assertThat(globberMap, equalTo(Optional.empty()));
+  }
+
+  @Test
+  public void testGlobberRunWithExtraFieldsButStillNameOnly()
+      throws IOException, InterruptedException {
+    tmp.newFile("foo.txt");
+    assertThat(
+        globber.run(Collections.singleton("foo.txt"), Collections.emptySet(), false),
+        equalTo(Optional.of(ImmutableSet.of("foo.txt"))));
+
+    Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> globberMap =
+        globber.runWithExtraFields(
+            Collections.singleton("foo.txt"),
+            Collections.emptySet(),
+            EnumSet.noneOf(WatchmanGlobber.Option.class),
+            TimeUnit.SECONDS.toNanos(30),
+            TimeUnit.SECONDS.toNanos(10),
+            ImmutableList.of("name"));
+
+    ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes> expected =
+        ImmutableMap.of(
+            "foo.txt",
+            new WatchmanGlobber.WatchmanFileAttributes(ImmutableMap.of("name", "foo.txt")));
+    assertThat(globberMap, equalTo(Optional.of(expected)));
   }
 
   private static class CapturingWatchmanClient implements WatchmanClient {
