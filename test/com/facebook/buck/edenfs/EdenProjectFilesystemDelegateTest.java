@@ -21,15 +21,27 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cli.TestWithBuckd;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.facebook.buck.util.timing.FakeClock;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
@@ -41,10 +53,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.util.Optional;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class EdenProjectFilesystemDelegateTest {
   private static final Sha1HashCode DUMMY_SHA1 = Sha1HashCode.of(Strings.repeat("faceb00c", 5));
+  private ProjectFilesystem projectFilesystem;
+  private Watchman watchman;
 
   /**
    * This is the location of the working directory for {@link Configuration#unix()}. Creating
@@ -53,6 +70,24 @@ public class EdenProjectFilesystemDelegateTest {
    * actual filesystem.
    */
   private static final String JIMFS_WORKING_DIRECTORY = "/work";
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TestWithBuckd testWithBuckd = new TestWithBuckd(tmp); // set up Watchman
+
+  @Before
+  public void setUp() throws Exception {
+    projectFilesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
+    WatchmanFactory watchmanFactory = new WatchmanFactory();
+    watchman =
+        watchmanFactory.build(
+            ImmutableSet.of(tmp.getRoot()),
+            ImmutableMap.of(),
+            new TestConsole(),
+            FakeClock.doNotCare(),
+            Optional.empty());
+    assumeTrue(watchman.getTransportPath().isPresent());
+  }
 
   @Test
   public void computeSha1ForOrdinaryFileUnderMount() throws IOException, EdenError, TException {
@@ -226,5 +261,54 @@ public class EdenProjectFilesystemDelegateTest {
             + "outside of the EdenFS root.",
         Sha1HashCode.fromHashCode(Hashing.sha1().hashBytes(bytes)),
         edenDelegate.computeSha1(path));
+  }
+
+  @Test
+  public void computeSha1ViaWatchman() throws IOException {
+    ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(tmp.getRoot());
+    Path path = tmp.newFile("foo").getPath();
+    EdenMount mount = createMock(EdenMount.class);
+
+    Config configWithFileSystem =
+        ConfigBuilder.createFromText(
+            "[eden]", "use_xattr = true", "[eden]", "use_watchman_content_sha1 = false");
+    EdenProjectFilesystemDelegate edenDelegateWithFileSystem =
+        new EdenProjectFilesystemDelegate(mount, delegate, configWithFileSystem);
+
+    Config configWithWatchman =
+        ConfigBuilder.createFromText(
+            "[eden]", "use_watchman_content_sha1 = true", "[eden]", "use_xattr = false");
+    EdenProjectFilesystemDelegate edenDelegateWithWatchman =
+        new EdenProjectFilesystemDelegate(mount, delegate, configWithWatchman);
+    edenDelegateWithWatchman.initEdenWatchman(watchman, projectFilesystem);
+
+    assertEquals(
+        edenDelegateWithFileSystem.computeSha1(path), edenDelegateWithWatchman.computeSha1(path));
+  }
+
+  @Test
+  public void computeSha1ViaWatchmanFailedWatchmanNotSetup()
+      throws IOException, TException, EdenError {
+    FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
+    Path root = fs.getPath(JIMFS_WORKING_DIRECTORY);
+    ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(root);
+
+    Config configWithWatchman =
+        ConfigBuilder.createFromText(
+            "[eden]", "use_watchman_content_sha1 = true", "[eden]", "use_xattr = false");
+
+    EdenMount mount = createMock(EdenMount.class);
+    Path path = fs.getPath("foo/bar");
+    expect(mount.getPathRelativeToProjectRoot(root.resolve(path))).andReturn(Optional.of(path));
+    expect(mount.getSha1(path)).andReturn(DUMMY_SHA1);
+    replay(mount);
+
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage(
+        String.format("Watchman is not set. Please turn off eden.use_watchman_content_sha1"));
+
+    EdenProjectFilesystemDelegate edenDelegate =
+        new EdenProjectFilesystemDelegate(mount, delegate, configWithWatchman);
+    edenDelegate.computeSha1(path);
   }
 }

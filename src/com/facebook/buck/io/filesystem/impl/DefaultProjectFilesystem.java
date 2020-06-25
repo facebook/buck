@@ -259,6 +259,10 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
     return delegate.getDetailsForLogging();
   }
 
+  public ProjectFilesystemDelegate getDelegate() {
+    return delegate;
+  }
+
   /**
    * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.
    */

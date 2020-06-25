@@ -18,13 +18,21 @@ package com.facebook.buck.edenfs;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
+import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.skylark.io.impl.SyncCookieState;
+import com.facebook.buck.skylark.io.impl.WatchmanGlobber;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -35,7 +43,10 @@ import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.UserDefinedFileAttributeView;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDelegate {
 
@@ -50,6 +61,12 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
 
   private static final String BUCKCONFIG_USE_XATTR_FOR_SHA1 = "use_xattr";
 
+  private static final String BUCKCONFIG_USE_WATCHMAN_CONTENT_SHA1 = "use_watchman_content_sha1";
+
+  private static final String WATCHMAN_CONTENT_SHA1_FIELD = "content.sha1hex";
+  private static final long DEFAULT_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(10);
+  private static final long DEFAULT_WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(1);
+
   private static final int SHA1_HEX_LENGTH = 40;
 
   private final EdenMount mount;
@@ -61,29 +78,40 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
 
   private final boolean useXattr;
 
+  private final boolean useWatchmanContentSha1;
+
+  private final SyncCookieState syncCookieState = new SyncCookieState();
+
+  private final EdenWatchmanDelayInit edenWatchmanDelayInit = new EdenWatchmanDelayInit();
+
   public EdenProjectFilesystemDelegate(
       EdenMount mount, ProjectFilesystemDelegate delegate, Config config) {
     this(
         mount,
         delegate,
         config.getBooleanValue("eden", BUCKCONFIG_DISABLE_SHA1_FAST_PATH, false),
-        config.getBooleanValue("eden", BUCKCONFIG_USE_XATTR_FOR_SHA1, false));
+        config.getBooleanValue("eden", BUCKCONFIG_USE_XATTR_FOR_SHA1, false),
+        config.getBooleanValue("eden", BUCKCONFIG_USE_WATCHMAN_CONTENT_SHA1, false));
   }
 
   @VisibleForTesting
   EdenProjectFilesystemDelegate(EdenMount mount, ProjectFilesystemDelegate delegate) {
-    this(mount, delegate, /* disableSha1FastPath */ false, /* useXattr */ false);
+    this(
+        mount, delegate, /* disableSha1FastPath */ false, /* useXattr */
+        false, /* useWatchmanContentSha1 */ false);
   }
 
   private EdenProjectFilesystemDelegate(
       EdenMount mount,
       ProjectFilesystemDelegate delegate,
       boolean disableSha1FastPath,
-      boolean useXattr) {
+      boolean useXattr,
+      boolean useWatchmanContentSha1) {
     this.mount = mount;
     this.delegate = delegate;
     this.disableSha1FastPath = disableSha1FastPath;
     this.useXattr = useXattr;
+    this.useWatchmanContentSha1 = useWatchmanContentSha1;
   }
 
   @Override
@@ -108,10 +136,14 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
       return delegate.computeSha1(path.getPath());
     }
 
-    Optional<Sha1HashCode> ret =
-        useXattr
-            ? computeSha1ViaXAttr(path)
-            : computeSha1ViaThrift(path, retryWithRealPathIfEdenError);
+    Optional<Sha1HashCode> ret;
+    if (useXattr) {
+      ret = computeSha1ViaXAttr(path);
+    } else if (useWatchmanContentSha1) {
+      ret = computeSha1ViaWatchman(path, retryWithRealPathIfEdenError);
+    } else {
+      ret = computeSha1ViaThrift(path, retryWithRealPathIfEdenError);
+    }
 
     return ret.isPresent() ? ret.get() : delegate.computeSha1(path.getPath());
   }
@@ -164,8 +196,80 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
     return Optional.empty();
   }
 
+  private Optional<Sha1HashCode> computeSha1ViaWatchman(
+      AbsPath path, boolean retryWithRealPathIfEdenError) throws IOException {
+    Optional<Sha1HashCode> sha1 = Optional.empty();
+    try {
+      sha1 = glob(path);
+    } catch (IOException | InterruptedException e) {
+      LOG.info(e, "Failed when fetching SHA-1 for %s", path);
+      if (retryWithRealPathIfEdenError) {
+        AbsPath realPath = path.toRealPath();
+        if (!realPath.equals(path)) {
+          return Optional.of(computeSha1(realPath, /* retryWithRealPathIfEdenError */ false));
+        }
+      }
+    }
+
+    return sha1;
+  }
+
+  private Optional<Sha1HashCode> glob(AbsPath path) throws IOException, InterruptedException {
+    EdenWatchman edenWatchman = edenWatchmanDelayInit.getEdenWatchman();
+    Watchman watchman = edenWatchman.getWatchman();
+    Path watchRootPath = edenWatchman.getWatchmanRootPath();
+    try (WatchmanClient watchmanClient = watchman.createClient()) {
+      WatchmanGlobber globber =
+          WatchmanGlobber.create(watchmanClient, syncCookieState, "", watchRootPath.toString());
+      String pathString = watchRootPath.relativize(path.getPath()).toString();
+      Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> ret =
+          globber.runWithExtraFields(
+              Collections.singleton(pathString),
+              ImmutableSet.of(),
+              EnumSet.of(WatchmanGlobber.Option.FORCE_CASE_SENSITIVE),
+              DEFAULT_TIMEOUT_NANOS,
+              DEFAULT_WARN_TIMEOUT_NANOS,
+              ImmutableList.of("name", WATCHMAN_CONTENT_SHA1_FIELD));
+      if (ret.isPresent() && ret.get().containsKey(pathString)) {
+        String sha1 =
+            (String) ret.get().get(pathString).getAttributeMap().get(WATCHMAN_CONTENT_SHA1_FIELD);
+        return Optional.of(Sha1HashCode.of(sha1));
+      }
+    }
+    return Optional.empty();
+  }
+
   @Override
   public AbsPath getPathForRelativePath(Path pathRelativeToProjectRootOrJustAbsolute) {
     return delegate.getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
+  }
+
+  public void initEdenWatchman(Watchman watchman, ProjectFilesystem projectFilesystem) {
+    this.edenWatchmanDelayInit.setWatchman(watchman, projectFilesystem);
+  }
+
+  /**
+   * EdenProjectFilesystemDelegate is created when a filesystem is created, and watchman needs the
+   * created filesystem. So this class is used to pass the created filesystem to watchman to avoid
+   * the chicken-and-egg scenario.
+   */
+  private static class EdenWatchmanDelayInit {
+    private Optional<EdenWatchman> edenWatchman = Optional.empty();
+
+    /** Attach watchman to the EdenFS delegate */
+    public void setWatchman(Watchman watchman, ProjectFilesystem projectFilesystem) {
+      Preconditions.checkState(!edenWatchman.isPresent(), "Watchman already initialized");
+      this.edenWatchman = Optional.of(new EdenWatchman(watchman, projectFilesystem));
+    }
+
+    /** return the eden watchman wrapper if initialized. */
+    public EdenWatchman getEdenWatchman() {
+      Preconditions.checkState(
+          edenWatchman.isPresent(),
+          String.format(
+              "Watchman is not set. Please turn off eden.%s",
+              BUCKCONFIG_USE_WATCHMAN_CONTENT_SHA1));
+      return edenWatchman.get();
+    }
   }
 }
