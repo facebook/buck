@@ -1237,6 +1237,9 @@ jobs:
       - run: 
           <<: *install_python
       - run:
+          # android_sdk needed to build java docs.
+          <<: *install_android_sdk
+      - run:
           # We do not want to build buck, install the latest release instead.
           name: Install Buck
           command: |
@@ -1247,6 +1250,7 @@ jobs:
       - run:
           name: Publish docs
           command: |
+            export ANDROID_HOME="${ANDROID_SDK}"
             cd docs
             #./publish.sh --start-soyweb
 
