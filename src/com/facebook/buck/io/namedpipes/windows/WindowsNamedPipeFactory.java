@@ -30,7 +30,8 @@ import java.util.UUID;
 public enum WindowsNamedPipeFactory implements NamedPipeFactory {
   INSTANCE;
 
-  private static final int BUFFER_SIZE = 512;
+  private static final int KB_IN_BYTES = 1024;
+  private static final int BUFFER_SIZE = 32 * KB_IN_BYTES;
 
   private static final String WINDOWS_PATH_DELIMITER = "\\";
 
