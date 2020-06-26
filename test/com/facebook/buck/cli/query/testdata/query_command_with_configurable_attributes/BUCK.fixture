@@ -37,6 +37,7 @@ genrule(
     ] + select({
         ":mode_a": [":a"],
         ":mode_b": [":b"],
+        "DEFAULT": [],
     }),
     out = "out",
     cmd = "echo $SRCS > $OUT",
@@ -49,6 +50,7 @@ genrule(
           select({
               ":mode_a": "$(location :a)",
               ":mode_b": "$(location :b)",
+              "DEFAULT": "NOPE",
           }) +
           " > $OUT",
 )
@@ -59,6 +61,7 @@ java_test(
                            select({
                                ":mode_a": 1,
                                ":mode_b": 2,
+                               "DEFAULT": 999,
                            }),
 )
 
@@ -75,6 +78,7 @@ java_test(
               ":mode_b": {
                   "varb": "valb",
               },
+              "DEFAULT": {},
           }),
 )
 

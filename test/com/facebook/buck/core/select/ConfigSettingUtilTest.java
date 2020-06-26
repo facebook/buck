@@ -106,4 +106,63 @@ public class ConfigSettingUtilTest {
             configSetting(windows),
             configSetting(windows, clang)));
   }
+
+  @Test
+  public void isSubsetConfigSetting() {
+    ConstraintValue linux = constraintValue("//:linux", "//:os");
+    ConstraintValue windows = constraintValue("//:windows", "//:os");
+    ConstraintValue clang = constraintValue("//:clang", "//:compiler");
+    ConstraintValue gcc = constraintValue("//:gcc", "//:compiler");
+    assertTrue(ConfigSettingUtil.isSubset(configSetting(), configSetting()));
+    assertTrue(ConfigSettingUtil.isSubset(configSetting(linux), configSetting()));
+    assertTrue(ConfigSettingUtil.isSubset(configSetting(linux, clang), configSetting()));
+    assertTrue(ConfigSettingUtil.isSubset(configSetting(linux, clang), configSetting(linux)));
+    assertTrue(
+        ConfigSettingUtil.isSubset(configSetting(linux, clang), configSetting(linux, clang)));
+    assertFalse(ConfigSettingUtil.isSubset(configSetting(linux, clang), configSetting(linux, gcc)));
+    assertFalse(ConfigSettingUtil.isSubset(configSetting(linux), configSetting(linux, clang)));
+    assertFalse(ConfigSettingUtil.isSubset(configSetting(linux), configSetting(windows)));
+  }
+
+  private static AnySelectable or(ConfigSettingSelectable... css) {
+    return AnySelectable.of(ImmutableList.copyOf(css));
+  }
+
+  @Test
+  public void isSubsetConfigSettingAny() {
+    ConstraintValue linux = constraintValue("//:linux", "//:os");
+    ConstraintValue windows = constraintValue("//:windows", "//:os");
+    ConstraintValue clang = constraintValue("//:clang", "//:compiler");
+    ConstraintValue gcc = constraintValue("//:gcc", "//:compiler");
+    assertFalse(ConfigSettingUtil.isSubset(configSetting(), or()));
+    assertTrue(ConfigSettingUtil.isSubset(configSetting(), AnySelectable.any()));
+    assertTrue(ConfigSettingUtil.isSubset(configSetting(linux), AnySelectable.any()));
+    assertTrue(
+        ConfigSettingUtil.isSubset(
+            configSetting(linux), or(configSetting(windows), configSetting(linux))));
+    assertTrue(
+        ConfigSettingUtil.isSubset(
+            configSetting(linux), or(configSetting(windows), configSetting(linux))));
+    assertTrue(
+        ConfigSettingUtil.isSubset(
+            configSetting(linux, clang), or(configSetting(windows), configSetting(linux))));
+    assertFalse(
+        ConfigSettingUtil.isSubset(
+            configSetting(linux), or(configSetting(linux, gcc), configSetting(linux, clang))));
+  }
+
+  @Test
+  public void isSubsetAny() {
+    ConstraintValue linux = constraintValue("//:linux", "//:os");
+    ConstraintValue windows = constraintValue("//:windows", "//:os");
+    ConstraintValue clang = constraintValue("//:clang", "//:compiler");
+    ConstraintValue gcc = constraintValue("//:gcc", "//:compiler");
+    assertTrue(
+        ConfigSettingUtil.isSubset(
+            or(configSetting(linux, clang), configSetting(windows, gcc)),
+            or(configSetting(linux), configSetting(windows))));
+    assertFalse(
+        ConfigSettingUtil.isSubset(
+            or(configSetting(linux), configSetting(windows)), or(configSetting(linux))));
+  }
 }

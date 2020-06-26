@@ -107,4 +107,35 @@ public class ConfigSettingUtil {
 
     return false;
   }
+
+  private static <K, V> boolean isSubset(Map<K, V> a, Map<K, V> b) {
+    if (a.isEmpty()) {
+      return true;
+    }
+    if (a.size() > b.size()) {
+      return false;
+    }
+    return a.entrySet().stream().allMatch(e -> b.entrySet().contains(e));
+  }
+
+  /** Check is one configuration space is a subset of another configuration space. */
+  static boolean isSubset(ConfigSettingSelectable a, ConfigSettingSelectable b) {
+    return isSubset(b.getValues(), a.getValues())
+        && isSubset(b.getConstraintValueMap(), a.getConstraintValueMap());
+  }
+
+  /** Check is one configuration space is a subset of another configuration space. */
+  public static boolean isSubset(ConfigSettingSelectable a, AnySelectable b) {
+    return b.getSelectables().stream().anyMatch(bs -> isSubset(a, bs));
+  }
+
+  /** Check is one configuration space is a subset of another configuration space. */
+  public static boolean isSubset(AnySelectable a, AnySelectable b) {
+    // shortcut
+    if (b == AnySelectable.any()) {
+      return true;
+    }
+
+    return a.getSelectables().stream().allMatch(k -> isSubset(k, b));
+  }
 }

@@ -5,6 +5,10 @@ android_binary(
         "//config/mode:dev": "//apps/android/keystores:debug",
         "//config/mode:opt": "//apps/android/keystores:prod",
     }),
+    compatible_with = [
+        "//config/mode:dev",
+        "//config/mode:opt",
+    ],
     manifest = "AndroidManifest.xml",
     deps = [
         "//libraries/android:foo-product",
@@ -18,6 +22,10 @@ android_binary(
         "//config/mode:dev": "//apps/android/keystores:debug",
         "//config/mode:opt": "//apps/android/keystores:prod",
     }),
+    compatible_with = [
+        "//config/mode:dev",
+        "//config/mode:opt",
+    ],
     manifest = "AndroidManifest.xml",
     deps = [
         "//libraries/android:bar-product",
@@ -31,6 +39,10 @@ android_binary(
         "//config/mode:dev": "//apps/android/keystores:debug",
         "//config/mode:opt": "//apps/android/keystores:prod",
     }),
+    compatible_with = [
+        "//config/mode:dev",
+        "//config/mode:opt",
+    ],
     manifest = "AndroidManifest.xml",
     deps = [
         "//libraries/android:tv-product",

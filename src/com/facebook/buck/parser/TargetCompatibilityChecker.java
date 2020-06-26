@@ -27,8 +27,9 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
-import com.facebook.buck.core.select.AnySelectable;
+import com.facebook.buck.core.select.LabelledAnySelectable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Checks whether a list of constraints listed in {@code compatible_with} attribute of a target is
@@ -62,7 +63,7 @@ class TargetCompatibilityChecker {
     return true;
   }
 
-  private static AnySelectable resolveCompatibleWithAttr(
+  public static LabelledAnySelectable resolveCompatibleWithAttr(
       ConfigurationRuleRegistry configurationRuleRegistry,
       ImmutableList<UnflavoredBuildTarget> compatibleConfigTargets,
       DependencyStack dependencyStack) {
@@ -70,21 +71,23 @@ class TargetCompatibilityChecker {
         configurationRuleRegistry.getConfigurationRuleResolver();
 
     if (compatibleConfigTargets.isEmpty()) {
-      return AnySelectable.any();
+      return LabelledAnySelectable.any();
     }
 
-    return AnySelectable.of(
+    return LabelledAnySelectable.of(
         compatibleConfigTargets.stream()
-            .map(
-                t -> {
-                  ConfigSettingRule configSettingRule =
-                      configurationRuleResolver.getRule(
-                          ConfigurationBuildTargets.convert(t),
-                          ConfigSettingRule.class,
-                          ConfigurationGraphDependencyStack.root(dependencyStack).child(t));
-                  return configSettingRule.getSelectable();
-                })
-            .collect(ImmutableList.toImmutableList()));
+            .distinct()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    t -> t,
+                    t -> {
+                      ConfigSettingRule configSettingRule =
+                          configurationRuleResolver.getRule(
+                              ConfigurationBuildTargets.convert(t),
+                              ConfigSettingRule.class,
+                              ConfigurationGraphDependencyStack.root(dependencyStack).child(t));
+                      return configSettingRule.getSelectable();
+                    })));
   }
 
   public static boolean configTargetsMatchPlatform(
@@ -93,7 +96,7 @@ class TargetCompatibilityChecker {
       Platform platform,
       DependencyStack dependencyStack,
       BuckConfig buckConfig) {
-    AnySelectable compatibleWith =
+    LabelledAnySelectable compatibleWith =
         resolveCompatibleWithAttr(
             configurationRuleRegistry, compatibleConfigTargets, dependencyStack);
 

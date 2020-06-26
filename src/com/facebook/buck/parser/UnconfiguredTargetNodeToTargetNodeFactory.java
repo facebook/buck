@@ -36,6 +36,7 @@ import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
+import com.facebook.buck.core.select.LabelledAnySelectable;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -126,6 +127,8 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
         perfEventScope.apply(
             SimplePerfEvent.PerfEventId.of("MarshalledConstructorArg.convertRawAttributes"))) {
 
+      LabelledAnySelectable compatibleWith;
+
       if (configurationRuleRegistry.isPresent()) {
         Platform targetPlatform =
             configurationRuleRegistry
@@ -133,15 +136,18 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
                 .getTargetPlatformResolver()
                 .getTargetPlatform(target.getTargetConfiguration(), DependencyStack.top(target));
 
-        if (!TargetCompatibilityChecker.configTargetsMatchPlatform(
-            configurationRuleRegistry.get(),
-            unconfiguredTargetNode.getCompatibleWith(),
-            targetPlatform,
-            dependencyStack,
-            buckConfig)) {
+        compatibleWith =
+            TargetCompatibilityChecker.resolveCompatibleWithAttr(
+                configurationRuleRegistry.get(),
+                unconfiguredTargetNode.getCompatibleWith(),
+                dependencyStack);
+
+        if (!compatibleWith.matchesPlatform(targetPlatform, buckConfig, dependencyStack)) {
           return TargetNodeMaybeIncompatible.ofIncompatible(
               target, unconfiguredTargetNode.getCompatibleWith());
         }
+      } else {
+        compatibleWith = LabelledAnySelectable.any();
       }
 
       DataTransferObjectDescriptor<? extends ConstructorArg> builder =
@@ -160,7 +166,8 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
               builder,
               declaredDeps,
               configurationDeps,
-              unconfiguredTargetNode.getAttributes());
+              unconfiguredTargetNode.getAttributes(),
+              compatibleWith);
     } catch (CoerceFailedException e) {
       throw new HumanReadableException(e, dependencyStack, e.getMessage());
     }

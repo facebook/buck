@@ -4,6 +4,7 @@ genrule(
     cmd = select({
         ":a": "echo a > $OUT",
         ":b": "echo b > $OUT",
+        "DEFAULT": "echo default > $OUT",
     }),
 )
 

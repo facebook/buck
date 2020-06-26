@@ -57,6 +57,10 @@ android_library(
         "//config/os:android": ["prod-infra-res.txt"],
         "//config/os:androidtv": ["prod-infra-tv-res.txt"],
     }),
+    compatible_with = [
+        "//config/os:android",
+        "//config/os:androidtv",
+    ],
     visibility = ["PUBLIC"],
     deps = [
         ":database",

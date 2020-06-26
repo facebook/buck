@@ -46,6 +46,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
+import com.facebook.buck.core.select.LabelledAnySelectable;
 import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -339,7 +340,8 @@ public class TargetNodeTest {
           builder,
           ImmutableSet.builder(),
           ImmutableSet.builder(),
-          instanceByParamName);
+          instanceByParamName,
+          LabelledAnySelectable.any());
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

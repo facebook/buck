@@ -31,6 +31,7 @@ import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransfo
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
+import com.facebook.buck.core.select.LabelledAnySelectable;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
 import com.facebook.buck.core.select.SelectorListResolver;
@@ -174,7 +175,8 @@ public class SkylarkDescriptionArgTest {
             constructorArgDescriptor,
             ImmutableSet.builder(),
             ImmutableSet.builder(),
-            attributes);
+            attributes,
+            LabelledAnySelectable.any());
 
     SkylarkDescriptionArg populated2 =
         marshaller.populate(
@@ -190,7 +192,8 @@ public class SkylarkDescriptionArgTest {
             constructorArgDescriptor,
             ImmutableSet.builder(),
             ImmutableSet.builder(),
-            attributes2);
+            attributes2,
+            LabelledAnySelectable.any());
 
     assertEquals(
         ImmutableSortedSet.of(), populated1.getPostCoercionValue(ParamName.bySnakeCase("labels")));

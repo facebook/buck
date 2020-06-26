@@ -43,6 +43,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.select.LabelledAnySelectable;
 import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
@@ -157,7 +158,8 @@ public class GenruleDescriptionTest {
             builder,
             declaredDeps,
             ImmutableSet.builder(),
-            instance);
+            instance,
+            LabelledAnySelectable.any());
     TargetNode<GenruleDescriptionArg> targetNode =
         new TargetNodeFactory(
                 new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE)

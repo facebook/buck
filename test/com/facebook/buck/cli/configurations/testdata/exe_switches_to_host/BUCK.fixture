@@ -46,6 +46,10 @@ python_binary(
         ":c-h": "b-host.py",
         ":c-t": "b-target.py",
     }),
+    compatible_with = [
+        ":c-h",
+        ":c-t",
+    ],
 )
 
 genrule(

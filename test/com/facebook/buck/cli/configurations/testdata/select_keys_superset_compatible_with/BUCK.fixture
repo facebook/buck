@@ -1,0 +1,47 @@
+constraint_setting(
+    name = "os",
+)
+
+constraint_value(
+    name = "c-linux",
+    constraint_setting = ":os",
+)
+
+constraint_value(
+    name = "c-windows",
+    constraint_setting = ":os",
+)
+
+config_setting(
+    name = "linux",
+    constraint_values = [
+        ":c-linux",
+    ],
+)
+
+config_setting(
+    name = "windows",
+    constraint_values = [
+        ":c-windows",
+    ],
+)
+
+platform(
+    name = "p-linux",
+    constraint_values = [
+        ":c-linux",
+    ],
+)
+
+genrule(
+    name = "g",
+    out = "g.txt",
+    compatible_with = [
+        ":linux",
+        ":windows",
+    ],
+    # This should fail even on Linux because it would fail on Windows
+    cmd = select({
+        ":linux": "echo 1> $OUT",
+    }),
+)

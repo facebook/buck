@@ -649,4 +649,31 @@ public class ConfigurationsIntegrationTest {
 
     assertEquals(expected, actual);
   }
+
+  @Test
+  public void selectKeysSupersetCompatibleWith() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "select_keys_superset_compatible_with", tmp);
+    workspace.setUp();
+
+    ProcessResult buildResult = workspace.runBuckBuild("--target-platforms=//:p-linux", "//:g");
+    buildResult.assertFailure();
+    MatcherAssert.assertThat(
+        buildResult.getStderr(),
+        MoreStringsForTests.containsIgnoringPlatformNewlines(
+            "When checking configurable attribute \"cmd\" in //:g:"
+                + " select keys space must be a superset of compatible_with space; uncovered compatible_with entry: //:windows\n"
+                + "    At //:g"));
+
+    ProcessResult queryResult =
+        workspace.runBuckCommand("cquery", "--target-platforms=//:p-linux", "//:g");
+    queryResult.assertFailure();
+    MatcherAssert.assertThat(
+        queryResult.getStderr(),
+        MoreStringsForTests.containsIgnoringPlatformNewlines(
+            "When checking configurable attribute \"cmd\" in //:g:"
+                + " select keys space must be a superset of compatible_with space; uncovered compatible_with entry: //:windows\n"
+                + "    At //:g"));
+  }
 }

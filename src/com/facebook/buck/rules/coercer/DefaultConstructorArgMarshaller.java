@@ -25,6 +25,8 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
+import com.facebook.buck.core.select.CompatibleWithUtil;
+import com.facebook.buck.core.select.LabelledAnySelectable;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorList;
@@ -75,7 +77,8 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       DataTransferObjectDescriptor<T> constructorArgDescriptor,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
-      Map<ParamName, ?> attributes)
+      Map<ParamName, ?> attributes,
+      LabelledAnySelectable compatibleWith)
       throws CoerceFailedException {
 
     ParamsInfo allParamInfo = constructorArgDescriptor.getParamsInfo();
@@ -138,7 +141,8 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                 (ParamInfo<Object>) info,
                 (TypeCoercer<Object, Object>) info.getTypeCoercer(),
                 isConfigurationRule,
-                attribute);
+                attribute,
+                compatibleWith);
       } else {
         attributeValue =
             createAttribute(
@@ -154,7 +158,8 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                 (ParamInfo<Object>) info,
                 (TypeCoercer<Object, Object>) info.getTypeCoercer(),
                 isConfigurationRule,
-                attribute);
+                attribute,
+                compatibleWith);
       }
       if (attributeValue != null) {
         info.setCoercedValue(builder, attributeValue);
@@ -182,7 +187,8 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       ParamInfo<T> info,
       TypeCoercer<U, T> coercer,
       boolean isConfigurationRule,
-      Object attribute)
+      Object attribute,
+      LabelledAnySelectable compatibleWith)
       throws CoerceFailedException {
     ImmutableList.Builder<T> valuesForConcatenation = ImmutableList.builder();
     for (TargetConfiguration nestedTargetConfiguration :
@@ -203,7 +209,8 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
               info,
               coercer,
               isConfigurationRule,
-              attribute);
+              attribute,
+              compatibleWith);
       if (configuredAttributeValue != null) {
         valuesForConcatenation.add(configuredAttributeValue);
       }
@@ -226,7 +233,8 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       ParamInfo<T> info,
       TypeCoercer<U, T> coercer,
       boolean isConfigurationRule,
-      Object attribute)
+      Object attribute,
+      LabelledAnySelectable compatibleWith)
       throws CoerceFailedException {
     if (isConfigurationRule) {
       if (info.isConfigurable()) {
@@ -265,7 +273,8 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
           dependencyStack,
           configurationDeps,
           info,
-          attributeWithSelectableValue);
+          attributeWithSelectableValue,
+          compatibleWith);
     } else {
       return coerce(
           cellNameResolver,
@@ -316,12 +325,16 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       DependencyStack dependencyStack,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       ParamInfo<T> paramInfo,
-      SelectorList<T> selectorList) {
+      SelectorList<T> selectorList,
+      LabelledAnySelectable compatibleWith) {
     String attributeName = paramInfo.getName().getSnakeCase();
     SelectorListResolved<T> selectorListResolved;
     try {
       selectorListResolved =
           selectorListResolver.resolveSelectorList(selectorList, dependencyStack);
+
+      CompatibleWithUtil.checkCompatibleWithIsSubsetOfSelectKeys(
+          compatibleWith, selectorListResolved);
     } catch (HumanReadableException e) {
       throw new HumanReadableException(
           e,

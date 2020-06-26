@@ -316,6 +316,10 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     SelectorListResolved<Object> selectorListResolved =
         selectorListResolver.resolveSelectorList(selectorList, dependencyStack);
 
+    // We do not validate `select` keys against `compatible_with` here
+    // because we already did that during configured target graph construction
+    // and this code is invoked by query after the configured target graph construction.
+
     return selectorListResolved.eval(
         configurationContext, coercer, buildTarget, attributeName1, dependencyStack);
   }

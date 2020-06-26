@@ -46,6 +46,7 @@ import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
 import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.select.LabelledAnySelectable;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
 import com.facebook.buck.core.select.Selector;
@@ -125,7 +126,8 @@ public class ConstructorArgMarshallerImmutableTest {
             builder(constructorClass),
             declaredDeps,
             configurationDeps,
-            attributesWithName);
+            attributesWithName,
+            LabelledAnySelectable.any());
     assertEquals(ImmutableSet.of(), configurationDeps.build());
     return result;
   }
@@ -541,7 +543,8 @@ public class ConstructorArgMarshallerImmutableTest {
                 ParamName.bySnakeCase("string"),
                 selectorList,
                 ParamName.bySnakeCase("name"),
-                "unused"));
+                "unused"),
+            LabelledAnySelectable.any());
 
     assertEquals("string2string4", dto.getString());
     assertTrue(declaredDeps.build().isEmpty());
@@ -571,7 +574,8 @@ public class ConstructorArgMarshallerImmutableTest {
             declaredDeps,
             ImmutableSet.builder(),
             ImmutableMap.<ParamName, Object>of(
-                ParamName.bySnakeCase("string"), "value", ParamName.bySnakeCase("name"), "zzz"));
+                ParamName.bySnakeCase("string"), "value", ParamName.bySnakeCase("name"), "zzz"),
+            LabelledAnySelectable.any());
     assertEquals("value", dto.getString());
     assertTrue(declaredDeps.build().isEmpty());
   }
@@ -602,7 +606,8 @@ public class ConstructorArgMarshallerImmutableTest {
             ParamName.bySnakeCase("deps"),
             ImmutableList.of(dep.getUnconfiguredBuildTarget()),
             ParamName.bySnakeCase("name"),
-            "myname"));
+            "myname"),
+        LabelledAnySelectable.any());
     assertEquals(ImmutableSet.of(dep), declaredDeps.build());
   }
 
@@ -627,7 +632,8 @@ public class ConstructorArgMarshallerImmutableTest {
             builder(DtoWithOptionalSetOfStrings.class),
             ImmutableSet.builder(),
             ImmutableSet.builder(),
-            ImmutableMap.of(ParamName.bySnakeCase("name"), "something"));
+            ImmutableMap.of(ParamName.bySnakeCase("name"), "something"),
+            LabelledAnySelectable.any());
     assertFalse(dto.getStrings().isPresent());
   }
 
@@ -679,7 +685,8 @@ public class ConstructorArgMarshallerImmutableTest {
                 ParamName.bySnakeCase("deps"),
                 ImmutableList.of(UnconfiguredBuildTargetParser.parse("//a/b:c")),
                 ParamName.bySnakeCase("name"),
-                "testtesttest"));
+                "testtesttest"),
+            LabelledAnySelectable.any());
 
     assertEquals(3, dto.getDeps().size());
     assertEquals(
@@ -719,7 +726,8 @@ public class ConstructorArgMarshallerImmutableTest {
                 ParamName.bySnakeCase("name"),
                 TARGET.getShortName(),
                 ParamName.bySnakeCase("compiler"),
-                UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("//tools:compiler")));
+                UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("//tools:compiler")),
+            LabelledAnySelectable.any());
     BuildTargetSourcePath compiler = (BuildTargetSourcePath) d.getCompiler();
     assertEquals(execConfiguration, compiler.getTarget().getTargetConfiguration());
   }

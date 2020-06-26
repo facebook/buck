@@ -244,4 +244,17 @@ public class SelectorResolved<T> {
             new Resolved<>(ConfigSettingSelectable.any(), Optional.ofNullable(element))),
         "");
   }
+
+  /** Get a union of select keys. */
+  public AnySelectable keys() {
+    // shortcut
+    if (conditions.containsKey(SelectorKey.DEFAULT)) {
+      return AnySelectable.any();
+    }
+
+    return AnySelectable.of(
+        conditions.values().stream()
+            .map(Resolved::getSelectable)
+            .collect(ImmutableList.toImmutableList()));
+  }
 }

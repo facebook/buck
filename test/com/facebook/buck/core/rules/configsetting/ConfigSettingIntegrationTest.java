@@ -114,25 +114,10 @@ public class ConfigSettingIntegrationTest {
     ProjectWorkspace workspace = setupWorkspace();
 
     ProcessResult processResult = workspace.runBuckBuild(":cat");
-    processResult.assertFailure();
-    if (enableSkylarkParsing) {
-      assertThat(
-          processResult.getStderr(),
-          containsString(
-              "None of the conditions in attribute \"srcs\" of //:cat match "
-                  + "the configuration.\nChecked conditions:\n"
-                  + " //:a\n"
-                  + " //:b"));
-    } else {
-      // Python does not preserve the order elements in a dict (prior 3.6)
-      assertThat(
-          processResult.getStderr(),
-          containsString(
-              "None of the conditions in attribute \"srcs\" of //:cat match "
-                  + "the configuration.\nChecked conditions:"));
-      assertThat(processResult.getStderr(), containsString("//:a"));
-      assertThat(processResult.getStderr(), containsString("//:b"));
-    }
+    processResult.assertSuccess();
+    assertThat(
+        processResult.getStderr(),
+        containsString("1 target skipped due to incompatibility with target configuration"));
   }
 
   @Test
@@ -257,13 +242,10 @@ public class ConfigSettingIntegrationTest {
 
     ProcessResult processResult =
         workspace.runBuckBuild("--target-platforms", "//:linux_arm", ":cat");
-    processResult.assertFailure();
+    processResult.assertSuccess();
     assertThat(
         processResult.getStderr(),
-        containsString(
-            "None of the conditions in attribute \"srcs\" of //:cat match the configuration.\nChecked conditions:\n"
-                + " //:linux_aarch64_config\n"
-                + " //:osx_config"));
+        containsString("1 target skipped due to incompatibility with target configuration"));
   }
 
   @Test

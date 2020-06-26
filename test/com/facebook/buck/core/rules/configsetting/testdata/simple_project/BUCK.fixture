@@ -4,6 +4,10 @@ genrule(
         ":a": ["a.txt"],
         ":b": ["b.txt"],
     }),
+    compatible_with = [
+        ":a",
+        ":b",
+    ],
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
 )
@@ -25,6 +29,10 @@ genrule(
         "//:b": ["b.txt"],
         "//:bc": ["c.txt"],
     }),
+    compatible_with = [
+        "//:b",
+        "//:bc",
+    ],
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
 )
@@ -91,6 +99,10 @@ genrule(
         "//:a": None,
         "//:c": "echo c > $OUT",
     }),
+    compatible_with = [
+        "//:a",
+        "//:c",
+    ],
 )
 
 genrule(
@@ -100,6 +112,10 @@ genrule(
         "//:b": "b",
     }) + "c",
     cmd = "echo a > $OUT",
+    compatible_with = [
+        "//:a",
+        "//:b",
+    ],
 )
 
 config_setting(
@@ -133,6 +149,10 @@ java_library(
         "//:java_version_7": "7",
         "//:java_version_8": "8",
     }),
+    compatible_with = [
+        "//:java_version_7",
+        "//:java_version_8",
+    ],
 )
 
 genrule(
@@ -142,6 +162,10 @@ genrule(
         "//:a": "a",
         "//:b": "b",
     }) + " > $OUT",
+    compatible_with = [
+        "//:a",
+        "//:b",
+    ],
 )
 
 java_test(
@@ -153,6 +177,10 @@ java_test(
         "//:a": {"VARA": "a"},
         "//:b": {"VARB": "b"},
     }),
+    compatible_with = [
+        "//:a",
+        "//:b",
+    ],
     deps = [
         "buck//third-party/java/junit:junit",
     ],
@@ -167,6 +195,10 @@ java_test(
         "//:a": {"VARA": "a"},
         "//:b": {"VARB": "b"},
     }),
+    compatible_with = [
+        "//:a",
+        "//:b",
+    ],
     deps = [
         "buck//third-party/java/junit:junit",
     ],
@@ -178,6 +210,10 @@ genrule(
         ":a": ["a.txt"],
         ":b": ["d.txt"],
     }),
+    compatible_with = [
+        "//:a",
+        "//:b",
+    ],
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
 )
@@ -188,6 +224,10 @@ genrule(
         ":a": ["a.txt"],
         ":b": ["b.txt"],
     }) + ["c.txt"],
+    compatible_with = [
+        "//:a",
+        "//:b",
+    ],
     out = "select_concat_out.txt",
     cmd = "cat $SRCS > $OUT",
 )
@@ -218,5 +258,9 @@ genrule(
         ":str-a": "aa",
         ":str-b": "bb",
     }) + ">$OUT",
+    compatible_with = [
+        "//:str-a",
+        "//:str-b",
+    ],
     out = "select_concat_str_out.txt",
 )

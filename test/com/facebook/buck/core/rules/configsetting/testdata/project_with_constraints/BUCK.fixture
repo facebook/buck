@@ -122,9 +122,13 @@ config_setting(
 genrule(
     name = "cat",
     srcs = select({
-        ":osx_config": ["a.txt"],
         ":linux_aarch64_config": ["b.txt"],
+        ":osx_config": ["a.txt"],
     }),
+    compatible_with = [
+        ":osx_config",
+        ":linux_aarch64_config",
+    ],
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
 )
@@ -135,6 +139,10 @@ genrule(
         ":a_on_osx": ["a.txt"],
         ":b_on_linux_aarch64": ["b.txt"],
     }),
+    compatible_with = [
+        ":a_on_osx",
+        ":b_on_linux_aarch64",
+    ],
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
 )
@@ -145,6 +153,10 @@ genrule(
         ":osx_config": ["a.txt"],
         ":osx_x86-64_config": ["b.txt"],
     }),
+    compatible_with = [
+        ":osx_config",
+        ":osx_x86-64_config",
+    ],
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
 )
@@ -155,6 +167,10 @@ genrule(
         ":osx_x86-64_config_with_a": ["a.txt"],
         ":osx_x86-64_config_with_ab": ["b.txt"],
     }),
+    compatible_with = [
+        ":osx_x86-64_config_with_a",
+        ":osx_x86-64_config_with_ab",
+    ],
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
 )

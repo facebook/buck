@@ -9,7 +9,7 @@ java_library(
         "//tools/build/config:java_11": glob(["java11/*.java"]),
         # We use conditional compilation to support building against both Java 8 and 11, despite
         # breaking interface changes in the JDK.
-        "//tools/build/config:java_8": glob(["java8/*.java"]),
+        "DEFAULT": glob(["java8/*.java"]),
     }),
     tests = [
         "//test/com/facebook/buck/jvm/java/abi:abi",

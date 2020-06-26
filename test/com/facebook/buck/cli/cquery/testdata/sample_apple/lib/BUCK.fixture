@@ -6,6 +6,11 @@ apple_library(
         "//config/os:macos": ["foo-macos.m"],
         "//config/os:tvos": ["foo-tvos.m"],
     }),
+    compatible_with = [
+        "//config/os:ios",
+        "//config/os:macos",
+        "//config/os:tvos",
+    ],
     deps = select({
         "//config/os:macos": [":maconly"],
         "DEFAULT": [],

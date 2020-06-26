@@ -2,8 +2,8 @@ apple_library(
     name = "PhoneProductKit",
     srcs = ["PhoneProduct.m"],
     compiler_flags = select({
-        "//config/mode:dev": [],
         "//config/mode:opt": ["-Oz"],
+        "DEFAULT": [],
     }),
     default_target_platform = "//config/platform:ios",
     visibility = ["PUBLIC"],
@@ -18,8 +18,8 @@ apple_library(
     name = "TVProductKit",
     srcs = ["TVProduct.m"],
     compiler_flags = select({
-        "//config/mode:dev": [],
         "//config/mode:opt": ["-Oz"],
+        "DEFAULT": [],
     }),
     default_target_platform = "//config/platform:tvos",
     visibility = ["PUBLIC"],
@@ -39,8 +39,8 @@ apple_library(
         "//config/os:tvos",
     ],
     compiler_flags = select({
-        "//config/mode:dev": [],
         "//config/mode:opt": ["-Oz"],
+        "DEFAULT": [],
     }),
     default_target_platform = "//config/platform:ios",
     preprocessor_flags = select({
@@ -63,8 +63,8 @@ apple_library(
         "DEFAULT": ["Database-default.m"],
     }),
     compiler_flags = select({
-        "//config/mode:dev": [],
         "//config/mode:opt": ["-O2"],
+        "DEFAULT": [],
     }),
     default_target_platform = "//config/platform:ios",
     tests = ["//tests/apple:DatabaseKitTest"],
@@ -78,8 +78,8 @@ apple_library(
     name = "NetworkKit",
     srcs = ["Network.m"],
     compiler_flags = select({
-        "//config/mode:dev": [],
         "//config/mode:opt": ["-O2"],
+        "DEFAULT": [],
     }),
     default_target_platform = "//config/platform:ios",
     headers = [

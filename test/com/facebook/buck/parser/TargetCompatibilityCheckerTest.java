@@ -47,6 +47,7 @@ import com.facebook.buck.core.rules.platform.ConstraintSettingRule;
 import com.facebook.buck.core.rules.platform.ConstraintValueRule;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.select.BuckConfigKey;
+import com.facebook.buck.core.select.LabelledAnySelectable;
 import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.util.immutables.RuleArg;
@@ -260,7 +261,8 @@ public class TargetCompatibilityCheckerTest {
         builder,
         ImmutableSet.builder(),
         ImmutableSet.builder(),
-        attributes.build());
+        attributes.build(),
+        LabelledAnySelectable.any());
   }
 
   static class TestRuleRuleDescription implements RuleDescription<AbstractTestDescriptionArg> {

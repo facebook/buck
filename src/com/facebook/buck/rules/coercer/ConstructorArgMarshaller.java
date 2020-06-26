@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
+import com.facebook.buck.core.select.LabelledAnySelectable;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
@@ -69,6 +70,7 @@ public interface ConstructorArgMarshaller {
    * @param declaredDeps A builder to be populated with the declared dependencies.
    * @param attributes configured attributes that cannot contain selectable values (instances of
    *     {@link SelectorList})
+   * @param compatibleWith
    * @return The fully populated DTO.
    */
   <T extends ConstructorArg> T populate(
@@ -84,6 +86,7 @@ public interface ConstructorArgMarshaller {
       DataTransferObjectDescriptor<T> constructorArgDescriptor,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
-      Map<ParamName, ?> attributes)
+      Map<ParamName, ?> attributes,
+      LabelledAnySelectable compatibleWith)
       throws CoerceFailedException;
 }
