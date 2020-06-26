@@ -25,7 +25,6 @@ import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -56,6 +55,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.step.ConditionalStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -63,16 +63,13 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
-import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -436,41 +433,41 @@ public class AppleBundle extends AbstractBuildRule
                 dryRunCodeSigning ? Optional.of(dryRunResultPath) : Optional.empty());
         stepsBuilder.add(provisioningProfileCopyStep);
 
-        codeSignIdentitySupplier =
+        Supplier<ProvisioningProfileMetadata> selectedProfile =
             () -> {
               // Using getUnchecked here because the previous step should already throw if exception
               // occurred, and this supplier would never be evaluated.
-              Optional<ProvisioningProfileMetadata> selectedProfile =
-                  Futures.getUnchecked(
-                      provisioningProfileCopyStep.getSelectedProvisioningProfileFuture());
+              return Futures.getUnchecked(
+                      provisioningProfileCopyStep.getSelectedProvisioningProfileFuture())
+                  .orElseThrow(
+                      () ->
+                          new IllegalStateException(
+                              "This supplier should never be evaluated when no profile is selected"));
+            };
+        CodeSignIdentityHolder codeSignIdentityHolder = new CodeSignIdentityHolder();
+        CodeSignIdentitySelectStep codeSignIdentitySelectStep =
+            new CodeSignIdentitySelectStep(
+                codeSignIdentitiesSupplier, selectedProfile, codeSignIdentityHolder);
 
-              if (!selectedProfile.isPresent()) {
-                // This should only happen in dry-run codesign mode (since otherwise an exception
-                // would have been thrown already.)  Still, we need to return *something*.
-                Preconditions.checkState(dryRunCodeSigning);
+        Supplier<Boolean> shouldRunCodeSignIdentitySelection =
+            () ->
+                Futures.getUnchecked(
+                        provisioningProfileCopyStep.getSelectedProvisioningProfileFuture())
+                    .isPresent();
+        stepsBuilder.add(
+            new ConditionalStep(shouldRunCodeSignIdentitySelection, codeSignIdentitySelectStep));
+
+        codeSignIdentitySupplier =
+            () -> {
+              if (codeSignIdentityHolder.getIdentity().isPresent()) {
+                return codeSignIdentityHolder.getIdentity().get();
+              } else if (dryRunCodeSigning) {
+                // Code sign identity is allowed not to be selected when code signing is run in dry
+                // mode. Still, we need to return *something*.
                 return CodeSignIdentity.AD_HOC;
+              } else {
+                throw new IllegalStateException("Code sign identity should be selected");
               }
-
-              ImmutableSet<HashCode> fingerprints =
-                  selectedProfile.get().getDeveloperCertificateFingerprints();
-              if (fingerprints.isEmpty()) {
-                // No constraints, pick an arbitrary identity.
-                // If no identities are available, use an ad-hoc identity.
-                return Iterables.getFirst(
-                    codeSignIdentitiesSupplier.get(), CodeSignIdentity.AD_HOC);
-              }
-              for (CodeSignIdentity identity : codeSignIdentitiesSupplier.get()) {
-                if (identity.getFingerprint().isPresent()
-                    && fingerprints.contains(identity.getFingerprint().get())) {
-                  return identity;
-                }
-              }
-
-              throw new HumanReadableException(
-                  "No code sign identity available for provisioning profile: %s\n"
-                      + "Profile requires an identity with one of the following SHA1 fingerprints "
-                      + "available in your keychain: \n  %s",
-                  selectedProfile.get().getProfilePath(), Joiner.on("\n  ").join(fingerprints));
             };
       }
 
