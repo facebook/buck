@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.api.Syntax;
@@ -33,6 +34,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -721,5 +723,17 @@ public class ParserIntegrationTest {
     workspace
         .runBuckBuild("//...", "-c", "parser.default_build_file_syntax=" + syntax)
         .assertSuccess();
+  }
+
+  @Test
+  public void getBasePath() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "get_base_path_is_deprecated", temporaryFolder);
+    workspace.setUp();
+    ProcessResult result = workspace.runBuckBuild("//ddd:g").assertSuccess();
+    Path outTxt = workspace.getGenPath(BuildTargetFactory.newInstance("//ddd:g"), "%s/out.txt");
+    assertEquals(ImmutableList.of("ddd"), Files.readAllLines(outTxt));
+    assertThat(result.getStderr(), containsString("get_base_path() function is deprecated"));
   }
 }

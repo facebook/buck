@@ -1,0 +1,5 @@
+genrule(
+    name = "g",
+    out = "out.txt",
+    cmd = "echo " + get_base_path() + ">$OUT",
+)

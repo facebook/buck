@@ -688,6 +688,7 @@ def get_base_path(build_env=None):
              the build file in the root of the project.
     :rtype: str
     """
+    print("get_base_path() function is deprecated; use package_name() instead")
     return _get_package_name("get_base_path", build_env=build_env)
 
 
