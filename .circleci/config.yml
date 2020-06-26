@@ -648,7 +648,7 @@ jobs:
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
 
-  macos_build_openjdk8:
+  mac_build_openjdk8:
     environment:
       <<: *macos_environment
     working_directory: "/Users/distiller/buck"
@@ -1280,7 +1280,7 @@ workflows:
 
   macos_jobs:
     jobs:
-      - macos_build_openjdk8
+      - mac_build_openjdk8
       - macos_unit_groovy
       - macos_build_ant
       - macos_test_integration
