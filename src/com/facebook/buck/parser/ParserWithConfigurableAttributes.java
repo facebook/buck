@@ -58,7 +58,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -331,19 +330,6 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       AbsPath buildFile,
       Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException {
-    ImmutableList<TargetNodeMaybeIncompatible> allTargetNodes =
-        getAllTargetNodes(state, cell, buildFile, targetConfiguration);
-
-    if (!state.getParsingContext().excludeUnsupportedTargets()) {
-      // All target nodes should be compatible in this case - as we would never have
-      // checked their compatibility in the parsing step if we did not want to exclude.
-      return allTargetNodes.stream()
-          .map(
-              targetNodeMaybeIncompatible ->
-                  targetNodeMaybeIncompatible.assertGetTargetNode(DependencyStack.root()))
-          .collect(ImmutableList.toImmutableList());
-    }
-
     return filterIncompatibleTargetNodes(
             getAllTargetNodes(state, cell, buildFile, targetConfiguration).stream())
         .collect(ImmutableList.toImmutableList());
@@ -408,9 +394,6 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             state,
             targetNodeFilter);
 
-    if (!state.getParsingContext().excludeUnsupportedTargets()) {
-      return buildTargets;
-    }
     return buildTargets.stream()
         .map(
             targets ->
@@ -467,9 +450,6 @@ class ParserWithConfigurableAttributes extends AbstractParser {
                     parsingContext.getApplyDefaultFlavorsMode()),
             state,
             targetNodeFilter);
-    if (!state.getParsingContext().excludeUnsupportedTargets()) {
-      return ImmutableSet.copyOf(Iterables.concat(buildTargets));
-    }
     long totalTargets = buildTargets.stream().mapToInt(targets -> targets.size()).sum();
     ImmutableSet<BuildTarget> filteredBuildTargets =
         filterIncompatibleTargetNodes(

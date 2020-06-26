@@ -293,8 +293,7 @@ public class PerBuildStateFactory {
                 configurationRuleRegistry.getTargetPlatformResolver()),
             hostConfiguration,
             parsingContext.getCells().getBuckConfig(),
-            (parsingContext.excludeUnsupportedTargets()
-                    && parsingContext.enableTargetCompatibilityChecks())
+            (parsingContext.enableTargetCompatibilityChecks())
                 ? Optional.of(configurationRuleRegistry)
                 : Optional.empty());
 

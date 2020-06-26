@@ -60,14 +60,6 @@ public abstract class ParsingContext {
   }
 
   /**
-   * Whether targets with constraints that are not compatible with the target platform should be
-   * excluded.
-   */
-  public boolean excludeUnsupportedTargets() {
-    return true;
-  }
-
-  /**
    * Controls how flavors are appended to the build targets.
    *
    * @see ApplyDefaultFlavorsMode
