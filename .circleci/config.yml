@@ -195,6 +195,13 @@ windows_environment: &windows_environment
   BUCK_NUM_THREADS: 3
   BUCK_PEX_LOCATION: "./new_buck.pex"
 
+tags_only_filter: &tags_only_filter
+  filters:
+    tags:
+      only: /^v20.*/
+    branches:
+      ignore: /.*/
+
 jobs:
   linux_build_openjdk8:
     environment:
@@ -1290,26 +1297,10 @@ workflows:
   publish_jobs:
     jobs:
       - macos_publish_release:
-          filters:
-            tags:
-              only: /^v20.*/
-            branches:
-              ignore: /.*/
+          <<: *tags_only_filter
       - linux_publish_release:
-          filters:
-            tags:
-              only: /^v20.*/
-            branches:
-              ignore: /.*/
+          <<: *tags_only_filter
       - windows_publish_release:
-          filters:
-            tags:
-              only: /^v20.*/
-            branches:
-              ignore: /.*/
+          <<: *tags_only_filter
       - publish_docs:
-          filters:
-            tags:
-              only: /^v20.*/
-            branches:
-              ignore: /.*/
+          <<: *tags_only_filter
