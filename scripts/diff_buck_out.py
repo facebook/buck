@@ -191,7 +191,6 @@ def compare_dirs(dirOne, dirTwo):
 
     process_hashes(file_hashes_dir_one, hashes_by_path)
     process_hashes(file_hashes_dir_two, hashes_by_path)
-
     matching_paths = []
     mismatching_paths = []
 
@@ -202,7 +201,7 @@ def compare_dirs(dirOne, dirTwo):
         elif count == 2:
             matching_paths.append(path)
 
-    return len(matching_paths), len(mismatching_paths), hashes_by_path
+    return matching_paths, mismatching_paths, hashes_by_path
 
 
 ################################################################
@@ -210,7 +209,6 @@ def compare_dirs(dirOne, dirTwo):
 ################################################################
 
 if __name__ == "__main__":
-
     if compareRootDirs:
         compare_dirs(dirOne, dirTwo, "root dirs")
     else:
