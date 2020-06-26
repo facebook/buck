@@ -18,6 +18,7 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -36,11 +37,16 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /** Compile the given module sources into their respective bytecode. */
 public class PythonCompileRule extends ModernBuildRule<PythonCompileRule.Impl> {
@@ -106,29 +112,47 @@ public class PythonCompileRule extends ModernBuildRule<PythonCompileRule.Impl> {
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      PythonComponents.Resolved resolvedSources =
-          sources.resolvePythonComponents(buildContext.getSourcePathResolver());
       return ImmutableList.<Step>builder()
           .addAll(
               MakeCleanDirectoryStep.of(
                   buildCellPathFactory.from(outputPathResolver.resolvePath(OUTPUT))))
           .add(
               new AbstractExecutionStep("py-compile") {
+
+                private final ImmutableList<String> pyCommand =
+                    python.getCommandPrefix(buildContext.getSourcePathResolver());
+                private final RelPath output = outputPathResolver.resolvePath(OUTPUT);
+                private final Path argsfile = outputPathResolver.getTempPath("py_compile_args");
+                private final PythonComponents.Resolved resolvedSources =
+                    sources.resolvePythonComponents(buildContext.getSourcePathResolver());
+
                 @Override
                 public StepExecutionResult execute(StepExecutionContext context)
                     throws IOException, InterruptedException {
                   ImmutableList.Builder<String> builder = ImmutableList.builder();
-                  builder.addAll(python.getCommandPrefix(buildContext.getSourcePathResolver()));
+                  builder.addAll(pyCommand);
                   builder.add("-c", getCompiler());
-                  builder.add("--output=" + outputPathResolver.resolvePath(OUTPUT));
+                  builder.add("--output=" + output);
                   if (ignoreErrors) {
                     builder.add("--ignore-errors");
                   }
-                  resolvedSources.forEachPythonComponent(
-                      (dst, src) ->
-                          builder.add(
-                              String.format(
-                                  "%s=%s", PythonUtil.toModuleName(dst.toString()), src)));
+
+                  // Write python source list to argsfile to avoid command length limits.
+                  try (BufferedWriter writer =
+                      new BufferedWriter(
+                          new OutputStreamWriter(
+                              Files.newOutputStream(
+                                  context.getBuildCellRootPath().resolve(argsfile)),
+                              Charsets.UTF_8))) {
+                    resolvedSources.forEachPythonComponent(
+                        (dst, src) -> {
+                          writer.write(
+                              String.format("%s=%s", PythonUtil.toModuleName(dst.toString()), src));
+                          writer.newLine();
+                        });
+                  }
+                  builder.add("@" + argsfile);
+
                   ImmutableList<String> command = builder.build();
                   ProcessExecutor processExecutor = context.getProcessExecutor();
                   if (withDownwardApi) {

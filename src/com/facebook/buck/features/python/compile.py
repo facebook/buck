@@ -46,7 +46,7 @@ def get_pyc_path(module, fmt):
 
 
 def main(argv):
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(fromfile_prefix_chars="@")
     parser.add_argument("-o", "--output", required=True)
     parser.add_argument("-f", "--format", default=DEFAULT_FORMAT)
     parser.add_argument("-i", "--ignore-errors", action="store_true")
