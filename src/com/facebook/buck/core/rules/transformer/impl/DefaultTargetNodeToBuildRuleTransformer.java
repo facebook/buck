@@ -121,7 +121,12 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               providerInfoCollection);
 
       BuildRule rule = description.createBuildRule(context, buildTarget, params, arg);
-      checkRuleIsBuiltForCorrectTarget(buildTarget, rule);
+      // Make sure the build rule for this description is for the right target. If it's not then it
+      // suggests a bug in the description (with the exception of alias rules, which are expected
+      // to simply point somewhere else).
+      if (!description.producesBuildRuleFromOtherTarget()) {
+        checkRuleIsBuiltForCorrectTarget(buildTarget, rule);
+      }
       return rule;
     } catch (Exception e) {
       throw new BuckUncheckedExecutionException(

@@ -126,6 +126,7 @@ RESOURCES_AFFECTING_BUILD_ARTIFACTS = {
 }
 
 BUCK_MODULES = {
+    "alias": "//src/com/facebook/buck/features/alias:alias",
     "d": "//src/com/facebook/buck/features/d:d",
     "dotnet": "//src/com/facebook/buck/features/dotnet:dotnet",
     "filebundler": "//src/com/facebook/buck/features/filebundler:filebundler",

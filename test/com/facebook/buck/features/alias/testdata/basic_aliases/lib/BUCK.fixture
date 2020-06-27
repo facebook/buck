@@ -1,0 +1,25 @@
+genrule(
+    name = "foo",
+    out = "foo.txt",
+    cmd = "echo " + select({
+        "//config:value1": "FOO1",
+        "//config:value2": "FOO2",
+        "//config:value3": "FOO3",
+        "//config:value4": "FOO4",
+        "DEFAULT": "FOO-DEFAULT",
+    }) + " > $OUT",
+    default_target_platform = "//config:platform1",
+    visibility = ["PUBLIC"],
+)
+
+genrule(
+    name = "bar",
+    out = "bar.txt",
+    cmd = "echo " + select({
+        "//config:value1": "BAR1",
+        "//config:value2": "BAR2",
+        "DEFAULT": "BAR-DEFAULT",
+    }) + " > $OUT",
+    default_target_platform = "//config:platform2",
+    visibility = ["PUBLIC"],
+)

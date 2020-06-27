@@ -1,0 +1,61 @@
+alias(
+    name = "foo-direct",
+    actual = "//lib:foo",
+    visibility = ["PUBLIC"],
+)
+
+alias(
+    name = "bar-direct",
+    actual = "//lib:bar",
+    visibility = ["PUBLIC"],
+)
+
+alias(
+    name = "foo-direct-with-default-target-platform",
+    actual = "//lib:foo",
+    default_target_platform = "//config:platform2",
+    visibility = ["PUBLIC"],
+)
+
+alias(
+    name = "different-targets-based-on-configuration",
+    actual = select({
+        "//config:value3": "//lib:foo",
+        "DEFAULT": "//lib:bar",
+    }),
+    default_target_platform = "//config:platform4",
+    visibility = ["PUBLIC"],
+)
+
+configured_alias(
+    name = "foo-with-platform2",
+    actual = "//lib:foo",
+    platform = "//config:platform2",
+    visibility = ["PUBLIC"],
+)
+
+configured_alias(
+    name = "bar-with-platform2",
+    actual = "//lib:bar",
+    platform = "//config:platform2",
+    visibility = ["PUBLIC"],
+)
+
+configured_alias(
+    name = "foo-with-selectable-platform",
+    actual = "//lib:foo",
+    compatible_with = [
+        "//config:value1",
+        "//config:value2",
+        "//config:value3",
+        "//config:value4",
+    ],
+    # Swap platforms 1 with 3, and swap platforms 2 with 4
+    platform = select({
+        "//config:value1": "//config:platform3",
+        "//config:value2": "//config:platform4",
+        "//config:value3": "//config:platform1",
+        "//config:value4": "//config:platform2",
+    }),
+    visibility = ["PUBLIC"],
+)

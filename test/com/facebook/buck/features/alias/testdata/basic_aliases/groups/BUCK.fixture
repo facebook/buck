@@ -1,0 +1,37 @@
+filegroup(
+    name = "foo-and-bar-with-platform2-directly",
+    srcs = [
+        "//lib:foo",
+        "//lib:bar",
+    ],
+    default_target_platform = "//config:platform2",
+)
+
+filegroup(
+    name = "foo-and-bar-with-platform2-aliases",
+    srcs = [
+        "//aliases:foo-with-platform2",
+        "//aliases:bar-with-platform2",
+    ],
+    # Explicitly no default_target_platform, since we shouldn't need it
+)
+
+filegroup(
+    name = "bar-included-twice-via-alias",
+    srcs = [
+        "//aliases:bar-direct",
+        "//lib:bar",
+    ],
+    default_target_platform = "//config:platform3",
+)
+
+filegroup(
+    name = "group-of-aliases-using-select",
+    srcs = [
+        # For platform4, this points to bar for platform4
+        "//aliases:different-targets-based-on-configuration",
+        # For platform4, this points to foo for platform2
+        "//aliases:foo-with-selectable-platform",
+    ],
+    default_target_platform = "//config:platform4",
+)

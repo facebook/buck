@@ -47,6 +47,14 @@ public interface DescriptionWithTargetGraph<T extends BuildRuleArg> extends Desc
       T args);
 
   /**
+   * Whether or not the build rule produced by this {@code Description} is expected to be a new rule
+   * or a reference to a different rule. This is mainly useful for alias descriptions.
+   */
+  default boolean producesBuildRuleFromOtherTarget() {
+    return false;
+  }
+
+  /**
    * Whether or not the build rule subgraph produced by this {@code Description} is safe to cache in
    * {@link com.facebook.buck.core.model.actiongraph.computation.IncrementalActionGraphGenerator}
    * for incremental action graph generation.

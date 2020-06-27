@@ -639,6 +639,7 @@
   </target>
 
   <target name="build-modules" depends="
+                                        build-module-alias,
                                         build-module-d,
                                         build-module-dotnet,
                                         build-module-filebundler,
@@ -657,6 +658,14 @@
                                         build-module-xcode,
                                         build-module-ziprules
                                        "/>
+
+  <target name="build-module-alias" depends="compile">
+    <build-buck-module-jar module-name="alias">
+      <module-javac-params>
+        <include name="com/facebook/buck/features/alias/**/*.java" />
+      </module-javac-params>
+    </build-buck-module-jar>
+  </target>
 
   <target name="build-module-d" depends="compile">
     <build-buck-module-jar module-name="d">

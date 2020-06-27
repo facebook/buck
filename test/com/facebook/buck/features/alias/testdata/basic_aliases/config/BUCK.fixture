@@ -1,0 +1,79 @@
+constraint_setting(
+    name = "something",
+)
+
+constraint_value(
+    name = "something-value-1",
+    constraint_setting = ":something",
+)
+
+constraint_value(
+    name = "something-value-2",
+    constraint_setting = ":something",
+)
+
+constraint_value(
+    name = "something-value-3",
+    constraint_setting = ":something",
+)
+
+constraint_value(
+    name = "something-value-4",
+    constraint_setting = ":something",
+)
+
+config_setting(
+    name = "value1",
+    constraint_values = [":something-value-1"],
+    visibility = ["PUBLIC"],
+)
+
+config_setting(
+    name = "value2",
+    constraint_values = [":something-value-2"],
+    visibility = ["PUBLIC"],
+)
+
+config_setting(
+    name = "value3",
+    constraint_values = [":something-value-3"],
+    visibility = ["PUBLIC"],
+)
+
+config_setting(
+    name = "value4",
+    constraint_values = [":something-value-4"],
+    visibility = ["PUBLIC"],
+)
+
+platform(
+    name = "platform1",
+    constraint_values = [
+        ":something-value-1",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+platform(
+    name = "platform2",
+    constraint_values = [
+        ":something-value-2",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+platform(
+    name = "platform3",
+    constraint_values = [
+        ":something-value-3",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+platform(
+    name = "platform4",
+    constraint_values = [
+        ":something-value-4",
+    ],
+    visibility = ["PUBLIC"],
+)
