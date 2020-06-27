@@ -1,0 +1,6 @@
+python_library(
+    name = "setuptools",
+    srcs = glob(["**/*.py"]),  # expose everything for setuptool
+    base_module = "",
+    visibility = ["PUBLIC"],
+)

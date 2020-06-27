@@ -105,14 +105,7 @@ class PytestMainProgram(__test_main__.MainProgram):
             return __test_main__.EXIT_CODE_TEST_FAILURE
 
     def _buck_format_test_item(self, item: pytest.Item) -> str:
-        """
-        formats a pytest item for printing, either in pytest standard format,
-        or buck format
-        """
-        if self.is_buck_test:
-            return "{}#{}".format(item.parent.nodeid, item.name)
-        else:
-            return item.nodeid
+        return "{}#{}".format(item.parent.nodeid, item.name)
 
     def _get_tests_to_run(self) -> List[str]:
         """

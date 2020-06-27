@@ -47,7 +47,7 @@ def pytest_test(name, srcs = None, deps = None, main_module = "tools.pytest.pyte
         if not (final_path.startswith("test_") or final_path.endswith("_test.py")):
             fail("src files must be named `test_*.py` or `*_test.py` for pytest: {}".format(src))
 
-    deps.extend(["//tools/pytest:pytest_runner"])
+    deps.extend(["//tools/pytest:pytest_runner", "//third-party/py/setuptools:setuptools"])
 
     if package_style != "inplace":
         # pytest execution requires the original source files and doesn't work with zip imports
