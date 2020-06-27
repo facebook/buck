@@ -117,7 +117,7 @@ public class DownwardApiProcessExecutorTest {
     }
   }
 
-  @Test
+  @Test(timeout = 10_000)
   public void downwardApi() throws IOException, InterruptedException {
     NamedPipe namedPipe = NamedPipeFactory.getFactory().create();
     TestListener listener = new TestListener();

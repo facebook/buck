@@ -73,7 +73,7 @@ public class NamedPipesTest {
    * <p>In the end test verifies that message that were sent was received in about 1s.
    */
   @Parameters(method = "getProtocols")
-  @Test
+  @Test(timeout = 10_000)
   public void testNamedPipes(DownwardProtocolType protocolType) throws InterruptedException {
     NamedPipeFactory namedPipeFactory = NamedPipeFactory.getFactory();
     ExecutorService executorService = MostExecutors.newSingleThreadExecutor("named_pipe_reader");
