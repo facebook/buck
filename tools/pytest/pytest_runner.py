@@ -105,13 +105,22 @@ class PytestMainProgram(__test_main__.MainProgram):
             return __test_main__.EXIT_CODE_TEST_FAILURE
 
     def _buck_format_test_item(self, item: pytest.Item) -> str:
-        return "{}#{}".format(item.parent.nodeid, item.name)
+        """
+        formats a pytest item for printing, either in pytest standard format,
+        or buck format
+        """
+        if self.is_buck_test:
+            return "{}#{}".format(item.parent.nodeid, item.name)
+        else:
+            # testpilot python runner expects this weird format
+            return "{1} ({0})".format(item.parent.nodeid, item.name)
 
     def _get_tests_to_run(self) -> List[str]:
         """
         gets a list of tests to run based on the given regex filters, as a set of
         """
-        if self.options.regex is None:
+
+        if self.options.regex is None and not self.test_args:
             return self._get_all_modules_args()
 
         tests, exit_code = self._list_tests()
@@ -119,13 +128,25 @@ class PytestMainProgram(__test_main__.MainProgram):
         if exit_code != ExitCode.OK:
             raise TestDiscoveryException(exit_code)
 
-        test_regex = re.compile(self.options.regex)
+        test_regex = re.compile(self.options.regex) if self.options.regex else None
 
-        return [
-            test.nodeid
-            for test in tests
-            if test_regex.match(self._buck_format_test_item(test))
-        ]
+        def matcher(test: pytest.Item) -> bool:
+            # regex matches are <testcase>#<testname> used by buck
+            regex_name = self._buck_format_test_item(test)
+
+            # testpilot matches are based on <testcase>.<testname>
+            test_name = "{0}.{1}".format(test.parent.nodeid, test.name)
+
+            is_match = True
+            if test_regex:
+                is_match = is_match and test_regex.match(regex_name)
+
+            if self.test_args:
+                is_match = is_match and test_name in self.test_args
+
+            return is_match
+
+        return [test.nodeid for test in tests if matcher(test)]
 
     def list_tests(self) -> ExitCode:
         tests, exit_code = self._list_tests()
