@@ -496,6 +496,26 @@ public class ConfiguredQueryCommandIntegrationTest {
         "stdout-root-recursive-target-spec-prints-every-target", result, workspace);
   }
 
+  @Test
+  public void buckDirectDependenciesAttributeIncludesConfiguration() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "//lib:foo",
+            "--target-universe",
+            "//bin:tvos-bin",
+            "--output-format",
+            "json",
+            "--output-attribute",
+            "buck.direct_dependencies");
+    assertJSONOutputMatchesFileContents(
+        "stdout-buck-direct-dependencies-attribute-includes-configuration.json", result, workspace);
+  }
+
   /**
    * =============================================================================================
    * ================================== Function specific tests ==================================

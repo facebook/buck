@@ -37,6 +37,7 @@ import com.facebook.buck.query.QueryNormalizer;
 import com.facebook.buck.query.QueryParserEnv;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.param.ParamNameOrSpecial;
+import com.facebook.buck.rules.param.SpecialAttr;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.PatternsMatcher;
@@ -435,6 +436,18 @@ public class ConfiguredQueryCommand
               "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
       return Optional.empty();
     }
+
+    // NOTE: Technically `getTargetNodeRawAttributes` will actually populate this value for us, but
+    //   it gives us target strings without configurations. This command generally prints targets
+    //   with their configuration information, so we should do that here. We could change the parser
+    //   to return full targets and then invoke toStringWithConfiguration explicitly here, but at
+    //   this point we've lost all type information about the list so it's more straightforward to
+    //   just overwrite it explicitly.
+    rawAttributes.put(
+        SpecialAttr.DIRECT_DEPENDENCIES,
+        node.getParseDeps().stream()
+            .map(BuildTarget::toStringWithConfiguration)
+            .collect(ImmutableList.toImmutableList()));
 
     return Optional.of(ImmutableMap.copyOf(rawAttributes));
   }

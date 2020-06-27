@@ -1,0 +1,7 @@
+{
+  "//lib:foo (//config/platform:tvos)": {
+    "buck.direct_dependencies":[
+      "//lib:bar (//config/platform:tvos)"
+    ]
+  }
+}
