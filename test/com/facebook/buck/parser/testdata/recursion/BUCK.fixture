@@ -1,0 +1,5 @@
+# @nolint
+
+load(":fact.bzl", "fact")
+
+print("factorial of 5 is %s" % fact(5))

@@ -1,4 +1,4 @@
-commit 108ecab61568dabd97b3f33e21cb0981fda281ae
+commit e2da380c3dc574dc4901bad52efcb5c0e4799cfe
 Author: Stiopa Koltsov <stepan.koltsov@gmail.com>
 Date:   Wed Apr 22 13:56:39 2020 +0100
 
@@ -2595,3 +2595,17 @@ index cf16770663..0720a41b94 100644
      return type;
    }
  
+diff --git a/src/main/java/com/google/devtools/build/lib/syntax/StarlarkFunction.java b/src/main/java/com/google/devtools/build/lib/syntax/StarlarkFunction.java
+index b4dceb39ba..79812ff778 100644
+--- a/src/main/java/com/google/devtools/build/lib/syntax/StarlarkFunction.java
++++ b/src/main/java/com/google/devtools/build/lib/syntax/StarlarkFunction.java
+@@ -80,9 +80,6 @@ public final class StarlarkFunction extends BaseFunction {
+     if (thread.mutability().isFrozen()) {
+       throw Starlark.errorf("Trying to call in frozen environment");
+     }
+-    if (thread.isRecursiveCall(this)) {
+-      throw Starlark.errorf("function '%s' called recursively", name);
+-    }
+ 
+     // Compute the effective parameter values
+     // and update the corresponding variables.

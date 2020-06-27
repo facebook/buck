@@ -736,4 +736,17 @@ public class ParserIntegrationTest {
     assertEquals(ImmutableList.of("ddd"), Files.readAllLines(outTxt));
     assertThat(result.getStderr(), containsString("get_base_path() function is deprecated"));
   }
+
+  @Test
+  @Parameters(method = "syntaxes")
+  public void recursion(Syntax syntax) throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "recursion", temporaryFolder);
+    workspace.setUp();
+    ProcessResult result =
+        workspace
+            .runBuckBuild("//:", "-c", "parser.default_build_file_syntax=" + syntax)
+            .assertSuccess();
+    assertThat(result.getStderr(), containsString("factorial of 5 is 120"));
+  }
 }
