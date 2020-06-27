@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -28,21 +27,9 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public interface ProcessExecutor {
-
-  ThreadPoolExecutor THREAD_POOL =
-      new ThreadPoolExecutor(
-          0,
-          Integer.MAX_VALUE,
-          1,
-          TimeUnit.SECONDS,
-          new SynchronousQueue<>(),
-          new MostExecutors.NamedThreadFactory("ProcessExecutor"));
 
   /**
    * Convenience method for {@link #launchAndExecute(ProcessExecutorParams, Set, Optional, Optional,

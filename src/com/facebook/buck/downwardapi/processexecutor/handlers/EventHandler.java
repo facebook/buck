@@ -30,20 +30,21 @@ public interface EventHandler<T extends AbstractMessage> {
   void handleEvent(DownwardApiExecutionContext context, T event);
 
   /** Returns appropriate event handler for a given {@code eventType}. */
-  @SuppressWarnings("rawtypes")
-  static EventHandler getEventHandler(EventTypeMessage.EventType eventType) {
+  @SuppressWarnings("unchecked")
+  static <T extends AbstractMessage> EventHandler<T> getEventHandler(
+      EventTypeMessage.EventType eventType) {
     switch (eventType) {
       case CONSOLE_EVENT:
-        return ConsoleEventHandler.INSTANCE;
+        return (EventHandler<T>) ConsoleEventHandler.INSTANCE;
 
       case LOG_EVENT:
-        return LogEventHandler.INSTANCE;
+        return (EventHandler<T>) LogEventHandler.INSTANCE;
 
       case STEP_EVENT:
-        return StepEventHandler.INSTANCE;
+        return (EventHandler<T>) StepEventHandler.INSTANCE;
 
       case CHROME_TRACE_EVENT:
-        return ChromeTraceEventHandler.INSTANCE;
+        return (EventHandler<T>) ChromeTraceEventHandler.INSTANCE;
 
       case UNKNOWN:
       case UNRECOGNIZED:

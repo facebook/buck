@@ -32,9 +32,11 @@ import com.facebook.buck.util.DelegateProcessExecutor;
 import com.facebook.buck.util.DownwardApiProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,8 +44,11 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
@@ -83,6 +88,15 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     }
   }
 
+  private static final ThreadPoolExecutor DOWNWARD_API_THREAD_POOL =
+      new ThreadPoolExecutor(
+          0,
+          Integer.MAX_VALUE,
+          1,
+          TimeUnit.SECONDS,
+          new SynchronousQueue<>(),
+          new MostExecutors.NamedThreadFactory("DownwardApi"));
+
   private static final long SHUTDOWN_TIMEOUT = 100;
   private static final TimeUnit SHUTDOWN_TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
 
@@ -107,48 +121,57 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     this.namedPipeFactory = namedPipeFactory;
   }
 
+  /** Process launched inside the {@link DownwardApiProcessExecutor} */
   private static class DownwardApiLaunchedProcess extends DelegateLaunchedProcess {
 
     private final NamedPipe namedPipe;
-    private final Future<?> namedPipeEventsHandler;
+    private final NamedPipeEventHandler namedPipeEventHandler;
+    private boolean readerThreadTerminated = false;
 
     public DownwardApiLaunchedProcess(
-        LaunchedProcess delegate, NamedPipe namedPipe, Future<?> readerFuture) {
+        LaunchedProcess delegate,
+        NamedPipe namedPipe,
+        NamedPipeEventHandler namedPipeEventHandler) {
       super(delegate);
       this.namedPipe = namedPipe;
-      this.namedPipeEventsHandler = readerFuture;
+      this.namedPipeEventHandler = namedPipeEventHandler;
     }
 
     @Override
     public void close() {
       super.close();
-      cancel(namedPipeEventsHandler);
-      close(namedPipe);
+      closeNamedPipe();
+      cancelHandler();
     }
 
-    private void cancel(Future<?> future) {
+    private void cancelHandler() {
+      readerThreadTerminated = true;
       try {
-        if (!future.cancel(true)) {
-          LOG.info("Named pipe events handler future is not yet canceled. Waiting till it done...");
-          future.get(SHUTDOWN_TIMEOUT, SHUTDOWN_TIMEOUT_UNIT);
-        }
+        namedPipeEventHandler.terminateAndWait(SHUTDOWN_TIMEOUT, SHUTDOWN_TIMEOUT_UNIT);
+      } catch (CancellationException e) {
+        // this is fine. it's just canceled
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       } catch (ExecutionException e) {
-        LOG.error(
-            e.getCause(),
-            "Exception while waiting processing named pipe events with event handler.");
+        LOG.warn(e.getCause(), "Exception while cancelling named pipe events processing.");
       } catch (TimeoutException e) {
-        LOG.warn("Timeout exception while waiting named pipe event handler to stop.");
+        LOG.error(
+            "Cannot shutdown downward api reader handler for named pipe: %s", namedPipe.getName());
+        readerThreadTerminated = false;
       }
     }
 
-    private void close(NamedPipe namedPipe) {
+    private void closeNamedPipe() {
       try {
         namedPipe.close();
       } catch (IOException e) {
         LOG.error(e, "Cannot close named pipe: %s", namedPipe.getName());
       }
+    }
+
+    @VisibleForTesting
+    boolean isReaderThreadTerminated() {
+      return readerThreadTerminated;
     }
   }
 
@@ -157,19 +180,20 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
       ProcessExecutorParams params, ImmutableMap<String, String> context) throws IOException {
 
     NamedPipe namedPipe = namedPipeFactory.create();
+    String namedPipeName = namedPipe.getName();
 
-    Runnable namedPipeEventHandler =
-        getNamedPipeEventHandler(namedPipe.getName(), DownwardApiExecutionContext.of(buckEventBus));
-    Future<?> namedPipeEventsHandler = THREAD_POOL.submit(namedPipeEventHandler);
+    NamedPipeEventHandler namedPipeEventHandler =
+        getNamedPipeEventHandler(namedPipeName, DownwardApiExecutionContext.of(buckEventBus));
+    namedPipeEventHandler.runOn(DOWNWARD_API_THREAD_POOL);
 
     ProcessExecutorParams updatedParams =
         ProcessExecutorParams.builder()
             .from(params)
-            .setEnvironment(buildEnvs(params, namedPipe.getName()))
+            .setEnvironment(buildEnvs(params, namedPipeName))
             .build();
     LaunchedProcess launchedProcess = getDelegate().launchProcess(updatedParams, context);
 
-    return new DownwardApiLaunchedProcess(launchedProcess, namedPipe, namedPipeEventsHandler);
+    return new DownwardApiLaunchedProcess(launchedProcess, namedPipe, namedPipeEventHandler);
   }
 
   private ImmutableMap<String, String> buildEnvs(
@@ -180,7 +204,8 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     Sets.SetView<String> intersection = Sets.intersection(envs.keySet(), extraEnvs.keySet());
     if (!intersection.isEmpty()) {
       LOG.warn(
-          "Env variables have the same keys [%s]. Replacing these keys with downward api related values.",
+          "Env variables have the same keys [%s]. "
+              + "Replacing these keys with downward api related values.",
           intersection);
       envs =
           envs.entrySet().stream()
@@ -204,13 +229,37 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     return builder.build();
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  private Runnable getNamedPipeEventHandler(
+  private NamedPipeEventHandler getNamedPipeEventHandler(
       String namedPipeName, DownwardApiExecutionContext context) {
-    return () -> {
+    return new NamedPipeEventHandler(namedPipeName, context, namedPipeFactory);
+  }
+
+  private static class NamedPipeEventHandler {
+
+    private final NamedPipeFactory namedPipeFactory;
+    private final String namedPipeName;
+    private final DownwardApiExecutionContext context;
+    private final SettableFuture<Void> done = SettableFuture.create();
+
+    private Optional<Future<?>> running = Optional.empty();
+
+    NamedPipeEventHandler(
+        String namedPipeName,
+        DownwardApiExecutionContext context,
+        NamedPipeFactory namedPipeFactory) {
+      this.namedPipeFactory = namedPipeFactory;
+      this.namedPipeName = namedPipeName;
+      this.context = context;
+    }
+
+    void runOn(ThreadPoolExecutor threadPool) {
+      running = Optional.of(threadPool.submit(this::run));
+    }
+
+    void run() {
       try (NamedPipe namedPipe = namedPipeFactory.connect(Paths.get(namedPipeName));
           InputStream inputStream = namedPipe.getInputStream()) {
-        LOG.info("Read named pipe: %s", namedPipe);
+        LOG.info("Starting to read events from named pipe: %s", namedPipeName);
         DownwardProtocol downwardProtocol = null;
         while (!Thread.currentThread().isInterrupted()) {
           try {
@@ -219,21 +268,29 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
             }
             EventTypeMessage.EventType eventType = downwardProtocol.readEventType(inputStream);
             AbstractMessage event = downwardProtocol.readEvent(inputStream, eventType);
-            EventHandler eventHandler = EventHandler.getEventHandler(eventType);
+            EventHandler<AbstractMessage> eventHandler = EventHandler.getEventHandler(eventType);
             try {
               eventHandler.handleEvent(context, event);
             } catch (Exception e) {
-              LOG.error(e, "Can't handle event: %s", event);
+              LOG.error(e, "Cannot handle event: %s", event);
             }
           } catch (IOException e) {
-            LOG.error("Exception during processing event from named pipe: %s", namedPipe, e);
+            LOG.error(e, "Exception during processing events from named pipe: %s", namedPipeName);
           }
         }
-        LOG.info("Finishing reader thread");
+        LOG.info("Finishing reader thread for pipe: %s", namedPipeName);
       } catch (IOException e) {
-        LOG.error(e, "Can't read from a named pipe: %s", namedPipeName);
+        LOG.error(e, "Cannot read from named pipe: %s", namedPipeName);
+      } finally {
+        done.set(null);
       }
-    };
+    }
+
+    void terminateAndWait(long timeout, TimeUnit unit)
+        throws CancellationException, InterruptedException, ExecutionException, TimeoutException {
+      running.map(future -> future.cancel(true));
+      done.get(timeout, unit);
+    }
   }
 
   @Override

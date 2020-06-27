@@ -22,6 +22,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
@@ -37,6 +38,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -44,6 +47,15 @@ import java.util.function.Consumer;
 public class DefaultProcessExecutor implements ProcessExecutor {
 
   private static final Logger LOG = Logger.get(ProcessExecutor.class);
+
+  private static final ThreadPoolExecutor PROCESS_EXECUTOR_THREAD_POOL =
+      new ThreadPoolExecutor(
+          0,
+          Integer.MAX_VALUE,
+          1,
+          TimeUnit.SECONDS,
+          new SynchronousQueue<>(),
+          new MostExecutors.NamedThreadFactory("ProcessExecutor"));
 
   private final PrintStream stdOutStream;
   private final PrintStream stdErrStream;
@@ -248,8 +260,8 @@ public class DefaultProcessExecutor implements ProcessExecutor {
                 ansi));
 
     // Consume the streams so they do not deadlock.
-    Future<Unit> stdOutTerminationFuture = THREAD_POOL.submit(stdOut);
-    Future<Unit> stdErrTerminationFuture = THREAD_POOL.submit(stdErr);
+    Future<Unit> stdOutTerminationFuture = PROCESS_EXECUTOR_THREAD_POOL.submit(stdOut);
+    Future<Unit> stdErrTerminationFuture = PROCESS_EXECUTOR_THREAD_POOL.submit(stdErr);
 
     boolean timedOut;
 
