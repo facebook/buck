@@ -58,8 +58,8 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
       TargetNode<T> targetNode,
       ProviderInfoCollection providerInfoCollection,
       CellPathResolver cellPathResolver) {
-    Preconditions.checkArgument(
-        targetNode.getBuildTarget().getCell() == cellPathResolver.getCurrentCellName());
+    BuildTarget buildTarget = targetNode.getBuildTarget();
+    Preconditions.checkArgument(buildTarget.getCell() == cellPathResolver.getCurrentCellName());
 
     try {
       Preconditions.checkState(
@@ -76,7 +76,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
       arg =
           QueryUtils.withDepsQuery(
               arg,
-              targetNode.getBuildTarget(),
+              buildTarget,
               cache,
               graphBuilder,
               cellPathResolver.getCellNameResolver(),
@@ -85,7 +85,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
       arg =
           QueryUtils.withProvidedDepsQuery(
               arg,
-              targetNode.getBuildTarget(),
+              buildTarget,
               cache,
               graphBuilder,
               cellPathResolver.getCellNameResolver(),
@@ -94,7 +94,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
       arg =
           QueryUtils.withModuleBlacklistQuery(
               arg,
-              targetNode.getBuildTarget(),
+              buildTarget,
               cache,
               graphBuilder,
               cellPathResolver.getCellNameResolver(),
@@ -120,10 +120,21 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               configurationRuleRegistry,
               providerInfoCollection);
 
-      return description.createBuildRule(context, targetNode.getBuildTarget(), params, arg);
+      BuildRule rule = description.createBuildRule(context, buildTarget, params, arg);
+      checkRuleIsBuiltForCorrectTarget(buildTarget, rule);
+      return rule;
     } catch (Exception e) {
       throw new BuckUncheckedExecutionException(
           e, "When creating rule %s.", targetNode.getBuildTarget());
     }
+  }
+
+  private void checkRuleIsBuiltForCorrectTarget(BuildTarget arg, BuildRule rule) {
+    Preconditions.checkState(
+        // TODO: This should hold for flavored build targets as well.
+        rule.getBuildTarget().getUnflavoredBuildTarget().equals(arg.getUnflavoredBuildTarget()),
+        "Computed rule for '%s' instead of '%s'.",
+        rule.getBuildTarget(),
+        arg);
   }
 }

@@ -156,12 +156,11 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
   public BuildRule computeIfAbsent(
       BuildTarget target, Function<BuildTarget, BuildRule> mappingFunction) {
     Preconditions.checkState(isValid);
-    Function<BuildTarget, BuildRule> scopedFunction = withCorrectTargetCheck(mappingFunction);
     Task<BuildRule> task =
         buildRuleIndex.computeIfAbsent(
-            target, ignored -> new Task<>(() -> scopedFunction.apply(target)));
+            target, ignored -> new Task<>(() -> mappingFunction.apply(target)));
     if (task.isBeingWorkedOnByCurrentThread()) {
-      BuildRule rule = scopedFunction.apply(target);
+      BuildRule rule = mappingFunction.apply(target);
       task.forceComplete(rule);
       return rule;
     } else {
@@ -187,9 +186,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
         entry ->
             buildRuleIndex.computeIfAbsent(
                 entry.getKey(),
-                ignored ->
-                    new Task<>(
-                        () -> withCorrectTargetCheck(entry.getValue()).apply(entry.getKey()))),
+                ignored -> new Task<>(() -> entry.getValue().apply(entry.getKey()))),
         (entry, rule) -> resultBuilder.put(entry.getKey(), rule));
     return resultBuilder.build();
   }
@@ -239,16 +236,13 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
         ignored ->
             new Task<>(
                 () ->
-                    withCorrectTargetCheck(
-                            ignored2 ->
-                                buildRuleGenerator.transform(
-                                    toolchainProviderResolver.apply(target),
-                                    targetGraph,
-                                    configurationRuleRegistry,
-                                    this,
-                                    targetGraph.get(target).cast(BuildRuleArg.class),
-                                    cells.getCell(target.getCell()).getCellPathResolver()))
-                        .apply(target)));
+                    buildRuleGenerator.transform(
+                        toolchainProviderResolver.apply(target),
+                        targetGraph,
+                        configurationRuleRegistry,
+                        this,
+                        targetGraph.get(target).cast(BuildRuleArg.class),
+                        cells.getCell(target.getCell()).getCellPathResolver())));
   }
 
   /** Please use {@code computeIfAbsent} instead */
@@ -279,15 +273,6 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
   public void invalidate() {
     isValid = false;
     buildRuleIndex.clear();
-  }
-
-  private Function<BuildTarget, BuildRule> withCorrectTargetCheck(
-      Function<BuildTarget, BuildRule> function) {
-    return target -> {
-      BuildRule rule = function.apply(target);
-      checkRuleIsBuiltForCorrectTarget(target, rule);
-      return rule;
-    };
   }
 
   <V> Task<V> completed(V value) {
