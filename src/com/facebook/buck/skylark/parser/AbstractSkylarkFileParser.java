@@ -134,7 +134,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
   abstract Globber getGlobber(Path parseFile);
 
-  private ImplicitlyLoadedExtension loadImplicitExtension(Path basePath, Label containingLabel)
+  private ImplicitlyLoadedExtension loadImplicitExtension(
+      ForwardRelativePath basePath, Label containingLabel)
       throws IOException, InterruptedException {
     Optional<ImplicitInclude> implicitInclude =
         packageImplicitIncludeFinder.findIncludeForBuildFile(basePath);
@@ -169,8 +170,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     ForwardRelativePath basePath = getBasePath(parseFile);
     Label containingLabel = createContainingLabel(basePath);
-    ImplicitlyLoadedExtension implicitLoad =
-        loadImplicitExtension(basePath.toPath(parseFile.getFileSystem()), containingLabel);
+    ImplicitlyLoadedExtension implicitLoad = loadImplicitExtension(basePath, containingLabel);
 
     StarlarkFile buildFileAst =
         parseSkylarkFile(buildFilePath, containingLabel, getBuckOrPackage().fileKind);
@@ -856,8 +856,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     ForwardRelativePath basePath = getBasePath(parseFile);
     Label containingLabel = createContainingLabel(basePath);
-    ImplicitlyLoadedExtension implicitLoad =
-        loadImplicitExtension(basePath.toPath(parseFile.getFileSystem()), containingLabel);
+    ImplicitlyLoadedExtension implicitLoad = loadImplicitExtension(basePath, containingLabel);
     StarlarkFile buildFileAst =
         parseSkylarkFile(buildFilePath, containingLabel, getBuckOrPackage().fileKind);
     ImmutableList<IncludesData> dependencies =

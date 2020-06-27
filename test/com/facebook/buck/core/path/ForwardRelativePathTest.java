@@ -26,9 +26,11 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.filesystems.BuckFileSystem;
 import com.facebook.buck.core.filesystems.BuckFileSystemProvider;
+import com.google.common.collect.ImmutableList;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.nio.file.FileSystem;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.junit.Rule;
@@ -280,5 +282,19 @@ public class ForwardRelativePathTest {
     assertEquals(
         ForwardRelativePath.of("foo/bar"), ForwardRelativePath.of("foo/bar/baz").getParent());
     assertEquals(Paths.get("foo/bar"), Paths.get("foo/bar/baz").getParent());
+  }
+
+  @Test
+  public void asIterable() {
+    for (String path : new String[] {"", "ab", "ab/c", "ab/c/de"}) {
+      assertEquals(
+          "for path: " + path,
+          ImmutableList.copyOf(Paths.get(path)).stream()
+              .map(Path::toString)
+              .collect(ImmutableList.toImmutableList()),
+          ImmutableList.copyOf(ForwardRelativePath.of(path).asIterable()).stream()
+              .map(ForwardRelativePath::toString)
+              .collect(ImmutableList.toImmutableList()));
+    }
   }
 }

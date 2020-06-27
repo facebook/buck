@@ -468,8 +468,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
                   "projectPrefix",
                   projectPrefix,
                   "packageImplicitLoad",
-                  packageImplicitIncludeFinder.findIncludeForBuildFile(
-                      getBasePath(buildFile).toPath(buildFile.getFileSystem()))));
+                  packageImplicitIncludeFinder.findIncludeForBuildFile(getBasePath(buildFile))));
       Path buckPyPath = getPathToBuckPy(options.getDescriptions());
       handleDiagnostics(
           buildFile.getPath(), buckPyPath.getParent(), resultObject.getDiagnostics(), buckEventBus);

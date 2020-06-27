@@ -16,9 +16,8 @@
 
 package com.facebook.buck.parser.implicit;
 
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -38,10 +37,12 @@ public class PackageImplicitIncludesFinder {
    * nested subpackages.
    */
   private static class IncludeNode {
-    final ImmutableMap<Path, IncludeNode> childPackages;
+    final ImmutableMap<ForwardRelativePath, IncludeNode> childPackages;
     final Optional<ImplicitInclude> include;
 
-    IncludeNode(ImmutableMap<Path, IncludeNode> childPackages, Optional<ImplicitInclude> include) {
+    IncludeNode(
+        ImmutableMap<ForwardRelativePath, IncludeNode> childPackages,
+        Optional<ImplicitInclude> include) {
       this.childPackages = childPackages;
       this.include = include;
     }
@@ -52,10 +53,10 @@ public class PackageImplicitIncludesFinder {
      * <p>If there are settings for foo, and foo/bar, then foo/bar/baz should return the settings
      * for foo/bar. If not_foo is specified, then the root settings should be returned.
      */
-    Optional<ImplicitInclude> findIncludeForPath(Path packagePath) {
+    Optional<ImplicitInclude> findIncludeForPath(ForwardRelativePath packagePath) {
       IncludeNode currentNode = this;
       Optional<ImplicitInclude> lastPresentInclude = currentNode.include;
-      for (Path component : packagePath) {
+      for (ForwardRelativePath component : packagePath.asIterable()) {
         IncludeNode childNode = currentNode.childPackages.get(component);
         if (childNode == null) {
           return lastPresentInclude;
@@ -72,11 +73,11 @@ public class PackageImplicitIncludesFinder {
 
   /** Builder class to create {@link IncludeNode} instances */
   private static class IncludeNodeBuilder {
-    private Map<Path, IncludeNodeBuilder> nodes = new HashMap<>();
+    private Map<ForwardRelativePath, IncludeNodeBuilder> nodes = new HashMap<>();
     private Optional<ImplicitInclude> include = Optional.empty();
 
     /** Creates a node at a subpath, or returns the existing builder */
-    IncludeNodeBuilder getOrCreateIncludeNodeForPath(Path path) {
+    IncludeNodeBuilder getOrCreateIncludeNodeForPath(ForwardRelativePath path) {
       return nodes.computeIfAbsent(path, p -> new IncludeNodeBuilder());
     }
 
@@ -95,9 +96,9 @@ public class PackageImplicitIncludesFinder {
   private PackageImplicitIncludesFinder(ImmutableMap<String, ImplicitInclude> packageToInclude) {
     IncludeNodeBuilder rootBuilder = new IncludeNodeBuilder();
     for (Map.Entry<String, ImplicitInclude> entry : packageToInclude.entrySet()) {
-      Path path = Paths.get(entry.getKey());
+      ForwardRelativePath path = ForwardRelativePath.of(entry.getKey());
       IncludeNodeBuilder currentBuilder = rootBuilder;
-      for (Path component : path) {
+      for (ForwardRelativePath component : path.asIterable()) {
         if (component.toString().isEmpty()) {
           continue;
         }
@@ -126,10 +127,11 @@ public class PackageImplicitIncludesFinder {
    * @return The path to a file and symbols that should be implicitly included for the given
    *     package.
    */
-  public Optional<ImplicitInclude> findIncludeForBuildFile(@Nullable Path packagePath) {
+  public Optional<ImplicitInclude> findIncludeForBuildFile(
+      @Nullable ForwardRelativePath packagePath) {
     if (packagePath == null) {
       // TODO(buck_team): remove @Nullable and this codepath
-      packagePath = Paths.get("");
+      packagePath = ForwardRelativePath.of("");
     }
     return node.findIncludeForPath(packagePath);
   }

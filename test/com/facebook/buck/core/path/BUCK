@@ -6,6 +6,7 @@ standard_java_test(
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/filesystems:filesystems",
         "//src/com/facebook/buck/core/path:path",
+        "//third-party/java/guava:guava",
         "//third-party/java/jimfs:jimfs",
         "//third-party/java/junit:junit",
     ],

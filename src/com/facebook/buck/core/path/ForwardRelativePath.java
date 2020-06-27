@@ -78,6 +78,17 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
     return segments.length;
   }
 
+  /** Compatible with {@link Path#iterator()}. */
+  public Iterable<ForwardRelativePath> asIterable() {
+    if (segments.length == 0) {
+      return ImmutableList.of(this);
+    }
+
+    return Arrays.stream(segments)
+        .map(s -> new ForwardRelativePath(new String[] {s}))
+        .collect(ImmutableList.toImmutableList());
+  }
+
   /** Similar to {@link Path#getParent()}. */
   @Nullable
   public ForwardRelativePath getParent() {
