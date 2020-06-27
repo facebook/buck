@@ -294,7 +294,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
   }
 
   @Override
-  public Result execute(
+  public DownwardApiExecutionResult execute(
       LaunchedProcess launchedProcess,
       Set<Option> options,
       Optional<String> stdin,
@@ -305,11 +305,20 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     checkState(launchedProcess instanceof DownwardApiLaunchedProcess);
     DownwardApiLaunchedProcess process = (DownwardApiLaunchedProcess) launchedProcess;
 
+    Result result;
     try {
-      return getDelegate().execute(process.delegate, options, stdin, timeOutMs, timeOutHandler);
+      result = getDelegate().execute(process.delegate, options, stdin, timeOutMs, timeOutHandler);
     } finally {
       launchedProcess.close();
     }
+
+    return new DownwardApiExecutionResult(
+        result.getExitCode(),
+        result.isTimedOut(),
+        result.getStdout(),
+        result.getStderr(),
+        result.getCommand(),
+        process.isReaderThreadTerminated());
   }
 
   @Override
