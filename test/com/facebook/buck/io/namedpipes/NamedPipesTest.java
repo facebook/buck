@@ -42,6 +42,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -73,34 +74,22 @@ public class NamedPipesTest {
    */
   @Parameters(method = "getProtocols")
   @Test
-  public void testNamedPipes(DownwardProtocolType protocolType) {
+  public void testNamedPipes(DownwardProtocolType protocolType) throws InterruptedException {
     NamedPipeFactory namedPipeFactory = NamedPipeFactory.getFactory();
     ExecutorService executorService = MostExecutors.newSingleThreadExecutor("named_pipe_reader");
     List<ReceivedNamedPipeJsonMessage> receivedMessages = new ArrayList<>();
     String namedPipePath = null;
     try (NamedPipe namedPipe = namedPipeFactory.create()) {
-      LOG.info("Named pipe created: " + namedPipe);
       namedPipePath = namedPipe.getName();
-      executorService.execute(readFromNamedPipeRunnable(namedPipePath, receivedMessages, 3));
-
-      try (OutputStream outputStream = namedPipe.getOutputStream()) {
-        LOG.info("Starting write messages into a named pipe!");
-        protocolType.writeDelimitedTo(outputStream);
-        DownwardProtocol downwardProtocol = protocolType.getDownwardProtocol();
-
-        writeToNamedPipe(
-            downwardProtocol, EventType.CONSOLE_EVENT, "Hello pipe reader!", outputStream);
-        TimeUnit.SECONDS.sleep(1);
-        writeToNamedPipe(downwardProtocol, EventType.LOG_EVENT, "Hello again!", outputStream);
-        TimeUnit.SECONDS.sleep(1);
-        writeToNamedPipe(downwardProtocol, EventType.STEP_EVENT, "Bye!", outputStream);
-      } catch (IOException e) {
-        LOG.error(e, "Can't write into a named pipe: " + namedPipePath);
-      } finally {
-        MostExecutors.shutdown(executorService, 1, TimeUnit.SECONDS);
-      }
+      LOG.info("Named pipe created: %s", namedPipePath);
+      Future<?> future =
+          executorService.submit(readFromNamedPipeRunnable(namedPipePath, receivedMessages, 3));
+      writeIntoNamedPipe(protocolType, namedPipe);
+      future.get(1, TimeUnit.SECONDS);
     } catch (Exception e) {
       LOG.error(e, "Can't create a named pipe.");
+    } finally {
+      MostExecutors.shutdown(executorService, 1, TimeUnit.SECONDS);
     }
 
     assertNotNull("Named pipe has not been created!", namedPipePath);
@@ -129,6 +118,20 @@ public class NamedPipesTest {
     }
   }
 
+  private void writeIntoNamedPipe(DownwardProtocolType protocolType, NamedPipe namedPipe) {
+    try (OutputStream outputStream = namedPipe.getOutputStream()) {
+      LOG.info("Starting write messages into a named pipe: %s!", namedPipe.getName());
+      protocolType.writeDelimitedTo(outputStream);
+      DownwardProtocol downwardProtocol = protocolType.getDownwardProtocol();
+      writeToNamedPipe(
+          downwardProtocol, EventType.CONSOLE_EVENT, "Hello pipe reader!", outputStream);
+      writeToNamedPipe(downwardProtocol, EventType.LOG_EVENT, "Hello again!", outputStream);
+      writeToNamedPipe(downwardProtocol, EventType.STEP_EVENT, "Bye!", outputStream);
+    } catch (IOException e) {
+      LOG.error(e, "Can't write into a named pipe: %s", namedPipe.getName());
+    }
+  }
+
   private static Runnable readFromNamedPipeRunnable(
       String namedPipePath,
       List<ReceivedNamedPipeJsonMessage> receivedMessages,
@@ -140,7 +143,7 @@ public class NamedPipesTest {
         NamedPipeFactory namedPipeFactory = NamedPipeFactory.getFactory();
         try (NamedPipe namedPipe = namedPipeFactory.connect(Paths.get(namedPipePath));
             InputStream inputStream = namedPipe.getInputStream()) {
-          LOG.info("Read named pipe: " + namedPipe);
+          LOG.info("Starting reading from named pipe: %s", namedPipe);
           DownwardProtocol downwardProtocol = DownwardProtocolType.readProtocol(inputStream);
           while (receivedMessages.size() < expectedMessageSize) {
             try {
@@ -155,7 +158,7 @@ public class NamedPipesTest {
           }
           LOG.info("Finishing reader thread!");
         } catch (IOException e) {
-          LOG.error(e, "Can't read from a named pipe: " + namedPipePath);
+          LOG.error(e, "Cannot read from a named pipe: %s", namedPipePath);
         }
       }
 
@@ -179,7 +182,7 @@ public class NamedPipesTest {
       private ReceivedNamedPipeJsonMessage serialize(String message) throws IOException {
         NamedPipeJsonMessage jsonMessage =
             ObjectMappers.readValue(message, NamedPipeJsonMessage.class);
-        LOG.info("json message received : " + jsonMessage);
+        LOG.info("json message received : %s", jsonMessage);
         return ImmutableReceivedNamedPipeJsonMessage.ofImpl(Instant.now(), jsonMessage);
       }
     };
