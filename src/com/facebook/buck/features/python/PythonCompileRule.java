@@ -142,7 +142,7 @@ public class PythonCompileRule extends ModernBuildRule<PythonCompileRule.Impl> {
                       new BufferedWriter(
                           new OutputStreamWriter(
                               Files.newOutputStream(
-                                  context.getBuildCellRootPath().resolve(argsfile)),
+                                  context.getRuleCellRoot().resolve(argsfile).getPath()),
                               Charsets.UTF_8))) {
                     resolvedSources.forEachPythonComponent(
                         (dst, src) -> {
@@ -163,7 +163,7 @@ public class PythonCompileRule extends ModernBuildRule<PythonCompileRule.Impl> {
                   return StepExecutionResult.of(
                       processExecutor.launchAndExecute(
                           ProcessExecutorParams.builder()
-                              .setDirectory(context.getBuildCellRootPath())
+                              .setDirectory(context.getRuleCellRoot().getPath())
                               // On some platforms (e.g. linux), python hash code randomness can
                               // cause the bytecode to be non-deterministic, so pin via the
                               // `PYTHONHASHSEED` env var.
