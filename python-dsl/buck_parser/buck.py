@@ -1159,7 +1159,6 @@ class BuildFileProcessor(object):
         # type: (bool) -> Dict[str, Callable]
         default_globals = {
             "include_defs": functools.partial(self._include_defs, is_implicit_include),
-            "load_symbols": self._load_symbols,
             "add_build_file_dep": self._add_build_file_dep,
             "read_config": self._read_config,
             "implicit_package_symbol": self._implicit_package_symbol,
@@ -1588,26 +1587,6 @@ class BuildFileProcessor(object):
         build_env.includes.add(build_include.path)
         build_env.merge(inner_env)
 
-    def _load_symbols(self, symbols):
-        """
-        Loads symbols into the current build context.
-
-        :param symbols: a dictionary of symbols to add into the current context. The keys should all be of type `str`.
-        """
-        assert isinstance(
-            symbols, dict
-        ), "load_symbols() accepts a dict of symbols to load into the current context"
-
-        # Look up the caller's stack frame and merge the include's globals
-        # into it's symbol table.
-        frame = get_caller_frame(skip=["_functools", __name__])
-        for (name, value) in symbols.iteritems():
-            assert not name.startswith("_"), (
-                "Tried to load private symbol `%s`. load_symbols() can only be used to load public (non `_`-prefixed) symbols"
-                % name
-            )
-            frame.f_globals[name] = value
-
     def _load(self, is_implicit_include, name, *symbols, **symbol_kwargs):
         # type: (bool, str, *str, **str) -> None
         """Pull the symbols from the named include into the current caller's context.
@@ -1651,7 +1630,7 @@ class BuildFileProcessor(object):
             build_env: The build environment on which to modify includes /
                        implicit_package_symbols properties
             package_implicit_load: A dictionary with "load_path", the first part of the
-                                   a `load` statement, and "load_symbols", a dictionary
+                                   a `load` statement, a dictionary
                                    that works like the **symbols attribute of `load`
         """
 

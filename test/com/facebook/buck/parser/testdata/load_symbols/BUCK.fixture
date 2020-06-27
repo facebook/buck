@@ -1,6 +1,0 @@
-load_symbols({"my_name": "hello", "my_rule": export_file})
-
-my_rule(
-    name = my_name,
-    src = "BUCK",
-)
