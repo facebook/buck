@@ -33,9 +33,7 @@ public interface NamedPipeFactory {
    *
    * @param namedPipePath - absolute path for the named pipe.
    */
-  default NamedPipe connect(Path namedPipePath) throws IOException {
-    return new RandomAccessFileBasedNamedPipe(namedPipePath);
-  }
+  NamedPipe connect(Path namedPipePath) throws IOException;
 
   /** Returns platform specific implementation of {@code NamedPipeFactory}. */
   static NamedPipeFactory getFactory() {

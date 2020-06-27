@@ -18,6 +18,7 @@ package com.facebook.buck.io.namedpipes.windows;
 
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
+import com.facebook.buck.io.namedpipes.RandomAccessFileBasedNamedPipe;
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinNT;
@@ -73,5 +74,10 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
               namedPipePath, Kernel32.INSTANCE.GetLastError()));
     }
     return namedPipeHandler;
+  }
+
+  @Override
+  public NamedPipe connect(Path namedPipePath) throws IOException {
+    return new RandomAccessFileBasedNamedPipe(namedPipePath);
   }
 }

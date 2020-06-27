@@ -18,6 +18,7 @@ package com.facebook.buck.io.namedpipes.posix;
 
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
+import com.facebook.buck.io.namedpipes.RandomAccessFileBasedNamedPipe;
 import com.sun.jna.LastErrorException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -60,5 +61,10 @@ public enum POSIXNamedPipeFactory implements NamedPipeFactory {
               "Can't create named pipe: %s with `mkfifo` command. Exit code: %s",
               pathString, exitCode));
     }
+  }
+
+  @Override
+  public NamedPipe connect(Path namedPipePath) throws IOException {
+    return new RandomAccessFileBasedNamedPipe(namedPipePath);
   }
 }

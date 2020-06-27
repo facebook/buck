@@ -46,10 +46,12 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.external.events.StepEventExternalInterface;
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
+import com.facebook.buck.io.namedpipes.RandomAccessFileBasedNamedPipe;
 import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.timing.SettableFakeClock;
@@ -64,6 +66,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.HashMap;
@@ -127,60 +130,28 @@ public class DownwardApiProcessExecutorTest {
             new SettableFakeClock(instant.toEpochMilli(), instant.getNano()));
     buckEventBus.register(listener);
 
-    ImmutableMap.Builder<String, String> envsBuilder = ImmutableMap.builder();
-    envsBuilder.put("SOME_ENV1", "VALUE1");
-    envsBuilder.put("SOME_ENV2", "VALUE2");
-    envsBuilder.put("BUCK_VERBOSITY", CONSOLE_PARAMS.getVerbosity());
-    envsBuilder.put("BUCK_ANSI_ENABLED", CONSOLE_PARAMS.isAnsiEscapeSequencesEnabled());
-    envsBuilder.put("BUCK_BUILD_UUID", buckEventBus.getBuildId().toString());
-    envsBuilder.put("BUCK_ACTION_ID", TEST_ACTION_ID);
-    envsBuilder.put("BUCK_EVENT_PIPE", namedPipe.getName());
-    ImmutableMap<String, String> envs = envsBuilder.build();
-
-    ProcessExecutorParams params =
-        ProcessExecutorParams.builder()
-            .setCommand(ImmutableList.of(TEST_COMMAND))
-            .setEnvironment(envs)
-            .build();
+    ProcessExecutorParams params = getProcessExecutorParams(namedPipe, buckEventBus);
 
     FakeProcess fakeProcess =
         new FakeProcess(
             Optional.of(
                 () -> {
                   try {
-                    process(namedPipe);
+                    writeIntoNamedPipeProcess(namedPipe);
                   } catch (Exception e) {
                     throw new RuntimeException(e);
                   }
                   return Optional.empty();
                 }));
 
-    ImmutableMap.Builder<ProcessExecutorParams, FakeProcess> fakeProcessesBuilder =
-        ImmutableMap.<ProcessExecutorParams, FakeProcess>builder().put(params, fakeProcess);
-
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(fakeProcessesBuilder.build());
-
     DownwardApiProcessExecutor processExecutor =
-        new DownwardApiProcessExecutor(
-            fakeProcessExecutor, CONSOLE_PARAMS, buckEventBus, TEST_ACTION_ID, () -> namedPipe);
+        getDownwardApiProcessExecutor(namedPipe, buckEventBus, params, fakeProcess);
 
-    ProcessExecutorParams executorParams =
-        ProcessExecutorParams.ofCommand(TEST_COMMAND)
-            .withEnvironment(
-                ImmutableMap.of(
-                    "SOME_ENV1",
-                    "VALUE1",
-                    "BUCK_BUILD_UUID",
-                    "TO_BE_REPLACED",
-                    "BUCK_ACTION_ID",
-                    "TO_BE_REPLACED",
-                    "SOME_ENV2",
-                    "VALUE2"));
-
-    processExecutor.launchAndExecute(executorParams);
+    DownwardApiExecutionResult result = launchAndExecute(processExecutor);
+    assertEquals(0, result.getExitCode());
 
     Map<Integer, BuckEvent> events = listener.events;
-    assertEquals(events.size(), 5);
+    assertEquals(5, events.size());
 
     long currentThreadId = Thread.currentThread().getId();
     for (BuckEvent buckEvent : events.values()) {
@@ -235,6 +206,72 @@ public class DownwardApiProcessExecutorTest {
     verifyLogEvent();
 
     assertFalse("Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipe.getName())));
+  }
+
+  private DownwardApiExecutionResult launchAndExecute(DownwardApiProcessExecutor processExecutor)
+      throws InterruptedException, IOException {
+    ProcessExecutor.Result result = processExecutor.launchAndExecute(getProcessExecutorParams());
+    return (DownwardApiExecutionResult) result;
+  }
+
+  private DownwardApiProcessExecutor getDownwardApiProcessExecutor(
+      NamedPipe namedPipe,
+      BuckEventBus buckEventBus,
+      ProcessExecutorParams params,
+      FakeProcess fakeProcess) {
+    ImmutableMap.Builder<ProcessExecutorParams, FakeProcess> fakeProcessesBuilder =
+        ImmutableMap.<ProcessExecutorParams, FakeProcess>builder().put(params, fakeProcess);
+
+    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(fakeProcessesBuilder.build());
+
+    return new DownwardApiProcessExecutor(
+        fakeProcessExecutor,
+        CONSOLE_PARAMS,
+        buckEventBus,
+        TEST_ACTION_ID,
+        new NamedPipeFactory() {
+          @Override
+          public NamedPipe create() {
+            return namedPipe;
+          }
+
+          @Override
+          public NamedPipe connect(Path namedPipePath) throws IOException {
+            return new RandomAccessFileBasedNamedPipe(namedPipePath);
+          }
+        });
+  }
+
+  private ProcessExecutorParams getProcessExecutorParams() {
+    return ProcessExecutorParams.ofCommand(TEST_COMMAND)
+        .withEnvironment(
+            ImmutableMap.of(
+                "SOME_ENV1",
+                "VALUE1",
+                "BUCK_BUILD_UUID",
+                "TO_BE_REPLACED",
+                "BUCK_ACTION_ID",
+                "TO_BE_REPLACED",
+                "SOME_ENV2",
+                "VALUE2"));
+  }
+
+  private ProcessExecutorParams getProcessExecutorParams(
+      NamedPipe namedPipe, BuckEventBus buckEventBus) {
+    ImmutableMap.Builder<String, String> envsBuilder = ImmutableMap.builder();
+    envsBuilder.put("SOME_ENV1", "VALUE1");
+    envsBuilder.put("SOME_ENV2", "VALUE2");
+    envsBuilder.put("BUCK_VERBOSITY", CONSOLE_PARAMS.getVerbosity());
+    envsBuilder.put("BUCK_ANSI_ENABLED", CONSOLE_PARAMS.isAnsiEscapeSequencesEnabled());
+    envsBuilder.put("BUCK_BUILD_UUID", buckEventBus.getBuildId().toString());
+    envsBuilder.put("BUCK_ACTION_ID", TEST_ACTION_ID);
+    envsBuilder.put("BUCK_EVENT_PIPE", namedPipe.getName());
+    ImmutableMap<String, String> envs = envsBuilder.build();
+
+    return ProcessExecutorParams.builder()
+        .setCommand(ImmutableList.of(TEST_COMMAND))
+        .setEnvironment(envs)
+        .build();
   }
 
   private void verifyLogEvent() {
@@ -296,7 +333,8 @@ public class DownwardApiProcessExecutorTest {
         diffInSeconds <= diffThreshold);
   }
 
-  private void process(NamedPipe namedPipe) throws IOException, InterruptedException {
+  private void writeIntoNamedPipeProcess(NamedPipe namedPipe)
+      throws IOException, InterruptedException {
     try (OutputStream outputStream = namedPipe.getOutputStream()) {
       List<String> messages = getJsonMessages();
       for (String message : messages) {

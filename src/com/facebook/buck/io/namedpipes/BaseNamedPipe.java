@@ -23,14 +23,16 @@ import java.nio.file.Path;
 public abstract class BaseNamedPipe implements NamedPipe {
 
   private final Path path;
+  private final String namedPipeName;
 
   protected BaseNamedPipe(Path path) {
     this.path = path;
+    this.namedPipeName = path.toString();
   }
 
   @Override
   public String getName() {
-    return path.toString();
+    return namedPipeName;
   }
 
   protected Path getPath() {
