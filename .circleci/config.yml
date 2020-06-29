@@ -195,6 +195,13 @@ windows_environment: &windows_environment
   BUCK_NUM_THREADS: 3
   BUCK_PEX_LOCATION: "./new_buck.pex"
 
+tags_only_filter: &tags_only_filter
+  filters:
+    tags:
+      only: /^v20.*/
+    branches:
+      ignore: /.*/
+
 jobs:
   linux_build_openjdk8:
     environment:
@@ -1226,6 +1233,36 @@ jobs:
             python3 ./tools/release/publish_release.py --no-build-deb --no-build-homebrew --github-token ${GITHUB_TOKEN} --chocolatey-token ${CHOCO_TOKEN} --use-existing-release --version ${VERSION} --output-dir artifacts
           shell: bash.exe
 
+  publish_docs:
+    environment:
+      <<: *linux_environment
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          # android_sdk needed to build java docs.
+          <<: *install_android_sdk
+      - run:
+          <<: *install_python
+      - run:
+          # We do not want to build buck, install the latest release instead.
+          name: Install Buck
+          command: |
+            url=`curl -sH "Authorization: token ${GITHUB_TOKEN}" https://api.github.com/repos/facebook/buck/releases/latest |grep "browser_download_url.*deb" |awk '{gsub("\"", "", $2); print $2}'`
+            curl -L -O $url
+            filename=`basename ${url}`
+            sudo dpkg -i ${filename} || echo "Warning: Buck installed without dependencies."
+      - run:
+          name: Publish docs
+          command: |
+            export ANDROID_HOME="${ANDROID_SDK}"
+            cd docs
+            ./publish.sh --start-soyweb
+
 workflows:
   version: 2.1
   linux_jobs:
@@ -1260,20 +1297,10 @@ workflows:
   publish_jobs:
     jobs:
       - macos_publish_release:
-          filters:
-            tags:
-              only: /^v20.*/
-            branches:
-              ignore: /.*/
+          <<: *tags_only_filter
       - linux_publish_release:
-          filters:
-            tags:
-              only: /^v20.*/
-            branches:
-              ignore: /.*/
+          <<: *tags_only_filter
       - windows_publish_release:
-          filters:
-            tags:
-              only: /^v20.*/
-            branches:
-              ignore: /.*/
+          <<: *tags_only_filter
+      - publish_docs:
+          <<: *tags_only_filter

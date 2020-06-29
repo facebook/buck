@@ -38,6 +38,8 @@ EOF
   exit 1
 }
 
+GIT_USER="buck-bot"
+CNAME="buck.build"
 START_SOYWEB=0
 KEEP_FILES=0
 SOYWEB_PID=0
@@ -83,7 +85,7 @@ echo "Documentation working directory is ${STATIC_FILES_DIR}"
 # Create a clean checkout of the gh-pages branch with no data:
 if [ -z "$1" ]
 then
-  git clone git@github.com:facebook/buck.git $STATIC_FILES_DIR
+  git clone https://${GIT_USER}:${GITHUB_TOKEN}@github.com/facebook/buck.git $STATIC_FILES_DIR
 else
   cp -r "$1" $STATIC_FILES_DIR
 fi
@@ -101,6 +103,8 @@ cd -
 
 # Commit the new version of the docs:
 cd $STATIC_FILES_DIR
+echo "${CNAME}" > CNAME
+git config --global user.name "${GIT_USER}"
 git add .
 git commit -m "Updated HTML documentation."
 
