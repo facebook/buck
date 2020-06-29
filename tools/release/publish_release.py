@@ -398,7 +398,7 @@ def publish(
             add_assets(release, github_token, homebrew_file)
             validate_tap(homebrew_dir, args.tap_repository, args.version)
             if args.homebrew_push_tap:
-                publish_tap_changes(homebrew_dir, args.tap_repository, args.version)
+                publish_tap_changes(homebrew_dir, args.tap_repository, args.version, github_token)
             else:
                 log_about_manual_tap_push(args.tap_repository)
 
