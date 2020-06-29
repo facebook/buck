@@ -1,0 +1,8 @@
+cxx_genrule(
+    name = "binary",
+    out = "out.bat",
+    outs = {
+        "label": ["out.bat"],
+    },
+    cmd = "(echo \"#!/bin/sh\"; echo \"echo hi\") > $OUT && chmod +x $OUT",
+)

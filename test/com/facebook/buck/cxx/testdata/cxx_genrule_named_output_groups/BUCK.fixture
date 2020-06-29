@@ -1,0 +1,13 @@
+cxx_genrule(
+    name = "named_output_groups",
+    outs = {
+        "output1": [
+            "out.txt",
+        ],
+        "output2": [
+            "out.txt",
+        ],
+    },
+    default_outs = ["out.txt"],
+    cmd = "echo something> $OUT/out.txt",
+)

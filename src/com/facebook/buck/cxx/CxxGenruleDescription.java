@@ -116,6 +116,7 @@ import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.immutables.value.Value;
 
 public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenruleDescriptionArg>
     implements Flavored,
@@ -313,7 +314,14 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       return super.createBuildRule(
           context, buildTarget.withAppendedFlavors(cxxPlatform.get().getFlavor()), params, args);
     }
-    return new CxxGenrule(buildTarget, context.getProjectFilesystem(), params, args.getOut());
+
+    // Named output not supported yet for CMD without platfrom
+    if (!args.getOut().isPresent()) {
+      throw new HumanReadableException(
+          "Out path required in cxx_genrule when CMD has no CxxPlatform");
+    }
+
+    return new CxxGenrule(buildTarget, context.getProjectFilesystem(), params, args.getOut().get());
   }
 
   @Override
@@ -335,9 +343,9 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         cmd,
         bash,
         cmdExe,
-        Optional.of(args.getOut()),
-        Optional.empty(), // named outputs not supported yet for CxxGenRule
-        Optional.empty(),
+        args.getOut(),
+        args.getOuts(),
+        args.getDefaultOuts(),
         downwardApiConfig.isEnabledForCxx());
   }
 
@@ -373,7 +381,24 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
   @RuleArg
   interface AbstractCxxGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
-    String getOut();
+    Optional<String> getOut();
+
+    Optional<ImmutableMap<String, ImmutableSet<String>>> getOuts();
+
+    Optional<ImmutableSet<String>> getDefaultOuts();
+
+    @Value.Check
+    default void check() {
+      // Out and Outs are mutually exclusive
+      if (getOut().isPresent() == getOuts().isPresent()) {
+        throw new HumanReadableException(
+            "One and only one of 'out' or 'outs' must be present in cxx_genrule.");
+      }
+      if (getOuts().isPresent() && !getDefaultOuts().isPresent()) {
+        throw new HumanReadableException(
+            "default_outs must be present if outs is present in cxx_genrule");
+      }
+    }
   }
 
   /** A macro expander that expands to a specific {@link Tool}. */
@@ -558,7 +583,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     private final ProjectFilesystem filesystem;
     private final CxxPlatform cxxPlatform;
     private final Linker.LinkableDepType depType;
-    private final String out;
+    private final Optional<String> out;
 
     CxxLinkerFlagsExpander(
         Class<M> clazz,
@@ -566,7 +591,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         ProjectFilesystem filesystem,
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType depType,
-        String out) {
+        Optional<String> out) {
       this.clazz = clazz;
       this.buildTarget = buildTarget;
       this.filesystem = filesystem;
@@ -596,10 +621,14 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
      */
     private ImmutableList<Arg> getSharedLinkArgs(
         ActionGraphBuilder graphBuilder, ImmutableList<BuildRule> rules) {
-
+      if (!out.isPresent()) {
+        throw new HumanReadableException(
+            "Out path required in cxx_genrule for shared dynamic linking.");
+      }
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
-      Path linkOutput = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(out);
+      Path linkOutput =
+          BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(out.get());
       Path absLinkOut = filesystem.resolve(linkOutput);
       SymlinkTree symlinkTree = requireSymlinkTree(graphBuilder, rules);
       return RichStream.from(

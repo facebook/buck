@@ -81,3 +81,23 @@ cxx_genrule(
     out = "rule.out",
     cmd = "@CMD@ > $OUT",
 )
+
+cxx_genrule(
+    name = "with_out_rule",
+    out = "rule.out",
+    cmd = "@CMD@ > $OUT",
+)
+
+cxx_genrule(
+    name = "without_out_rule",
+    outs = {
+        "output1": [
+            "out1.txt",
+        ],
+        "output2": [
+            "out2.txt",
+        ],
+    },
+    default_outs = ["default.txt"],
+    cmd = "echo thing1 @CMD@ > $OUT/out1.txt && echo thing2 @CMD@ > $OUT/out2.txt && echo default @CMD@ > $OUT/default.txt",
+)

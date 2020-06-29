@@ -16,12 +16,16 @@
 
 package com.facebook.buck.cxx;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -58,10 +62,18 @@ public class CxxGenruleIntegrationTest {
   }
 
   @Test
-  public void ldflagsfilter() throws IOException {
+  public void ldflagsStaticfilter() throws IOException {
     workspace.replaceFileContents(
         "BUCK", "@CMD@", "echo -- $(ldflags-static-filter ^.*prebuilt_c.* :dep_on_prebuilt_c)");
     Path output = workspace.buildAndReturnOutput("//:rule#default");
+    assertThat(workspace.getFileContents(output), Matchers.containsString("dep_on_prebuilt_c"));
+  }
+
+  @Test
+  public void ldflagsSharedfilter() throws IOException {
+    workspace.replaceFileContents(
+        "BUCK", "@CMD@", "echo -- $(ldflags-shared-filter ^.*prebuilt_c.* :dep_on_prebuilt_c)");
+    Path output = workspace.buildAndReturnOutput("//:with_out_rule#default");
     assertThat(workspace.getFileContents(output), Matchers.containsString("dep_on_prebuilt_c"));
   }
 
@@ -156,5 +168,87 @@ public class CxxGenruleIntegrationTest {
     Path trivialPath = workspace.buildAndReturnOutput("//:trivial#default,shared");
     Path output = workspace.buildAndReturnOutput("//:rule#default");
     assertThat(workspace.getFileContents(output), Matchers.containsString(trivialPath.toString()));
+  }
+
+  @Test
+  public void namedOutputMapsToOutputPath() throws IOException {
+    ProjectWorkspace testWorkspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_genrule_outputs_map", tmp);
+    testWorkspace.setUp();
+
+    Path result = testWorkspace.buildAndReturnOutput("//:outputs_map#default[output1]");
+    assertTrue(result.endsWith("out1.txt"));
+    assertEquals("something1" + System.lineSeparator(), testWorkspace.getFileContents(result));
+
+    result = testWorkspace.buildAndReturnOutput("//:outputs_map#default[output2]");
+    assertTrue(result.endsWith("out2.txt"));
+    assertEquals("another2" + System.lineSeparator(), testWorkspace.getFileContents(result));
+
+    result = testWorkspace.buildAndReturnOutput("//:outputs_map#default");
+    assertTrue(result.endsWith("default.txt"));
+    assertEquals("defaultfoo" + System.lineSeparator(), testWorkspace.getFileContents(result));
+  }
+
+  @Test
+  public void namedOutputInMultipleGroups() throws IOException {
+    ProjectWorkspace testWorkspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "cxx_genrule_named_output_groups", tmp);
+    testWorkspace.setUp();
+
+    Path result = testWorkspace.buildAndReturnOutput("//:named_output_groups#default[output1]");
+    assertTrue(result.endsWith("out.txt"));
+    assertEquals("something" + System.lineSeparator(), testWorkspace.getFileContents(result));
+
+    result = testWorkspace.buildAndReturnOutput("//:named_output_groups#default[output2]");
+    assertTrue(result.endsWith("out.txt"));
+    assertEquals("something" + System.lineSeparator(), testWorkspace.getFileContents(result));
+
+    result = testWorkspace.buildAndReturnOutput("//:named_output_groups#default");
+    assertTrue(result.endsWith("out.txt"));
+    assertEquals("something" + System.lineSeparator(), testWorkspace.getFileContents(result));
+  }
+
+  @Test
+  public void errorOnRuleWithBothOutAndOuts() throws IOException {
+    ProjectWorkspace testWorkspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "cxx_genrule_incompatible_outattrs", tmp);
+    testWorkspace.setUp();
+    ProcessResult processResult = testWorkspace.runBuckBuild("//:binary#default");
+    processResult.assertExitCode(ExitCode.BUILD_ERROR);
+    assertTrue(
+        processResult
+            .getStderr()
+            .contains("One and only one of 'out' or 'outs' must be present in cxx_genrule."));
+  }
+
+  @Test
+  public void errorOnNameOutputsWithoutDefaultOuts() throws IOException {
+    ProjectWorkspace testWorkspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_genrule_default_outs", tmp);
+    testWorkspace.setUp();
+
+    ProcessResult result =
+        testWorkspace
+            .runBuckBuild("//:target_without_default_outs#default[output1]")
+            .assertExitCode(ExitCode.BUILD_ERROR);
+
+    assertTrue(
+        result
+            .getStderr()
+            .contains("default_outs must be present if outs is present in cxx_genrule"));
+  }
+
+  @Test
+  // TODO: Remove this test once named ouput is supported in CxxLinkerFlagsExpander
+  public void errorldflagsSharedfilterNoOut() throws IOException {
+    workspace.replaceFileContents(
+        "BUCK", "@CMD@", " -- $(ldflags-shared-filter ^.*prebuilt_c.* :dep_on_prebuilt_c)");
+    ProcessResult result =
+        workspace.runBuckBuild("//:without_out_rule#default").assertExitCode(ExitCode.BUILD_ERROR);
+
+    assertTrue(
+        result.getStderr().contains("Out path required in cxx_genrule for shared dynamic linking"));
   }
 }

@@ -1,0 +1,9 @@
+cxx_genrule(
+    name = "target_without_default_outs",
+    outs = {
+        "output1": [
+            "out.txt",
+        ],
+    },
+    cmd = "echo something> $OUT/out.txt",
+)

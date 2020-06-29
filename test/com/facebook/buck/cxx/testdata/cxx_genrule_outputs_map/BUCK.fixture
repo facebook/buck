@@ -1,0 +1,13 @@
+cxx_genrule(
+    name = "outputs_map",
+    outs = {
+        "output1": [
+            "out1.txt",
+        ],
+        "output2": [
+            "out2.txt",
+        ],
+    },
+    default_outs = ["default.txt"],
+    cmd = "echo something1> $OUT/out1.txt && echo another2>$OUT/out2.txt && echo defaultfoo>$OUT/default.txt",
+)
