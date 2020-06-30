@@ -32,7 +32,7 @@ async def test_build():
 
         result = await (await repo.build("//:target_file")).wait()
         assert list(
-            (path_of_cwd / Path("buck-out")).iterdir()
+            (path_of_cwd / "buck-out").iterdir()
         ), "build should have generated outputs in buck-out"
         assert "target_file" in result.get_stdout()
         assert result.get_exit_code() == 0
@@ -48,11 +48,34 @@ async def test_clean():
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
         await (await repo.build("//:target_file")).wait()
         assert list(
-            (path_of_cwd / Path("buck-out")).iterdir()
+            (path_of_cwd / "buck-out").iterdir()
         ), "build should have generated outputs in buck-out"
         result = await (await repo.clean()).wait()
         assert not (
-            path_of_cwd / Path("buck-out")
+            path_of_cwd / "buck-out"
         ).exists(), "clean should have deleted outputs in buck-out"
         assert result.get_exit_code() == 0
         # TODO return something reasonable for exit code error code messages?
+
+
+@pytest.mark.asyncio
+async def test_kill():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        path_of_cwd = Path(temp_dir)
+        test_script = pkg_resources.resource_filename(
+            "test.buck_repo_test", "test_script.py"
+        )
+        repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
+
+        await (await repo.build("//:target_file")).wait()
+        assert list(
+            (path_of_cwd / ".buckd").iterdir()
+        ), "build should have generated buck daemon"
+
+        result = await (await repo.kill()).wait()
+        assert not (
+            path_of_cwd / ".buckd"
+        ).exists(), "kill should have deleted buck daemon"
+
+        err_code = result.get_exit_code()
+        assert err_code == 0

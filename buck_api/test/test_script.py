@@ -19,7 +19,6 @@ import shutil
 from pathlib import Path
 
 
-# TODO fix spacing in this file
 parser = argparse.ArgumentParser()
 
 
@@ -29,12 +28,15 @@ def run_build(remain_args):
     parser.add_argument("target")
     args = parser.parse_args(remain_args)
     target = Path(args.target.replace(":", "/").strip("/"))
-    # creating a path to a buck-out directory in a temp directory
-    conf_dir = str(abs(hash((args.target))))
-    output = Path("buck-out", "gen") / Path(conf_dir) / target
-    os.makedirs(output.parent)
+    output = Path("./buck-out/gen") / Path(str(abs(hash((args.target))))) / target
+    os.makedirs(output.parent, exist_ok=True)
     with open(output, "w") as f1:
         f1.write("Hello, World!")
+
+    buckd_sock = Path(".buckd/sock")
+    os.makedirs(buckd_sock.parent, exist_ok=True)
+    with open(buckd_sock, "w") as sock:
+        sock.write("buck daemon exists")
     print(args)
 
 
@@ -47,7 +49,11 @@ def run_clean(remain_args):
         shutil.rmtree("buck-out/")
 
 
-FUNCTION_MAP = {"build": run_build, "clean": run_clean}
+def run_kill(remain_args):
+    shutil.rmtree(".buckd")
+
+
+FUNCTION_MAP = {"build": run_build, "clean": run_clean, "kill": run_kill}
 
 parser.add_argument("command", choices=FUNCTION_MAP.keys())
 (args, remain_args) = parser.parse_known_args()

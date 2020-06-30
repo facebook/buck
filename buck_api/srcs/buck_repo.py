@@ -49,6 +49,14 @@ class BuckRepo:
         process = await self._run_buck_command("clean", *argv)
         return BuckProcess(process, result_type=BuckResult, encoding=self.encoding)
 
+    async def kill(self) -> BuckProcess[BuckResult]:
+        """
+        Returns a BuckProcess with BuckResult type using a process
+        created with the kill command
+        """
+        process = await self._run_buck_command("kill")
+        return BuckProcess(process, result_type=BuckResult, encoding=self.encoding)
+
     async def _run_buck_command(self, cmd: str, *argv: str) -> subprocess.Process:
         """
         Returns a process created from the execuable path,
