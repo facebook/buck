@@ -197,7 +197,7 @@ public class PrecompiledHeaderFeatureTest {
                   FakeSourcePath.of("foo.pch"));
           BuildRule rule =
               factory.requirePreprocessAndCompileBuildRule(
-                  "foo.c", preconfiguredCxxSource(ImmutableList.of("-I", from.toString())));
+                  "foo.c", preconfiguredCxxSource(StringArg.from("-I", from.toString())));
           return FluentIterable.from(rule.getBuildDeps())
               .filter(CxxPrecompiledHeader.class)
               .first()
@@ -450,7 +450,7 @@ public class PrecompiledHeaderFeatureTest {
   }
 
   /** Configures a CxxSource.Builder representing a C source file. */
-  private static CxxSource preconfiguredCxxSource(ImmutableList<String> flags) {
+  private static CxxSource preconfiguredCxxSource(Iterable<Arg> flags) {
     return CxxSource.of(CxxSource.Type.C, FakeSourcePath.of("foo.c"), flags);
   }
 

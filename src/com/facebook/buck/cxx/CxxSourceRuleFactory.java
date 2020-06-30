@@ -378,7 +378,7 @@ public abstract class CxxSourceRuleFactory {
             // Add custom compiler flags.
             .addAllRuleFlags(getRuleCompileFlags(source.getType()))
             // Add custom per-file flags.
-            .addAllRuleFlags(sanitizedArgs(StringArg.from(source.getFlags())))
+            .addAllRuleFlags(sanitizedArgs(source.getFlags()))
             .addRuleFlags(new CxxThinLTOIndexArg(thinIndicesRoot, source.getPath()))
             .build();
 
@@ -442,7 +442,7 @@ public abstract class CxxSourceRuleFactory {
             // Add custom compiler flags.
             .addAllRuleFlags(getRuleCompileFlags(source.getType()))
             // Add custom per-file flags.
-            .addAllRuleFlags(sanitizedArgs(StringArg.from(source.getFlags())))
+            .addAllRuleFlags(sanitizedArgs(source.getFlags()))
             .build();
 
     // TODO(steveo): this does not account for `precompiledHeaderRule`.
@@ -468,7 +468,7 @@ public abstract class CxxSourceRuleFactory {
   }
 
   private CxxToolFlags computePreprocessorFlags(
-      CxxSource.Type type, ImmutableList<String> sourceFlags) {
+      CxxSource.Type type, ImmutableList<Arg> sourceFlags) {
     Compiler compiler =
         CxxSourceTypes.getCompiler(getCxxPlatform(), CxxSourceTypes.getPreprocessorOutputType(type))
             .resolve(getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration());
@@ -477,12 +477,11 @@ public abstract class CxxSourceRuleFactory {
         .addAllPlatformFlags(getPlatformPreprocessorFlags(type))
         .addAllRuleFlags(rulePreprocessorFlags.apply(type))
         // Add custom per-file flags.
-        .addAllRuleFlags(sanitizedArgs(StringArg.from(sourceFlags)))
+        .addAllRuleFlags(sanitizedArgs(sourceFlags))
         .build();
   }
 
-  private CxxToolFlags computeCompilerFlags(
-      CxxSource.Type type, ImmutableList<String> sourceFlags) {
+  private CxxToolFlags computeCompilerFlags(CxxSource.Type type, ImmutableList<Arg> sourceFlags) {
     CxxSource.Type outputType = CxxSourceTypes.getPreprocessorOutputType(type);
     return CxxToolFlags.explicitBuilder()
         // If we're using pic, add in the appropriate flag.
@@ -497,7 +496,7 @@ public abstract class CxxSourceRuleFactory {
         // Add in the platform specific compiler flags.
         .addAllPlatformFlags(getPlatformCompileFlags(outputType))
         .addAllRuleFlags(getRuleCompileFlags(outputType))
-        .addAllRuleFlags(sanitizedArgs(StringArg.from(sourceFlags)))
+        .addAllRuleFlags(sanitizedArgs(sourceFlags))
         .build();
   }
 
@@ -730,7 +729,7 @@ public abstract class CxxSourceRuleFactory {
   private CxxPrecompiledHeader requirePrecompiledHeaderBuildRule(
       PreprocessorDelegateCacheValue preprocessorDelegateCacheValue,
       CxxSource.Type sourceType,
-      ImmutableList<String> sourceFlags,
+      ImmutableList<Arg> sourceFlags,
       ActionGraphBuilder graphBuilder,
       SourcePathResolverAdapter pathResolver,
       boolean withDownwardApi) {
@@ -928,13 +927,13 @@ public abstract class CxxSourceRuleFactory {
   interface PreprocessorDelegateCacheKey {
 
     static PreprocessorDelegateCacheKey of(
-        CxxSource.Type sourceType, ImmutableList<String> sourceFlags) {
+        CxxSource.Type sourceType, ImmutableList<Arg> sourceFlags) {
       return ImmutablePreprocessorDelegateCacheKey.ofImpl(sourceType, sourceFlags);
     }
 
     CxxSource.Type getSourceType();
 
-    ImmutableList<String> getSourceFlags();
+    ImmutableList<Arg> getSourceFlags();
   }
 
   private class PreprocessorDelegateCacheValue {

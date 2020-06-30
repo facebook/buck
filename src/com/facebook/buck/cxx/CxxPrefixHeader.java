@@ -26,6 +26,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -55,7 +56,7 @@ public class CxxPrefixHeader extends PreInclude {
       Function<CxxToolFlags, String> getBaseHash,
       CxxPlatform cxxPlatform,
       CxxSource.Type sourceType,
-      ImmutableList<String> sourceFlags,
+      ImmutableList<Arg> sourceFlags,
       ActionGraphBuilder graphBuilder,
       SourcePathResolverAdapter pathResolver,
       boolean withDownwardApi) {

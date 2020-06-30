@@ -1821,7 +1821,10 @@ public class CxxDescriptionEnhancer {
       }
       cxxSources.put(
           ent.getKey(),
-          CxxSource.of(type.get(), ent.getValue().getSourcePath(), ent.getValue().getFlags()));
+          CxxSource.of(
+              type.get(),
+              ent.getValue().getSourcePath(),
+              StringArg.from(ent.getValue().getFlags())));
     }
 
     return cxxSources.build();

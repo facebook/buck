@@ -67,6 +67,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.Step;
@@ -168,7 +169,7 @@ public class CxxPrecompiledHeaderRuleTest {
         pathResolver.getAbsolutePath(headerSourcePath).getPath());
   }
 
-  public CxxSource newCxxSource(SourcePath path, ImmutableList<String> flags) {
+  public CxxSource newCxxSource(SourcePath path, ImmutableList<Arg> flags) {
     return CxxSource.of(CxxSource.Type.C, path, flags);
   }
 
@@ -402,7 +403,8 @@ public class CxxPrecompiledHeaderRuleTest {
     CxxPreprocessAndCompile lib =
         factory1.requirePreprocessAndCompileBuildRule(
             "lib.cpp",
-            newCxxSource(FakeSourcePath.of("lib.cpp"), ImmutableList.of("-flag-for-source")));
+            newCxxSource(
+                FakeSourcePath.of("lib.cpp"), ImmutableList.of(StringArg.of("-flag-for-source"))));
     graphBuilder.addToIndex(lib);
     ImmutableList<String> libCmd = lib.makeMainStep(context, false).getCommand();
     assertTrue(seek(libCmd, "-flag-for-source").size() > 0);

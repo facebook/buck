@@ -688,8 +688,7 @@ public class CxxSourceRuleFactoryTest {
               Optional.empty(),
               PicType.PDC);
 
-      ImmutableList<String> perFileFlags =
-          ImmutableList.of("-per-file-flag", "-and-another-per-file-flag");
+      Iterable<Arg> perFileFlags = StringArg.from("-per-file-flag", "-and-another-per-file-flag");
       CxxSource cSource = CxxSource.of(sourceType, FakeSourcePath.of(sourceName), perFileFlags);
       CxxPreprocessAndCompile cPreprocess =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(sourceName, cSource);
@@ -702,7 +701,7 @@ public class CxxSourceRuleFactoryTest {
               sourcePathResolverAdapter);
       assertContains(cPreprocessCommand, expectedTypeSpecificPreprocessorFlags);
       assertContains(cPreprocessCommand, expectedPreprocessorFlags);
-      assertContains(cPreprocessCommand, perFileFlags);
+      assertContains(cPreprocessCommand, Arg.stringify(perFileFlags, sourcePathResolverAdapter));
     }
 
     @Test
@@ -740,7 +739,7 @@ public class CxxSourceRuleFactoryTest {
               Optional.empty(),
               PicType.PDC);
 
-      ImmutableList<String> perFileFlags = ImmutableList.of("-per-file-flag");
+      Iterable<Arg> perFileFlags = StringArg.from("-per-file-flag");
       CxxSource source = CxxSource.of(sourceType, FakeSourcePath.of(sourceName), perFileFlags);
       CxxPreprocessAndCompile rule;
       if (source.getType().isPreprocessable()) {
@@ -752,7 +751,7 @@ public class CxxSourceRuleFactoryTest {
       assertContains(command, expectedCompilerFlags);
       assertContains(command, expectedTypeSpecificFlags);
       assertContains(command, asflags);
-      assertContains(command, perFileFlags);
+      assertContains(command, Arg.stringify(perFileFlags, sourcePathResolverAdapter));
     }
   }
 

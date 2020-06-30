@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
@@ -150,9 +151,9 @@ public abstract class CxxSource { // NOPMD
 
   public abstract SourcePath getPath();
 
-  public abstract ImmutableList<String> getFlags();
+  public abstract ImmutableList<Arg> getFlags();
 
-  public static CxxSource of(CxxSource.Type type, SourcePath path, ImmutableList<String> flags) {
+  public static CxxSource of(CxxSource.Type type, SourcePath path, Iterable<Arg> flags) {
     return ImmutableCxxSource.ofImpl(type, path, flags);
   }
 }
