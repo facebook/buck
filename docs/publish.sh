@@ -34,6 +34,10 @@ show_help() {
 Usage: publish.sh [--start-soyweb] [--keep-files]
   --start-soyweb Start soyweb and shut it down when the script is finished
   --keep-files   Keep temporary files after attempting to publish
+  --help Show this help
+
+  Set the environment variables GIT_USER and GITHUB_TOKEN if you want to publish using another
+  GitHub account. These variables are already set in CircleCI to automate publishing.
 EOF
   exit 1
 }
@@ -90,7 +94,12 @@ echo "Documentation working directory is ${STATIC_FILES_DIR}"
 # Create a clean checkout of the gh-pages branch with no data:
 if [ -z "$1" ]
 then
-  git clone git@github.com:facebookexperimental/buck-dev.git "$STATIC_FILES_DIR"
+  if [ -z "${GIT_USER}" ]
+  then
+    git clone git@github.com:facebookexperimental/buck-dev.git "$STATIC_FILES_DIR"
+  else
+    git clone "https://${GIT_USER}:${GITHUB_TOKEN}@github.com/facebookexperimental/buck-dev.git" "$STATIC_FILES_DIR"
+  fi
 else
   cp -r "$1" "$STATIC_FILES_DIR"
 fi
@@ -108,6 +117,10 @@ cd "$DOCS_DIR"
 
 # Commit the new version of the docs:
 cd "$STATIC_FILES_DIR"
+if [ -z "${GIT_USER}" ]
+then
+  git config --global user.name "${GIT_USER}"
+fi
 git add .
 git commit -m "Updated HTML documentation."
 
@@ -124,4 +137,6 @@ if [ $EXIT_CODE -ne 0 ]; then
   echo "WARNING: 'git push origin gh-pages failed'. "
   echo "Try going to https://github.com/facebookexperimental/buck-dev/branches"
   echo "and re-running this script."
+else
+  echo "Publishing docs was successful."
 fi
