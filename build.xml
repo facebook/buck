@@ -176,6 +176,7 @@
     <include name="grpc/grpc-context-1.24.0.jar" />
     <include name="grpc/grpc-core-1.24.0.jar" />
     <include name="grpc/perfmark-api-0.20.1.jar" />
+    <include name="scribe/scribe-thrift.jar"/>
     <include name="grpc/grpc-api-1.24.0.jar" />
     <include name="grpc/grpc-netty-1.24.0.jar" />
     <include name="grpc/grpc-netty-shaded-1.24.0.jar" />

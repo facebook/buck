@@ -163,5 +163,6 @@
     <orderEntry type="library" name="log4j2" level="project" />
     <orderEntry type="library" name="Bundled Protobuf Distribution" level="application" />
     <orderEntry type="library" name="dex-method-counts" level="project" />
+    <orderEntry type="library" name="scribe-thrift" level="project" />
   </component>
 </module>
