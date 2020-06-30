@@ -94,7 +94,7 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
     RelPath bundleOutputPath =
         context
             .getSourcePathResolver()
-            .getRelativePath(Objects.requireNonNull(bundle.getSourcePathToOutput()));
+            .getCellUnsafeRelPath(Objects.requireNonNull(bundle.getSourcePathToOutput()));
 
     appendAdditionalAppleWatchSteps(context, commands);
 
@@ -125,7 +125,7 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
             temp.getPath()));
 
     buildableContext.recordArtifact(
-        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getPath());
+        context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput()).getPath());
 
     return commands.build();
   }

@@ -80,7 +80,7 @@ public class RemoteFileTest {
     buildableContext.recordArtifact(
         graphBuilder
             .getSourcePathResolver()
-            .getRelativePath(remoteFile.getSourcePathToOutput())
+            .getCellUnsafeRelPath(remoteFile.getSourcePathToOutput())
             .getPath());
     remoteFile.getBuildSteps(
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),

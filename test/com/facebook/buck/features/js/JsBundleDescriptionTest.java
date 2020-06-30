@@ -156,8 +156,8 @@ public class JsBundleDescriptionTest {
 
       SourcePathResolverAdapter pathResolver = scenario.graphBuilder.getSourcePathResolver();
       assertEquals(
-          pathResolver.getRelativePath(map.getSourcePathToOutput()),
-          pathResolver.getRelativePath(bundle.getSourcePathToSourceMap()));
+          pathResolver.getCellUnsafeRelPath(map.getSourcePathToOutput()),
+          pathResolver.getCellUnsafeRelPath(bundle.getSourcePathToSourceMap()));
     }
 
     @Test

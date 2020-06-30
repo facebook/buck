@@ -1277,7 +1277,7 @@ public class TargetsCommand extends AbstractCommand {
         if (rule instanceof JavaLibrary) {
           ((JavaLibrary) rule)
               .getGeneratedAnnotationSourcePath()
-              .map(sourcePathResolverAdapter::getRelativePath)
+              .map(sourcePathResolverAdapter::getCellUnsafeRelPath)
               .map(rule.getProjectFilesystem()::resolve)
               .map(path -> pathToString(path.getPath(), params))
               .ifPresent(builder::setGeneratedSourcePath);

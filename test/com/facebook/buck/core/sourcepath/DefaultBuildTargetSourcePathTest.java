@@ -41,7 +41,7 @@ public class DefaultBuildTargetSourcePathTest {
     SourcePath path = DefaultBuildTargetSourcePath.of(target);
 
     try {
-      graphBuilder.getSourcePathResolver().getRelativePath(path);
+      graphBuilder.getSourcePathResolver().getCellUnsafeRelPath(path);
       fail();
     } catch (HumanReadableException e) {
       assertEquals("No known output for: " + target.getFullyQualifiedName(), e.getMessage());
@@ -57,7 +57,7 @@ public class DefaultBuildTargetSourcePathTest {
 
     SourcePath path = rule.getSourcePathToOutput();
 
-    RelPath resolved = graphBuilder.getSourcePathResolver().getRelativePath(path);
+    RelPath resolved = graphBuilder.getSourcePathResolver().getCellUnsafeRelPath(path);
 
     assertEquals(RelPath.get("cheese"), resolved);
   }

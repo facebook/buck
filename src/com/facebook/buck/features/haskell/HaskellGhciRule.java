@@ -292,7 +292,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     @Override
     public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-      Path src = resolver.getRelativePath(lib).getPath().toRealPath();
+      Path src = resolver.getCellUnsafeRelPath(lib).getPath().toRealPath();
       Path dest = symlinkDir.resolve(name);
       return SymlinkFileStep.of(getProjectFilesystem(), src, dest).execute(context);
     }
@@ -318,7 +318,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     String name = getBuildTarget().getShortName();
     RelPath dir = getOutputDir();
-    RelPath so = resolver.getRelativePath(omnibusSharedObject.getSourcePathToOutput());
+    RelPath so = resolver.getCellUnsafeRelPath(omnibusSharedObject.getSourcePathToOutput());
     Path binDir = dir.resolve(name + ".bin");
     Path packagesDir = dir.resolve(name + ".packages");
     Path symlinkDir = dir.resolve(HaskellGhciDescription.getSoLibsRelDir(getBuildTarget()));
@@ -348,7 +348,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableSet.Builder<String> pkgdirs = ImmutableSet.builder();
     for (HaskellPackage pkg : prebuiltHaskellPackages) {
       try {
-        pkgdirs.add(resolver.getRelativePath(pkg.getPackageDb()).getPath().toRealPath().toString());
+        pkgdirs.add(
+            resolver.getCellUnsafeRelPath(pkg.getPackageDb()).getPath().toRealPath().toString());
       } catch (IOException ex) {
         throw new RuntimeException(ex);
       }
@@ -362,7 +363,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     for (HaskellPackage pkg : haskellPackages) {
       Path pkgdir = Paths.get(pkg.getInfo().getName());
 
-      RelPath pkgDbSrc = resolver.getRelativePath(pkg.getPackageDb());
+      RelPath pkgDbSrc = resolver.getCellUnsafeRelPath(pkg.getPackageDb());
       Path pkgDbLink = pkgdir.resolve(pkgDbSrc.getFileName());
       putLink.accept(pkgDbLink, pkgDbSrc.getPath());
       pkgdirs.add("${DIR}/" + dir.relativize(packagesDir.resolve(pkgDbLink)));
@@ -379,7 +380,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       artifacts.addAll(pkg.getInterfaces());
 
       for (SourcePath artifact : artifacts.build()) {
-        RelPath source = resolver.getRelativePath(artifact);
+        RelPath source = resolver.getCellUnsafeRelPath(artifact);
         Path destination =
             pkgdir.resolve(
                 source.subpath(source.getNameCount() - 2, source.getNameCount()).getPath());
@@ -462,7 +463,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         startGhciContents.append('\n');
         List<String> lines =
             Files.readAllLines(
-                resolver.getRelativePath(ghciInit.get()).getPath(), StandardCharsets.UTF_8);
+                resolver.getCellUnsafeRelPath(ghciInit.get()).getPath(), StandardCharsets.UTF_8);
         startGhciContents.append(Joiner.on('\n').join(lines));
       } catch (IOException ex) {
         throw new RuntimeException(ex);
@@ -480,7 +481,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // ghciBinDep
     ImmutableList.Builder<String> srcpaths = ImmutableList.builder();
     for (SourcePath sp : srcs.getSourcePaths()) {
-      srcpaths.add(resolver.getRelativePath(sp).toString());
+      srcpaths.add(resolver.getCellUnsafeRelPath(sp).toString());
     }
 
     String ghcPath = null;
@@ -491,7 +492,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
         steps.add(
             SymlinkFileStep.of(
-                getProjectFilesystem(), resolver.getRelativePath(sp).getPath(), bin));
+                getProjectFilesystem(), resolver.getCellUnsafeRelPath(sp).getPath(), bin));
 
         ghcPath = "${DIR}/" + dir.relativize(bin) + " -B" + ghciLib.toRealPath();
       } else {

@@ -68,7 +68,7 @@ public class SourcePathResolverTest {
     RelPath expectedPath = RelPath.get("foo");
     SourcePath sourcePath = PathSourcePath.of(projectFilesystem, expectedPath);
 
-    assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
+    assertEquals(expectedPath, pathResolver.getCellUnsafeRelPath(sourcePath));
   }
 
   @Test
@@ -83,7 +83,7 @@ public class SourcePathResolverTest {
     graphBuilder.addToIndex(rule);
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(rule.getBuildTarget());
 
-    assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
+    assertEquals(expectedPath, pathResolver.getCellUnsafeRelPath(sourcePath));
   }
 
   @Test
@@ -104,7 +104,7 @@ public class SourcePathResolverTest {
         BuildTargetWithOutputs.of(buildTarget, OutputLabel.of("bar"));
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
 
-    assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
+    assertEquals(expectedPath, pathResolver.getCellUnsafeRelPath(sourcePath));
   }
 
   @Test
@@ -131,7 +131,7 @@ public class SourcePathResolverTest {
         BuildTargetWithOutputs.of(buildTarget, OutputLabel.of("bar"));
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
 
-    assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
+    assertEquals(expectedPath, pathResolver.getCellUnsafeRelPath(sourcePath));
   }
 
   @Test
@@ -155,7 +155,7 @@ public class SourcePathResolverTest {
         BuildTargetWithOutputs.of(buildTarget, OutputLabel.of("baz"));
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
 
-    pathResolver.getRelativePath(sourcePath);
+    pathResolver.getCellUnsafeRelPath(sourcePath);
   }
 
   @Test
@@ -176,7 +176,7 @@ public class SourcePathResolverTest {
         BuildTargetWithOutputs.of(buildTarget, OutputLabel.of("bar"));
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
 
-    pathResolver.getRelativePath(sourcePath);
+    pathResolver.getCellUnsafeRelPath(sourcePath);
   }
 
   @Test
@@ -190,7 +190,7 @@ public class SourcePathResolverTest {
     graphBuilder.addToIndex(rule);
     SourcePath sourcePath = ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), expectedPath);
 
-    assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
+    assertEquals(expectedPath, pathResolver.getCellUnsafeRelPath(sourcePath));
   }
 
   @Test
@@ -201,7 +201,7 @@ public class SourcePathResolverTest {
     RelPath expectedPath = RelPath.get("foo");
     SourcePath sourcePath = PathSourcePath.of(projectFilesystem, expectedPath);
 
-    assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
+    assertEquals(expectedPath, pathResolver.getCellUnsafeRelPath(sourcePath));
   }
 
   @Test
@@ -214,7 +214,7 @@ public class SourcePathResolverTest {
     graphBuilder.addToIndex(rule);
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(rule.getBuildTarget());
 
-    assertEquals(rule.getOutputFile(), pathResolver.getRelativePath(sourcePath).getPath());
+    assertEquals(rule.getOutputFile(), pathResolver.getCellUnsafeRelPath(sourcePath).getPath());
   }
 
   @Test
@@ -500,6 +500,6 @@ public class SourcePathResolverTest {
         FakeSourcePath.of(
             new FakeProjectFilesystem(), Paths.get("cheese").toAbsolutePath().toString());
 
-    pathResolver.getRelativePath(path);
+    pathResolver.getCellUnsafeRelPath(path);
   }
 }

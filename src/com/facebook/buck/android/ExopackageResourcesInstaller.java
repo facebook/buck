@@ -92,7 +92,7 @@ public class ExopackageResourcesInstaller extends AbstractBuildRule {
             ImmutableSortedMap<String, ImmutableSortedSet<Path>> contents =
                 ExopackageDeviceDirectoryLister.deserializeDirectoryContentsForPackage(
                     getProjectFilesystem(),
-                    resolver.getRelativePath(deviceExoContents).getPath(),
+                    resolver.getCellUnsafeRelPath(deviceExoContents).getPath(),
                     packageName);
             context
                 .getAndroidDevicesHelper()

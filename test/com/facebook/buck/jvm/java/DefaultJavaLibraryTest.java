@@ -992,7 +992,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .setCmd("something")
             .build(graphBuilder, filesystem);
     filesystem.writeContentsToPath(
-        "class Test {}", pathResolver.getRelativePath(genSrc.getSourcePathToOutput()));
+        "class Test {}", pathResolver.getCellUnsafeRelPath(genSrc.getSourcePathToOutput()));
     JavaLibrary library =
         createJavaLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addSrc(genSrc.getSourcePathToOutput())
@@ -1030,7 +1030,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .setCmd("something else")
             .build(graphBuilder, filesystem);
     filesystem.writeContentsToPath(
-        "class Test2 {}", pathResolver.getRelativePath(genSrc.getSourcePathToOutput()));
+        "class Test2 {}", pathResolver.getCellUnsafeRelPath(genSrc.getSourcePathToOutput()));
     library =
         createJavaLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addSrc(genSrc.getSourcePathToOutput())
@@ -1066,10 +1066,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     JavaLibrary library = (JavaLibrary) graphBuilder.requireRule(libraryNode.getBuildTarget());
 
     filesystem.writeContentsToPath(
-        "JAR contents", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
+        "JAR contents", pathResolver.getCellUnsafeRelPath(dep.getSourcePathToOutput()));
     writeAbiJar(
         filesystem,
-        pathResolver.getRelativePath(
+        pathResolver.getCellUnsafeRelPath(
             graphBuilder.requireRule(dep.getAbiJar().get()).getSourcePathToOutput()),
         "Source.class",
         "ABI JAR contents");
@@ -1096,7 +1096,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     library = (JavaLibrary) graphBuilder.requireRule(libraryNode.getBuildTarget());
 
     filesystem.writeContentsToPath(
-        "different JAR contents", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
+        "different JAR contents", pathResolver.getCellUnsafeRelPath(dep.getSourcePathToOutput()));
     FileHashLoader unaffectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     factory = new TestInputBasedRuleKeyFactory(unaffectedHashCache, ruleFinder);
@@ -1114,7 +1114,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     writeAbiJar(
         filesystem,
-        pathResolver.getRelativePath(
+        pathResolver.getCellUnsafeRelPath(
             graphBuilder.requireRule(dep.getAbiJar().get()).getSourcePathToOutput()),
         "Source.class",
         "changed ABI JAR contents");
@@ -1158,10 +1158,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         (JavaLibrary) graphBuilder.requireRule(BuildTargetFactory.newInstance("//:lib"));
 
     filesystem.writeContentsToPath(
-        "JAR contents", pathResolver.getRelativePath(exportedDep.getSourcePathToOutput()));
+        "JAR contents", pathResolver.getCellUnsafeRelPath(exportedDep.getSourcePathToOutput()));
     writeAbiJar(
         filesystem,
-        pathResolver.getRelativePath(
+        pathResolver.getCellUnsafeRelPath(
             graphBuilder.requireRule(exportedDep.getAbiJar().get()).getSourcePathToOutput()),
         "Source1.class",
         "ABI JAR contents");
@@ -1191,7 +1191,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     filesystem.writeContentsToPath(
         "different JAR contents",
-        pathResolver.getRelativePath(exportedDep.getSourcePathToOutput()));
+        pathResolver.getCellUnsafeRelPath(exportedDep.getSourcePathToOutput()));
     FileHashLoader unaffectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     factory = new TestInputBasedRuleKeyFactory(unaffectedHashCache, ruleFinder);
@@ -1210,7 +1210,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         filesystem,
         ruleFinder
             .getSourcePathResolver()
-            .getRelativePath(
+            .getCellUnsafeRelPath(
                 graphBuilder.requireRule(exportedDep.getAbiJar().get()).getSourcePathToOutput()),
         "Source1.class",
         "changed ABI JAR contents");
@@ -1260,10 +1260,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         (JavaLibrary) graphBuilder.requireRule(BuildTargetFactory.newInstance("//:lib"));
 
     filesystem.writeContentsToPath(
-        "JAR contents", pathResolver.getRelativePath(exportedDep.getSourcePathToOutput()));
+        "JAR contents", pathResolver.getCellUnsafeRelPath(exportedDep.getSourcePathToOutput()));
     writeAbiJar(
         filesystem,
-        pathResolver.getRelativePath(
+        pathResolver.getCellUnsafeRelPath(
             graphBuilder.requireRule(exportedDep.getAbiJar().get()).getSourcePathToOutput()),
         "Source1.class",
         "ABI JAR contents");
@@ -1292,7 +1292,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     filesystem.writeContentsToPath(
         "different JAR contents",
-        pathResolver.getRelativePath(exportedDep.getSourcePathToOutput()));
+        pathResolver.getCellUnsafeRelPath(exportedDep.getSourcePathToOutput()));
     FileHashLoader unaffectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     factory = new TestInputBasedRuleKeyFactory(unaffectedHashCache, ruleFinder);
@@ -1311,7 +1311,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         filesystem,
         ruleFinder
             .getSourcePathResolver()
-            .getRelativePath(
+            .getCellUnsafeRelPath(
                 graphBuilder.requireRule(exportedDep.getAbiJar().get()).getSourcePathToOutput()),
         "Source1.class",
         "changed ABI JAR contents");
@@ -1493,9 +1493,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     JarBackedJavac jsrJavac = ((JarBackedJavac) javacStep.getJavac());
     assertEquals(
         RichStream.from(jsrJavac.getCompilerClassPath())
-            .map(pathResolver::getRelativePath)
+            .map(pathResolver::getCellUnsafeRelPath)
             .collect(ImmutableSet.toImmutableSet()),
-        ImmutableSet.of(pathResolver.getRelativePath(javac.getSourcePathToOutput())));
+        ImmutableSet.of(pathResolver.getCellUnsafeRelPath(javac.getSourcePathToOutput())));
   }
 
   // Utilities

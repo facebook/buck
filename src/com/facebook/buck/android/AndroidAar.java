@@ -111,7 +111,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     commands.add(
         CopyStep.forFile(
             filesystem,
-            sourcePathResolver.getRelativePath(manifest.getSourcePathToOutput()),
+            sourcePathResolver.getCellUnsafeRelPath(manifest.getSourcePathToOutput()),
             temp.resolveRel("AndroidManifest.xml")));
 
     // put R.txt into tmp folder
@@ -127,13 +127,13 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     commands.add(
         CopyStep.forDirectory(
             filesystem,
-            sourcePathResolver.getRelativePath(assembledResourceDirectory),
+            sourcePathResolver.getCellUnsafeRelPath(assembledResourceDirectory),
             temp.resolveRel("res"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
     commands.add(
         CopyStep.forDirectory(
             filesystem,
-            sourcePathResolver.getRelativePath(assembledAssetsDirectory),
+            sourcePathResolver.getCellUnsafeRelPath(assembledAssetsDirectory),
             temp.resolveRel("assets"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
 
@@ -153,7 +153,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             commands.add(
                 CopyStep.forDirectory(
                     filesystem,
-                    sourcePathResolver.getRelativePath(sourcePath),
+                    sourcePathResolver.getCellUnsafeRelPath(sourcePath),
                     temp.resolveRel("jni"),
                     CopyStep.DirectoryMode.CONTENTS_ONLY)));
 
@@ -163,7 +163,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             commands.add(
                 CopyStep.forDirectory(
                     filesystem,
-                    sourcePathResolver.getRelativePath(sourcePath),
+                    sourcePathResolver.getCellUnsafeRelPath(sourcePath),
                     temp.resolveRel("assets").resolveRel("lib"),
                     CopyStep.DirectoryMode.CONTENTS_ONLY)));
 

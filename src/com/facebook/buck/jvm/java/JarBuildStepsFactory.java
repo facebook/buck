@@ -377,7 +377,7 @@ public class JarBuildStepsFactory
         filesystem.getIgnoredPaths(),
         steps,
         Optional.ofNullable(getSourcePathToOutput(buildTarget, filesystem))
-            .map(sourcePath -> context.getSourcePathResolver().getRelativePath(sourcePath)),
+            .map(sourcePath -> context.getSourcePathResolver().getCellUnsafeRelPath(sourcePath)),
         pathToClassHashes);
 
     return steps.build();
@@ -405,7 +405,7 @@ public class JarBuildStepsFactory
         filesystem.getIgnoredPaths(),
         steps,
         Optional.ofNullable(getSourcePathToOutput(libraryTarget, filesystem))
-            .map(sourcePath -> context.getSourcePathResolver().getRelativePath(sourcePath)),
+            .map(sourcePath -> context.getSourcePathResolver().getCellUnsafeRelPath(sourcePath)),
         pathToClassHashes);
 
     return steps.build();
@@ -461,7 +461,8 @@ public class JarBuildStepsFactory
     ImmutableSortedSet<RelPath> entriesToJar =
         ImmutableSortedSet.orderedBy(RelPath.comparator()).add(classesDir).build();
     Optional<RelPath> manifestRelFile =
-        manifestFile.map(sourcePath -> sourcePathResolver.getRelativePath(filesystem, sourcePath));
+        manifestFile.map(
+            sourcePath -> sourcePathResolver.getCellUnsafeRelPath(filesystem, sourcePath));
     return getOutputJarPath(buildTarget, filesystem)
         .map(
             output ->

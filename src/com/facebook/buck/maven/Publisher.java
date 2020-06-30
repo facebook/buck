@@ -127,7 +127,7 @@ public class Publisher {
                   "No maven coordinates specified for published rule ",
                   publishable));
       RelPath relativePathToOutput =
-          pathResolver.getRelativePath(
+          pathResolver.getCellUnsafeRelPath(
               Preconditions.checkNotNull(
                   publishable.getSourcePathToOutput(),
                   "No path to output present in ",

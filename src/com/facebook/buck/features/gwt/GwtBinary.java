@@ -135,7 +135,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     // Create a clean directory where the .zip file will be written.
     RelPath workingDirectory =
-        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getParent();
+        context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput()).getParent();
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     steps.addAll(
         MakeCleanDirectoryStep.of(
@@ -198,7 +198,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     steps.add(javaStep);
 
     buildableContext.recordArtifact(
-        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getPath());
+        context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput()).getPath());
 
     return steps.build();
   }

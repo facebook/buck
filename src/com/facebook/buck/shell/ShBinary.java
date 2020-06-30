@@ -177,7 +177,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     valuesBuilder.put("path_to_project_root_file", escapedProjectRoot);
     valuesBuilder.put(
         "script_to_run",
-        Escaper.escapeAsBashString(context.getSourcePathResolver().getRelativePath(main)));
+        Escaper.escapeAsBashString(context.getSourcePathResolver().getCellUnsafeRelPath(main)));
     valuesBuilder.put("resources", resourceStrings);
     valuesBuilder.put("cell_names", cellsNamesBuilder.build());
     valuesBuilder.put("cell_paths", cellsPathsStringsBuilder.build());
@@ -275,7 +275,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     for (SourcePath sourcePath : resources) {
       Path linkPath = deriveLinkPath(resolver, sourcePath);
       if (!linkPaths.containsKey(linkPath)) {
-        linkPaths.put(linkPath, resolver.getRelativePath(sourcePath).getPath());
+        linkPaths.put(linkPath, resolver.getCellUnsafeRelPath(sourcePath).getPath());
       } else {
         conflicts.add(
             String.format(
@@ -306,7 +306,8 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   .toPathDefaultFileSystem()
                   .resolve(resolver.getSourcePathName(target, sourcePath)));
     } else if (sourcePath instanceof PathSourcePath) {
-      return Paths.get(ROOT_CELL_LINK_NAME).resolve(resolver.getRelativePath(sourcePath).getPath());
+      return Paths.get(ROOT_CELL_LINK_NAME)
+          .resolve(resolver.getCellUnsafeRelPath(sourcePath).getPath());
     } else {
       throw new RuntimeException(
           "unknown source path: " + sourcePath + "for sh_binary " + this.getBuildTarget());

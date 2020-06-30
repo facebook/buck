@@ -170,7 +170,10 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       for (SourcePath interfaceDir : interfaces) {
         Path relInterfaceDir =
             pkgRoot.resolve(
-                packageDb.getParent().relativize(resolver.getRelativePath(interfaceDir)).getPath());
+                packageDb
+                    .getParent()
+                    .relativize(resolver.getCellUnsafeRelPath(interfaceDir))
+                    .getPath());
         importDirs.add('"' + relInterfaceDir.toString() + '"');
       }
       entries.put("import-dirs", Joiner.on(", ").join(importDirs));
@@ -181,7 +184,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     for (SourcePath library : libraries) {
       Path relLibPath =
           pkgRoot.resolve(
-              packageDb.getParent().relativize(resolver.getRelativePath(library)).getPath());
+              packageDb.getParent().relativize(resolver.getCellUnsafeRelPath(library)).getPath());
       libDirs.add('"' + relLibPath.getParent().toString() + '"');
 
       String libName = MorePaths.stripPathPrefixAndExtension(relLibPath.getFileName(), "lib");

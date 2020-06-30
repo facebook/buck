@@ -85,7 +85,8 @@ public class InputBasedRuleKeyFactoryTest {
             new FakeBuildRule(BuildTargetFactory.newInstance("//:dep"), filesystem));
     dep.setOutputFile(depOutput.toString());
     filesystem.writeContentsToPath(
-        "hello", graphBuilder.getSourcePathResolver().getRelativePath(dep.getSourcePathToOutput()));
+        "hello",
+        graphBuilder.getSourcePathResolver().getCellUnsafeRelPath(dep.getSourcePathToOutput()));
 
     FakeFileHashCache hashCache =
         new FakeFileHashCache(ImmutableMap.of(filesystem.resolve(depOutput), HashCode.fromInt(0)));
@@ -125,7 +126,8 @@ public class InputBasedRuleKeyFactoryTest {
 
     dep.setOutputFile(depOutput.toString());
     filesystem.writeContentsToPath(
-        "hello", graphBuilder.getSourcePathResolver().getRelativePath(dep.getSourcePathToOutput()));
+        "hello",
+        graphBuilder.getSourcePathResolver().getCellUnsafeRelPath(dep.getSourcePathToOutput()));
 
     FakeFileHashCache hashCache =
         new FakeFileHashCache(ImmutableMap.of(filesystem.resolve(depOutput), HashCode.fromInt(0)));

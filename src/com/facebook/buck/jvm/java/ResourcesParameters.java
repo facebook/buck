@@ -91,7 +91,7 @@ public abstract class ResourcesParameters implements AddsToRuleKey {
 
       Optional<BuildRule> underlyingRule = ruleFinder.getRule(rawResource);
       RelPath relativePathToResource =
-          ruleFinder.getSourcePathResolver().getRelativePath(rawResource);
+          ruleFinder.getSourcePathResolver().getCellUnsafeRelPath(rawResource);
 
       String resource;
 

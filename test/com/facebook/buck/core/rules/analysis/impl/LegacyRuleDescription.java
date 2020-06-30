@@ -109,7 +109,8 @@ public class LegacyRuleDescription
         SortedSet<BuildRule> depRules = getBuildDeps();
         List<Object> deps = new ArrayList<>();
         data.put("dep", deps);
-        RelPath output = context1.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+        RelPath output =
+            context1.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput());
         data.put("outputs", ImmutableList.of(output));
 
         ImmutableList<Path> toRead =
@@ -136,7 +137,7 @@ public class LegacyRuleDescription
                 BuildCellRelativePath.of(
                     context1
                         .getSourcePathResolver()
-                        .getRelativePath(getSourcePathToOutput())
+                        .getCellUnsafeRelPath(getSourcePathToOutput())
                         .getParent())));
         steps.add(
             new AbstractExecutionStep("write json") {
@@ -145,7 +146,9 @@ public class LegacyRuleDescription
                 getProjectFilesystem()
                     .writeContentsToPath(
                         ObjectMappers.WRITER.writeValueAsString(data),
-                        context1.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
+                        context1
+                            .getSourcePathResolver()
+                            .getCellUnsafeRelPath(getSourcePathToOutput()));
                 return StepExecutionResult.of(0);
               }
             });

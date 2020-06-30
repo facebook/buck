@@ -330,12 +330,13 @@ public class IjProjectSourcePathResolverTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePath sourcePathToOutput =
         graphBuilder.requireRule(node.getBuildTarget()).getSourcePathToOutput();
-    RelPath realPath = graphBuilder.getSourcePathResolver().getRelativePath(sourcePathToOutput);
+    RelPath realPath =
+        graphBuilder.getSourcePathResolver().getCellUnsafeRelPath(sourcePathToOutput);
 
     // Find the guessed path
     SourcePathResolverAdapter projectSourcePathResolver =
         new SourcePathResolverAdapter(new IjProjectSourcePathResolver(targetGraph));
-    RelPath guessedPath = projectSourcePathResolver.getRelativePath(toResolve);
+    RelPath guessedPath = projectSourcePathResolver.getCellUnsafeRelPath(toResolve);
 
     assertEquals(realPath, guessedPath);
   }

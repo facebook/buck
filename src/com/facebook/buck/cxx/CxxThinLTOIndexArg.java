@@ -39,7 +39,7 @@ public class CxxThinLTOIndexArg implements Arg {
         String.format(
             "-fthinlto-index=%s.thinlto.bc",
             pathResolver
-                .getRelativePath(thinIndicesRoot)
-                .resolve(pathResolver.getRelativePath(cxxSourcePath))));
+                .getCellUnsafeRelPath(thinIndicesRoot)
+                .resolve(pathResolver.getCellUnsafeRelPath(cxxSourcePath))));
   }
 }

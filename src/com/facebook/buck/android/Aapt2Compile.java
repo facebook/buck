@@ -100,7 +100,7 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
           new Aapt2CompileStep(
               filesystem.getRootPath(),
               aapt2ExecutableTool.getCommandPrefix(sourcePathResolverAdapter),
-              sourcePathResolverAdapter.getRelativePath(resDir).getPath(),
+              sourcePathResolverAdapter.getCellUnsafeRelPath(resDir).getPath(),
               outputPath.getPath(),
               ProjectFilesystemUtils.relativize(
                   filesystem.getRootPath(), buildContext.getBuildCellRootPath()),

@@ -420,8 +420,8 @@ public class JsBundleGenruleDescriptionTest {
     SourcePathResolverAdapter pathResolver = sourcePathResolver();
 
     assertEquals(
-        pathResolver.getRelativePath(setup.jsBundle().getSourcePathToSourceMap()),
-        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+        pathResolver.getCellUnsafeRelPath(setup.jsBundle().getSourcePathToSourceMap()),
+        pathResolver.getCellUnsafeRelPath(setup.rule().getSourcePathToOutput()));
   }
 
   @Test
@@ -431,8 +431,8 @@ public class JsBundleGenruleDescriptionTest {
     SourcePathResolverAdapter pathResolver = sourcePathResolver();
 
     assertEquals(
-        pathResolver.getRelativePath(setup.jsBundle().getSourcePathToMisc()),
-        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+        pathResolver.getCellUnsafeRelPath(setup.jsBundle().getSourcePathToMisc()),
+        pathResolver.getCellUnsafeRelPath(setup.rule().getSourcePathToOutput()));
   }
 
   @Test
@@ -448,7 +448,9 @@ public class JsBundleGenruleDescriptionTest {
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
                 genrule.getProjectFilesystem(),
-                context.getSourcePathResolver().getRelativePath(genrule.getSourcePathToOutput())));
+                context
+                    .getSourcePathResolver()
+                    .getCellUnsafeRelPath(genrule.getSourcePathToOutput())));
     assertThat(buildSteps, hasItem(expectedStep));
 
     int mkJsDirIdx = buildSteps.indexOf(expectedStep);
@@ -518,8 +520,8 @@ public class JsBundleGenruleDescriptionTest {
     SourcePathResolverAdapter pathResolver = sourcePathResolver();
 
     assertEquals(
-        pathResolver.getRelativePath(setup.genrule().getSourcePathToSourceMap()),
-        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+        pathResolver.getCellUnsafeRelPath(setup.genrule().getSourcePathToSourceMap()),
+        pathResolver.getCellUnsafeRelPath(setup.rule().getSourcePathToOutput()));
   }
 
   @Test
@@ -539,7 +541,7 @@ public class JsBundleGenruleDescriptionTest {
                 genrule.getProjectFilesystem(),
                 context
                     .getSourcePathResolver()
-                    .getRelativePath(genrule.getSourcePathToSourceMap())
+                    .getCellUnsafeRelPath(genrule.getSourcePathToSourceMap())
                     .getParent()));
     assertThat(buildSteps, hasItem(expectedStep));
 
@@ -597,8 +599,8 @@ public class JsBundleGenruleDescriptionTest {
     SourcePathResolverAdapter pathResolver = sourcePathResolver();
 
     assertEquals(
-        pathResolver.getRelativePath(setup.genrule().getSourcePathToMisc()),
-        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+        pathResolver.getCellUnsafeRelPath(setup.genrule().getSourcePathToMisc()),
+        pathResolver.getCellUnsafeRelPath(setup.rule().getSourcePathToOutput()));
   }
 
   @Test
@@ -616,7 +618,9 @@ public class JsBundleGenruleDescriptionTest {
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
                 genrule.getProjectFilesystem(),
-                context.getSourcePathResolver().getRelativePath(genrule.getSourcePathToMisc())));
+                context
+                    .getSourcePathResolver()
+                    .getCellUnsafeRelPath(genrule.getSourcePathToMisc())));
     assertThat(buildSteps, hasItem(expectedStep));
 
     int mkMiscDirIdx = buildSteps.indexOf(expectedStep);
@@ -630,8 +634,8 @@ public class JsBundleGenruleDescriptionTest {
     SourcePathResolverAdapter pathResolver = sourcePathResolver();
 
     assertEquals(
-        pathResolver.getRelativePath(setup.jsBundleDepsFile().getSourcePathToOutput()),
-        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+        pathResolver.getCellUnsafeRelPath(setup.jsBundleDepsFile().getSourcePathToOutput()),
+        pathResolver.getCellUnsafeRelPath(setup.rule().getSourcePathToOutput()));
   }
 
   @Test
@@ -674,12 +678,12 @@ public class JsBundleGenruleDescriptionTest {
     SourcePathResolverAdapter pathResolver = sourcePathResolver();
 
     assertEquals(
-        pathResolver.getRelativePath(setup.genrule().getSourcePathToDepsFile()),
-        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+        pathResolver.getCellUnsafeRelPath(setup.genrule().getSourcePathToDepsFile()),
+        pathResolver.getCellUnsafeRelPath(setup.rule().getSourcePathToOutput()));
 
     assertEquals(
-        pathResolver.getRelativePath(setup.jsBundleDepsFile().getSourcePathToOutput()),
-        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+        pathResolver.getCellUnsafeRelPath(setup.jsBundleDepsFile().getSourcePathToOutput()),
+        pathResolver.getCellUnsafeRelPath(setup.rule().getSourcePathToOutput()));
   }
 
   @Test
@@ -689,12 +693,12 @@ public class JsBundleGenruleDescriptionTest {
     SourcePathResolverAdapter pathResolver = sourcePathResolver();
 
     assertEquals(
-        pathResolver.getRelativePath(setup.genrule().getSourcePathToDepsFile()),
-        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+        pathResolver.getCellUnsafeRelPath(setup.genrule().getSourcePathToDepsFile()),
+        pathResolver.getCellUnsafeRelPath(setup.rule().getSourcePathToOutput()));
 
     assertNotEquals(
-        pathResolver.getRelativePath(setup.jsBundleDepsFile().getSourcePathToOutput()),
-        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+        pathResolver.getCellUnsafeRelPath(setup.jsBundleDepsFile().getSourcePathToOutput()),
+        pathResolver.getCellUnsafeRelPath(setup.rule().getSourcePathToOutput()));
   }
 
   @Test
@@ -716,7 +720,7 @@ public class JsBundleGenruleDescriptionTest {
     SourcePath outputPath = setup.genrule().getSourcePathToOutput();
     Path resolvedPath =
         BuildPaths.removeHashFrom(
-                sourcePathResolver().getRelativePath(outputPath).getPath(), setup.target)
+                sourcePathResolver().getCellUnsafeRelPath(outputPath).getPath(), setup.target)
             .get();
 
     assertThat(resolvedPath, equalTo(targetOutputPath));

@@ -112,7 +112,7 @@ public class ExopackageInstallFinisher extends AbstractBuildRule {
                     getProjectFilesystem(),
                     buildContext
                         .getSourcePathResolver()
-                        .getRelativePath(deviceExoContents)
+                        .getCellUnsafeRelPath(deviceExoContents)
                         .getPath(),
                     packageName);
             context

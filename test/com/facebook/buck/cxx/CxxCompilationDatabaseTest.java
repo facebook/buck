@@ -163,7 +163,7 @@ public class CxxCompilationDatabaseTest {
         BuildTargetPaths.getGenPath(filesystem, testBuildTarget, "__%s/compile_commands.json"),
         graphBuilder
             .getSourcePathResolver()
-            .getRelativePath(compilationDatabase.getSourcePathToOutput()));
+            .getCellUnsafeRelPath(compilationDatabase.getSourcePathToOutput()));
 
     List<Step> buildSteps =
         compilationDatabase.getBuildSteps(

@@ -150,14 +150,14 @@ class HeaderPathNormalizer {
       Optional<Pair<Path, ImmutableList<Path>>> vals =
           MorePaths.splitOnCommonPrefix(
               headerMap.values().stream()
-                  .map(sourcePath -> pathResolver.getRelativePath(sourcePath).getPath())
+                  .map(sourcePath -> pathResolver.getCellUnsafeRelPath(sourcePath).getPath())
                   .collect(Collectors.toList()));
       if (keys.isPresent()
           && vals.isPresent()
           && keys.get().getSecond().equals(vals.get().getSecond())) {
         Pair<Path, Path> stripped =
             MorePaths.stripCommonSuffix(
-                pathResolver.getRelativePath(root).resolve(keys.get().getFirst()),
+                pathResolver.getCellUnsafeRelPath(root).resolve(keys.get().getFirst()),
                 vals.get().getFirst());
         prefixMap.put(stripped.getFirst(), stripped.getSecond());
       }

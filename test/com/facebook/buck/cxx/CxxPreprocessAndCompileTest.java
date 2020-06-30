@@ -489,7 +489,7 @@ public class CxxPreprocessAndCompileTest {
     BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
 
     projectFilesystem.writeContentsToPath(
-        "test.o: " + pathResolver.getRelativePath(DEFAULT_INPUT) + " ",
+        "test.o: " + pathResolver.getCellUnsafeRelPath(DEFAULT_INPUT) + " ",
         BuildTargetPaths.getGenPath(
                 projectFilesystem, BuildTargetFactory.newInstance("//foo:bar"), "%s__")
             .resolve("test.o.dep"));

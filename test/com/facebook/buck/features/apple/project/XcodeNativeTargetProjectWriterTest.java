@@ -99,7 +99,7 @@ public class XcodeNativeTargetProjectWriterTest {
     pathRelativizer =
         new PathRelativizer(
             Paths.get("_output"),
-            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath());
+            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath());
   }
 
   @Test
@@ -107,7 +107,7 @@ public class XcodeNativeTargetProjectWriterTest {
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(
             pathRelativizer,
-            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath());
+            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath());
     mutator
         .setTargetName("TestTarget")
         .setProduct(ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
@@ -122,7 +122,7 @@ public class XcodeNativeTargetProjectWriterTest {
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(
             pathRelativizer,
-            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath());
+            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath());
     mutator
         .setTargetName("TestTarget")
         .setTargetGroupPath(ImmutableList.of("Grandparent", "Parent"))
@@ -140,7 +140,7 @@ public class XcodeNativeTargetProjectWriterTest {
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(
             pathRelativizer,
-            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath());
+            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath());
     NewNativeTargetProjectMutator.Result result =
         mutator
             .setTargetName("TestTarget")
@@ -532,14 +532,14 @@ public class XcodeNativeTargetProjectWriterTest {
         pathResolver,
         new PathRelativizer(
             Paths.get("_output"),
-            sourcePath -> pathResolver.getRelativePath(sourcePath).getPath()));
+            sourcePath -> pathResolver.getCellUnsafeRelPath(sourcePath).getPath()));
   }
 
   private NewNativeTargetProjectMutator mutator(
       SourcePathResolverAdapter pathResolver, PathRelativizer relativizer) {
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(
-            relativizer, sourcePath -> pathResolver.getRelativePath(sourcePath).getPath());
+            relativizer, sourcePath -> pathResolver.getCellUnsafeRelPath(sourcePath).getPath());
     mutator
         .setTargetName("TestTarget")
         .setProduct(

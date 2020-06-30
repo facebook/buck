@@ -204,7 +204,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
     ArrayList<String> errors = new ArrayList<>();
 
     for (SourcePath assetCatalogDir : assetCatalogDirs) {
-      RelPath catalogPath = sourcePathResolverAdapter.getRelativePath(assetCatalogDir);
+      RelPath catalogPath = sourcePathResolverAdapter.getCellUnsafeRelPath(assetCatalogDir);
       if (!catalogPath.getFileName().toString().endsWith(".xcassets")) {
         errors.add(
             String.format(

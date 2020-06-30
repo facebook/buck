@@ -121,7 +121,7 @@ public class LuaBinaryDescriptionTest {
     assertThat(
         graphBuilder
             .getSourcePathResolver()
-            .getRelativePath(binary.getSourcePathToOutput())
+            .getCellUnsafeRelPath(binary.getSourcePathToOutput())
             .toString(),
         Matchers.endsWith(".override"));
   }

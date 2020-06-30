@@ -114,7 +114,7 @@ public class DirectHeaderMapTest {
         new DirectHeaderMap(buildTarget, projectFilesystem, symlinkTreeRoot.getPath(), links);
     graphBuilder.addToIndex(buildRule);
 
-    headerMapPath = pathResolver.getRelativePath(buildRule.getSourcePathToOutput());
+    headerMapPath = pathResolver.getCellUnsafeRelPath(buildRule.getSourcePathToOutput());
   }
 
   @Test

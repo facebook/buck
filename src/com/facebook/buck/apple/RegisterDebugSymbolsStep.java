@@ -90,6 +90,7 @@ class RegisterDebugSymbolsStep implements Step {
   @Override
   public String getDescription(StepExecutionContext context) {
     return String.format(
-        "register debug symbols for binary '%s': '%s'", resolver.getRelativePath(binary), dsymPath);
+        "register debug symbols for binary '%s': '%s'",
+        resolver.getCellUnsafeRelPath(binary), dsymPath);
   }
 }

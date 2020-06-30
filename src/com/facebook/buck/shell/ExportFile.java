@@ -147,7 +147,7 @@ public class ExportFile extends AbstractBuildRule
       BuildContext context, BuildableContext buildableContext) {
     SourcePathResolverAdapter resolver = context.getSourcePathResolver();
 
-    if (resolver.getFilesystem(src).isDirectory(resolver.getRelativePath(src))) {
+    if (resolver.getFilesystem(src).isDirectory(resolver.getCellUnsafeRelPath(src))) {
       handleDirectory(context.getEventBus());
     }
 
@@ -160,7 +160,7 @@ public class ExportFile extends AbstractBuildRule
           MakeCleanDirectoryStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(), getProjectFilesystem(), out.getParent())));
-      if (resolver.getFilesystem(src).isDirectory(resolver.getRelativePath(src))) {
+      if (resolver.getFilesystem(src).isDirectory(resolver.getCellUnsafeRelPath(src))) {
         builder.add(
             CopyStep.forDirectory(
                 getProjectFilesystem(),

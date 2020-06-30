@@ -131,7 +131,7 @@ public class AndroidManifest extends AbstractBuildRule {
             context.getSourcePathResolver().getAllAbsolutePaths(manifestFiles).stream()
                 .map(AbsPath::getPath)
                 .collect(ImmutableSet.toImmutableSet()),
-            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getPath(),
+            context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput()).getPath(),
             getProjectFilesystem()
                 .resolve(
                     BuildTargetPaths.getScratchPath(

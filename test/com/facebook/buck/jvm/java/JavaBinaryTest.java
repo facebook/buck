@@ -106,7 +106,7 @@ public class JavaBinaryTest {
     // Each classpath entry is specified via its absolute path so that the executable command can be
     // run from a /tmp directory, if necessary.
     String expectedClasspath =
-        basePath + pathResolver.getRelativePath(javaBinary.getSourcePathToOutput());
+        basePath + pathResolver.getCellUnsafeRelPath(javaBinary.getSourcePathToOutput());
 
     List<String> expectedCommand = ImmutableList.of("java", "-jar", expectedClasspath);
     assertEquals(

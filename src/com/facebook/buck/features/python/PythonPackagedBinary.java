@@ -119,7 +119,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    RelPath binPath = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+    RelPath binPath = context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput());
 
     // Make sure the parent directory exists.
     steps.add(

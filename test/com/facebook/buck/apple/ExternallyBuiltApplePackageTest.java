@@ -123,7 +123,7 @@ public class ExternallyBuiltApplePackageTest {
     assertThat(
         graphBuilder
             .getSourcePathResolver()
-            .getRelativePath(Objects.requireNonNull(rule.getSourcePathToOutput()))
+            .getCellUnsafeRelPath(Objects.requireNonNull(rule.getSourcePathToOutput()))
             .toString(),
         endsWith(".api"));
   }

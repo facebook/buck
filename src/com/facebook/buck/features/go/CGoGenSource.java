@@ -178,7 +178,7 @@ public class CGoGenSource extends AbstractBuildRule {
             cgoCompilerFlags,
             ImmutableList.of("@" + argsFile),
             cgoSrcs.stream()
-                .map(context.getSourcePathResolver()::getRelativePath)
+                .map(context.getSourcePathResolver()::getCellUnsafeRelPath)
                 .collect(ImmutableList.toImmutableList()),
             platform,
             genDir.getPath(),

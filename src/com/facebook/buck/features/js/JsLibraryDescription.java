@@ -422,7 +422,8 @@ public class JsLibraryDescription
     for (Either<SourcePath, Pair<SourcePath, String>> source : sources) {
       RelPath relativePath =
           source.transform(
-              sourcePathResolverAdapter::getRelativePath, pair -> RelPath.get(pair.getSecond()));
+              sourcePathResolverAdapter::getCellUnsafeRelPath,
+              pair -> RelPath.get(pair.getSecond()));
       builder.put(source, JsFlavors.fileFlavorForSourcePath(relativePath));
     }
     return builder.build();
@@ -455,6 +456,6 @@ public class JsLibraryDescription
                 new HumanReadableException(
                     "%s: Using '%s' as base path for '%s' would move the file "
                         + "out of the project root.",
-                    target, basePath, sourcePathResolverAdapter.getRelativePath(sourcePath)));
+                    target, basePath, sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath)));
   }
 }

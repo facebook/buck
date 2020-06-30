@@ -108,7 +108,7 @@ public class ExportFileTest {
         TestExecutionContext.newInstance());
     assertEquals(
         BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolveRel("example.html"),
-        pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
+        pathResolver.getCellUnsafeRelPath(exportFile.getSourcePathToOutput()));
   }
 
   @Test
@@ -137,7 +137,7 @@ public class ExportFileTest {
         TestExecutionContext.newInstance());
     assertEquals(
         BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolveRel("fish"),
-        pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
+        pathResolver.getCellUnsafeRelPath(exportFile.getSourcePathToOutput()));
   }
 
   @Test
@@ -169,7 +169,7 @@ public class ExportFileTest {
         TestExecutionContext.newInstance());
     assertEquals(
         BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolveRel("fish"),
-        pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
+        pathResolver.getCellUnsafeRelPath(exportFile.getSourcePathToOutput()));
   }
 
   @Test
@@ -275,8 +275,8 @@ public class ExportFileTest {
             .setSrc(src)
             .build(graphBuilder, projectFilesystem);
     assertThat(
-        pathResolver.getRelativePath(exportFile.getSourcePathToOutput()),
-        Matchers.equalTo(pathResolver.getRelativePath(src)));
+        pathResolver.getCellUnsafeRelPath(exportFile.getSourcePathToOutput()),
+        Matchers.equalTo(pathResolver.getCellUnsafeRelPath(src)));
   }
 
   @Test

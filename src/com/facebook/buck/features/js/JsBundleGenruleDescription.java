@@ -124,7 +124,8 @@ public class JsBundleGenruleDescription
                 jsBundle.getSourcePathToOutput(), "%s has no output", jsBundle.getBuildTarget());
       }
 
-      Path fileName = graphBuilder.getSourcePathResolver().getRelativePath(output).getFileName();
+      Path fileName =
+          graphBuilder.getSourcePathResolver().getCellUnsafeRelPath(output).getFileName();
       return new ExportFile(
           buildTarget,
           projectFilesystem,

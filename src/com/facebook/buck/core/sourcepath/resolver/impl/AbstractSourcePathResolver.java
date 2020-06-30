@@ -127,16 +127,12 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
   public ImmutableSortedSet<RelPath> getAllRelativePaths(
       ProjectFilesystem projectFilesystem, Collection<? extends SourcePath> sourcePaths) {
     return sourcePaths.stream()
-        .flatMap(sourcePath -> getRelativePath(projectFilesystem, sourcePath).stream())
+        .flatMap(sourcePath -> getCellUnsafeRelPath(projectFilesystem, sourcePath).stream())
         .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
   }
 
-  /**
-   * @return The {@link RelPath} instances the {@code sourcePath} refers to, relative to its owning
-   *     {@link ProjectFilesystem}.
-   */
   @Override
-  public ImmutableSortedSet<RelPath> getRelativePath(SourcePath sourcePath) {
+  public ImmutableSortedSet<RelPath> getCellUnsafeRelPath(SourcePath sourcePath) {
     ImmutableSortedSet<Path> toReturns = getPathPrivateImpl(sourcePath);
 
     return toReturns.stream()
@@ -148,8 +144,8 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
    * @return The {@link Path} instances the {@code sourcePath} refers to, ideally relative to its
    *     owning {@link ProjectFilesystem}. Absolute path may get returned however!
    *     <p>We should make sure that {@link #getPathPrivateImpl} always returns a relative path
-   *     after which we should simply call {@link #getRelativePath}. Until then we still need this
-   *     nonsense.
+   *     after which we should simply call {@link #getCellUnsafeRelPath}. Until then we still need
+   *     this nonsense.
    */
   @Override
   public ImmutableSortedSet<Path> getIdeallyRelativePath(SourcePath sourcePath) {
@@ -244,7 +240,7 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
   }
 
   @Override
-  public ImmutableSortedSet<RelPath> getRelativePath(
+  public ImmutableSortedSet<RelPath> getCellUnsafeRelPath(
       ProjectFilesystem projectFilesystem, SourcePath sourcePath) {
     return getAbsolutePath(sourcePath).stream()
         .map(path -> projectFilesystem.relativize(path))

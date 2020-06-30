@@ -93,7 +93,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    RelPath output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+    RelPath output = context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput());
     buildableContext.recordArtifact(output.getPath());
     buildableContext.recordArtifact(getMappingPath().getPath());
     buildableContext.recordArtifact(getTargetsPath().getPath());
@@ -223,7 +223,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
       return ImmutableList.<String>builder()
           .addAll(Splitter.on(' ').split(executableCommand))
           .add(getMappingPath().toString())
-          .add(pathResolver.getRelativePath(getSourcePathToOutput()).toString())
+          .add(pathResolver.getCellUnsafeRelPath(getSourcePathToOutput()).toString())
           .build();
     }
 

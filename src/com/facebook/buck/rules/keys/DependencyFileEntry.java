@@ -50,10 +50,10 @@ public abstract class DependencyFileEntry {
    */
   public static RelPath getPathToFile(SourcePathResolverAdapter resolver, SourcePath sourcePath) {
     if (sourcePath instanceof ArchiveMemberSourcePath) {
-      return resolver.getRelativePath(
+      return resolver.getCellUnsafeRelPath(
           ((ArchiveMemberSourcePath) sourcePath).getArchiveSourcePath());
     }
-    return resolver.getRelativePath(sourcePath);
+    return resolver.getCellUnsafeRelPath(sourcePath);
   }
 
   public static DependencyFileEntry fromSourcePath(

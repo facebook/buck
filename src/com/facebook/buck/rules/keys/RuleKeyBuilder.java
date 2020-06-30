@@ -165,7 +165,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
   final RuleKeyBuilder<RULE_KEY> setSourcePathDirectly(SourcePath sourcePath) throws IOException {
     SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
     if (sourcePath instanceof BuildTargetSourcePath) {
-      RelPath relativePath = resolver.getRelativePath(sourcePath);
+      RelPath relativePath = resolver.getCellUnsafeRelPath(sourcePath);
       Optional<HashCode> precomputedHash =
           ((BuildTargetSourcePath) sourcePath).getPrecomputedHash();
       if (precomputedHash.isPresent()) {
@@ -212,7 +212,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
     RelPath relativeArchivePath =
         ruleFinder
             .getSourcePathResolver()
-            .getRelativePath(archiveSourcePath.getArchiveSourcePath());
+            .getCellUnsafeRelPath(archiveSourcePath.getArchiveSourcePath());
     hasher.putArchiveMemberPath(
         relativeArchivePath.getPath(),
         archiveSourcePath.getMemberPath(),
@@ -252,13 +252,13 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
   final RuleKeyBuilder<RULE_KEY> setNonHashingSourcePathDirectly(SourcePath sourcePath) {
     SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
     if (sourcePath instanceof BuildTargetSourcePath) {
-      hasher.putNonHashingPath(resolver.getRelativePath(sourcePath).getPath());
+      hasher.putNonHashingPath(resolver.getCellUnsafeRelPath(sourcePath).getPath());
     } else if (sourcePath instanceof PathSourcePath) {
-      hasher.putNonHashingPath(resolver.getRelativePath(sourcePath).getPath());
+      hasher.putNonHashingPath(resolver.getCellUnsafeRelPath(sourcePath).getPath());
     } else if (sourcePath instanceof ArchiveMemberSourcePath) {
       ArchiveMemberSourcePath archiveSourcePath = (ArchiveMemberSourcePath) sourcePath;
       RelPath relativeArchivePath =
-          resolver.getRelativePath(archiveSourcePath.getArchiveSourcePath());
+          resolver.getCellUnsafeRelPath(archiveSourcePath.getArchiveSourcePath());
       hasher.putArchiveMemberPath(
           relativeArchivePath.getPath(), archiveSourcePath.getMemberPath(), HashCode.fromInt(0));
     } else {

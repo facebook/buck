@@ -250,7 +250,7 @@ public class PythonSymlinkTreeTest {
                     sourcePath ->
                         ruleResolver
                             .getSourcePathResolver()
-                            .getRelativePath(sourcePath)
+                            .getCellUnsafeRelPath(sourcePath)
                             .getPath())));
   }
 

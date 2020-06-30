@@ -797,7 +797,7 @@ public class CxxLibraryDescriptionTest {
             containsString(
                 graphBuilder
                     .getSourcePathResolver()
-                    .getRelativePath(Objects.requireNonNull(loc.getSourcePathToOutput()))
+                    .getCellUnsafeRelPath(Objects.requireNonNull(loc.getSourcePathToOutput()))
                     .toString())));
   }
 
@@ -877,7 +877,7 @@ public class CxxLibraryDescriptionTest {
                 containsString(
                     graphBuilder
                         .getSourcePathResolver()
-                        .getRelativePath(Objects.requireNonNull(loc.getSourcePathToOutput()))
+                        .getCellUnsafeRelPath(Objects.requireNonNull(loc.getSourcePathToOutput()))
                         .toString()))));
   }
 
@@ -917,7 +917,7 @@ public class CxxLibraryDescriptionTest {
             containsString(
                 graphBuilder
                     .getSourcePathResolver()
-                    .getRelativePath(Objects.requireNonNull(loc.getSourcePathToOutput()))
+                    .getCellUnsafeRelPath(Objects.requireNonNull(loc.getSourcePathToOutput()))
                     .toString())));
   }
 
@@ -962,7 +962,7 @@ public class CxxLibraryDescriptionTest {
             containsString(
                 graphBuilder
                     .getSourcePathResolver()
-                    .getRelativePath(Objects.requireNonNull(loc.getSourcePathToOutput()))
+                    .getCellUnsafeRelPath(Objects.requireNonNull(loc.getSourcePathToOutput()))
                     .toString())));
   }
 
@@ -1010,7 +1010,7 @@ public class CxxLibraryDescriptionTest {
                 containsString(
                     graphBuilder
                         .getSourcePathResolver()
-                        .getRelativePath(Objects.requireNonNull(loc.getSourcePathToOutput()))
+                        .getCellUnsafeRelPath(Objects.requireNonNull(loc.getSourcePathToOutput()))
                         .toString()))));
   }
 

@@ -201,7 +201,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
   }
 
   private Path getSuffixedOutput(SourcePathResolverAdapter pathResolver, String suffix) {
-    return Paths.get(pathResolver.getRelativePath(getSourcePathToOutput()) + suffix);
+    return Paths.get(pathResolver.getCellUnsafeRelPath(getSourcePathToOutput()) + suffix);
   }
 
   public CxxIncludePaths getCxxIncludePaths() {
@@ -289,7 +289,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
     SourcePathResolverAdapter resolver = context.getSourcePathResolver();
     Path pchOutput =
         canPrecompile()
-            ? resolver.getRelativePath(getSourcePathToOutput()).getPath()
+            ? resolver.getCellUnsafeRelPath(getSourcePathToOutput()).getPath()
             : Platform.detect().getNullDevicePath();
 
     return new CxxPreprocessAndCompileStep(

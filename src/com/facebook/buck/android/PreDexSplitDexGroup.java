@@ -223,7 +223,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
 
     result.primaryDexInputs.forEach(
         (key, value) -> {
-          Path input = sourcePathResolverAdapter.getRelativePath(filesystem, value).getPath();
+          Path input = sourcePathResolverAdapter.getCellUnsafeRelPath(filesystem, value).getPath();
           steps.add(CopyStep.forFile(filesystem, input, primaryDexDir.resolve(key)));
         });
 
@@ -263,7 +263,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
                         aggregatedOutputToInputs.build(),
                         path ->
                             sourcePathResolverAdapter
-                                .getRelativePath(filesystem, path)
+                                .getCellUnsafeRelPath(filesystem, path)
                                 .getPath()))),
             () -> dexInputHashes,
             outputHashDir,
@@ -366,7 +366,9 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     for (Map.Entry<SourcePath, Sha1HashCode> entry : dexInputHashes.entrySet()) {
       dexInputHashesBuilder.put(
-          sourcePathResolverAdapter.getRelativePath(projectFilesystem, entry.getKey()).getPath(),
+          sourcePathResolverAdapter
+              .getCellUnsafeRelPath(projectFilesystem, entry.getKey())
+              .getPath(),
           entry.getValue());
     }
     return dexInputHashesBuilder.build();

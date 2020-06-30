@@ -53,8 +53,8 @@ public class SourcePathResolverAdapter {
    * Returns the {@link RelPath} associated with the given {@link SourcePath} relative to its owning
    * {@link ProjectFilesystem}.
    */
-  public RelPath getRelativePath(SourcePath sourcePath) {
-    return Iterables.getOnlyElement(resolver.getRelativePath(sourcePath));
+  public RelPath getCellUnsafeRelPath(SourcePath sourcePath) {
+    return Iterables.getOnlyElement(resolver.getCellUnsafeRelPath(sourcePath));
   }
 
   /**
@@ -69,8 +69,8 @@ public class SourcePathResolverAdapter {
    * Returns the {@link RelPath} associated with the given {@link SourcePath} relative to the given
    * {@link ProjectFilesystem}.
    */
-  public RelPath getRelativePath(ProjectFilesystem projectFilesystem, SourcePath sourcePath) {
-    return Iterables.getOnlyElement(resolver.getRelativePath(projectFilesystem, sourcePath));
+  public RelPath getCellUnsafeRelPath(ProjectFilesystem projectFilesystem, SourcePath sourcePath) {
+    return Iterables.getOnlyElement(resolver.getCellUnsafeRelPath(projectFilesystem, sourcePath));
   }
 
   /**

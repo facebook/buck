@@ -91,7 +91,7 @@ public class ManifestTest {
         ManifestUtil.toMap(manifest),
         Matchers.equalTo(
             ImmutableMap.of(
-                key, ImmutableMap.of(RESOLVER.getRelativePath(input).toString(), hashCode))));
+                key, ImmutableMap.of(RESOLVER.getCellUnsafeRelPath(input).toString(), hashCode))));
   }
 
   @Test
@@ -117,7 +117,7 @@ public class ManifestTest {
                 key,
                 ImmutableMap.of(
                     ArchiveMemberPath.of(
-                            RESOLVER.getRelativePath(input.getArchiveSourcePath()).getPath(),
+                            RESOLVER.getCellUnsafeRelPath(input.getArchiveSourcePath()).getPath(),
                             input.getMemberPath())
                         .toString(),
                     hashCode))));
@@ -154,7 +154,7 @@ public class ManifestTest {
             ImmutableMap.of(
                 key,
                 ImmutableMap.of(
-                    RESOLVER.getRelativePath(input1).toString(),
+                    RESOLVER.getCellUnsafeRelPath(input1).toString(),
                     Manifest.hashSourcePathGroup(
                         fileHashLoader, RESOLVER, ImmutableList.of(input1, input2))))));
 
@@ -167,7 +167,7 @@ public class ManifestTest {
             ImmutableMap.of(
                 key,
                 ImmutableMap.of(
-                    RESOLVER.getRelativePath(input2).toString(),
+                    RESOLVER.getCellUnsafeRelPath(input2).toString(),
                     Manifest.hashSourcePathGroup(
                         fileHashLoader, RESOLVER, ImmutableList.of(input1, input2))))));
   }
@@ -181,7 +181,7 @@ public class ManifestTest {
         ManifestUtil.fromMap(
             new RuleKey("cc"),
             ImmutableMap.of(
-                key, ImmutableMap.of(RESOLVER.getRelativePath(input).toString(), hashCode)));
+                key, ImmutableMap.of(RESOLVER.getCellUnsafeRelPath(input).toString(), hashCode)));
     FileHashLoader fileHashLoader =
         new FakeFileHashCache(ImmutableMap.of(RESOLVER.getAbsolutePath(input).getPath(), hashCode));
     assertThat(
@@ -217,7 +217,7 @@ public class ManifestTest {
             ImmutableMap.of(
                 key,
                 ImmutableMap.of(
-                    RESOLVER.getRelativePath(input1).toString(),
+                    RESOLVER.getCellUnsafeRelPath(input1).toString(),
                     Manifest.hashSourcePathGroup(
                         fileHashLoader, RESOLVER, ImmutableList.of(input1, input2)))));
     assertThat(
@@ -230,7 +230,7 @@ public class ManifestTest {
             ImmutableMap.of(
                 key,
                 ImmutableMap.of(
-                    RESOLVER.getRelativePath(input2).toString(),
+                    RESOLVER.getCellUnsafeRelPath(input2).toString(),
                     Manifest.hashSourcePathGroup(
                         fileHashLoader, RESOLVER, ImmutableList.of(input1, input2)))));
     assertThat(
@@ -247,7 +247,8 @@ public class ManifestTest {
             new RuleKey("cc"),
             ImmutableMap.of(
                 key,
-                ImmutableMap.of(RESOLVER.getRelativePath(input).toString(), HashCode.fromInt(1))));
+                ImmutableMap.of(
+                    RESOLVER.getCellUnsafeRelPath(input).toString(), HashCode.fromInt(1))));
     FileHashLoader fileHashLoader =
         new FakeFileHashCache(
             ImmutableMap.of(RESOLVER.getAbsolutePath(input).getPath(), HashCode.fromInt(2)));
@@ -265,7 +266,8 @@ public class ManifestTest {
             new RuleKey("cc"),
             ImmutableMap.of(
                 key,
-                ImmutableMap.of(RESOLVER.getRelativePath(input).toString(), HashCode.fromInt(1))));
+                ImmutableMap.of(
+                    RESOLVER.getCellUnsafeRelPath(input).toString(), HashCode.fromInt(1))));
     FileHashLoader fileHashLoader = new FakeFileHashCache(ImmutableMap.of());
     assertThat(
         manifest.lookup(fileHashLoader, RESOLVER, ImmutableSet.of(input)),
@@ -282,9 +284,11 @@ public class ManifestTest {
             new RuleKey("cc"),
             ImmutableMap.of(
                 key1,
-                ImmutableMap.of(RESOLVER.getRelativePath(input).toString(), HashCode.fromInt(1)),
+                ImmutableMap.of(
+                    RESOLVER.getCellUnsafeRelPath(input).toString(), HashCode.fromInt(1)),
                 key2,
-                ImmutableMap.of(RESOLVER.getRelativePath(input).toString(), HashCode.fromInt(2))));
+                ImmutableMap.of(
+                    RESOLVER.getCellUnsafeRelPath(input).toString(), HashCode.fromInt(2))));
     FileHashLoader fileHashLoader =
         new FakeFileHashCache(
             ImmutableMap.of(RESOLVER.getAbsolutePath(input).getPath(), HashCode.fromInt(2)));

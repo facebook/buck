@@ -106,7 +106,8 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
                       Iterables.transform(
                           compilerPlugins,
                           input ->
-                              "-Xplugin:" + context.getSourcePathResolver().getRelativePath(input)))
+                              "-Xplugin:"
+                                  + context.getSourcePathResolver().getCellUnsafeRelPath(input)))
                   .build(),
               context.getSourcePathResolver(),
               outputDirectory.getPath(),

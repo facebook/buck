@@ -68,7 +68,9 @@ public class ClasspathMacroExpanderTest {
         graphBuilder,
         filesystem.getRootPath()
             + File.separator
-            + graphBuilder.getSourcePathResolver().getRelativePath(rule.getSourcePathToOutput()));
+            + graphBuilder
+                .getSourcePathResolver()
+                .getCellUnsafeRelPath(rule.getSourcePathToOutput()));
   }
 
   @Test
@@ -96,9 +98,9 @@ public class ClasspathMacroExpanderTest {
         String.format(
             "%s" + File.separator + "%s" + File.pathSeparatorChar + "%s" + File.separator + "%s",
             filesystem.getRootPath(),
-            pathResolver.getRelativePath(dep.getSourcePathToOutput()),
+            pathResolver.getCellUnsafeRelPath(dep.getSourcePathToOutput()),
             filesystem.getRootPath(),
-            pathResolver.getRelativePath(rule.getSourcePathToOutput())));
+            pathResolver.getCellUnsafeRelPath(rule.getSourcePathToOutput())));
   }
 
   public JavaLibraryBuilder getLibraryBuilder(String target) {

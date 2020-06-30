@@ -40,7 +40,7 @@ public class ExplicitBuildTargetSourcePathTest {
         com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath.of(
             rule.getBuildTarget(), path);
     assertEquals(target, buildTargetSourcePath.getTarget());
-    assertEquals(path, pathResolver.getRelativePath(buildTargetSourcePath));
+    assertEquals(path, pathResolver.getCellUnsafeRelPath(buildTargetSourcePath));
   }
 
   @Test

@@ -767,7 +767,7 @@ public class TestRunning {
       if (classesItem == null || !filesystem.isDirectory(classesItem)) {
         SourcePath path = rule.getSourcePathToOutput();
         if (path != null) {
-          classesItem = sourcePathResolver.getRelativePath(path);
+          classesItem = sourcePathResolver.getCellUnsafeRelPath(path);
         }
       }
       if (classesItem == null) {
@@ -811,7 +811,8 @@ public class TestRunning {
         continue;
       }
 
-      RelPath javaSrcRelativePath = ruleFinder.getSourcePathResolver().getRelativePath(javaSrcPath);
+      RelPath javaSrcRelativePath =
+          ruleFinder.getSourcePathResolver().getCellUnsafeRelPath(javaSrcPath);
 
       // If the source path is already under a known source folder, then we can skip this
       // source path.

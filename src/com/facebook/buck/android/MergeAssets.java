@@ -121,7 +121,7 @@ public class MergeAssets extends AbstractBuildRule {
           @Override
           public StepExecutionResult execute(StepExecutionContext context) throws IOException {
             for (SourcePath sourcePath : assetsDirectories) {
-              RelPath relativePath = pathResolver.getRelativePath(sourcePath);
+              RelPath relativePath = pathResolver.getCellUnsafeRelPath(sourcePath);
               AbsPath absolutePath = pathResolver.getAbsolutePath(sourcePath);
               ProjectFilesystem assetFilesystem = pathResolver.getFilesystem(sourcePath);
               assetFilesystem.walkFileTree(

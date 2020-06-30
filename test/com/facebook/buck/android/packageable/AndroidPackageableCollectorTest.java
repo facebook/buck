@@ -454,7 +454,7 @@ public class AndroidPackageableCollectorTest {
                     androidBinary.getProjectFilesystem(), androidLibraryTarget, "lib__%s__output")
                 .resolveRel(androidLibraryTarget.getShortNameAndFlavorPostfix() + ".jar")),
         packageableCollection.getClasspathEntriesToDex().stream()
-            .map(graphBuilder.getSourcePathResolver()::getRelativePath)
+            .map(graphBuilder.getSourcePathResolver()::getCellUnsafeRelPath)
             .collect(ImmutableSet.toImmutableSet()));
   }
 
@@ -465,7 +465,11 @@ public class AndroidPackageableCollectorTest {
       ImmutableSet<SourcePath> actual) {
     assertEquals(
         message,
-        expected.stream().map(pathResolver::getRelativePath).collect(ImmutableSet.toImmutableSet()),
-        actual.stream().map(pathResolver::getRelativePath).collect(ImmutableSet.toImmutableSet()));
+        expected.stream()
+            .map(pathResolver::getCellUnsafeRelPath)
+            .collect(ImmutableSet.toImmutableSet()),
+        actual.stream()
+            .map(pathResolver::getCellUnsafeRelPath)
+            .collect(ImmutableSet.toImmutableSet()));
   }
 }

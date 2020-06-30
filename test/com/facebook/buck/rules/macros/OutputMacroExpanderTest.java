@@ -78,7 +78,7 @@ public class OutputMacroExpanderTest {
     RelPath absolutePath =
         graphBuilder
             .getSourcePathResolver()
-            .getRelativePath(rule.getSourcePathToSupplementaryOutput("one"));
+            .getCellUnsafeRelPath(rule.getSourcePathToSupplementaryOutput("one"));
     String expectedCmd = absolutePath.toString();
 
     assertEquals(expectedCmd, transformedString);

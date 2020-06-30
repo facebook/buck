@@ -99,7 +99,7 @@ public class HaskellLibraryDescriptionTest {
                 Objects.requireNonNull(staticLib.getSourcePathToOutput()),
                 Objects.requireNonNull(sharedLib.getSourcePathToOutput()))
             .stream()
-            .map(graphBuilder.getSourcePathResolver()::getRelativePath)
+            .map(graphBuilder.getSourcePathResolver()::getCellUnsafeRelPath)
             .collect(ImmutableList.toImmutableList());
     assertThat(outputs.size(), Matchers.equalTo(ImmutableSet.copyOf(outputs).size()));
 

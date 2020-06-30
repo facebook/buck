@@ -65,7 +65,7 @@ public class DexWithClassesTest {
         BuildTargetPaths.getGenPath(javaLibrary.getProjectFilesystem(), buildTarget, "%s/dex.jar"),
         ruleFinder
             .getSourcePathResolver()
-            .getRelativePath(dexWithClasses.getSourcePathToDexFile()));
+            .getCellUnsafeRelPath(dexWithClasses.getSourcePathToDexFile()));
     assertEquals(ImmutableSet.of("com/example/Main"), dexWithClasses.getClassNames());
     assertEquals(1600, dexWithClasses.getWeightEstimate());
   }

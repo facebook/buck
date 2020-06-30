@@ -143,7 +143,7 @@ public class SymlinkTree extends AbstractBuildRule
     List<SourcePath> conflicts = new ArrayList<>();
 
     for (SourcePath sourcePath : sourcePaths) {
-      RelPath relativePath = resolver.getRelativePath(sourcePath);
+      RelPath relativePath = resolver.getCellUnsafeRelPath(sourcePath);
       if (!assignedPaths.contains(relativePath.getPath())) {
         builder.put(sourcePath, relativePath.getPath());
         assignedPaths.add(relativePath.getPath());
@@ -153,7 +153,7 @@ public class SymlinkTree extends AbstractBuildRule
     }
 
     for (SourcePath conflict : conflicts) {
-      RelPath relativePath = resolver.getRelativePath(conflict);
+      RelPath relativePath = resolver.getCellUnsafeRelPath(conflict);
       RelPath parent = MorePaths.getParentOrEmpty(relativePath);
       String extension = MorePaths.getFileExtension(relativePath);
       String name = MorePaths.getNameWithoutExtension(relativePath);

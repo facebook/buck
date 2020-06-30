@@ -443,7 +443,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary library =
         (PrebuiltCxxLibrary) libraryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
-        pathResolver.getRelativePath(library.getStaticLibrary(platform1, graphBuilder).get()),
+        pathResolver.getCellUnsafeRelPath(library.getStaticLibrary(platform1, graphBuilder).get()),
         Matchers.equalTo(
             TARGET
                 .getCellRelativeBasePath()
@@ -451,7 +451,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
                 .toRelPathDefaultFilesystem()
                 .resolveRel("libs/PLATFORM1/libtest-PLATFORM1.a")));
     assertThat(
-        pathResolver.getRelativePath(library.getStaticLibrary(platform2, graphBuilder).get()),
+        pathResolver.getCellUnsafeRelPath(library.getStaticLibrary(platform2, graphBuilder).get()),
         Matchers.equalTo(
             TARGET
                 .getCellRelativeBasePath()

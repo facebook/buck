@@ -184,7 +184,7 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
               virtualPath.orElseGet(
                   () ->
                       PathFormatter.pathWithUnixSeparators(
-                          sourcePathResolverAdapter.getRelativePath(src))))
+                          sourcePathResolverAdapter.getCellUnsafeRelPath(src))))
           .addString("transformProfile", transformProfile);
     }
 

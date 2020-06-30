@@ -127,7 +127,7 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclare
         for (SourcePath path : nativeLibsDirs) {
           ProjectFilesystem pathFilesystem = pathResolver.getFilesystem(path);
           pathFilesystem.walkRelativeFileTree(
-              pathResolver.getRelativePath(path).getPath(),
+              pathResolver.getCellUnsafeRelPath(path).getPath(),
               new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
@@ -154,7 +154,7 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclare
 
       return ImmutableList.<String>builder()
           .addAll(Splitter.on(' ').split(executableCommand))
-          .add(pathResolver.getRelativePath(getSourcePathToOutput()).toString())
+          .add(pathResolver.getCellUnsafeRelPath(getSourcePathToOutput()).toString())
           .addAll(libPaths.build().stream().map(Path::toString)::iterator)
           .build();
     }

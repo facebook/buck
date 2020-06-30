@@ -136,7 +136,10 @@ public class PrebuiltJarDescription
       public ImmutableList<Step> getBuildSteps(
           BuildContext context, BuildableContext buildableContext) {
         buildableContext.recordArtifact(
-            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getPath());
+            context
+                .getSourcePathResolver()
+                .getCellUnsafeRelPath(getSourcePathToOutput())
+                .getPath());
 
         ImmutableList.Builder<Step> steps = ImmutableList.builder();
 

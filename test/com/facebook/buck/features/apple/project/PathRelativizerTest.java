@@ -36,7 +36,7 @@ public class PathRelativizerTest {
             sourcePath ->
                 new TestActionGraphBuilder()
                     .getSourcePathResolver()
-                    .getRelativePath(sourcePath)
+                    .getCellUnsafeRelPath(sourcePath)
                     .getPath());
   }
 

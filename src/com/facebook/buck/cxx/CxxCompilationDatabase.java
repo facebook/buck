@@ -104,7 +104,8 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
                 outputJsonFile.getParent())));
     steps.add(
         new GenerateCompilationCommandsJson(
-            context, context.getSourcePathResolver().getRelativePath(getSourcePathToOutput())));
+            context,
+            context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput())));
     return steps.build();
   }
 

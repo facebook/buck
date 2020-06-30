@@ -62,18 +62,20 @@ public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
     SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
 
     buildableContext.recordArtifact(
-        sourcePathResolverAdapter.getRelativePath(getSourcePathToOutput()).getPath());
+        sourcePathResolverAdapter.getCellUnsafeRelPath(getSourcePathToOutput()).getPath());
     buildableContext.recordArtifact(
-        sourcePathResolverAdapter.getRelativePath(getSourcePathToSourceMap()).getPath());
+        sourcePathResolverAdapter.getCellUnsafeRelPath(getSourcePathToSourceMap()).getPath());
     buildableContext.recordArtifact(
-        sourcePathResolverAdapter.getRelativePath(getSourcePathToResources()).getPath());
+        sourcePathResolverAdapter.getCellUnsafeRelPath(getSourcePathToResources()).getPath());
     buildableContext.recordArtifact(
-        sourcePathResolverAdapter.getRelativePath(getSourcePathToMisc()).getPath());
+        sourcePathResolverAdapter.getCellUnsafeRelPath(getSourcePathToMisc()).getPath());
 
-    RelPath jsDir = sourcePathResolverAdapter.getRelativePath(getSourcePathToOutput());
-    RelPath resourcesDir = sourcePathResolverAdapter.getRelativePath(getSourcePathToResources());
-    RelPath sourceMapFile = sourcePathResolverAdapter.getRelativePath(getSourcePathToSourceMap());
-    RelPath miscDirPath = sourcePathResolverAdapter.getRelativePath(getSourcePathToMisc());
+    RelPath jsDir = sourcePathResolverAdapter.getCellUnsafeRelPath(getSourcePathToOutput());
+    RelPath resourcesDir =
+        sourcePathResolverAdapter.getCellUnsafeRelPath(getSourcePathToResources());
+    RelPath sourceMapFile =
+        sourcePathResolverAdapter.getCellUnsafeRelPath(getSourcePathToSourceMap());
+    RelPath miscDirPath = sourcePathResolverAdapter.getCellUnsafeRelPath(getSourcePathToMisc());
 
     return ImmutableList.<Step>builder()
         .addAll(
@@ -81,7 +83,7 @@ public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
-                    sourcePathResolverAdapter.getRelativePath(
+                    sourcePathResolverAdapter.getCellUnsafeRelPath(
                         JsUtil.relativeToOutputRoot(
                             getBuildTarget(), getProjectFilesystem(), "")))))
         .add(

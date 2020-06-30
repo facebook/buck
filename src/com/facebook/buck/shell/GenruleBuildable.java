@@ -521,7 +521,7 @@ public class GenruleBuildable implements Buildable {
         .reverse()
         .forEach(
             src -> {
-              RelPath relativePath = pathResolver.getRelativePath(src);
+              RelPath relativePath = pathResolver.getCellUnsafeRelPath(src);
               AbsPath absolutePath = pathResolver.getAbsolutePath(src);
               AbsPath canonicalPath = absolutePath.normalize();
 

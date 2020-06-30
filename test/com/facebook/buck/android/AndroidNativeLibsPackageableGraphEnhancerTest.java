@@ -113,7 +113,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         copyNativeLibraries.getNativeLibDirectories().stream()
             .map(
                 sourcePath ->
-                    graphBuilder.getSourcePathResolver().getRelativePath(sourcePath).getPath())
+                    graphBuilder.getSourcePathResolver().getCellUnsafeRelPath(sourcePath).getPath())
             .collect(ImmutableList.toImmutableList()),
         Matchers.contains(ndkLibrary.getLibraryPath()));
   }

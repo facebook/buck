@@ -41,7 +41,7 @@ public class PathSourcePathTest {
     PathSourcePath path = FakeSourcePath.of(projectFilesystem, "cheese");
 
     SourcePathResolverAdapter resolver = new TestActionGraphBuilder().getSourcePathResolver();
-    RelPath resolved = resolver.getRelativePath(path);
+    RelPath resolved = resolver.getCellUnsafeRelPath(path);
 
     assertEquals(RelPath.get("cheese"), resolved);
   }

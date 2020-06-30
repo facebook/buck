@@ -65,7 +65,7 @@ public class AndroidAppModularity extends AbstractBuildRule {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     RelPath metadataFile =
-        buildContext.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+        buildContext.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput());
 
     steps.add(
         MkdirStep.of(

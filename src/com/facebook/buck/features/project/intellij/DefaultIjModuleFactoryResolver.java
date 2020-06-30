@@ -145,12 +145,14 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
     if (arg.getRes().get().isLeft()) {
       // Left is a simple source path
       return Optional.of(
-          sourcePathResolver.getRelativePath(filesystem, arg.getRes().get().getLeft()).getPath());
+          sourcePathResolver
+              .getCellUnsafeRelPath(filesystem, arg.getRes().get().getLeft())
+              .getPath());
     } else {
       // Right is a mapped set of paths, so we need the symlink tree
       return Optional.of(
           sourcePathResolver
-              .getRelativePath(
+              .getCellUnsafeRelPath(
                   filesystem,
                   DefaultBuildTargetSourcePath.of(
                       targetNode
@@ -173,12 +175,12 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
     if (arg.getAssets().get().isLeft()) {
       // Left is a simple source path
       return Optional.of(
-          sourcePathResolver.getRelativePath(arg.getAssets().get().getLeft()).getPath());
+          sourcePathResolver.getCellUnsafeRelPath(arg.getAssets().get().getLeft()).getPath());
     } else {
       // Right is a mapped set of paths, so we need the symlink tree
       return Optional.of(
           sourcePathResolver
-              .getRelativePath(
+              .getCellUnsafeRelPath(
                   targetNode.getFilesystem(),
                   DefaultBuildTargetSourcePath.of(
                       targetNode
@@ -247,6 +249,6 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
             ((IjProjectSourcePathResolver) resolver)
                 .getBuildTarget(sourcePath)
                 .ifPresent(requiredTargets::add));
-    return sourcePathResolver.getRelativePath(sourcePath);
+    return sourcePathResolver.getCellUnsafeRelPath(sourcePath);
   }
 }

@@ -221,7 +221,7 @@ public class PythonBinaryDescriptionTest {
     assertThat(
         graphBuilder
             .getSourcePathResolver()
-            .getRelativePath(Objects.requireNonNull(binary.getSourcePathToOutput()))
+            .getCellUnsafeRelPath(Objects.requireNonNull(binary.getSourcePathToOutput()))
             .toString(),
         Matchers.endsWith(".different_extension"));
   }
@@ -236,7 +236,7 @@ public class PythonBinaryDescriptionTest {
     assertThat(
         graphBuilder
             .getSourcePathResolver()
-            .getRelativePath(Objects.requireNonNull(binary.getSourcePathToOutput()))
+            .getCellUnsafeRelPath(Objects.requireNonNull(binary.getSourcePathToOutput()))
             .toString(),
         Matchers.endsWith(".different_extension"));
   }

@@ -81,7 +81,7 @@ public class XcodeNativeTargetProjectWriterTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance();
     projectExcludeResolver = new ProjectExcludeResolver(targetGraph, ImmutableList.of());
     pathRelativizer =
-        new PathRelativizer(Paths.get("_output"), sourcePathResolverAdapter::getRelativePath);
+        new PathRelativizer(Paths.get("_output"), sourcePathResolverAdapter::getCellUnsafeRelPath);
     newCellPathResolver =
         CellMappingsFactory.create(
             projectFilesystem.getRootPath(),
@@ -106,7 +106,7 @@ public class XcodeNativeTargetProjectWriterTest {
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
-            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath(),
+            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath(),
             projectExcludeResolver,
             true,
             newCellPathResolver,
@@ -132,7 +132,7 @@ public class XcodeNativeTargetProjectWriterTest {
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
-            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath(),
+            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath(),
             projectExcludeResolver,
             false,
             newCellPathResolver,
@@ -170,7 +170,7 @@ public class XcodeNativeTargetProjectWriterTest {
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
-            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath(),
+            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath(),
             projectExcludeResolver,
             false,
             newCellPathResolver,
@@ -204,7 +204,7 @@ public class XcodeNativeTargetProjectWriterTest {
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
-            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath(),
+            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath(),
             projectExcludeResolver,
             false,
             newCellPathResolver,
@@ -225,7 +225,7 @@ public class XcodeNativeTargetProjectWriterTest {
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
-            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath(),
+            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath(),
             projectExcludeResolver,
             false,
             newCellPathResolver,
@@ -258,7 +258,7 @@ public class XcodeNativeTargetProjectWriterTest {
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
-            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath(),
+            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath(),
             projectExcludeResolver,
             false,
             newCellPathResolver,
@@ -287,7 +287,7 @@ public class XcodeNativeTargetProjectWriterTest {
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
-            sourcePath -> sourcePathResolverAdapter.getRelativePath(sourcePath).getPath(),
+            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath(),
             projectExcludeResolver,
             false,
             newCellPathResolver,

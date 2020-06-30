@@ -91,9 +91,9 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    RelPath output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+    RelPath output = context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput());
     Optional<RelPath> input =
-        pathToRDotJavaDir.map(context.getSourcePathResolver()::getRelativePath);
+        pathToRDotJavaDir.map(context.getSourcePathResolver()::getCellUnsafeRelPath);
     buildableContext.recordArtifact(output.getPath());
     return new ImmutableList.Builder<Step>()
         .addAll(

@@ -535,7 +535,8 @@ public class CachingBuildEngineTest {
           new AbstractExecutionStep("Some Short Name") {
             @Override
             public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-              RelPath outputPath = pathResolver.getRelativePath(ruleToTest.getSourcePathToOutput());
+              RelPath outputPath =
+                  pathResolver.getCellUnsafeRelPath(ruleToTest.getSourcePathToOutput());
               filesystem.mkdirs(outputPath.getParent());
               filesystem.touch(outputPath.getPath());
               return StepExecutionResults.SUCCESS;
@@ -2162,7 +2163,7 @@ public class CachingBuildEngineTest {
       // threshold.
       Path metadataDirectory = BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem);
       filesystem.mkdirs(metadataDirectory);
-      RelPath outputPath = pathResolver.getRelativePath(rule.getSourcePathToOutput());
+      RelPath outputPath = pathResolver.getCellUnsafeRelPath(rule.getSourcePathToOutput());
       filesystem.writeContentsToPath(
           ObjectMappers.WRITER.writeValueAsString(
               ImmutableList.of(BuildInfo.MetadataKey.RECORDED_PATHS, outputPath.toString())),
@@ -2233,13 +2234,14 @@ public class CachingBuildEngineTest {
 
       // Create the output file.
       filesystem.writeContentsToPath(
-          "stuff", pathResolver.getRelativePath(rule.getSourcePathToOutput()));
+          "stuff", pathResolver.getCellUnsafeRelPath(rule.getSourcePathToOutput()));
 
       // Prepopulate the recorded paths metadata.
       BuildInfoRecorder recorder = createBuildInfoRecorder(target);
       recorder.addMetadata(
           BuildInfo.MetadataKey.RECORDED_PATHS,
-          ImmutableList.of(pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString()));
+          ImmutableList.of(
+              pathResolver.getCellUnsafeRelPath(rule.getSourcePathToOutput()).toString()));
 
       // Prepopulate the input rule key on disk, so that we avoid a rebuild.
       recorder.addBuildMetadata(
@@ -2294,7 +2296,7 @@ public class CachingBuildEngineTest {
       // Prepopulate the recorded paths metadata.
       Path metadataDirectory = BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem);
       filesystem.mkdirs(metadataDirectory);
-      RelPath outputPath = pathResolver.getRelativePath(rule.getSourcePathToOutput());
+      RelPath outputPath = pathResolver.getCellUnsafeRelPath(rule.getSourcePathToOutput());
       filesystem.writeContentsToPath(
           ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(outputPath.toString())),
           metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
@@ -2380,7 +2382,7 @@ public class CachingBuildEngineTest {
         assertThat(
             fetchedArtifactEntries,
             Matchers.hasEntry(
-                pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString(),
+                pathResolver.getCellUnsafeRelPath(rule.getSourcePathToOutput()).toString(),
                 "stuff".getBytes(UTF_8)));
       }
     }
@@ -2635,7 +2637,7 @@ public class CachingBuildEngineTest {
 
       // Create the output file.
       filesystem.writeContentsToPath(
-          "stuff", pathResolver.getRelativePath(rule.getSourcePathToOutput()));
+          "stuff", pathResolver.getCellUnsafeRelPath(rule.getSourcePathToOutput()));
 
       // Prepopulate the recorded paths metadata.
       Path metadataDirectory = BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem);
@@ -2643,7 +2645,7 @@ public class CachingBuildEngineTest {
       filesystem.writeContentsToPath(
           ObjectMappers.WRITER.writeValueAsString(
               ImmutableList.of(
-                  pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString())),
+                  pathResolver.getCellUnsafeRelPath(rule.getSourcePathToOutput()).toString())),
           metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
       if (previousRuleKey.isPresent()) {
@@ -2730,7 +2732,8 @@ public class CachingBuildEngineTest {
               .setOut("input")
               .build(graphBuilder, filesystem);
       RelPath input =
-          pathResolver.getRelativePath(Objects.requireNonNull(genrule.getSourcePathToOutput()));
+          pathResolver.getCellUnsafeRelPath(
+              Objects.requireNonNull(genrule.getSourcePathToOutput()));
       filesystem.mkdirs(input.getParent());
       filesystem.writeContentsToPath("contents", input);
 
@@ -2906,7 +2909,8 @@ public class CachingBuildEngineTest {
               .setOut("input")
               .build(graphBuilder, filesystem);
       RelPath input =
-          pathResolver.getRelativePath(Objects.requireNonNull(genrule.getSourcePathToOutput()));
+          pathResolver.getCellUnsafeRelPath(
+              Objects.requireNonNull(genrule.getSourcePathToOutput()));
 
       // Create a simple rule which just writes a file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -3076,7 +3080,8 @@ public class CachingBuildEngineTest {
               .setOut("input")
               .build(graphBuilder, filesystem);
       RelPath input =
-          pathResolver.getRelativePath(Objects.requireNonNull(genrule.getSourcePathToOutput()));
+          pathResolver.getCellUnsafeRelPath(
+              Objects.requireNonNull(genrule.getSourcePathToOutput()));
 
       // Create a simple rule which just writes a file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -3165,7 +3170,8 @@ public class CachingBuildEngineTest {
               .setOut("input")
               .build(graphBuilder, filesystem);
       RelPath input =
-          pathResolver.getRelativePath(Objects.requireNonNull(genrule.getSourcePathToOutput()));
+          pathResolver.getCellUnsafeRelPath(
+              Objects.requireNonNull(genrule.getSourcePathToOutput()));
 
       // Create a simple rule which just writes a file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -3288,7 +3294,8 @@ public class CachingBuildEngineTest {
               .setOut("input")
               .build(graphBuilder, filesystem);
       RelPath input =
-          pathResolver.getRelativePath(Objects.requireNonNull(genrule.getSourcePathToOutput()));
+          pathResolver.getCellUnsafeRelPath(
+              Objects.requireNonNull(genrule.getSourcePathToOutput()));
       filesystem.mkdirs(input.getParent());
       filesystem.writeContentsToPath("contents", input);
 
@@ -3401,7 +3408,8 @@ public class CachingBuildEngineTest {
               .setOut("input")
               .build(graphBuilder, filesystem);
       RelPath input =
-          pathResolver.getRelativePath(Objects.requireNonNull(genrule.getSourcePathToOutput()));
+          pathResolver.getCellUnsafeRelPath(
+              Objects.requireNonNull(genrule.getSourcePathToOutput()));
       filesystem.mkdirs(input.getParent());
       filesystem.writeContentsToPath("contents", input);
 
@@ -3524,7 +3532,8 @@ public class CachingBuildEngineTest {
               .setOut("input")
               .build(graphBuilder, filesystem);
       RelPath input =
-          pathResolver.getRelativePath(Objects.requireNonNull(genrule.getSourcePathToOutput()));
+          pathResolver.getCellUnsafeRelPath(
+              Objects.requireNonNull(genrule.getSourcePathToOutput()));
       filesystem.mkdirs(input.getParent());
       filesystem.writeContentsToPath("contents", input);
 
@@ -3640,7 +3649,7 @@ public class CachingBuildEngineTest {
       BuildRuleParams params = TestBuildRuleParams.create();
       SourcePath input =
           PathSourcePath.of(filesystem, filesystem.getRootPath().getFileSystem().getPath("input"));
-      filesystem.touch(pathResolver.getRelativePath(input).getPath());
+      filesystem.touch(pathResolver.getCellUnsafeRelPath(input).getPath());
       RelPath output = BuildTargetPaths.getGenPath(filesystem, target, "%s/output");
       DepFileBuildRule rule =
           new DepFileBuildRule(target, filesystem, params) {
@@ -3743,7 +3752,7 @@ public class CachingBuildEngineTest {
                   BuildInfo.MetadataKey.DEP_FILE,
                   ObjectMappers.WRITER.writeValueAsString(
                       depFileKey.getInputs().stream()
-                          .map(pathResolver::getRelativePath)
+                          .map(pathResolver::getCellUnsafeRelPath)
                           .collect(ImmutableList.toImmutableList())))
               .build(),
           BorrowablePath.notBorrowablePath(artifact.getPath()));
@@ -3775,7 +3784,7 @@ public class CachingBuildEngineTest {
             equalTo(
                 ObjectMappers.WRITER.writeValueAsString(
                     depFileKey.getInputs().stream()
-                        .map(pathResolver::getRelativePath)
+                        .map(pathResolver::getCellUnsafeRelPath)
                         .collect(ImmutableList.toImmutableList()))));
         Files.delete(fetchedArtifact.get());
       }
@@ -3791,7 +3800,7 @@ public class CachingBuildEngineTest {
       BuildRuleParams params = TestBuildRuleParams.create();
       SourcePath input =
           PathSourcePath.of(filesystem, filesystem.getRootPath().getFileSystem().getPath("input"));
-      filesystem.touch(pathResolver.getRelativePath(input).getPath());
+      filesystem.touch(pathResolver.getCellUnsafeRelPath(input).getPath());
       Path output = Paths.get("output");
       DepFileBuildRule rule =
           new DepFileBuildRule(target, filesystem, params) {

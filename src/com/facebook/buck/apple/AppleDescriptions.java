@@ -330,10 +330,10 @@ public class AppleDescriptions {
             .putAll(
                 Stream.concat(
                         convertAppleHeadersToPublicCxxHeaders(
-                            buildTarget, resolver::getRelativePath, headerPathPrefix, arg)
+                            buildTarget, resolver::getCellUnsafeRelPath, headerPathPrefix, arg)
                             .entrySet().stream(),
                         convertAppleHeadersToPrivateCxxHeaders(
-                            buildTarget, resolver::getRelativePath, headerPathPrefix, arg)
+                            buildTarget, resolver::getCellUnsafeRelPath, headerPathPrefix, arg)
                             .entrySet().stream())
                     .distinct() // allow duplicate entries as long as they map to the same path
                     .collect(
@@ -413,11 +413,11 @@ public class AppleDescriptions {
     output.setHeaders(
         SourceSortedSet.ofNamedSources(
             convertAppleHeadersToPrivateCxxHeaders(
-                buildTarget, resolver::getRelativePath, headerPathPrefix, arg)));
+                buildTarget, resolver::getCellUnsafeRelPath, headerPathPrefix, arg)));
     output.setExportedHeaders(
         SourceSortedSet.ofNamedSources(
             convertAppleHeadersToPublicCxxHeaders(
-                buildTarget, resolver::getRelativePath, headerPathPrefix, arg)));
+                buildTarget, resolver::getCellUnsafeRelPath, headerPathPrefix, arg)));
     if (arg.isModular()) {
       output.addCompilerFlags(
           StringWithMacros.ofConstantString(

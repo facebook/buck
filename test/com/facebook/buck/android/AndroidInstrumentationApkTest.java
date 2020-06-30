@@ -146,7 +146,7 @@ public class AndroidInstrumentationApkTest {
             BuildTargetPaths.getGenPath(
                 javaLibrary3.getProjectFilesystem(), javaLibrary3.getBuildTarget(), "%s.jar")),
         androidBinary.getAndroidPackageableCollection().getClasspathEntriesToDex().stream()
-            .map(graphBuilder.getSourcePathResolver()::getRelativePath)
+            .map(graphBuilder.getSourcePathResolver()::getCellUnsafeRelPath)
             .collect(ImmutableSet.toImmutableSet()));
     assertEquals(
         "//apps:instrumentation should have one JAR file to dex.",
@@ -155,7 +155,7 @@ public class AndroidInstrumentationApkTest {
                 javaLibrary4.getProjectFilesystem(), javaLibrary4.getBuildTarget(), "%s.jar")),
         androidInstrumentationApk.getAndroidPackageableCollection().getClasspathEntriesToDex()
             .stream()
-            .map(graphBuilder.getSourcePathResolver()::getRelativePath)
+            .map(graphBuilder.getSourcePathResolver()::getCellUnsafeRelPath)
             .collect(ImmutableSet.toImmutableSet()));
   }
 }

@@ -90,13 +90,13 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
             sourcePathResolverAdapter, jsOutputDir, sourceMapFile, resourcesDir, miscDirPath);
 
     buildableContext.recordArtifact(
-        sourcePathResolverAdapter.getRelativePath(jsOutputDir).getPath());
+        sourcePathResolverAdapter.getCellUnsafeRelPath(jsOutputDir).getPath());
     buildableContext.recordArtifact(
-        sourcePathResolverAdapter.getRelativePath(sourceMapFile).getPath());
+        sourcePathResolverAdapter.getCellUnsafeRelPath(sourceMapFile).getPath());
     buildableContext.recordArtifact(
-        sourcePathResolverAdapter.getRelativePath(resourcesDir).getPath());
+        sourcePathResolverAdapter.getCellUnsafeRelPath(resourcesDir).getPath());
     buildableContext.recordArtifact(
-        sourcePathResolverAdapter.getRelativePath(miscDirPath).getPath());
+        sourcePathResolverAdapter.getCellUnsafeRelPath(miscDirPath).getPath());
 
     return ImmutableList.<Step>builder()
         .addAll(
@@ -104,7 +104,7 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
-                    sourcePathResolverAdapter.getRelativePath(
+                    sourcePathResolverAdapter.getCellUnsafeRelPath(
                         JsUtil.relativeToOutputRoot(
                             getBuildTarget(), getProjectFilesystem(), "")))))
         .add(
@@ -112,22 +112,22 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
-                    sourcePathResolverAdapter.getRelativePath(jsOutputDir))),
+                    sourcePathResolverAdapter.getCellUnsafeRelPath(jsOutputDir))),
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
-                    sourcePathResolverAdapter.getRelativePath(sourceMapFile).getParent())),
+                    sourcePathResolverAdapter.getCellUnsafeRelPath(sourceMapFile).getParent())),
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
-                    sourcePathResolverAdapter.getRelativePath(resourcesDir))),
+                    sourcePathResolverAdapter.getCellUnsafeRelPath(resourcesDir))),
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
-                    sourcePathResolverAdapter.getRelativePath(miscDirPath))),
+                    sourcePathResolverAdapter.getCellUnsafeRelPath(miscDirPath))),
             JsUtil.jsonWorkerShellStepAddingFlavors(
                 worker,
                 jobArgs,

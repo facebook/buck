@@ -1127,7 +1127,7 @@ public class ProjectGenerator {
 
   private static String sourceNameRelativeToOutput(
       SourcePath source, SourcePathResolverAdapter pathResolver, Path outputDirectory) {
-    RelPath pathRelativeToCell = pathResolver.getRelativePath(source);
+    RelPath pathRelativeToCell = pathResolver.getCellUnsafeRelPath(source);
     Path pathRelativeToOutput =
         MorePaths.relativizeWithDotDotSupport(outputDirectory, pathRelativeToCell.getPath());
     return pathRelativeToOutput.toString();

@@ -181,7 +181,7 @@ public class SwiftLibraryIntegrationTest {
             ExplicitBuildTargetSourcePath.of(
                 swiftCompileTarget,
                 pathResolver
-                    .getRelativePath(buildRule.getSourcePathToOutput())
+                    .getCellUnsafeRelPath(buildRule.getSourcePathToOutput())
                     .resolve("bar.swiftmodule"))));
 
     Arg objArg = buildRule.getFileListLinkArg().get(0);
@@ -190,7 +190,7 @@ public class SwiftLibraryIntegrationTest {
     ExplicitBuildTargetSourcePath fileListSourcePath =
         ExplicitBuildTargetSourcePath.of(
             swiftCompileTarget,
-            pathResolver.getRelativePath(buildRule.getSourcePathToOutput()).resolve("bar.o"));
+            pathResolver.getCellUnsafeRelPath(buildRule.getSourcePathToOutput()).resolve("bar.o"));
     assertThat(fileListArg.getPath(), Matchers.equalTo(fileListSourcePath));
 
     TargetGraph targetGraph =
@@ -295,7 +295,7 @@ public class SwiftLibraryIntegrationTest {
         ExplicitBuildTargetSourcePath.of(
                 swiftCompileTarget,
                 pathResolver
-                    .getRelativePath(buildRule.getSourcePathToOutput())
+                    .getCellUnsafeRelPath(buildRule.getSourcePathToOutput())
                     .resolve("bar.swiftdoc"))
             .getResolvedPath()
             .toString();

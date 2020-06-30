@@ -206,7 +206,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
                   archiver.getArchiveOptions(contents == ArchiveContents.THIN),
                   outputPath.getPath(),
                   inputs.stream()
-                      .map(resolver::getRelativePath)
+                      .map(resolver::getCellUnsafeRelPath)
                       .collect(ImmutableList.toImmutableList()),
                   archiver,
                   outputPathResolver.getTempPath().getPath(),

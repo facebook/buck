@@ -618,7 +618,7 @@ abstract class GoDescriptors {
    */
   private static Path getPathInSymlinkTree(
       SourcePathResolverAdapter resolver, Path goPackageName, SourcePath ruleOutput) {
-    RelPath output = resolver.getRelativePath(ruleOutput);
+    RelPath output = resolver.getCellUnsafeRelPath(ruleOutput);
 
     String extension = Files.getFileExtension(output.toString());
     return Paths.get(goPackageName + (extension.equals("") ? "" : "." + extension));

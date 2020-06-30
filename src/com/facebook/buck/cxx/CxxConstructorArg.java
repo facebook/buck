@@ -85,7 +85,7 @@ public interface CxxConstructorArg
                   "Files may be listed in srcs or platform_srcs, but not both. The following %s both in srcs and platform_srcs: \n\n\t%s\n",
                   intersect.size() > 1 ? "files are listed" : "file is listed",
                   intersect.stream()
-                      .map(sourcePathResolverAdapter::getRelativePath)
+                      .map(sourcePathResolverAdapter::getCellUnsafeRelPath)
                       .map(Object::toString)
                       .collect(Collectors.joining("\n\t")))
               .replace("\n", System.lineSeparator()));

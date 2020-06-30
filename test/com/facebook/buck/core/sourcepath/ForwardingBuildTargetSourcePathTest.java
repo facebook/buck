@@ -48,7 +48,7 @@ public class ForwardingBuildTargetSourcePathTest {
         com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
             target, PathSourcePath.of(new FakeProjectFilesystem(), relativePath));
     assertEquals(target, sourcePath.getTarget());
-    assertEquals(relativePath, pathResolver.getRelativePath(sourcePath));
+    assertEquals(relativePath, pathResolver.getCellUnsafeRelPath(sourcePath));
   }
 
   @Test
@@ -61,7 +61,7 @@ public class ForwardingBuildTargetSourcePathTest {
         com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
             target, DefaultBuildTargetSourcePath.of(target));
     assertEquals(target, sourcePath.getTarget());
-    assertEquals(rule.getOutputFile(), pathResolver.getRelativePath(sourcePath).getPath());
+    assertEquals(rule.getOutputFile(), pathResolver.getCellUnsafeRelPath(sourcePath).getPath());
   }
 
   @Test
@@ -74,7 +74,7 @@ public class ForwardingBuildTargetSourcePathTest {
         com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
             target, ExplicitBuildTargetSourcePath.of(target, relativePath));
     assertEquals(target, sourcePath.getTarget());
-    assertEquals(relativePath, pathResolver.getRelativePath(sourcePath));
+    assertEquals(relativePath, pathResolver.getCellUnsafeRelPath(sourcePath));
   }
 
   @Test
@@ -95,6 +95,6 @@ public class ForwardingBuildTargetSourcePathTest {
             com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
                 target2, ExplicitBuildTargetSourcePath.of(target2, relativePath)));
     assertEquals(target1, sourcePath.getTarget());
-    assertEquals(relativePath, pathResolver.getRelativePath(sourcePath));
+    assertEquals(relativePath, pathResolver.getCellUnsafeRelPath(sourcePath));
   }
 }

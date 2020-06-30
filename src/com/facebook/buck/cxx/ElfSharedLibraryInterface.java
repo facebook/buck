@@ -66,7 +66,7 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
       boolean removeUndefinedSymbols,
       boolean withDownwardApi) {
     String libName =
-        ruleFinder.getSourcePathResolver().getRelativePath(input).getFileName().toString();
+        ruleFinder.getSourcePathResolver().getCellUnsafeRelPath(input).getFileName().toString();
     return new ElfSharedLibraryInterface<>(
         target,
         projectFilesystem,
@@ -244,7 +244,7 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
       SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
       return new Pair<>(
           sourcePathResolverAdapter.getFilesystem(input),
-          sourcePathResolverAdapter.getRelativePath(input).getPath());
+          sourcePathResolverAdapter.getCellUnsafeRelPath(input).getPath());
     }
   }
 

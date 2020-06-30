@@ -195,7 +195,7 @@ public class OcamlBuildRulesGenerator {
                               .toImmutableList())
                       .build()));
 
-      Path outputPath = ocamlContext.getCOutput(pathResolver.getRelativePath(cSrc).getPath());
+      Path outputPath = ocamlContext.getCOutput(pathResolver.getCellUnsafeRelPath(cSrc).getPath());
       OcamlCCompile compileRule =
           new OcamlCCompile(
               projectFilesystem,

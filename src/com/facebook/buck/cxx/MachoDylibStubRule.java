@@ -57,7 +57,11 @@ public class MachoDylibStubRule extends ModernBuildRule<MachoDylibStubRule.Dylib
       SourcePath inputDylib,
       boolean withDownwardApi) {
     String libName =
-        ruleFinder.getSourcePathResolver().getRelativePath(inputDylib).getFileName().toString();
+        ruleFinder
+            .getSourcePathResolver()
+            .getCellUnsafeRelPath(inputDylib)
+            .getFileName()
+            .toString();
     return new MachoDylibStubRule(
         target,
         projectFilesystem,
@@ -118,7 +122,7 @@ public class MachoDylibStubRule extends ModernBuildRule<MachoDylibStubRule.Dylib
           new MachoScrubContentSectionsStep(
               stripToolPrefix,
               sourcePathResolverAdapter.getFilesystem(inputDylib),
-              sourcePathResolverAdapter.getRelativePath(inputDylib),
+              sourcePathResolverAdapter.getCellUnsafeRelPath(inputDylib),
               filesystem,
               output.getPath(),
               ProjectFilesystemUtils.relativize(

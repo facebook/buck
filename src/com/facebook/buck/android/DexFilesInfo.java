@@ -67,7 +67,7 @@ class DexFilesInfo implements AddsToRuleKey {
     return secondaryDexDirs.transform(
         set ->
             set.stream()
-                .map(sourcePath -> resolver.getRelativePath(sourcePath).getPath())
+                .map(sourcePath -> resolver.getCellUnsafeRelPath(sourcePath).getPath())
                 .collect(ImmutableSet.toImmutableSet()),
         view -> view.getSecondaryDexDirs(filesystem, resolver));
   }
@@ -88,8 +88,8 @@ class DexFilesInfo implements AddsToRuleKey {
     ImmutableSet<Path> getSecondaryDexDirs(
         ProjectFilesystem filesystem, SourcePathResolverAdapter resolver) {
       try {
-        RelPath resolvedRootDirectory = resolver.getRelativePath(rootDirectory);
-        return filesystem.readLines(resolver.getRelativePath(subDirListing).getPath()).stream()
+        RelPath resolvedRootDirectory = resolver.getCellUnsafeRelPath(rootDirectory);
+        return filesystem.readLines(resolver.getCellUnsafeRelPath(subDirListing).getPath()).stream()
             .map(resolvedRootDirectory::resolve)
             .collect(ImmutableSet.toImmutableSet());
       } catch (IOException e) {

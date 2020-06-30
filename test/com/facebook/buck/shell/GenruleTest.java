@@ -178,7 +178,7 @@ public class GenruleTest {
     assertEquals(
         BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
             .resolveRel("AndroidManifest.xml"),
-        pathResolver.getRelativePath(genrule.getSourcePathToOutput()));
+        pathResolver.getCellUnsafeRelPath(genrule.getSourcePathToOutput()));
 
     SourcePath outputSourcePath = genrule.getSourcePathToOutput();
     AbsPath manifestPath = graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
@@ -682,7 +682,7 @@ public class GenruleTest {
             .build(graphBuilder);
     filesystem.writeContentsToPath(
         "something",
-        ruleFinder.getSourcePathResolver().getRelativePath(dep.getSourcePathToOutput()));
+        ruleFinder.getSourcePathResolver().getCellUnsafeRelPath(dep.getSourcePathToOutput()));
     BuildRule rule = ruleBuilder.build(graphBuilder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
@@ -729,7 +729,7 @@ public class GenruleTest {
             .build(graphBuilder);
     filesystem.writeContentsToPath(
         "something else",
-        ruleFinder.getSourcePathResolver().getRelativePath(dep.getSourcePathToOutput()));
+        ruleFinder.getSourcePathResolver().getCellUnsafeRelPath(dep.getSourcePathToOutput()));
     rule = ruleBuilder.build(graphBuilder);
     inputBasedRuleKeyFactory =
         new TestInputBasedRuleKeyFactory(
@@ -762,7 +762,7 @@ public class GenruleTest {
             .build(graphBuilder, filesystem);
     filesystem.writeContentsToPath("something", Paths.get("dep.exe"));
     filesystem.writeContentsToPath(
-        "something", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
+        "something", pathResolver.getCellUnsafeRelPath(dep.getSourcePathToOutput()));
     BuildRule rule = ruleBuilder.build(graphBuilder);
     DefaultRuleKeyFactory defaultRuleKeyFactory =
         new TestDefaultRuleKeyFactory(
@@ -811,7 +811,7 @@ public class GenruleTest {
             .setMain(PathSourcePath.of(filesystem, Paths.get("dep.exe")))
             .build(graphBuilder, filesystem);
     filesystem.writeContentsToPath(
-        "something else", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
+        "something else", pathResolver.getCellUnsafeRelPath(dep.getSourcePathToOutput()));
     rule = ruleBuilder.build(graphBuilder);
     ruleFinder = graphBuilder;
     inputBasedRuleKeyFactory =
@@ -845,7 +845,7 @@ public class GenruleTest {
             .build(graphBuilder, filesystem);
     filesystem.writeContentsToPath("something", Paths.get("source.java"));
     filesystem.writeContentsToPath(
-        "something", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
+        "something", pathResolver.getCellUnsafeRelPath(dep.getSourcePathToOutput()));
     BuildRule rule = ruleBuilder.build(graphBuilder);
     DefaultRuleKeyFactory defaultRuleKeyFactory =
         new TestDefaultRuleKeyFactory(
@@ -890,7 +890,7 @@ public class GenruleTest {
             .addSrc(Paths.get("source.java"))
             .build(graphBuilder, filesystem);
     filesystem.writeContentsToPath(
-        "something else", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
+        "something else", pathResolver.getCellUnsafeRelPath(dep.getSourcePathToOutput()));
     rule = ruleBuilder.build(graphBuilder);
     ruleFinder = graphBuilder;
     inputBasedRuleKeyFactory =
@@ -1103,7 +1103,7 @@ public class GenruleTest {
   private ImmutableSet<Path> convertSourcePathsToPaths(
       SourcePathResolver sourcePathResolver, ImmutableSet<SourcePath> sourcePaths) {
     return sourcePaths.stream()
-        .map(sourcePathResolver::getRelativePath)
+        .map(sourcePathResolver::getCellUnsafeRelPath)
         .flatMap(Set::stream)
         .map(RelPath::getPath)
         .collect(ImmutableSet.toImmutableSet());

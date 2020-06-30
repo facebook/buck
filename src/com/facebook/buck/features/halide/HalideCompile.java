@@ -64,7 +64,8 @@ public class HalideCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    RelPath outputDir = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+    RelPath outputDir =
+        context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput());
     buildableContext.recordArtifact(
         objectOutputPath(getBuildTarget(), getProjectFilesystem(), functionNameOverride));
     buildableContext.recordArtifact(

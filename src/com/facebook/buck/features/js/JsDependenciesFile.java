@@ -74,7 +74,7 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
     ObjectBuilder jobArgs = getJobArgs(sourcePathResolverAdapter, outputFile);
 
     buildableContext.recordArtifact(
-        sourcePathResolverAdapter.getRelativePath(outputFile).getPath());
+        sourcePathResolverAdapter.getCellUnsafeRelPath(outputFile).getPath());
 
     return ImmutableList.<Step>builder()
         .add(
@@ -82,7 +82,7 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
-                    sourcePathResolverAdapter.getRelativePath(outputFile).getParent())),
+                    sourcePathResolverAdapter.getCellUnsafeRelPath(outputFile).getParent())),
             JsUtil.jsonWorkerShellStepAddingFlavors(
                 worker,
                 jobArgs,

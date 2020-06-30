@@ -52,7 +52,7 @@ public class AppleDescriptionsTest {
             "prefix/file.h", FakeSourcePath.of("file.h")),
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
             BuildTargetFactory.newInstance("//:foobar"),
-            resolver::getRelativePath,
+            resolver::getCellUnsafeRelPath,
             Paths.get("prefix"),
             SourceSortedSet.ofUnnamedSources(
                 ImmutableSortedSet.of(
@@ -73,7 +73,7 @@ public class AppleDescriptionsTest {
             "file.h", FakeSourcePath.of("file.h")),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
             BuildTargetFactory.newInstance("//:foobar"),
-            resolver::getRelativePath,
+            resolver::getCellUnsafeRelPath,
             SourceSortedSet.ofUnnamedSources(
                 ImmutableSortedSet.of(
                     FakeSourcePath.of("path/to/some_file.h"),
@@ -95,7 +95,7 @@ public class AppleDescriptionsTest {
         headerMap,
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
             BuildTargetFactory.newInstance("//:foobar"),
-            resolver::getRelativePath,
+            resolver::getCellUnsafeRelPath,
             Paths.get("prefix"),
             SourceSortedSet.ofNamedSources(headerMap)));
   }
@@ -113,7 +113,7 @@ public class AppleDescriptionsTest {
         ImmutableMap.of(),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
             BuildTargetFactory.newInstance("//:foobar"),
-            resolver::getRelativePath,
+            resolver::getCellUnsafeRelPath,
             SourceSortedSet.ofNamedSources(headerMap)));
   }
 
@@ -129,7 +129,7 @@ public class AppleDescriptionsTest {
         AppleDescriptions.convertToFlatCxxHeaders(
             BuildTargetFactory.newInstance("//:foobar"),
             Paths.get("prefix"),
-            resolver::getRelativePath,
+            resolver::getCellUnsafeRelPath,
             ImmutableSet.of(
                 FakeSourcePath.of("path/to/some_file.h"),
                 FakeSourcePath.of("path/to/another_file.h"),
@@ -149,7 +149,7 @@ public class AppleDescriptionsTest {
         AppleDescriptions.convertToFlatCxxHeaders(
             BuildTargetFactory.newInstance("//:foobar"),
             Paths.get(""),
-            resolver::getRelativePath,
+            resolver::getCellUnsafeRelPath,
             ImmutableSet.of(
                 FakeSourcePath.of("path/to/some_file.h"),
                 FakeSourcePath.of("path/to/another_file.h"),

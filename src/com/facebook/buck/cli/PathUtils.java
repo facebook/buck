@@ -53,7 +53,9 @@ public class PathUtils {
           sourcePaths == null || sourcePaths.isEmpty()
               ? Optional.empty()
               : Optional.of(
-                  pathResolver.getRelativePath(Iterables.getOnlyElement(sourcePaths)).getPath());
+                  pathResolver
+                      .getCellUnsafeRelPath(Iterables.getOnlyElement(sourcePaths))
+                      .getPath());
     } else {
       Preconditions.checkState(
           outputLabel.isDefault(),
@@ -62,7 +64,7 @@ public class PathUtils {
           rule.getFullyQualifiedName());
       outputPathOptional =
           Optional.ofNullable(rule.getSourcePathToOutput())
-              .map(sourcePath -> pathResolver.getRelativePath(sourcePath).getPath());
+              .map(sourcePath -> pathResolver.getCellUnsafeRelPath(sourcePath).getPath());
     }
     // When using buck out compat mode, we favor using the default buck output path in the UI, so
     // amend the output paths when this is set.

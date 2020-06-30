@@ -75,7 +75,7 @@ public class AppleProjectHelper {
   static PathRelativizer defaultPathRelativizer(String output_path) {
     return new PathRelativizer(
         Paths.get(output_path),
-        new TestActionGraphBuilder().getSourcePathResolver()::getRelativePath);
+        new TestActionGraphBuilder().getSourcePathResolver()::getCellUnsafeRelPath);
   }
 
   static SourcePathResolverAdapter defaultSourcePathResolverAdapter(

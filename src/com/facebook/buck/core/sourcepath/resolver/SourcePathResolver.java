@@ -46,7 +46,11 @@ public interface SourcePathResolver {
   ImmutableSortedSet<RelPath> getAllRelativePaths(
       ProjectFilesystem projectFilesystem, Collection<? extends SourcePath> sourcePaths);
 
-  ImmutableSortedSet<RelPath> getRelativePath(SourcePath sourcePath);
+  /**
+   * @return The {@link RelPath} instances the {@code sourcePath} refers to, relative to its owning
+   *     {@link ProjectFilesystem}.
+   */
+  ImmutableSortedSet<RelPath> getCellUnsafeRelPath(SourcePath sourcePath);
 
   ImmutableSortedSet<Path> getIdeallyRelativePath(SourcePath sourcePath);
 
@@ -68,7 +72,7 @@ public interface SourcePathResolver {
    * @return {@link RelPath} instances to the given {@link SourcePath} that is relative to the given
    *     {@link ProjectFilesystem}
    */
-  ImmutableSortedSet<RelPath> getRelativePath(
+  ImmutableSortedSet<RelPath> getCellUnsafeRelPath(
       ProjectFilesystem projectFilesystem, SourcePath sourcePath);
 
   /**

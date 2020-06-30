@@ -257,7 +257,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     // This matches the implementation in ExportFileDescription
     // If the mode is REFERENCE we need to return the relative path to the real underlying file
     if (arg.getMode().map(mode -> mode == ExportFileDescription.Mode.REFERENCE).orElse(false)) {
-      return arg.getSrc().map(sourcePath -> adapter.getRelativePath(sourcePath).getPath());
+      return arg.getSrc().map(sourcePath -> adapter.getCellUnsafeRelPath(sourcePath).getPath());
     }
     // Otherwise, we resolve the generated path for the COPY
     String name = arg.getOut().orElse(buildTarget.getShortNameAndFlavorPostfix());
@@ -303,7 +303,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     // The binary jar is copied with its same name to the output directory, so we need to get
     // the name. The only difference is when the name doesn't end in `.jar` it gets renamed.
     SourcePath binaryJar = constructorArg.getBinaryJar();
-    Path fileName = adapter.getRelativePath(filesystem, binaryJar).getFileName();
+    Path fileName = adapter.getCellUnsafeRelPath(filesystem, binaryJar).getFileName();
     String fileNameWithJarExtension =
         String.format("%s.jar", MorePaths.getNameWithoutExtension(fileName));
     // Matches the implementation in PrebuiltJar's constructor

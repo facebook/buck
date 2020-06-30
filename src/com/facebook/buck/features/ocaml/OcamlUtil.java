@@ -64,7 +64,7 @@ public class OcamlUtil {
       SourcePathResolverAdapter resolver, String... extensions) {
     return (Predicate<SourcePath>)
         input -> {
-          String strInput = resolver.getRelativePath(input).toString();
+          String strInput = resolver.getCellUnsafeRelPath(input).toString();
           for (String ext : extensions) {
             if (strInput.endsWith(ext)) {
               return true;

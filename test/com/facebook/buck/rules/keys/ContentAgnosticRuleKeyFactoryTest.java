@@ -108,7 +108,7 @@ public class ContentAgnosticRuleKeyFactoryTest {
     dep.setOutputFile(depOutput.toString());
     fileSystem.writeContentsToPath(
         fileContents,
-        graphBuilder.getSourcePathResolver().getRelativePath(dep.getSourcePathToOutput()));
+        graphBuilder.getSourcePathResolver().getCellUnsafeRelPath(dep.getSourcePathToOutput()));
 
     BuildRule rule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -129,7 +129,7 @@ public class ContentAgnosticRuleKeyFactoryTest {
     PathSourcePath sourcePath = PathSourcePath.of(fileSystem, Paths.get(filename));
 
     fileSystem.writeContentsToPath(
-        fileContents, graphBuilder.getSourcePathResolver().getRelativePath(sourcePath));
+        fileContents, graphBuilder.getSourcePathResolver().getCellUnsafeRelPath(sourcePath));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:rule");
     ActionRegistryForTests actionRegistry = new ActionRegistryForTests(buildTarget);

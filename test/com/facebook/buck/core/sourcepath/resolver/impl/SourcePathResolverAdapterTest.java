@@ -61,10 +61,11 @@ public class SourcePathResolverAdapterTest {
     // Only tests the methods that adds some sort of assertion in the adapter and doesn't test
     // one-liner delegating methods
     EasyMock.expect(mockResolver.getAbsolutePath(mockSourcePath)).andReturn(getMockAbsPaths(1, 50));
-    EasyMock.expect(mockResolver.getRelativePath(mockSourcePath)).andReturn(getMockRelPaths(1, 90));
+    EasyMock.expect(mockResolver.getCellUnsafeRelPath(mockSourcePath))
+        .andReturn(getMockRelPaths(1, 90));
     EasyMock.expect(mockResolver.getIdeallyRelativePath(mockSourcePath))
         .andReturn(getMockPaths(1, -10));
-    EasyMock.expect(mockResolver.getRelativePath(projectFilesystem, mockSourcePath))
+    EasyMock.expect(mockResolver.getCellUnsafeRelPath(projectFilesystem, mockSourcePath))
         .andReturn(getMockRelPaths(1, 100));
     EasyMock.expect(
             mockResolver.getMappedPaths(
@@ -76,13 +77,13 @@ public class SourcePathResolverAdapterTest {
         testAdapter.getAbsolutePath(mockSourcePath).getPath().toString(),
         Matchers.endsWith("path50"));
     assertThat(
-        testAdapter.getRelativePath(mockSourcePath).getPath().toString(),
+        testAdapter.getCellUnsafeRelPath(mockSourcePath).getPath().toString(),
         Matchers.endsWith("path90"));
     assertThat(
         testAdapter.getIdeallyRelativePath(mockSourcePath),
         Matchers.contains(Paths.get("path-10")));
     assertThat(
-        testAdapter.getRelativePath(projectFilesystem, mockSourcePath).getPath(),
+        testAdapter.getCellUnsafeRelPath(projectFilesystem, mockSourcePath).getPath(),
         Matchers.contains(Paths.get("path100")));
     assertThat(
         testAdapter.getMappedPaths(ImmutableMap.of("tee", mockSourcePath, "hee", mockSourcePath)),
@@ -104,9 +105,10 @@ public class SourcePathResolverAdapterTest {
   public void getRelativePathThrowsIfNotOneElement() {
     exception.expect(Matchers.instanceOf(IllegalArgumentException.class));
     exception.expectMessage("expected one element but was: <path90, path91>");
-    EasyMock.expect(mockResolver.getRelativePath(mockSourcePath)).andReturn(getMockRelPaths(2, 90));
+    EasyMock.expect(mockResolver.getCellUnsafeRelPath(mockSourcePath))
+        .andReturn(getMockRelPaths(2, 90));
     EasyMock.replay(mockResolver);
-    testAdapter.getRelativePath(mockSourcePath);
+    testAdapter.getCellUnsafeRelPath(mockSourcePath);
   }
 
   @Test
@@ -124,10 +126,10 @@ public class SourcePathResolverAdapterTest {
   public void getRelativePathThrowsThrowsIfNotOneElement() {
     exception.expect(Matchers.instanceOf(IllegalArgumentException.class));
     exception.expectMessage("expected one element but was: <path100, path101>");
-    EasyMock.expect(mockResolver.getRelativePath(projectFilesystem, mockSourcePath))
+    EasyMock.expect(mockResolver.getCellUnsafeRelPath(projectFilesystem, mockSourcePath))
         .andReturn(getMockRelPaths(2, 100));
     EasyMock.replay(mockResolver);
-    testAdapter.getRelativePath(projectFilesystem, mockSourcePath);
+    testAdapter.getCellUnsafeRelPath(projectFilesystem, mockSourcePath);
   }
 
   @Test

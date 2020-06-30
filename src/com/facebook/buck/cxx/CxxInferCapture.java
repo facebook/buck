@@ -138,9 +138,9 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
     ImmutableList<String> frontendCommand = getFrontendCommand();
 
     buildableContext.recordArtifact(
-        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getPath());
+        context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput()).getPath());
 
-    RelPath inputRelativePath = context.getSourcePathResolver().getRelativePath(input);
+    RelPath inputRelativePath = context.getSourcePathResolver().getCellUnsafeRelPath(input);
     return ImmutableList.<Step>builder()
         .add(
             MkdirStep.of(
@@ -201,7 +201,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
               preprocessorDelegate.getHeaderPathNormalizer(context),
               HeaderVerification.of(HeaderVerification.Mode.IGNORE),
               getDepFilePath(),
-              context.getSourcePathResolver().getRelativePath(input).getPath(),
+              context.getSourcePathResolver().getCellUnsafeRelPath(input).getPath(),
               output.getPath(),
               DependencyTrackingMode.MAKEFILE,
               false);

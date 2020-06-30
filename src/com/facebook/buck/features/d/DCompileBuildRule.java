@@ -71,7 +71,7 @@ public class DCompileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     RelPath output =
         context
             .getSourcePathResolver()
-            .getRelativePath(Objects.requireNonNull(getSourcePathToOutput()));
+            .getCellUnsafeRelPath(Objects.requireNonNull(getSourcePathToOutput()));
     buildableContext.recordArtifact(output.getPath());
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
@@ -94,7 +94,7 @@ public class DCompileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
             compiler.getEnvironment(context.getSourcePathResolver()),
             compiler.getCommandPrefix(context.getSourcePathResolver()),
             flags,
-            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()),
+            context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput()),
             context.getSourcePathResolver().getAllAbsolutePaths(sources),
             ProjectFilesystemUtils.relativize(
                 getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),

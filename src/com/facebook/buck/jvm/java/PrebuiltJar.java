@@ -138,7 +138,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   .build();
             });
 
-    Path fileName = resolver.getRelativePath(binaryJar).getFileName();
+    Path fileName = resolver.getCellUnsafeRelPath(binaryJar).getFileName();
     String fileNameWithJarExtension =
         String.format("%s.jar", MorePaths.getNameWithoutExtension(fileName));
     this.copiedBinaryJar =
@@ -343,7 +343,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     JavaLibraryRules.addAccumulateClassNamesStep(
         projectFilesystem.getIgnoredPaths(),
         steps,
-        Optional.of(context.getSourcePathResolver().getRelativePath(getSourcePathToOutput())),
+        Optional.of(context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput())),
         pathToClassHashes);
 
     return steps.build();

@@ -166,18 +166,18 @@ public class Manifest {
       ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) path;
       return fileHashLoader.getForArchiveMember(
           resolver.getFilesystem(path),
-          resolver.getRelativePath(archiveMemberSourcePath.getArchiveSourcePath()).getPath(),
+          resolver.getCellUnsafeRelPath(archiveMemberSourcePath.getArchiveSourcePath()).getPath(),
           archiveMemberSourcePath.getMemberPath());
     } else {
       return fileHashLoader.get(
-          resolver.getFilesystem(path), resolver.getRelativePath(path).getPath());
+          resolver.getFilesystem(path), resolver.getCellUnsafeRelPath(path).getPath());
     }
   }
 
   private static ArchiveMemberPath getArchiveMemberPath(
       SourcePathResolverAdapter resolver, ArchiveMemberSourcePath archivePath) {
     return ArchiveMemberPath.of(
-        resolver.getRelativePath(archivePath.getArchiveSourcePath()).getPath(),
+        resolver.getCellUnsafeRelPath(archivePath.getArchiveSourcePath()).getPath(),
         archivePath.getMemberPath());
   }
 
@@ -256,7 +256,7 @@ public class Manifest {
     if (input instanceof ArchiveMemberSourcePath) {
       return getArchiveMemberPath(resolver, (ArchiveMemberSourcePath) input);
     } else {
-      return resolver.getRelativePath(input);
+      return resolver.getCellUnsafeRelPath(input);
     }
   }
 

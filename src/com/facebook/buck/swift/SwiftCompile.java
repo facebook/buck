@@ -226,7 +226,7 @@ public class SwiftCompile extends AbstractBuildRule implements SupportsInputBase
 
     if (bridgingHeader.isPresent()) {
       compilerArgs.add(
-          "-import-objc-header", resolver.getRelativePath(bridgingHeader.get()).toString());
+          "-import-objc-header", resolver.getCellUnsafeRelPath(bridgingHeader.get()).toString());
     }
     if (importUnderlyingModule) {
       compilerArgs.add("-import-underlying-module");
@@ -247,7 +247,7 @@ public class SwiftCompile extends AbstractBuildRule implements SupportsInputBase
             getBuildDeps().stream()
                 .filter(SwiftCompile.class::isInstance)
                 .map(BuildRule::getSourcePathToOutput)
-                .map(input -> resolver.getRelativePath(input).toString())
+                .map(input -> resolver.getCellUnsafeRelPath(input).toString())
                 .collect(ImmutableSet.toImmutableSet())));
 
     boolean hasMainEntry =
@@ -285,7 +285,7 @@ public class SwiftCompile extends AbstractBuildRule implements SupportsInputBase
       compilerArgs.add("-filelist", swiftFileListPath.get().toString());
     } else {
       for (SourcePath sourcePath : srcs) {
-        compilerArgs.add(resolver.getRelativePath(sourcePath).toString());
+        compilerArgs.add(resolver.getCellUnsafeRelPath(sourcePath).toString());
       }
     }
 
@@ -371,7 +371,7 @@ public class SwiftCompile extends AbstractBuildRule implements SupportsInputBase
   private Step makeFileListStep(SourcePathResolverAdapter resolver, AbsPath swiftFileListPath) {
     ImmutableList<String> relativePaths =
         srcs.stream()
-            .map(sourcePath -> resolver.getRelativePath(sourcePath).toString())
+            .map(sourcePath -> resolver.getCellUnsafeRelPath(sourcePath).toString())
             .collect(ImmutableList.toImmutableList());
 
     return new Step() {

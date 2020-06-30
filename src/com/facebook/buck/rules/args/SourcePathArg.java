@@ -58,7 +58,7 @@ public abstract class SourcePathArg implements Arg, HasSourcePath {
     SourcePath path = getPath();
     if (path instanceof BuildTargetSourcePath
         && cellName.equals(((BuildTargetSourcePath) path).getTarget().getCell())) {
-      String line = pathResolver.getRelativePath(path).toString();
+      String line = pathResolver.getCellUnsafeRelPath(path).toString();
       if (useUnixPathSeparator) {
         line = PathFormatter.pathWithUnixSeparators(line);
       }

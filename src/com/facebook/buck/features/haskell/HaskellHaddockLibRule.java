@@ -360,7 +360,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
               MoreIterables.zipAndConcat(
                   Iterables.cycle("--read-interface"),
                   RichStream.from(compilerFlags.getHaddockInterfaces())
-                      .map(sp -> resolver.getRelativePath(sp).toString())
+                      .map(sp -> resolver.getCellUnsafeRelPath(sp).toString())
                       .toImmutableList()))
           .add("--dump-interface", getInterface().toString())
           .addAll(haddockFlags)

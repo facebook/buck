@@ -68,7 +68,7 @@ public class JavaSourceJarTest {
 
     assertNotNull(output);
     assertThat(
-        graphBuilder.getSourcePathResolver().getRelativePath(output).toString(),
+        graphBuilder.getSourcePathResolver().getCellUnsafeRelPath(output).toString(),
         endsWith(JavaPaths.SRC_JAR));
   }
 

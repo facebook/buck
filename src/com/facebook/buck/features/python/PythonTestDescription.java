@@ -157,7 +157,7 @@ public class PythonTestDescription
   protected static RelPath getTestMainPath(
       SourcePathResolverAdapter resolver, Optional<PythonTestRunner> testRunner) {
     return testRunner
-        .map(runner -> resolver.getRelativePath(runner.getSrc()))
+        .map(runner -> resolver.getCellUnsafeRelPath(runner.getSrc()))
         .orElse(RelPath.get(DEFAULT_TEST_MAIN_NAME));
   }
 

@@ -80,7 +80,7 @@ public class CalculateClassAbiTest {
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
     filesystem.writeContentsToPath("stuff", input);
     filesystem.writeContentsToPath(
-        "stuff", pathResolver.getRelativePath(javaLibrary.getSourcePathToOutput()));
+        "stuff", pathResolver.getCellUnsafeRelPath(javaLibrary.getSourcePathToOutput()));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:library-abi");
     CalculateClassAbi calculateAbi =
@@ -98,7 +98,7 @@ public class CalculateClassAbiTest {
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
     filesystem.writeContentsToPath("new stuff", input);
     filesystem.writeContentsToPath(
-        "new stuff", pathResolver.getRelativePath(javaLibrary.getSourcePathToOutput()));
+        "new stuff", pathResolver.getCellUnsafeRelPath(javaLibrary.getSourcePathToOutput()));
 
     // Re-setup some entities to drop internal rule key caching.
     graphBuilder = new TestActionGraphBuilder();
@@ -134,7 +134,9 @@ public class CalculateClassAbiTest {
     filesystem.writeContentsToPath("stuff", input);
     filesystem.writeContentsToPath(
         "stuff",
-        ruleFinder.getSourcePathResolver().getRelativePath(javaLibrary.getSourcePathToOutput()));
+        ruleFinder
+            .getSourcePathResolver()
+            .getCellUnsafeRelPath(javaLibrary.getSourcePathToOutput()));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:library-abi");
     CalculateClassAbi calculateAbi =

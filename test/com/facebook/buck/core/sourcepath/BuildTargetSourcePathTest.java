@@ -45,7 +45,7 @@ public class BuildTargetSourcePathTest {
     DefaultBuildTargetSourcePath path = DefaultBuildTargetSourcePath.of(rule.getBuildTarget());
 
     try {
-      graphBuilder.getSourcePathResolver().getRelativePath(path);
+      graphBuilder.getSourcePathResolver().getCellUnsafeRelPath(path);
       fail();
     } catch (HumanReadableException e) {
       assertEquals("No known output for: " + target.getFullyQualifiedName(), e.getMessage());
@@ -67,7 +67,7 @@ public class BuildTargetSourcePathTest {
 
     DefaultBuildTargetSourcePath path = DefaultBuildTargetSourcePath.of(rule.getBuildTarget());
 
-    RelPath resolved = graphBuilder.getSourcePathResolver().getRelativePath(path);
+    RelPath resolved = graphBuilder.getSourcePathResolver().getCellUnsafeRelPath(path);
 
     assertEquals(RelPath.get("cheese"), resolved);
   }
@@ -90,7 +90,7 @@ public class BuildTargetSourcePathTest {
         com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath.of(
             rule.getBuildTarget(), path);
     assertEquals(target, buildTargetSourcePath.getTarget());
-    assertEquals(path, pathResolver.getRelativePath(buildTargetSourcePath));
+    assertEquals(path, pathResolver.getCellUnsafeRelPath(buildTargetSourcePath));
   }
 
   @Test
@@ -107,8 +107,8 @@ public class BuildTargetSourcePathTest {
         com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
             rule2.getBuildTarget(), sourcePath1);
 
-    assertEquals(path, pathResolver.getRelativePath(sourcePath1));
-    assertEquals(path, pathResolver.getRelativePath(sourcePath2));
+    assertEquals(path, pathResolver.getCellUnsafeRelPath(sourcePath1));
+    assertEquals(path, pathResolver.getCellUnsafeRelPath(sourcePath2));
   }
 
   @Test
@@ -128,8 +128,8 @@ public class BuildTargetSourcePathTest {
         com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath.of(
             rule2.getBuildTarget(), sourcePath1);
 
-    assertEquals(path, pathResolver.getRelativePath(sourcePath1));
-    assertEquals(path, pathResolver.getRelativePath(sourcePath2));
+    assertEquals(path, pathResolver.getCellUnsafeRelPath(sourcePath1));
+    assertEquals(path, pathResolver.getCellUnsafeRelPath(sourcePath2));
   }
 
   @Test
@@ -152,9 +152,11 @@ public class BuildTargetSourcePathTest {
             rule2.getBuildTarget(), sourcePath1);
 
     assertEquals(
-        pathResolver.getRelativePath(sourcePath0), pathResolver.getRelativePath(sourcePath1));
+        pathResolver.getCellUnsafeRelPath(sourcePath0),
+        pathResolver.getCellUnsafeRelPath(sourcePath1));
     assertEquals(
-        pathResolver.getRelativePath(sourcePath0), pathResolver.getRelativePath(sourcePath2));
+        pathResolver.getCellUnsafeRelPath(sourcePath0),
+        pathResolver.getCellUnsafeRelPath(sourcePath2));
   }
 
   @Test

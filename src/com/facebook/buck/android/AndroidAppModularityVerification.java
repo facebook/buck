@@ -89,7 +89,7 @@ public class AndroidAppModularityVerification extends AbstractBuildRule {
     Optional<Path> proguardConfigDir =
         proguardTextFilesPath.map(
             sourcePath ->
-                buildContext.getSourcePathResolver().getRelativePath(sourcePath).getPath());
+                buildContext.getSourcePathResolver().getCellUnsafeRelPath(sourcePath).getPath());
     Optional<Path> proguardFullConfigFile =
         proguardConfigDir.map(p -> p.resolve("configuration.txt"));
     Optional<Path> proguardMappingFile = proguardConfigDir.map(p -> p.resolve("mapping.txt"));
@@ -110,7 +110,10 @@ public class AndroidAppModularityVerification extends AbstractBuildRule {
 
     AndroidModuleConsistencyStep androidModuleConsistencyStep =
         AndroidModuleConsistencyStep.ensureModuleConsistency(
-            buildContext.getSourcePathResolver().getRelativePath(appModularityResult).getPath(),
+            buildContext
+                .getSourcePathResolver()
+                .getCellUnsafeRelPath(appModularityResult)
+                .getPath(),
             additionalDexStoreToJarPathMap,
             getProjectFilesystem(),
             proguardFullConfigFile,

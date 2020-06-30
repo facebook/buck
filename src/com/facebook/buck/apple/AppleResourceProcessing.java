@@ -447,7 +447,7 @@ public class AppleResourceProcessing {
           Iterables.concat(
               resources.getResourceDirsForDestination(destination),
               resources.getResourceFilesForDestination(destination))) {
-        Path pathInBundle = resolver.getRelativePath(path).getFileName();
+        Path pathInBundle = resolver.getCellUnsafeRelPath(path).getFileName();
         if (resourcePaths.contains(pathInBundle)) {
           throw new HumanReadableException(
               "Bundle contains multiple resources with path %s", pathInBundle);

@@ -44,7 +44,7 @@ public class OutputMacroExpander extends AbstractMacroExpanderWithoutPrecomputed
 
     @Override
     Path sourcePathToArgPath(SourcePath path, SourcePathResolverAdapter resolver) {
-      return resolver.getRelativePath(path).getPath();
+      return resolver.getCellUnsafeRelPath(path).getPath();
     }
   }
 }

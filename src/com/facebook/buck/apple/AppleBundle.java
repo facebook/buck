@@ -330,7 +330,7 @@ public class AppleBundle extends AbstractBuildRule
                 context.getBuildCellRootPath(), getProjectFilesystem(), getMetadataPath())));
 
     RelPath infoPlistOutputPath =
-        context.getSourcePathResolver().getRelativePath(processedInfoPlist);
+        context.getSourcePathResolver().getCellUnsafeRelPath(processedInfoPlist);
     Path infoPlistBundlePath = getInfoPlistPath();
     stepsBuilder.add(
         CopyStep.forFile(
@@ -533,7 +533,7 @@ public class AppleBundle extends AbstractBuildRule
 
     // Ensure the bundle directory is archived so we can fetch it later.
     buildableContext.recordArtifact(
-        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()).getPath());
+        context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput()).getPath());
 
     return stepsBuilder.build();
   }
@@ -624,7 +624,7 @@ public class AppleBundle extends AbstractBuildRule
 
     for (BuildRule extraBinary : extraBinaries) {
       RelPath outputPath =
-          context.getSourcePathResolver().getRelativePath(extraBinary.getSourcePathToOutput());
+          context.getSourcePathResolver().getCellUnsafeRelPath(extraBinary.getSourcePathToOutput());
       Path bundlePath = getBundleBinaryPathForBuildRule(extraBinary);
       binariesBuilder.put(bundlePath, outputPath.getPath());
     }
@@ -734,7 +734,7 @@ public class AppleBundle extends AbstractBuildRule
     RelPath dsymPath =
         buildContext
             .getSourcePathResolver()
-            .getRelativePath(appleDsym.get().getSourcePathToOutput());
+            .getCellUnsafeRelPath(appleDsym.get().getSourcePathToOutput());
     Path dsymSourcePath = bundleRoot.getParent().resolve(dsymPath.getFileName());
     Path dsymDestinationPath =
         bundleRoot

@@ -318,7 +318,7 @@ public class SymlinkTreeTest {
                     sourcePath ->
                         ruleResolver
                             .getSourcePathResolver()
-                            .getRelativePath(sourcePath)
+                            .getCellUnsafeRelPath(sourcePath)
                             .getPath())));
   }
 

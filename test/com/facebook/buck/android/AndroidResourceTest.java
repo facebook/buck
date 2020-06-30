@@ -127,7 +127,7 @@ public class AndroidResourceTest {
             /* hasWhitelistedStrings */ false);
     projectFilesystem.writeContentsToPath(
         "com.example.android" + System.lineSeparator(),
-        resolver.getRelativePath(androidResource.getPathToRDotJavaPackageFile()));
+        resolver.getCellUnsafeRelPath(androidResource.getPathToRDotJavaPackageFile()));
     androidResource.initializeFromDisk(resolver);
     assertEquals("com.example.android", androidResource.getRDotJavaPackage());
   }
@@ -156,7 +156,7 @@ public class AndroidResourceTest {
             /* hasWhitelistedStrings */ false);
     projectFilesystem.writeContentsToPath(
         "com.ex.pkg" + System.lineSeparator(),
-        resolver.getRelativePath(androidResource.getPathToRDotJavaPackageFile()));
+        resolver.getCellUnsafeRelPath(androidResource.getPathToRDotJavaPackageFile()));
     androidResource.initializeFromDisk(resolver);
     assertEquals("com.ex.pkg", androidResource.getRDotJavaPackage());
   }
@@ -186,7 +186,7 @@ public class AndroidResourceTest {
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     filesystem.writeContentsToPath(
         "something",
-        graphBuilder.getSourcePathResolver().getRelativePath(dep.getPathToTextSymbolsFile()));
+        graphBuilder.getSourcePathResolver().getCellUnsafeRelPath(dep.getPathToTextSymbolsFile()));
     RuleKey original =
         new TestInputBasedRuleKeyFactory(fileHashCache, graphBuilder).build(resource);
 
@@ -194,7 +194,7 @@ public class AndroidResourceTest {
 
     filesystem.writeContentsToPath(
         "something else",
-        graphBuilder.getSourcePathResolver().getRelativePath(dep.getPathToTextSymbolsFile()));
+        graphBuilder.getSourcePathResolver().getCellUnsafeRelPath(dep.getPathToTextSymbolsFile()));
     RuleKey changed = new TestInputBasedRuleKeyFactory(fileHashCache, graphBuilder).build(resource);
 
     assertThat(original, Matchers.not(Matchers.equalTo(changed)));

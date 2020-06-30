@@ -277,7 +277,7 @@ public class BuildReport {
 
   private RelPath relativizeSourcePathToProjectRoot(
       ProjectFilesystem projectFilesystem, SourcePath sourcePath) {
-    RelPath relativeOutputPath = pathResolver.getRelativePath(sourcePath);
+    RelPath relativeOutputPath = pathResolver.getCellUnsafeRelPath(sourcePath);
     AbsPath absoluteOutputPath = projectFilesystem.resolve(relativeOutputPath);
     return rootCell.getFilesystem().relativize(absoluteOutputPath);
   }

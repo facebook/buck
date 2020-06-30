@@ -130,7 +130,7 @@ public class CopyResourcesStep implements Step {
                           targetPackageDir.isEmpty() ? "" : "/",
                           buildContext
                               .getSourcePathResolver()
-                              .getRelativePath(rawResource)
+                              .getCellUnsafeRelPath(rawResource)
                               .getFileName()));
         } else {
           relativeSymlinkPath =

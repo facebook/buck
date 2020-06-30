@@ -747,7 +747,7 @@ public class AppleLibraryDescription
             Paths.get(""),
             AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
                 buildTarget,
-                graphBuilder.getSourcePathResolver()::getRelativePath,
+                graphBuilder.getSourcePathResolver()::getCellUnsafeRelPath,
                 headerPathPrefix,
                 args.getExportedHeaders())));
     if (targetContainsSwift(buildTarget, graphBuilder)) {
@@ -775,7 +775,7 @@ public class AppleLibraryDescription
             Paths.get(""),
             AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
                 buildTarget,
-                graphBuilder.getSourcePathResolver()::getRelativePath,
+                graphBuilder.getSourcePathResolver()::getCellUnsafeRelPath,
                 headerPathPrefix,
                 args.getExportedHeaders()));
 

@@ -156,7 +156,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         steps.add(
             CopyStep.forDirectory(
                 getProjectFilesystem(),
-                resolver.getRelativePath(resource),
+                resolver.getCellUnsafeRelPath(resource),
                 outputResourcePath.getParent(),
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
       } else {
@@ -168,7 +168,9 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     outputResourcePath.getParent())));
         steps.add(
             CopyStep.forFile(
-                getProjectFilesystem(), resolver.getRelativePath(resource), outputResourcePath));
+                getProjectFilesystem(),
+                resolver.getCellUnsafeRelPath(resource),
+                outputResourcePath));
       }
     }
 
@@ -211,7 +213,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             externalLinkerFlags.build(),
             ImmutableList.of(linkTree.getRoot()),
             platform,
-            resolver.getRelativePath(mainObject.getSourcePathToOutput()).getPath(),
+            resolver.getCellUnsafeRelPath(mainObject.getSourcePathToOutput()).getPath(),
             GoLinkStep.BuildMode.EXECUTABLE,
             linkMode,
             output.getPath(),
