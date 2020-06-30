@@ -17,11 +17,9 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Objects;
 import java.util.SortedSet;
-import java.util.function.Function;
-import javax.annotation.Nullable;
 
 public class AndroidResourceHelper {
 
@@ -34,19 +32,17 @@ public class AndroidResourceHelper {
    * <p>
    */
   public static ImmutableSortedSet<BuildRule> androidResOnly(SortedSet<BuildRule> deps) {
-    return deps.stream()
-        .map(
-            new Function<BuildRule, BuildRule>() {
-              @Override
-              @Nullable
-              public BuildRule apply(BuildRule buildRule) {
-                if (buildRule instanceof HasAndroidResourceDeps) {
-                  return buildRule;
-                }
-                return null;
-              }
-            })
-        .filter(Objects::nonNull)
-        .collect(ImmutableSortedSet.toImmutableSortedSet(deps.comparator()));
+    ImmutableSortedSet.Builder<BuildRule> buildRules =
+        new ImmutableSortedSet.Builder<>(deps.comparator());
+    for (BuildRule buildRule : deps) {
+      if (buildRule instanceof ExportDependencies) {
+        buildRules.addAll(androidResOnly(((ExportDependencies) buildRule).getExportedDeps()));
+      }
+
+      if (buildRule instanceof HasAndroidResourceDeps) {
+        buildRules.add(buildRule);
+      }
+    }
+    return buildRules.build();
   }
 }
