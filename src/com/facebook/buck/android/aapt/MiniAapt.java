@@ -93,6 +93,14 @@ public class MiniAapt implements Step {
               + "not(starts-with(., '@android:')) and "
               + "not(starts-with(., '@null'))]");
 
+  private static final XPathExpression ANDROID_ID_AND_ATTR_USAGE =
+      createExpression(
+          "//@*[(starts-with(., '@') and "
+              + "not(starts-with(., '@+')) and "
+              + "not(starts-with(., '@android:')) and "
+              + "not(starts-with(., '@null'))) or "
+              + "starts-with(., '?attr')]");
+
   private static final XPathExpression ANDROID_ID_DEFINITION =
       createExpression("//@*[starts-with(., '@+') and " + "not(starts-with(., '@+android:id'))]");
 
@@ -121,6 +129,7 @@ public class MiniAapt implements Step {
   private final ImmutableSet<Path> pathsToSymbolsOfDeps;
   private final ResourceCollector resourceCollector;
   private final boolean isGrayscaleImageProcessingEnabled;
+  private final boolean isVerifyingStyleReferencesEnabled;
   private final ResourceCollectionType resourceCollectionType;
 
   public MiniAapt(
@@ -136,6 +145,7 @@ public class MiniAapt implements Step {
         pathToTextSymbolsFile,
         pathsToSymbolsOfDeps,
         /* isGrayscaleImageProcessingEnabled */ false,
+        /* isVerifyingStyleReferencesEnabled */ false,
         ResourceCollectionType.R_DOT_TXT);
   }
 
@@ -146,6 +156,7 @@ public class MiniAapt implements Step {
       Path pathToOutputFile,
       ImmutableSet<Path> pathsToSymbolsOfDeps,
       boolean isGrayscaleImageProcessingEnabled,
+      boolean isVerifyingStyleReferencesEnabled,
       ResourceCollectionType resourceCollectionType) {
     this.resolver = resolver;
     this.filesystem = filesystem;
@@ -153,6 +164,7 @@ public class MiniAapt implements Step {
     this.pathToOutputFile = pathToOutputFile;
     this.pathsToSymbolsOfDeps = pathsToSymbolsOfDeps;
     this.isGrayscaleImageProcessingEnabled = isGrayscaleImageProcessingEnabled;
+    this.isVerifyingStyleReferencesEnabled = isVerifyingStyleReferencesEnabled;
     this.resourceCollectionType = resourceCollectionType;
 
     switch (resourceCollectionType) {
@@ -552,11 +564,14 @@ public class MiniAapt implements Step {
             RType.ID, resourceName.substring(ID_DEFINITION_PREFIX.length()), xmlFile, location);
       }
 
-      NodeList nodesUsingIds = (NodeList) ANDROID_ID_USAGE.evaluate(dom, XPathConstants.NODESET);
+      XPathExpression expression =
+          isVerifyingStyleReferencesEnabled ? ANDROID_ID_AND_ATTR_USAGE : ANDROID_ID_USAGE;
+      NodeList nodesUsingIds = (NodeList) expression.evaluate(dom, XPathConstants.NODESET);
       for (int i = 0; i < nodesUsingIds.getLength(); i++) {
         String resourceName = nodesUsingIds.item(i).getNodeValue();
         int slashPosition = resourceName.indexOf('/');
-        if (resourceName.charAt(0) != '@' || slashPosition == -1) {
+        if ((resourceName.charAt(0) != '@' && resourceName.charAt(0) != '?')
+            || slashPosition == -1) {
           throw new ResourceParseException("Invalid definition of a resource: '%s'", resourceName);
         }
 

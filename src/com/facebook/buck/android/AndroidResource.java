@@ -110,6 +110,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final boolean isGrayscaleImageProcessingEnabled;
 
+  @AddToRuleKey private final boolean isVerifyingStyleReferencesEnabled;
+
   private final ImmutableSortedSet<BuildRule> deps;
 
   private final BuildOutputInitializer<String> buildOutputInitializer;
@@ -149,7 +151,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Supplier<ImmutableSortedSet<? extends SourcePath>> symbolFilesFromDeps,
       boolean hasWhitelistedStrings,
       boolean resourceUnion,
-      boolean isGrayscaleImageProcessingEnabled) {
+      boolean isGrayscaleImageProcessingEnabled,
+      boolean isVerifyingStyleReferencesEnabled) {
     super(
         buildTarget,
         projectFilesystem,
@@ -196,6 +199,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
           }
         };
     this.isGrayscaleImageProcessingEnabled = isGrayscaleImageProcessingEnabled;
+    this.isVerifyingStyleReferencesEnabled = isVerifyingStyleReferencesEnabled;
   }
 
   public AndroidResource(
@@ -225,7 +229,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
         manifestFile,
         hasWhitelistedStrings,
         /* resourceUnion */ false,
-        /* isGrayscaleImageProcessingEnabled */ false);
+        /* isGrayscaleImageProcessingEnabled */ false,
+        /* isVerifyingStyleReferencesEnabled */ false);
   }
 
   public AndroidResource(
@@ -242,7 +247,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings,
       boolean resourceUnion,
-      boolean isGrayscaleImageProcessingEnabled) {
+      boolean isGrayscaleImageProcessingEnabled,
+      boolean isVerifyingStyleReferencesEnabled) {
     this(
         buildTarget,
         projectFilesystem,
@@ -263,7 +269,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 .toImmutableSortedSet(Ordering.natural()),
         hasWhitelistedStrings,
         resourceUnion,
-        isGrayscaleImageProcessingEnabled);
+        isGrayscaleImageProcessingEnabled,
+        isVerifyingStyleReferencesEnabled);
   }
 
   @Override
@@ -342,6 +349,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
             Objects.requireNonNull(pathToTextSymbolsFile),
             pathsToSymbolsOfDeps,
             isGrayscaleImageProcessingEnabled,
+            isVerifyingStyleReferencesEnabled,
             ResourceCollectionType.R_DOT_TXT));
     return steps.build();
   }
