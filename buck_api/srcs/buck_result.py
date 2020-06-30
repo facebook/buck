@@ -20,7 +20,7 @@ class BuckResult:
     """ Represents a Buck process that has finished running """
 
     def __init__(
-        self, process: subprocess.Process, stdout, stderr, encoding="utf-8"
+        self, process: subprocess.Process, stdout: bytes, stderr: bytes, encoding: str
     ) -> None:
         self.process = process
         self.encoding = encoding
@@ -39,3 +39,12 @@ class BuckResult:
         """ Returns the standard error that is redirected into standard output
             of the Buck Result instance """
         return str(self.stdout, self.encoding)
+
+
+class BuildResult(BuckResult):
+    """ Represents a Buck process  of a build command that has finished running """
+
+    def __init__(
+        self, process: subprocess.Process, stdout: bytes, stderr: bytes, encoding: str
+    ) -> None:
+        super().__init__(process, stdout, stderr, encoding)

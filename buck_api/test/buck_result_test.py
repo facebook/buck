@@ -25,7 +25,7 @@ async def test_get_out():
         "echo hello", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
-    br: BuckResult = BuckResult(process, stdout, stderr)
+    br: BuckResult = BuckResult(process, stdout, stderr, "utf-8")
     assert br.get_stdout() == "hello\n"
 
 
@@ -35,7 +35,7 @@ async def test_get_err():
         '>&2 echo "hello"', stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
-    br: BuckResult = BuckResult(process, stdout, stderr)
+    br: BuckResult = BuckResult(process, stdout, stderr, "utf-8")
     assert br.get_stderr() == "hello\n"
 
 
@@ -45,7 +45,7 @@ async def test_get_exit_code():
         "exit 3", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
-    br: BuckResult = BuckResult(process, stdout, stderr)
+    br: BuckResult = BuckResult(process, stdout, stderr, "utf-8")
     assert br.get_exit_code() == 3
 
 
@@ -55,7 +55,7 @@ async def test_get_out_stored():
         "echo hello", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
-    br: BuckResult = BuckResult(process, stdout, stderr)
+    br: BuckResult = BuckResult(process, stdout, stderr, "utf-8")
     assert br.get_stdout() == "hello\n"
     assert br.get_stdout() == "hello\n"
     assert br.get_stdout() == "hello\n"
@@ -68,7 +68,7 @@ async def test_get_err_stored():
         '>&2 echo "hello"', stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
-    br: BuckResult = BuckResult(process, stdout, stderr)
+    br: BuckResult = BuckResult(process, stdout, stderr, "utf-8")
     assert br.get_stderr() == "hello\n"
     assert br.get_stderr() == "hello\n"
     assert br.get_stderr() == "hello\n"

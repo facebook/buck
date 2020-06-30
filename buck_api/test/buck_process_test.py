@@ -25,7 +25,7 @@ async def test_wait():
     process = await subprocess.create_subprocess_shell(
         "echo hello", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    bp = BuckProcess(process)
+    bp = BuckProcess(process, BuckResult, "utf-8")
     br: BuckResult = await bp.wait()
     assert br.get_stdout() == "hello\n"
 
@@ -35,7 +35,7 @@ async def test_get_out():
     process = await subprocess.create_subprocess_shell(
         "echo hello", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    bp = BuckProcess(process)
+    bp = BuckProcess(process, BuckResult, "utf-8")
     assert (await bp.get_stdout().readline()).decode("utf-8") == "hello\n"
 
 
@@ -44,5 +44,5 @@ async def test_get_err():
     process = await subprocess.create_subprocess_shell(
         '>&2 echo "hello"', stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    bp = BuckProcess(process)
+    bp = BuckProcess(process, BuckResult, "utf-8")
     assert (await bp.get_stderr().readline()).decode("utf-8") == "hello\n"

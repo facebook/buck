@@ -14,20 +14,29 @@
 # limitations under the License.
 
 from asyncio import StreamReader, subprocess
+from typing import Callable, Generic, TypeVar
 
-from buck_result import BuckResult
+
+T = TypeVar("T")
 
 
-class BuckProcess:
+class BuckProcess(Generic[T]):
     """ Instiates a BuckProcess object with a new process """
 
-    def __init__(self, process: subprocess.Process) -> None:
+    def __init__(
+        self,
+        process: subprocess.Process,
+        result_type: Callable[[subprocess.Process, bytes, bytes, str], T],
+        encoding: str,
+    ) -> None:
         self._process = process
+        self._result_type = result_type
+        self._encoding = encoding
 
-    async def wait(self) -> BuckResult:
+    async def wait(self) -> T:
         """ Returns a BuckResult with a finished process """
         stdout, stderr = await self._process.communicate()
-        return BuckResult(self._process, stdout, stderr)
+        return self._result_type(self._process, stdout, stderr, self._encoding)
 
     def get_stderr(self) -> StreamReader:
         """ Returns the standard error of the Buck Process instance. """

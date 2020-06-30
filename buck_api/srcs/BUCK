@@ -22,3 +22,20 @@ python_library(
         ":buck_result_lib",
     ],
 )
+
+python_library(
+    name = "buck_repo_lib",
+    srcs = [
+        "buck_repo.py",
+    ],
+    base_module = "",
+    # TODO namespace properly modules should align with the path in repo
+    # e.g. buck_client so that you import buck_client.buck_repo or something.
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":buck_process_lib",
+        ":buck_result_lib",
+    ],
+)
