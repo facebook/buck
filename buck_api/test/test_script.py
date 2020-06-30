@@ -15,9 +15,11 @@
 
 import argparse
 import os
+import shutil
 from pathlib import Path
 
 
+# TODO fix spacing in this file
 parser = argparse.ArgumentParser()
 
 
@@ -27,17 +29,29 @@ def run_build(remain_args):
     parser.add_argument("target")
     args = parser.parse_args(remain_args)
     target = Path(args.target.replace(":", "/").strip("/"))
-    output = Path("./buck-out/gen") / Path(str(abs(hash(args.target)))) / target
+    # creating a path to a buck-out directory in a temp directory
+    conf_dir = str(abs(hash((args.target))))
+    output = Path("buck-out", "gen") / Path(conf_dir) / target
     os.makedirs(output.parent)
     with open(output, "w") as f1:
         f1.write("Hello, World!")
     print(args)
 
 
-FUNCTION_MAP = {"build": run_build}
+def run_clean(remain_args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--keep-cache", action="store_true")
+    args = parser.parse_args(remain_args)
+    if not args.dry_run:
+        shutil.rmtree("buck-out/")
+
+
+FUNCTION_MAP = {"build": run_build, "clean": run_clean}
 
 parser.add_argument("command", choices=FUNCTION_MAP.keys())
 (args, remain_args) = parser.parse_known_args()
 
 func = FUNCTION_MAP[args.command]
+
 func(remain_args)

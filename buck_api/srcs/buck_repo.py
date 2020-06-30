@@ -16,13 +16,14 @@
 from asyncio import subprocess
 
 from buck_process import BuckProcess
-from buck_result import BuildResult
+from buck_result import BuckResult, BuildResult
 
 
 class BuckRepo:
-    """ Instiates a BuckRepo object with a exectuable path """
+    """ Instantiates a BuckRepo object with a exectuable path """
 
     def __init__(self, path_to_buck: str, encoding: str, cwd: str = None) -> None:
+        # TODO change cwd to take Path object
         self.path_to_buck = path_to_buck
         self.cwd = cwd
         self.encoding = encoding
@@ -36,10 +37,19 @@ class BuckRepo:
         created with the build command and any
         additional arguments
         """
-        process = await self._runBuckCommand("build", *argv)
+        process = await self._run_buck_command("build", *argv)
         return BuckProcess(process, result_type=BuildResult, encoding=self.encoding)
 
-    async def _runBuckCommand(self, cmd: str, *argv: str) -> subprocess.Process:
+    async def clean(self, *argv: str) -> BuckProcess[BuckResult]:
+        """
+        Returns a BuckProcess with BuckResult type using a process
+        created with the clean command and any
+        additional arguments
+        """
+        process = await self._run_buck_command("clean", *argv)
+        return BuckProcess(process, result_type=BuckResult, encoding=self.encoding)
+
+    async def _run_buck_command(self, cmd: str, *argv: str) -> subprocess.Process:
         """
         Returns a process created from the execuable path,
         command and any additional arguments
