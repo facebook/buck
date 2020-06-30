@@ -188,7 +188,7 @@ public class CxxToolchainDescription
 
     cxxPlatform.setLd(
         new DefaultLinkerProvider(
-            linkerType, ToolProviders.getToolProvider(args.getLinker()), true));
+            linkerType, ToolProviders.getToolProvider(args.getLinker()), args.getCacheLinks()));
 
     if (linkerType == LinkerProvider.Type.GNU) {
       cxxPlatform.setLdflags(
@@ -327,6 +327,11 @@ public class CxxToolchainDescription
     /** Whether to use an argfile for long command lines. */
     @Value.Default
     default boolean getUseArgFile() {
+      return true;
+    }
+
+    @Value.Default
+    default boolean getCacheLinks() {
       return true;
     }
 
