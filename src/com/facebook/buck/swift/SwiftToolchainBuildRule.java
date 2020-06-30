@@ -62,12 +62,11 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
     return SwiftPlatform.builder()
         .setSwiftc(swiftc)
         .setSwiftStdlibTool(swiftStdlibTool)
-        .setSwiftSharedLibraryRunPaths(runtimeRunPaths)
         .setSwiftTarget(swiftTarget)
-        .addSwiftRuntimePathsForBundling(runtimePathsForBundling.toArray(new Path[0]))
-        .addSwiftRuntimePathsForLinking(runtimePathsForLinking.toArray(new Path[0]))
-        .addSwiftStaticRuntimePaths(staticRuntimePaths.toArray(new Path[0]))
-        .addSwiftSharedLibraryRunPaths(runtimeRunPaths.toArray(new Path[0]))
+        .setSwiftRuntimePathsForBundling(runtimePathsForBundling)
+        .setSwiftRuntimePathsForLinking(runtimePathsForLinking)
+        .setSwiftStaticRuntimePaths(staticRuntimePaths)
+        .setSwiftSharedLibraryRunPaths(runtimeRunPaths)
         .build();
   }
 }

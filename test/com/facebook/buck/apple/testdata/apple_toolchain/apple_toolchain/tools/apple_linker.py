@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import sys
 
@@ -42,7 +43,7 @@ def _extract_linker_args_from_driver_args():
 
 linker_args = _extract_linker_args_from_driver_args()
 
-parser = impl.argparser()
+parser = argparse.ArgumentParser()
 
 parser.add_argument("-o", dest="output", action=impl.StripQuotesAction)
 parser.add_argument("-L", dest="lpath", action="append", default=[])
@@ -50,6 +51,7 @@ parser.add_argument("-F", dest="fpath", action="append", default=[])
 parser.add_argument("-framework", dest="frameworks", action="append", default=[])
 parser.add_argument("-add_ast_path", dest="ast_paths", action="append", default=[])
 parser.add_argument("-test-flag", action=impl.StripQuotesAction)
+parser.add_argument("-rpath", action="append", default=[])
 
 (options, args) = parser.parse_known_args(args=linker_args)
 
@@ -60,11 +62,15 @@ inputs = [arg for arg in args if not arg.startswith("-")]
 impl.log(args)
 
 for lpath in options.lpath:
-    assert os.path.exists(lpath), lpath
+    if not lpath.startswith("/test/") and not lpath.startswith("@"):
+        assert os.path.exists(lpath), lpath
 for fpath in options.fpath:
     assert os.path.exists(fpath), fpath
 for ast_path in options.ast_paths:
     assert os.path.exists(ast_path), ast_path
+for rpath in options.rpath:
+    if not lpath.startswith("/test/") and not lpath.startswith("@"):
+        assert os.path.exists(rpath), rpath
 
 assert os.path.exists(options.test_flag), options.test_flag
 
@@ -83,5 +89,7 @@ with open(options.output, "w") as output:
     print("linker: libs:", ",".join(libs), file=output)
     if options.ast_paths:
         print("linker: ast_paths:", ",".join(options.ast_paths), file=output)
+    if options.rpath:
+        print("linker: rpath:", ",".join(options.rpath), file=output)
 
 sys.exit(0)

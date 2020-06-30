@@ -216,9 +216,10 @@ public class AppleToolchainIntegrationTest {
                 + "swift compile: extra swift code%n"
                 + "linker: fpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
                 + "linker: frameworks: Foundation%n"
-                + "linker: lpath: %n"
+                + "linker: lpath: /test/linking,@executable_path/linking,@loader_path/linking%n"
                 + "linker: libs: %n"
-                + "linker: ast_paths: %s/SwiftLibrary.swiftmodule,%s/SwiftCompanionLibrary.swiftmodule,%s/AnotherSwiftLibrary.swiftmodule%n",
+                + "linker: ast_paths: %s/SwiftLibrary.swiftmodule,%s/SwiftCompanionLibrary.swiftmodule,%s/AnotherSwiftLibrary.swiftmodule%n"
+                + "linker: rpath: /test/runtime_run,@executable_path/runtime_run,@loader_path/runtime_run%n",
             rootPath,
             swiftLibraryPath,
             companionLibraryPath,

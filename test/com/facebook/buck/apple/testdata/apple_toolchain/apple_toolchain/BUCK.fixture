@@ -135,6 +135,26 @@ swift_toolchain(
         "-test-arg1",
         "-test-arg2",
     ],
+    runtime_paths_for_bundling = [
+        "/test/bundling",
+        "@executable_path/bundling",
+        "@loader_path/bundling",
+    ],
+    runtime_paths_for_linking = [
+        "/test/linking",
+        "@executable_path/linking",
+        "@loader_path/linking",
+    ],
+    static_runtime_paths = [
+        "/test/static_runtime",
+        "@executable_path/static_runtime",
+        "@loader_path/static_runtime",
+    ],
+    runtime_run_paths = [
+        "/test/runtime_run",
+        "@executable_path/runtime_run",
+        "@loader_path/runtime_run",
+    ],
 )
 
 cxx_toolchain(

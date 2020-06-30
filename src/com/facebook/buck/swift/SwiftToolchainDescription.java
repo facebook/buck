@@ -24,13 +24,13 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.Tools;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 /** Defines an swift_toolchain rule which provides values to fill {@link SwiftPlatform}. */
@@ -58,23 +58,22 @@ public class SwiftToolchainDescription
       args.getSwiftStdlibToolFlags().forEach(swiftStdlibToolBuilder::addArg);
       swiftStdlibTool = Optional.of(swiftStdlibToolBuilder.build());
     }
-    SourcePathResolverAdapter pathResolver = actionGraphBuilder.getSourcePathResolver();
     return new SwiftToolchainBuildRule(
         buildTarget,
         context.getProjectFilesystem(),
         swiftc,
         swiftStdlibTool,
         args.getRuntimePathsForBundling().stream()
-            .map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath())
+            .map(Paths::get)
             .collect(ImmutableList.toImmutableList()),
         args.getRuntimePathsForLinking().stream()
-            .map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath())
+            .map(Paths::get)
             .collect(ImmutableList.toImmutableList()),
         args.getStaticRuntimePaths().stream()
-            .map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath())
+            .map(Paths::get)
             .collect(ImmutableList.toImmutableList()),
         args.getRuntimeRunPaths().stream()
-            .map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath())
+            .map(Paths::get)
             .collect(ImmutableList.toImmutableList()));
   }
 
@@ -103,15 +102,15 @@ public class SwiftToolchainDescription
     ImmutableList<String> getSwiftStdlibToolFlags();
 
     /** Runtime paths for bundling. */
-    ImmutableList<SourcePath> getRuntimePathsForBundling();
+    ImmutableList<String> getRuntimePathsForBundling();
 
     /** Runtime paths for linking. */
-    ImmutableList<SourcePath> getRuntimePathsForLinking();
+    ImmutableList<String> getRuntimePathsForLinking();
 
     /** Static runtime paths. */
-    ImmutableList<SourcePath> getStaticRuntimePaths();
+    ImmutableList<String> getStaticRuntimePaths();
 
     /** Runtime run paths. */
-    ImmutableList<SourcePath> getRuntimeRunPaths();
+    ImmutableList<String> getRuntimeRunPaths();
   }
 }
