@@ -20,7 +20,10 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.versions.TargetNodeTranslator;
+import com.google.common.collect.Comparators;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -30,6 +33,25 @@ public abstract class CxxGenruleFilterAndTargetsMacro implements Macro {
   public abstract Optional<Pattern> getFilter();
 
   public abstract ImmutableList<BuildTarget> getTargets();
+
+  @Override
+  public int compareTo(Macro o) {
+    int result = Macro.super.compareTo(o);
+    if (result != 0) {
+      return result;
+    }
+    CxxGenruleFilterAndTargetsMacro other = (CxxGenruleFilterAndTargetsMacro) o;
+    return ComparisonChain.start()
+        .compare(
+            getFilter(),
+            other.getFilter(),
+            Comparators.emptiesFirst(Comparator.comparing(Pattern::pattern)))
+        .compare(
+            getTargets(),
+            other.getTargets(),
+            Comparators.lexicographical(Comparator.<BuildTarget>naturalOrder()))
+        .result();
+  }
 
   /**
    * @return a copy of this {@link CxxGenruleFilterAndTargetsMacro} with the given {@link

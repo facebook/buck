@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.versions.TargetNodeTranslator;
+import com.google.common.collect.ComparisonChain;
 import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -32,6 +33,18 @@ public abstract class BuildTargetMacro implements Macro {
 
   public BuildTarget getTarget() {
     return getTargetWithOutputs().getBuildTarget();
+  }
+
+  @Override
+  public int compareTo(Macro o) {
+    int result = Macro.super.compareTo(o);
+    if (result != 0) {
+      return result;
+    }
+    BuildTargetMacro other = (BuildTargetMacro) o;
+    return ComparisonChain.start()
+        .compare(getTargetWithOutputs(), other.getTargetWithOutputs())
+        .result();
   }
 
   /**

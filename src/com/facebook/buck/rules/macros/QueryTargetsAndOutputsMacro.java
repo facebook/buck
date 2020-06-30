@@ -18,6 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.query.Query;
+import com.google.common.collect.ComparisonChain;
 
 /**
  * Class providing the type for macros used in `$(query_targets_and_outputs ...)` macro strings. The
@@ -31,6 +32,16 @@ public abstract class QueryTargetsAndOutputsMacro extends QueryMacro {
   }
 
   abstract String getSeparator();
+
+  @Override
+  public int compareTo(Macro o) {
+    int result = super.compareTo(o);
+    if (result != 0) {
+      return result;
+    }
+    QueryTargetsAndOutputsMacro other = (QueryTargetsAndOutputsMacro) o;
+    return ComparisonChain.start().compare(getSeparator(), other.getSeparator()).result();
+  }
 
   @Override
   public Class<? extends Macro> getMacroClass() {

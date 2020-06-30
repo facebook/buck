@@ -18,6 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ComparisonChain;
 
 /**
  * Macro used to denote the absolute path of an output of a rule. Used when constructing command
@@ -41,6 +42,16 @@ public abstract class AbsoluteOutputMacro implements Macro, UnconfiguredMacro {
   }
 
   public abstract String getOutputName();
+
+  @Override
+  public int compareTo(Macro o) {
+    int result = Macro.super.compareTo(o);
+    if (result != 0) {
+      return result;
+    }
+    AbsoluteOutputMacro other = (AbsoluteOutputMacro) o;
+    return ComparisonChain.start().compare(getOutputName(), other.getOutputName()).result();
+  }
 
   @Override
   public Macro configure(

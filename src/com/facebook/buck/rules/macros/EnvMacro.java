@@ -18,6 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ComparisonChain;
 
 /** <code>$(env)</code> macro type. */
 @BuckStyleValue
@@ -38,6 +39,16 @@ public interface EnvMacro extends Macro, UnconfiguredMacro {
   }
 
   String getVar();
+
+  @Override
+  default int compareTo(Macro o) {
+    int result = Macro.super.compareTo(o);
+    if (result != 0) {
+      return result;
+    }
+    EnvMacro other = (EnvMacro) o;
+    return ComparisonChain.start().compare(getVar(), other.getVar()).result();
+  }
 
   @Override
   default Macro configure(

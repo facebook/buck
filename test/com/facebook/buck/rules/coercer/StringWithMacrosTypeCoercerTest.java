@@ -35,9 +35,12 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.rules.macros.UnconfiguredMacro;
 import com.facebook.buck.util.types.Either;
+import com.google.common.collect.Comparators;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -441,6 +444,18 @@ public class StringWithMacrosTypeCoercerTest {
     }
 
     @Override
+    public int compareTo(Macro o) {
+      int result = Macro.super.compareTo(o);
+      if (result != 0) {
+        return result;
+      }
+      TestMacro other = (TestMacro) o;
+      return ComparisonChain.start()
+          .compare(args, other.args, Comparators.lexicographical(Comparator.<String>naturalOrder()))
+          .result();
+    }
+
+    @Override
     public Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass() {
       return TestMacro.class;
     }
@@ -481,6 +496,18 @@ public class StringWithMacrosTypeCoercerTest {
       Test2Macro testMacro = (Test2Macro) o;
 
       return args.equals(testMacro.args);
+    }
+
+    @Override
+    public int compareTo(Macro o) {
+      int result = Macro.super.compareTo(o);
+      if (result != 0) {
+        return result;
+      }
+      Test2Macro other = (Test2Macro) o;
+      return ComparisonChain.start()
+          .compare(args, other.args, Comparators.lexicographical(Comparator.<String>naturalOrder()))
+          .result();
     }
 
     @Override

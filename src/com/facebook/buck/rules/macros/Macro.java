@@ -23,9 +23,14 @@ import com.facebook.buck.versions.TargetTranslatable;
 import java.util.Optional;
 
 /** Base class for strongly typed macros. */
-public interface Macro extends TargetTranslatable<Macro> {
+public interface Macro extends TargetTranslatable<Macro>, Comparable<Macro> {
 
   Class<? extends Macro> getMacroClass();
+
+  @Override
+  default int compareTo(Macro o) {
+    return this.getClass().getName().compareTo(o.getClass().getName());
+  }
 
   @Override
   default Optional<Macro> translateTargets(

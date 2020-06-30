@@ -17,17 +17,26 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ComparisonChain;
 import org.immutables.value.Value;
 
 /** Packages up a {@link Macro} along some configuration. */
 @BuckStyleValue
-public abstract class MacroContainer {
+public abstract class MacroContainer implements Comparable<MacroContainer> {
 
   public abstract Macro getMacro();
 
   @Value.Default
   public boolean isOutputToFile() {
     return false;
+  }
+
+  @Override
+  public int compareTo(MacroContainer o) {
+    return ComparisonChain.start()
+        .compare(getMacro(), o.getMacro())
+        .compareFalseFirst(isOutputToFile(), o.isOutputToFile())
+        .result();
   }
 
   public static MacroContainer of(Macro macro, boolean outputToFile) {

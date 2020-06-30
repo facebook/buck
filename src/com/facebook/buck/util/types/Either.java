@@ -17,6 +17,8 @@
 package com.facebook.buck.util.types;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ComparisonChain;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -217,5 +219,26 @@ public abstract class Either<LEFT, RIGHT> {
     public int hashCode() {
       return Objects.hash(true, value);
     }
+  }
+
+  /** @return a {@link Comparator} used to compare {@link Either}s. */
+  public static <LEFT, RIGHT> Comparator<Either<LEFT, RIGHT>> comparator(
+      Comparator<LEFT> leftComparator, Comparator<RIGHT> rightComparator) {
+    return (a, b) ->
+        ComparisonChain.start()
+            .compare(
+                a.isLeft() ? a.getLeft() : null,
+                b.isLeft() ? b.getLeft() : null,
+                Comparator.nullsLast(leftComparator))
+            .compare(
+                a.isRight() ? a.getRight() : null,
+                b.isRight() ? b.getRight() : null,
+                Comparator.nullsLast(rightComparator))
+            .result();
+  }
+
+  public static <LEFT extends Comparable<LEFT>, RIGHT extends Comparable<RIGHT>>
+      Comparator<Either<LEFT, RIGHT>> comparator() {
+    return comparator(Comparator.<LEFT>naturalOrder(), Comparator.<RIGHT>naturalOrder());
   }
 }

@@ -24,13 +24,15 @@ import com.facebook.buck.util.string.StringMatcher;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
+import com.google.common.collect.Comparators;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.function.Function;
 
 /** A class representing a string containing ordered, embedded, strongly typed macros. */
 public abstract class StringWithMacros
-    implements TargetTranslatable<StringWithMacros>, StringMatcher {
+    implements TargetTranslatable<StringWithMacros>, StringMatcher, Comparable<StringWithMacros> {
 
   private StringWithMacros() {}
 
@@ -212,6 +214,13 @@ public abstract class StringWithMacros
         Function<? super MacroContainer, ? extends T> macroMapper) {
       return ImmutableList.of(stringMapper.apply(constant));
     }
+  }
+
+  @Override
+  public int compareTo(StringWithMacros o) {
+    return ComparisonChain.start()
+        .compare(getParts(), o.getParts(), Comparators.lexicographical(Either.comparator()))
+        .result();
   }
 
   /** Default implementation */

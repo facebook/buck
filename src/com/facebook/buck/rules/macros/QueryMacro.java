@@ -20,12 +20,23 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.versions.TargetNodeTranslator;
+import com.google.common.collect.ComparisonChain;
 import java.util.Optional;
 
 /** Base class for macros that embed a query string. */
 public abstract class QueryMacro implements Macro {
 
   public abstract Query getQuery();
+
+  @Override
+  public int compareTo(Macro o) {
+    int result = Macro.super.compareTo(o);
+    if (result != 0) {
+      return result;
+    }
+    QueryMacro other = (QueryMacro) o;
+    return ComparisonChain.start().compare(getQuery(), other.getQuery()).result();
+  }
 
   /** @return a copy of this {@link QueryMacro} with the given {@link Query}. */
   abstract QueryMacro withQuery(Query query);

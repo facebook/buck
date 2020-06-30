@@ -20,18 +20,28 @@ import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSortedSet;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 @BuckStyleValue
-public abstract class Query {
+public abstract class Query implements Comparable<Query> {
 
   public abstract String getQuery();
 
   public abstract TargetConfiguration getTargetConfiguration();
 
   public abstract BaseName getBaseName();
+
+  @Override
+  public int compareTo(Query o) {
+    return ComparisonChain.start()
+        .compare(getQuery(), o.getQuery())
+        .compare(getTargetConfiguration(), o.getTargetConfiguration())
+        .compare(getBaseName(), o.getBaseName())
+        .result();
+  }
 
   @Nullable
   @Value.NaturalOrder
