@@ -26,6 +26,7 @@ import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.sandbox.SandboxConfig;
+import com.facebook.buck.support.cli.config.CliConfig;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;
@@ -40,6 +41,7 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
     InferBuckConfig inferBuckConfig = new InferBuckConfig(buckConfig);
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
 
@@ -83,6 +85,7 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
             sandboxConfig,
             reConfig,
             downwardApiConfig,
+            cliConfig,
             cxxBuckConfig,
             context.getSandboxExecutionStrategy()),
         new CxxToolchainDescription(downwardApiConfig),

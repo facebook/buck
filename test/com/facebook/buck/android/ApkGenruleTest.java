@@ -53,6 +53,7 @@ import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -111,6 +112,7 @@ public class ApkGenruleTest {
 
     BuckConfig buckConfig = FakeBuckConfig.empty();
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
 
@@ -120,6 +122,7 @@ public class ApkGenruleTest {
             sandboxConfig,
             reConfig,
             downwardApiConfig,
+            cliConfig,
             new NoSandboxExecutionStrategy());
     ApkGenruleDescriptionArg arg =
         ApkGenruleDescriptionArg.builder()

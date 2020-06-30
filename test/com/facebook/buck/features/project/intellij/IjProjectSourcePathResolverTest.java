@@ -76,6 +76,7 @@ import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescriptionArg;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.nio.file.Paths;
@@ -107,6 +108,7 @@ public class IjProjectSourcePathResolverTest {
 
     BuckConfig buckConfig = FakeBuckConfig.empty();
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
 
@@ -127,6 +129,7 @@ public class IjProjectSourcePathResolverTest {
                     sandboxConfig,
                     reConfig,
                     downwardApiConfig,
+                    cliConfig,
                     new NoSandboxExecutionStrategy()),
                 target) {};
     TargetNode<JarGenruleDescriptionArg> node = builder.build(filesystem);

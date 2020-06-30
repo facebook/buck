@@ -31,6 +31,7 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxConfig;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -64,12 +65,14 @@ public class GenruleBuilder
     RemoteExecutionConfig reConfig = RemoteExecutionConfig.of(buckConfig);
     SandboxConfig sandboxConfig = SandboxConfig.of(buckConfig);
     DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
+    CliConfig cliConfig = CliConfig.of(buckConfig);
 
     return new GenruleDescription(
         toolchainProvider,
         sandboxConfig,
         reConfig,
         downwardApiConfig,
+        cliConfig,
         new NoSandboxExecutionStrategy());
   }
 

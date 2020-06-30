@@ -30,6 +30,7 @@ import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.util.environment.Platform;
 import java.util.Arrays;
@@ -55,6 +56,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
     AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, Platform.detect());
     TestBuckConfig testBuckConfig = buckConfig.getView(TestBuckConfig.class);
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
 
@@ -118,6 +120,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             sandboxConfig,
             reConfig,
             downwardApiConfig,
+            cliConfig,
             sandboxExecutionStrategy));
   }
 }

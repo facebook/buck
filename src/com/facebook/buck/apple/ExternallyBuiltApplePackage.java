@@ -142,7 +142,8 @@ public final class ExternallyBuiltApplePackage
           sandboxProperties,
           androidTools,
           executeRemotely,
-          withDownwardApi);
+          withDownwardApi,
+          false);
       this.sdkVersion = sdkVersion;
       this.platformBuildVersion = platformBuildVersion;
       this.sdkPath = sdkPath;

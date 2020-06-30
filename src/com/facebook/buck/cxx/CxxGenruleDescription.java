@@ -96,6 +96,7 @@ import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
@@ -130,6 +131,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       SandboxConfig sandboxConfig,
       RemoteExecutionConfig reConfig,
       DownwardApiConfig downwardApiConfig,
+      CliConfig cliConfig,
       CxxBuckConfig cxxBuckConfig,
       SandboxExecutionStrategy sandboxExecutionStrategy) {
     super(
@@ -137,6 +139,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         sandboxConfig,
         reConfig,
         downwardApiConfig,
+        cliConfig,
         sandboxExecutionStrategy,
         false);
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();

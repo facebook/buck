@@ -218,6 +218,8 @@ public class GenruleBuildable implements Buildable {
 
   @AddToRuleKey private final boolean withDownwardApi;
 
+  @AddToRuleKey private final boolean checkUntrackedArtifacts;
+
   public GenruleBuildable(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
@@ -236,7 +238,8 @@ public class GenruleBuildable implements Buildable {
       Optional<SandboxProperties> sandboxProperties,
       Optional<GenruleAndroidTools> androidTools,
       boolean executeRemotely,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean checkUntrackedArtifacts) {
     this.buildTarget = buildTarget;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
     this.srcs = srcs;
@@ -254,6 +257,7 @@ public class GenruleBuildable implements Buildable {
     this.isWorkerGenrule = isWorkerGenrule();
     this.androidTools = androidTools;
     this.executeRemotely = executeRemotely;
+    this.checkUntrackedArtifacts = checkUntrackedArtifacts;
 
     Preconditions.checkArgument(
         out.isPresent() ^ outs.isPresent(), "Genrule unexpectedly has both 'out' and 'outs'.");
@@ -421,7 +425,8 @@ public class GenruleBuildable implements Buildable {
               srcPath.getPath(),
               tmpPath.getPath(),
               createProgramRunner(),
-              withDownwardApi));
+              withDownwardApi,
+              checkUntrackedArtifacts));
     }
 
     outputPaths.ifPresent(
@@ -593,7 +598,8 @@ public class GenruleBuildable implements Buildable {
       Path srcPath,
       Path tmpPath,
       ProgramRunner programRunner,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean checkUntrackedArtifacts) {
     SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
     // The user's command (this.cmd) should be run from the directory that contains only the
     // symlinked files. This ensures that the user can reference only the files that were declared
@@ -645,41 +651,45 @@ public class GenruleBuildable implements Buildable {
                   outputPathsBuilder.add(
                       filesystem.resolve(outputPathResolver.resolvePath(outputPath).getPath())));
         }
-        RelPath genPath = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s");
-        ImmutableSet<Path> expectedOutputPaths = outputPathsBuilder.build();
 
-        if (!expectedOutputPaths.contains(filesystem.resolve(genPath).getPath())) {
-          // If the list of outputs contains the output directory, skip looking any further
-          filesystem.walkFileTree(
-              filesystem.resolve(genPath).getPath(),
-              new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attrs) {
-                  if (expectedOutputPaths.contains(path)) {
-                    // Skip pruning if the directory is in the declared outputs
-                    return FileVisitResult.SKIP_SUBTREE;
-                  }
-                  // Skip emitting warning for output path
-                  if (!filesystem.resolve(genPath).getPath().equals(path)) {
-                    emitUndeclaredArtifactWarning(path);
-                  }
-                  return FileVisitResult.CONTINUE;
-                }
+        if (checkUntrackedArtifacts) {
+          RelPath genPath = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s");
+          ImmutableSet<Path> expectedOutputPaths = outputPathsBuilder.build();
 
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                  if (!expectedOutputPaths.contains(file)) {
-                    emitUndeclaredArtifactWarning(file);
+          if (!expectedOutputPaths.contains(filesystem.resolve(genPath).getPath())) {
+            // If the list of outputs contains the output directory, skip looking any further
+            filesystem.walkFileTree(
+                filesystem.resolve(genPath).getPath(),
+                new SimpleFileVisitor<Path>() {
+                  @Override
+                  public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attrs) {
+                    if (expectedOutputPaths.contains(path)) {
+                      // Skip pruning if the directory is in the declared outputs
+                      return FileVisitResult.SKIP_SUBTREE;
+                    }
+                    // Skip emitting warning for output path
+                    if (!filesystem.resolve(genPath).getPath().equals(path)) {
+                      emitUndeclaredArtifactWarning(path);
+                    }
+                    return FileVisitResult.CONTINUE;
                   }
-                  return FileVisitResult.CONTINUE;
-                }
 
-                private void emitUndeclaredArtifactWarning(Path path) {
-                  context
-                      .getBuckEventBus()
-                      .post(ConsoleEvent.warning("Untracked artifact found: %s", path.toString()));
-                }
-              });
+                  @Override
+                  public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                    if (!expectedOutputPaths.contains(file)) {
+                      emitUndeclaredArtifactWarning(file);
+                    }
+                    return FileVisitResult.CONTINUE;
+                  }
+
+                  private void emitUndeclaredArtifactWarning(Path path) {
+                    context
+                        .getBuckEventBus()
+                        .post(
+                            ConsoleEvent.warning("Untracked artifact found: %s", path.toString()));
+                  }
+                });
+          }
         }
         return result;
       }

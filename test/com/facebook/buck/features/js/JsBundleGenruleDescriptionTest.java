@@ -67,6 +67,7 @@ import com.facebook.buck.shell.GenruleBuildable;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -341,6 +342,7 @@ public class JsBundleGenruleDescriptionTest {
 
     BuckConfig buckConfig = FakeBuckConfig.empty();
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
 
@@ -349,6 +351,7 @@ public class JsBundleGenruleDescriptionTest {
             sandboxConfig,
             reConfig,
             downwardApiConfig,
+            cliConfig,
             new NoSandboxExecutionStrategy())
         .addAppleBundleResources(
             genruleBuilder,
@@ -374,6 +377,7 @@ public class JsBundleGenruleDescriptionTest {
     AppleBundleResources.Builder resourcesBuilder = AppleBundleResources.builder();
     BuckConfig buckConfig = FakeBuckConfig.empty();
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
 
@@ -382,6 +386,7 @@ public class JsBundleGenruleDescriptionTest {
             sandboxConfig,
             reConfig,
             downwardApiConfig,
+            cliConfig,
             new NoSandboxExecutionStrategy())
         .addAppleBundleResources(
             resourcesBuilder,

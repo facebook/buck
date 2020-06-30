@@ -249,7 +249,8 @@ public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable
           sandboxProperties,
           androidTools,
           executeRemotely,
-          withDownwardApi);
+          withDownwardApi,
+          false);
       this.jsBundleOutput = jsBundleOutput;
       this.jsBundleMisc = jsBundleMisc;
       this.jsBundleResources = jsBundleResources;

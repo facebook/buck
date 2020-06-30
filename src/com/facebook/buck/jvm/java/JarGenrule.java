@@ -78,7 +78,8 @@ public final class JarGenrule extends BaseGenrule<GenruleBuildable> implements B
             Optional.empty(),
             Optional.empty(),
             false,
-            withDownwardApi));
+            withDownwardApi,
+            false));
     this.javaRuntimeLauncher = javaRuntimeLauncher;
   }
 

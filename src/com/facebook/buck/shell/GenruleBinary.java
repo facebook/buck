@@ -55,7 +55,8 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
       Optional<String> environmentExpansionSeparator,
       Optional<AndroidTools> androidTools,
       boolean executeRemotely,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean checkUntrackedArtifacts) {
     super(
         buildTarget,
         projectFilesystem,
@@ -74,7 +75,8 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
         environmentExpansionSeparator,
         androidTools,
         executeRemotely,
-        withDownwardApi);
+        withDownwardApi,
+        checkUntrackedArtifacts);
   }
 
   @Override

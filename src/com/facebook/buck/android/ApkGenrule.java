@@ -193,7 +193,8 @@ public final class ApkGenrule extends BaseGenrule<ApkGenrule.Buildable>
           sandboxProperties,
           androidTools,
           executeRemotely,
-          withDownwardApi);
+          withDownwardApi,
+          false);
       this.apkPath = apkPath;
     }
 

@@ -32,6 +32,7 @@ import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxConfig;
+import com.facebook.buck.support.cli.config.CliConfig;
 
 public class CxxGenruleBuilder
     extends AbstractNodeBuilder<
@@ -49,6 +50,7 @@ public class CxxGenruleBuilder
       FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms, BuckConfig buckConfig) {
 
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
 
@@ -61,6 +63,7 @@ public class CxxGenruleBuilder
         sandboxConfig,
         reConfig,
         downwardApiConfig,
+        cliConfig,
         new CxxBuckConfig(FakeBuckConfig.empty()),
         new NoSandboxExecutionStrategy());
   }

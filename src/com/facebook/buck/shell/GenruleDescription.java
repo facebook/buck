@@ -30,6 +30,7 @@ import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -44,12 +45,14 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       SandboxConfig sandboxConfig,
       RemoteExecutionConfig reConfig,
       DownwardApiConfig downwardApiConfig,
+      CliConfig cliConfig,
       SandboxExecutionStrategy sandboxExecutionStrategy) {
     super(
         toolchainProvider,
         sandboxConfig,
         reConfig,
         downwardApiConfig,
+        cliConfig,
         sandboxExecutionStrategy,
         false);
   }
@@ -70,6 +73,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
     boolean withDownwardApi = downwardApiConfig.isEnabledForGenrule();
+    boolean checkUntrackedArtifacts = cliConfig.shouldPrintGenruleUntrackedArtifactWarning();
     if (!args.getExecutable().orElse(false)) {
       return new Genrule(
           buildTarget,
@@ -90,7 +94,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getEnvironmentExpansionSeparator(),
           getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()),
           canExecuteRemotely(args),
-          withDownwardApi);
+          withDownwardApi,
+          checkUntrackedArtifacts);
     } else {
       return new GenruleBinary(
           buildTarget,
@@ -109,7 +114,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getEnvironmentExpansionSeparator(),
           getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()),
           canExecuteRemotely(args),
-          withDownwardApi);
+          withDownwardApi,
+          checkUntrackedArtifacts);
     }
   }
 

@@ -58,6 +58,7 @@ import com.facebook.buck.rules.macros.WorkerMacroArg;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -80,6 +81,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   protected final SandboxConfig sandboxConfig;
   protected final RemoteExecutionConfig reConfig;
   protected final DownwardApiConfig downwardApiConfig;
+  protected final CliConfig cliConfig;
   protected final SandboxExecutionStrategy sandboxExecutionStrategy;
   protected final boolean enableSandbox;
 
@@ -88,12 +90,14 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       SandboxConfig sandboxConfig,
       RemoteExecutionConfig reConfig,
       DownwardApiConfig downwardApiConfig,
+      CliConfig cliConfig,
       SandboxExecutionStrategy sandboxExecutionStrategy,
       boolean enableSandbox) {
     this.toolchainProvider = toolchainProvider;
     this.sandboxConfig = sandboxConfig;
     this.reConfig = reConfig;
     this.downwardApiConfig = downwardApiConfig;
+    this.cliConfig = cliConfig;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
     this.enableSandbox = enableSandbox;
   }
@@ -160,7 +164,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         args.getEnvironmentExpansionSeparator(),
         getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()),
         canExecuteRemotely(args),
-        withDownwardApi);
+        withDownwardApi,
+        cliConfig.shouldPrintGenruleUntrackedArtifactWarning());
   }
 
   /**

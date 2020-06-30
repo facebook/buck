@@ -37,6 +37,9 @@ public abstract class CliConfig implements ConfigView<BuckConfig> {
   @VisibleForTesting
   public static final String TRUNCATE_FAILING_COMMAND_CONFIG = "truncate_failing_command";
 
+  public static final String PRINT_GENRULE_UNTRACKED_ARTIFACTS_CONFIG =
+      "print_genrule_untracked_artifacts_config";
+
   @Override
   public abstract BuckConfig getDelegate();
 
@@ -123,5 +126,11 @@ public abstract class CliConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public boolean getEnableFailingCommandTruncation() {
     return getDelegate().getBooleanValue(UI_SECTION, TRUNCATE_FAILING_COMMAND_CONFIG, true);
+  }
+
+  @Value.Lazy
+  public boolean shouldPrintGenruleUntrackedArtifactWarning() {
+    return getDelegate()
+        .getBooleanValue(UI_SECTION, PRINT_GENRULE_UNTRACKED_ARTIFACTS_CONFIG, false);
   }
 }

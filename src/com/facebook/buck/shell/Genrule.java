@@ -159,7 +159,8 @@ public class Genrule extends BaseGenrule<GenruleBuildable>
       Optional<String> environmentExpansionSeparator,
       Optional<AndroidTools> androidTools,
       boolean executeRemotely,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean checkUntrackedArtifacts) {
     super(
         buildTarget,
         projectFilesystem,
@@ -192,7 +193,8 @@ public class Genrule extends BaseGenrule<GenruleBuildable>
             androidTools.map(
                 tools -> GenruleAndroidTools.of(tools, buildTarget, buildRuleResolver)),
             executeRemotely,
-            withDownwardApi));
+            withDownwardApi,
+            checkUntrackedArtifacts));
   }
 
   /**

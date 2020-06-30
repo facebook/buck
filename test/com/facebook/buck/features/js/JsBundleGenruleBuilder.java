@@ -29,6 +29,7 @@ import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxConfig;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import javax.annotation.Nullable;
@@ -45,6 +46,7 @@ public class JsBundleGenruleBuilder
   private static JsBundleGenruleDescription getJsBundleGenruleDescription() {
     BuckConfig buckConfig = FakeBuckConfig.empty();
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
 
@@ -53,6 +55,7 @@ public class JsBundleGenruleBuilder
         sandboxConfig,
         reConfig,
         downwardApiConfig,
+        cliConfig,
         new NoSandboxExecutionStrategy());
   }
 

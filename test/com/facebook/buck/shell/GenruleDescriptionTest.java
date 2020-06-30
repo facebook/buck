@@ -68,6 +68,7 @@ import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxConfig;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
@@ -88,6 +89,7 @@ public class GenruleDescriptionTest {
 
     BuckConfig buckConfig = FakeBuckConfig.empty();
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
 
@@ -97,6 +99,7 @@ public class GenruleDescriptionTest {
             sandboxConfig,
             reConfig,
             downwardApiConfig,
+            cliConfig,
             new NoSandboxExecutionStrategy());
     KnownNativeRuleTypes knownRuleTypes =
         KnownNativeRuleTypes.of(

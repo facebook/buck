@@ -30,6 +30,7 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxConfig;
+import com.facebook.buck.support.cli.config.CliConfig;
 import java.nio.file.Paths;
 
 public class ApkGenruleBuilder
@@ -46,6 +47,7 @@ public class ApkGenruleBuilder
   private static ApkGenruleDescription getDescription(ToolchainProvider toolchainProvider) {
     BuckConfig buckConfig = FakeBuckConfig.empty();
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
 
@@ -54,6 +56,7 @@ public class ApkGenruleBuilder
         sandboxConfig,
         reConfig,
         downwardApiConfig,
+        cliConfig,
         new NoSandboxExecutionStrategy());
   }
 

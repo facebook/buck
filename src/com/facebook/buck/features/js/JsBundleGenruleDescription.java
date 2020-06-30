@@ -44,6 +44,7 @@ import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDirectoryAction;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -61,12 +62,14 @@ public class JsBundleGenruleDescription
       SandboxConfig sandboxConfig,
       RemoteExecutionConfig reConfig,
       DownwardApiConfig downwardApiConfig,
+      CliConfig cliConfig,
       SandboxExecutionStrategy sandboxExecutionStrategy) {
     super(
         toolchainProvider,
         sandboxConfig,
         reConfig,
         downwardApiConfig,
+        cliConfig,
         sandboxExecutionStrategy,
         false);
   }

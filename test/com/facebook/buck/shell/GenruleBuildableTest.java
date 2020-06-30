@@ -701,6 +701,7 @@ public class GenruleBuildableTest {
                 return ImmutableList.of();
               }
             },
+            false,
             false);
 
     step.execute(TestExecutionContext.newInstance());
@@ -751,6 +752,7 @@ public class GenruleBuildableTest {
                 return ImmutableList.of();
               }
             },
+            false,
             false);
 
     step.execute(TestExecutionContext.newInstance());

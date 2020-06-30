@@ -1,0 +1,2 @@
+[ui]
+  print_genrule_untracked_artifacts_config = True

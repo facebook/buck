@@ -31,6 +31,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
+import com.facebook.buck.support.cli.config.CliConfig;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -41,12 +42,14 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
       SandboxConfig sandboxConfig,
       RemoteExecutionConfig reConfig,
       DownwardApiConfig downwardApiConfig,
+      CliConfig cliConfig,
       SandboxExecutionStrategy sandboxExecutionStrategy) {
     super(
         toolchainProvider,
         sandboxConfig,
         reConfig,
         downwardApiConfig,
+        cliConfig,
         sandboxExecutionStrategy,
         false);
   }
