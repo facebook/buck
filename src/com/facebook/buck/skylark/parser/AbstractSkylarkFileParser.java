@@ -37,7 +37,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -73,6 +72,7 @@ import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -88,7 +88,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
   private final Cache<com.google.devtools.build.lib.vfs.Path, StarlarkFile> astCache;
   private final Cache<com.google.devtools.build.lib.vfs.Path, ExtensionData> extensionDataCache;
-  private final LoadingCache<LoadImport, IncludesData> includesDataCache;
+  private final ConcurrentHashMap<Label, IncludesData> includesDataCache;
   private final PackageImplicitIncludesFinder packageImplicitIncludeFinder;
 
   private final ReadConfigContext readConfigContext;
@@ -106,16 +106,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     this.astCache = CacheBuilder.newBuilder().build();
     this.extensionDataCache = CacheBuilder.newBuilder().build();
 
-    this.includesDataCache =
-        CacheBuilder.newBuilder()
-            .build(
-                new CacheLoader<LoadImport, IncludesData>() {
-                  @Override
-                  public IncludesData load(LoadImport loadImport)
-                      throws IOException, InterruptedException {
-                    return loadInclude(loadImport);
-                  }
-                });
+    this.includesDataCache = new ConcurrentHashMap<>();
 
     this.packageImplicitIncludeFinder =
         PackageImplicitIncludesFinder.fromConfiguration(options.getPackageImplicitIncludes());
@@ -391,7 +382,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *
    * @param loadImport an import label representing an extension to load.
    */
-  private IncludesData loadInclude(LoadImport loadImport)
+  private IncludesData loadIncludeImpl(LoadImport loadImport)
       throws IOException, BuildFileParseException, InterruptedException {
     Label label = loadImport.getLabel();
     com.google.devtools.build.lib.vfs.Path filePath = getImportPath(label, loadImport.getImport());
@@ -403,6 +394,22 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     return ImmutableIncludesData.ofImpl(
         filePath, dependencies, toIncludedPaths(filePath.toString(), dependencies, null));
+  }
+
+  /**
+   * Creates an {@code IncludesData} object from a {@code path}.
+   *
+   * @param loadImport an import label representing an extension to load.
+   */
+  private IncludesData loadInclude(LoadImport loadImport)
+      throws IOException, BuildFileParseException, InterruptedException {
+    IncludesData includesData = includesDataCache.get(loadImport.getLabel());
+    if (includesData != null) {
+      return includesData;
+    }
+    includesData = loadIncludeImpl(loadImport);
+    includesDataCache.put(loadImport.getLabel(), includesData);
+    return includesData;
   }
 
   /** Collects all the included files identified by corresponding Starlark imports. */
@@ -419,7 +426,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       if (!processed.add(skylarkImport)) continue;
       LoadImport loadImport = ImmutableLoadImport.ofImpl(containingLabel, skylarkImport);
       try {
-        includes.add(includesDataCache.getUnchecked(loadImport));
+        includes.add(loadInclude(loadImport));
       } catch (UncheckedExecutionException e) {
         propagateRootCause(e);
       }
@@ -888,6 +895,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     abstract String getImport();
 
     /** Returns a label of current import file. */
+    @Value.Derived
     Label getLabel() {
       try {
         return getContainingLabel().getRelativeWithRemapping(getImport(), ImmutableMap.of());
