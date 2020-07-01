@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -35,6 +36,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -75,10 +77,35 @@ public class CopyResourcesStep implements Step {
 
   @VisibleForTesting
   ImmutableList<Step> buildSteps() {
-    ImmutableList.Builder<Step> allSteps = ImmutableList.builder();
+    ImmutableMap<AbsPath, Path> resourcesMap =
+        getResourcesMap(buildContext, filesystem, outputDirectory, parameters, target);
+    ImmutableList.Builder<Step> steps =
+        ImmutableList.builderWithExpectedSize(resourcesMap.size() * 2);
+    resourcesMap.forEach(
+        (resourceAbsPath, target) -> {
+          steps.add(
+              MkdirStep.of(
+                  BuildCellRelativePath.fromCellRelativePath(
+                      buildContext.getBuildCellRootPath(), filesystem, target.getParent())));
+          steps.add(SymlinkFileStep.of(filesystem, resourceAbsPath.getPath(), target));
+        });
+
+    return steps.build();
+  }
+
+  /**
+   * Returns discovered resources as a map, where the key is the an actual absolute path to the resource
+   * and a value is a desired path to it.
+   */
+  public static ImmutableMap<AbsPath, Path> getResourcesMap(
+      BuildContext buildContext,
+      ProjectFilesystem filesystem,
+      Path outputDirectory,
+      ResourcesParameters parameters,
+      BuildTarget buildTarget) {
 
     if (parameters.getResources().isEmpty()) {
-      return allSteps.build();
+      return ImmutableMap.of();
     }
 
     JavaPackageFinder javaPackageFinder =
@@ -91,13 +118,13 @@ public class CopyResourcesStep implements Step {
                         new ResourcesRootPackageFinder(root, buildContext.getJavaPackageFinder()))
             .orElse(buildContext.getJavaPackageFinder());
 
-    String targetPackageDir = javaPackageFinder.findJavaPackage(target);
-
+    String targetPackageDir = javaPackageFinder.findJavaPackage(buildTarget);
+    ImmutableMap.Builder<AbsPath, Path> resourcesMapBuilder = ImmutableMap.builder();
     for (Map.Entry<String, SourcePath> entry : parameters.getResources().entrySet()) {
       String resource = entry.getKey();
       SourcePath rawResource = entry.getValue();
-      RelPath relativePathToResource =
-          filesystem.relativize(buildContext.getSourcePathResolver().getAbsolutePath(rawResource));
+      AbsPath resourceAbsPath = buildContext.getSourcePathResolver().getAbsolutePath(rawResource);
+      RelPath relativePathToResource = filesystem.relativize(resourceAbsPath);
 
       Path javaPackageAsPath =
           javaPackageFinder.findJavaPackageFolder(
@@ -138,17 +165,10 @@ public class CopyResourcesStep implements Step {
         }
       }
       Path target = outputDirectory.resolve(relativeSymlinkPath);
-      allSteps.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  buildContext.getBuildCellRootPath(), filesystem, target.getParent())));
-      allSteps.add(
-          SymlinkFileStep.of(
-              filesystem,
-              buildContext.getSourcePathResolver().getAbsolutePath(rawResource).getPath(),
-              target));
+
+      resourcesMapBuilder.put(resourceAbsPath, target);
     }
-    return allSteps.build();
+    return resourcesMapBuilder.build();
   }
 
   @Override
