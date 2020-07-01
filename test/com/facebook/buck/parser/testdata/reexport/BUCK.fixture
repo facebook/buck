@@ -1,0 +1,5 @@
+# @nolint
+
+load(":a.bzl", "x")
+
+print("x = %s" % x)

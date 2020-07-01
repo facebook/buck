@@ -777,4 +777,17 @@ public class ParserIntegrationTest {
             .assertSuccess();
     assertThat(result.getStderr(), containsString("x=1 y=2 z=3 w=4"));
   }
+
+  @Test
+  @Parameters(method = "syntaxes")
+  public void reexport(Syntax syntax) throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "reexport", temporaryFolder);
+    workspace.setUp();
+    ProcessResult result =
+        workspace
+            .runBuckBuild("//:", "-c", "parser.default_build_file_syntax=" + syntax)
+            .assertSuccess();
+    assertThat(result.getStderr(), containsString("x = 17"));
+  }
 }
