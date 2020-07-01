@@ -1,0 +1,5 @@
+{
+  "//lib:bar (//config/platform:tvos)": {
+    "fully_qualified_name": "//lib:bar"
+  }
+}

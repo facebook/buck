@@ -381,6 +381,24 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void containsFullyQualifiedNameAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "//lib:bar",
+            "--target-universe",
+            "//bin:tvos-bin",
+            "--output-attribute",
+            "fully_qualified_name");
+    assertJSONOutputMatchesFileContents(
+        "stdout-contains-fully-qualified-name-attribute.json", result, workspace);
+  }
+
+  @Test
   public void implicitTargetUniverseForRdeps() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);

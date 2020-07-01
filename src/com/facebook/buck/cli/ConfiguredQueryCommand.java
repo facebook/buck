@@ -460,6 +460,10 @@ public class ConfiguredQueryCommand
             .map(BuildTarget::toStringWithConfiguration)
             .collect(ImmutableList.toImmutableList()));
 
+    // NOTE: This name includes flavors, as it is meant to directly map to what is shown in the
+    //   "key" (aka `//foo:foo (//some:platform)`).
+    result.put(SpecialAttr.FULLY_QUALIFIED_NAME, node.getBuildTarget().getFullyQualifiedName());
+
     return result.build();
   }
 
