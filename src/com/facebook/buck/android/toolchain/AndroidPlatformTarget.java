@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.toolchain;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -56,8 +57,8 @@ public abstract class AndroidPlatformTarget implements Toolchain, AddsToRuleKey 
 
   public abstract Path getAndroidJar();
 
-  /** @return bootclasspath entries as absolute {@link Path}s */
-  public abstract List<Path> getBootclasspathEntries();
+  /** @return bootclasspath entries as {@link AbsPath}s */
+  public abstract List<AbsPath> getBootclasspathEntries();
 
   public abstract Supplier<Tool> getAaptExecutable();
 
@@ -91,7 +92,7 @@ public abstract class AndroidPlatformTarget implements Toolchain, AddsToRuleKey 
   public static AndroidPlatformTarget of(
       String platformName,
       Path androidJar,
-      List<Path> bootclasspathEntries,
+      List<AbsPath> bootclasspathEntries,
       Supplier<Tool> aaptExecutable,
       ToolProvider aapt2ToolProvider,
       Path adbExecutable,

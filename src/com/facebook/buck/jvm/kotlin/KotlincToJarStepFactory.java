@@ -49,6 +49,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.CopyStep.DirectoryMode;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Joiner;
@@ -88,7 +89,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @AddToRuleKey private final ImmutableList<SourcePath> friendPaths;
   @AddToRuleKey private final AnnotationProcessingTool annotationProcessingTool;
   @AddToRuleKey private final Optional<String> jvmTarget;
-  @AddToRuleKey private final ExtraClasspathProvider extraClassPath;
+  @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final boolean withDownwardApi;
@@ -141,7 +142,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     this.friendPaths = friendPaths;
     this.annotationProcessingTool = annotationProcessingTool;
     this.jvmTarget = jvmTarget;
-    this.extraClassPath = extraClassPath;
+    this.extraClasspathProvider = extraClassPath;
     this.javac = javac;
     this.javacOptions = Objects.requireNonNull(javacOptions);
     this.withDownwardApi = withDownwardApi;
@@ -203,8 +204,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       ImmutableSortedSet<Path> allClasspaths =
           ImmutableSortedSet.<Path>naturalOrder()
               .addAll(
-                  Optional.ofNullable(extraClassPath.getExtraClasspath())
-                      .orElse(ImmutableList.of()))
+                  RichStream.from(extraClasspathProvider.getExtraClasspath())
+                      .map(AbsPath::getPath)
+                      .iterator())
               .addAll(declaredClasspathEntries)
               .addAll(kotlinHomeLibraries)
               .build();
@@ -394,14 +396,15 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 ImmutableSortedSet.<Path>naturalOrder()
                     .add(projectFilesystem.resolve(outputDirectory).getPath())
                     .addAll(
-                        Optional.ofNullable(extraClassPath.getExtraClasspath())
-                            .orElse(ImmutableList.of()))
+                        RichStream.from(extraClasspathProvider.getExtraClasspath())
+                            .map(AbsPath::getPath)
+                            .iterator())
                     .addAll(declaredClasspathEntries)
                     .build())
             .setSourceFilePaths(javaSourceFiles)
             .build();
 
-    new JavacToJarStepFactory(javac, finalJavacOptions, extraClassPath, withDownwardApi)
+    new JavacToJarStepFactory(javac, finalJavacOptions, extraClasspathProvider, withDownwardApi)
         .createCompileStep(
             buildContext,
             projectFilesystem,
@@ -426,7 +429,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
   @Override
   protected Optional<String> getBootClasspath(BuildContext context) {
-    return javacOptions.withBootclasspathFromContext(extraClassPath).getBootclasspath();
+    return javacOptions.withBootclasspathFromContext(extraClasspathProvider).getBootclasspath();
   }
 
   private String encodeKaptApOptions(Map<String, String> kaptApOptions, String kaptGeneratedPath) {

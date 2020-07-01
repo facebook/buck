@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -366,7 +367,10 @@ public final class ProGuardObfuscateStep extends IsolatedShellStep {
 
       // -libraryjars
       Iterable<Path> bootclasspathPaths =
-          () -> androidPlatformTarget.getBootclasspathEntries().iterator();
+          () ->
+              androidPlatformTarget.getBootclasspathEntries().stream()
+                  .map(AbsPath::getPath)
+                  .iterator();
       Iterable<Path> libraryJars =
           Iterables.concat(bootclasspathPaths, additionalLibraryJarsForProguard);
 
