@@ -1,0 +1,11 @@
+{
+  "//bin:foo-bin": {
+    "buck.direct_dependencies": [
+      "//bin:keystore-debug",
+      "//bin:keystore-prod",
+      "//config/mode:dev",
+      "//config/mode:opt",
+      "//lib:foo"
+    ]
+  }
+}

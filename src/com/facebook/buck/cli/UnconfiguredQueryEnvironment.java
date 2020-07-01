@@ -336,6 +336,11 @@ public class UnconfiguredQueryEnvironment
     return targetGraph.getNode(buildTarget);
   }
 
+  public ImmutableSet<UnconfiguredBuildTarget> getNodesDirectDependencies(
+      UnconfiguredTargetNode node) {
+    return targetGraph.getTraversalResult(node).getParseDeps();
+  }
+
   /**
    * Filter function to remove any {@code UnconfiguredQueryTarget}s that don't refer to build
    * targets

@@ -306,6 +306,24 @@ public class UnconfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void includesComputedDirectDependenciesAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery",
+            "//bin:foo-bin",
+            "--output-attribute",
+            "buck.direct_dependencies",
+            "--output-format",
+            "json");
+    assertJSONOutputMatchesFileContents(
+        "stdout-includes-computed-direct-dependencies-attribute.json", result, workspace);
+  }
+
+  @Test
   public void doesntConfigureDependenciesOfTargetForPlatform() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);

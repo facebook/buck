@@ -65,7 +65,8 @@ public class UnconfiguredQueryCommand
     extends AbstractQueryCommand<UnconfiguredQueryTarget, UnconfiguredQueryEnvironment> {
 
   private static final ImmutableSet<SpecialAttr> supportedComputedAttributes =
-      ImmutableSet.of(SpecialAttr.BASE_PATH, SpecialAttr.BUCK_TYPE);
+      ImmutableSet.of(
+          SpecialAttr.BASE_PATH, SpecialAttr.DIRECT_DEPENDENCIES, SpecialAttr.BUCK_TYPE);
 
   private PerBuildState perBuildState;
   private TraversableGraph<UnconfiguredTargetNode> targetGraph;
@@ -344,7 +345,7 @@ public class UnconfiguredQueryCommand
       }
       UnconfiguredTargetNode node = maybeNode.get();
       getAllRawAttributes(params, node)
-          .map(attrs -> getMatchingRawAndComputedAttributes(matcher, node, attrs))
+          .map(attrs -> getMatchingRawAndComputedAttributes(env, matcher, node, attrs))
           .ifPresent(
               attrs ->
                   result.put(
@@ -377,6 +378,7 @@ public class UnconfiguredQueryCommand
   }
 
   private ImmutableMap<ParamNameOrSpecial, Object> getMatchingRawAndComputedAttributes(
+      UnconfiguredQueryEnvironment env,
       PatternsMatcher matcher,
       UnconfiguredTargetNode node,
       TwoArraysImmutableHashMap<ParamName, Object> rawAttributes) {
@@ -395,6 +397,18 @@ public class UnconfiguredQueryCommand
         getMatchingAttributeNames(matcher, supportedComputedAttributes);
     if (matchingSpecialAttributes.contains(SpecialAttr.BASE_PATH)) {
       result.put(SpecialAttr.BASE_PATH, node.getBuildTarget().getBaseName().getPath().toString());
+    }
+    // NOTE: Certain queries (like `buck uquery "//..."`) don't require us to calculate dependencies
+    // to print a result, so printing this attribute might require calculating it for the first
+    // time. That means we need to be very careful that we're not calculating the information unless
+    // we really need it. Unfortunately doing it here means it's single threaded, if we wanted to
+    // improve this we could try to parallelize this calculation like we do when building the graph.
+    if (matchingSpecialAttributes.contains(SpecialAttr.DIRECT_DEPENDENCIES)) {
+      result.put(
+          SpecialAttr.DIRECT_DEPENDENCIES,
+          env.getNodesDirectDependencies(node).stream()
+              .map(Object::toString)
+              .collect(ImmutableList.toImmutableList()));
     }
     if (matchingSpecialAttributes.contains(SpecialAttr.BUCK_TYPE)) {
       result.put(SpecialAttr.BUCK_TYPE, node.getRuleType().getName());
