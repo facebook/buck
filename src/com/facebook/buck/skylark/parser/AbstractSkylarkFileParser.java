@@ -563,6 +563,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     // Adds a single dependency key for this extension.
     public void addDependency(LoadImport dependency) {
+      Preconditions.checkArgument(dependency.getContainingLabel().equals(load.getLabel()));
       dependencies.add(dependency);
     }
 
