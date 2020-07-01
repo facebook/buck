@@ -18,7 +18,6 @@ package com.facebook.buck.io.namedpipes.windows;
 
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
-import com.facebook.buck.io.namedpipes.RandomAccessFileBasedNamedPipe;
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinNT;
@@ -30,6 +29,8 @@ import java.util.UUID;
 /** Windows named pipe factory. (Singleton With Enum Implementation). */
 public enum WindowsNamedPipeFactory implements NamedPipeFactory {
   INSTANCE;
+
+  static final Kernel32 API = Kernel32.INSTANCE;
 
   private static final int KB_IN_BYTES = 1024;
   // Linux has 64K buffer, MacOS 16K.
@@ -48,12 +49,12 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
             "pipe",
             "buck-" + UUID.randomUUID());
     Path path = Paths.get(namedPipePath);
-    return new WindowsNamedPipe(path, createNamedPipe(namedPipePath));
+    return new WindowsServerNamedPipe(path, createNamedPipe(namedPipePath));
   }
 
   private static WinNT.HANDLE createNamedPipe(String namedPipePath) throws IOException {
     WinNT.HANDLE namedPipeHandler =
-        Kernel32.INSTANCE.CreateNamedPipe(
+        API.CreateNamedPipe(
             /* lpName */ namedPipePath,
             /* dwOpenMode */ WinBase.PIPE_ACCESS_DUPLEX,
             /* dwPipeMode */ WinBase.PIPE_TYPE_BYTE
@@ -70,14 +71,14 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
     if (WinBase.INVALID_HANDLE_VALUE.equals(namedPipeHandler)) {
       throw new IOException(
           String.format(
-              "Can't create named pipe: %s with CreateNamedPipe() command. Error code: %s",
-              namedPipePath, Kernel32.INSTANCE.GetLastError()));
+              "Cannot create named pipe: %s with CreateNamedPipe() command. Error code: %s",
+              namedPipePath, API.GetLastError()));
     }
     return namedPipeHandler;
   }
 
   @Override
-  public NamedPipe connect(Path namedPipePath) throws IOException {
-    return new RandomAccessFileBasedNamedPipe(namedPipePath);
+  public NamedPipe connect(Path namedPipePath) {
+    return new WindowsClientNamedPipe(namedPipePath);
   }
 }
