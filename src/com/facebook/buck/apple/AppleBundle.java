@@ -70,7 +70,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import com.google.common.util.concurrent.Futures;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
@@ -418,44 +417,57 @@ public class AppleBundle extends AbstractBuildRule
 
         Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
 
-        ProvisioningProfileCopyStep provisioningProfileCopyStep =
-            new ProvisioningProfileCopyStep(
-                getProjectFilesystem(),
-                infoPlistBundlePath,
-                platform,
-                entitlementsPlist,
-                provisioningProfileStore,
-                resourcesDestinationPath.resolve("embedded.mobileprovision"),
-                dryRunCodeSigning
-                    ? bundleRoot.resolve(CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE)
-                    : signingEntitlementsTempPath.get(),
-                codeSignIdentitiesSupplier,
-                dryRunCodeSigning ? Optional.of(dryRunResultPath) : Optional.empty());
-        stepsBuilder.add(provisioningProfileCopyStep);
+        ProvisioningProfileMetadataHolder selectedProfile = new ProvisioningProfileMetadataHolder();
+        {
+          ProvisioningProfileSelectStep provisioningProfileSelectStep =
+              new ProvisioningProfileSelectStep(
+                  getProjectFilesystem(),
+                  infoPlistBundlePath,
+                  platform,
+                  entitlementsPlist,
+                  codeSignIdentitiesSupplier,
+                  provisioningProfileStore,
+                  dryRunCodeSigning ? Optional.of(dryRunResultPath) : Optional.empty(),
+                  selectedProfile);
+          stepsBuilder.add(provisioningProfileSelectStep);
+        }
 
-        Supplier<ProvisioningProfileMetadata> selectedProfile =
+        Supplier<Boolean> isProvisioningProfileSelected =
+            () -> selectedProfile.getMetadata().isPresent();
+
+        Supplier<ProvisioningProfileMetadata> selectedProfileSupplier =
             () -> {
-              // Using getUnchecked here because the previous step should already throw if exception
-              // occurred, and this supplier would never be evaluated.
-              return Futures.getUnchecked(
-                      provisioningProfileCopyStep.getSelectedProvisioningProfileFuture())
-                  .orElseThrow(
-                      () ->
-                          new IllegalStateException(
-                              "This supplier should never be evaluated when no profile is selected"));
+              Preconditions.checkState(isProvisioningProfileSelected.get());
+              //noinspection OptionalGetWithoutIsPresent
+              return selectedProfile.getMetadata().get();
             };
-        CodeSignIdentityHolder codeSignIdentityHolder = new CodeSignIdentityHolder();
-        CodeSignIdentitySelectStep codeSignIdentitySelectStep =
-            new CodeSignIdentitySelectStep(
-                codeSignIdentitiesSupplier, selectedProfile, codeSignIdentityHolder);
 
-        Supplier<Boolean> shouldRunCodeSignIdentitySelection =
-            () ->
-                Futures.getUnchecked(
-                        provisioningProfileCopyStep.getSelectedProvisioningProfileFuture())
-                    .isPresent();
-        stepsBuilder.add(
-            new ConditionalStep(shouldRunCodeSignIdentitySelection, codeSignIdentitySelectStep));
+        {
+          ProvisioningProfileCopyStep provisioningProfileCopyStep =
+              new ProvisioningProfileCopyStep(
+                  getProjectFilesystem(),
+                  infoPlistBundlePath,
+                  entitlementsPlist,
+                  resourcesDestinationPath.resolve("embedded.mobileprovision"),
+                  dryRunCodeSigning
+                      ? bundleRoot.resolve(CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE)
+                      : signingEntitlementsTempPath.get(),
+                  dryRunCodeSigning,
+                  selectedProfileSupplier);
+
+          stepsBuilder.add(
+              new ConditionalStep(isProvisioningProfileSelected, provisioningProfileCopyStep));
+        }
+
+        CodeSignIdentityHolder codeSignIdentityHolder = new CodeSignIdentityHolder();
+        {
+          CodeSignIdentitySelectStep codeSignIdentitySelectStep =
+              new CodeSignIdentitySelectStep(
+                  codeSignIdentitiesSupplier, selectedProfileSupplier, codeSignIdentityHolder);
+
+          stepsBuilder.add(
+              new ConditionalStep(isProvisioningProfileSelected, codeSignIdentitySelectStep));
+        }
 
         codeSignIdentitySupplier =
             () -> {
@@ -466,7 +478,11 @@ public class AppleBundle extends AbstractBuildRule
                 // mode. Still, we need to return *something*.
                 return CodeSignIdentity.AD_HOC;
               } else {
-                throw new IllegalStateException("Code sign identity should be selected");
+                String reason =
+                    isProvisioningProfileSelected.get()
+                        ? "Provisioning profile should be selected"
+                        : "Code sign identity should be selected";
+                throw new IllegalStateException(reason);
               }
             };
       }
