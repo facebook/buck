@@ -1,0 +1,5 @@
+# @nolint
+
+load(":c.bzl", "s")
+
+print(s)

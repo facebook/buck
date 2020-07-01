@@ -738,4 +738,32 @@ public class ParserIntegrationTest {
             .assertSuccess();
     assertThat(result.getStderr(), containsString("factorial of 5 is 120"));
   }
+
+  @Test
+  @Parameters(method = "syntaxes")
+  public void loadTwiceFromBuck(Syntax syntax) throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "load_twice_from_buck", temporaryFolder);
+    workspace.setUp();
+    ProcessResult result =
+        workspace
+            .runBuckBuild("//:", "-c", "parser.default_build_file_syntax=" + syntax)
+            .assertSuccess();
+    assertThat(result.getStderr(), containsString("x=1 y=2 z=3 w=4"));
+  }
+
+  @Test
+  @Parameters(method = "syntaxes")
+  public void loadTwiceFromBzl(Syntax syntax) throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "load_twice_from_bzl", temporaryFolder);
+    workspace.setUp();
+    ProcessResult result =
+        workspace
+            .runBuckBuild("//:", "-c", "parser.default_build_file_syntax=" + syntax)
+            .assertSuccess();
+    assertThat(result.getStderr(), containsString("x=1 y=2 z=3 w=4"));
+  }
 }
