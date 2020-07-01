@@ -16,15 +16,14 @@
 
 package com.facebook.buck.io.namedpipes.posix;
 
-import com.facebook.buck.io.namedpipes.RandomAccessFileBasedNamedPipe;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 /** POSIX name pipe that creates and removes a physical file corresponding to the named pipe. */
-class POSIXNamedPipe extends RandomAccessFileBasedNamedPipe {
+class POSIXServerNamedPipe extends POSIXClientNamedPipe {
 
-  POSIXNamedPipe(Path path) throws IOException {
+  POSIXServerNamedPipe(Path path) throws IOException {
     super(path);
   }
 

@@ -18,7 +18,6 @@ package com.facebook.buck.io.namedpipes.posix;
 
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
-import com.facebook.buck.io.namedpipes.RandomAccessFileBasedNamedPipe;
 import com.sun.jna.LastErrorException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -36,7 +35,7 @@ public enum POSIXNamedPipeFactory implements NamedPipeFactory {
   public NamedPipe create() throws IOException {
     Path namedPathName = Paths.get(TMP_DIR, "pipe", "buck-" + UUID.randomUUID());
     createNamedPipe(namedPathName);
-    return new POSIXNamedPipe(namedPathName);
+    return new POSIXServerNamedPipe(namedPathName);
   }
 
   private static void createNamedPipe(Path path) throws IOException {
@@ -50,7 +49,7 @@ public enum POSIXNamedPipeFactory implements NamedPipeFactory {
     } catch (LastErrorException e) {
       throw new IOException(
           String.format(
-              "Can't create named pipe: %s with `mkfifo` command. Error code: %s. "
+              "Cannot create named pipe: %s with `mkfifo` command. Error code: %s. "
                   + "Check where 'java.io.tmpdir':%s points to and make sure that this directory is on a filesystem that supports pipes (e.g. not EdenFS).",
               pathString, e.getErrorCode(), TMP_DIR),
           e);
@@ -58,13 +57,13 @@ public enum POSIXNamedPipeFactory implements NamedPipeFactory {
     if (exitCode != 0) {
       throw new IOException(
           String.format(
-              "Can't create named pipe: %s with `mkfifo` command. Exit code: %s",
+              "Cannot create named pipe: %s with `mkfifo` command. Exit code: %s",
               pathString, exitCode));
     }
   }
 
   @Override
   public NamedPipe connect(Path namedPipePath) throws IOException {
-    return new RandomAccessFileBasedNamedPipe(namedPipePath);
+    return new POSIXClientNamedPipe(namedPipePath);
   }
 }
