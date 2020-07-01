@@ -16,6 +16,8 @@
 
 package com.facebook.buck.io.namedpipes.windows;
 
+import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.closeConnectedPipe;
+
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.sun.jna.platform.win32.Kernel32;
@@ -30,17 +32,12 @@ import java.util.UUID;
 public enum WindowsNamedPipeFactory implements NamedPipeFactory {
   INSTANCE;
 
-  static final Kernel32 API = Kernel32.INSTANCE;
-
-  private static final int KB_IN_BYTES = 1024;
-  // Linux has 64K buffer, MacOS 16K.
-  // Set buffer size to 32K (the number in the middle of Linux and MacOs sizes).
-  private static final int BUFFER_SIZE = 32 * KB_IN_BYTES;
-
   private static final String WINDOWS_PATH_DELIMITER = "\\";
 
+  private static final int CONNECT_TIMEOUT_IN_MILLIS = 1_000;
+
   @Override
-  public NamedPipe create() throws IOException {
+  public NamedPipe create() {
     String namedPipePath =
         String.join(
             WINDOWS_PATH_DELIMITER,
@@ -49,36 +46,35 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
             "pipe",
             "buck-" + UUID.randomUUID());
     Path path = Paths.get(namedPipePath);
-    return new WindowsServerNamedPipe(path, createNamedPipe(namedPipePath));
-  }
-
-  private static WinNT.HANDLE createNamedPipe(String namedPipePath) throws IOException {
-    WinNT.HANDLE namedPipeHandler =
-        API.CreateNamedPipe(
-            /* lpName */ namedPipePath,
-            /* dwOpenMode */ WinBase.PIPE_ACCESS_DUPLEX,
-            /* dwPipeMode */ WinBase.PIPE_TYPE_BYTE
-                | WinBase.PIPE_READMODE_BYTE
-                // do not allow remote clients
-                | WinBase.PIPE_REJECT_REMOTE_CLIENTS
-                | WinBase.PIPE_WAIT,
-            /* nMaxInstances */ WinBase.PIPE_UNLIMITED_INSTANCES,
-            /* nOutBufferSize */ BUFFER_SIZE,
-            /* nInBufferSize */ BUFFER_SIZE,
-            /* nDefaultTimeOut */ 0,
-            /* lpSecurityAttributes */ null);
-
-    if (WinBase.INVALID_HANDLE_VALUE.equals(namedPipeHandler)) {
-      throw new IOException(
-          String.format(
-              "Cannot create named pipe: %s with CreateNamedPipe() command. Error code: %s",
-              namedPipePath, API.GetLastError()));
-    }
-    return namedPipeHandler;
+    return new WindowsNamedPipeServer(path);
   }
 
   @Override
-  public NamedPipe connect(Path namedPipePath) {
-    return new WindowsClientNamedPipe(namedPipePath);
+  public NamedPipe connect(Path path) throws IOException {
+    return new WindowsNamedPipeClient(
+        path, connectToPipe(path), handle -> closeConnectedPipe(handle, true));
+  }
+
+  private static WinNT.HANDLE connectToPipe(Path path) throws IOException {
+    String namedPipeName = path.toString();
+    Kernel32.INSTANCE.WaitNamedPipe(namedPipeName, CONNECT_TIMEOUT_IN_MILLIS);
+
+    WinNT.HANDLE handle =
+        Kernel32.INSTANCE.CreateFile(
+            namedPipeName,
+            WinNT.GENERIC_READ | WinNT.GENERIC_WRITE,
+            0, // no sharing
+            null, // default security attributes
+            WinNT.OPEN_EXISTING, // opens existing pipe
+            WinNT.FILE_FLAG_OVERLAPPED,
+            null // no template file
+            );
+
+    if (WinBase.INVALID_HANDLE_VALUE.equals(handle)) {
+      throw new IOException(
+          String.format("Could not create named pipe, error %d", Kernel32.INSTANCE.GetLastError()));
+    }
+
+    return handle;
   }
 }

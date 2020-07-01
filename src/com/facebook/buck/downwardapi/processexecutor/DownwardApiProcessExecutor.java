@@ -270,13 +270,15 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
             } catch (Exception e) {
               LOG.error(e, "Cannot handle event: %s", event);
             }
-          } catch (ClosedChannelException | PipeNotConnectedException e) {
+          } catch (ClosedChannelException e) {
             LOG.info("Named pipe %s is closed", namedPipeName);
           } catch (IOException e) {
             LOG.error(e, "Exception during processing events from named pipe: %s", namedPipeName);
           }
         }
         LOG.info("Finishing reader thread for pipe: %s", namedPipeName);
+      } catch (PipeNotConnectedException e) {
+        LOG.info("Named pipe %s is closed", namedPipeName);
       } catch (IOException e) {
         LOG.error(e, "Cannot read from named pipe: %s", namedPipeName);
       } finally {
