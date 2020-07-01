@@ -270,6 +270,42 @@ public class UnconfiguredQueryCommandIntegrationTest {
    * =============================================================================================
    */
   @Test
+  public void includesComputedTypeAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery",
+            "//lib:devtools",
+            "--output-attribute",
+            "buck.type",
+            "--output-format",
+            "json");
+    assertJSONOutputMatchesFileContents(
+        "stdout-includes-computed-type-attribute.json", result, workspace);
+  }
+
+  @Test
+  public void includesComputedBasePathAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery",
+            "//lib:devtools",
+            "--output-attribute",
+            "buck.base_path",
+            "--output-format",
+            "json");
+    assertJSONOutputMatchesFileContents(
+        "stdout-includes-computed-base-path-attribute.json", result, workspace);
+  }
+
+  @Test
   public void doesntConfigureDependenciesOfTargetForPlatform() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);

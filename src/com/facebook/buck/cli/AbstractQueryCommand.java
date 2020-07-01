@@ -263,20 +263,43 @@ public abstract class AbstractQueryCommand<
   }
 
   /**
+   * Filters the names in {@code attributeNames} based on whether they match a pattern from {@code
+   * matcher}. In the context of queries, this matcher normally represents the {@code
+   * --output-attribute} parameter. Returns the set of all matching names.
+   */
+  protected <T extends ParamNameOrSpecial> ImmutableSet<T> getMatchingAttributeNames(
+      PatternsMatcher matcher, Set<T> attributeNames) {
+    if (matcher.isMatchesNone()) {
+      return ImmutableSet.of();
+    }
+    if (matcher.isMatchesAny()) {
+      return ImmutableSet.copyOf(attributeNames);
+    }
+
+    ImmutableSet.Builder<T> result = ImmutableSet.builder();
+    for (T name : attributeNames) {
+      if (matcher.matches(name.getSnakeCase())) {
+        result.add(name);
+      }
+    }
+    return result.build();
+  }
+
+  /**
    * Filters the entries in {@code attributes} based on whether the key matches a pattern from
    * {@code matcher}. In the context of queries, this matcher normally represents the {@code
-   * --output-attributes} parameter. Returns a new map of only matching key/values.
+   * --output-attribute} parameter. Returns a new map of only matching key/values.
+   *
+   * <p>This method is equivalent to filtering {@code attributes} such that only attributes returned
+   * from {@link #getMatchingAttributeNames(PatternsMatcher, Set)} remain.
    */
   protected ImmutableMap<ParamNameOrSpecial, Object> getMatchingAttributes(
       PatternsMatcher matcher, ImmutableMap<ParamNameOrSpecial, Object> attributes) {
+    ImmutableSet<ParamNameOrSpecial> matchingNames =
+        getMatchingAttributeNames(matcher, attributes.keySet());
     ImmutableMap.Builder<ParamNameOrSpecial, Object> result = ImmutableMap.builder();
-    if (!matcher.isMatchesNone()) {
-      for (Map.Entry<ParamNameOrSpecial, Object> entry : attributes.entrySet()) {
-        String snakeCaseKey = entry.getKey().getSnakeCase();
-        if (matcher.matches(snakeCaseKey)) {
-          result.put(entry.getKey(), entry.getValue());
-        }
-      }
+    for (ParamNameOrSpecial match : matchingNames) {
+      result.put(match, attributes.get(match));
     }
     return result.build();
   }

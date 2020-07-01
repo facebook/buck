@@ -40,10 +40,13 @@ import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.UnconfiguredQueryBuildTarget;
 import com.facebook.buck.query.UnconfiguredQueryTarget;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.param.ParamNameOrSpecial;
+import com.facebook.buck.rules.param.SpecialAttr;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.PatternsMatcher;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -60,6 +63,9 @@ import java.util.Set;
 /** Buck subcommand which facilitates querying information about the unconfigured target graph. */
 public class UnconfiguredQueryCommand
     extends AbstractQueryCommand<UnconfiguredQueryTarget, UnconfiguredQueryEnvironment> {
+
+  private static final ImmutableSet<SpecialAttr> supportedComputedAttributes =
+      ImmutableSet.of(SpecialAttr.BASE_PATH, SpecialAttr.BUCK_TYPE);
 
   private PerBuildState perBuildState;
   private TraversableGraph<UnconfiguredTargetNode> targetGraph;
@@ -332,10 +338,13 @@ public class UnconfiguredQueryCommand
         result = ImmutableMap.builder();
 
     for (UnconfiguredQueryTarget target : queryResult) {
-      nodeForQueryTarget(env, target)
-          .flatMap(node -> getAllAttributes(params, node))
-          .map(attrs -> getMatchingAttributes(matcher, attrs))
-          .map(attrs -> eliminateSelectsFromRawAttributes(attrs))
+      Optional<UnconfiguredTargetNode> maybeNode = nodeForQueryTarget(env, target);
+      if (!maybeNode.isPresent()) {
+        continue;
+      }
+      UnconfiguredTargetNode node = maybeNode.get();
+      getAllRawAttributes(params, node)
+          .map(attrs -> getMatchingRawAndComputedAttributes(matcher, node, attrs))
           .ifPresent(
               attrs ->
                   result.put(
@@ -345,7 +354,7 @@ public class UnconfiguredQueryCommand
     return Optional.of(result.build());
   }
 
-  private Optional<ImmutableMap<ParamNameOrSpecial, Object>> getAllAttributes(
+  private Optional<TwoArraysImmutableHashMap<ParamName, Object>> getAllRawAttributes(
       CommandRunnerParams params, UnconfiguredTargetNode node) {
     UnflavoredBuildTarget buildTarget = node.getBuildTarget();
     Cell owningCell = params.getCells().getCell(buildTarget.getCell());
@@ -364,17 +373,33 @@ public class UnconfiguredQueryCommand
       return Optional.empty();
     }
 
-    return Optional.of(ImmutableMap.copyOf(rawTargetNode.getAttrs()));
+    return Optional.of(rawTargetNode.getAttrs());
   }
 
-  private ImmutableMap<ParamNameOrSpecial, Object> eliminateSelectsFromRawAttributes(
-      ImmutableMap<ParamNameOrSpecial, Object> rawAttributes) {
-    ImmutableMap.Builder<ParamNameOrSpecial, Object> result =
-        ImmutableMap.builderWithExpectedSize(rawAttributes.size());
-    for (ParamNameOrSpecial key : rawAttributes.keySet()) {
-      Object value = eliminateSelect(rawAttributes.get(key));
-      result.put(key, value);
+  private ImmutableMap<ParamNameOrSpecial, Object> getMatchingRawAndComputedAttributes(
+      PatternsMatcher matcher,
+      UnconfiguredTargetNode node,
+      TwoArraysImmutableHashMap<ParamName, Object> rawAttributes) {
+    ImmutableMap.Builder<ParamNameOrSpecial, Object> result = ImmutableMap.builder();
+
+    // Matching raw attributes:
+    ImmutableSet<ParamName> matchingRawAttributeNames =
+        getMatchingAttributeNames(matcher, rawAttributes.keySet());
+    for (ParamName name : matchingRawAttributeNames) {
+      Object valueWithoutSelect = eliminateSelect(rawAttributes.get(name));
+      result.put(name, valueWithoutSelect);
     }
+
+    // Matching computed attributes:
+    ImmutableSet<SpecialAttr> matchingSpecialAttributes =
+        getMatchingAttributeNames(matcher, supportedComputedAttributes);
+    if (matchingSpecialAttributes.contains(SpecialAttr.BASE_PATH)) {
+      result.put(SpecialAttr.BASE_PATH, node.getBuildTarget().getBaseName().getPath().toString());
+    }
+    if (matchingSpecialAttributes.contains(SpecialAttr.BUCK_TYPE)) {
+      result.put(SpecialAttr.BUCK_TYPE, node.getRuleType().getName());
+    }
+
     return result.build();
   }
 

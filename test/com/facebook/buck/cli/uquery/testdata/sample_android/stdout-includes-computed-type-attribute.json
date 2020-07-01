@@ -1,0 +1,5 @@
+{
+  "//lib:devtools": {
+    "buck.type": "android_library"
+  }
+}
