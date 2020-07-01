@@ -42,6 +42,8 @@ interface RustPlatform extends FlavorConvertible {
 
   ToolProvider getRustCompiler();
 
+  Optional<ToolProvider> getRustdoc();
+
   /**
    * Get rustc flags for rust_library() rules.
    *

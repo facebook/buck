@@ -49,10 +49,12 @@ import javax.annotation.Nullable;
 /** An {@link UnresolvedRustPlatform} based on .buckconfig values. */
 public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform {
   private static final Path DEFAULT_RUSTC_COMPILER = Paths.get("rustc");
+  private static final Path RUSTDOC = Paths.get("rustdoc");
 
   private final RustBuckConfig rustBuckConfig;
   private final String name;
   private final ToolProvider rustCompiler;
+  private final ToolProvider rustdoc;
   private final Optional<ToolProvider> linkerOverride;
   private final UnresolvedCxxPlatform unresolvedCxxPlatform;
   private final @Nullable ProcessExecutor processExecutor;
@@ -82,6 +84,19 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
                   return new ConstantToolProvider(tool);
                 });
 
+    this.rustdoc =
+        rustBuckConfig
+            .getRustdoc(name)
+            .orElseGet(
+                () -> {
+                  HashedFileTool tool =
+                      new HashedFileTool(
+                          () ->
+                              buckConfig.getPathSourcePath(
+                                  executableFinder.getExecutable(
+                                      RUSTDOC, buckConfig.getEnvironment())));
+                  return new ConstantToolProvider(tool);
+                });
     this.linkerOverride = rustBuckConfig.getRustLinker(name);
     this.processExecutor = processExecutor;
   }
@@ -104,6 +119,7 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
     ImmutableRustPlatform.Builder builder =
         ImmutableRustPlatform.builder()
             .setRustCompiler(rustCompiler)
+            .setRustdoc(rustdoc)
             .addAllRustLibraryFlags(
                 rustBuckConfig.getRustcLibraryFlags(name).stream()
                     .map(StringArg::of)

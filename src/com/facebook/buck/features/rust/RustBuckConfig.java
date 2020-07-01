@@ -100,6 +100,10 @@ public class RustBuckConfig {
     return getRustTool(platform, "compiler");
   }
 
+  public Optional<ToolProvider> getRustdoc(String platform) {
+    return getRustTool(platform, "rustdoc");
+  }
+
   /**
    * Get common set of rustc flags. These are used for all rules that invoke rustc.
    *
