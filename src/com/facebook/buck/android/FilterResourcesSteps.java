@@ -24,6 +24,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.Step;
@@ -399,6 +400,8 @@ public class FilterResourcesSteps {
       Step convertStep =
           new BashStep(
               workingDirectory,
+              ProjectFilesystemUtils.relativize(
+                  context.getRuleCellRoot(), context.getBuildCellRootPath()),
               withDownwardApi,
               "convert",
               "-adaptive-resize",

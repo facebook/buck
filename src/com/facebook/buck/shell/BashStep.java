@@ -16,8 +16,9 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -29,7 +30,7 @@ import java.nio.file.Path;
  * reserved for cases where the expressiveness of Bash (often in the form of *-shell-expansion)
  * makes the command considerably easier to implement.
  */
-public class BashStep extends ShellStep {
+public class BashStep extends IsolatedShellStep {
 
   private final String bashCommand;
 
@@ -37,13 +38,15 @@ public class BashStep extends ShellStep {
    * @param bashCommand command to execute. For convenience, multiple arguments are supported and
    *     will be joined with space characters if more than one is present.
    */
-  public BashStep(Path workingDirectory, boolean withDownwardApi, String... bashCommand) {
-    super(workingDirectory, withDownwardApi);
+  public BashStep(
+      Path workingDirectory, RelPath cellPath, boolean withDownwardApi, String... bashCommand) {
+    super(workingDirectory, cellPath, withDownwardApi);
     this.bashCommand = Joiner.on(' ').join(bashCommand);
   }
 
-  public BashStep(AbsPath workingDirectory, boolean withDownwardApi, String... bashCommand) {
-    this(workingDirectory.getPath(), withDownwardApi, bashCommand);
+  public BashStep(
+      AbsPath workingDirectory, RelPath cellPath, boolean withDownwardApi, String... bashCommand) {
+    this(workingDirectory.getPath(), cellPath, withDownwardApi, bashCommand);
   }
 
   @Override
@@ -52,7 +55,7 @@ public class BashStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     return ImmutableList.of("bash", "-c", bashCommand);
   }
 }

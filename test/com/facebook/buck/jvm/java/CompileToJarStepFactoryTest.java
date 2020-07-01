@@ -23,9 +23,9 @@ import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -62,13 +62,14 @@ public class CompileToJarStepFactoryTest {
             outputDirectory,
             classpathEntries,
             Optional.of(androidBootClassPath),
-            false));
+            false,
+            executionContext.getBuildCellRootPath()));
 
     ImmutableList<Step> steps = commands.build();
     assertEquals(2, steps.size());
 
-    assertTrue(steps.get(0) instanceof ShellStep);
-    ShellStep step0 = (ShellStep) steps.get(0);
+    assertTrue(steps.get(0) instanceof IsolatedShellStep);
+    IsolatedShellStep step0 = (IsolatedShellStep) steps.get(0);
     assertEquals(
         ImmutableList.of("bash", "-c", "tool arg1 " + outputDirectory),
         step0.getShellCommand(executionContext));
@@ -80,8 +81,8 @@ public class CompileToJarStepFactoryTest {
             Joiner.on(':').join(Iterables.transform(classpathEntries, filesystem::resolve))),
         step0.getEnvironmentVariables(platform));
 
-    assertTrue(steps.get(1) instanceof ShellStep);
-    ShellStep step1 = (ShellStep) steps.get(1);
+    assertTrue(steps.get(1) instanceof IsolatedShellStep);
+    IsolatedShellStep step1 = (IsolatedShellStep) steps.get(1);
     assertEquals(
         ImmutableList.of("bash", "-c", "tool2 " + outputDirectory),
         step1.getShellCommand(executionContext));

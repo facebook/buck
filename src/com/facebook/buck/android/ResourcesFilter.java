@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -33,6 +34,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -279,7 +281,8 @@ public class ResourcesFilter extends AbstractBuildRule
                 getProjectFilesystem().newFileOutputStream(filterResourcesDataPath.getPath());
             writeFilterResourcesData(filterResourcesDataOutputStream, inResDirToOutResDirMap);
             buildableContext.recordArtifact(filterResourcesDataPath.getPath());
-            addPostFilterCommandSteps(cmd, context.getSourcePathResolver(), steps);
+            addPostFilterCommandSteps(
+                cmd, context.getSourcePathResolver(), context.getBuildCellRootPath(), steps);
           } catch (IOException e) {
             throw new RuntimeException("Could not generate/save filter resources data json", e);
           } finally {
@@ -292,13 +295,22 @@ public class ResourcesFilter extends AbstractBuildRule
   void addPostFilterCommandSteps(
       Arg command,
       SourcePathResolverAdapter sourcePathResolverAdapter,
+      Path buildCellRootPath,
       ImmutableList.Builder<Step> steps) {
+
     ImmutableList.Builder<String> commandLineBuilder = new ImmutableList.Builder<>();
     command.appendToCommandLine(commandLineBuilder::add, sourcePathResolverAdapter);
     commandLineBuilder.add(Escaper.escapeAsBashString(getFilterResourcesDataPath()));
     commandLineBuilder.add(Escaper.escapeAsBashString(getRDotJsonPath()));
     String commandLine = Joiner.on(' ').join(commandLineBuilder.build());
-    steps.add(new BashStep(getProjectFilesystem().getRootPath(), withDownwardApi, commandLine));
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    AbsPath rootPath = projectFilesystem.getRootPath();
+    steps.add(
+        new BashStep(
+            rootPath,
+            ProjectFilesystemUtils.relativize(rootPath, buildCellRootPath),
+            withDownwardApi,
+            commandLine));
   }
 
   private RelPath getFilterResourcesDataPath() {

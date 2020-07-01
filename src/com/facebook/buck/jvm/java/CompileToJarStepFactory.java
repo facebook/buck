@@ -18,11 +18,13 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -217,7 +219,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
                 compilerParameters.getOutputPaths().getClassesDir(),
                 compilerParameters.getClasspathEntries(),
                 getBootClasspath(context),
-                withDownwardApi)));
+                withDownwardApi,
+                context.getBuildCellRootPath())));
 
     createJarStep(libraryJarParameters, steps);
   }
@@ -260,7 +263,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       RelPath outputDirectory,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Optional<String> bootClasspath,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      Path buildCellRootPath) {
     if (postprocessClassesCommands.isEmpty()) {
       return ImmutableList.of();
     }
@@ -274,18 +278,18 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
     bootClasspath.ifPresent(s -> envVarBuilder.put("COMPILATION_BOOTCLASSPATH", s));
     ImmutableMap<String, String> envVars = envVarBuilder.build();
 
+    AbsPath rootPath = filesystem.getRootPath();
+    RelPath cellPath = ProjectFilesystemUtils.relativize(rootPath, buildCellRootPath);
     for (String postprocessClassesCommand : postprocessClassesCommands) {
-      BashStep bashStep =
-          new BashStep(
-              filesystem.getRootPath(),
-              withDownwardApi,
-              postprocessClassesCommand + " " + outputDirectory) {
+      String bashCommand = postprocessClassesCommand + " " + outputDirectory;
+      commands.add(
+          new BashStep(rootPath, cellPath, withDownwardApi, bashCommand) {
+
             @Override
             public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
               return envVars;
             }
-          };
-      commands.add(bashStep);
+          });
     }
     return commands.build();
   }

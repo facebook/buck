@@ -38,6 +38,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
@@ -437,6 +438,7 @@ public class AndroidBinaryTest {
             .setKeystore(keystoreRule.getBuildTarget())
             .setManifest(FakeSourcePath.of("manifest"));
     AndroidBinary androidBinary = builder.build(graphBuilder);
+    ProjectFilesystem projectFilesystem = androidBinary.getProjectFilesystem();
 
     BuildRule aaptPackageRule =
         graphBuilder.getRule(BuildTargetFactory.newInstance("//:target#aapt_package,dex"));
@@ -444,17 +446,20 @@ public class AndroidBinaryTest {
         (ResourcesFilter) ((AaptPackageResources) aaptPackageRule).getFilteredResourcesProvider();
     ImmutableList.Builder<Step> stepsBuilder = new ImmutableList.Builder<>();
     resourcesFilter.addPostFilterCommandSteps(
-        StringArg.of("cmd"), graphBuilder.getSourcePathResolver(), stepsBuilder);
+        StringArg.of("cmd"),
+        graphBuilder.getSourcePathResolver(),
+        projectFilesystem.getRootPath().getPath(),
+        stepsBuilder);
     ImmutableList<Step> steps = stepsBuilder.build();
 
     RelPath dataPath =
         BuildTargetPaths.getGenPath(
-            androidBinary.getProjectFilesystem(),
+            projectFilesystem,
             resourcesFilter.getBuildTarget(),
             "%s/post_filter_resources_data.json");
     RelPath rJsonPath =
         BuildTargetPaths.getGenPath(
-            androidBinary.getProjectFilesystem(), resourcesFilter.getBuildTarget(), "%s/R.json");
+            projectFilesystem, resourcesFilter.getBuildTarget(), "%s/R.json");
     assertEquals(
         ImmutableList.of("bash", "-c", "cmd " + dataPath + " " + rJsonPath),
         ((BashStep) steps.get(0)).getShellCommand(null));
