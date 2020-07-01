@@ -705,6 +705,17 @@ public class ParserIntegrationTest {
 
   @Test
   @Parameters(method = "syntaxes")
+  public void loadSymbols(Syntax syntax) throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "load_symbols", temporaryFolder);
+    workspace.setUp();
+    workspace
+        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax=" + syntax)
+        .assertSuccess();
+  }
+
+  @Test
+  @Parameters(method = "syntaxes")
   public void partial(Syntax syntax) throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "partial", temporaryFolder);
