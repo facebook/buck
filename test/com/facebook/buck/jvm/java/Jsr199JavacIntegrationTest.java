@@ -117,6 +117,7 @@ public class Jsr199JavacIntegrationTest {
   public void testClassesFile() throws IOException, InterruptedException {
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
+    ProjectFilesystem projectFilesystem = createProjectFilesystem();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
@@ -125,7 +126,8 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getVerbosity(),
             executionContext.getCellPathResolver(),
             createJavaPackageFinder(),
-            createProjectFilesystem(),
+            projectFilesystem,
+            projectFilesystem.getRootPath(),
             executionContext.getProjectFilesystemFactory(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor());
@@ -172,6 +174,7 @@ public class Jsr199JavacIntegrationTest {
 
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
+    ProjectFilesystem projectFilesystem = createProjectFilesystem();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
@@ -180,7 +183,8 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getVerbosity(),
             executionContext.getCellPathResolver(),
             createJavaPackageFinder(),
-            createProjectFilesystem(),
+            projectFilesystem,
+            projectFilesystem.getRootPath(),
             executionContext.getProjectFilesystemFactory(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor());
@@ -279,6 +283,7 @@ public class Jsr199JavacIntegrationTest {
 
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false, Optional.of(fakeJavacJar));
 
+    ProjectFilesystem projectFilesystem = createProjectFilesystem();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
@@ -287,7 +292,8 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getVerbosity(),
             executionContext.getCellPathResolver(),
             createJavaPackageFinder(),
-            createProjectFilesystem(),
+            projectFilesystem,
+            projectFilesystem.getRootPath(),
             executionContext.getProjectFilesystemFactory(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor());
@@ -376,6 +382,7 @@ public class Jsr199JavacIntegrationTest {
   public void jdkNotFound() {
     Jsr199Javac javac = new JdkNotFoundJavac();
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
+    ProjectFilesystem projectFilesystem = createProjectFilesystem();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
@@ -384,7 +391,8 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getVerbosity(),
             executionContext.getCellPathResolver(),
             createJavaPackageFinder(),
-            createProjectFilesystem(),
+            projectFilesystem,
+            projectFilesystem.getRootPath(),
             executionContext.getProjectFilesystemFactory(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor());

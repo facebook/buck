@@ -127,6 +127,7 @@ public class JavacPipelineState implements RulePipelineState {
               firstOrderContext.getCellPathResolver(),
               javaPackageFinder,
               filesystem,
+              context.getRuleCellRoot(),
               context.getProjectFilesystemFactory(),
               firstOrderContext.getEnvironment(),
               processExecutor);

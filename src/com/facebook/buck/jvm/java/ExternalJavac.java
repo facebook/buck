@@ -170,7 +170,7 @@ public class ExternalJavac implements Javac {
               ProcessExecutorParams.builder()
                   .setCommand(command.build())
                   .setEnvironment(context.getEnvironment())
-                  .setDirectory(context.getProjectFilesystem().getRootPath().getPath())
+                  .setDirectory(context.getRuleCellRoot().getPath())
                   .build();
           ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(params);
           exitCode = result.getExitCode();

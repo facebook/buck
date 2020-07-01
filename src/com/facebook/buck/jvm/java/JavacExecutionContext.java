@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -42,6 +43,8 @@ public interface JavacExecutionContext {
   JavaPackageFinder getJavaPackageFinder();
 
   ProjectFilesystem getProjectFilesystem();
+
+  AbsPath getRuleCellRoot();
 
   ProjectFilesystemFactory getProjectFilesystemFactory();
 

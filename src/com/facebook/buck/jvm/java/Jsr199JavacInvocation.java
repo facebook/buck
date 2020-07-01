@@ -22,6 +22,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.api.BuckTracing;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
@@ -268,9 +269,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                         options.contains("-parameters"));
                 stubGenerator.generate(topLevelTypes);
                 jarBuilder.createJarFile(
-                    context
-                        .getProjectFilesystem()
-                        .getPathForRelativePath(jarParameters.getJarPath()));
+                    ProjectFilesystemUtils.getPathForRelativePath(
+                        context.getRuleCellRoot(), jarParameters.getJarPath()));
               }
 
               debugLogDiagnostics();
@@ -463,9 +463,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                     return newJarBuilder(libraryJarParameters)
                         .createJarFile(
                             Objects.requireNonNull(
-                                context
-                                    .getProjectFilesystem()
-                                    .getPathForRelativePath(libraryJarParameters.getJarPath())));
+                                ProjectFilesystemUtils.getPathForRelativePath(
+                                    context.getRuleCellRoot(), libraryJarParameters.getJarPath())));
                   } catch (RuntimeException e) {
                     if (e.getCause() instanceof StopCompilation) {
                       return 0;
@@ -516,9 +515,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
           PluginLoaderJavaFileManager fileManager;
           if (libraryJarParameters != null) {
             Path directToJarPath =
-                context
-                    .getProjectFilesystem()
-                    .getPathForRelativePath(libraryJarParameters.getJarPath());
+                ProjectFilesystemUtils.getPathForRelativePath(
+                    context.getRuleCellRoot(), libraryJarParameters.getJarPath());
             inMemoryFileManager =
                 new JavaInMemoryFileManager(
                     standardFileManager,
@@ -631,7 +629,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     private JarBuilder newJarBuilder(JarParameters jarParameters) {
       JarBuilder jarBuilder = new JarBuilder();
       Objects.requireNonNull(inMemoryFileManager).writeToJar(jarBuilder);
-      AbsPath rootPath = context.getProjectFilesystem().getRootPath();
+      AbsPath rootPath = context.getRuleCellRoot();
       return jarBuilder
           .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
           .setEntriesToJar(jarParameters.getEntriesToJar().stream().map(rootPath::resolve))
