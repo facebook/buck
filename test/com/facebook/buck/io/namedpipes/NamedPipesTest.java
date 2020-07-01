@@ -80,7 +80,7 @@ public class NamedPipesTest {
     ExecutorService executorService = MostExecutors.newSingleThreadExecutor("named_pipe_reader");
     List<ReceivedNamedPipeJsonMessage> receivedMessages = new ArrayList<>();
     String namedPipePath = null;
-    try (NamedPipe namedPipe = namedPipeFactory.create()) {
+    try (NamedPipeReader namedPipe = namedPipeFactory.createAsReader()) {
       namedPipePath = namedPipe.getName();
       LOG.info("Named pipe created: %s", namedPipePath);
       Future<?> future =
@@ -122,7 +122,8 @@ public class NamedPipesTest {
   private void writeIntoNamedPipe(DownwardProtocolType protocolType, String namedPipeName)
       throws IOException {
     Path namedPipePath = Paths.get(namedPipeName);
-    try (NamedPipe connectNamedPipe = NamedPipeFactory.getFactory().connect(namedPipePath)) {
+    try (NamedPipeWriter connectNamedPipe =
+        NamedPipeFactory.getFactory().connectAsWriter(namedPipePath)) {
       try (OutputStream outputStream = connectNamedPipe.getOutputStream()) {
         LOG.info("Starting write messages into a named pipe: %s!", namedPipeName);
         protocolType.writeDelimitedTo(outputStream);
@@ -138,7 +139,7 @@ public class NamedPipesTest {
   }
 
   private static Runnable readFromNamedPipeRunnable(
-      NamedPipe namedPipe,
+      NamedPipeReader namedPipe,
       List<ReceivedNamedPipeJsonMessage> receivedMessages,
       int expectedMessageSize) {
 

@@ -16,11 +16,12 @@
 
 package com.facebook.buck.io.namedpipes;
 
-import java.io.Closeable;
+import java.io.IOException;
+import java.io.OutputStream;
 
-/** Interface for named pipe. */
-public interface NamedPipe extends Closeable {
+/** Interface for named pipe's writer. */
+public interface NamedPipeWriter extends NamedPipe {
 
-  /** Returns named pipe name */
-  String getName();
+  /** Gets {@code OutputStream} to named pipe. */
+  OutputStream getOutputStream() throws IOException;
 }

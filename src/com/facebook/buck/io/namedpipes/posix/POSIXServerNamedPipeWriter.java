@@ -14,13 +14,25 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.io.namedpipes;
+package com.facebook.buck.io.namedpipes.posix;
 
-import java.io.Closeable;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-/** Interface for named pipe. */
-public interface NamedPipe extends Closeable {
+/**
+ * POSIX name pipe writer reader that creates and removes a physical file corresponding to the named
+ * pipe.
+ */
+class POSIXServerNamedPipeWriter extends POSIXClientNamedPipeWriter {
 
-  /** Returns named pipe name */
-  String getName();
+  POSIXServerNamedPipeWriter(Path path) {
+    super(path);
+  }
+
+  @Override
+  public void close() throws IOException {
+    super.close();
+    Files.deleteIfExists(getPath());
+  }
 }

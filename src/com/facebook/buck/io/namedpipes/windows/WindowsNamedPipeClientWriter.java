@@ -14,22 +14,28 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.io.namedpipes.posix;
+package com.facebook.buck.io.namedpipes.windows;
 
+import com.facebook.buck.io.namedpipes.NamedPipeWriter;
+import com.sun.jna.platform.win32.WinNT;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.function.Consumer;
 
-/** POSIX name pipe that creates and removes a physical file corresponding to the named pipe. */
-class POSIXServerNamedPipe extends POSIXClientNamedPipe {
+/** Client implementation of Windows name pipe reader. */
+class WindowsNamedPipeClientWriter extends WindowsNamedPipeClientBase implements NamedPipeWriter {
 
-  POSIXServerNamedPipe(Path path) throws IOException {
-    super(path);
+  private final OutputStream os;
+
+  WindowsNamedPipeClientWriter(Path path, WinNT.HANDLE handle, Consumer<WinNT.HANDLE> closeCallback)
+      throws IOException {
+    super(path, handle, closeCallback);
+    this.os = new NamedPipeOutputStream();
   }
 
   @Override
-  public void close() throws IOException {
-    super.close();
-    Files.deleteIfExists(getPath());
+  public OutputStream getOutputStream() {
+    return os;
   }
 }

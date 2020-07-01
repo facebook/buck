@@ -14,13 +14,22 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.io.namedpipes;
+package com.facebook.buck.io.namedpipes.windows;
 
-import java.io.Closeable;
+import com.facebook.buck.io.namedpipes.NamedPipeReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
 
-/** Interface for named pipe. */
-public interface NamedPipe extends Closeable {
+/** Server implementation of Windows name pipe reader. */
+class WindowsNamedPipeServerReader extends WindowsNamedPipeServerBase implements NamedPipeReader {
 
-  /** Returns named pipe name */
-  String getName();
+  public WindowsNamedPipeServerReader(Path path) {
+    super(path);
+  }
+
+  @Override
+  public InputStream getInputStream() throws IOException {
+    return connect(WindowsNamedPipeClientReader.class).getInputStream();
+  }
 }

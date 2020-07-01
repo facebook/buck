@@ -16,8 +16,9 @@
 
 package com.facebook.buck.io.namedpipes.posix;
 
-import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
+import com.facebook.buck.io.namedpipes.NamedPipeReader;
+import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.sun.jna.LastErrorException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,10 +33,17 @@ public enum POSIXNamedPipeFactory implements NamedPipeFactory {
   private static final String TMP_DIR = System.getProperty("java.io.tmpdir");
 
   @Override
-  public NamedPipe create() throws IOException {
+  public NamedPipeWriter createAsWriter() throws IOException {
     Path namedPathName = Paths.get(TMP_DIR, "pipe", "buck-" + UUID.randomUUID());
     createNamedPipe(namedPathName);
-    return new POSIXServerNamedPipe(namedPathName);
+    return new POSIXServerNamedPipeWriter(namedPathName);
+  }
+
+  @Override
+  public NamedPipeReader createAsReader() throws IOException {
+    Path namedPathName = Paths.get(TMP_DIR, "pipe", "buck-" + UUID.randomUUID());
+    createNamedPipe(namedPathName);
+    return new POSIXServerNamedPipeReader(namedPathName);
   }
 
   private static void createNamedPipe(Path path) throws IOException {
@@ -63,7 +71,12 @@ public enum POSIXNamedPipeFactory implements NamedPipeFactory {
   }
 
   @Override
-  public NamedPipe connect(Path namedPipePath) throws IOException {
-    return new POSIXClientNamedPipe(namedPipePath);
+  public NamedPipeWriter connectAsWriter(Path namedPipePath) {
+    return new POSIXClientNamedPipeWriter(namedPipePath);
+  }
+
+  @Override
+  public NamedPipeReader connectAsReader(Path namedPipePath) {
+    return new POSIXClientNamedPipeReader(namedPipePath);
   }
 }

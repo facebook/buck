@@ -26,6 +26,7 @@ import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
+import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.windows.PipeNotConnectedException;
 import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.DelegateLaunchedProcess;
@@ -180,7 +181,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
   public DownwardApiLaunchedProcess launchProcess(
       ProcessExecutorParams params, ImmutableMap<String, String> context) throws IOException {
 
-    NamedPipe namedPipe = namedPipeFactory.create();
+    NamedPipeReader namedPipe = namedPipeFactory.createAsReader();
     String namedPipeName = namedPipe.getName();
 
     NamedPipeEventHandler namedPipeEventHandler =
@@ -231,19 +232,19 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
   }
 
   private NamedPipeEventHandler getNamedPipeEventHandler(
-      NamedPipe namedPipe, DownwardApiExecutionContext context) {
+      NamedPipeReader namedPipe, DownwardApiExecutionContext context) {
     return new NamedPipeEventHandler(namedPipe, context);
   }
 
   private static class NamedPipeEventHandler {
 
-    private final NamedPipe namedPipe;
+    private final NamedPipeReader namedPipe;
     private final DownwardApiExecutionContext context;
     private final SettableFuture<Void> done = SettableFuture.create();
 
     private Optional<Future<?>> running = Optional.empty();
 
-    NamedPipeEventHandler(NamedPipe namedPipe, DownwardApiExecutionContext context) {
+    NamedPipeEventHandler(NamedPipeReader namedPipe, DownwardApiExecutionContext context) {
       this.namedPipe = namedPipe;
       this.context = context;
     }

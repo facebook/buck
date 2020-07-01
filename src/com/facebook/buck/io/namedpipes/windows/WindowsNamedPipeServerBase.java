@@ -20,14 +20,14 @@ import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.cl
 import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.createEvent;
 
 import com.facebook.buck.io.namedpipes.BaseNamedPipe;
+import com.facebook.buck.io.namedpipes.NamedPipeReader;
+import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinError;
 import com.sun.jna.platform.win32.WinNT;
 import com.sun.jna.platform.win32.WinNT.HANDLE;
 import com.sun.jna.ptr.IntByReference;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +40,7 @@ import java.util.function.Consumer;
  *
  * <p>Ported from {@link com.facebook.nailgun.NGWin32NamedPipeServerSocket}
  */
-class WindowsNamedPipeServer extends BaseNamedPipe {
+abstract class WindowsNamedPipeServerBase extends BaseNamedPipe {
 
   private static final WindowsNamedPipeLibrary API = WindowsNamedPipeLibrary.INSTANCE;
 
@@ -53,7 +53,7 @@ class WindowsNamedPipeServer extends BaseNamedPipe {
   private final LinkedBlockingQueue<HANDLE> connectedHandles;
   private final Consumer<HANDLE> closeCallback;
 
-  public WindowsNamedPipeServer(Path path) {
+  public WindowsNamedPipeServerBase(Path path) {
     super(path);
     this.openHandles = new LinkedBlockingQueue<>();
     this.connectedHandles = new LinkedBlockingQueue<>();
@@ -68,17 +68,7 @@ class WindowsNamedPipeServer extends BaseNamedPipe {
         };
   }
 
-  @Override
-  public InputStream getInputStream() throws IOException {
-    return connect().getInputStream();
-  }
-
-  @Override
-  public OutputStream getOutputStream() throws IOException {
-    return connect().getOutputStream();
-  }
-
-  private WindowsNamedPipeClient connect() throws IOException {
+  protected <T extends WindowsNamedPipeClientBase> T connect(Class<T> clazz) throws IOException {
     HANDLE handle =
         API.CreateNamedPipe(
             /* lpName */ getName(),
@@ -100,21 +90,21 @@ class WindowsNamedPipeServer extends BaseNamedPipe {
     if (API.ConnectNamedPipe(handle, overlapped.getPointer())) {
       openHandles.remove(handle);
       connectedHandles.add(handle);
-      return new WindowsNamedPipeClient(getPath(), handle, closeCallback);
+      return getClient(handle, clazz);
     }
 
     int connectError = API.GetLastError();
     if (connectError == WinError.ERROR_PIPE_CONNECTED) {
       openHandles.remove(handle);
       connectedHandles.add(handle);
-      return new WindowsNamedPipeClient(getPath(), handle, closeCallback);
+      return getClient(handle, clazz);
     }
 
     if (connectError == WinError.ERROR_NO_DATA) {
       // Client has connected and disconnected between CreateNamedPipe() and ConnectNamedPipe()
       // connection is broken, but it is returned it avoid loop here.
       // Actual error will happen when it will try to read/write from/to pipe.
-      return new WindowsNamedPipeClient(getPath(), handle, closeCallback);
+      return getClient(handle, clazz);
     }
 
     if (connectError == WinError.ERROR_IO_PENDING) {
@@ -129,12 +119,25 @@ class WindowsNamedPipeServer extends BaseNamedPipe {
 
       openHandles.remove(handle);
       connectedHandles.add(handle);
-      return new WindowsNamedPipeClient(getPath(), handle, closeCallback);
+      return getClient(handle, clazz);
     }
 
     throw new IOException(
         String.format(
             "ConnectNamedPipe() failed. Named pipe: %s, error: %s", getName(), connectError));
+  }
+
+  private <T extends WindowsNamedPipeClientBase> T getClient(HANDLE handle, Class<T> clazz)
+      throws IOException {
+    if (NamedPipeWriter.class.isAssignableFrom(clazz)) {
+      return clazz.cast(new WindowsNamedPipeClientWriter(getPath(), handle, closeCallback));
+    }
+
+    if (NamedPipeReader.class.isAssignableFrom(clazz)) {
+      return clazz.cast(new WindowsNamedPipeClientReader(getPath(), handle, closeCallback));
+    }
+
+    throw new IllegalStateException(clazz + " is not supported!");
   }
 
   private WinBase.OVERLAPPED createOverlapped() {

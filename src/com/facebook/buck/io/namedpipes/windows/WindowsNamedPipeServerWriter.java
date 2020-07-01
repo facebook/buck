@@ -14,13 +14,22 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.io.namedpipes;
+package com.facebook.buck.io.namedpipes.windows;
 
-import java.io.Closeable;
+import com.facebook.buck.io.namedpipes.NamedPipeWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Path;
 
-/** Interface for named pipe. */
-public interface NamedPipe extends Closeable {
+/** Server implementation of Windows name pipe writer. */
+class WindowsNamedPipeServerWriter extends WindowsNamedPipeServerBase implements NamedPipeWriter {
 
-  /** Returns named pipe name */
-  String getName();
+  public WindowsNamedPipeServerWriter(Path path) {
+    super(path);
+  }
+
+  @Override
+  public OutputStream getOutputStream() throws IOException {
+    return connect(WindowsNamedPipeClientWriter.class).getOutputStream();
+  }
 }

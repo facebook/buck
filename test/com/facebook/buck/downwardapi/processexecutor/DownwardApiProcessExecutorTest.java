@@ -46,6 +46,8 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.external.events.StepEventExternalInterface;
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
+import com.facebook.buck.io.namedpipes.NamedPipeReader;
+import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.FakeProcess;
@@ -118,7 +120,7 @@ public class DownwardApiProcessExecutorTest {
 
   @Test(timeout = 10_000)
   public void downwardApiWithNoWriters() throws IOException, InterruptedException {
-    NamedPipe namedPipe = NamedPipeFactory.getFactory().create();
+    NamedPipeReader namedPipe = NamedPipeFactory.getFactory().createAsReader();
 
     Instant instant = Instant.now();
     BuckEventBus buckEventBus =
@@ -140,7 +142,7 @@ public class DownwardApiProcessExecutorTest {
 
   @Test(timeout = 10_000)
   public void downwardApi() throws IOException, InterruptedException {
-    NamedPipe namedPipe = NamedPipeFactory.getFactory().create();
+    NamedPipeReader namedPipe = NamedPipeFactory.getFactory().createAsReader();
     TestListener listener = new TestListener();
 
     Instant instant = Instant.now();
@@ -237,7 +239,7 @@ public class DownwardApiProcessExecutorTest {
   }
 
   private DownwardApiProcessExecutor getDownwardApiProcessExecutor(
-      NamedPipe namedPipe,
+      NamedPipeReader namedPipe,
       BuckEventBus buckEventBus,
       ProcessExecutorParams params,
       FakeProcess fakeProcess) {
@@ -253,14 +255,23 @@ public class DownwardApiProcessExecutorTest {
         TEST_ACTION_ID,
         new NamedPipeFactory() {
           @Override
-          public NamedPipe create() {
+          public NamedPipeWriter createAsWriter() {
+            throw new UnsupportedOperationException();
+          }
+
+          @Override
+          public NamedPipeReader createAsReader() {
             return namedPipe;
           }
 
           @Override
-          public NamedPipe connect(Path namedPipePath) {
-            throw new UnsupportedOperationException(
-                "Process executor should only create named pipes. Connect is not supported!");
+          public NamedPipeWriter connectAsWriter(Path namedPipePath) {
+            throw new UnsupportedOperationException();
+          }
+
+          @Override
+          public NamedPipeReader connectAsReader(Path namedPipePath) {
+            throw new UnsupportedOperationException();
           }
         });
   }
@@ -359,7 +370,8 @@ public class DownwardApiProcessExecutorTest {
   private void writeIntoNamedPipeProcess(String namedPipeName)
       throws IOException, InterruptedException {
 
-    try (NamedPipe namedPipe = NamedPipeFactory.getFactory().connect(Paths.get(namedPipeName))) {
+    try (NamedPipeWriter namedPipe =
+        NamedPipeFactory.getFactory().connectAsWriter(Paths.get(namedPipeName))) {
       try (OutputStream outputStream = namedPipe.getOutputStream()) {
         List<String> messages = getJsonMessages();
         for (String message : messages) {

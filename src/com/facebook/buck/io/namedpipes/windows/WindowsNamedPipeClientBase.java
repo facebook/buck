@@ -37,18 +37,16 @@ import java.util.function.Consumer;
  *
  * <p>Ported from {@link com.facebook.nailgun.NGWin32NamedPipeSocket}
  */
-class WindowsNamedPipeClient extends BaseNamedPipe {
+abstract class WindowsNamedPipeClientBase extends BaseNamedPipe {
 
   private static final WindowsNamedPipeLibrary API = WindowsNamedPipeLibrary.INSTANCE;
 
   private final HANDLE handle;
   private final Consumer<HANDLE> closeCallback;
-  private final InputStream is;
-  private final OutputStream os;
   private final HANDLE readerWaitable;
   private final HANDLE writerWaitable;
 
-  public WindowsNamedPipeClient(Path path, HANDLE handle, Consumer<HANDLE> closeCallback)
+  public WindowsNamedPipeClientBase(Path path, HANDLE handle, Consumer<HANDLE> closeCallback)
       throws IOException {
     super(path);
     this.handle = handle;
@@ -63,19 +61,6 @@ class WindowsNamedPipeClient extends BaseNamedPipe {
     if (writerWaitable == null) {
       throw new IOException(String.format("CreateEvent() failed. For named pipe: %s", getName()));
     }
-
-    this.is = new NamedPipeInputStream();
-    this.os = new NamedPipeOutputStream();
-  }
-
-  @Override
-  public InputStream getInputStream() {
-    return is;
-  }
-
-  @Override
-  public OutputStream getOutputStream() {
-    return os;
   }
 
   @Override
@@ -83,7 +68,8 @@ class WindowsNamedPipeClient extends BaseNamedPipe {
     closeCallback.accept(handle);
   }
 
-  private class NamedPipeInputStream extends InputStream {
+  /** Input stream from Named Pipe */
+  protected class NamedPipeInputStream extends InputStream {
 
     @Override
     public int read() throws IOException {
@@ -130,7 +116,8 @@ class WindowsNamedPipeClient extends BaseNamedPipe {
     }
   }
 
-  private class NamedPipeOutputStream extends OutputStream {
+  /** Output stream from Named Pipe */
+  protected class NamedPipeOutputStream extends OutputStream {
 
     @Override
     public void write(int b) throws IOException {

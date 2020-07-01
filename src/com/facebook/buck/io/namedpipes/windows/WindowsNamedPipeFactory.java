@@ -18,8 +18,9 @@ package com.facebook.buck.io.namedpipes.windows;
 
 import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.closeConnectedPipe;
 
-import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
+import com.facebook.buck.io.namedpipes.NamedPipeReader;
+import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinNT;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /** Windows named pipe factory. (Singleton With Enum Implementation). */
 public enum WindowsNamedPipeFactory implements NamedPipeFactory {
@@ -37,7 +39,16 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
   private static final int CONNECT_TIMEOUT_IN_MILLIS = 1_000;
 
   @Override
-  public NamedPipe create() {
+  public NamedPipeWriter createAsWriter() {
+    return new WindowsNamedPipeServerWriter(createPath());
+  }
+
+  @Override
+  public NamedPipeReader createAsReader() {
+    return new WindowsNamedPipeServerReader(createPath());
+  }
+
+  private static Path createPath() {
     String namedPipePath =
         String.join(
             WINDOWS_PATH_DELIMITER,
@@ -45,14 +56,17 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
             ".",
             "pipe",
             "buck-" + UUID.randomUUID());
-    Path path = Paths.get(namedPipePath);
-    return new WindowsNamedPipeServer(path);
+    return Paths.get(namedPipePath);
   }
 
   @Override
-  public NamedPipe connect(Path path) throws IOException {
-    return new WindowsNamedPipeClient(
-        path, connectToPipe(path), handle -> closeConnectedPipe(handle, true));
+  public NamedPipeWriter connectAsWriter(Path path) throws IOException {
+    return new WindowsNamedPipeClientWriter(path, connectToPipe(path), getCloseHandleCallback());
+  }
+
+  @Override
+  public NamedPipeReader connectAsReader(Path path) throws IOException {
+    return new WindowsNamedPipeClientReader(path, connectToPipe(path), getCloseHandleCallback());
   }
 
   private static WinNT.HANDLE connectToPipe(Path path) throws IOException {
@@ -76,5 +90,9 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
     }
 
     return handle;
+  }
+
+  private static Consumer<WinNT.HANDLE> getCloseHandleCallback() {
+    return handle -> closeConnectedPipe(handle, true);
   }
 }

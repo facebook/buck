@@ -25,15 +25,25 @@ import java.nio.file.Path;
 /** Factory interface that creates named pipe. */
 public interface NamedPipeFactory {
 
-  /** Creates platform specific named pipe and named pipe object. */
-  NamedPipe create() throws IOException;
+  /** Creates platform specific named pipe and named pipe object and returns writer interface. */
+  NamedPipeWriter createAsWriter() throws IOException;
+
+  /** Creates platform specific named pipe and named pipe object and returns reader interface.. */
+  NamedPipeReader createAsReader() throws IOException;
 
   /**
-   * Connects to a given {@code namedPipePath}.
+   * Connects to a given {@code namedPipePath} as writer.
    *
    * @param namedPipePath - absolute path for the named pipe.
    */
-  NamedPipe connect(Path namedPipePath) throws IOException;
+  NamedPipeWriter connectAsWriter(Path namedPipePath) throws IOException;
+
+  /**
+   * Connects to a given {@code namedPipePath} as reader.
+   *
+   * @param namedPipePath - absolute path for the named pipe.
+   */
+  NamedPipeReader connectAsReader(Path namedPipePath) throws IOException;
 
   /** Returns platform specific implementation of {@code NamedPipeFactory}. */
   static NamedPipeFactory getFactory() {
