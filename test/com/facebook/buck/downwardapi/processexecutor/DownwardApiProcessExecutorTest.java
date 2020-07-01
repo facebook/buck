@@ -46,7 +46,6 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.external.events.StepEventExternalInterface;
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
-import com.facebook.buck.io.namedpipes.RandomAccessFileBasedNamedPipe;
 import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.FakeProcess;
@@ -118,6 +117,28 @@ public class DownwardApiProcessExecutorTest {
   }
 
   @Test(timeout = 10_000)
+  public void downwardApiWithNoWriters() throws IOException, InterruptedException {
+    NamedPipe namedPipe = NamedPipeFactory.getFactory().create();
+
+    Instant instant = Instant.now();
+    BuckEventBus buckEventBus =
+        BuckEventBusForTests.newInstance(
+            new SettableFakeClock(instant.toEpochMilli(), instant.getNano()));
+
+    ProcessExecutorParams params = getProcessExecutorParams(namedPipe, buckEventBus);
+
+    // do nothing
+    FakeProcess fakeProcess = new FakeProcess(Optional.of(() -> Optional.empty()));
+
+    DownwardApiProcessExecutor processExecutor =
+        getDownwardApiProcessExecutor(namedPipe, buckEventBus, params, fakeProcess);
+
+    DownwardApiExecutionResult result = launchAndExecute(processExecutor);
+    assertEquals(0, result.getExitCode());
+    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
+  }
+
+  @Test(timeout = 10_000)
   public void downwardApi() throws IOException, InterruptedException {
     NamedPipe namedPipe = NamedPipeFactory.getFactory().create();
     TestListener listener = new TestListener();
@@ -137,7 +158,7 @@ public class DownwardApiProcessExecutorTest {
             Optional.of(
                 () -> {
                   try {
-                    writeIntoNamedPipeProcess(namedPipe);
+                    writeIntoNamedPipeProcess(namedPipe.getName());
                   } catch (Exception e) {
                     throw new RuntimeException(e);
                   }
@@ -149,6 +170,7 @@ public class DownwardApiProcessExecutorTest {
 
     DownwardApiExecutionResult result = launchAndExecute(processExecutor);
     assertEquals(0, result.getExitCode());
+    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
 
     Map<Integer, BuckEvent> events = listener.events;
     assertEquals(5, events.size());
@@ -236,8 +258,9 @@ public class DownwardApiProcessExecutorTest {
           }
 
           @Override
-          public NamedPipe connect(Path namedPipePath) throws IOException {
-            return new RandomAccessFileBasedNamedPipe(namedPipePath);
+          public NamedPipe connect(Path namedPipePath) {
+            throw new UnsupportedOperationException(
+                "Process executor should only create named pipes. Connect is not supported!");
           }
         });
   }
@@ -333,14 +356,17 @@ public class DownwardApiProcessExecutorTest {
         diffInSeconds <= diffThreshold);
   }
 
-  private void writeIntoNamedPipeProcess(NamedPipe namedPipe)
+  private void writeIntoNamedPipeProcess(String namedPipeName)
       throws IOException, InterruptedException {
-    try (OutputStream outputStream = namedPipe.getOutputStream()) {
-      List<String> messages = getJsonMessages();
-      for (String message : messages) {
-        LOG.info("Writing into named pipe: %s%s", System.lineSeparator(), message);
-        outputStream.write(message.getBytes(StandardCharsets.UTF_8));
-        TimeUnit.MILLISECONDS.sleep(100);
+
+    try (NamedPipe namedPipe = NamedPipeFactory.getFactory().connect(Paths.get(namedPipeName))) {
+      try (OutputStream outputStream = namedPipe.getOutputStream()) {
+        List<String> messages = getJsonMessages();
+        for (String message : messages) {
+          LOG.info("Writing into named pipe: %s%s", System.lineSeparator(), message);
+          outputStream.write(message.getBytes(StandardCharsets.UTF_8));
+          TimeUnit.MILLISECONDS.sleep(100);
+        }
       }
     }
   }

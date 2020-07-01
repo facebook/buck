@@ -26,6 +26,7 @@ import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
+import com.facebook.buck.io.namedpipes.windows.PipeNotConnectedException;
 import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.DelegateLaunchedProcess;
 import com.facebook.buck.util.DelegateProcessExecutor;
@@ -40,7 +41,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Paths;
+import java.nio.channels.ClosedChannelException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -176,14 +177,14 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
   }
 
   @Override
-  public LaunchedProcess launchProcess(
+  public DownwardApiLaunchedProcess launchProcess(
       ProcessExecutorParams params, ImmutableMap<String, String> context) throws IOException {
 
     NamedPipe namedPipe = namedPipeFactory.create();
     String namedPipeName = namedPipe.getName();
 
     NamedPipeEventHandler namedPipeEventHandler =
-        getNamedPipeEventHandler(namedPipeName, DownwardApiExecutionContext.of(buckEventBus));
+        getNamedPipeEventHandler(namedPipe, DownwardApiExecutionContext.of(buckEventBus));
     namedPipeEventHandler.runOn(DOWNWARD_API_THREAD_POOL);
 
     ProcessExecutorParams updatedParams =
@@ -230,25 +231,20 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
   }
 
   private NamedPipeEventHandler getNamedPipeEventHandler(
-      String namedPipeName, DownwardApiExecutionContext context) {
-    return new NamedPipeEventHandler(namedPipeName, context, namedPipeFactory);
+      NamedPipe namedPipe, DownwardApiExecutionContext context) {
+    return new NamedPipeEventHandler(namedPipe, context);
   }
 
   private static class NamedPipeEventHandler {
 
-    private final NamedPipeFactory namedPipeFactory;
-    private final String namedPipeName;
+    private final NamedPipe namedPipe;
     private final DownwardApiExecutionContext context;
     private final SettableFuture<Void> done = SettableFuture.create();
 
     private Optional<Future<?>> running = Optional.empty();
 
-    NamedPipeEventHandler(
-        String namedPipeName,
-        DownwardApiExecutionContext context,
-        NamedPipeFactory namedPipeFactory) {
-      this.namedPipeFactory = namedPipeFactory;
-      this.namedPipeName = namedPipeName;
+    NamedPipeEventHandler(NamedPipe namedPipe, DownwardApiExecutionContext context) {
+      this.namedPipe = namedPipe;
       this.context = context;
     }
 
@@ -257,8 +253,8 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     }
 
     void run() {
-      try (NamedPipe namedPipe = namedPipeFactory.connect(Paths.get(namedPipeName));
-          InputStream inputStream = namedPipe.getInputStream()) {
+      String namedPipeName = namedPipe.getName();
+      try (InputStream inputStream = namedPipe.getInputStream()) {
         LOG.info("Starting to read events from named pipe: %s", namedPipeName);
         DownwardProtocol downwardProtocol = null;
         while (!Thread.currentThread().isInterrupted()) {
@@ -274,6 +270,8 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
             } catch (Exception e) {
               LOG.error(e, "Cannot handle event: %s", event);
             }
+          } catch (ClosedChannelException | PipeNotConnectedException e) {
+            LOG.info("Named pipe %s is closed", namedPipeName);
           } catch (IOException e) {
             LOG.error(e, "Exception during processing events from named pipe: %s", namedPipeName);
           }
