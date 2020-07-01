@@ -363,6 +363,24 @@ public class ConfiguredQueryCommandIntegrationTest {
    * =============================================================================================
    */
   @Test
+  public void configurationIncludedAsComputedAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "//lib:bar",
+            "--target-universe",
+            "//bin:tvos-bin",
+            "--output-attribute",
+            "buck.configuration");
+    assertJSONOutputMatchesFileContents(
+        "stdout-configuration-included-as-computed-attribute.json", result, workspace);
+  }
+
+  @Test
   public void implicitTargetUniverseForRdeps() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);

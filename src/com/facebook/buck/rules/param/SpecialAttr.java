@@ -42,7 +42,19 @@ public class SpecialAttr implements ParamNameOrSpecial, Comparable<SpecialAttr> 
   /** Rule type. */
   public static final SpecialAttr BUCK_TYPE = new SpecialAttr("buck.type", "buck.type");
 
-  /** Target configuration attached to target */
+  /**
+   * Configuration attached to target. This is the same value you would get in parenthesis after the
+   * target name in a cquery result, but provided in an easily machine-readable format.
+   *
+   * <p>NOTE: At time of writing this is a human-readable platform name, but in the future we want
+   * this to be a hash.
+   */
+  public static final SpecialAttr CONFIGURATION = new SpecialAttr("buck.configuration");
+
+  /**
+   * Target configurations (multiple) attached to target. Only used for `buck query` since the
+   * MergedTargetGraph is the only place where the "same" target has multiple configurations.
+   */
   public static final SpecialAttr TARGET_CONFIGURATIONS =
       new SpecialAttr("buck.target_configurations", "buck.targetConfigurations");
 

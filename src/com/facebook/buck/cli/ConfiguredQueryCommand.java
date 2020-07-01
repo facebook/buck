@@ -437,19 +437,30 @@ public class ConfiguredQueryCommand
       return Optional.empty();
     }
 
+    rawAttributes.putAll(getComputedAttributes(node));
+
+    return Optional.of(ImmutableMap.copyOf(rawAttributes));
+  }
+
+  private ImmutableMap<SpecialAttr, Object> getComputedAttributes(TargetNode<?> node) {
+    ImmutableMap.Builder<SpecialAttr, Object> result = ImmutableMap.builder();
+
+    result.put(
+        SpecialAttr.CONFIGURATION, node.getBuildTarget().getTargetConfiguration().toString());
+
     // NOTE: Technically `getTargetNodeRawAttributes` will actually populate this value for us, but
     //   it gives us target strings without configurations. This command generally prints targets
     //   with their configuration information, so we should do that here. We could change the parser
     //   to return full targets and then invoke toStringWithConfiguration explicitly here, but at
     //   this point we've lost all type information about the list so it's more straightforward to
     //   just overwrite it explicitly.
-    rawAttributes.put(
+    result.put(
         SpecialAttr.DIRECT_DEPENDENCIES,
         node.getParseDeps().stream()
             .map(BuildTarget::toStringWithConfiguration)
             .collect(ImmutableList.toImmutableList()));
 
-    return Optional.of(ImmutableMap.copyOf(rawAttributes));
+    return result.build();
   }
 
   private String toPresentationForm(ConfiguredQueryTarget target) {
