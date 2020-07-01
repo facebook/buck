@@ -29,6 +29,7 @@ import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -39,7 +40,6 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -212,15 +212,14 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
         context, projectFilesystem, target, compilerParameters, steps, buildableContext);
 
     steps.addAll(
-        Lists.newCopyOnWriteArrayList(
-            addPostprocessClassesCommands(
-                projectFilesystem,
-                postprocessClassesCommands,
-                compilerParameters.getOutputPaths().getClassesDir(),
-                compilerParameters.getClasspathEntries(),
-                getBootClasspath(context),
-                withDownwardApi,
-                context.getBuildCellRootPath())));
+        addPostprocessClassesCommands(
+            projectFilesystem,
+            postprocessClassesCommands,
+            compilerParameters.getOutputPaths().getClassesDir(),
+            compilerParameters.getClasspathEntries(),
+            getBootClasspath(context),
+            withDownwardApi,
+            context.getBuildCellRootPath()));
 
     createJarStep(libraryJarParameters, steps);
   }
@@ -257,7 +256,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
    * @param bootClasspath the compilation boot classpath.
    */
   @VisibleForTesting
-  static ImmutableList<Step> addPostprocessClassesCommands(
+  static ImmutableList<IsolatedStep> addPostprocessClassesCommands(
       ProjectFilesystem filesystem,
       List<String> postprocessClassesCommands,
       RelPath outputDirectory,
@@ -269,14 +268,9 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       return ImmutableList.of();
     }
 
-    ImmutableList.Builder<Step> commands = new ImmutableList.Builder<>();
-    ImmutableMap.Builder<String, String> envVarBuilder = ImmutableMap.builder();
-    envVarBuilder.put(
-        "COMPILATION_CLASSPATH",
-        Joiner.on(':').join(Iterables.transform(declaredClasspathEntries, filesystem::resolve)));
-
-    bootClasspath.ifPresent(s -> envVarBuilder.put("COMPILATION_BOOTCLASSPATH", s));
-    ImmutableMap<String, String> envVars = envVarBuilder.build();
+    ImmutableList.Builder<IsolatedStep> commands = new ImmutableList.Builder<>();
+    ImmutableMap<String, String> envVars =
+        getEnvs(filesystem, declaredClasspathEntries, bootClasspath);
 
     AbsPath rootPath = filesystem.getRootPath();
     RelPath cellPath = ProjectFilesystemUtils.relativize(rootPath, buildCellRootPath);
@@ -292,6 +286,19 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
           });
     }
     return commands.build();
+  }
+
+  private static ImmutableMap<String, String> getEnvs(
+      ProjectFilesystem filesystem,
+      ImmutableSortedSet<Path> declaredClasspathEntries,
+      Optional<String> bootClasspath) {
+    ImmutableMap.Builder<String, String> envVarBuilder = ImmutableMap.builder();
+    envVarBuilder.put(
+        "COMPILATION_CLASSPATH",
+        Joiner.on(':').join(Iterables.transform(declaredClasspathEntries, filesystem::resolve)));
+
+    bootClasspath.ifPresent(s -> envVarBuilder.put("COMPILATION_BOOTCLASSPATH", s));
+    return envVarBuilder.build();
   }
 
   public abstract void createCompileStep(

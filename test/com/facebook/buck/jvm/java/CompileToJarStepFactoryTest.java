@@ -23,8 +23,8 @@ import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
@@ -54,7 +54,7 @@ public class CompileToJarStepFactoryTest {
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
     Platform platform = executionContext.getPlatform();
 
-    ImmutableList.Builder<Step> commands = ImmutableList.builder();
+    ImmutableList.Builder<IsolatedStep> commands = ImmutableList.builder();
     commands.addAll(
         CompileToJarStepFactory.addPostprocessClassesCommands(
             new FakeProjectFilesystem(),
@@ -65,7 +65,7 @@ public class CompileToJarStepFactoryTest {
             false,
             executionContext.getBuildCellRootPath()));
 
-    ImmutableList<Step> steps = commands.build();
+    ImmutableList<IsolatedStep> steps = commands.build();
     assertEquals(2, steps.size());
 
     assertTrue(steps.get(0) instanceof IsolatedShellStep);
