@@ -129,7 +129,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   abstract Globber getGlobber(Path parseFile);
 
   private ImplicitlyLoadedExtension loadImplicitExtension(
-      ForwardRelativePath basePath, Label containingLabel)
+      ForwardRelativePath basePath, Label containingLabel, LoadStack loadStack)
       throws IOException, InterruptedException {
     Optional<ImplicitInclude> implicitInclude =
         packageImplicitIncludeFinder.findIncludeForBuildFile(basePath);
@@ -141,7 +141,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     ExtensionData data =
         loadExtension(
             ImmutableLoadImport.ofImpl(
-                containingLabel, implicitInclude.get().getLoadPath(), Location.BUILTIN));
+                containingLabel, implicitInclude.get().getLoadPath(), Location.BUILTIN),
+            loadStack);
     ImmutableMap<String, Object> symbols = data.getExtension().getBindings();
     ImmutableMap<String, String> expectedSymbols = implicitInclude.get().getSymbols();
     Builder<String, Object> loaded = ImmutableMap.builderWithExpectedSize(expectedSymbols.size());
@@ -169,10 +170,15 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     ForwardRelativePath basePath = getBasePath(parseFile);
     Label containingLabel = createContainingLabel(basePath);
-    ImplicitlyLoadedExtension implicitLoad = loadImplicitExtension(basePath, containingLabel);
+    ImplicitlyLoadedExtension implicitLoad =
+        loadImplicitExtension(
+            basePath, containingLabel, LoadStack.top(Location.fromFile(buildFilePath)));
 
     StarlarkFile buildFileAst =
-        parseSkylarkFile(buildFilePath, containingLabel, getBuckOrPackage().fileKind);
+        parseSkylarkFile(
+            buildFilePath,
+            LoadStack.top(Location.fromFile(buildFilePath)),
+            getBuckOrPackage().fileKind);
     Globber globber = getGlobber(parseFile.getPath());
     PackageContext packageContext =
         createPackageContext(basePath, globber, implicitLoad.getLoadedSymbols());
@@ -233,7 +239,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       @Nullable ExtensionData implicitLoadExtensionData)
       throws IOException, InterruptedException, BuildFileParseException {
     ImmutableList<ExtensionData> dependencies =
-        loadExtensions(containingLabel, getImports(buildFileAst, containingLabel));
+        loadExtensions(containingLabel, getImports(buildFileAst, containingLabel), LoadStack.EMPTY);
     ImmutableMap<String, StarlarkThread.Extension> importMap =
         toImportMap(dependencies, implicitLoadExtensionData);
     StarlarkThread env =
@@ -330,7 +336,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   }
 
   private StarlarkFile parseSkylarkFile(
-      com.google.devtools.build.lib.vfs.Path path, Label containingLabel, FileKind fileKind)
+      com.google.devtools.build.lib.vfs.Path path, LoadStack loadStack, FileKind fileKind)
       throws BuildFileParseException, IOException {
     StarlarkFile result = astCache.getIfPresent(path);
     if (result == null) {
@@ -338,12 +344,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         result = readSkylarkAST(path);
       } catch (FileNotFoundException e) {
         throw BuildFileParseException.createForUnknownParseError(
-            "%s cannot be loaded because it does not exist. It was referenced from %s",
-            path, containingLabel);
+            loadStack.toDependencyStack(), "%s cannot be loaded because it does not exist", path);
       }
       if (!result.errors().isEmpty()) {
         throw BuildFileParseException.createForUnknownParseError(
-            "Cannot parse %s.  It was referenced from %s", path, containingLabel);
+            loadStack.toDependencyStack(), "Cannot parse %s", path);
       }
 
       // TODO(nga): these enable proper file validation (e. g. denies global redefinition)
@@ -356,14 +361,14 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
         if (!result.errors().isEmpty()) {
           throw BuildFileParseException.createForUnknownParseError(
-              "Cannot parse %s.  It was referenced from %s", path, containingLabel);
+              loadStack.toDependencyStack(), "Cannot parse %s", path);
         }
       }
 
       if (fileKind != FileKind.BZL) {
         if (!StarlarkBuckFileSyntax.checkBuildSyntax(result, eventHandler)) {
           throw BuildFileParseException.createForUnknownParseError(
-              "Cannot parse %s.  It was referenced from %s", path, containingLabel);
+              loadStack.toDependencyStack(), "Cannot parse %s", path);
         }
       }
 
@@ -392,15 +397,14 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *
    * @param loadImport an import label representing an extension to load.
    */
-  private IncludesData loadIncludeImpl(LoadImport loadImport)
+  private IncludesData loadIncludeImpl(LoadImport loadImport, LoadStack loadStack)
       throws IOException, BuildFileParseException, InterruptedException {
     Label label = loadImport.getLabel();
     com.google.devtools.build.lib.vfs.Path filePath = getImportPath(label, loadImport.getImport());
 
-    StarlarkFile fileAst =
-        parseSkylarkFile(filePath, loadImport.getContainingLabel(), FileKind.BZL);
-
-    ImmutableList<IncludesData> dependencies = loadIncludes(label, getImports(fileAst, label));
+    StarlarkFile fileAst = parseSkylarkFile(filePath, loadStack, FileKind.BZL);
+    ImmutableList<IncludesData> dependencies =
+        loadIncludes(label, getImports(fileAst, label), loadStack);
 
     return ImmutableIncludesData.ofImpl(
         filePath, dependencies, toIncludedPaths(filePath.toString(), dependencies, null));
@@ -411,20 +415,20 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *
    * @param loadImport an import label representing an extension to load.
    */
-  private IncludesData loadInclude(LoadImport loadImport)
+  private IncludesData loadInclude(LoadImport loadImport, LoadStack loadStack)
       throws IOException, BuildFileParseException, InterruptedException {
     IncludesData includesData = includesDataCache.get(loadImport.getLabel());
     if (includesData != null) {
       return includesData;
     }
-    includesData = loadIncludeImpl(loadImport);
+    includesData = loadIncludeImpl(loadImport, loadStack);
     includesDataCache.put(loadImport.getLabel(), includesData);
     return includesData;
   }
 
   /** Collects all the included files identified by corresponding Starlark imports. */
   private ImmutableList<IncludesData> loadIncludes(
-      Label containingLabel, ImmutableList<LoadImport> skylarkImports)
+      Label containingLabel, ImmutableList<LoadImport> skylarkImports, LoadStack loadStack)
       throws BuildFileParseException, IOException, InterruptedException {
     Set<String> processed = new HashSet<>(skylarkImports.size());
     ImmutableList.Builder<IncludesData> includes =
@@ -438,7 +442,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       // sometimes users include the same extension multiple times...
       if (!processed.add(skylarkImport.getImport())) continue;
       try {
-        includes.add(loadInclude(skylarkImport));
+        includes.add(
+            loadInclude(skylarkImport, loadStack.child(skylarkImport.getImportLocation())));
       } catch (UncheckedExecutionException e) {
         propagateRootCause(e);
       }
@@ -464,7 +469,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
   /** Loads all extensions identified by corresponding imports. */
   protected ImmutableList<ExtensionData> loadExtensions(
-      Label containingLabel, ImmutableList<LoadImport> skylarkImports)
+      Label containingLabel, ImmutableList<LoadImport> skylarkImports, LoadStack loadStack)
       throws BuildFileParseException, IOException, InterruptedException {
     Set<String> processed = new HashSet<>(skylarkImports.size());
     ImmutableList.Builder<ExtensionData> extensions =
@@ -478,7 +483,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       // sometimes users include the same extension multiple times...
       if (!processed.add(skylarkImport.getImport())) continue;
       try {
-        extensions.add(loadExtension(skylarkImport));
+        extensions.add(
+            loadExtension(skylarkImport, loadStack.child(skylarkImport.getImportLocation())));
       } catch (UncheckedExecutionException e) {
         propagateRootCause(e);
       }
@@ -544,15 +550,20 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     private final LoadImport load;
     // Path for the extension.
     private final com.google.devtools.build.lib.vfs.Path path;
+    // Load path
+    private final LoadStack loadStack;
     // List of dependencies this extension uses.
     private final Set<LoadImport> dependencies;
     // This extension AST.
     private @Nullable StarlarkFile ast;
 
     private ExtensionLoadState(
-        LoadImport load, com.google.devtools.build.lib.vfs.Path extensionPath) {
+        LoadImport load,
+        com.google.devtools.build.lib.vfs.Path extensionPath,
+        LoadStack loadStack) {
       this.load = load;
       this.path = extensionPath;
+      this.loadStack = loadStack;
       this.dependencies = new HashSet<LoadImport>();
       this.ast = null;
     }
@@ -661,11 +672,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    * @param load {@link ExtensionLoadState} representing the extension being loaded.
    * @returns true if AST was loaded, false otherwise.
    */
-  private boolean maybeLoadAST(ExtensionLoadState load) throws IOException {
+  private boolean maybeLoadAST(ExtensionLoadState load, LoadStack loadStack) throws IOException {
     if (load.haveAST()) {
       return false;
     }
-    load.setAST(parseSkylarkFile(load.getPath(), load.getParentLabel(), FileKind.BZL));
+    load.setAST(parseSkylarkFile(load.getPath(), loadStack, FileKind.BZL));
     return true;
   }
 
@@ -695,7 +706,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       if (extensionDataCache.getIfPresent(extensionPath) == null) {
         // Schedule dependency to be loaded if needed.
         haveUnsatisfiedDeps = true;
-        queue.push(new ExtensionLoadState(dependency, extensionPath));
+        queue.push(
+            new ExtensionLoadState(
+                dependency, extensionPath, load.loadStack.child(dependency.getImportLocation())));
       }
     }
     return haveUnsatisfiedDeps;
@@ -807,13 +820,14 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *
    * @param loadImport an import label representing an extension to load.
    */
-  private ExtensionData loadExtension(LoadImport loadImport)
+  private ExtensionData loadExtension(LoadImport loadImport, LoadStack loadStack)
       throws IOException, BuildFileParseException, InterruptedException {
+
     ExtensionData extension = null;
     ArrayDeque<ExtensionLoadState> work = new ArrayDeque<>();
-    work.push(
-        new ExtensionLoadState(
-            loadImport, getImportPath(loadImport.getLabel(), loadImport.getImport())));
+    com.google.devtools.build.lib.vfs.Path extensionPath =
+        getImportPath(loadImport.getLabel(), loadImport.getImport());
+    work.push(new ExtensionLoadState(loadImport, extensionPath, loadStack));
 
     while (!work.isEmpty()) {
       ExtensionLoadState load = work.peek();
@@ -827,7 +841,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       }
 
       // Load BuildFileAST if needed.
-      boolean astLoaded = maybeLoadAST(load);
+      boolean astLoaded = maybeLoadAST(load, load.loadStack);
       boolean haveUnsatisfiedDeps = astLoaded && processExtensionDependencies(load, work);
 
       // NB: If we have unsatisfied dependencies, we don't do anything;
@@ -899,11 +913,12 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     ForwardRelativePath basePath = getBasePath(parseFile);
     Label containingLabel = createContainingLabel(basePath);
-    ImplicitlyLoadedExtension implicitLoad = loadImplicitExtension(basePath, containingLabel);
+    ImplicitlyLoadedExtension implicitLoad =
+        loadImplicitExtension(basePath, containingLabel, LoadStack.EMPTY);
     StarlarkFile buildFileAst =
-        parseSkylarkFile(buildFilePath, containingLabel, getBuckOrPackage().fileKind);
+        parseSkylarkFile(buildFilePath, LoadStack.EMPTY, getBuckOrPackage().fileKind);
     ImmutableList<IncludesData> dependencies =
-        loadIncludes(containingLabel, getImports(buildFileAst, containingLabel));
+        loadIncludes(containingLabel, getImports(buildFileAst, containingLabel), LoadStack.EMPTY);
 
     // it might be potentially faster to keep sorted sets for each dependency separately and just
     // merge sorted lists as we aggregate transitive close up

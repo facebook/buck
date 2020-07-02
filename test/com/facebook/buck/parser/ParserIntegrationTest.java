@@ -810,4 +810,29 @@ public class ParserIntegrationTest {
             .assertSuccess();
     assertThat(result.getStderr(), containsString("x = 17"));
   }
+
+  @Test
+  @Parameters(method = "syntaxes")
+  public void recursiveLoad(Syntax syntax) throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "recursive_load", temporaryFolder);
+    workspace.setUp();
+    ProcessResult processResult =
+        workspace.runBuckBuild("//...", "-c", "parser.default_build_file_syntax=" + syntax);
+    assertEquals(ExitCode.PARSE_ERROR, processResult.getExitCode());
+    switch (syntax) {
+      case PYTHON_DSL:
+        {
+          assertThat(processResult.getStderr(), containsString("maximum recursion depth exceeded"));
+          break;
+        }
+      case SKYLARK:
+        {
+          assertThat(processResult.getStderr(), containsString("Load cycle while loading"));
+          break;
+        }
+      default:
+        throw new AssertionError("unreachable");
+    }
+  }
 }

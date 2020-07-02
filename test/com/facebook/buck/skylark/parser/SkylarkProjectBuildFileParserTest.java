@@ -1376,8 +1376,7 @@ public class SkylarkProjectBuildFileParserTest {
   public void throwsHumanReadableExceptionWhenFileDoesNotExist()
       throws IOException, InterruptedException {
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage(
-        "src/test/build_rules.bzl cannot be loaded because it does not exist. It was referenced from //src/test:BUCK");
+    thrown.expectMessage("src/test/build_rules.bzl cannot be loaded because it does not exist");
 
     AbsPath directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory.getPath());

@@ -274,7 +274,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
     }
 
     try {
-      loadExtensions(containingLabel, extensionsToLoad);
+      loadExtensions(containingLabel, extensionsToLoad, LoadStack.EMPTY);
     } catch (IOException | InterruptedException e) {
       throw BuildFileParseException.createForUnknownParseError("Could not parse %s", buildFile);
     }
