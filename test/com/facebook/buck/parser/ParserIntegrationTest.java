@@ -739,6 +739,26 @@ public class ParserIntegrationTest {
 
   @Test
   @Parameters(method = "syntaxes")
+  public void readConfigTopLevel(Syntax syntax) throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "read_config", temporaryFolder);
+    workspace.setUp();
+    ProcessResult result =
+        workspace
+            .runBuckBuild(
+                "//:",
+                "-c",
+                "parser.default_build_file_syntax=" + syntax,
+                "-c",
+                "foo.bar=br",
+                "-c",
+                "foo.baz=bz")
+            .assertSuccess();
+    assertThat(result.getStderr(), containsString("bar = br, baz = bz"));
+  }
+
+  @Test
+  @Parameters(method = "syntaxes")
   public void recursion(Syntax syntax) throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "recursion", temporaryFolder);

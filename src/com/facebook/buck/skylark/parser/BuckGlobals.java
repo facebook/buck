@@ -102,6 +102,7 @@ public abstract class BuckGlobals {
       // correct provider() is made available for user-defined rules in
       Starlark.addMethods(builder, new SkylarkProviderFunction());
     }
+    addNativeModuleFunctions(builder);
     return Module.createForBuiltins(builder.build());
   }
 

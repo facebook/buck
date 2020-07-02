@@ -786,9 +786,7 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
-  public void cannotUseGlobalGlobFunctionInsideOfExtension() throws Exception {
-    thrown.expect(BuildFileParseException.class);
-
+  public void canUseGlobalGlobFunctionInsideOfExtension() throws Exception {
     AbsPath directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory.getPath());
     AbsPath buildFile = directory.resolve("BUCK");

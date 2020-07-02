@@ -1,0 +1,5 @@
+# @nolint
+
+load(":rc.bzl", "bar", "baz")
+
+print("bar = {}, baz = {}".format(bar, baz()))
