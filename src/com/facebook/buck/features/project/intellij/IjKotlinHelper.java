@@ -16,8 +16,10 @@
 
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.android.AndroidKotlinCoreArg;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidLibraryDescriptionArg;
+import com.facebook.buck.android.RobolectricTestDescriptionArg;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactory;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
@@ -33,8 +35,9 @@ public final class IjKotlinHelper {
   public static boolean isKotlinModule(JvmLibraryArg constructorArg) {
     return constructorArg instanceof KotlinLibraryDescriptionArg
         || constructorArg instanceof KotlinTestDescriptionArg
-        || constructorArg instanceof AndroidLibraryDescriptionArg
-            && ((AndroidLibraryDescriptionArg) constructorArg)
+        || (constructorArg instanceof AndroidLibraryDescriptionArg
+                || constructorArg instanceof RobolectricTestDescriptionArg)
+            && ((AndroidKotlinCoreArg) constructorArg)
                 .getLanguage()
                 .map(AndroidLibraryDescription.JvmLanguage.KOTLIN::equals)
                 .orElse(false);

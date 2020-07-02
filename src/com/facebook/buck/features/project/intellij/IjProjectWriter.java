@@ -18,8 +18,9 @@ package com.facebook.buck.features.project.intellij;
 
 import static com.facebook.buck.features.project.intellij.IjProjectPaths.getUrl;
 
+import com.facebook.buck.android.AndroidKotlinCoreArg;
 import com.facebook.buck.android.AndroidLibraryDescription;
-import com.facebook.buck.android.AndroidLibraryDescriptionArg;
+import com.facebook.buck.android.RobolectricTestDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.features.project.intellij.model.ContentRoot;
@@ -215,10 +216,13 @@ public class IjProjectWriter {
   }
 
   private Optional<AndroidLibraryDescription.JvmLanguage> getModuleLang(BuildTarget buildTarget) {
-    if (targetGraph.get(buildTarget).getConstructorArg() instanceof AndroidLibraryDescriptionArg) {
-      return ((AndroidLibraryDescriptionArg) (targetGraph.get(buildTarget).getConstructorArg()))
+    if (targetGraph.get(buildTarget).getConstructorArg() instanceof AndroidKotlinCoreArg
+        || targetGraph.get(buildTarget).getConstructorArg()
+            instanceof RobolectricTestDescriptionArg) {
+      return ((AndroidKotlinCoreArg) (targetGraph.get(buildTarget).getConstructorArg()))
           .getLanguage();
     }
+
     return Optional.empty();
   }
 

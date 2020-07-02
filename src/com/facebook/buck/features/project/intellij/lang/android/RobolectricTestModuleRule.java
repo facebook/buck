@@ -20,6 +20,7 @@ import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.android.RobolectricTestDescriptionArg;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.features.project.intellij.IjKotlinHelper;
 import com.facebook.buck.features.project.intellij.JavaLanguageLevelHelper;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
@@ -49,6 +50,8 @@ public class RobolectricTestModuleRule extends AndroidModuleRule<RobolectricTest
     addDepsAndTestSources(target, true /* wantsPackagePrefix */, context);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
     context.setJavaLanguageLevel(JavaLanguageLevelHelper.getLanguageLevel(projectConfig, target));
+
+    IjKotlinHelper.addKotlinJavaRuntimeLibraryDependencyIfNecessary(target, context);
   }
 
   @Override
