@@ -16,7 +16,7 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
@@ -27,7 +27,6 @@ import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
-import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.Tuple;
@@ -105,20 +104,15 @@ public abstract class AbstractSkylarkFunctions {
       parameters = {@Param(name = "symbols", type = Dict.class, named = true)},
       useStarlarkThread = true)
   public void loadSymbols(Dict<?, ?> symbols /* <String, Any> */, StarlarkThread env) {
-    Module mod = env.getGlobals();
+    LoadSymbolsContext loadSymbolsContext = env.getThreadLocal(LoadSymbolsContext.class);
+    if (loadSymbolsContext == null) {
+      throw new BuckUncheckedExecutionException(
+          "%s is not specified", LoadSymbolsContext.class.getSimpleName());
+    }
     for (Object keyObj : symbols) {
       if (keyObj instanceof String) {
         String key = (String) keyObj;
-        if (key.startsWith("_")) {
-          throw new HumanReadableException(
-              "Tried to load private symbol `%s`. load_symbols() can only be used to load public (non `_`-prefixed) symbols",
-              key);
-        }
-        try {
-          mod.put(key, symbols.get(keyObj));
-        } catch (Exception e) {
-          throw new RuntimeException(e);
-        }
+        loadSymbolsContext.putSymbol(key, symbols.get(keyObj));
       }
     }
   }

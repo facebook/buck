@@ -28,6 +28,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.facebook.buck.parser.implicit.PackageImplicitIncludesFinder;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
+import com.facebook.buck.skylark.function.LoadSymbolsContext;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
@@ -70,6 +71,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
@@ -724,6 +726,10 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
       readConfigContext.setup(extensionEnv);
 
+      LoadSymbolsContext loadSymbolsContext = new LoadSymbolsContext();
+
+      loadSymbolsContext.setup(extensionEnv);
+
       extensionEnv.setPostAssignHook(
           (n, v) -> {
             try {
@@ -744,7 +750,16 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
           load.getLabel(),
           load.getParentLabel());
 
-      loadedExtension = new StarlarkThread.Extension(extensionEnv);
+      Map<String, Object> exportedBindings = extensionEnv.getGlobals().getExportedBindings();
+      Map<String, Object> loadedSymbols = loadSymbolsContext.getLoadedSymbols();
+      ImmutableMap.Builder<String, Object> exports =
+          ImmutableMap.builderWithExpectedSize(exportedBindings.size() + loadedSymbols.size());
+      exports.putAll(exportedBindings);
+      exports.putAll(loadedSymbols);
+
+      loadedExtension =
+          new StarlarkThread.Extension(
+              exports.build(), extensionEnv.getTransitiveContentHashCode());
     }
 
     return ImmutableExtensionData.ofImpl(

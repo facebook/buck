@@ -1,4 +1,4 @@
-load_symbols({"my_name": "hello", "my_rule": export_file})
+load(":symbols.bzl", "my_name", "my_rule")
 
 my_rule(
     name = my_name,
