@@ -185,7 +185,12 @@ public class JsBundleDescription
     Either<ImmutableSet<String>, String> entryPoint = args.getEntry();
     TransitiveLibraryDependencies libsResolver =
         new TransitiveLibraryDependencies(
-            buildTarget, context.getTargetGraph(), graphBuilder, args.getDefaultTransformProfile());
+            buildTarget,
+            context.getTargetGraph(),
+            graphBuilder,
+            args.getFallbackTransformProfile().isPresent()
+                ? args.getFallbackTransformProfile()
+                : args.getDefaultTransformProfile());
     ImmutableSet<JsLibrary> flavoredLibraryDeps = libsResolver.collect(args.getDeps());
     Stream<BuildRule> generatedDeps =
         findGeneratedSources(graphBuilder, flavoredLibraryDeps.stream())
@@ -389,7 +394,14 @@ public class JsBundleDescription
     /** For R.java */
     Optional<String> getAndroidPackage();
 
+    /**
+     * @deprecated This is in the process of being renamed to getFallbackTransformProfile. Delete
+     *     this once no BUCK files are referencing default_transform_profile.
+     */
+    @Deprecated
     Optional<String> getDefaultTransformProfile();
+
+    Optional<String> getFallbackTransformProfile();
   }
 
   private static class TransitiveLibraryDependencies {
@@ -401,7 +413,7 @@ public class JsBundleDescription
         BuildTarget bundleTarget,
         TargetGraph targetGraph,
         ActionGraphBuilder graphBuilder,
-        Optional<String> defaultTransformProfile) {
+        Optional<String> fallbackTransformProfile) {
       this.targetGraph = targetGraph;
       this.graphBuilder = graphBuilder;
 
@@ -414,15 +426,15 @@ public class JsBundleDescription
                       JsLibraryDescription.FLAVOR_DOMAINS.stream()
                           .anyMatch(domain -> domain.contains(flavor)));
       if (!JsFlavors.TRANSFORM_PROFILE_DOMAIN.containsAnyOf(bundleFlavors)
-          && defaultTransformProfile.isPresent()
-          && !defaultTransformProfile.get().equals("default")) {
-        Flavor defaultTransformProfileFlavor =
+          && fallbackTransformProfile.isPresent()
+          && !fallbackTransformProfile.get().equals("default")) {
+        Flavor fallbackTransformProfileFlavor =
             Iterables.getOnlyElement(
                 JsFlavors.TRANSFORM_PROFILE_DOMAIN.getFlavors().asList().stream()
-                        .filter(flavor -> flavor.getName().equals(defaultTransformProfile.get()))
+                        .filter(flavor -> flavor.getName().equals(fallbackTransformProfile.get()))
                     ::iterator);
         extraFlavorsStream =
-            Stream.concat(extraFlavorsStream, Stream.of(defaultTransformProfileFlavor));
+            Stream.concat(extraFlavorsStream, Stream.of(fallbackTransformProfileFlavor));
       }
       extraFlavors =
           extraFlavorsStream.collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));

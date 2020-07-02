@@ -72,8 +72,8 @@ public class JsBundleBuilder
     return this;
   }
 
-  JsBundleBuilder setDefaultTransformProfile(String transformProfile) {
-    getArgForPopulating().setDefaultTransformProfile(transformProfile);
+  JsBundleBuilder setFallbackTransformProfile(String transformProfile) {
+    getArgForPopulating().setFallbackTransformProfile(transformProfile);
     return this;
   }
 }
