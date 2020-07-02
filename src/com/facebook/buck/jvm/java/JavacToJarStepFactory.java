@@ -148,8 +148,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
             ? pipeline.getLibraryJarParameters()
             : pipeline.getAbiJarParameters();
 
-    jarParameters.ifPresent(
-        parameters -> addJarSetupSteps(projectFilesystem, context, parameters, steps));
+    jarParameters.ifPresent(parameters -> addJarSetupSteps(parameters, steps));
 
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.

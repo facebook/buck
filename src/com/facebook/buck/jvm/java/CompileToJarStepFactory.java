@@ -30,6 +30,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -70,7 +71,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
     JarParameters jarParameters =
         abiJarParameters != null ? abiJarParameters : libraryJarParameters;
     if (jarParameters != null) {
-      addJarSetupSteps(projectFilesystem, context, jarParameters, steps);
+      addJarSetupSteps(jarParameters, steps);
     }
 
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
@@ -153,17 +154,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
     }
   }
 
-  protected void addJarSetupSteps(
-      ProjectFilesystem projectFilesystem,
-      BuildContext context,
-      JarParameters jarParameters,
-      Builder<Step> steps) {
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                projectFilesystem,
-                jarParameters.getJarPath().getParent())));
+  protected void addJarSetupSteps(JarParameters jarParameters, Builder<Step> steps) {
+    steps.addAll(MakeCleanDirectoryIsolatedStep.of(jarParameters.getJarPath().getParent()));
   }
 
   protected void recordDepFileIfNecessary(
