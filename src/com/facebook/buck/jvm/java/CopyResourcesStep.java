@@ -94,8 +94,8 @@ public class CopyResourcesStep implements Step {
   }
 
   /**
-   * Returns discovered resources as a map, where the key is the an actual absolute path to the resource
-   * and a value is a desired path to it.
+   * Returns discovered resources as a map, where the key is the an actual absolute path to the
+   * resource and a value is a desired path to it.
    */
   public static ImmutableMap<AbsPath, Path> getResourcesMap(
       BuildContext buildContext,
