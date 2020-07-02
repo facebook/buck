@@ -20,7 +20,6 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
-import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
@@ -64,7 +63,6 @@ import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -172,6 +170,8 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final boolean withDownwardApi;
 
+  @AddToRuleKey private final AppleCodeSignType codeSignType;
+
   AppleBundle(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -189,7 +189,8 @@ public class AppleBundle extends AbstractBuildRule
       Set<SourcePath> frameworks,
       AppleCxxPlatform appleCxxPlatform,
       Set<BuildTarget> tests,
-      CodeSignIdentityStore codeSignIdentityStore,
+      Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier,
+      AppleCodeSignType codeSignType,
       ProvisioningProfileStore provisioningProfileStore,
       boolean dryRunCodeSigning,
       boolean cacheable,
@@ -239,13 +240,10 @@ public class AppleBundle extends AbstractBuildRule
 
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
 
-    if (needCodeSign() && !adHocCodeSignIsSufficient()) {
-      this.provisioningProfileStore = provisioningProfileStore;
-      this.codeSignIdentitiesSupplier = codeSignIdentityStore.getIdentitiesSupplier();
-    } else {
-      this.provisioningProfileStore = ProvisioningProfileStore.empty();
-      this.codeSignIdentitiesSupplier = Suppliers.ofInstance(ImmutableList.of());
-    }
+    this.codeSignIdentitiesSupplier = codeSignIdentitiesSupplier;
+    this.provisioningProfileStore = provisioningProfileStore;
+    this.codeSignType = codeSignType;
+
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
     this.codesign =
         appleCxxPlatform
@@ -388,7 +386,7 @@ public class AppleBundle extends AbstractBuildRule
         getProjectFilesystem(),
         codeSignOnCopyPathsBuilder);
 
-    if (needCodeSign()) {
+    if (codeSignType != AppleCodeSignType.SKIP) {
       Optional<Path> signingEntitlementsTempPath = Optional.empty();
       Supplier<CodeSignIdentity> codeSignIdentitySupplier;
 
@@ -396,7 +394,7 @@ public class AppleBundle extends AbstractBuildRule
           entitlementsFile.map(
               sourcePath -> context.getSourcePathResolver().getAbsolutePath(sourcePath).getPath());
 
-      if (adHocCodeSignIsSufficient()) {
+      if (codeSignType == AppleCodeSignType.ADHOC) {
         if (useEntitlementsWhenAdhocCodeSigning) {
           signingEntitlementsTempPath = entitlementsPlist;
         }
@@ -819,16 +817,6 @@ public class AppleBundle extends AbstractBuildRule
       return ((NativeTestable) binary).getPrivateCxxPreprocessorInput(cxxPlatform, graphBuilder);
     }
     return CxxPreprocessorInput.of();
-  }
-
-  private boolean adHocCodeSignIsSufficient() {
-    return ApplePlatform.adHocCodeSignIsSufficient(platform.getName());
-  }
-
-  // .framework bundles will be code-signed when they're copied into the containing bundle.
-  private boolean needCodeSign() {
-    return ApplePlatform.needsCodeSign(platform.getName())
-        && !extension.equals(FRAMEWORK_EXTENSION);
   }
 
   @Override

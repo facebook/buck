@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import static com.facebook.buck.apple.AppleAssetCatalog.validateAssetCatalogs;
+import static com.facebook.buck.apple.AppleCodeSignType.DISTRIBUTION;
 import static com.facebook.buck.swift.SwiftDescriptions.SWIFT_EXTENSION;
 
 import com.facebook.buck.apple.AppleAssetCatalog.ValidationType;
@@ -25,6 +26,7 @@ import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
@@ -82,6 +84,7 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -103,6 +106,7 @@ import java.util.SortedSet;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -1009,6 +1013,20 @@ public class AppleDescriptions {
       }
     }
 
+    AppleCodeSignType codeSignType =
+        AppleCodeSignType.signTypeForBundle(
+            appleCxxPlatform.getAppleSdk().getApplePlatform(), unwrappedExtension);
+
+    Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier;
+    ProvisioningProfileStore profileStore;
+    if (codeSignType == DISTRIBUTION) {
+      codeSignIdentitiesSupplier = codeSignIdentityStore.getIdentitiesSupplier();
+      profileStore = provisioningProfileStore;
+    } else {
+      codeSignIdentitiesSupplier = Suppliers.ofInstance(ImmutableList.of());
+      profileStore = ProvisioningProfileStore.empty();
+    }
+
     return new AppleBundle(
         buildTarget,
         projectFilesystem,
@@ -1026,8 +1044,9 @@ public class AppleDescriptions {
         frameworks,
         appleCxxPlatform,
         tests,
-        codeSignIdentityStore,
-        provisioningProfileStore,
+        codeSignIdentitiesSupplier,
+        codeSignType,
+        profileStore,
         dryRunCodeSigning,
         cacheable,
         verifyResources,
