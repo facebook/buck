@@ -47,12 +47,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.events.EventHandler;
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Parser for build files written using Skylark syntax.
@@ -251,10 +252,20 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
 
   @Override
   public void loadExtensionsForUserDefinedRules(AbsPath buildFile, BuildFileManifest manifest) {
-    ImmutableList<String> extensionsToLoad =
+    Label containingLabel = createContainingLabel(getBasePath(buildFile));
+    ImmutableList<LoadImport> extensionsToLoad =
         manifest.getTargets().values().stream()
-            .map(props -> UserDefinedRuleNames.importFromIdentifier(props.getBuckType()))
-            .filter(Objects::nonNull)
+            .flatMap(
+                props -> {
+                  String importS = UserDefinedRuleNames.importFromIdentifier(props.getBuckType());
+                  return importS != null
+                      ? Stream.of(
+                          ImmutableLoadImport.ofImpl(
+                              containingLabel,
+                              importS,
+                              Location.fromFile(absPathToStarlarkPath(buildFile))))
+                      : Stream.empty();
+                })
             .distinct()
             .collect(ImmutableList.toImmutableList());
 
@@ -263,7 +274,6 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
     }
 
     try {
-      Label containingLabel = createContainingLabel(getBasePath(buildFile));
       loadExtensions(containingLabel, extensionsToLoad);
     } catch (IOException | InterruptedException e) {
       throw BuildFileParseException.createForUnknownParseError("Could not parse %s", buildFile);
