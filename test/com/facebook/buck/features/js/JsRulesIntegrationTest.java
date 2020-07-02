@@ -40,6 +40,10 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
@@ -47,6 +51,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Rule;
@@ -78,11 +83,43 @@ public class JsRulesIntegrationTest {
     }
   }
 
+  private static ObjectMapper getPrettyPrintingObjectMapper() {
+    DefaultPrettyPrinter.Indenter indenter =
+        new DefaultIndenter(
+            "  ",
+            // Use platform-invariant newlines.
+            "\n");
+    return new ObjectMapper()
+        .setDefaultPrettyPrinter(
+            new DefaultPrettyPrinter().withArrayIndenter(indenter).withObjectIndenter(indenter))
+        .enable(SerializationFeature.INDENT_OUTPUT);
+  }
+
   private static String normalizeObservedContent(String content) {
+    ObjectMapper mapper = getPrettyPrintingObjectMapper();
+
     // Replace a string like `fruit#file-apple.js-9635e8d52e.jsfile`
     // with `fruit#file-apple.js-<HASH>.jsfile`.
-    return content.replaceAll(
-        "\\.(js|json)-[0-9a-f]{10}(,ios)?(,release)?\\.jsfile", ".$1-<HASH>$2$3.jsfile");
+    return Arrays.stream(
+            content
+                .replaceAll(
+                    "\\.(js|json)-[0-9a-f]{10}(,ios)?(,release)?\\.jsfile", ".$1-<HASH>$2$3.jsfile")
+                .split("\n"))
+        .map(
+            line -> {
+              // Pretty-print embedded JSON objects.
+              if (line.startsWith("{") && line.endsWith("}")) {
+                try {
+                  Object jsonObject = mapper.readValue(line, Object.class);
+                  return mapper.writer().writeValueAsString(jsonObject);
+                } catch (IOException e) {
+                  return line;
+                }
+              } else {
+                return line;
+              }
+            })
+        .collect(Collectors.joining("\n"));
   }
 
   @Test
