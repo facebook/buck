@@ -48,6 +48,7 @@ import javax.annotation.Nullable;
 
 /** Provides a base implementation for post compile steps. */
 public abstract class CompileToJarStepFactory implements AddsToRuleKey {
+
   protected CompileToJarStepFactory() {}
 
   public final void createCompileToJarStep(
@@ -129,8 +130,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
                 compilerParameters.getOutputPaths().getOutputJarDirPath())));
 
     // If there are resources, then link them to the appropriate place in the classes directory.
-    steps.add(
-        new CopyResourcesStep(
+    steps.addAll(
+        CopyResourcesStep.of(
             projectFilesystem,
             context,
             target,

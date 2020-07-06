@@ -85,8 +85,8 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     // repository will be added as com/example/resource.txt in the resulting JAR (assuming that
     // "/java/" is listed under src_roots in .buckconfig).
     RelPath tempJarFolder = workingDirectory.resolveRel("tmp");
-    steps.add(
-        new CopyResourcesStep(
+    steps.addAll(
+        CopyResourcesStep.of(
             getProjectFilesystem(),
             context,
             getBuildTarget(),

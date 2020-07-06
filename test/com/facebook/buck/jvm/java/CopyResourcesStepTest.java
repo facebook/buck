@@ -20,27 +20,27 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.SymlinkFileStep;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
+import com.facebook.buck.step.isolatedsteps.common.SymlinkIsolatedStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import org.junit.Test;
 
 public class CopyResourcesStepTest {
+
   @Test
   public void testAddResourceCommandsWithBuildFileParentOfSrcDirectory() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
@@ -57,8 +57,8 @@ public class CopyResourcesStepTest {
             .withJavaPackageFinder(javaPackageFinder)
             .withBuildCellRootPath(filesystem.getRootPath().getPath());
 
-    CopyResourcesStep step =
-        new CopyResourcesStep(
+    ImmutableList<IsolatedStep> steps =
+        CopyResourcesStep.of(
             filesystem,
             buildContext,
             buildTarget,
@@ -77,33 +77,29 @@ public class CopyResourcesStepTest {
                 .getScratchDir()
                 .resolve("android/java/lib__resources__classes"));
 
-    Path target =
+    RelPath target =
         filesystem
             .getBuckPaths()
             .getScratchDir()
-            .resolve("android/java/lib__resources__classes/com/facebook/common/util/data.json");
-    Path target1 =
+            .resolveRel("android/java/lib__resources__classes/com/facebook/common/util/data.json");
+    RelPath target1 =
         filesystem
             .getBuckPaths()
             .getScratchDir()
-            .resolve("android/java/lib__resources__classes/com/facebook/base/data.json");
-    List<? extends Step> expected =
+            .resolveRel("android/java/lib__resources__classes/com/facebook/base/data.json");
+    List<IsolatedStep> expected =
         ImmutableList.of(
-            MkdirStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), filesystem, target1.getParent())),
-            SymlinkFileStep.of(
-                filesystem,
-                filesystem.resolve("android/java/src/com/facebook/base/data.json").getPath(),
+            MkdirIsolatedStep.of(target1.getParent()),
+            SymlinkIsolatedStep.of(
+                filesystem.relativize(
+                    filesystem.resolve("android/java/src/com/facebook/base/data.json")),
                 target1),
-            MkdirStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), filesystem, target.getParent())),
-            SymlinkFileStep.of(
-                filesystem,
-                filesystem.resolve("android/java/src/com/facebook/common/util/data.json").getPath(),
+            MkdirIsolatedStep.of(target.getParent()),
+            SymlinkIsolatedStep.of(
+                filesystem.relativize(
+                    filesystem.resolve("android/java/src/com/facebook/common/util/data.json")),
                 target));
-    assertEquals(expected, step.buildSteps());
+    assertEquals(expected, steps);
   }
 
   @Test
@@ -121,8 +117,9 @@ public class CopyResourcesStepTest {
         FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver())
             .withJavaPackageFinder(javaPackageFinder)
             .withBuildCellRootPath(filesystem.getRootPath().getPath());
-    CopyResourcesStep step =
-        new CopyResourcesStep(
+
+    ImmutableList<IsolatedStep> steps =
+        CopyResourcesStep.of(
             filesystem,
             buildContext,
             buildTarget,
@@ -141,33 +138,30 @@ public class CopyResourcesStepTest {
                 .getScratchDir()
                 .resolve("android/java/src/lib__resources__classes"));
 
-    Path target =
+    RelPath target =
         filesystem
             .getBuckPaths()
             .getScratchDir()
-            .resolve("android/java/src/lib__resources__classes/com/facebook/common/util/data.json");
-    Path target1 =
+            .resolveRel(
+                "android/java/src/lib__resources__classes/com/facebook/common/util/data.json");
+    RelPath target1 =
         filesystem
             .getBuckPaths()
             .getScratchDir()
-            .resolve("android/java/src/lib__resources__classes/com/facebook/base/data.json");
-    List<? extends Step> expected =
+            .resolveRel("android/java/src/lib__resources__classes/com/facebook/base/data.json");
+    List<IsolatedStep> expected =
         ImmutableList.of(
-            MkdirStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), filesystem, target1.getParent())),
-            SymlinkFileStep.of(
-                filesystem,
-                filesystem.resolve("android/java/src/com/facebook/base/data.json").getPath(),
+            MkdirIsolatedStep.of(target1.getParent()),
+            SymlinkIsolatedStep.of(
+                filesystem.relativize(
+                    filesystem.resolve("android/java/src/com/facebook/base/data.json")),
                 target1),
-            MkdirStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), filesystem, target.getParent())),
-            SymlinkFileStep.of(
-                filesystem,
-                filesystem.resolve("android/java/src/com/facebook/common/util/data.json").getPath(),
+            MkdirIsolatedStep.of(target.getParent()),
+            SymlinkIsolatedStep.of(
+                filesystem.relativize(
+                    filesystem.resolve("android/java/src/com/facebook/common/util/data.json")),
                 target));
-    assertEquals(expected, step.buildSteps());
+    assertEquals(expected, steps);
   }
 
   @Test
@@ -187,8 +181,8 @@ public class CopyResourcesStepTest {
             .withJavaPackageFinder(javaPackageFinder)
             .withBuildCellRootPath(filesystem.getRootPath().getPath());
 
-    CopyResourcesStep step =
-        new CopyResourcesStep(
+    ImmutableList<IsolatedStep> steps =
+        CopyResourcesStep.of(
             filesystem,
             buildContext,
             buildTarget,
@@ -207,37 +201,33 @@ public class CopyResourcesStepTest {
                 .getScratchDir()
                 .resolve("android/java/src/com/facebook/lib__resources__classes"));
 
-    Path target =
+    RelPath target =
         filesystem
             .getBuckPaths()
             .getScratchDir()
-            .resolve(
+            .resolveRel(
                 "android/java/src/com/facebook/lib__resources__classes/"
                     + "com/facebook/common/util/data.json");
-    Path target1 =
+    RelPath target1 =
         filesystem
             .getBuckPaths()
             .getScratchDir()
-            .resolve(
+            .resolveRel(
                 "android/java/src/com/facebook/lib__resources__classes/"
                     + "com/facebook/base/data.json");
-    List<? extends Step> expected =
+    List<IsolatedStep> expected =
         ImmutableList.of(
-            MkdirStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), filesystem, target1.getParent())),
-            SymlinkFileStep.of(
-                filesystem,
-                filesystem.resolve("android/java/src/com/facebook/base/data.json").getPath(),
+            MkdirIsolatedStep.of(target1.getParent()),
+            SymlinkIsolatedStep.of(
+                filesystem.relativize(
+                    filesystem.resolve("android/java/src/com/facebook/base/data.json")),
                 target1),
-            MkdirStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), filesystem, target.getParent())),
-            SymlinkFileStep.of(
-                filesystem,
-                filesystem.resolve("android/java/src/com/facebook/common/util/data.json").getPath(),
+            MkdirIsolatedStep.of(target.getParent()),
+            SymlinkIsolatedStep.of(
+                filesystem.relativize(
+                    filesystem.resolve("android/java/src/com/facebook/common/util/data.json")),
                 target));
-    assertEquals(expected, step.buildSteps());
+    assertEquals(expected, steps);
   }
 
   private JavaPackageFinder createJavaPackageFinder(ProjectFilesystem projectFilesystem) {
