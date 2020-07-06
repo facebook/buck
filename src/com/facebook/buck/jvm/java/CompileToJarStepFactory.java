@@ -22,15 +22,13 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
+import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -66,8 +64,9 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       boolean withDownwardApi) {
     Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
 
-    addCompilerSetupSteps(
-        context, projectFilesystem, target, compilerParameters, resourcesParameters, steps);
+    steps.addAll(
+        getCompilerSetupIsolatedSteps(
+            context, projectFilesystem, target, compilerParameters, resourcesParameters));
 
     JarParameters jarParameters =
         abiJarParameters != null ? abiJarParameters : libraryJarParameters;
@@ -99,40 +98,28 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
     }
   }
 
-  protected void addCompilerSetupSteps(
+  /** Returns Compiler Setup steps */
+  protected ImmutableList<IsolatedStep> getCompilerSetupIsolatedSteps(
       BuildContext context,
-      ProjectFilesystem projectFilesystem,
+      ProjectFilesystem filesystem,
       BuildTarget target,
       CompilerParameters compilerParameters,
-      ResourcesParameters resourcesParameters,
-      Builder<Step> steps) {
+      ResourcesParameters resourcesParameters) {
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                projectFilesystem,
-                compilerParameters.getOutputPaths().getClassesDir())));
+    CompilerOutputPaths outputPaths = compilerParameters.getOutputPaths();
 
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                projectFilesystem,
-                compilerParameters.getOutputPaths().getAnnotationPath())));
+    Builder<IsolatedStep> steps = ImmutableList.builder();
 
-    steps.add(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                projectFilesystem,
-                compilerParameters.getOutputPaths().getOutputJarDirPath())));
+    steps.addAll(MakeCleanDirectoryIsolatedStep.of(outputPaths.getClassesDir()));
+    steps.addAll(
+        MakeCleanDirectoryIsolatedStep.of(getRelPath(filesystem, outputPaths.getAnnotationPath())));
+    steps.add(MkdirIsolatedStep.of(getRelPath(filesystem, outputPaths.getOutputJarDirPath())));
 
     // If there are resources, then link them to the appropriate place in the classes directory.
     steps.addAll(
         CopyResourcesStep.of(
-            projectFilesystem,
+            filesystem,
             context,
             target,
             resourcesParameters,
@@ -140,19 +127,18 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
 
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
       steps.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(),
-                  projectFilesystem,
-                  compilerParameters.getOutputPaths().getPathToSourcesList().getParent())));
-
+          MkdirIsolatedStep.of(
+              getRelPath(filesystem, outputPaths.getPathToSourcesList().getParent())));
       steps.addAll(
-          MakeCleanDirectoryStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(),
-                  projectFilesystem,
-                  compilerParameters.getOutputPaths().getWorkingDirectory())));
+          MakeCleanDirectoryIsolatedStep.of(
+              getRelPath(filesystem, outputPaths.getWorkingDirectory())));
     }
+
+    return steps.build();
+  }
+
+  private RelPath getRelPath(ProjectFilesystem filesystem, Path path) {
+    return filesystem.relativize(filesystem.resolve(path));
   }
 
   protected void addJarSetupSteps(JarParameters jarParameters, Builder<Step> steps) {

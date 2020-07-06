@@ -139,8 +139,9 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     addAnnotationGenFolderStep(target, projectFilesystem, steps, buildableContext, context);
 
     if (!pipeline.isRunning()) {
-      addCompilerSetupSteps(
-          context, projectFilesystem, target, compilerParameters, resourcesParameters, steps);
+      steps.addAll(
+          getCompilerSetupIsolatedSteps(
+              context, projectFilesystem, target, compilerParameters, resourcesParameters));
     }
 
     Optional<JarParameters> jarParameters =
