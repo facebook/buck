@@ -110,7 +110,6 @@ public class KotlinLibraryIntegrationTest {
   public void pureTreeOfKotlinCodeWithAnnotationProcessorsShouldNotMakeAnInvalidJavacCall()
       throws Exception {
     overrideToolsJavacInBuckConfig();
-    overrideSpecifyingAnnotationProcessorsInBuckConfig();
     Path jarFile = workspace.buildAndReturnOutput("//com/example/ap/purekotlinap:example");
     assertNotNull(
         new JarFile(jarFile.toString()).getEntry("com/example/ap/purekotlinap/Example_.class"));
@@ -127,13 +126,6 @@ public class KotlinLibraryIntegrationTest {
     // particular, when there are no .java files in the srcs of the rule.
     String buckconfig = workspace.getFileContents(".buckconfig");
     String amendedBuckconfig = buckconfig + String.format("[tools]\njavac = %s", javac.get());
-    workspace.writeContentsToPath(amendedBuckconfig, ".buckconfig");
-  }
-
-  private void overrideSpecifyingAnnotationProcessorsInBuckConfig() throws IOException {
-    String buckconfig = workspace.getFileContents(".buckconfig");
-    String amendedBuckconfig =
-        buckconfig + "\n[kotlin]\nkapt_explicitly_specified_annotation_processors = true";
     workspace.writeContentsToPath(amendedBuckconfig, ".buckconfig");
   }
 
@@ -215,11 +207,7 @@ public class KotlinLibraryIntegrationTest {
   @Test
   public void shouldCompileKotlinClassWithTarget8() {
     ProcessResult buildResult =
-        workspace.runBuckCommand(
-            "build",
-            "//com/example/good:example_with_target",
-            "-c",
-            "kotlin.add_jvm_target_to_kotlinc=true");
+        workspace.runBuckCommand("build", "//com/example/good:example_with_target");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 
