@@ -20,26 +20,26 @@ import static com.facebook.buck.jvm.java.JavacOptions.SpoolMode;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.SymlinkFileStep;
+import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
+import com.facebook.buck.step.isolatedsteps.common.SymlinkIsolatedStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
-import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class JavacToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
+
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
 
   @AddToRuleKey private final Javac javac;
@@ -84,15 +84,11 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       BuildTarget invokingTarget,
       ProjectFilesystem filesystem,
       Builder<Step> steps,
-      BuildableContext buildableContext,
-      BuildContext buildContext) {
-    Path annotationGenFolder =
-        CompilerOutputPaths.getAnnotationPath(filesystem, invokingTarget).get();
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                buildContext.getBuildCellRootPath(), filesystem, annotationGenFolder)));
-    buildableContext.recordArtifact(annotationGenFolder);
+      BuildableContext buildableContext) {
+    RelPath annotationGenFolder = CompilerOutputPaths.getAnnotationPath(filesystem, invokingTarget);
+
+    steps.addAll(MakeCleanDirectoryIsolatedStep.of(annotationGenFolder));
+    buildableContext.recordArtifact(annotationGenFolder.getPath());
   }
 
   @Override
@@ -107,7 +103,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     JavacOptions buildTimeOptions =
         javacOptions.withBootclasspathFromContext(extraClasspathProvider);
 
-    addAnnotationGenFolderStep(invokingRule, projectFilesystem, steps, buildableContext, context);
+    addAnnotationGenFolderStep(invokingRule, projectFilesystem, steps, buildableContext);
 
     steps.add(
         new JavacStep(
@@ -136,7 +132,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
     CompilerParameters compilerParameters = pipeline.getCompilerParameters();
 
-    addAnnotationGenFolderStep(target, projectFilesystem, steps, buildableContext, context);
+    addAnnotationGenFolderStep(target, projectFilesystem, steps, buildableContext);
 
     if (!pipeline.isRunning()) {
       steps.addAll(
@@ -249,12 +245,10 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     boolean generatingCode = !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
     if (generatingCode && pipeline.isRunning()) {
       steps.add(
-          SymlinkFileStep.of(
-              projectFilesystem,
+          SymlinkIsolatedStep.of(
               CompilerOutputPaths.getAnnotationPath(
-                      projectFilesystem, JavaAbis.getSourceAbiJar(invokingRule))
-                  .get(),
-              CompilerOutputPaths.getAnnotationPath(projectFilesystem, invokingRule).get()));
+                  projectFilesystem, JavaAbis.getSourceAbiJar(invokingRule)),
+              CompilerOutputPaths.getAnnotationPath(projectFilesystem, invokingRule)));
     }
 
     steps.add(

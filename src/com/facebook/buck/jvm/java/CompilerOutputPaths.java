@@ -29,13 +29,14 @@ import java.util.Optional;
 /** Provides access to the various output paths for a java library. */
 @BuckStyleValueWithBuilder
 public abstract class CompilerOutputPaths {
+
   public abstract RelPath getClassesDir();
 
   public abstract Path getOutputJarDirPath();
 
   public abstract Optional<Path> getAbiJarPath();
 
-  public abstract Path getAnnotationPath();
+  public abstract RelPath getAnnotationPath();
 
   public abstract Path getPathToSourcesList();
 
@@ -59,8 +60,7 @@ public abstract class CompilerOutputPaths {
                 ? Optional.of(
                     genRoot.resolve(String.format("%s.jar", target.getShortNameAndFlavorPostfix())))
                 : Optional.empty())
-        .setAnnotationPath(
-            BuildTargetPaths.getAnnotationPath(filesystem, target, "__%s_gen__").getPath())
+        .setAnnotationPath(BuildTargetPaths.getAnnotationPath(filesystem, target, "__%s_gen__"))
         .setPathToSourcesList(
             BuildTargetPaths.getGenPath(filesystem, target, "__%s__srcs").getPath())
         .setWorkingDirectory(
@@ -82,8 +82,8 @@ public abstract class CompilerOutputPaths {
     return CompilerOutputPaths.of(target, filesystem).getOutputJarDirPath();
   }
 
-  public static Optional<Path> getAnnotationPath(ProjectFilesystem filesystem, BuildTarget target) {
-    return Optional.of(CompilerOutputPaths.of(target, filesystem).getAnnotationPath());
+  public static RelPath getAnnotationPath(ProjectFilesystem filesystem, BuildTarget target) {
+    return CompilerOutputPaths.of(target, filesystem).getAnnotationPath();
   }
 
   public static Path getAbiJarPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {

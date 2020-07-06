@@ -112,8 +112,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
     Builder<IsolatedStep> steps = ImmutableList.builder();
 
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(outputPaths.getClassesDir()));
-    steps.addAll(
-        MakeCleanDirectoryIsolatedStep.of(getRelPath(filesystem, outputPaths.getAnnotationPath())));
+    steps.addAll(MakeCleanDirectoryIsolatedStep.of(outputPaths.getAnnotationPath()));
     steps.add(MkdirIsolatedStep.of(getRelPath(filesystem, outputPaths.getOutputJarDirPath())));
 
     // If there are resources, then link them to the appropriate place in the classes directory.

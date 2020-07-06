@@ -138,7 +138,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                         BuildTargetFactory.newInstance("//android/java/src/com/facebook:fb"),
                         filesystem)
                     .getAnnotationPath())
-            .toAbsolutePath()
             .toString();
   }
 

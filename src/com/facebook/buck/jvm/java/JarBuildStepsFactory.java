@@ -507,8 +507,7 @@ public class JarBuildStepsFactory
     if (!hasAnnotationProcessing()) {
       return Optional.empty();
     }
-
-    return CompilerOutputPaths.getAnnotationPath(filesystem, buildTarget);
+    return Optional.of(CompilerOutputPaths.getAnnotationPath(filesystem, buildTarget).getPath());
   }
 
   private Path getDepFileRelativePath(ProjectFilesystem filesystem, BuildTarget buildTarget) {

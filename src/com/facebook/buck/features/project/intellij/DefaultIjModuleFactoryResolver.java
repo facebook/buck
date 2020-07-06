@@ -198,7 +198,9 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
         && constructorArg.getAnnotationProcessors().isEmpty()) {
       return Optional.empty();
     }
-    return CompilerOutputPaths.getAnnotationPath(projectFilesystem, targetNode.getBuildTarget());
+    return Optional.of(
+        CompilerOutputPaths.getAnnotationPath(projectFilesystem, targetNode.getBuildTarget())
+            .getPath());
   }
 
   @Override

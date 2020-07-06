@@ -58,6 +58,7 @@ import java.util.stream.Stream;
 import org.junit.Test;
 
 public class DummyRDotJavaTest {
+
   @Test
   public void testBuildSteps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -107,7 +108,7 @@ public class DummyRDotJavaTest {
     RelPath rDotJavaOutputFolder =
         DummyRDotJava.getPathToOutputDir(dummyRDotJava.getBuildTarget(), filesystem);
     Path rDotJavaAnnotationFolder =
-        CompilerOutputPaths.getAnnotationPath(filesystem, dummyRDotJava.getBuildTarget()).get();
+        CompilerOutputPaths.getAnnotationPath(filesystem, dummyRDotJava.getBuildTarget()).getPath();
 
     String rDotJavaOutputJar =
         MorePaths.pathWithPlatformSeparators(

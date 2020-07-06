@@ -436,7 +436,6 @@ public class TargetsCommandIntegrationTest {
                     CompilerOutputPaths.getAnnotationPath(
                             filesystem,
                             BuildTargetFactory.newInstance("//:test-library-with-processing"))
-                        .get()
                         .toString()),
             "//:test-library-with-processing-with-srcs "
                 + resolvePath.apply(
@@ -451,7 +450,6 @@ public class TargetsCommandIntegrationTest {
                             filesystem,
                             BuildTargetFactory.newInstance(
                                 "//:test-library-with-processing-with-srcs"))
-                        .get()
                         .toString()),
             "//:test-library-with-srcs "
                 + resolvePath.apply(
@@ -536,7 +534,7 @@ public class TargetsCommandIntegrationTest {
                     CompilerOutputPaths.getOutputJarPath(javaLibTarget, filesystem))
                 + " "
                 + MorePaths.pathWithPlatformSeparators(
-                    CompilerOutputPaths.getAnnotationPath(filesystem, javaLibTarget).get()),
+                    CompilerOutputPaths.getAnnotationPath(filesystem, javaLibTarget)),
             "//:plugin",
             "//:test "
                 + MorePaths.pathWithPlatformSeparators(
