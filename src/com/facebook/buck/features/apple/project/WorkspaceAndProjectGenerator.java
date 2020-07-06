@@ -939,7 +939,7 @@ public class WorkspaceAndProjectGenerator {
             projectTargetNode.getBuildTarget(),
             appleBundleDescriptionArg.getBinary(),
             projectTargetNode.getBuildTarget().getCellRelativeBasePath());
-            excludedTargetsBuilder.add(binaryTarget);
+        excludedTargetsBuilder.add(binaryTarget);
       } else if (projectTargetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
         // prebuilt frameworks are unbuildable, they just propagate linker flags and dependencies
         excludedTargetsBuilder.add(projectTargetNode.getBuildTarget());
