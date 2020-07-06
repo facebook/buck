@@ -7,7 +7,9 @@ prebuilt_jar(
     binary_jar = "scribe-thrift.jar",
     visibility = [
         "//src/com/facebook/buck/scribe/...",
+        "//src/com/facebook/buck/util/network:network",
         "//test/com/facebook/buck/scribe/...",
+        "//test/com/facebook/buck/util/network:network",
     ],
     deps = [
         "//src/com/facebook/buck/util/json:json",

@@ -30,7 +30,9 @@ java_library(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/stream:stream",
         "//third-party/java/guava:guava",
         "//third-party/java/okhttp:okhttp",
+        "//third-party/java/scribe:scribed-thrift-bindings",
     ],
 )
