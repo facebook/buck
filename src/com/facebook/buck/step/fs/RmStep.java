@@ -17,11 +17,9 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.step.isolatedsteps.common.RmIsolatedStep;
-import java.nio.file.Path;
 
 @BuckStyleValue
 public abstract class RmStep extends DelegateStep<RmIsolatedStep> {
@@ -37,10 +35,7 @@ public abstract class RmStep extends DelegateStep<RmIsolatedStep> {
 
   @Override
   protected RmIsolatedStep createDelegate(StepExecutionContext context) {
-    Path absolutePath =
-        context.getBuildCellRootPath().resolve(getPath().getPathRelativeToBuildCellRoot());
-    AbsPath ruleCellRoot = context.getRuleCellRoot();
-    return RmIsolatedStep.of(ruleCellRoot.relativize(absolutePath), isRecursive());
+    return RmIsolatedStep.of(toCellRootRelativePath(context, getPath()), isRecursive());
   }
 
   public static RmStep of(BuildCellRelativePath path, boolean recursive) {

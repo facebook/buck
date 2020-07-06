@@ -79,7 +79,7 @@ public class ModernBuildRuleTest {
     ImmutableList<Step> steps = rule.getBuildSteps(buildContext, buildableContext);
     MoreAsserts.assertStepsNames(
         "The root directory should be remote and created exactly once",
-        ImmutableList.of("delegated_rm", "mkdir", "delegated_rm", "mkdir"),
+        ImmutableList.of("delegated_rm", "delegated_mkdir", "delegated_rm", "delegated_mkdir"),
         steps);
     assertEquals(
         RmStep.of(

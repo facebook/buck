@@ -204,13 +204,13 @@ public class GenruleTest {
         ImmutableList.of(
             "delegated_rm",
             "delegated_rm",
-            "mkdir",
+            "delegated_mkdir",
             "delegated_rm",
-            "mkdir",
+            "delegated_mkdir",
             "delegated_rm",
-            "mkdir",
+            "delegated_mkdir",
             "delegated_rm",
-            "mkdir",
+            "delegated_mkdir",
             "genrule_srcs_link_tree",
             "genrule"),
         steps);
@@ -401,13 +401,13 @@ public class GenruleTest {
         ImmutableList.of(
             "delegated_rm",
             "delegated_rm",
-            "mkdir",
+            "delegated_mkdir",
             "delegated_rm",
-            "mkdir",
+            "delegated_mkdir",
             "delegated_rm",
-            "mkdir",
+            "delegated_mkdir",
             "delegated_rm",
-            "mkdir",
+            "delegated_mkdir",
             "worker"),
         steps);
 

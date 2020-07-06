@@ -17,10 +17,14 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import java.io.IOException;
+import java.nio.file.Path;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -55,5 +59,13 @@ abstract class DelegateStep<T extends IsolatedStep> implements Step {
       delegate = createDelegate(context);
     }
     return delegate;
+  }
+
+  protected static RelPath toCellRootRelativePath(
+      StepExecutionContext context, BuildCellRelativePath path) {
+    Path absolutePath =
+        context.getBuildCellRootPath().resolve(path.getPathRelativeToBuildCellRoot());
+    AbsPath ruleCellRoot = context.getRuleCellRoot();
+    return ruleCellRoot.relativize(absolutePath);
   }
 }

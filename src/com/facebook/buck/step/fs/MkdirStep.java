@@ -19,36 +19,31 @@ package com.facebook.buck.step.fs;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.Escaper;
-import java.io.IOException;
-import java.nio.file.Files;
+import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
+import com.google.common.annotations.VisibleForTesting;
+import java.nio.file.Path;
+import org.immutables.value.Value;
 
 /** Command that runs equivalent command of {@code mkdir -p} on the specified directory. */
 @BuckStyleValue
-public abstract class MkdirStep implements Step {
+public abstract class MkdirStep extends DelegateStep<MkdirIsolatedStep> {
 
-  public abstract BuildCellRelativePath getPath();
+  abstract BuildCellRelativePath getPath();
 
-  @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-    Files.createDirectories(
-        context.getBuildCellRootPath().resolve(getPath().getPathRelativeToBuildCellRoot()));
-    return StepExecutionResults.SUCCESS;
+  @VisibleForTesting
+  @Value.Derived
+  public Path getPathRelativeToBuildCellRoot() {
+    return getPath().getPathRelativeToBuildCellRoot();
   }
 
   @Override
-  public String getShortName() {
+  protected String getShortNameSuffix() {
     return "mkdir";
   }
 
   @Override
-  public String getDescription(StepExecutionContext context) {
-    return String.format(
-        "mkdir -p %s",
-        Escaper.escapeAsShellString(getPath().getPathRelativeToBuildCellRoot().toString()));
+  protected MkdirIsolatedStep createDelegate(StepExecutionContext context) {
+    return MkdirIsolatedStep.of(toCellRootRelativePath(context, getPath()));
   }
 
   public static MkdirStep of(BuildCellRelativePath path) {

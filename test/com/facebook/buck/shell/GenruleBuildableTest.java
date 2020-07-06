@@ -372,7 +372,6 @@ public class GenruleBuildableTest {
                 step ->
                     step instanceof MkdirStep
                         && ((MkdirStep) step)
-                            .getPath()
                             .getPathRelativeToBuildCellRoot()
                             .equals(targetGenrulePath.getPath()))
             .findFirst();
