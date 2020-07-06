@@ -1601,7 +1601,7 @@ class BuildFileProcessor(object):
         # Look up the caller's stack frame and merge the include's globals
         # into it's symbol table.
         frame = get_caller_frame(skip=["_functools", __name__])
-        for (name, value) in symbols.iteritems():
+        for (name, value) in symbols.items():
             assert not name.startswith("_"), (
                 "Tried to load private symbol `%s`. load_symbols() can only be used to load public (non `_`-prefixed) symbols"
                 % name
