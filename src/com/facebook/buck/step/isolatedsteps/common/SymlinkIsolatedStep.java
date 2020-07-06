@@ -16,6 +16,8 @@
 
 package com.facebook.buck.step.isolatedsteps.common;
 
+import static com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils.getAbsPathForRelativePath;
+
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -24,7 +26,6 @@ import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
-import com.google.common.base.Joiner;
 import java.io.IOException;
 
 /** Creates a symlink from a desired path to an existing path. */
@@ -36,12 +37,17 @@ public abstract class SymlinkIsolatedStep extends IsolatedStep {
   abstract RelPath getDesiredPath();
 
   @Override
+  public String getShortName() {
+    return "symlink_file";
+  }
+
+  @Override
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException {
     AbsPath ruleCellRoot = context.getRuleCellRoot();
 
-    AbsPath existingAbsPath = ruleCellRoot.resolve(getExistingPath());
-    AbsPath desiredAbsPath = ruleCellRoot.resolve(getDesiredPath());
+    AbsPath existingAbsPath = getAbsPathForRelativePath(ruleCellRoot, getExistingPath());
+    AbsPath desiredAbsPath = getAbsPathForRelativePath(ruleCellRoot, getDesiredPath());
 
     ProjectFilesystemUtils.createSymLink(
         ruleCellRoot, desiredAbsPath.getPath(), existingAbsPath.getPath(), /* force */ true);
@@ -50,20 +56,15 @@ public abstract class SymlinkIsolatedStep extends IsolatedStep {
   }
 
   @Override
-  public String getShortName() {
-    return "symlink_file";
-  }
-
-  @Override
   public String getIsolatedStepDescription(IsolatedExecutionContext context) {
     AbsPath ruleCellRoot = context.getRuleCellRoot();
-    return Joiner.on(" ")
-        .join(
-            "ln",
-            "-f",
-            "-s",
-            ruleCellRoot.resolve(getExistingPath()),
-            ruleCellRoot.resolve(getDesiredPath()));
+    return String.join(
+        " ",
+        "ln",
+        "-f",
+        "-s",
+        getAbsPathForRelativePath(ruleCellRoot, getExistingPath()).toString(),
+        getAbsPathForRelativePath(ruleCellRoot, getDesiredPath()).toString());
   }
 
   public static SymlinkIsolatedStep of(RelPath existingPath, RelPath desiredPath) {

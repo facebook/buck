@@ -17,54 +17,35 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.StepExecutionResults;
-import com.google.common.base.Joiner;
-import java.io.IOException;
+import com.facebook.buck.step.isolatedsteps.common.SymlinkIsolatedStep;
 import java.nio.file.Path;
 
 @BuckStyleValue
-public abstract class SymlinkFileStep implements Step {
+public abstract class SymlinkFileStep extends DelegateStep<SymlinkIsolatedStep> {
 
-  // TODO(dwh): Remove filesystem when ignored files are removed.
-  protected abstract ProjectFilesystem getFilesystem();
+  abstract ProjectFilesystem getFilesystem();
 
-  // TODO(dwh): Require this to be one of absolute or relative.
-  protected abstract Path getExistingFile();
+  abstract Path getExistingFile();
 
-  // TODO(dwh): Require this to be absolute.
-  protected abstract Path getDesiredLink();
-
-  /** Get the path to the existing file that should be linked. */
-  private Path getAbsoluteExistingFilePath() {
-    return getFilesystem().resolve(getExistingFile());
-  }
-
-  /** Get the path to the desired link that should be created. */
-  private Path getAbsoluteDesiredLinkPath() {
-    return getFilesystem().resolve(getDesiredLink());
-  }
+  abstract Path getDesiredLink();
 
   @Override
-  public String getShortName() {
+  protected String getShortNameSuffix() {
     return "symlink_file";
   }
 
   @Override
-  public String getDescription(StepExecutionContext context) {
-    return Joiner.on(" ")
-        .join("ln", "-f", "-s", getAbsoluteExistingFilePath(), getAbsoluteDesiredLinkPath());
-  }
+  protected SymlinkIsolatedStep createDelegate(StepExecutionContext context) {
+    Path existingFilePath = getFilesystem().resolve(getExistingFile());
+    Path desiredLinkPath = getFilesystem().resolve(getDesiredLink());
 
-  @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-    Path existingFilePath = getAbsoluteExistingFilePath();
-    Path desiredLinkPath = getAbsoluteDesiredLinkPath();
-    getFilesystem().createSymLink(desiredLinkPath, existingFilePath, /* force */ true);
-    return StepExecutionResults.SUCCESS;
+    AbsPath ruleCellRoot = context.getRuleCellRoot();
+
+    return SymlinkIsolatedStep.of(
+        ruleCellRoot.relativize(existingFilePath), ruleCellRoot.relativize(desiredLinkPath));
   }
 
   public static SymlinkFileStep of(

@@ -291,7 +291,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
 
     @Override
-    public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+    public StepExecutionResult execute(StepExecutionContext context)
+        throws IOException, InterruptedException {
       Path src = resolver.getCellUnsafeRelPath(lib).getPath().toRealPath();
       Path dest = symlinkDir.resolve(name);
       return SymlinkFileStep.of(getProjectFilesystem(), src, dest).execute(context);

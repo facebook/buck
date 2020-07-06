@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -34,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Rule;
@@ -46,30 +46,35 @@ public class SymlinkFileStepTest {
   @Rule public final TemporaryFolder tmpDir = new TemporaryFolder();
 
   @Test
-  public void testAbsoluteSymlinkFiles() throws IOException {
+  public void testAbsoluteSymlinkFiles() throws IOException, InterruptedException {
     StepExecutionContext context = TestExecutionContext.newInstance();
 
     File source = tmpDir.newFile();
-    Files.write("foobar", source, StandardCharsets.UTF_8);
+    Files.write("foobar", source, UTF_8);
 
     File target = tmpDir.newFile();
     target.delete();
 
+    Path existingFile = Paths.get(source.getName());
+    Path desiredLink = Paths.get(target.getName());
+    Path root = tmpDir.getRoot().toPath();
     SymlinkFileStep step =
         SymlinkFileStep.of(
-            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath()),
-            Paths.get(source.getName()),
-            Paths.get(target.getName()));
+            TestProjectFilesystems.createProjectFilesystem(root), existingFile, desiredLink);
     step.execute(context);
     // Run twice to ensure we can overwrite an existing symlink
     step.execute(context);
 
     assertTrue(target.exists());
-    assertEquals("foobar", Files.readFirstLine(target, StandardCharsets.UTF_8));
+    assertEquals("foobar", Files.readFirstLine(target, UTF_8));
 
     // Modify the original file and see if the linked file changes as well.
-    Files.write("new", source, StandardCharsets.UTF_8);
-    assertEquals("new", Files.readFirstLine(target, StandardCharsets.UTF_8));
+    Files.write("new", source, UTF_8);
+    assertEquals("new", Files.readFirstLine(target, UTF_8));
+
+    assertEquals(
+        "ln -f -s " + root.resolve(existingFile) + " " + root.resolve(desiredLink),
+        step.getDescription(context));
   }
 
   @Test
@@ -77,10 +82,11 @@ public class SymlinkFileStepTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     // Run `ln -s /path/that/does/not/exist dummy` in /tmp.
+    Path root = tmpDir.getRoot().toPath();
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("ln", "-s", "/path/that/does/not/exist", "my_symlink"))
-            .setDirectory(tmpDir.getRoot().toPath())
+            .setDirectory(root)
             .build();
     ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
     executor.launchAndExecute(params);
@@ -95,8 +101,7 @@ public class SymlinkFileStepTest {
         java.nio.file.Files.isSymbolicLink(symlink));
 
     // Create an ExecutionContext to return the ProjectFilesystem.
-    ProjectFilesystem projectFilesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem = TestProjectFilesystems.createProjectFilesystem(root);
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
 
     tmpDir.newFile("dummy");
@@ -106,5 +111,9 @@ public class SymlinkFileStepTest {
     assertEquals(0, exitCode);
     assertTrue(java.nio.file.Files.isSymbolicLink(symlink));
     assertTrue(symlink.toFile().exists());
+
+    assertEquals(
+        "ln -f -s " + root.resolve("dummy") + " " + root.resolve("my_symlink"),
+        symlinkStep.getDescription(executionContext));
   }
 }
