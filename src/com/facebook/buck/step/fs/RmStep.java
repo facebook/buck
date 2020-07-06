@@ -17,57 +17,30 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.file.MostFiles;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.StepExecutionResults;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import java.io.IOException;
-import java.nio.file.Files;
+import com.facebook.buck.step.isolatedsteps.common.RmIsolatedStep;
 import java.nio.file.Path;
 
 @BuckStyleValue
-public abstract class RmStep implements Step {
+public abstract class RmStep extends DelegateStep<RmIsolatedStep> {
 
-  public abstract BuildCellRelativePath getPath();
+  abstract BuildCellRelativePath getPath();
 
-  public abstract boolean isRecursive();
+  abstract boolean isRecursive();
 
   @Override
-  public String getShortName() {
+  protected String getShortNameSuffix() {
     return "rm";
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+  protected RmIsolatedStep createDelegate(StepExecutionContext context) {
     Path absolutePath =
         context.getBuildCellRootPath().resolve(getPath().getPathRelativeToBuildCellRoot());
-    if (isRecursive()) {
-      // Delete a folder recursively
-      MostFiles.deleteRecursivelyIfExists(absolutePath);
-    } else {
-      // Delete a single file
-      Files.deleteIfExists(absolutePath);
-    }
-    return StepExecutionResults.SUCCESS;
-  }
-
-  @Override
-  public String getDescription(StepExecutionContext context) {
-    ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.add("rm");
-    args.add("-f");
-
-    if (isRecursive()) {
-      args.add("-r");
-    }
-
-    args.add(getPath().getPathRelativeToBuildCellRoot().toString());
-
-    return Joiner.on(" ").join(args.build());
+    AbsPath ruleCellRoot = context.getRuleCellRoot();
+    return RmIsolatedStep.of(ruleCellRoot.relativize(absolutePath), isRecursive());
   }
 
   public static RmStep of(BuildCellRelativePath path, boolean recursive) {
@@ -75,6 +48,6 @@ public abstract class RmStep implements Step {
   }
 
   public static RmStep of(BuildCellRelativePath path) {
-    return ImmutableRmStep.ofImpl(path, false);
+    return of(path, false);
   }
 }

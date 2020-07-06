@@ -47,10 +47,12 @@ public class RmStepTest {
   public void setUp() {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
+    AbsPath rootPath = filesystem.getRootPath();
     context =
         StepExecutionContext.builder()
             .from(executionContext)
-            .setBuildCellRootPath(filesystem.getRootPath().getPath())
+            .setBuildCellRootPath(rootPath.getPath())
+            .setRuleCellRoot(rootPath)
             .build();
   }
 
@@ -64,6 +66,7 @@ public class RmStepTest {
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));
+    assertEquals("rm -f " + file, step.getDescription(context));
   }
 
   @Test
@@ -90,6 +93,7 @@ public class RmStepTest {
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file));
+    assertEquals("rm -f -r " + file, step.getDescription(context));
   }
 
   @Test

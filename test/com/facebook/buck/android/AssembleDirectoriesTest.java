@@ -50,10 +50,12 @@ public class AssembleDirectoriesTest {
   @Before
   public void setUp() {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    AbsPath rootPath = filesystem.getRootPath();
     context =
         TestExecutionContext.newBuilder()
             .setCellPathResolver(TestCellPathResolver.get(filesystem))
-            .setBuildCellRootPath(filesystem.getRootPath().getPath())
+            .setRuleCellRoot(rootPath)
+            .setBuildCellRootPath(rootPath.getPath())
             .build();
   }
 

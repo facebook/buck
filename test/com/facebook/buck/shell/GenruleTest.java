@@ -202,14 +202,14 @@ public class GenruleTest {
     MoreAsserts.assertStepsNames(
         "",
         ImmutableList.of(
-            "rm",
-            "rm",
+            "delegated_rm",
+            "delegated_rm",
             "mkdir",
-            "rm",
+            "delegated_rm",
             "mkdir",
-            "rm",
+            "delegated_rm",
             "mkdir",
-            "rm",
+            "delegated_rm",
             "mkdir",
             "genrule_srcs_link_tree",
             "genrule"),
@@ -399,7 +399,16 @@ public class GenruleTest {
     MoreAsserts.assertStepsNames(
         "",
         ImmutableList.of(
-            "rm", "rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "worker"),
+            "delegated_rm",
+            "delegated_rm",
+            "mkdir",
+            "delegated_rm",
+            "mkdir",
+            "delegated_rm",
+            "mkdir",
+            "delegated_rm",
+            "mkdir",
+            "worker"),
         steps);
 
     Step step = steps.get(9);

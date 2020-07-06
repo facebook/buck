@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -41,6 +42,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
@@ -105,17 +107,19 @@ public class SmartDexingStepTest {
   @Test
   public void testCreateDxStepForDxPseudoRuleWithXzOutput() {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    FileSystem fileSystem = filesystem.getFileSystem();
 
     ImmutableList<Path> filesToDex =
-        ImmutableList.of(Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
-    Path outputPath = Paths.get("classes.dex.jar.xz");
+        ImmutableList.of(fileSystem.getPath("foo.dex.jar"), fileSystem.getPath("bar.dex.jar"));
+    Path outputPath = fileSystem.getPath("classes.dex.jar.xz");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
 
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
+    AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
         AndroidTestUtils.createAndroidPlatformTarget(),
         steps,
-        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath().getPath()),
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
         filesystem,
         filesToDex,
         outputPath,
@@ -134,7 +138,7 @@ public class SmartDexingStepTest {
             Joiner.on(" ")
                 .join(
                     "(cd",
-                    filesystem.getRootPath(),
+                    rootPath,
                     "&&",
                     Paths.get("/usr/bin/dx"),
                     "--dex --output",
@@ -142,26 +146,28 @@ public class SmartDexingStepTest {
                     filesystem.resolve("foo.dex.jar"),
                     filesystem.resolve("bar.dex.jar") + ")"),
             "repack classes.dex.tmp.jar in classes.dex.jar",
-            "rm -f classes.dex.tmp.jar",
+            "rm -f " + filesystem.resolve("classes.dex.tmp.jar"),
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "xz -z -4 --check=crc32 classes.dex.jar"),
         steps.build(),
-        TestExecutionContext.newBuilder().build());
+        TestExecutionContext.newInstance(rootPath));
   }
 
   @Test
   public void testCreateDxStepForDxPseudoRuleWithXzOutputNonDefaultCompression() {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    FileSystem fileSystem = filesystem.getFileSystem();
 
     ImmutableList<Path> filesToDex =
-        ImmutableList.of(Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
-    Path outputPath = Paths.get("classes.dex.jar.xz");
+        ImmutableList.of(fileSystem.getPath("foo.dex.jar"), fileSystem.getPath("bar.dex.jar"));
+    Path outputPath = fileSystem.getPath("classes.dex.jar.xz");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
+    AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
         AndroidTestUtils.createAndroidPlatformTarget(),
         steps,
-        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath().getPath()),
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
         filesystem,
         filesToDex,
         outputPath,
@@ -180,7 +186,7 @@ public class SmartDexingStepTest {
             Joiner.on(" ")
                 .join(
                     "(cd",
-                    filesystem.getRootPath(),
+                    rootPath,
                     "&&",
                     Paths.get("/usr/bin/dx"),
                     "--dex --output",
@@ -188,11 +194,11 @@ public class SmartDexingStepTest {
                     filesystem.resolve("foo.dex.jar"),
                     filesystem.resolve("bar.dex.jar") + ")"),
             "repack classes.dex.tmp.jar in classes.dex.jar",
-            "rm -f classes.dex.tmp.jar",
+            "rm -f " + filesystem.resolve("classes.dex.tmp.jar"),
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "xz -z -9 --check=crc32 classes.dex.jar"),
         steps.build(),
-        TestExecutionContext.newBuilder().build());
+        TestExecutionContext.newInstance(rootPath));
   }
 
   @Test
@@ -220,11 +226,12 @@ public class SmartDexingStepTest {
         Optional.empty(),
         false);
 
+    AbsPath rootPath = filesystem.getRootPath();
     assertEquals(
         Joiner.on(" ")
             .join(
                 "(cd",
-                filesystem.getRootPath(),
+                rootPath,
                 "&&",
                 Paths.get("/usr/bin/dx"),
                 "--dex --output",

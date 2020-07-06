@@ -88,16 +88,19 @@ public class ExportFileTest {
     SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     ExportFile exportFile = new ExportFileBuilder(target).build(graphBuilder, projectFilesystem);
 
+    AbsPath rootPath = projectFilesystem.getRootPath();
     List<Step> steps =
         exportFile.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(pathResolver)
-                .withBuildCellRootPath(projectFilesystem.getRootPath().getPath()),
+                .withBuildCellRootPath(rootPath.getPath()),
             new FakeBuildableContext());
 
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "rm -f -r " + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
+            "rm -f -r "
+                + projectFilesystem.resolve(
+                    BuildTargetPaths.getGenPath(projectFilesystem, target, "%s")),
             "mkdir -p " + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
             "cp "
                 + projectFilesystem.resolve("example.html")
@@ -105,7 +108,7 @@ public class ExportFileTest {
                 + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s")
                     .resolve("example.html")),
         steps,
-        TestExecutionContext.newInstance());
+        TestExecutionContext.newInstance(rootPath));
     assertEquals(
         BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolveRel("example.html"),
         pathResolver.getCellUnsafeRelPath(exportFile.getSourcePathToOutput()));
@@ -118,23 +121,26 @@ public class ExportFileTest {
     ExportFile exportFile =
         new ExportFileBuilder(target).setOut("fish").build(graphBuilder, projectFilesystem);
 
+    AbsPath rootPath = projectFilesystem.getRootPath();
     List<Step> steps =
         exportFile.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(pathResolver)
-                .withBuildCellRootPath(projectFilesystem.getRootPath().getPath()),
+                .withBuildCellRootPath(rootPath.getPath()),
             new FakeBuildableContext());
 
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "rm -f -r " + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
+            "rm -f -r "
+                + projectFilesystem.resolve(
+                    BuildTargetPaths.getGenPath(projectFilesystem, target, "%s")),
             "mkdir -p " + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
             "cp "
                 + projectFilesystem.resolve("example.html")
                 + " "
                 + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolve("fish")),
         steps,
-        TestExecutionContext.newInstance());
+        TestExecutionContext.newInstance(rootPath));
     assertEquals(
         BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolveRel("fish"),
         pathResolver.getCellUnsafeRelPath(exportFile.getSourcePathToOutput()));
@@ -150,23 +156,26 @@ public class ExportFileTest {
             .setOut("fish")
             .build(graphBuilder, projectFilesystem);
 
+    AbsPath rootPath = projectFilesystem.getRootPath();
     List<Step> steps =
         exportFile.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(pathResolver)
-                .withBuildCellRootPath(projectFilesystem.getRootPath().getPath()),
+                .withBuildCellRootPath(rootPath.getPath()),
             new FakeBuildableContext());
 
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "rm -f -r " + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
+            "rm -f -r "
+                + projectFilesystem.resolve(
+                    BuildTargetPaths.getGenPath(projectFilesystem, target, "%s")),
             "mkdir -p " + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
             "cp "
                 + projectFilesystem.resolve("chips")
                 + " "
                 + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolve("fish")),
         steps,
-        TestExecutionContext.newInstance());
+        TestExecutionContext.newInstance(rootPath));
     assertEquals(
         BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolveRel("fish"),
         pathResolver.getCellUnsafeRelPath(exportFile.getSourcePathToOutput()));

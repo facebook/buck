@@ -55,8 +55,8 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Map;
@@ -532,8 +532,9 @@ public class SmartDexingStep implements Step {
       buckedId = Optional.of(id);
     }
 
+    FileSystem fileSystem = filesystem.getFileSystem();
     if (DexStore.XZ.matchesPath(outputPath)) {
-      Path tempDexJarOutput = Paths.get(output.replaceAll("\\.jar\\.xz$", ".tmp.jar"));
+      Path tempDexJarOutput = fileSystem.getPath(output.replaceAll("\\.jar\\.xz$", ".tmp.jar"));
       steps.add(
           new DxStep(
               filesystem,
@@ -550,7 +551,7 @@ public class SmartDexingStep implements Step {
               withDownwardApi));
       // We need to make sure classes.dex is STOREd in the .dex.jar file, otherwise .XZ
       // compression won't be effective.
-      Path repackedJar = Paths.get(output.replaceAll("\\.xz$", ""));
+      Path repackedJar = fileSystem.getPath(output.replaceAll("\\.xz$", ""));
       steps.add(
           new RepackZipEntriesStep(
               filesystem,
@@ -574,7 +575,8 @@ public class SmartDexingStep implements Step {
       // The differences in output file names make it worth separating into a different case.
 
       // Ensure classes.dex is stored.
-      Path tempDexJarOutput = Paths.get(output.replaceAll("\\.jar\\.xzs\\.tmp~$", ".tmp.jar"));
+      Path tempDexJarOutput =
+          fileSystem.getPath(output.replaceAll("\\.jar\\.xzs\\.tmp~$", ".tmp.jar"));
       steps.add(
           new DxStep(
               filesystem,

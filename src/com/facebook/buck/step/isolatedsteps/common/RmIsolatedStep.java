@@ -25,10 +25,9 @@ import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.StringJoiner;
 
 /** Removes a path if it exists. */
 @BuckStyleValue
@@ -47,8 +46,7 @@ public abstract class RmIsolatedStep extends IsolatedStep {
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException {
 
-    AbsPath absolutePath =
-        ProjectFilesystemUtils.getAbsPathForRelativePath(context.getRuleCellRoot(), getPath());
+    AbsPath absolutePath = getAbsPath(context);
 
     if (isRecursive()) {
       // Delete a folder recursively
@@ -60,9 +58,13 @@ public abstract class RmIsolatedStep extends IsolatedStep {
     return StepExecutionResults.SUCCESS;
   }
 
+  private AbsPath getAbsPath(IsolatedExecutionContext context) {
+    return ProjectFilesystemUtils.getAbsPathForRelativePath(context.getRuleCellRoot(), getPath());
+  }
+
   @Override
   public String getIsolatedStepDescription(IsolatedExecutionContext context) {
-    ImmutableList.Builder<String> args = ImmutableList.builder();
+    StringJoiner args = new StringJoiner(" ");
     args.add("rm");
     args.add("-f");
 
@@ -70,9 +72,9 @@ public abstract class RmIsolatedStep extends IsolatedStep {
       args.add("-r");
     }
 
-    args.add(getPath().toString());
+    args.add(getAbsPath(context).toString());
 
-    return Joiner.on(" ").join(args.build());
+    return args.toString();
   }
 
   public static RmIsolatedStep of(RelPath path, boolean recursive) {

@@ -64,7 +64,7 @@ public class TestExecutionContext {
   }
 
   public static StepExecutionContext newInstance(AbsPath root) {
-    return newBuilder().setRuleCellRoot(root).build();
+    return newBuilder().setRuleCellRoot(root).setBuildCellRootPath(root.getPath()).build();
   }
 
   public static StepExecutionContext newInstanceWithRealProcessExecutor() {
