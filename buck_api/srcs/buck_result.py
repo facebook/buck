@@ -14,6 +14,28 @@
 # limitations under the License.
 
 from asyncio import subprocess
+from enum import Enum
+
+
+class ExitCode(Enum):
+    """Enum for exit codes of Buck"""
+
+    SUCCESS = 0
+    BUILD_ERROR = 1
+    BUSY = 2
+    COMMANDLINE_ERROR = 3
+    NOTHING_TO_DO = 4
+    PARSE_ERROR = 5
+    RUN_ERROR = 6
+    FATAL_GENERIC = 10
+    FATAL_BOOTSTRAP = 11
+    FATAL_OOM = 12
+    FATAL_IO = 13
+    FATAL_DISK_FULL = 14
+    FIX_FAILED = 16
+    TEST_ERROR = 32
+    TEST_NOTHING = 64
+    SIGNAL_INTERRUPT = 130
 
 
 class BuckResult:
@@ -27,9 +49,9 @@ class BuckResult:
         self.stdout = stdout
         self.stderr = stderr
 
-    def get_exit_code(self) -> int:
+    def get_exit_code(self) -> ExitCode:
         """ Returns the exit code of a Buck Result when it exits """
-        return self.process.returncode
+        return ExitCode(self.process.returncode)
 
     def get_stderr(self) -> str:
         """ Returns the standard error of the Buck Result instance """

@@ -19,6 +19,7 @@ from pathlib import Path
 import pkg_resources
 import pytest
 from buck_repo import BuckRepo
+from buck_result import ExitCode
 
 
 @pytest.mark.asyncio
@@ -35,7 +36,7 @@ async def test_build():
             (path_of_cwd / "buck-out").iterdir()
         ), "build should have generated outputs in buck-out"
         assert "target_file" in result.get_stdout()
-        assert result.get_exit_code() == 0
+        assert result.get_exit_code() == ExitCode.SUCCESS
 
 
 @pytest.mark.asyncio
@@ -54,8 +55,7 @@ async def test_clean():
         assert not (
             path_of_cwd / "buck-out"
         ).exists(), "clean should have deleted outputs in buck-out"
-        assert result.get_exit_code() == 0
-        # TODO return something reasonable for exit code error code messages?
+        assert result.get_exit_code() == ExitCode.SUCCESS
 
 
 @pytest.mark.asyncio
@@ -77,5 +77,4 @@ async def test_kill():
             path_of_cwd / ".buckd"
         ).exists(), "kill should have deleted buck daemon"
 
-        err_code = result.get_exit_code()
-        assert err_code == 0
+        assert result.get_exit_code() == ExitCode.SUCCESS

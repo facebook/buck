@@ -16,7 +16,7 @@
 from asyncio import subprocess
 
 import pytest
-from buck_result import BuckResult
+from buck_result import BuckResult, ExitCode
 
 
 @pytest.mark.asyncio
@@ -46,7 +46,7 @@ async def test_get_exit_code():
     )
     stdout, stderr = await process.communicate()
     br: BuckResult = BuckResult(process, stdout, stderr, "utf-8")
-    assert br.get_exit_code() == 3
+    assert br.get_exit_code() == ExitCode.COMMANDLINE_ERROR
 
 
 @pytest.mark.asyncio
