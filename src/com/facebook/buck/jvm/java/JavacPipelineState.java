@@ -24,7 +24,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
@@ -49,7 +48,6 @@ import javax.annotation.Nullable;
 public class JavacPipelineState implements RulePipelineState {
   private static final Logger LOG = Logger.get(JavacPipelineState.class);
 
-  private final JavaPackageFinder javaPackageFinder;
   private final CompilerParameters compilerParameters;
   private final JavacOptions javacOptions;
   private final BuildTarget invokingRule;
@@ -66,7 +64,6 @@ public class JavacPipelineState implements RulePipelineState {
   @Nullable private Javac.Invocation invocation;
 
   public JavacPipelineState(
-      JavaPackageFinder javaPackageFinder,
       Javac javac,
       JavacOptions javacOptions,
       BuildTarget invokingRule,
@@ -75,7 +72,6 @@ public class JavacPipelineState implements RulePipelineState {
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       boolean withDownwardApi) {
-    this.javaPackageFinder = javaPackageFinder;
     this.javac = javac;
     this.javacOptions = javacOptions;
     this.invokingRule = invokingRule;
@@ -125,7 +121,6 @@ public class JavacPipelineState implements RulePipelineState {
               firstOrderContext.getClassLoaderCache(),
               verbosity,
               firstOrderContext.getCellPathResolver(),
-              javaPackageFinder,
               filesystem,
               context.getRuleCellRoot(),
               context.getProjectFilesystemFactory(),

@@ -27,7 +27,6 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
-import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.SymlinkIsolatedStep;
@@ -59,7 +58,6 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   }
 
   public JavacPipelineState createPipelineState(
-      JavaPackageFinder javaPackageFinder,
       BuildTarget invokingRule,
       CompilerParameters compilerParameters,
       @Nullable JarParameters abiJarParameters,
@@ -69,7 +67,6 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
         javacOptions.withBootclasspathFromContext(extraClasspathProvider);
 
     return new JavacPipelineState(
-        javaPackageFinder,
         javac,
         buildTimeOptions,
         invokingRule,
@@ -107,7 +104,6 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
 
     steps.add(
         new JavacStep(
-            context.getJavaPackageFinder(),
             javac,
             buildTimeOptions,
             invokingRule,
@@ -210,7 +206,6 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
 
       steps.add(
           new JavacStep(
-              context.getJavaPackageFinder(),
               javac,
               buildTimeOptions,
               invokingRule,

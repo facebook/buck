@@ -32,7 +32,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.Javac.Invocation;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.version.JavaVersion;
@@ -125,7 +124,6 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getClassLoaderCache(),
             executionContext.getVerbosity(),
             executionContext.getCellPathResolver(),
-            createJavaPackageFinder(),
             projectFilesystem,
             projectFilesystem.getRootPath(),
             executionContext.getProjectFilesystemFactory(),
@@ -182,7 +180,6 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getClassLoaderCache(),
             executionContext.getVerbosity(),
             executionContext.getCellPathResolver(),
-            createJavaPackageFinder(),
             projectFilesystem,
             projectFilesystem.getRootPath(),
             executionContext.getProjectFilesystemFactory(),
@@ -291,7 +288,6 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getClassLoaderCache(),
             executionContext.getVerbosity(),
             executionContext.getCellPathResolver(),
-            createJavaPackageFinder(),
             projectFilesystem,
             projectFilesystem.getRootPath(),
             executionContext.getProjectFilesystemFactory(),
@@ -361,10 +357,6 @@ public class Jsr199JavacIntegrationTest {
     return TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
 
-  private JavaPackageFinder createJavaPackageFinder() {
-    return new FakeJavaPackageFinder();
-  }
-
   /**
    * Behaves like {@link com.facebook.buck.jvm.java.JdkProvidedInMemoryJavac} when JDK is not
    * present
@@ -390,7 +382,6 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getClassLoaderCache(),
             executionContext.getVerbosity(),
             executionContext.getCellPathResolver(),
-            createJavaPackageFinder(),
             projectFilesystem,
             projectFilesystem.getRootPath(),
             executionContext.getProjectFilesystemFactory(),

@@ -32,7 +32,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TestExecutionContext;
@@ -75,7 +74,6 @@ public class JavacStepTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavacStep step =
         new JavacStep(
-            getJavaPackageFinder(),
             fakeJavac,
             javacOptions,
             target,
@@ -124,7 +122,6 @@ public class JavacStepTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavacStep step =
         new JavacStep(
-            getJavaPackageFinder(),
             fakeJavac,
             javacOptions,
             target,
@@ -181,7 +178,6 @@ public class JavacStepTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavacStep step =
         new JavacStep(
-            getJavaPackageFinder(),
             fakeJavac,
             javacOptions,
             target,
@@ -230,7 +226,6 @@ public class JavacStepTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavacStep step =
         new JavacStep(
-            getJavaPackageFinder(),
             fakeJavac,
             javacOptions,
             target,
@@ -285,7 +280,6 @@ public class JavacStepTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavacStep step =
         new JavacStep(
-            getJavaPackageFinder(),
             fakeJavac,
             javacOptions,
             target,
@@ -309,9 +303,5 @@ public class JavacStepTest {
     executionContext.getBuckEventBus().register(listener);
     thrown.expectMessage("Bootstrap classpath /no-such-dir contains no valid entries");
     step.execute(executionContext);
-  }
-
-  private JavaPackageFinder getJavaPackageFinder() {
-    return new FakeJavaPackageFinder();
   }
 }

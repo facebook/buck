@@ -25,7 +25,6 @@ import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
-import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -52,7 +51,6 @@ public class JavacStep implements Step {
   private final ProjectFilesystem filesystem;
 
   public JavacStep(
-      JavaPackageFinder javaPackageFinder,
       Javac javac,
       JavacOptions javacOptions,
       BuildTarget invokingRule,
@@ -65,7 +63,6 @@ public class JavacStep implements Step {
       boolean withDownwardApi) {
     this(
         new JavacPipelineState(
-            javaPackageFinder,
             javac,
             javacOptions,
             invokingRule,

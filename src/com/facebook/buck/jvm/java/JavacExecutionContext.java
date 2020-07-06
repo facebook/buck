@@ -21,7 +21,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
-import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
@@ -30,6 +29,7 @@ import java.io.PrintStream;
 
 @BuckStyleValue
 public interface JavacExecutionContext {
+
   JavacEventSink getEventSink();
 
   PrintStream getStdErr();
@@ -39,8 +39,6 @@ public interface JavacExecutionContext {
   Verbosity getVerbosity();
 
   CellPathResolver getCellPathResolver();
-
-  JavaPackageFinder getJavaPackageFinder();
 
   ProjectFilesystem getProjectFilesystem();
 

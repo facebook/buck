@@ -38,7 +38,6 @@ import com.facebook.buck.jvm.java.ClasspathChecker;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
-import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JavacStep;
@@ -137,7 +136,6 @@ public class DummyRDotJavaTest {
             .addAll(makeCleanDirDescription(rDotJavaAnnotationFolder))
             .add(
                 new JavacStep(
-                        new FakeJavaPackageFinder(),
                         DEFAULT_JAVAC,
                         JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
                             .setJavaAnnotationProcessorParams(JavacPluginParams.EMPTY)
