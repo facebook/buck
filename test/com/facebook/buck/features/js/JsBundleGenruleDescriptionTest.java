@@ -19,10 +19,12 @@ package com.facebook.buck.features.js;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
-import static org.hamcrest.Matchers.any;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -67,6 +69,7 @@ import com.facebook.buck.shell.GenruleBuildable;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.step.isolatedsteps.common.RmIsolatedStep;
 import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
@@ -79,6 +82,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class JsBundleGenruleDescriptionTest {
+
   private static final BuildTarget genruleTarget =
       BuildTargetFactory.newInstance("//:bundle-genrule");
   private static final BuildTarget defaultBundleTarget =
@@ -454,7 +458,9 @@ public class JsBundleGenruleDescriptionTest {
     assertThat(buildSteps, hasItem(expectedStep));
 
     int mkJsDirIdx = buildSteps.indexOf(expectedStep);
-    assertThat(buildSteps.subList(mkJsDirIdx, buildSteps.size()), not(hasItem(any(RmStep.class))));
+    assertThat(
+        buildSteps.subList(mkJsDirIdx, buildSteps.size()),
+        not(hasItems(anyOf(is(RmStep.class), is(RmIsolatedStep.class)))));
   }
 
   @Test
@@ -547,7 +553,8 @@ public class JsBundleGenruleDescriptionTest {
 
     int mkSourceMapDirIdx = buildSteps.indexOf(expectedStep);
     assertThat(
-        buildSteps.subList(mkSourceMapDirIdx, buildSteps.size()), not(hasItem(any(RmStep.class))));
+        buildSteps.subList(mkSourceMapDirIdx, buildSteps.size()),
+        not(hasItems(anyOf(is(RmStep.class), is(RmIsolatedStep.class)))));
   }
 
   @Test
@@ -625,7 +632,8 @@ public class JsBundleGenruleDescriptionTest {
 
     int mkMiscDirIdx = buildSteps.indexOf(expectedStep);
     assertThat(
-        buildSteps.subList(mkMiscDirIdx, buildSteps.size()), not(hasItem(any(RmStep.class))));
+        buildSteps.subList(mkMiscDirIdx, buildSteps.size()),
+        not(hasItems(anyOf(is(RmStep.class), is(RmIsolatedStep.class)))));
   }
 
   @Test
@@ -765,6 +773,7 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   private static class TestSetup {
+
     private final JsTestScenario scenario;
     private final BuildTarget target;
     private final BuildTarget bundleTarget;

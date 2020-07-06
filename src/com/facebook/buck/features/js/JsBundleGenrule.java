@@ -43,6 +43,7 @@ import com.facebook.buck.shell.GenruleBuildable;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.step.isolatedsteps.common.RmIsolatedStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -331,6 +332,10 @@ public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable
               .collect(Collectors.toSet()));
     }
 
+    private static IntStream reverseRange(int from, int to) {
+      return IntStream.range(from, to).map(i -> to - i + from - 1);
+    }
+
     @Override
     public ImmutableList<Step> getBuildSteps(
         BuildContext context,
@@ -340,18 +345,22 @@ public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable
       ImmutableList<Step> buildSteps =
           super.getBuildSteps(context, filesystem, outputPathResolver, buildCellPathFactory);
       OptionalInt lastRmStep =
-          IntStream.range(0, buildSteps.size())
-              .map(x -> buildSteps.size() - 1 - x)
-              .filter(i -> buildSteps.get(i) instanceof RmStep)
+          reverseRange(0, buildSteps.size())
+              .filter(
+                  i -> {
+                    Step step = buildSteps.get(i);
+                    return step instanceof RmStep || step instanceof RmIsolatedStep;
+                  })
               .findFirst();
 
       Preconditions.checkState(
-          lastRmStep.isPresent(), "Genrule is expected to have at least on RmDir step");
+          lastRmStep.isPresent(),
+          "Genrule is expected to have at least on RmStep/RmIsolatedStep step");
 
       OutputPath output = Iterables.getOnlyElement(getOutputs(JS));
       ImmutableList.Builder<Step> builder =
           ImmutableList.<Step>builder()
-              // First, all Genrule steps including the last RmDir step are added
+              // First, all Genrule steps including the last RmStep/RmIsolatedStep step are added
               .addAll(buildSteps.subList(0, lastRmStep.getAsInt() + 1))
               // Our MkdirStep must run after all RmSteps created by Genrule to prevent immediate
               // deletion of the directory. It must, however, run before the genrule command itself
