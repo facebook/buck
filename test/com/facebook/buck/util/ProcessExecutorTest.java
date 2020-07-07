@@ -20,8 +20,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.EnumSet;
@@ -31,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Test;
 
 public class ProcessExecutorTest {
+
   @Test
   public void testDontExpectStdout() throws IOException, InterruptedException {
     CapturingPrintStream stdOut = new CapturingPrintStream();
@@ -119,12 +124,32 @@ public class ProcessExecutorTest {
     assertTrue("process was reported as timed out", result.isTimedOut());
   }
 
+  @Test
+  public void processWaitForLaunchedProcessWithDelegatedProcessExecutor()
+      throws IOException, InterruptedException {
+    @SuppressWarnings("PMD.PrematureDeclaration")
+    ProcessExecutor executor =
+        new DefaultProcessExecutor(new TestConsole(Verbosity.ALL))
+            .withDownwardAPI(
+                DownwardApiProcessExecutor.FACTORY,
+                new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")));
+
+    String cmd = Platform.detect() == Platform.WINDOWS ? "cmd /C echo Hello" : "echo Hello";
+    ProcessExecutorParams params = ProcessExecutorParams.ofCommand(makeCommandArray(cmd));
+    ProcessExecutor.LaunchedProcess launchedProcess = executor.launchProcess(params);
+
+    assertTrue(launchedProcess instanceof DelegateLaunchedProcess);
+
+    ProcessExecutor.Result result = executor.waitForLaunchedProcess(launchedProcess);
+    assertEquals(0, result.getExitCode());
+  }
+
   private static String[] makeCommandArray(String command) {
     StringTokenizer st = new StringTokenizer(command);
-    String[] cmdarray = new String[st.countTokens()];
+    String[] cmdArray = new String[st.countTokens()];
     for (int i = 0; st.hasMoreTokens(); i++) {
-      cmdarray[i] = st.nextToken();
+      cmdArray[i] = st.nextToken();
     }
-    return cmdarray;
+    return cmdArray;
   }
 }

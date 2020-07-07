@@ -308,7 +308,8 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
 
     Result result;
     try {
-      result = getDelegate().execute(process.delegate, options, stdin, timeOutMs, timeOutHandler);
+      result =
+          getDelegate().execute(process.getDelegate(), options, stdin, timeOutMs, timeOutHandler);
     } finally {
       launchedProcess.close();
     }

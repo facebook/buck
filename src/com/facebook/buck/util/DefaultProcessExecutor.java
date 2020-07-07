@@ -153,8 +153,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   @Override
   public Result waitForLaunchedProcess(LaunchedProcess launchedProcess)
       throws InterruptedException {
-    checkState(launchedProcess instanceof LaunchedProcessImpl);
-    LaunchedProcessImpl launchedProcessImpl = (LaunchedProcessImpl) launchedProcess;
+    LaunchedProcessImpl launchedProcessImpl = getLaunchedProcessImpl(launchedProcess);
     checkState(!waitForInternal(launchedProcessImpl.process, Optional.empty(), Optional.empty()));
     int exitCode = launchedProcessImpl.process.exitValue();
     return new Result(
@@ -165,8 +164,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   public Result waitForLaunchedProcessWithTimeout(
       LaunchedProcess launchedProcess, long millis, Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
-    checkState(launchedProcess instanceof LaunchedProcessImpl);
-    Process process = ((LaunchedProcessImpl) launchedProcess).process;
+    Process process = getLaunchedProcessImpl(launchedProcess).process;
     boolean timedOut = waitForInternal(process, Optional.of(millis), timeOutHandler);
     int exitCode = !timedOut ? process.exitValue() : 1;
     return new Result(
@@ -233,8 +231,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
-    checkState(launchedProcess instanceof LaunchedProcessImpl);
-    Process process = ((LaunchedProcessImpl) launchedProcess).process;
+    Process process = getLaunchedProcessImpl(launchedProcess).process;
     // Read stdout/stderr asynchronously while running a Process.
     // See http://stackoverflow.com/questions/882772/capturing-stdout-when-calling-runtime-exec
     boolean shouldPrintStdOut = options.contains(Option.PRINT_STD_OUT);
@@ -383,5 +380,16 @@ public class DefaultProcessExecutor implements ProcessExecutor {
     public void close() {
       process.destroy();
     }
+  }
+
+  private LaunchedProcessImpl getLaunchedProcessImpl(LaunchedProcess launchedProcess) {
+    LaunchedProcess process = launchedProcess;
+    if (launchedProcess instanceof DelegateLaunchedProcess) {
+      DelegateLaunchedProcess delegateLaunchedProcess = (DelegateLaunchedProcess) launchedProcess;
+      process = delegateLaunchedProcess.getDelegate();
+    }
+
+    checkState(process instanceof LaunchedProcessImpl);
+    return (LaunchedProcessImpl) process;
   }
 }

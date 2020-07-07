@@ -16,8 +16,9 @@
 
 package com.facebook.buck.util;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.facebook.buck.core.util.log.Logger;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.zaxxer.nuprocess.NuAbstractProcessHandler;
 import com.zaxxer.nuprocess.NuProcess;
@@ -44,6 +45,7 @@ public class ListeningProcessExecutor {
    * stdout or stderr bytes to read, or is ready to receive bytes on stdin.
    */
   public interface ProcessListener {
+
     /** Called just after the process starts. */
     void onStart(LaunchedProcess process);
 
@@ -102,6 +104,7 @@ public class ListeningProcessExecutor {
 
   /** Represents a process which was launched by a {@link ListeningProcessExecutor}. */
   public interface LaunchedProcess {
+
     /** The capacity of each I/O buffer, in bytes. */
     int BUFFER_CAPACITY = NuProcess.BUFFER_CAPACITY;
 
@@ -143,6 +146,7 @@ public class ListeningProcessExecutor {
   }
 
   private static class LaunchedProcessImpl implements LaunchedProcess {
+
     public final NuProcess nuProcess;
     public final ProcessExecutorParams params;
 
@@ -178,6 +182,7 @@ public class ListeningProcessExecutor {
   }
 
   private static class ListeningProcessHandler extends NuAbstractProcessHandler {
+
     private final ProcessExecutorParams params;
     private final ProcessListener listener;
     @Nullable public LaunchedProcessImpl process;
@@ -195,7 +200,7 @@ public class ListeningProcessExecutor {
     @Override
     public void onStart(NuProcess process) {
       Objects.requireNonNull(this.process);
-      Preconditions.checkState(this.process.nuProcess == process);
+      checkState(this.process.nuProcess == process);
       listener.onStart(this.process);
     }
 
@@ -253,7 +258,7 @@ public class ListeningProcessExecutor {
     LOG.debug("Successfully launched process %s", process);
 
     // This should be set by onPreStart().
-    Preconditions.checkState(processHandler.process != null);
+    checkState(processHandler.process != null);
     processRegistry.registerProcess(processHandler.process.nuProcess, params, ImmutableMap.of());
     return processHandler.process;
   }
@@ -268,8 +273,7 @@ public class ListeningProcessExecutor {
   public int waitForProcess(LaunchedProcess process, long timeout, TimeUnit timeUnit)
       throws InterruptedException {
     LOG.debug("Waiting for process %s timeout %d %s", process, timeout, timeUnit);
-    Preconditions.checkArgument(process instanceof LaunchedProcessImpl);
-    LaunchedProcessImpl processImpl = (LaunchedProcessImpl) process;
+    LaunchedProcessImpl processImpl = getLaunchedProcessImpl(process);
     int exitCode = processImpl.nuProcess.waitFor(timeout, timeUnit);
     LOG.debug("Wait for process returned %d", exitCode);
     return exitCode;
@@ -287,8 +291,7 @@ public class ListeningProcessExecutor {
     if (exitCode == Integer.MIN_VALUE) {
       // Specifying 0 for timeout guarantees that the wait will not time out. This way we know that
       // an exit code equal to Integer.MIN_VALUE must mean that the process failed to start.
-      Preconditions.checkArgument(process instanceof LaunchedProcessImpl);
-      LaunchedProcessImpl processImpl = (LaunchedProcessImpl) process;
+      LaunchedProcessImpl processImpl = getLaunchedProcessImpl(process);
       throw new IOException(
           String.format("Failed to start process %s", processImpl.params.getCommand()));
     }
@@ -301,8 +304,16 @@ public class ListeningProcessExecutor {
    */
   public void destroyProcess(LaunchedProcess process, boolean force) {
     LOG.debug("Destroying process %s (force %s)", process, force);
-    Preconditions.checkArgument(process instanceof LaunchedProcessImpl);
-    LaunchedProcessImpl processImpl = (LaunchedProcessImpl) process;
+    LaunchedProcessImpl processImpl = getLaunchedProcessImpl(process);
     processImpl.nuProcess.destroy(force);
+  }
+
+  private LaunchedProcessImpl getLaunchedProcessImpl(LaunchedProcess launchedProcess) {
+    // If `LaunchedProcess` could be wrapped into delegated subscass then here an extra check and
+    // unwrap logic is required.
+    // Please check `DefaultProcessExecutor` and similar method for extracting `LaunchedProcessImpl`
+    // from `LaunchedProcess`.
+    checkState(launchedProcess instanceof LaunchedProcessImpl);
+    return (LaunchedProcessImpl) launchedProcess;
   }
 }

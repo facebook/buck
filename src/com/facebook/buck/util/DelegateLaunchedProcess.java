@@ -26,7 +26,7 @@ import java.io.OutputStream;
  */
 public abstract class DelegateLaunchedProcess implements ProcessExecutor.LaunchedProcess {
 
-  public final ProcessExecutor.LaunchedProcess delegate;
+  private final ProcessExecutor.LaunchedProcess delegate;
 
   public DelegateLaunchedProcess(ProcessExecutor.LaunchedProcess delegate) {
     this.delegate = delegate;
@@ -60,5 +60,9 @@ public abstract class DelegateLaunchedProcess implements ProcessExecutor.Launche
   @Override
   public void close() {
     delegate.close();
+  }
+
+  public ProcessExecutor.LaunchedProcess getDelegate() {
+    return delegate;
   }
 }
