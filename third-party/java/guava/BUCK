@@ -10,22 +10,22 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "guava",
-    binary_jar = "guava-23.3-jre.jar",
+    binary_jar = "guava-25.1-jre.jar",
     licenses = [
         "COPYING",
     ],
-    source_jar = "guava-23.3-jre-sources.jar",
+    source_jar = "guava-25.1-jre-sources.jar",
     visibility = ["PUBLIC"],
     deps = ["//third-party/java/j2objc:j2objc-annotations"],
 )
 
 prebuilt_jar(
     name = "guava-testlib",
-    binary_jar = "guava-testlib-23.3-jre.jar",
+    binary_jar = "guava-testlib-25.1-jre.jar",
     licenses = [
         "COPYING",
     ],
-    source_jar = "guava-testlib-23.3-jre-sources.jar",
+    source_jar = "guava-testlib-25.1-jre-sources.jar",
     visibility = [
         "//test/...",
         "//tools/ideabuck/tests/...",

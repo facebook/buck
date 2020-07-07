@@ -413,7 +413,7 @@ public class ProjectIntegrationTest {
         .assertSuccess("buck project should exit cleanly");
 
     // Check every file in output-dir matches one in project
-    for (File outFile : Files.fileTreeTraverser().children(outPath.toFile())) {
+    for (File outFile : Files.fileTraverser().breadthFirst(outPath.toFile())) {
       RelPath relativePath = outPath.relativize(Paths.get(outFile.getPath()));
       File projFile = temporaryFolder.getRoot().resolve(relativePath).toFile();
       assertTrue(projFile.exists());
@@ -424,7 +424,7 @@ public class ProjectIntegrationTest {
   }
 
   Iterable<File> recursePath(Path path) {
-    return Files.fileTreeTraverser().breadthFirstTraversal(path.toFile());
+    return Files.fileTraverser().breadthFirst(path.toFile());
   }
 
   @Test
