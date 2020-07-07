@@ -23,6 +23,7 @@ import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
+import com.facebook.buck.downwardapi.utils.DownwardApiConstants;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
@@ -223,11 +224,11 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
 
   private ImmutableMap<String, String> downwardApiEnvs(String namedPipeName) {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builderWithExpectedSize(5);
-    builder.put("BUCK_VERBOSITY", verbosity);
-    builder.put("BUCK_ANSI_ENABLED", isAnsiTerminal);
-    builder.put("BUCK_BUILD_UUID", buckEventBus.getBuildId().toString());
-    builder.put("BUCK_ACTION_ID", actionId);
-    builder.put("BUCK_EVENT_PIPE", namedPipeName);
+    builder.put(DownwardApiConstants.ENV_VERBOSITY, verbosity);
+    builder.put(DownwardApiConstants.ENV_ANSI_ENABLED, isAnsiTerminal);
+    builder.put(DownwardApiConstants.ENV_BUILD_UUID, buckEventBus.getBuildId().toString());
+    builder.put(DownwardApiConstants.ENV_ACTION_ID, actionId);
+    builder.put(DownwardApiConstants.ENV_EVENT_PIPE, namedPipeName);
     return builder.build();
   }
 

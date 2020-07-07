@@ -18,6 +18,7 @@ java_library(
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/downwardapi/processexecutor/handlers:handlers",
         "//src/com/facebook/buck/downwardapi/protocol:protocol",
+        "//src/com/facebook/buck/downwardapi/utils:utils",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io/namedpipes:namedpipes",
         "//src/com/facebook/buck/util:process_executor",
