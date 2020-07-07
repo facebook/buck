@@ -188,9 +188,7 @@ public class JsBundleDescription
             buildTarget,
             context.getTargetGraph(),
             graphBuilder,
-            args.getFallbackTransformProfile().isPresent()
-                ? args.getFallbackTransformProfile()
-                : args.getDefaultTransformProfile());
+            args.getFallbackTransformProfile());
     ImmutableSet<JsLibrary> flavoredLibraryDeps = libsResolver.collect(args.getDeps());
     Stream<BuildRule> generatedDeps =
         findGeneratedSources(graphBuilder, flavoredLibraryDeps.stream())
@@ -393,13 +391,6 @@ public class JsBundleDescription
 
     /** For R.java */
     Optional<String> getAndroidPackage();
-
-    /**
-     * @deprecated This is in the process of being renamed to getFallbackTransformProfile. Delete
-     *     this once no BUCK files are referencing default_transform_profile.
-     */
-    @Deprecated
-    Optional<String> getDefaultTransformProfile();
 
     Optional<String> getFallbackTransformProfile();
   }
