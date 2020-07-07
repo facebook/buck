@@ -45,6 +45,7 @@ import com.google.longrunning.Operation;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.Status;
+import io.grpc.Status.Code;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.ClientCallStreamObserver;
 import io.grpc.stub.ClientResponseObserver;
@@ -120,10 +121,16 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
                       + "Response=[%s].",
                   operation.toString()));
         }
+        ExecuteResponse response = operation.getResponse().unpack(ExecuteResponse.class);
 
-        resultFuture.set(
-            getExecutionResult(
-                operation.getResponse().unpack(ExecuteResponse.class), executedMetadata));
+        if (response.getStatus().getCode() == Code.DEADLINE_EXCEEDED.value()) {
+          String extraDescription = "Execution failed due to timeout on RE";
+          throw Status.fromCodeValue(response.getStatus().getCode())
+              .augmentDescription(extraDescription)
+              .asRuntimeException();
+        }
+
+        resultFuture.set(getExecutionResult(response, executedMetadata));
       } catch (StatusRuntimeException e) {
         resultFuture.setException(e);
       } catch (Exception e) {
