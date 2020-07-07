@@ -12,6 +12,4 @@ let () =
       raise e
   else
     failwith "File does not exist!"
-  );
-  let p = Registry.get_plugin () in
-  p ()
+  )

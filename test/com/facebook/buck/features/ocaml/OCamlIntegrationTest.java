@@ -28,9 +28,11 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
@@ -63,7 +65,6 @@ import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -108,7 +109,7 @@ public class OCamlIntegrationTest {
     ExecutableFinder executableFinder = new ExecutableFinder();
     ToolchainCreationContext toolchainCreationContext =
         ToolchainCreationContext.of(
-            ImmutableMap.of(),
+            EnvVariablesProvider.getSystemEnv(),
             buckConfig,
             new FakeProjectFilesystem(),
             processExecutor,
@@ -229,12 +230,16 @@ public class OCamlIntegrationTest {
     BuildTarget binTarget = BuildTargetFactory.newInstance("//ocaml_native_plugin:tester");
     workspace.runBuckCommand("build", binTarget.toString()).assertSuccess();
 
-    Path ocamlNativePluginDir =
-        workspace.getDestPath().resolve("buck-out").resolve("gen").resolve("ocaml_native_plugin");
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+    AbsPath basePath = filesystem.getRootPath().toRealPath();
 
-    Path pluginCmxsFile = ocamlNativePluginDir.resolve("plugin#default").resolve("libplugin.cmxs");
+    Path testerExecutableFile =
+        basePath.resolve(BuildTargetPaths.getGenPath(filesystem, binTarget, "%s/tester")).getPath();
 
-    Path testerExecutableFile = ocamlNativePluginDir.resolve("tester").resolve("tester");
+    Path pluginCmxsFile =
+        basePath
+            .resolve(BuildTargetPaths.getGenPath(filesystem, pluginTarget, "%s/libplugin.cmxs"))
+            .getPath();
 
     // Run `./tester /path/to/plugin.cmxs`
     String out =
@@ -519,8 +524,8 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertFailure();
     BuckBuildLog buildLog = workspace.getBuildLog();
     assertTrue(buildLog.getAllTargets().containsAll(targets));
-    buildLog.assertTargetCanceled(target);
-    buildLog.assertTargetCanceled(binary);
+    buildLog.assertTargetFailed(target.toString());
+    buildLog.assertTargetFailed(binary.toString());
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents(".buckconfig", "warnings_flags=+a", "");
@@ -554,8 +559,8 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertFailure();
     BuckBuildLog buildLog = workspace.getBuildLog();
     assertThat(buildLog.getAllTargets(), Matchers.hasItems(targets.toArray(new BuildTarget[0])));
-    buildLog.assertTargetCanceled(target);
-    buildLog.assertTargetCanceled(binary);
+    buildLog.assertTargetFailed(target.toString());
+    buildLog.assertTargetFailed(binary.toString());
 
     workspace.resetBuildLogFile();
 
