@@ -20,6 +20,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -113,6 +114,7 @@ public class SkylarkBuildModuleTest {
                 NativeGlobber.create(root),
                 rawConfig,
                 PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("my/package")),
+                ForwardRelativePath.of("my/package"),
                 eventHandler,
                 ImmutableMap.of()))
         .setup(env);

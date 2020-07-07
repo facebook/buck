@@ -267,6 +267,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         PackageIdentifier.create(
             RepositoryName.createFromValidStrippedName(options.getCellName()),
             PathFragment.createAlreadyNormalized(basePath.toString())),
+        basePath,
         eventHandler,
         implicitlyLoadedSymbols);
   }

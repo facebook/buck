@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -118,6 +119,7 @@ public class SkylarkPackageModuleTest {
                 NativeGlobber.create(root),
                 ImmutableMap.of(),
                 PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("my/package")),
+                ForwardRelativePath.of("my/package"),
                 eventHandler,
                 ImmutableMap.of()));
     parseContext.setup(env);

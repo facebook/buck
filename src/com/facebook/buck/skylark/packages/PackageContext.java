@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.packages;
 
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.skylark.io.Globber;
 import com.google.common.collect.ImmutableMap;
@@ -38,6 +39,8 @@ public abstract class PackageContext {
   /** Returns a package identifier of the build file that is being parsed. */
   public abstract PackageIdentifier getPackageIdentifier();
 
+  public abstract ForwardRelativePath getBasePath();
+
   /** @return The event handler for reporting events during package parsing. */
   public abstract EventHandler getEventHandler();
 
@@ -48,9 +51,10 @@ public abstract class PackageContext {
       Globber globber,
       Map<String, ? extends ImmutableMap<String, String>> rawConfig,
       PackageIdentifier packageIdentifier,
+      ForwardRelativePath basePath,
       EventHandler eventHandler,
       Map<String, ? extends Object> implicitlyLoadedSymbols) {
     return ImmutablePackageContext.ofImpl(
-        globber, rawConfig, packageIdentifier, eventHandler, implicitlyLoadedSymbols);
+        globber, rawConfig, packageIdentifier, basePath, eventHandler, implicitlyLoadedSymbols);
   }
 }

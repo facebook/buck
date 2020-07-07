@@ -19,6 +19,7 @@ package com.facebook.buck.core.starlark.rule;
 import static com.facebook.buck.skylark.function.SkylarkRuleFunctions.IMPLICIT_ATTRIBUTES;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.coercer.SkylarkParamInfo;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
@@ -134,6 +135,7 @@ public class SkylarkUserDefinedRuleTest {
                 ImmutableMap.of(),
                 PackageIdentifier.create(
                     "@repo", PathFragment.create("some_package").getChild("subdir")),
+                ForwardRelativePath.of("some_package/subdir"),
                 eventHandler,
                 ImmutableMap.of()));
 

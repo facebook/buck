@@ -100,12 +100,7 @@ public class RuleFunctionFactory {
             kwargs);
 
         ParseContext parseContext = ParseContext.getParseContext(thread, loc, name);
-        String basePath =
-            parseContext
-                .getPackageContext()
-                .getPackageIdentifier()
-                .getPackageFragment()
-                .getPathString();
+        ForwardRelativePath basePath = parseContext.getPackageContext().getBasePath();
         RecordedRule recordedRule = populateAttributes(ruleClass, getName(), basePath, kwargs, loc);
         parseContext.recordRule(recordedRule, loc);
         return Starlark.NONE;
@@ -153,12 +148,13 @@ public class RuleFunctionFactory {
    * Populates provided {@code builder} with values from {@code kwargs} assuming {@code ruleClass}
    * as the target {@link BaseDescription} class.
    *
+   * @param basePath current BUCK file base path
    * @param kwargs The keyword arguments and their values passed to rule function in build file.
    */
   private RecordedRule populateAttributes(
       BaseDescription<?> ruleClass,
       String name,
-      String basePath,
+      ForwardRelativePath basePath,
       Map<String, Object> kwargs,
       Location loc)
       throws EvalException {
@@ -195,8 +191,7 @@ public class RuleFunctionFactory {
     }
 
     throwOnMissingRequiredAttribute(kwargs, allParamInfo.getParamInfosByName(), name, loc);
-    return RecordedRule.of(
-        ForwardRelativePath.of(basePath), name, visibility, withinView, builder.build());
+    return RecordedRule.of(basePath, name, visibility, withinView, builder.build());
   }
 
   private static ImmutableList<String> toListOfString(String attrName, Object value) {
