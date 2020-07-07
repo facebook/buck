@@ -24,7 +24,6 @@ public class BuckStarlark {
   private BuckStarlark() {}
 
   /** Starlark semantics used in Buck */
-  // TODO(nga): remove `incompatibleDepsetUnion`
   public static final StarlarkSemantics BUCK_STARLARK_SEMANTICS =
-      StarlarkSemantics.builderWithDefaults().incompatibleDepsetUnion(false).build();
+      StarlarkSemantics.builderWithDefaults().build();
 }
