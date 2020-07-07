@@ -52,6 +52,8 @@ public class JsFlavors {
   public static final UserFlavor MISC = UserFlavor.of("misc", "Expose misc directory");
   public static final UserFlavor DEPENDENCY_FILE =
       UserFlavor.of("dependencies", "Build dependency file");
+  public static final UserFlavor TRANSFORM_PROFILE_DEFAULT =
+      UserFlavor.of("transform-profile-default", "Enable the default JS transform profile");
   public static final UserFlavor HERMES_STABLE =
       UserFlavor.of("hermes-stable", "Enable the hermes-stable JS transform profile");
   public static final UserFlavor HERMES_CANARY =
@@ -78,7 +80,13 @@ public class JsFlavors {
   public static final FlavorDomain<String> TRANSFORM_PROFILE_DOMAIN =
       new FlavorDomain<>(
           "Transform profile",
-          ImmutableMap.of(HERMES_STABLE, "hermes-stable", HERMES_CANARY, "hermes-canary"));
+          ImmutableMap.of(
+              TRANSFORM_PROFILE_DEFAULT,
+              "default",
+              HERMES_STABLE,
+              "hermes-stable",
+              HERMES_CANARY,
+              "hermes-canary"));
 
   public static final InternalFlavor ANDROID_RESOURCES = InternalFlavor.of("_res_");
   public static final InternalFlavor FORCE_JS_BUNDLE = InternalFlavor.of("_js_");

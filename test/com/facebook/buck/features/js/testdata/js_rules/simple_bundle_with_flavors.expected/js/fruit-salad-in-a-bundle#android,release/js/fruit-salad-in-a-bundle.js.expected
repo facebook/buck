@@ -6,9 +6,9 @@
     "fruit-salad"
   ],
   "libraries" : [
-    "@/buck-out/gen/js/extras#android,release.jslib",
-    "@/buck-out/gen/js/fruit#android,release.jslib",
-    "@/buck-out/gen/js/fruit-salad#android,release.jslib"
+    "@/buck-out/gen/js/extras#android,release,transform-profile-default.jslib",
+    "@/buck-out/gen/js/fruit#android,release,transform-profile-default.jslib",
+    "@/buck-out/gen/js/fruit-salad#android,release,transform-profile-default.jslib"
   ],
   "platform" : "android",
   "release" : true,
@@ -34,9 +34,9 @@
   "release" : true,
   "rootPath" : "@",
   "platform" : "android",
-  "outputPath" : "@/buck-out/gen/js/extras#android,release.jslib",
+  "outputPath" : "@/buck-out/gen/js/extras#android,release,transform-profile-default.jslib",
   "dependencyLibraryFilePaths" : [ ],
-  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/extras#_files_,android,release.jslib",
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/extras#_files_,android,release,transform-profile-default.jslib",
   "flavors" : [
     "android",
     "release"
@@ -47,10 +47,10 @@
   "release" : true,
   "rootPath" : "@",
   "platform" : "android",
-  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,android,release.jslib",
+  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,android,release,transform-profile-default.jslib",
   "sourceFilePaths" : [
-    "@/buck-out/gen/js/extras#_files_,android,file-choclate-chips.js-<HASH>,release.jsfile",
-    "@/buck-out/gen/js/extras#_files_,android,file-yoghurt.js-<HASH>,release.jsfile"
+    "@/buck-out/gen/js/extras#_files_,android,file-choclate-chips.js-<HASH>,release,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/extras#_files_,android,file-yoghurt.js-<HASH>,release,transform-profile-default.jsfile"
   ],
   "flavors" : [
     "android",
@@ -59,8 +59,9 @@
 }
 {
   "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,android,file-choclate-chips.js-<HASH>,release.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,android,file-choclate-chips.js-<HASH>,release,transform-profile-default.jsfile",
+  "transformedJsFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
+  "transformProfile" : "default",
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -72,9 +73,10 @@
 }
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/choclate-chips.js",
   "sourceJsFileName" : "js/extras/choclate-chips.js",
+  "transformProfile" : "default",
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -84,8 +86,9 @@
 var choclateChips;
 {
   "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,android,file-yoghurt.js-<HASH>,release.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,android,file-yoghurt.js-<HASH>,release,transform-profile-default.jsfile",
+  "transformedJsFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile",
+  "transformProfile" : "default",
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -97,9 +100,10 @@ var choclateChips;
 }
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/yoghurt.js",
   "sourceJsFileName" : "js/extras/yoghurt.js",
+  "transformProfile" : "default",
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -112,9 +116,9 @@ var yoghurt;
   "release" : true,
   "rootPath" : "@",
   "platform" : "android",
-  "outputPath" : "@/buck-out/gen/js/fruit#android,release.jslib",
+  "outputPath" : "@/buck-out/gen/js/fruit#android,release,transform-profile-default.jslib",
   "dependencyLibraryFilePaths" : [ ],
-  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/fruit#_files_,android,release.jslib",
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/fruit#_files_,android,release,transform-profile-default.jslib",
   "flavors" : [
     "android",
     "release"
@@ -125,11 +129,11 @@ var yoghurt;
   "release" : true,
   "rootPath" : "@",
   "platform" : "android",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,release.jslib",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,release,transform-profile-default.jslib",
   "sourceFilePaths" : [
-    "@/buck-out/gen/js/fruit#_files_,android,file-apple.js-<HASH>,release.jsfile",
-    "@/buck-out/gen/js/fruit#_files_,android,file-banana.js-<HASH>,release.jsfile",
-    "@/buck-out/gen/js/fruit#_files_,android,file-pear.js-<HASH>,release.jsfile"
+    "@/buck-out/gen/js/fruit#_files_,android,file-apple.js-<HASH>,release,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/fruit#_files_,android,file-banana.js-<HASH>,release,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/fruit#_files_,android,file-pear.js-<HASH>,release,transform-profile-default.jsfile"
   ],
   "flavors" : [
     "android",
@@ -138,8 +142,9 @@ var yoghurt;
 }
 {
   "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-apple.js-<HASH>,release.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-apple.js-<HASH>,release,transform-profile-default.jsfile",
+  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>,transform-profile-default.jsfile",
+  "transformProfile" : "default",
   "flavors" : [
     "android",
     "release"
@@ -147,16 +152,18 @@ var yoghurt;
 }
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/apple.js",
   "sourceJsFileName" : "js/apple.js",
+  "transformProfile" : "default",
   "flavors" : [ ]
 }
 var apple;
 {
   "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-banana.js-<HASH>,release.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-banana.js-<HASH>,release,transform-profile-default.jsfile",
+  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>,transform-profile-default.jsfile",
+  "transformProfile" : "default",
   "flavors" : [
     "android",
     "release"
@@ -164,16 +171,18 @@ var apple;
 }
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/banana.js",
   "sourceJsFileName" : "js/banana.js",
+  "transformProfile" : "default",
   "flavors" : [ ]
 }
 var banana;
 {
   "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-pear.js-<HASH>,release.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-pear.js-<HASH>,release,transform-profile-default.jsfile",
+  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>,transform-profile-default.jsfile",
+  "transformProfile" : "default",
   "flavors" : [
     "android",
     "release"
@@ -181,9 +190,10 @@ var banana;
 }
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/pear.js",
   "sourceJsFileName" : "js/pear.js",
+  "transformProfile" : "default",
   "flavors" : [ ]
 }
 var pear;
@@ -192,12 +202,12 @@ var pear;
   "release" : true,
   "rootPath" : "@",
   "platform" : "android",
-  "outputPath" : "@/buck-out/gen/js/fruit-salad#android,release.jslib",
+  "outputPath" : "@/buck-out/gen/js/fruit-salad#android,release,transform-profile-default.jslib",
   "dependencyLibraryFilePaths" : [
-    "@/buck-out/gen/js/extras#android,release.jslib",
-    "@/buck-out/gen/js/fruit#android,release.jslib"
+    "@/buck-out/gen/js/extras#android,release,transform-profile-default.jslib",
+    "@/buck-out/gen/js/fruit#android,release,transform-profile-default.jslib"
   ],
-  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/fruit-salad#_files_,android,release.jslib",
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/fruit-salad#_files_,android,release,transform-profile-default.jslib",
   "flavors" : [
     "android",
     "release"
@@ -208,9 +218,9 @@ var pear;
   "release" : true,
   "rootPath" : "@",
   "platform" : "android",
-  "outputPath" : "@/buck-out/gen/js/extras#android,release.jslib",
+  "outputPath" : "@/buck-out/gen/js/extras#android,release,transform-profile-default.jslib",
   "dependencyLibraryFilePaths" : [ ],
-  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/extras#_files_,android,release.jslib",
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/extras#_files_,android,release,transform-profile-default.jslib",
   "flavors" : [
     "android",
     "release"
@@ -221,10 +231,10 @@ var pear;
   "release" : true,
   "rootPath" : "@",
   "platform" : "android",
-  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,android,release.jslib",
+  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,android,release,transform-profile-default.jslib",
   "sourceFilePaths" : [
-    "@/buck-out/gen/js/extras#_files_,android,file-choclate-chips.js-<HASH>,release.jsfile",
-    "@/buck-out/gen/js/extras#_files_,android,file-yoghurt.js-<HASH>,release.jsfile"
+    "@/buck-out/gen/js/extras#_files_,android,file-choclate-chips.js-<HASH>,release,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/extras#_files_,android,file-yoghurt.js-<HASH>,release,transform-profile-default.jsfile"
   ],
   "flavors" : [
     "android",
@@ -233,8 +243,9 @@ var pear;
 }
 {
   "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,android,file-choclate-chips.js-<HASH>,release.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,android,file-choclate-chips.js-<HASH>,release,transform-profile-default.jsfile",
+  "transformedJsFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
+  "transformProfile" : "default",
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -246,9 +257,10 @@ var pear;
 }
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/choclate-chips.js",
   "sourceJsFileName" : "js/extras/choclate-chips.js",
+  "transformProfile" : "default",
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -258,8 +270,9 @@ var pear;
 var choclateChips;
 {
   "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,android,file-yoghurt.js-<HASH>,release.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,android,file-yoghurt.js-<HASH>,release,transform-profile-default.jsfile",
+  "transformedJsFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile",
+  "transformProfile" : "default",
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -271,9 +284,10 @@ var choclateChips;
 }
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/yoghurt.js",
   "sourceJsFileName" : "js/extras/yoghurt.js",
+  "transformProfile" : "default",
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -286,9 +300,9 @@ var yoghurt;
   "release" : true,
   "rootPath" : "@",
   "platform" : "android",
-  "outputPath" : "@/buck-out/gen/js/fruit#android,release.jslib",
+  "outputPath" : "@/buck-out/gen/js/fruit#android,release,transform-profile-default.jslib",
   "dependencyLibraryFilePaths" : [ ],
-  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/fruit#_files_,android,release.jslib",
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/fruit#_files_,android,release,transform-profile-default.jslib",
   "flavors" : [
     "android",
     "release"
@@ -299,11 +313,11 @@ var yoghurt;
   "release" : true,
   "rootPath" : "@",
   "platform" : "android",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,release.jslib",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,release,transform-profile-default.jslib",
   "sourceFilePaths" : [
-    "@/buck-out/gen/js/fruit#_files_,android,file-apple.js-<HASH>,release.jsfile",
-    "@/buck-out/gen/js/fruit#_files_,android,file-banana.js-<HASH>,release.jsfile",
-    "@/buck-out/gen/js/fruit#_files_,android,file-pear.js-<HASH>,release.jsfile"
+    "@/buck-out/gen/js/fruit#_files_,android,file-apple.js-<HASH>,release,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/fruit#_files_,android,file-banana.js-<HASH>,release,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/fruit#_files_,android,file-pear.js-<HASH>,release,transform-profile-default.jsfile"
   ],
   "flavors" : [
     "android",
@@ -312,8 +326,9 @@ var yoghurt;
 }
 {
   "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-apple.js-<HASH>,release.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-apple.js-<HASH>,release,transform-profile-default.jsfile",
+  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>,transform-profile-default.jsfile",
+  "transformProfile" : "default",
   "flavors" : [
     "android",
     "release"
@@ -321,16 +336,18 @@ var yoghurt;
 }
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/apple.js",
   "sourceJsFileName" : "js/apple.js",
+  "transformProfile" : "default",
   "flavors" : [ ]
 }
 var apple;
 {
   "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-banana.js-<HASH>,release.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-banana.js-<HASH>,release,transform-profile-default.jsfile",
+  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>,transform-profile-default.jsfile",
+  "transformProfile" : "default",
   "flavors" : [
     "android",
     "release"
@@ -338,16 +355,18 @@ var apple;
 }
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/banana.js",
   "sourceJsFileName" : "js/banana.js",
+  "transformProfile" : "default",
   "flavors" : [ ]
 }
 var banana;
 {
   "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-pear.js-<HASH>,release.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-pear.js-<HASH>,release,transform-profile-default.jsfile",
+  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>,transform-profile-default.jsfile",
+  "transformProfile" : "default",
   "flavors" : [
     "android",
     "release"
@@ -355,9 +374,10 @@ var banana;
 }
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/pear.js",
   "sourceJsFileName" : "js/pear.js",
+  "transformProfile" : "default",
   "flavors" : [ ]
 }
 var pear;
@@ -366,9 +386,9 @@ var pear;
   "release" : true,
   "rootPath" : "@",
   "platform" : "android",
-  "outputFilePath" : "@/buck-out/gen/js/fruit-salad#_files_,android,release.jslib",
+  "outputFilePath" : "@/buck-out/gen/js/fruit-salad#_files_,android,release,transform-profile-default.jslib",
   "sourceFilePaths" : [
-    "@/buck-out/gen/js/fruit-salad#_files_,android,file-fruit-salad.js-<HASH>,release.jsfile"
+    "@/buck-out/gen/js/fruit-salad#_files_,android,file-fruit-salad.js-<HASH>,release,transform-profile-default.jsfile"
   ],
   "flavors" : [
     "android",
@@ -377,8 +397,9 @@ var pear;
 }
 {
   "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/fruit-salad#_files_,android,file-fruit-salad.js-<HASH>,release.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit-salad#file-fruit-salad.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit-salad#_files_,android,file-fruit-salad.js-<HASH>,release,transform-profile-default.jsfile",
+  "transformedJsFilePath" : "@/buck-out/gen/js/fruit-salad#file-fruit-salad.js-<HASH>,transform-profile-default.jsfile",
+  "transformProfile" : "default",
   "flavors" : [
     "android",
     "release"
@@ -386,9 +407,10 @@ var pear;
 }
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit-salad#file-fruit-salad.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit-salad#file-fruit-salad.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/fruit-salad.js",
   "sourceJsFileName" : "js/fruit-salad.js",
+  "transformProfile" : "default",
   "flavors" : [ ]
 }
 var fruitSalad;

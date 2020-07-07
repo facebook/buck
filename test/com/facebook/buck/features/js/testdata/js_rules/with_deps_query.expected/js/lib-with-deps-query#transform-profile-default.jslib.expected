@@ -1,0 +1,105 @@
+{
+  "command" : "library-dependencies",
+  "release" : false,
+  "rootPath" : "@",
+  "outputPath" : "@/buck-out/gen/js/lib-with-deps-query#transform-profile-default.jslib",
+  "dependencyLibraryFilePaths" : [
+    "@/buck-out/gen/js/build-target-output#transform-profile-default.jslib",
+    "@/buck-out/gen/js/native-js/photo-album-js#transform-profile-default.jslib",
+    "@/buck-out/gen/js/native-js/text-widget-js#transform-profile-default.jslib"
+  ],
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/lib-with-deps-query#_files_,transform-profile-default.jslib",
+  "flavors" : [ ]
+}
+{
+  "command" : "library-dependencies",
+  "release" : false,
+  "rootPath" : "@",
+  "outputPath" : "@/buck-out/gen/js/build-target-output#transform-profile-default.jslib",
+  "dependencyLibraryFilePaths" : [ ],
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/build-target-output#_files_,transform-profile-default.jslib",
+  "flavors" : [ ]
+}
+{
+  "command" : "library-files",
+  "release" : false,
+  "rootPath" : "@",
+  "outputFilePath" : "@/buck-out/gen/js/build-target-output#_files_,transform-profile-default.jslib",
+  "sourceFilePaths" : [
+    "@/buck-out/gen/js/build-target-output#file-exported.js-<HASH>,transform-profile-default.jsfile"
+  ],
+  "flavors" : [ ]
+}
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/build-target-output#file-exported.js-<HASH>,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/buck-out/gen/external/exported.js/exported.js",
+  "sourceJsFileName" : "buck-out/gen/external/exported.js/exported.js",
+  "transformProfile" : "default",
+  "flavors" : [ ]
+}
+var exported;
+{
+  "command" : "library-dependencies",
+  "release" : false,
+  "rootPath" : "@",
+  "outputPath" : "@/buck-out/gen/js/native-js/photo-album-js#transform-profile-default.jslib",
+  "dependencyLibraryFilePaths" : [ ],
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/native-js/photo-album-js#_files_,transform-profile-default.jslib",
+  "flavors" : [ ]
+}
+{
+  "command" : "library-files",
+  "release" : false,
+  "rootPath" : "@",
+  "outputFilePath" : "@/buck-out/gen/js/native-js/photo-album-js#_files_,transform-profile-default.jslib",
+  "sourceFilePaths" : [
+    "@/buck-out/gen/js/native-js/photo-album-js#file-photo-album.js-<HASH>,transform-profile-default.jsfile"
+  ],
+  "flavors" : [ ]
+}
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/native-js/photo-album-js#file-photo-album.js-<HASH>,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/js/native-js/photo-album.js",
+  "sourceJsFileName" : "js/native-js/photo-album.js",
+  "transformProfile" : "default",
+  "flavors" : [ ]
+}
+var photoAlbum;
+{
+  "command" : "library-dependencies",
+  "release" : false,
+  "rootPath" : "@",
+  "outputPath" : "@/buck-out/gen/js/native-js/text-widget-js#transform-profile-default.jslib",
+  "dependencyLibraryFilePaths" : [ ],
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/native-js/text-widget-js#_files_,transform-profile-default.jslib",
+  "flavors" : [ ]
+}
+{
+  "command" : "library-files",
+  "release" : false,
+  "rootPath" : "@",
+  "outputFilePath" : "@/buck-out/gen/js/native-js/text-widget-js#_files_,transform-profile-default.jslib",
+  "sourceFilePaths" : [
+    "@/buck-out/gen/js/native-js/text-widget-js#file-text-widget.js-<HASH>,transform-profile-default.jsfile"
+  ],
+  "flavors" : [ ]
+}
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/native-js/text-widget-js#file-text-widget.js-<HASH>,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/js/native-js/text-widget.js",
+  "sourceJsFileName" : "js/native-js/text-widget.js",
+  "transformProfile" : "default",
+  "flavors" : [ ]
+}
+var textWidget;
+{
+  "command" : "library-files",
+  "release" : false,
+  "rootPath" : "@",
+  "outputFilePath" : "@/buck-out/gen/js/lib-with-deps-query#_files_,transform-profile-default.jslib",
+  "sourceFilePaths" : [ ],
+  "flavors" : [ ]
+}

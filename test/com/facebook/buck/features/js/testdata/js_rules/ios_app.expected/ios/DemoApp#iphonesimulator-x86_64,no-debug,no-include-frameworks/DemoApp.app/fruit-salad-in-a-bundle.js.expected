@@ -6,9 +6,9 @@
     "fruit-salad"
   ],
   "libraries" : [
-    "@/buck-out/gen/js/extras#ios.jslib",
-    "@/buck-out/gen/js/fruit#ios.jslib",
-    "@/buck-out/gen/js/fruit-salad#ios.jslib"
+    "@/buck-out/gen/js/extras#ios,transform-profile-default.jslib",
+    "@/buck-out/gen/js/fruit#ios,transform-profile-default.jslib",
+    "@/buck-out/gen/js/fruit-salad#ios,transform-profile-default.jslib"
   ],
   "platform" : "ios",
   "release" : false,
@@ -33,9 +33,9 @@
   "release" : false,
   "rootPath" : "@",
   "platform" : "ios",
-  "outputPath" : "@/buck-out/gen/js/extras#ios.jslib",
+  "outputPath" : "@/buck-out/gen/js/extras#ios,transform-profile-default.jslib",
   "dependencyLibraryFilePaths" : [ ],
-  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/extras#_files_,ios.jslib",
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/extras#_files_,ios,transform-profile-default.jslib",
   "flavors" : [
     "ios"
   ]
@@ -45,10 +45,10 @@
   "release" : false,
   "rootPath" : "@",
   "platform" : "ios",
-  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,ios.jslib",
+  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,ios,transform-profile-default.jslib",
   "sourceFilePaths" : [
-    "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>.jsfile",
-    "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>.jsfile"
+    "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile"
   ],
   "flavors" : [
     "ios"
@@ -56,9 +56,10 @@
 }
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/choclate-chips.js",
   "sourceJsFileName" : "js/extras/choclate-chips.js",
+  "transformProfile" : "default",
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -68,9 +69,10 @@
 var choclateChips;
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/yoghurt.js",
   "sourceJsFileName" : "js/extras/yoghurt.js",
+  "transformProfile" : "default",
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -83,9 +85,9 @@ var yoghurt;
   "release" : false,
   "rootPath" : "@",
   "platform" : "ios",
-  "outputPath" : "@/buck-out/gen/js/fruit#ios.jslib",
+  "outputPath" : "@/buck-out/gen/js/fruit#ios,transform-profile-default.jslib",
   "dependencyLibraryFilePaths" : [ ],
-  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/fruit#_files_,ios.jslib",
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/fruit#_files_,ios,transform-profile-default.jslib",
   "flavors" : [
     "ios"
   ]
@@ -95,11 +97,11 @@ var yoghurt;
   "release" : false,
   "rootPath" : "@",
   "platform" : "ios",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,ios.jslib",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,ios,transform-profile-default.jslib",
   "sourceFilePaths" : [
-    "@/buck-out/gen/js/fruit#file-apple.js-<HASH>.jsfile",
-    "@/buck-out/gen/js/fruit#file-banana.js-<HASH>.jsfile",
-    "@/buck-out/gen/js/fruit#file-pear.js-<HASH>.jsfile"
+    "@/buck-out/gen/js/fruit#file-apple.js-<HASH>,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/fruit#file-banana.js-<HASH>,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/fruit#file-pear.js-<HASH>,transform-profile-default.jsfile"
   ],
   "flavors" : [
     "ios"
@@ -107,25 +109,28 @@ var yoghurt;
 }
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/apple.js",
   "sourceJsFileName" : "js/apple.js",
+  "transformProfile" : "default",
   "flavors" : [ ]
 }
 var apple;
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/banana.js",
   "sourceJsFileName" : "js/banana.js",
+  "transformProfile" : "default",
   "flavors" : [ ]
 }
 var banana;
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/pear.js",
   "sourceJsFileName" : "js/pear.js",
+  "transformProfile" : "default",
   "flavors" : [ ]
 }
 var pear;
@@ -134,12 +139,12 @@ var pear;
   "release" : false,
   "rootPath" : "@",
   "platform" : "ios",
-  "outputPath" : "@/buck-out/gen/js/fruit-salad#ios.jslib",
+  "outputPath" : "@/buck-out/gen/js/fruit-salad#ios,transform-profile-default.jslib",
   "dependencyLibraryFilePaths" : [
-    "@/buck-out/gen/js/extras#ios.jslib",
-    "@/buck-out/gen/js/fruit#ios.jslib"
+    "@/buck-out/gen/js/extras#ios,transform-profile-default.jslib",
+    "@/buck-out/gen/js/fruit#ios,transform-profile-default.jslib"
   ],
-  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/fruit-salad#_files_,ios.jslib",
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/fruit-salad#_files_,ios,transform-profile-default.jslib",
   "flavors" : [
     "ios"
   ]
@@ -149,9 +154,9 @@ var pear;
   "release" : false,
   "rootPath" : "@",
   "platform" : "ios",
-  "outputPath" : "@/buck-out/gen/js/extras#ios.jslib",
+  "outputPath" : "@/buck-out/gen/js/extras#ios,transform-profile-default.jslib",
   "dependencyLibraryFilePaths" : [ ],
-  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/extras#_files_,ios.jslib",
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/extras#_files_,ios,transform-profile-default.jslib",
   "flavors" : [
     "ios"
   ]
@@ -161,10 +166,10 @@ var pear;
   "release" : false,
   "rootPath" : "@",
   "platform" : "ios",
-  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,ios.jslib",
+  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,ios,transform-profile-default.jslib",
   "sourceFilePaths" : [
-    "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>.jsfile",
-    "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>.jsfile"
+    "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile"
   ],
   "flavors" : [
     "ios"
@@ -172,9 +177,10 @@ var pear;
 }
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/choclate-chips.js",
   "sourceJsFileName" : "js/extras/choclate-chips.js",
+  "transformProfile" : "default",
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -184,9 +190,10 @@ var pear;
 var choclateChips;
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/yoghurt.js",
   "sourceJsFileName" : "js/extras/yoghurt.js",
+  "transformProfile" : "default",
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -199,9 +206,9 @@ var yoghurt;
   "release" : false,
   "rootPath" : "@",
   "platform" : "ios",
-  "outputPath" : "@/buck-out/gen/js/fruit#ios.jslib",
+  "outputPath" : "@/buck-out/gen/js/fruit#ios,transform-profile-default.jslib",
   "dependencyLibraryFilePaths" : [ ],
-  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/fruit#_files_,ios.jslib",
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/fruit#_files_,ios,transform-profile-default.jslib",
   "flavors" : [
     "ios"
   ]
@@ -211,11 +218,11 @@ var yoghurt;
   "release" : false,
   "rootPath" : "@",
   "platform" : "ios",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,ios.jslib",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,ios,transform-profile-default.jslib",
   "sourceFilePaths" : [
-    "@/buck-out/gen/js/fruit#file-apple.js-<HASH>.jsfile",
-    "@/buck-out/gen/js/fruit#file-banana.js-<HASH>.jsfile",
-    "@/buck-out/gen/js/fruit#file-pear.js-<HASH>.jsfile"
+    "@/buck-out/gen/js/fruit#file-apple.js-<HASH>,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/fruit#file-banana.js-<HASH>,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/fruit#file-pear.js-<HASH>,transform-profile-default.jsfile"
   ],
   "flavors" : [
     "ios"
@@ -223,25 +230,28 @@ var yoghurt;
 }
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/apple.js",
   "sourceJsFileName" : "js/apple.js",
+  "transformProfile" : "default",
   "flavors" : [ ]
 }
 var apple;
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/banana.js",
   "sourceJsFileName" : "js/banana.js",
+  "transformProfile" : "default",
   "flavors" : [ ]
 }
 var banana;
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/pear.js",
   "sourceJsFileName" : "js/pear.js",
+  "transformProfile" : "default",
   "flavors" : [ ]
 }
 var pear;
@@ -250,9 +260,9 @@ var pear;
   "release" : false,
   "rootPath" : "@",
   "platform" : "ios",
-  "outputFilePath" : "@/buck-out/gen/js/fruit-salad#_files_,ios.jslib",
+  "outputFilePath" : "@/buck-out/gen/js/fruit-salad#_files_,ios,transform-profile-default.jslib",
   "sourceFilePaths" : [
-    "@/buck-out/gen/js/fruit-salad#file-fruit-salad.js-<HASH>.jsfile"
+    "@/buck-out/gen/js/fruit-salad#file-fruit-salad.js-<HASH>,transform-profile-default.jsfile"
   ],
   "flavors" : [
     "ios"
@@ -260,9 +270,10 @@ var pear;
 }
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit-salad#file-fruit-salad.js-<HASH>.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit-salad#file-fruit-salad.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/fruit-salad.js",
   "sourceJsFileName" : "js/fruit-salad.js",
+  "transformProfile" : "default",
   "flavors" : [ ]
 }
 var fruitSalad;

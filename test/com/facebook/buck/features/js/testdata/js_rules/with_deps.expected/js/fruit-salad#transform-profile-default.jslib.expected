@@ -1,48 +1,34 @@
 {
-  "outputFilePath" : "@/buck-out/gen/js/fruit-with-extras#android,dependencies.deps",
-  "command" : "dependencies",
-  "entryPoints" : [
-    "yoghurt",
-    "banana",
-    "apple"
-  ],
-  "libraries" : [
-    "@/buck-out/gen/js/extras#android,transform-profile-default.jslib",
-    "@/buck-out/gen/js/fruit#android,transform-profile-default.jslib"
-  ],
-  "platform" : "android",
+  "command" : "library-dependencies",
   "release" : false,
   "rootPath" : "@",
-  "flavors" : [
-    "android",
-    "dependencies"
-  ]
+  "outputPath" : "@/buck-out/gen/js/fruit-salad#transform-profile-default.jslib",
+  "dependencyLibraryFilePaths" : [
+    "@/buck-out/gen/js/extras#transform-profile-default.jslib",
+    "@/buck-out/gen/js/fruit#transform-profile-default.jslib"
+  ],
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/fruit-salad#_files_,transform-profile-default.jslib",
+  "flavors" : [ ]
 }
 {
   "command" : "library-dependencies",
   "release" : false,
   "rootPath" : "@",
-  "platform" : "android",
-  "outputPath" : "@/buck-out/gen/js/extras#android,transform-profile-default.jslib",
+  "outputPath" : "@/buck-out/gen/js/extras#transform-profile-default.jslib",
   "dependencyLibraryFilePaths" : [ ],
-  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/extras#_files_,android,transform-profile-default.jslib",
-  "flavors" : [
-    "android"
-  ]
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/extras#_files_,transform-profile-default.jslib",
+  "flavors" : [ ]
 }
 {
   "command" : "library-files",
   "release" : false,
   "rootPath" : "@",
-  "platform" : "android",
-  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,android,transform-profile-default.jslib",
+  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,transform-profile-default.jslib",
   "sourceFilePaths" : [
     "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
     "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile"
   ],
-  "flavors" : [
-    "android"
-  ]
+  "flavors" : [ ]
 }
 {
   "command" : "transform",
@@ -74,28 +60,22 @@ var yoghurt;
   "command" : "library-dependencies",
   "release" : false,
   "rootPath" : "@",
-  "platform" : "android",
-  "outputPath" : "@/buck-out/gen/js/fruit#android,transform-profile-default.jslib",
+  "outputPath" : "@/buck-out/gen/js/fruit#transform-profile-default.jslib",
   "dependencyLibraryFilePaths" : [ ],
-  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/fruit#_files_,android,transform-profile-default.jslib",
-  "flavors" : [
-    "android"
-  ]
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/fruit#_files_,transform-profile-default.jslib",
+  "flavors" : [ ]
 }
 {
   "command" : "library-files",
   "release" : false,
   "rootPath" : "@",
-  "platform" : "android",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,transform-profile-default.jslib",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,transform-profile-default.jslib",
   "sourceFilePaths" : [
     "@/buck-out/gen/js/fruit#file-apple.js-<HASH>,transform-profile-default.jsfile",
     "@/buck-out/gen/js/fruit#file-banana.js-<HASH>,transform-profile-default.jsfile",
     "@/buck-out/gen/js/fruit#file-pear.js-<HASH>,transform-profile-default.jsfile"
   ],
-  "flavors" : [
-    "android"
-  ]
+  "flavors" : [ ]
 }
 {
   "command" : "transform",
@@ -124,3 +104,22 @@ var banana;
   "flavors" : [ ]
 }
 var pear;
+{
+  "command" : "library-files",
+  "release" : false,
+  "rootPath" : "@",
+  "outputFilePath" : "@/buck-out/gen/js/fruit-salad#_files_,transform-profile-default.jslib",
+  "sourceFilePaths" : [
+    "@/buck-out/gen/js/fruit-salad#file-fruit-salad.js-<HASH>,transform-profile-default.jsfile"
+  ],
+  "flavors" : [ ]
+}
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/fruit-salad#file-fruit-salad.js-<HASH>,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/js/fruit-salad.js",
+  "sourceJsFileName" : "js/fruit-salad.js",
+  "transformProfile" : "default",
+  "flavors" : [ ]
+}
+var fruitSalad;

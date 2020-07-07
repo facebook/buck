@@ -73,7 +73,9 @@ public class JsLibraryDescriptionTest {
   @Before
   public void setUp() {
     scenarioBuilder = JsTestScenario.builder();
-    target = BuildTargetFactory.newInstance(String.format("//%s:target", targetDirectory));
+    target =
+        BuildTargetFactory.newInstance(String.format("//%s:target", targetDirectory))
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
   }
 
   @Test
@@ -90,9 +92,12 @@ public class JsLibraryDescriptionTest {
   @Test
   public void ruleDependsOnDeps() {
     BuildTarget[] depTargets = {
-      BuildTargetFactory.newInstance("//dep:a"),
-      BuildTargetFactory.newInstance("//dep:b"),
-      BuildTargetFactory.newInstance("//dep:c"),
+      BuildTargetFactory.newInstance("//dep:a")
+          .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT),
+      BuildTargetFactory.newInstance("//dep:b")
+          .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT),
+      BuildTargetFactory.newInstance("//dep:c")
+          .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT),
     };
 
     for (BuildTarget depTarget : depTargets) {
@@ -109,9 +114,12 @@ public class JsLibraryDescriptionTest {
   @Test
   public void rulePropagatesFlavorsToDeps() {
     BuildTarget[] depTargets = {
-      BuildTargetFactory.newInstance("//dep:a"),
-      BuildTargetFactory.newInstance("//dep:b"),
-      BuildTargetFactory.newInstance("//dep:c"),
+      BuildTargetFactory.newInstance("//dep:a")
+          .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT),
+      BuildTargetFactory.newInstance("//dep:b")
+          .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT),
+      BuildTargetFactory.newInstance("//dep:c")
+          .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT),
     };
 
     for (BuildTarget depTarget : depTargets) {
@@ -308,7 +316,8 @@ public class JsLibraryDescriptionTest {
   @Test
   public void propagatesReleaseAndPlatformFlavors() {
     ImmutableSortedSet<UserFlavor> flavors =
-        ImmutableSortedSet.of(JsFlavors.IOS, JsFlavors.RELEASE);
+        ImmutableSortedSet.of(
+            JsFlavors.IOS, JsFlavors.RELEASE, JsFlavors.TRANSFORM_PROFILE_DEFAULT);
     target = target.withFlavors(flavors);
     JsTestScenario scenario =
         scenarioBuilder
@@ -351,11 +360,21 @@ public class JsLibraryDescriptionTest {
 
   @Test
   public void supportsDepsQueryAllPlatforms() {
-    BuildTarget a = BuildTargetFactory.newInstance("//query-deps:a");
-    BuildTarget b = BuildTargetFactory.newInstance("//query-deps:b");
-    BuildTarget c = BuildTargetFactory.newInstance("//query-deps:c");
-    BuildTarget l = BuildTargetFactory.newInstance("//query-deps:l");
-    BuildTarget x = BuildTargetFactory.newInstance("//query-deps:x");
+    BuildTarget a =
+        BuildTargetFactory.newInstance("//query-deps:a")
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
+    BuildTarget b =
+        BuildTargetFactory.newInstance("//query-deps:b")
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
+    BuildTarget c =
+        BuildTargetFactory.newInstance("//query-deps:c")
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
+    BuildTarget l =
+        BuildTargetFactory.newInstance("//query-deps:l")
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
+    BuildTarget x =
+        BuildTargetFactory.newInstance("//query-deps:x")
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
 
     JsTestScenario scenario =
         scenarioBuilder
@@ -398,11 +417,21 @@ public class JsLibraryDescriptionTest {
     assumeFalse(
         "Only for Apple OS. Invokes the AppleLibraryDescription",
         Platform.detect() == Platform.WINDOWS);
-    BuildTarget a = BuildTargetFactory.newInstance("//query-deps:a");
-    BuildTarget b = BuildTargetFactory.newInstance("//query-deps:b");
-    BuildTarget c = BuildTargetFactory.newInstance("//query-deps:c");
-    BuildTarget l = BuildTargetFactory.newInstance("//query-deps:l");
-    BuildTarget x = BuildTargetFactory.newInstance("//query-deps:x");
+    BuildTarget a =
+        BuildTargetFactory.newInstance("//query-deps:a")
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
+    BuildTarget b =
+        BuildTargetFactory.newInstance("//query-deps:b")
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
+    BuildTarget c =
+        BuildTargetFactory.newInstance("//query-deps:c")
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
+    BuildTarget l =
+        BuildTargetFactory.newInstance("//query-deps:l")
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
+    BuildTarget x =
+        BuildTargetFactory.newInstance("//query-deps:x")
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
 
     JsTestScenario scenario =
         scenarioBuilder
@@ -442,8 +471,12 @@ public class JsLibraryDescriptionTest {
 
   @Test
   public void supportsDepsAndDepsQuery() {
-    BuildTarget a = BuildTargetFactory.newInstance("//query:dep");
-    BuildTarget b = BuildTargetFactory.newInstance("//direct:dep");
+    BuildTarget a =
+        BuildTargetFactory.newInstance("//query:dep")
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
+    BuildTarget b =
+        BuildTargetFactory.newInstance("//direct:dep")
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
 
     JsTestScenario scenario =
         scenarioBuilder

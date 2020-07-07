@@ -1,29 +1,4 @@
 {
-  "assetsDirPath" : "@/buck-out/gen/js/bundle_with_extra_json/res",
-  "bundlePath" : "@/buck-out/gen/js/bundle_with_extra_json/js/bundle_with_extra_json.js",
-  "command" : "bundle",
-  "entryPoints" : [
-    "pear"
-  ],
-  "libraries" : [
-    "@/buck-out/gen/js/fruit#transform-profile-default.jslib"
-  ],
-  "release" : false,
-  "rootPath" : "@",
-  "sourceMapPath" : "@/buck-out/gen/js/bundle_with_extra_json/map/bundle_with_extra_json.js.map",
-  "miscDirPath" : "@/buck-out/gen/js/bundle_with_extra_json/misc",
-  "extraData" : {
-    "a" : [
-      1,
-      2,
-      3
-    ],
-    "b" : true,
-    "s" : "hello @/js/empty!"
-  },
-  "flavors" : [ ]
-}
-{
   "command" : "library-dependencies",
   "release" : false,
   "rootPath" : "@",

@@ -1,0 +1,38 @@
+{
+  "command" : "library-dependencies",
+  "release" : false,
+  "rootPath" : "@",
+  "outputPath" : "@/buck-out/gen/external/replace-file-prefix#transform-profile-default.jslib",
+  "dependencyLibraryFilePaths" : [ ],
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/external/replace-file-prefix#_files_,transform-profile-default.jslib",
+  "flavors" : [ ]
+}
+{
+  "command" : "library-files",
+  "release" : false,
+  "rootPath" : "@",
+  "outputFilePath" : "@/buck-out/gen/external/replace-file-prefix#_files_,transform-profile-default.jslib",
+  "sourceFilePaths" : [
+    "@/buck-out/gen/external/replace-file-prefix#file-mango.js-<HASH>,transform-profile-default.jsfile",
+    "@/buck-out/gen/external/replace-file-prefix#file-papaya.js-<HASH>,transform-profile-default.jsfile"
+  ],
+  "flavors" : [ ]
+}
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/external/replace-file-prefix#file-mango.js-<HASH>,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/external/tropical-fruit/mango.js",
+  "sourceJsFileName" : "js/node_modules/tropical-fruit/mango.js",
+  "transformProfile" : "default",
+  "flavors" : [ ]
+}
+var mango;
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/external/replace-file-prefix#file-papaya.js-<HASH>,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/external/tropical-fruit/papaya.js",
+  "sourceJsFileName" : "js/node_modules/tropical-fruit/papaya.js",
+  "transformProfile" : "default",
+  "flavors" : [ ]
+}
+var papaya;

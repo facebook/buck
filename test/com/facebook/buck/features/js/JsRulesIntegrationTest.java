@@ -103,7 +103,8 @@ public class JsRulesIntegrationTest {
     return Arrays.stream(
             content
                 .replaceAll(
-                    "\\.(js|json)-[0-9a-f]{10}(,ios)?(,release)?\\.jsfile", ".$1-<HASH>$2$3.jsfile")
+                    "\\.(js|json)-[0-9a-f]{10}((?:,ios|,release|,transform-profile-default)*)\\.jsfile",
+                    ".$1-<HASH>$2.jsfile")
                 .split("\n"))
         .map(
             line -> {
@@ -124,7 +125,7 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void testSimpleLibraryBuild() throws IOException {
-    workspace.runBuckBuild("//js:fruit").assertSuccess();
+    workspace.runBuckBuild("//js:fruit#transform-profile-default").assertSuccess();
 
     workspace.verify(
         Paths.get("simple_library_build.expected"),
@@ -198,7 +199,7 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void testLibraryWithExtraJson() throws IOException {
-    workspace.runBuckBuild("//js:extras").assertSuccess();
+    workspace.runBuckBuild("//js:extras#transform-profile-default").assertSuccess();
 
     workspace.verify(
         Paths.get("with_extra_json.expected"),
@@ -218,7 +219,7 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void testOptimizationBuild() throws IOException {
-    workspace.runBuckBuild("//js:fruit#release,android").assertSuccess();
+    workspace.runBuckBuild("//js:fruit#release,android,transform-profile-default").assertSuccess();
 
     workspace.verify(
         Paths.get("simple_release_build.expected"),
@@ -228,7 +229,7 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void testBuildWithDeps() throws IOException {
-    workspace.runBuckBuild("//js:fruit-salad").assertSuccess();
+    workspace.runBuckBuild("//js:fruit-salad#transform-profile-default").assertSuccess();
 
     workspace.verify(
         Paths.get("with_deps.expected"), genPath, JsRulesIntegrationTest::normalizeObservedContent);
@@ -236,7 +237,9 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void testReleaseBuildWithDeps() throws IOException {
-    workspace.runBuckBuild("//js:fruit-salad#release,ios").assertSuccess();
+    workspace
+        .runBuckBuild("//js:fruit-salad#release,ios,transform-profile-default")
+        .assertSuccess();
 
     workspace.verify(
         Paths.get("release_flavor_with_deps.expected"),
@@ -246,7 +249,11 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void testFlavoredAndUnflavoredBuild() throws IOException {
-    workspace.runBuckBuild("//js:fruit#release,android", "//js:fruit").assertSuccess();
+    workspace
+        .runBuckBuild(
+            "//js:fruit#release,android,transform-profile-default",
+            "//js:fruit#transform-profile-default")
+        .assertSuccess();
 
     workspace.verify(
         Paths.get("same_target_with_and_without_flavors.expected"),
@@ -256,7 +263,7 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void testBuildTargetOutputs() throws IOException {
-    workspace.runBuckBuild("//js:build-target-output").assertSuccess();
+    workspace.runBuckBuild("//js:build-target-output#transform-profile-default").assertSuccess();
 
     workspace.verify(
         Paths.get("with_build_target.expected"),
@@ -267,7 +274,9 @@ public class JsRulesIntegrationTest {
   @Test
   public void testReplacePrefixes() throws IOException {
     workspace
-        .runBuckBuild("//external:replace-file-prefix", "//js:replace-build-target-prefix")
+        .runBuckBuild(
+            "//external:replace-file-prefix#transform-profile-default",
+            "//js:replace-build-target-prefix#transform-profile-default")
         .assertSuccess();
 
     workspace.verify(
@@ -278,7 +287,7 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void testSubPathsOfBuildTargets() throws IOException {
-    workspace.runBuckBuild("//js:node_modules").assertSuccess();
+    workspace.runBuckBuild("//js:node_modules#transform-profile-default").assertSuccess();
 
     workspace.verify(
         Paths.get("subpaths.expected"), genPath, JsRulesIntegrationTest::normalizeObservedContent);
@@ -286,7 +295,7 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void testLibraryWithDepsQuery() throws IOException {
-    workspace.runBuckBuild("//js:lib-with-deps-query").assertSuccess();
+    workspace.runBuckBuild("//js:lib-with-deps-query#transform-profile-default").assertSuccess();
 
     workspace.verify(
         Paths.get("with_deps_query.expected"),

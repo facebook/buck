@@ -61,15 +61,22 @@ public class JsBundleDescriptionTest {
   public static class TestsWithSetup {
 
     private static final BuildTarget directDependencyTarget =
-        BuildTargetFactory.newInstance("//libs:direct");
-    private static final BuildTarget level2 = BuildTargetFactory.newInstance("//libs:level2");
-    private static final BuildTarget level1_1 = BuildTargetFactory.newInstance("//libs:level1.1");
-    private static final BuildTarget level1_2 = BuildTargetFactory.newInstance("//libs:level1.2");
+        BuildTargetFactory.newInstance("//libs:direct")
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
+    private static final BuildTarget level2 =
+        BuildTargetFactory.newInstance("//libs:level2")
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
+    private static final BuildTarget level1_1 =
+        BuildTargetFactory.newInstance("//libs:level1.1")
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
+    private static final BuildTarget level1_2 =
+        BuildTargetFactory.newInstance("//libs:level1.2")
+            .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
 
     private JsTestScenario.Builder scenarioBuilder;
     private JsTestScenario scenario;
 
-    static Collection<BuildTarget> allLibaryTargets(Flavor... flavors) {
+    static Collection<BuildTarget> allLibraryTargets(Flavor... flavors) {
       return Stream.of(level2, level1_1, level1_2, directDependencyTarget)
           .map(t -> t.withAppendedFlavors(flavors))
           .collect(Collectors.toList());
@@ -90,14 +97,14 @@ public class JsBundleDescriptionTest {
     @Test
     public void testTransitiveLibraryDependencies() {
       BuildRule jsBundle = scenario.graphBuilder.requireRule(bundleTarget);
-      assertThat(allLibaryTargets(), everyItem(in(dependencyTargets(jsBundle))));
+      assertThat(allLibraryTargets(), everyItem(in(dependencyTargets(jsBundle))));
     }
 
     @Test
     public void testTransitiveLibraryDependenciesWithFlavors() {
       Flavor[] flavors = {JsFlavors.IOS, JsFlavors.RELEASE};
       BuildRule jsBundle = scenario.graphBuilder.requireRule(bundleTarget.withFlavors(flavors));
-      assertThat(allLibaryTargets(flavors), everyItem(in(dependencyTargets(jsBundle))));
+      assertThat(allLibraryTargets(flavors), everyItem(in(dependencyTargets(jsBundle))));
     }
 
     @Test
@@ -105,15 +112,15 @@ public class JsBundleDescriptionTest {
       BuildRule jsBundle =
           scenario.graphBuilder.requireRule(
               bundleTarget.withFlavors(JsFlavors.IOS, JsFlavors.RELEASE));
-      assertThat(allLibaryTargets(), everyItem(not(in(dependencyTargets(jsBundle)))));
+      assertThat(allLibraryTargets(), everyItem(not(in(dependencyTargets(jsBundle)))));
     }
 
     @Test
     public void testFlavoredBundleWithoutReleaseFlavorDependOnFlavoredLibs() {
       Flavor[] flavors = {JsFlavors.IOS, JsFlavors.RAM_BUNDLE_INDEXED};
       BuildRule jsBundle = scenario.graphBuilder.requireRule((bundleTarget.withFlavors(flavors)));
-      assertThat(allLibaryTargets(JsFlavors.IOS), everyItem(in(dependencyTargets(jsBundle))));
-      assertThat(allLibaryTargets(flavors), everyItem(not(in(dependencyTargets(jsBundle)))));
+      assertThat(allLibraryTargets(JsFlavors.IOS), everyItem(in(dependencyTargets(jsBundle))));
+      assertThat(allLibraryTargets(flavors), everyItem(not(in(dependencyTargets(jsBundle)))));
     }
 
     @Test
@@ -123,8 +130,8 @@ public class JsBundleDescriptionTest {
       BuildRule jsBundle =
           scenario.graphBuilder.requireRule((bundleTarget.withFlavors(bundleFlavors)));
       assertThat(
-          allLibaryTargets(flavorsToBePropagated), everyItem(in(dependencyTargets(jsBundle))));
-      assertThat(allLibaryTargets(bundleFlavors), everyItem(not(in(dependencyTargets(jsBundle)))));
+          allLibraryTargets(flavorsToBePropagated), everyItem(in(dependencyTargets(jsBundle))));
+      assertThat(allLibraryTargets(bundleFlavors), everyItem(not(in(dependencyTargets(jsBundle)))));
     }
 
     @Test
@@ -134,15 +141,15 @@ public class JsBundleDescriptionTest {
       BuildRule jsBundle =
           scenario.graphBuilder.requireRule((bundleTarget.withFlavors(bundleFlavors)));
       assertThat(
-          allLibaryTargets(flavorsToBePropagated), everyItem(in(dependencyTargets(jsBundle))));
-      assertThat(allLibaryTargets(bundleFlavors), everyItem(not(in(dependencyTargets(jsBundle)))));
+          allLibraryTargets(flavorsToBePropagated), everyItem(in(dependencyTargets(jsBundle))));
+      assertThat(allLibraryTargets(bundleFlavors), everyItem(not(in(dependencyTargets(jsBundle)))));
     }
 
     @Test
     public void testTransitiveLibraryDependenciesWithFlavorsForAndroid() {
       Flavor[] flavors = {JsFlavors.ANDROID, JsFlavors.RELEASE};
       BuildRule jsBundle = scenario.graphBuilder.requireRule(bundleTarget.withFlavors(flavors));
-      assertThat(allLibaryTargets(flavors), everyItem(in(dependencyTargets(jsBundle))));
+      assertThat(allLibraryTargets(flavors), everyItem(in(dependencyTargets(jsBundle))));
     }
 
     @Test
@@ -169,16 +176,24 @@ public class JsBundleDescriptionTest {
               .build();
 
       BuildRule jsBundle = testScenario.graphBuilder.requireRule(bundleTarget);
-      assertThat(allLibaryTargets(), everyItem(in(dependencyTargets(jsBundle))));
+      assertThat(allLibraryTargets(), everyItem(in(dependencyTargets(jsBundle))));
     }
 
     @Test
     public void testTransitiveDependenciesAcrossSubGraph() {
       assumeTrue(Platform.detect() != Platform.WINDOWS);
-      BuildTarget firstLevelA = BuildTargetFactory.newInstance("//:firstA");
-      BuildTarget firstLevelB = BuildTargetFactory.newInstance("//:firstB");
-      BuildTarget secondLevelA = BuildTargetFactory.newInstance("//:secondA");
-      BuildTarget secondLevelB = BuildTargetFactory.newInstance("//:secondB");
+      BuildTarget firstLevelA =
+          BuildTargetFactory.newInstance("//:firstA")
+              .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
+      BuildTarget firstLevelB =
+          BuildTargetFactory.newInstance("//:firstB")
+              .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
+      BuildTarget secondLevelA =
+          BuildTargetFactory.newInstance("//:secondA")
+              .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
+      BuildTarget secondLevelB =
+          BuildTargetFactory.newInstance("//:secondB")
+              .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);
       BuildTarget bundleTarget = BuildTargetFactory.newInstance("//the:bundle");
 
       JsTestScenario.Builder builder = JsTestScenario.builder(scenario);

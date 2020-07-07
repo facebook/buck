@@ -425,13 +425,15 @@ public class JsBundleDescription
                   flavor ->
                       JsLibraryDescription.FLAVOR_DOMAINS.stream()
                           .anyMatch(domain -> domain.contains(flavor)));
-      if (!JsFlavors.TRANSFORM_PROFILE_DOMAIN.containsAnyOf(bundleFlavors)
-          && fallbackTransformProfile.isPresent()
-          && !fallbackTransformProfile.get().equals("default")) {
+      if (!JsFlavors.TRANSFORM_PROFILE_DOMAIN.containsAnyOf(bundleFlavors)) {
+        String fallbackFlavorName =
+            fallbackTransformProfile
+                .map(p -> p.equals("default") ? "transform-profile-default" : p)
+                .orElse("transform-profile-default");
         Flavor fallbackTransformProfileFlavor =
             Iterables.getOnlyElement(
                 JsFlavors.TRANSFORM_PROFILE_DOMAIN.getFlavors().asList().stream()
-                        .filter(flavor -> flavor.getName().equals(fallbackTransformProfile.get()))
+                        .filter(flavor -> flavor.getName().equals(fallbackFlavorName))
                     ::iterator);
         extraFlavorsStream =
             Stream.concat(extraFlavorsStream, Stream.of(fallbackTransformProfileFlavor));

@@ -1,0 +1,46 @@
+{
+  "command" : "library-dependencies",
+  "release" : false,
+  "rootPath" : "@",
+  "outputPath" : "@/buck-out/gen/js/extras#transform-profile-default.jslib",
+  "dependencyLibraryFilePaths" : [ ],
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/extras#_files_,transform-profile-default.jslib",
+  "flavors" : [ ]
+}
+{
+  "command" : "library-files",
+  "release" : false,
+  "rootPath" : "@",
+  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,transform-profile-default.jslib",
+  "sourceFilePaths" : [
+    "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile"
+  ],
+  "flavors" : [ ]
+}
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/js/extras/choclate-chips.js",
+  "sourceJsFileName" : "js/extras/choclate-chips.js",
+  "transformProfile" : "default",
+  "extraData" : {
+    "arbitrary" : "extra",
+    "json" : 1
+  },
+  "flavors" : [ ]
+}
+var choclateChips;
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/js/extras/yoghurt.js",
+  "sourceJsFileName" : "js/extras/yoghurt.js",
+  "transformProfile" : "default",
+  "extraData" : {
+    "arbitrary" : "extra",
+    "json" : 1
+  },
+  "flavors" : [ ]
+}
+var yoghurt;

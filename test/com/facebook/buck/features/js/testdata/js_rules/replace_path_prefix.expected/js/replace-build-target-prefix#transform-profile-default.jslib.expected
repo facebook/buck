@@ -1,0 +1,28 @@
+{
+  "command" : "library-dependencies",
+  "release" : false,
+  "rootPath" : "@",
+  "outputPath" : "@/buck-out/gen/js/replace-build-target-prefix#transform-profile-default.jslib",
+  "dependencyLibraryFilePaths" : [ ],
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/replace-build-target-prefix#_files_,transform-profile-default.jslib",
+  "flavors" : [ ]
+}
+{
+  "command" : "library-files",
+  "release" : false,
+  "rootPath" : "@",
+  "outputFilePath" : "@/buck-out/gen/js/replace-build-target-prefix#_files_,transform-profile-default.jslib",
+  "sourceFilePaths" : [
+    "@/buck-out/gen/js/replace-build-target-prefix#file-exported.js-<HASH>,transform-profile-default.jsfile"
+  ],
+  "flavors" : [ ]
+}
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/replace-build-target-prefix#file-exported.js-<HASH>,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/buck-out/gen/external/exported.js/exported.js",
+  "sourceJsFileName" : "js/node_modules/exported.js",
+  "transformProfile" : "default",
+  "flavors" : [ ]
+}
+var exported;
