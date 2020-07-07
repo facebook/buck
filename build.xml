@@ -169,7 +169,7 @@
     <include name="eclipse/org.eclipse.osgi_3.13.0.v20180409-1500.jar"/>
     <include name="eden/eden.jar" />
     <include name="fbthrift/java-thrift-dependencies.jar" />
-    <include name="errorprone/error_prone_annotations-2.0.19.jar" />
+    <include name="errorprone/error_prone_annotations-2.2.0.jar" />
     <include name="fastutil/fastutil-7.2.0.jar" />
     <include name="guava/guava-20.0.jar" />
     <include name="guava/guava-25.1-jre.jar" />

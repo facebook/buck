@@ -164,5 +164,6 @@
     <orderEntry type="library" name="Bundled Protobuf Distribution" level="application" />
     <orderEntry type="library" name="dex-method-counts" level="project" />
     <orderEntry type="library" name="scribe-thrift" level="project" />
+    <orderEntry type="library" name="error_prone" level="project" />
   </component>
 </module>
