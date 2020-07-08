@@ -17,8 +17,6 @@
 package com.facebook.buck.jvm.java.testutil.compiler;
 
 import org.junit.runners.Parameterized;
-import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.TestClass;
 
 /**
  * Parameterized test runner that enables tests to work with the Compiler Tree API implementation
@@ -28,15 +26,6 @@ import org.junit.runners.model.TestClass;
  */
 public class CompilerTreeApiParameterized extends Parameterized {
   public CompilerTreeApiParameterized(Class<?> klass) throws Throwable {
-    super(klass);
-  }
-
-  @Override
-  protected TestClass createTestClass(Class<?> testClass) {
-    try {
-      return new TestClass(CompilerTreeApiTestRunner.reloadFromCompilerClassLoader(testClass));
-    } catch (InitializationError initializationError) {
-      throw new AssertionError(initializationError);
-    }
+    super(CompilerTreeApiTestRunner.reloadFromCompilerClassLoader(klass));
   }
 }
