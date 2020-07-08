@@ -100,8 +100,8 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
           new SynchronousQueue<>(),
           new MostExecutors.NamedThreadFactory("DownwardApi"));
 
-  private static final long SHUTDOWN_TIMEOUT = 100;
-  private static final TimeUnit SHUTDOWN_TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
+  private static final long SHUTDOWN_TIMEOUT = 1;
+  private static final TimeUnit SHUTDOWN_TIMEOUT_UNIT = TimeUnit.SECONDS;
 
   private final String isAnsiTerminal;
   private final String verbosity;
