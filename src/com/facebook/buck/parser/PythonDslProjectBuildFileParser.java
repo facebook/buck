@@ -607,10 +607,15 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     if ("SelectorValue".equals(type)) {
       Map<String, Object> conditions =
           (Map<String, Object>) Objects.requireNonNull(attributeValue.get("conditions"));
-      Map<String, Object> convertedConditions =
-          Maps.transformValues(conditions, v -> v == null ? Starlark.NONE : v);
+      ImmutableMap.Builder<String, Object> convertedConditions =
+          ImmutableMap.builderWithExpectedSize(conditions.size());
+      for (Map.Entry<String, Object> entry : conditions.entrySet()) {
+        convertedConditions.put(
+            entry.getKey(), entry.getValue() != null ? entry.getValue() : Starlark.NONE);
+      }
       return SelectorValue.of(
-          convertedConditions, Objects.toString(attributeValue.get("no_match_message"), ""));
+          convertedConditions.build(),
+          Objects.toString(attributeValue.get("no_match_message"), ""));
     } else {
       Preconditions.checkState("SelectorList".equals(type));
       List<Object> items = (List<Object>) Objects.requireNonNull(attributeValue.get("items"));

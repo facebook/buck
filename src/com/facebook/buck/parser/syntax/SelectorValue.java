@@ -43,7 +43,13 @@ public abstract class SelectorValue {
         .collect(Collectors.joining(", ", "select({", "})"));
   }
 
-  public static SelectorValue of(Map<String, ? extends Object> dictionary, String noMatchError) {
+  public static SelectorValue of(
+      ImmutableMap<String, ? extends Object> dictionary, String noMatchError) {
+    return ImmutableSelectorValue.ofImpl(dictionary, noMatchError);
+  }
+
+  public static SelectorValue copyOf(
+      Map<String, ? extends Object> dictionary, String noMatchError) {
     return ImmutableSelectorValue.ofImpl(dictionary, noMatchError);
   }
 }

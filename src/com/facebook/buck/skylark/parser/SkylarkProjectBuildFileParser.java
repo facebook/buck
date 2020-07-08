@@ -203,10 +203,11 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
                   (com.google.devtools.build.lib.syntax.SelectorValue) obj;
               // recursively convert dictionary elements
               @SuppressWarnings("unchecked")
-              TwoArraysImmutableHashMap<String, Object> dictionary =
+              TwoArraysImmutableHashMap<String, Object> conditionsConverted =
                   (TwoArraysImmutableHashMap<String, Object>)
                       pojoizer.convertToPojo(skylarkSelectorValue.getDictionary());
-              return SelectorValue.of(dictionary, skylarkSelectorValue.getNoMatchError());
+              return SelectorValue.of(
+                  ImmutableMap.copyOf(conditionsConverted), skylarkSelectorValue.getNoMatchError());
             }));
     pojoizer.addPojoTransformer(
         BuildFileManifestPojoizer.PojoTransformer.of(

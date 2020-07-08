@@ -52,7 +52,8 @@ public class AuditRulesCommandTest {
     assertEquals(
         "select({\n  \"one\": \"two\",\n})",
         AuditRulesCommand.createDisplayString(
-            ListWithSelects.of(ImmutableList.of(SelectorValue.of(testDict, "")), String.class)));
+            ListWithSelects.of(
+                ImmutableList.of(SelectorValue.copyOf(testDict, "")), String.class)));
     Dict<String, String> testDict2 = Dict.of(Mutability.create(), "three", "four");
     Dict<String, String> twoEntryDict = Dict.of(Mutability.create());
     twoEntryDict.putAll(testDict, Location.BUILTIN);
@@ -61,7 +62,7 @@ public class AuditRulesCommandTest {
         "select({\n  \"one\": \"two\",\n  \"three\": \"four\",\n})",
         AuditRulesCommand.createDisplayString(
             ListWithSelects.of(
-                ImmutableList.of(SelectorValue.of(twoEntryDict, "")), String.class)));
+                ImmutableList.of(SelectorValue.copyOf(twoEntryDict, "")), String.class)));
     Dict<String, ImmutableList<String>> testDict3 = Dict.of(null, "foo", testList);
     Dict<String, ImmutableList<String>> result = Dict.of(Mutability.create());
     result.putAll(testDict3, Location.BUILTIN);
@@ -71,14 +72,15 @@ public class AuditRulesCommandTest {
     assertEquals(
         "select({\n  \"foo\": [\n    \"foo\",\n    \"bar\",\n    \"baz\",\n  ],\n  \"bar\": [\n    \"foo\",\n    \"bar\",\n    \"baz\",\n  ],\n})",
         AuditRulesCommand.createDisplayString(
-            ListWithSelects.of(ImmutableList.of(SelectorValue.of(testDict3, "")), String.class)));
+            ListWithSelects.of(
+                ImmutableList.of(SelectorValue.copyOf(testDict3, "")), String.class)));
     // ListWithSelects with SelectorValue and other types
     ImmutableList<String> shortList = ImmutableList.of("foo");
     assertEquals(
         "[\n  \"foo\",\n] + select({\n  \"foo\": [\n    \"foo\",\n    \"bar\",\n    \"baz\",\n  ],\n  \"bar\": [\n    \"foo\",\n    \"bar\",\n    \"baz\",\n  ],\n}) + [\n  \"foo\",\n  \"bar\",\n  \"baz\",\n]",
         AuditRulesCommand.createDisplayString(
             ListWithSelects.of(
-                ImmutableList.of(shortList, SelectorValue.of(testDict3, ""), testList),
+                ImmutableList.of(shortList, SelectorValue.copyOf(testDict3, ""), testList),
                 String.class)));
   }
 
