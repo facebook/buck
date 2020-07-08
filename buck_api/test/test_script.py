@@ -14,8 +14,10 @@
 # limitations under the License.
 
 import argparse
+import hashlib
 import os
 import shutil
+import sys
 from pathlib import Path
 
 
@@ -28,16 +30,19 @@ def run_build(remain_args):
     parser.add_argument("target")
     args = parser.parse_args(remain_args)
     target = Path(args.target.replace(":", "/").strip("/"))
-    output = Path("./buck-out/gen") / Path(str(abs(hash((args.target))))) / target
-    os.makedirs(output.parent, exist_ok=True)
+    # creating a path to a buck-out directory in a temp directory
+    conf_dir = hashlib.md5(args.target.encode()).hexdigest()
+    output = Path("buck-out", "gen") / Path(conf_dir) / target
+    os.makedirs(output.parent)
     with open(output, "w") as f1:
         f1.write("Hello, World!")
-
     buckd_sock = Path(".buckd/sock")
     os.makedirs(buckd_sock.parent, exist_ok=True)
     with open(buckd_sock, "w") as sock:
         sock.write("buck daemon exists")
     print(args)
+    with open(target, "r") as target_file:
+        sys.exit(int(target_file.read()))
 
 
 def run_clean(remain_args):

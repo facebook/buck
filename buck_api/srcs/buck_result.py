@@ -70,3 +70,16 @@ class BuildResult(BuckResult):
         self, process: subprocess.Process, stdout: bytes, stderr: bytes, encoding: str
     ) -> None:
         super().__init__(process, stdout, stderr, encoding)
+
+    def is_success(self) -> bool:
+        """ Returns if a Build Result is successful"""
+        return self.get_exit_code() == ExitCode.SUCCESS
+
+    def is_failure(self) -> bool:
+        """Returns if a Build Result fails for any reason"""
+        print(self.get_exit_code())
+        return self.get_exit_code() != ExitCode.SUCCESS
+
+    def is_build_failure(self) -> bool:
+        """Returns if a Build Result fails because of a build failue only"""
+        return self.get_exit_code() == ExitCode.BUILD_ERROR
