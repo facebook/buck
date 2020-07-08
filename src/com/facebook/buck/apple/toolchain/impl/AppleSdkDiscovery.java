@@ -227,14 +227,14 @@ public class AppleSdkDiscovery {
         }
       }
 
-      AppleSdk.Builder sdkBuilder = AppleSdk.builder();
+      ImmutableList.Builder<AppleToolchain> sdkToolchains = ImmutableList.builder();
 
       if (toolchains.isPresent()) {
         for (String toolchainId : toolchains.get()) {
           AppleToolchain toolchain = xcodeToolchains.get(toolchainId);
           if (toolchain != null) {
             foundToolchain = true;
-            sdkBuilder.addToolchains(toolchain);
+            sdkToolchains.add(toolchain);
           } else {
             LOG.debug("Specified toolchain %s not found for SDK path %s", toolchainId, sdkDir);
           }
@@ -242,12 +242,14 @@ public class AppleSdkDiscovery {
       }
       if (!foundToolchain && defaultToolchain.isPresent()) {
         foundToolchain = true;
-        sdkBuilder.addToolchains(defaultToolchain.get());
+        sdkToolchains.add(defaultToolchain.get());
       }
       if (!foundToolchain) {
         LOG.warn("No toolchains found and no default toolchain. Skipping SDK path %s.", sdkDir);
         return ImmutableList.of();
       } else {
+        AppleSdk.Builder sdkBuilder = AppleSdk.builder();
+        sdkBuilder.addAllToolchains(sdkToolchains.build());
         ApplePlatform applePlatform = ApplePlatform.of(platformName.toString());
         sdkBuilder.setName(name).setVersion(version).setApplePlatform(applePlatform);
         ImmutableList<String> architectures = validArchitecturesForPlatform(applePlatform, sdkDir);
