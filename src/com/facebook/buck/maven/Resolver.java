@@ -224,20 +224,18 @@ public class Resolver {
       ImmutableMap<String, Dependency> specifiedDependencies)
       throws IOException, ArtifactResolutionException {
     String projectName = getProjectName(artifactToDownload);
-    Path project = buckRepoRoot.resolve(buckThirdPartyRelativePath).resolve(projectName);
-    Files.createDirectories(project);
+    Path artifactPath = buckRepoRoot.resolve(buckThirdPartyRelativePath)
+                               .resolve(projectName)
+                               .resolve(artifactToDownload.getArtifactId());
+    Files.createDirectories(artifactPath);
 
-    Prebuilt library = resolveLib(artifactToDownload, project);
+    Prebuilt library = resolveLib(artifactToDownload, artifactPath);
 
     // Populate deps
     Iterable<Artifact> incoming = graph.getIncomingNodesFor(artifactToDownload);
     for (Artifact artifact : incoming) {
       String groupName = getProjectName(artifact);
-      if (projectName.equals(groupName)) {
-        library.addDep(String.format(":%s", artifact.getArtifactId()));
-      } else {
-        library.addDep(buckThirdPartyRelativePath, artifact);
-      }
+      library.addDep(buckThirdPartyRelativePath, artifact);
     }
 
     // Populate visibility
@@ -254,20 +252,20 @@ public class Resolver {
         library.addVisibility(rule);
       }
     }
-    return Maps.immutableEntry(project, library);
+    return Maps.immutableEntry(artifactPath, library);
   }
 
-  private Prebuilt resolveLib(Artifact artifact, Path project)
+  private Prebuilt resolveLib(Artifact artifact, Path artifactPath)
       throws ArtifactResolutionException, IOException {
     Artifact jar =
         new DefaultArtifact(
             artifact.getGroupId(), artifact.getArtifactId(), "jar", artifact.getVersion());
 
-    Path relativePath = resolveArtifact(jar, project);
+    Path relativePath = resolveArtifact(jar, artifactPath);
 
     Prebuilt library = new Prebuilt(jar.getArtifactId(), jar.toString(), relativePath);
 
-    downloadSources(jar, project, library);
+    downloadSources(jar, artifactPath, library);
     return library;
   }
 
@@ -280,7 +278,7 @@ public class Resolver {
     }
     ArtifactResult result =
         repoSys.resolveArtifact(session, new ArtifactRequest(artifact, repos, null));
-    return copy(result, project);
+    return copy(result, project, artifact.getArtifactId());
   }
 
   /**
@@ -369,18 +367,18 @@ public class Resolver {
     STGroupString groups = new STGroupString("prebuilt-template", template);
 
     for (Path key : buckFilesData.keySet()) {
-      Path buckFile = key.resolve("BUCK");
-      if (Files.exists(buckFile)) {
-        Files.delete(buckFile);
-      }
+        Path buckFile = key.resolve("BUCK");
+        if (Files.exists(buckFile)) {
+          Files.delete(buckFile);
+        }
 
-      ST st = Objects.requireNonNull(groups.getInstanceOf("/prebuilts"));
-      st.add("data", buckFilesData.get(key));
-      Files.write(buckFile, st.render().getBytes(UTF_8));
+        ST st = Objects.requireNonNull(groups.getInstanceOf("/prebuilts"));
+        st.add("data", buckFilesData.get(key));
+        Files.write(buckFile, st.render().getBytes(UTF_8));
     }
   }
 
-  private Path copy(ArtifactResult result, Path destDir) throws IOException {
+  private Path copy(ArtifactResult result, Path destDir, String pkg) throws IOException {
     Path source = result.getArtifact().getFile().toPath();
     Path sink = destDir.resolve(source.getFileName());
 
@@ -648,9 +646,10 @@ public class Resolver {
 
     private String formatDep(Path buckThirdPartyRelativePath, Artifact artifact) {
       return String.format(
-          "//%s/%s:%s",
+          "//%s/%s/%s:%s",
           PathFormatter.pathWithUnixSeparators(buckThirdPartyRelativePath),
           getProjectName(artifact),
+          artifact.getArtifactId(),
           artifact.getArtifactId());
     }
 
