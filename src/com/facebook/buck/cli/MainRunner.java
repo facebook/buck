@@ -1601,7 +1601,9 @@ public final class MainRunner {
       if (defaultProjectFilesystem.getDelegate() instanceof EdenProjectFilesystemDelegate) {
         EdenProjectFilesystemDelegate edenProjectFilesystemDelegate =
             ((EdenProjectFilesystemDelegate) defaultProjectFilesystem.getDelegate());
-        edenProjectFilesystemDelegate.initEdenWatchman(watchman, filesystem);
+        if (!edenProjectFilesystemDelegate.isEdenWatchmanInit()) {
+          edenProjectFilesystemDelegate.initEdenWatchman(watchman, filesystem);
+        }
       }
     }
   }

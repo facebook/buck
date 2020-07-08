@@ -248,6 +248,11 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
     this.edenWatchmanDelayInit.setWatchman(watchman, projectFilesystem);
   }
 
+  /** return if Eden Watchman has been initialized */
+  public boolean isEdenWatchmanInit() {
+    return this.edenWatchmanDelayInit.edenWatchman.isPresent();
+  }
+
   /**
    * EdenProjectFilesystemDelegate is created when a filesystem is created, and watchman needs the
    * created filesystem. So this class is used to pass the created filesystem to watchman to avoid
