@@ -285,8 +285,7 @@ public class RobolectricTestDescription
                 ImmutableSet.of(),
                 ImmutableSet.of(),
                 Optional.empty(),
-                downwardApiConfig.isEnabledForAndroid(),
-                /* resourceIdBlocklist= */ Optional.empty());
+                downwardApiConfig.isEnabledForAndroid());
 
         graphBuilder.addToIndex(aapt2Link);
         AaptOutputInfo aaptOutputInfo = aapt2Link.getAaptOutputInfo();
