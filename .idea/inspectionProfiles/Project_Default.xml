@@ -28,6 +28,9 @@
         </value>
       </option>
     </inspection_tool>
+    <inspection_tool class="RawUseOfParameterizedType" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoreObjectConstruction" value="false" />
+    </inspection_tool>
     <inspection_tool class="SuspiciousMethodCalls" enabled="true" level="ERROR" enabled_by_default="true">
       <option name="REPORT_CONVERTIBLE_METHOD_CALLS" value="true" />
     </inspection_tool>
