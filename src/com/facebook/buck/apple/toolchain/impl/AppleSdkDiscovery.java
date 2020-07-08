@@ -132,10 +132,9 @@ public class AppleSdkDiscovery {
                 continue;
               }
 
-              AppleSdk.Builder sdkBuilder = AppleSdk.builder();
-              if (buildSdkFromPath(
-                  sdkDir, sdkBuilder, xcodeToolchains, defaultToolchain, appleConfig)) {
-                AppleSdk sdk = sdkBuilder.build();
+              ImmutableList<AppleSdk> discoveredSdks =
+                  buildSdksFromPath(sdkDir, xcodeToolchains, defaultToolchain, appleConfig);
+              for (AppleSdk sdk : discoveredSdks) {
                 LOG.debug("Found SDK %s", sdk);
 
                 AppleSdkPaths.Builder xcodePathsBuilder = AppleSdkPaths.builder();
@@ -189,9 +188,8 @@ public class AppleSdkDiscovery {
     return appleSdkPathsBuilder.build();
   }
 
-  private static boolean buildSdkFromPath(
+  private static ImmutableList<AppleSdk> buildSdksFromPath(
       Path sdkDir,
-      AppleSdk.Builder sdkBuilder,
       ImmutableMap<String, AppleToolchain> xcodeToolchains,
       Optional<AppleToolchain> defaultToolchain,
       AppleConfig appleConfig)
@@ -203,7 +201,7 @@ public class AppleSdkDiscovery {
         sdkSettings = (NSDictionary) PropertyListParser.parse(bufferedSdkSettingsPlist);
       } catch (PropertyListFormatException | ParseException | SAXException e) {
         LOG.error(e, "Malformatted SDKSettings.plist. Skipping SDK path %s.", sdkDir);
-        return false;
+        return ImmutableList.of();
       } catch (ParserConfigurationException e) {
         throw new IOException(e);
       }
@@ -229,6 +227,8 @@ public class AppleSdkDiscovery {
         }
       }
 
+      AppleSdk.Builder sdkBuilder = AppleSdk.builder();
+
       if (toolchains.isPresent()) {
         for (String toolchainId : toolchains.get()) {
           AppleToolchain toolchain = xcodeToolchains.get(toolchainId);
@@ -246,17 +246,18 @@ public class AppleSdkDiscovery {
       }
       if (!foundToolchain) {
         LOG.warn("No toolchains found and no default toolchain. Skipping SDK path %s.", sdkDir);
-        return false;
+        return ImmutableList.of();
       } else {
         ApplePlatform applePlatform = ApplePlatform.of(platformName.toString());
         sdkBuilder.setName(name).setVersion(version).setApplePlatform(applePlatform);
         ImmutableList<String> architectures = validArchitecturesForPlatform(applePlatform, sdkDir);
         sdkBuilder.addAllArchitectures(architectures);
-        return true;
+        AppleSdk sdk = sdkBuilder.build();
+        return ImmutableList.of(sdk);
       }
     } catch (NoSuchFileException e) {
       LOG.warn(e, "Skipping SDK at path %s, no SDKSettings.plist found", sdkDir);
-      return false;
+      return ImmutableList.of();
     }
   }
 
