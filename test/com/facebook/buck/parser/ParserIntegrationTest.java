@@ -522,8 +522,8 @@ public class ParserIntegrationTest {
             "-c",
             "parser.disable_implicit_native_rules=true"),
         "name 'java_library' is not defined",
-        "extension.bzl\", line 5",
-        "BUCK\", line 4");
+        "extension.bzl:5",
+        "BUCK:2");
     assertParseFailedWithSubstrings(
         workspace.runBuckBuild(
             "//skylark/native_in_build_file:main",
@@ -557,8 +557,8 @@ public class ParserIntegrationTest {
             "-c",
             "parser.disable_implicit_native_rules=false"),
         "name 'java_library' is not defined",
-        "extension.bzl\", line 5",
-        "BUCK\", line 4");
+        "extension.bzl:5",
+        "BUCK:2");
     workspace
         .runBuckBuild(
             "//skylark/native_in_extension_bzl:main",
@@ -584,8 +584,8 @@ public class ParserIntegrationTest {
             "-c",
             "parser.default_build_file_syntax=SKYLARK"),
         "name 'java_library' is not defined",
-        "extension.bzl\", line 5",
-        "BUCK\", line 4");
+        "extension.bzl:5",
+        "BUCK:2");
     workspace
         .runBuckBuild(
             "//skylark/native_in_extension_bzl:main",

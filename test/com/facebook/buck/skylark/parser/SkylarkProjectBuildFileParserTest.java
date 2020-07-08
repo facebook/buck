@@ -868,7 +868,10 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(buildFile.getPath(), Collections.singletonList("foo()"));
 
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot evaluate file " + buildFile);
+    thrown.expectMessage(
+        Matchers.anyOf(
+            containsString("Cannot parse " + buildFile.toString().replace('/', '\\')),
+            containsString("Cannot parse " + buildFile.toString().replace('\\', '/'))));
 
     parser.getManifest(buildFile);
   }
@@ -926,7 +929,8 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(
         extensionFile.getPath(),
         ImmutableList.of(
-            "load('//src/test:extension_rules.bzl', 'get_name')", "get_name = get_name"));
+            "load('//src/test:extension_rules.bzl', _get_name='get_name')",
+            "get_name = _get_name"));
     RawTargetNode rule = getSingleRule(buildFile);
     assertThat(rule.getBySnakeCase("binary_jar"), equalTo("jar"));
   }
@@ -981,7 +985,8 @@ public class SkylarkProjectBuildFileParserTest {
         extensionExtensionFile.getPath(), Arrays.asList("def get_name():", "  return 'jar'"));
     Files.write(
         extensionFile.getPath(),
-        ImmutableList.of("load(':extension_rules.bzl', 'get_name')", "get_name = get_name"));
+        ImmutableList.of(
+            "load(':extension_rules.bzl', _get_name='get_name')", "get_name = _get_name"));
     RawTargetNode rule = getSingleRule(buildFile);
     assertThat(rule.getBySnakeCase("binary_jar"), equalTo("jar"));
   }
@@ -1160,7 +1165,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     parser = createParserWithOptions(eventCollector, options);
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot evaluate");
+    thrown.expectMessage("Cannot parse");
 
     try {
       parser.getManifest(buildFile);
@@ -1196,7 +1201,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     parser = createParserWithOptions(eventCollector, options);
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot evaluate");
+    thrown.expectMessage("Cannot parse");
 
     try {
       parser.getManifest(buildFile);
@@ -1284,7 +1289,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     parser = createParserWithOptions(eventCollector, options);
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot evaluate");
+    thrown.expectMessage("Cannot parse");
 
     try {
       parser.getManifest(buildFile);
@@ -1326,7 +1331,8 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(
         extensionFile.getPath(),
         ImmutableList.of(
-            "load('//src/test:extension_rules.bzl', 'get_name')", "get_name = get_name"));
+            "load('//src/test:extension_rules.bzl', _get_name='get_name')",
+            "get_name = _get_name"));
     RawTargetNode rule = getSingleRule(buildFile);
     assertThat(rule.getBySnakeCase("binary_jar"), equalTo("False"));
   }
@@ -1364,7 +1370,8 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(
         extensionFile.getPath(),
         ImmutableList.of(
-            "load('//src/test:extension_rules.bzl', 'get_name')", "get_name = get_name"));
+            "load('//src/test:extension_rules.bzl', _get_name='get_name')",
+            "get_name = _get_name"));
     BuildFileManifest buildFileManifest = parser.getManifest(buildFile);
     assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(2));
     RawTargetNode rule = Iterables.getFirst(buildFileManifest.getTargets().values(), null);
@@ -1691,7 +1698,7 @@ public class SkylarkProjectBuildFileParserTest {
       parser.getManifest(buildFile);
       fail("Should not reach here.");
     } catch (BuildFileParseException e) {
-      assertThat(e.getMessage(), startsWith("Cannot evaluate "));
+      assertThat(e.getMessage(), startsWith("Cannot parse "));
     }
     assertThat(eventCollector.count(), is(1));
     assertThat(

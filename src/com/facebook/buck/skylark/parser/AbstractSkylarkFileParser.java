@@ -328,8 +328,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     return file;
   }
 
-  private static final boolean ENABLE_PROPER_VALIDATION = false;
-
   private Module getGlobals(FileKind fileKind) {
     return fileKind == FileKind.BZL
         ? buckGlobals.getBuckLoadContextGlobals()
@@ -352,18 +350,13 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
             loadStack.toDependencyStack(), "Cannot parse %s", path);
       }
 
-      // TODO(nga): these enable proper file validation (e. g. denies global redefinition)
-      //   but nice stack trace becomes unavailable.
-      //   So for example, ParserIntegrationTest fails
-      if (ENABLE_PROPER_VALIDATION) {
-        ValidationEnvironment.validateFile(
-            result, getGlobals(fileKind), BuckStarlark.BUCK_STARLARK_SEMANTICS, false);
-        Event.replayEventsOn(eventHandler, result.errors());
+      ValidationEnvironment.validateFile(
+          result, getGlobals(fileKind), BuckStarlark.BUCK_STARLARK_SEMANTICS, false);
+      Event.replayEventsOn(eventHandler, result.errors());
 
-        if (!result.errors().isEmpty()) {
-          throw BuildFileParseException.createForUnknownParseError(
-              loadStack.toDependencyStack(), "Cannot parse %s", path);
-        }
+      if (!result.errors().isEmpty()) {
+        throw BuildFileParseException.createForUnknownParseError(
+            loadStack.toDependencyStack(), "Cannot parse %s", path);
       }
 
       if (fileKind != FileKind.BZL) {
