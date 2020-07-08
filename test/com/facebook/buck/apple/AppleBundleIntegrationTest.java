@@ -436,10 +436,11 @@ public class AppleBundleIntegrationTest {
             "%s"));
     workspace.assertFilesEqual(
         RelPath.get("DemoApp.xcent.expected"),
-        BuildTargetPaths.getScratchPath(
-            filesystem,
-            target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
-            "%s.xcent"));
+        BuildTargetPaths.getGenPath(
+                filesystem,
+                target.withoutFlavors().withAppendedFlavors(AppleCodeSignPreparation.FLAVOR),
+                "%s")
+            .resolveRel("Entitlements.plist"));
 
     Path appPath =
         workspace.getPath(
@@ -471,10 +472,11 @@ public class AppleBundleIntegrationTest {
 
     workspace.assertFilesEqual(
         RelPath.get("DemoAppViaSubstitutions.xcent.expected"),
-        BuildTargetPaths.getScratchPath(
-            filesystem,
-            target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
-            "%s.xcent"));
+        BuildTargetPaths.getGenPath(
+                filesystem,
+                target.withoutFlavors().withAppendedFlavors(AppleCodeSignPreparation.FLAVOR),
+                "%s")
+            .resolveRel("Entitlements.plist"));
 
     Path appPath =
         workspace.getPath(
@@ -1094,10 +1096,11 @@ public class AppleBundleIntegrationTest {
             "%s"));
     workspace.assertFilesEqual(
         RelPath.get("DemoApp.xcent.expected"),
-        BuildTargetPaths.getScratchPath(
-            filesystem,
-            target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
-            "%s.xcent"));
+        BuildTargetPaths.getGenPath(
+                filesystem,
+                target.withoutFlavors().withAppendedFlavors(AppleCodeSignPreparation.FLAVOR),
+                "%s")
+            .resolveRel("Entitlements.plist"));
 
     Path appPath =
         workspace.getPath(

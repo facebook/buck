@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import static com.facebook.buck.apple.AppleAssetCatalog.validateAssetCatalogs;
+import static com.facebook.buck.apple.AppleCodeSignType.ADHOC;
 import static com.facebook.buck.apple.AppleCodeSignType.DISTRIBUTION;
 import static com.facebook.buck.swift.SwiftDescriptions.SWIFT_EXTENSION;
 
@@ -100,6 +101,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -980,10 +982,11 @@ public class AppleDescriptions {
 
     Optional<HasEntitlementsFile> maybeHasEntitlementsFile =
         graphBuilder.requireMetadata(unwrappedBinary.getBuildTarget(), HasEntitlementsFile.class);
-    Optional<SourcePath> maybeEntitlements =
+    Optional<SourcePath> maybeEntitlementsFromBinaryParameter =
         maybeHasEntitlementsFile.flatMap(HasEntitlementsFile::getEntitlementsFile);
+    Optional<SourcePath> maybeEntitlements;
     // If entitlements are provided via binary's `entitlements_file` parameter use it directly
-    if (!maybeEntitlements.isPresent()) {
+    if (!maybeEntitlementsFromBinaryParameter.isPresent()) {
       // Fall back to getting CODE_SIGN_ENTITLEMENTS from info_plist_substitutions
       Optional<AbsPath> maybeEntitlementsPathInSubstitutions =
           AppleEntitlementsFromSubstitutions.entitlementsPathInSubstitutions(
@@ -1009,7 +1012,11 @@ public class AppleDescriptions {
                             maybeEntitlementsPathInSubstitutions.get()));
         maybeEntitlements =
             Optional.ofNullable(entitlementsFromSubstitutions.getSourcePathToOutput());
+      } else {
+        maybeEntitlements = maybeEntitlementsFromBinaryParameter;
       }
+    } else {
+      maybeEntitlements = maybeEntitlementsFromBinaryParameter;
     }
 
     AppleCodeSignType codeSignType =
@@ -1017,13 +1024,49 @@ public class AppleDescriptions {
             appleCxxPlatform.getAppleSdk().getApplePlatform(), unwrappedExtension);
 
     Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier;
-    ProvisioningProfileStore profileStore;
+    SourcePath infoPlistReadyToCopy;
+    Optional<SourcePath> provisioningProfileReadyToCopy;
+    Optional<SourcePath> entitlementsReadyForCodeSign;
+    Optional<SourcePath> dryCodeSignResultsReadyToCopy;
+    Optional<SourcePath> codeSignIdentityFingerprint;
     if (codeSignType == DISTRIBUTION) {
       codeSignIdentitiesSupplier = codeSignIdentityStore.getIdentitiesSupplier();
-      profileStore = provisioningProfileStore;
+      BuildTarget provisioningProfileTarget =
+          buildTarget.withoutFlavors().withAppendedFlavors(AppleCodeSignPreparation.FLAVOR);
+      AppleCodeSignPreparation codeSignPrepRule =
+          (AppleCodeSignPreparation)
+              graphBuilder.computeIfAbsent(
+                  provisioningProfileTarget,
+                  target ->
+                      new AppleCodeSignPreparation(
+                          target,
+                          projectFilesystem,
+                          graphBuilder,
+                          appleCxxPlatform.getAppleSdk().getApplePlatform(),
+                          infoPlist.getSourcePathToOutput(),
+                          maybeEntitlements,
+                          provisioningProfileStore,
+                          codeSignIdentitiesSupplier,
+                          dryRunCodeSigning));
+      infoPlistReadyToCopy = codeSignPrepRule.getSourcePathToInfoPlistOutput();
+      provisioningProfileReadyToCopy =
+          Optional.of(codeSignPrepRule.getSourcePathToProvisioningProfile());
+      entitlementsReadyForCodeSign =
+          Optional.of(codeSignPrepRule.getSourcePathToEntitlementsOutput());
+      dryCodeSignResultsReadyToCopy = codeSignPrepRule.getSourcePathToDryRunOutput();
+      codeSignIdentityFingerprint =
+          Optional.of(Objects.requireNonNull(codeSignPrepRule.getSourcePathToOutput()));
     } else {
       codeSignIdentitiesSupplier = Suppliers.ofInstance(ImmutableList.of());
-      profileStore = ProvisioningProfileStore.empty();
+      infoPlistReadyToCopy = infoPlist.getSourcePathToOutput();
+      provisioningProfileReadyToCopy = Optional.empty();
+      if (useEntitlementsWhenAdhocCodeSigning && codeSignType == ADHOC) {
+        entitlementsReadyForCodeSign = maybeEntitlements;
+      } else {
+        entitlementsReadyForCodeSign = Optional.empty();
+      }
+      dryCodeSignResultsReadyToCopy = Optional.empty();
+      codeSignIdentityFingerprint = Optional.empty();
     }
 
     return new AppleBundle(
@@ -1033,7 +1076,7 @@ public class AppleDescriptions {
         graphBuilder,
         unwrappedExtension,
         productName,
-        infoPlist.getSourcePathToOutput(),
+        infoPlistReadyToCopy,
         unwrappedBinary,
         appleDsym,
         extraBinaries,
@@ -1045,8 +1088,6 @@ public class AppleDescriptions {
         tests,
         codeSignIdentitiesSupplier,
         codeSignType,
-        profileStore,
-        dryRunCodeSigning,
         cacheable,
         verifyResources,
         codesignFlags,
@@ -1055,11 +1096,13 @@ public class AppleDescriptions {
         ibtoolFlagsUnwrapped,
         codesignTimeout,
         copySwiftStdlibToFrameworks,
-        useEntitlementsWhenAdhocCodeSigning,
         sliceAppPackageSwiftRuntime,
         sliceAppBundleSwiftRuntime,
         withDownwardApi,
-        maybeEntitlements);
+        entitlementsReadyForCodeSign,
+        provisioningProfileReadyToCopy,
+        dryCodeSignResultsReadyToCopy,
+        codeSignIdentityFingerprint);
   }
 
   /**

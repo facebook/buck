@@ -20,8 +20,6 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
-import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
-import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -99,9 +97,11 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final Optional<String> productName;
 
-  @AddToRuleKey private final SourcePath processedInfoPlist;
+  @AddToRuleKey private final SourcePath infoPlistFile;
 
-  @AddToRuleKey private final Optional<SourcePath> entitlementsFile;
+  @AddToRuleKey private final Optional<SourcePath> maybeEntitlementsFile;
+
+  @AddToRuleKey private final Optional<SourcePath> maybeProvisioningProfileFile;
 
   @AddToRuleKey private final BuildRule binary;
 
@@ -123,8 +123,6 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final ApplePlatform platform;
 
-  @AddToRuleKey private final ProvisioningProfileStore provisioningProfileStore;
-
   @AddToRuleKey private final Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier;
 
   @AddToRuleKey private final Optional<Tool> codesignAllocatePath;
@@ -135,8 +133,6 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final Tool lipo;
 
-  @AddToRuleKey private final boolean dryRunCodeSigning;
-
   @AddToRuleKey private final ImmutableList<String> codesignFlags;
 
   @AddToRuleKey private final Optional<String> codesignIdentitySubjectName;
@@ -145,8 +141,6 @@ public class AppleBundle extends AbstractBuildRule
   @AddToRuleKey private final ImmutableMap<SourcePath, String> extensionBundlePaths;
 
   @AddToRuleKey private final boolean copySwiftStdlibToFrameworks;
-
-  @AddToRuleKey private final boolean useEntitlementsWhenAdhocCodeSigning;
 
   @AddToRuleKey private final boolean sliceAppPackageSwiftRuntime;
   @AddToRuleKey private final boolean sliceAppBundleSwiftRuntime;
@@ -172,6 +166,10 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final AppleCodeSignType codeSignType;
 
+  @AddToRuleKey private final Optional<SourcePath> maybeDryCodeSignResultFile;
+
+  @AddToRuleKey private final Optional<SourcePath> maybeCodeSignIdentityFingerprintFile;
+
   AppleBundle(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -179,7 +177,7 @@ public class AppleBundle extends AbstractBuildRule
       ActionGraphBuilder graphBuilder,
       String extension,
       Optional<String> productName,
-      SourcePath processedInfoPlist,
+      SourcePath infoPlistFile,
       BuildRule binary,
       Optional<AppleDsym> appleDsym,
       ImmutableSet<BuildRule> extraBinaries,
@@ -191,8 +189,6 @@ public class AppleBundle extends AbstractBuildRule
       Set<BuildTarget> tests,
       Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier,
       AppleCodeSignType codeSignType,
-      ProvisioningProfileStore provisioningProfileStore,
-      boolean dryRunCodeSigning,
       boolean cacheable,
       boolean verifyResources,
       ImmutableList<String> codesignFlags,
@@ -201,19 +197,21 @@ public class AppleBundle extends AbstractBuildRule
       ImmutableList<String> ibtoolFlags,
       Duration codesignTimeout,
       boolean copySwiftStdlibToFrameworks,
-      boolean useEntitlementsWhenAdhocCodeSigning,
       boolean sliceAppPackageSwiftRuntime,
       boolean sliceAppBundleSwiftRuntime,
       boolean withDownwardApi,
-      Optional<SourcePath> entitlementsFile) {
+      Optional<SourcePath> maybeEntitlementsFile,
+      Optional<SourcePath> maybeProvisioningProfileFile,
+      Optional<SourcePath> maybeDryCodeSignResultFile,
+      Optional<SourcePath> maybeCodeSignIdentityFingerprintFile) {
     super(buildTarget, projectFilesystem);
     this.buildRuleParams = params;
     this.extension = extension;
     this.productName = productName;
-    this.processedInfoPlist = processedInfoPlist;
+    this.infoPlistFile = infoPlistFile;
     this.binary = binary;
     this.withDownwardApi = withDownwardApi;
-    this.entitlementsFile = entitlementsFile;
+    this.maybeEntitlementsFile = maybeEntitlementsFile;
     this.isLegacyWatchApp = AppleBundleSupport.isLegacyWatchApp(extension, binary);
     this.appleDsym = appleDsym;
     this.extraBinaries = extraBinaries;
@@ -230,18 +228,19 @@ public class AppleBundle extends AbstractBuildRule
     AppleSdk sdk = appleCxxPlatform.getAppleSdk();
     this.platform = sdk.getApplePlatform();
     this.sdkPath = appleCxxPlatform.getAppleSdkPaths().getSdkPath();
-    this.dryRunCodeSigning = dryRunCodeSigning;
     this.cacheable = cacheable;
     this.verifyResources = verifyResources;
     this.codesignFlags = codesignFlags;
     this.codesignIdentitySubjectName = codesignIdentity;
     this.ibtoolModuleFlag = ibtoolModuleFlag.orElse(false);
     this.ibtoolFlags = ibtoolFlags;
+    this.maybeProvisioningProfileFile = maybeProvisioningProfileFile;
+    this.maybeDryCodeSignResultFile = maybeDryCodeSignResultFile;
+    this.maybeCodeSignIdentityFingerprintFile = maybeCodeSignIdentityFingerprintFile;
 
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
 
     this.codeSignIdentitiesSupplier = codeSignIdentitiesSupplier;
-    this.provisioningProfileStore = provisioningProfileStore;
     this.codeSignType = codeSignType;
 
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
@@ -257,7 +256,6 @@ public class AppleBundle extends AbstractBuildRule
 
     this.codesignTimeout = codesignTimeout;
     this.copySwiftStdlibToFrameworks = copySwiftStdlibToFrameworks;
-    this.useEntitlementsWhenAdhocCodeSigning = useEntitlementsWhenAdhocCodeSigning;
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
 
     this.sliceAppPackageSwiftRuntime = sliceAppPackageSwiftRuntime;
@@ -321,17 +319,7 @@ public class AppleBundle extends AbstractBuildRule
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot)));
 
-    stepsBuilder.add(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), getMetadataPath())));
-
-    RelPath infoPlistOutputPath =
-        context.getSourcePathResolver().getCellUnsafeRelPath(processedInfoPlist);
-    Path infoPlistBundlePath = getInfoPlistPath();
-    stepsBuilder.add(
-        CopyStep.forFile(
-            getProjectFilesystem(), infoPlistOutputPath.getPath(), infoPlistBundlePath));
+    addCopyInfoPlistStep(context, stepsBuilder);
 
     if (hasBinary()) {
       appendCopyBinarySteps(stepsBuilder, context);
@@ -386,110 +374,22 @@ public class AppleBundle extends AbstractBuildRule
         getProjectFilesystem(),
         codeSignOnCopyPathsBuilder);
 
+    maybeProvisioningProfileFile.ifPresent(
+        sourcePath -> addCopyProvisioningProfileStep(context, stepsBuilder, sourcePath));
+
+    addCopyCodeSignDryRunResultsStepsIfNeeded(context, stepsBuilder);
+
     if (codeSignType != AppleCodeSignType.SKIP) {
-      Optional<Path> signingEntitlementsTempPath = Optional.empty();
-      Supplier<CodeSignIdentity> codeSignIdentitySupplier;
-
-      Optional<Path> entitlementsPlist =
-          entitlementsFile.map(
-              sourcePath -> context.getSourcePathResolver().getAbsolutePath(sourcePath).getPath());
-
-      if (codeSignType == AppleCodeSignType.ADHOC) {
-        if (useEntitlementsWhenAdhocCodeSigning) {
-          signingEntitlementsTempPath = entitlementsPlist;
-        }
-        CodeSignIdentity identity =
-            codesignIdentitySubjectName
-                .map(id -> CodeSignIdentity.ofAdhocSignedWithSubjectCommonName(id))
-                .orElse(CodeSignIdentity.AD_HOC);
-        codeSignIdentitySupplier = () -> identity;
-      } else {
-        // Copy the .mobileprovision file if the platform requires it, and sign the executable.
-        signingEntitlementsTempPath =
-            Optional.of(
-                BuildTargetPaths.getScratchPath(
-                        getProjectFilesystem(), getBuildTarget(), "%s.xcent")
-                    .getPath());
-
-        Path dryRunResultPath = bundleRoot.resolve(PP_DRY_RUN_RESULT_FILE);
-
-        Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
-
-        ProvisioningProfileMetadataHolder selectedProfile = new ProvisioningProfileMetadataHolder();
-        {
-          ProvisioningProfileSelectStep provisioningProfileSelectStep =
-              new ProvisioningProfileSelectStep(
-                  getProjectFilesystem(),
-                  infoPlistBundlePath,
-                  platform,
-                  entitlementsPlist,
-                  codeSignIdentitiesSupplier,
-                  provisioningProfileStore,
-                  dryRunCodeSigning ? Optional.of(dryRunResultPath) : Optional.empty(),
-                  selectedProfile);
-          stepsBuilder.add(provisioningProfileSelectStep);
-        }
-
-        Supplier<Boolean> isProvisioningProfileSelected =
-            () -> selectedProfile.getMetadata().isPresent();
-
-        Supplier<ProvisioningProfileMetadata> selectedProfileSupplier =
-            () -> {
-              Preconditions.checkState(isProvisioningProfileSelected.get());
-              //noinspection OptionalGetWithoutIsPresent
-              return selectedProfile.getMetadata().get();
-            };
-
-        {
-          ProvisioningProfileCopyStep provisioningProfileCopyStep =
-              new ProvisioningProfileCopyStep(
-                  getProjectFilesystem(),
-                  infoPlistBundlePath,
-                  entitlementsPlist,
-                  resourcesDestinationPath.resolve("embedded.mobileprovision"),
-                  dryRunCodeSigning
-                      ? bundleRoot.resolve(CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE)
-                      : signingEntitlementsTempPath.get(),
-                  dryRunCodeSigning,
-                  selectedProfileSupplier);
-
-          stepsBuilder.add(
-              new ConditionalStep(isProvisioningProfileSelected, provisioningProfileCopyStep));
-        }
-
-        CodeSignIdentityHolder codeSignIdentityHolder = new CodeSignIdentityHolder();
-        {
-          CodeSignIdentitySelectStep codeSignIdentitySelectStep =
-              new CodeSignIdentitySelectStep(
-                  codeSignIdentitiesSupplier, selectedProfileSupplier, codeSignIdentityHolder);
-
-          stepsBuilder.add(
-              new ConditionalStep(isProvisioningProfileSelected, codeSignIdentitySelectStep));
-        }
-
-        codeSignIdentitySupplier =
-            () -> {
-              if (codeSignIdentityHolder.getIdentity().isPresent()) {
-                return codeSignIdentityHolder.getIdentity().get();
-              } else if (dryRunCodeSigning) {
-                // Code sign identity is allowed not to be selected when code signing is run in dry
-                // mode. Still, we need to return *something*.
-                return CodeSignIdentity.AD_HOC;
-              } else {
-                String reason =
-                    isProvisioningProfileSelected.get()
-                        ? "Provisioning profile should be selected"
-                        : "Code sign identity should be selected";
-                throw new IllegalStateException(reason);
-              }
-            };
-      }
+      Supplier<CodeSignIdentity> codeSignIdentitySupplier =
+          appendStepsToSelectCodeSignIdentity(context, stepsBuilder);
 
       AppleResourceProcessing.addSwiftStdlibStepIfNeeded(
           context.getSourcePathResolver(),
           bundleRoot.resolve(destinations.getFrameworksPath()),
           bundleRoot,
-          dryRunCodeSigning ? Optional.empty() : Optional.of(codeSignIdentitySupplier),
+          maybeDryCodeSignResultFile.isPresent()
+              ? Optional.empty()
+              : Optional.of(codeSignIdentitySupplier),
           stepsBuilder,
           false,
           extension,
@@ -511,8 +411,13 @@ public class AppleBundle extends AbstractBuildRule
       }
 
       ImmutableList<Path> codeSignOnCopyPaths = codeSignOnCopyPathsBuilder.build();
-      if (dryRunCodeSigning) {
-        final boolean shouldUseEntitlements = signingEntitlementsTempPath.isPresent();
+
+      Optional<Path> entitlementsPlist =
+          maybeEntitlementsFile.map(
+              sourcePath -> context.getSourcePathResolver().getAbsolutePath(sourcePath).getPath());
+
+      if (maybeDryCodeSignResultFile.isPresent()) {
+        final boolean shouldUseEntitlements = entitlementsPlist.isPresent();
         appendDryCodeSignSteps(
             stepsBuilder, codeSignOnCopyPaths, codeSignIdentitySupplier, shouldUseEntitlements);
       } else {
@@ -521,7 +426,7 @@ public class AppleBundle extends AbstractBuildRule
             stepsBuilder,
             codeSignOnCopyPaths,
             codeSignIdentitySupplier,
-            signingEntitlementsTempPath);
+            entitlementsPlist);
       }
     } else {
       AppleResourceProcessing.addSwiftStdlibStepIfNeeded(
@@ -550,6 +455,35 @@ public class AppleBundle extends AbstractBuildRule
         context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput()).getPath());
 
     return stepsBuilder.build();
+  }
+
+  private Supplier<CodeSignIdentity> appendStepsToSelectCodeSignIdentity(
+      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
+    if (codeSignType == AppleCodeSignType.ADHOC) {
+      CodeSignIdentity identity =
+          codesignIdentitySubjectName
+              .map(CodeSignIdentity::ofAdhocSignedWithSubjectCommonName)
+              .orElse(CodeSignIdentity.AD_HOC);
+      return () -> identity;
+    } else {
+      Path fingerprintPath =
+          context
+              .getSourcePathResolver()
+              .getAbsolutePath(
+                  maybeCodeSignIdentityFingerprintFile.orElseThrow(
+                      () ->
+                          new IllegalStateException(
+                              "Code sign identity should be provided when code sign is needed")))
+              .getPath();
+      CodeSignIdentityHolder selectedCodeSignIdentity = new CodeSignIdentityHolder();
+      stepsBuilder.add(
+          new CodeSignIdentityFindStep(
+              fingerprintPath,
+              getProjectFilesystem(),
+              codeSignIdentitiesSupplier,
+              selectedCodeSignIdentity));
+      return () -> selectedCodeSignIdentity.getIdentity().get();
+    }
   }
 
   private void appendDryCodeSignSteps(
@@ -622,6 +556,86 @@ public class AppleBundle extends AbstractBuildRule
             codesignFlags,
             codesignTimeout,
             withDownwardApi));
+  }
+
+  private void addCopyProvisioningProfileStep(
+      BuildContext context,
+      ImmutableList.Builder<Step> stepsBuilder,
+      SourcePath provisioningProfileFile) {
+    Path resourcesDestinationPath = bundleRoot.resolve(destinations.getResourcesPath());
+    stepsBuilder.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), resourcesDestinationPath)));
+
+    Path provisioningProfilePath =
+        context.getSourcePathResolver().getCellUnsafeRelPath(provisioningProfileFile).getPath();
+    Path provisioningProfileBundlePath =
+        resourcesDestinationPath.resolve("embedded.mobileprovision");
+    stepsBuilder.add(
+        new ConditionalStep(
+            () -> {
+              boolean provisioningProfileFileExist =
+                  getProjectFilesystem().exists(provisioningProfilePath);
+              Preconditions.checkState(
+                  provisioningProfileFileExist || maybeDryCodeSignResultFile.isPresent(),
+                  ".mobileprovision file could be missing only when code sign is dry");
+              return getProjectFilesystem().exists(provisioningProfilePath);
+            },
+            CopyStep.forFile(
+                getProjectFilesystem(), provisioningProfilePath, provisioningProfileBundlePath)));
+  }
+
+  private void addCopyInfoPlistStep(
+      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
+    Path metadataDestinationPath = bundleRoot.resolve(destinations.getMetadataPath());
+    stepsBuilder.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), metadataDestinationPath)));
+
+    Path infoPlistPath =
+        context.getSourcePathResolver().getCellUnsafeRelPath(infoPlistFile).getPath();
+    Path infoPlistBundlePath = getMetadataPath().resolve("Info.plist");
+    stepsBuilder.add(CopyStep.forFile(getProjectFilesystem(), infoPlistPath, infoPlistBundlePath));
+  }
+
+  private void addCopyCodeSignDryRunResultsStepsIfNeeded(
+      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
+
+    if (codeSignType != AppleCodeSignType.DISTRIBUTION || !maybeDryCodeSignResultFile.isPresent()) {
+      return;
+    }
+
+    {
+      Path dryRunResultPath =
+          context
+              .getSourcePathResolver()
+              .getCellUnsafeRelPath(maybeDryCodeSignResultFile.get())
+              .getPath();
+      Path dryRunResultBundlePath = bundleRoot.resolve(PP_DRY_RUN_RESULT_FILE);
+      stepsBuilder.add(
+          CopyStep.forFile(getProjectFilesystem(), dryRunResultPath, dryRunResultBundlePath));
+    }
+
+    {
+      Path entitlementsPath =
+          context
+              .getSourcePathResolver()
+              .getCellUnsafeRelPath(
+                  maybeEntitlementsFile.orElseThrow(
+                      () ->
+                          new IllegalStateException(
+                              "Entitlements should be provided when non-adhoc codesign is needed")))
+              .getPath();
+      Path entitlementsBundlePath = bundleRoot.resolve(CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE);
+      // Entitlements file could be missing when something went wrong, but code sign is run in dry
+      // mode
+      stepsBuilder.add(
+          new ConditionalStep(
+              () -> getProjectFilesystem().exists(entitlementsPath),
+              CopyStep.forFile(getProjectFilesystem(), entitlementsPath, entitlementsBundlePath)));
+    }
   }
 
   private void appendCopyBinarySteps(
