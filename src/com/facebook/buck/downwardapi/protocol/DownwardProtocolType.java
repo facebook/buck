@@ -47,6 +47,7 @@ public enum DownwardProtocolType {
                 Arrays.stream(values())
                     .filter(p -> p.protocolId.equals(protocolId))
                     .findFirst()
+                    // Do not remove this cast as it caused an exception on JDK versions under 8u60
                     .<IllegalStateException>orElseThrow(
                         () -> new IllegalStateException("Not valid protocol type: " + protocolId)))
         .getDownwardProtocol();
