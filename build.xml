@@ -351,7 +351,7 @@
     <include name="guice/guice-3.0.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="jsr/jsr305.jar" />
-    <include name="junit/junit-4.12.jar" />
+    <include name="junit/junit-4.13.jar" />
     <include name="testng/testng-6.8.jar" />
   </fileset>
 
@@ -880,7 +880,7 @@
 
     <jar destfile="${build.dir}/dx.jar">
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-25.1-jre.jar"/>
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/junit/junit-4.12.jar" />
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/junit/junit-4.13.jar" />
       <fileset dir="${dx.classes.dir}" />
       <manifest>
         <attribute name="Main-Class" value="com.android.dx.command.Main" />
@@ -1232,7 +1232,7 @@
   <path id="javadoc.classpath">
     <path refid="classpath" />
     <!-- Buck test runner has references to JUnit and TestNG. -->
-    <pathelement location="${third-party.dir}/java/junit/junit-4.12.jar" />
+    <pathelement location="${third-party.dir}/java/junit/junit-4.13.jar" />
     <pathelement location="${third-party.dir}/java/testng/testng-6.8.jar" />
 
     <!-- Include the Compiler Tree API stub because its types are used in some places. -->
