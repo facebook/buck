@@ -1,0 +1,15 @@
+java_library(
+    name = "pojoizer",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/parser/syntax:syntax",
+        "//src/com/facebook/buck/util/collect:collect",
+        "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//third-party/java/bazel:bazel",
+    ],
+)

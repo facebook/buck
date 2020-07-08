@@ -21,7 +21,6 @@ import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.BuildFileManifestPojoizer;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.RawTargetNode;
@@ -29,8 +28,6 @@ import com.facebook.buck.parser.api.UserDefinedRuleLoader;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.parser.syntax.ListWithSelects;
-import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.skylark.io.Globber;
@@ -155,13 +152,13 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
       TwoArraysImmutableHashMap<String, RawTargetNode> targets =
           rawRules.mapValues(
               (k, r) ->
+                  // TODO(nga): avoid creating RecordedRule
                   RawTargetNode.of(
                       r.getBasePath(),
                       r.getBuckType(),
                       r.getVisibility(),
                       r.getWithinView(),
-                      r.getRawRule()
-                          .mapValues((n, v) -> getBuildFileManifestPojoizer().convertToPojo(v))));
+                      r.getRawRule()));
 
       rulesParsed = targets.size();
 
@@ -177,48 +174,6 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
       LOG.verbose("Finished parsing build file %s", buildFile);
       buckEventBus.post(ParseBuckFileEvent.finished(startEvent, rulesParsed, 0L, Optional.empty()));
     }
-  }
-
-  private static BuildFileManifestPojoizer getBuildFileManifestPojoizer() {
-    // Convert Skylark-specific classes to Buck API POJO classes to decouple them from parser
-    // implementation. BuildFileManifest should only have POJO classes.
-    BuildFileManifestPojoizer pojoizer = BuildFileManifestPojoizer.of();
-    pojoizer.addPojoTransformer(
-        BuildFileManifestPojoizer.PojoTransformer.of(
-            com.google.devtools.build.lib.syntax.SelectorList.class,
-            obj -> {
-              com.google.devtools.build.lib.syntax.SelectorList skylarkSelectorList =
-                  (com.google.devtools.build.lib.syntax.SelectorList) obj;
-              // recursively convert list elements
-              @SuppressWarnings("unchecked")
-              ImmutableList<Object> elements =
-                  (ImmutableList<Object>) pojoizer.convertToPojo(skylarkSelectorList.getElements());
-              return ListWithSelects.of(elements, skylarkSelectorList.getType());
-            }));
-    pojoizer.addPojoTransformer(
-        BuildFileManifestPojoizer.PojoTransformer.of(
-            com.google.devtools.build.lib.syntax.SelectorValue.class,
-            obj -> {
-              com.google.devtools.build.lib.syntax.SelectorValue skylarkSelectorValue =
-                  (com.google.devtools.build.lib.syntax.SelectorValue) obj;
-              // recursively convert dictionary elements
-              @SuppressWarnings("unchecked")
-              TwoArraysImmutableHashMap<String, Object> conditionsConverted =
-                  (TwoArraysImmutableHashMap<String, Object>)
-                      pojoizer.convertToPojo(skylarkSelectorValue.getDictionary());
-              return SelectorValue.of(
-                  ImmutableMap.copyOf(conditionsConverted), skylarkSelectorValue.getNoMatchError());
-            }));
-    pojoizer.addPojoTransformer(
-        BuildFileManifestPojoizer.PojoTransformer.of(
-            com.google.devtools.build.lib.syntax.Depset.class,
-            obj -> {
-              com.google.devtools.build.lib.syntax.Depset skylarkNestedSet =
-                  (com.google.devtools.build.lib.syntax.Depset) obj;
-              // recursively convert set elements
-              return pojoizer.convertToPojo(skylarkNestedSet.toCollection());
-            }));
-    return pojoizer;
   }
 
   /** Creates a globber for the package defined by the provided build file path. */

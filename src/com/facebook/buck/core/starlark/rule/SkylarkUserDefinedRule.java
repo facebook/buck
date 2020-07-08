@@ -26,6 +26,7 @@ import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.skylark.parser.context.RecordedRule;
+import com.facebook.buck.skylark.parser.pojoizer.BuildFileManifestPojoizer;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -143,13 +144,19 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
      */
     int i = 0;
     for (String name : names) {
-      Preconditions.checkNotNull(args[i]);
+      Object value = args[i];
+      // sanity check
+      Preconditions.checkNotNull(value);
+
       if (name.equals(CommonParamNames.VISIBILITY.getSnakeCase())) {
-        visibility = (ImmutableList<String>) args[i];
+        visibility = (ImmutableList<String>) value;
       } else if (name.equals(CommonParamNames.WITHIN_VIEW.getSnakeCase())) {
-        withinView = (ImmutableList<String>) args[i];
+        withinView = (ImmutableList<String>) value;
       } else {
-        builder.put(ParamName.bySnakeCase(name), args[i]);
+        Object converted = BuildFileManifestPojoizer.convertToPojo(value);
+        if (converted != Starlark.NONE) {
+          builder.put(ParamName.bySnakeCase(name), converted);
+        }
       }
       i++;
     }

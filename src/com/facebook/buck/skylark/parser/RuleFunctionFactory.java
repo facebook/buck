@@ -27,6 +27,7 @@ import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.skylark.parser.context.RecordedRule;
+import com.facebook.buck.skylark.parser.pojoizer.BuildFileManifestPojoizer;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -173,21 +174,27 @@ public class RuleFunctionFactory {
 
     for (Map.Entry<String, Object> kwargEntry : kwargs.entrySet()) {
       ParamName paramName = ParamName.bySnakeCase(kwargEntry.getKey());
+      Object value = kwargEntry.getValue();
+
+      if (value == Starlark.NONE) {
+        continue;
+      }
+
       if (kwargEntry.getKey().equals(CommonParamNames.VISIBILITY.getSnakeCase())) {
-        visibility = toListOfString(kwargEntry.getKey(), kwargEntry.getValue());
+        visibility = toListOfString(kwargEntry.getKey(), value);
         continue;
       }
       if (kwargEntry.getKey().equals(CommonParamNames.WITHIN_VIEW.getSnakeCase())) {
-        withinView = toListOfString(kwargEntry.getKey(), kwargEntry.getValue());
+        withinView = toListOfString(kwargEntry.getKey(), value);
         continue;
       }
       if (!allParamInfo.getParamInfosByName().containsKey(paramName)) {
         throw new EvalException(loc, kwargEntry.getKey() + " is not a recognized attribute");
       }
-      if (Starlark.NONE.equals(kwargEntry.getValue())) {
-        continue;
+      Object converted = BuildFileManifestPojoizer.convertToPojo(value);
+      if (converted != Starlark.NONE) {
+        builder.put(paramName, converted);
       }
-      builder.put(paramName, kwargEntry.getValue());
     }
 
     throwOnMissingRequiredAttribute(kwargs, allParamInfo.getParamInfosByName(), name, loc);

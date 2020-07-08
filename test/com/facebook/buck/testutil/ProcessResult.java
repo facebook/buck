@@ -85,6 +85,10 @@ public class ProcessResult {
     assertExitCode(message, ExitCode.BUILD_ERROR);
   }
 
+  public ProcessResult assertParseError() {
+    return assertExitCode(null, ExitCode.PARSE_ERROR);
+  }
+
   public ProcessResult assertExitCode(ExitCode exitCode) {
     return assertExitCode(null, exitCode);
   }
