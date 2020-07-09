@@ -373,14 +373,14 @@ public class Resolver {
     STGroupString groups = new STGroupString("prebuilt-template", template);
 
     for (Path key : buckFilesData.keySet()) {
-        Path buckFile = key.resolve("BUCK");
-        if (Files.exists(buckFile)) {
-          Files.delete(buckFile);
-        }
+      Path buckFile = key.resolve("BUCK");
+      if (Files.exists(buckFile)) {
+        Files.delete(buckFile);
+      }
 
-        ST st = Objects.requireNonNull(groups.getInstanceOf("/prebuilts"));
-        st.add("data", buckFilesData.get(key));
-        Files.write(buckFile, st.render().getBytes(UTF_8));
+      ST st = Objects.requireNonNull(groups.getInstanceOf("/prebuilts"));
+      st.add("data", buckFilesData.get(key));
+      Files.write(buckFile, st.render().getBytes(UTF_8));
     }
   }
 
