@@ -16,7 +16,7 @@
 from asyncio import subprocess
 
 from buck_process import BuckProcess
-from buck_result import BuckResult, BuildResult
+from buck_result import BuckResult, BuildResult, TestResult
 
 
 class BuckRepo:
@@ -56,6 +56,15 @@ class BuckRepo:
         """
         process = await self._run_buck_command("kill")
         return BuckProcess(process, result_type=BuckResult, encoding=self.encoding)
+
+    async def test(self, *argv: str) -> BuckProcess[TestResult]:
+        """
+        Returns a BuckProcess with TestResult type using a process
+        created with the test command and any
+        additional arguments
+        """
+        process = await self._run_buck_command("test", *argv)
+        return BuckProcess(process, result_type=TestResult, encoding=self.encoding)
 
     async def _run_buck_command(self, cmd: str, *argv: str) -> subprocess.Process:
         """

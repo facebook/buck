@@ -58,7 +58,27 @@ def run_kill(remain_args):
     shutil.rmtree(".buckd")
 
 
-FUNCTION_MAP = {"build": run_build, "clean": run_clean, "kill": run_kill}
+def run_test(remain_args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("target")
+    args = parser.parse_args(remain_args)
+    target = Path(args.target.replace(":", "/").strip("/"))
+    conf_dir = hashlib.md5(args.target.encode()).hexdigest()
+    output = Path("buck-out", "gen") / Path(conf_dir) / target
+    os.makedirs(output.parent)
+    with open(output, "w") as f1:
+        f1.write("Hello, World!")
+    print(args)
+    with open(target, "r") as target_file:
+        sys.exit(int(target_file.read()))
+
+
+FUNCTION_MAP = {
+    "build": run_build,
+    "clean": run_clean,
+    "kill": run_kill,
+    "test": run_test,
+}
 
 parser.add_argument("command", choices=FUNCTION_MAP.keys())
 (args, remain_args) = parser.parse_known_args()

@@ -31,8 +31,7 @@ async def test_build():
             "test.buck_repo_test", "test_script.py"
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
-        with open(os.path.join(path_of_cwd, "target_file_success"), "w") as target:
-            target.write("0")
+        _create_file(path_of_cwd, "target_file_success", "0")
         result = await (await repo.build("//:target_file_success")).wait()
         assert list(
             (path_of_cwd / "buck-out").iterdir()
@@ -49,16 +48,13 @@ async def test_build_failed():
             "test.buck_repo_test", "test_script.py"
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
+
         # testing failures
-        with open(
-            os.path.join(path_of_cwd, "target_file_build_failure"), "w"
-        ) as target:
-            target.write("1")
+        _create_file(path_of_cwd, "target_file_build_failure", "1")
         result = await (await repo.build("//:target_file_build_failure")).wait()
         assert result.is_build_failure()
 
-        with open(os.path.join(path_of_cwd, "target_file_failure"), "w") as target:
-            target.write("13")
+        _create_file(path_of_cwd, "target_file_failure", "13")
         result = await (await repo.build("//:target_file_failure")).wait()
         assert result.is_failure()
 
@@ -102,3 +98,50 @@ async def test_kill():
         ).exists(), "kill should have deleted buck daemon"
 
         assert result.get_exit_code() == ExitCode.SUCCESS
+
+
+@pytest.mark.asyncio
+async def test_test():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        path_of_cwd = Path(temp_dir)
+        test_script = pkg_resources.resource_filename(
+            "test.buck_repo_test", "test_script.py"
+        )
+        repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
+        _create_file(path_of_cwd, "target_file_success", "0")
+        result = await (await repo.test("//:target_file_success")).wait()
+        assert list(
+            (path_of_cwd / "buck-out").iterdir()
+        ), "test should have generated outputs in buck-out"
+        assert "target_file_success" in result.get_stdout()
+        assert result.is_success()
+
+
+@pytest.mark.asyncio
+async def test_test_failed():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        path_of_cwd = Path(temp_dir)
+        test_script = pkg_resources.resource_filename(
+            "test.buck_repo_test", "test_script.py"
+        )
+        repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
+
+        # testing failures
+        _create_file(path_of_cwd, "target_file_test_failure", "32")
+        result = await (await repo.test("//:target_file_test_failure")).wait()
+        assert result.is_test_failure()
+
+        _create_file(path_of_cwd, "target_file_failure", "13")
+        result = await (await repo.test("//:target_file_failure")).wait()
+        assert result.is_failure()
+
+        # testing failures
+        _create_file(path_of_cwd, "target_file_build_failure", "1")
+        result = await (await repo.test("//:target_file_build_failure")).wait()
+        assert result.is_build_failure()
+
+
+def _create_file(dirpath: Path, filepath: Path, message: str) -> None:
+    """ Writes out a message to a file given the path"""
+    with open(os.path.join(dirpath, filepath), "w") as f1:
+        f1.write(message)
