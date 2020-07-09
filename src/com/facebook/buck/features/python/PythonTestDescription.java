@@ -192,19 +192,23 @@ public class PythonTestDescription
    * use the existing python binary rule without changes to account for the build-time creation of
    * this file.
    */
-  private static BuildRule createTestModulesSourceBuildRule(
+  private static BuildRule requireTestModulesSourceBuildRule(
+      ActionGraphBuilder graphBuilder,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      Path outputPath,
       ImmutableSet<String> testModules) {
-
-    // Modify the build rule params to change the target, type, and remove all deps.
-    BuildTarget newBuildTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("test_module"));
-
-    String contents = getTestModulesListContents(testModules);
-
-    return new WriteFile(
-        newBuildTarget, projectFilesystem, contents, outputPath, /* executable */ false);
+    return graphBuilder.computeIfAbsent(
+        // Modify the build rule params to change the target, type, and remove all deps.
+        buildTarget
+            .withoutFlavors(TEST_TYPE.getFlavors())
+            .withAppendedFlavors(InternalFlavor.of("test_module")),
+        target ->
+            new WriteFile(
+                target,
+                projectFilesystem,
+                getTestModulesListContents(testModules),
+                getTestModulesListPath(target, projectFilesystem), /* executable */
+                false));
   }
 
   private UnresolvedCxxPlatform getCxxPlatform(
@@ -337,11 +341,8 @@ public class PythonTestDescription
     // Construct a build rule to generate the test modules list source file and
     // add it to the build.
     BuildRule testModulesBuildRule =
-        createTestModulesSourceBuildRule(
-            buildTarget,
-            projectFilesystem,
-            getTestModulesListPath(buildTarget, projectFilesystem),
-            testModules);
+        requireTestModulesSourceBuildRule(
+            graphBuilder, buildTarget, projectFilesystem, testModules);
     graphBuilder.addToIndex(testModulesBuildRule);
 
     Optional<PythonTestRunner> testRunner = maybeGetTestRunner(args, graphBuilder);
