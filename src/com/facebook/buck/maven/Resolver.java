@@ -278,7 +278,7 @@ public class Resolver {
     }
     ArtifactResult result =
         repoSys.resolveArtifact(session, new ArtifactRequest(artifact, repos, null));
-    return copy(result, project, artifact.getArtifactId());
+    return copy(result, project);
   }
 
   /**
@@ -378,7 +378,7 @@ public class Resolver {
     }
   }
 
-  private Path copy(ArtifactResult result, Path destDir, String pkg) throws IOException {
+  private Path copy(ArtifactResult result, Path destDir) throws IOException {
     Path source = result.getArtifact().getFile().toPath();
     Path sink = destDir.resolve(source.getFileName());
 
