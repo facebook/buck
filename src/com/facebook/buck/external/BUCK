@@ -1,0 +1,15 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "external",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/...",
+        "//test/com/facebook/buck/...",
+    ],
+    deps = [
+        "//src-gen:buildable-command-model",
+        "//src/com/facebook/buck/rules/modern:modern",
+        "//third-party/java/guava:guava",
+    ],
+)
