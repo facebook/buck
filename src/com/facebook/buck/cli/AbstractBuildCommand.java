@@ -58,7 +58,6 @@ import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.support.cli.config.AliasConfig;
-import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ListeningProcessExecutor;
@@ -332,12 +331,6 @@ abstract class AbstractBuildCommand extends AbstractCommand {
       Function<ImmutableList<TargetNodeSpec>, ImmutableList<TargetNodeSpec>> targetNodeSpecEnhancer,
       ImmutableSet<String> additionalTargets)
       throws Exception {
-    if (showOutput) {
-      CommandHelper.maybePrintShowOutputWarning(
-          params.getBuckConfig().getView(CliConfig.class),
-          params.getConsole().getAnsi(),
-          params.getBuckEventBus());
-    }
     if (!additionalTargets.isEmpty()) {
       this.arguments.addAll(additionalTargets);
     }

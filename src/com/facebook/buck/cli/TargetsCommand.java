@@ -482,12 +482,6 @@ public class TargetsCommand extends AbstractCommand {
   private ExitCode runWithExecutor(CommandRunnerParams params, ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, CycleException,
           VersionException {
-    if (isShowOutput) {
-      CommandHelper.maybePrintShowOutputWarning(
-          params.getBuckConfig().getView(CliConfig.class),
-          params.getConsole().getAnsi(),
-          params.getBuckEventBus());
-    }
     Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses =
         getDescriptionClassFromParams(params);
     if (!descriptionClasses.isPresent()) {

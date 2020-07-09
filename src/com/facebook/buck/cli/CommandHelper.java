@@ -16,10 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.support.cli.config.CliConfig;
-import com.facebook.buck.util.Ansi;
 import java.io.PrintStream;
 
 /** Utility class with print methods */
@@ -37,20 +33,5 @@ public final class CommandHelper {
     printStream.println("Description: ");
     printStream.println("  " + command.getShortDescription());
     printStream.println();
-  }
-
-  /**
-   * Prints a warning to terminal about --show-output being replaced by --show-outputs if the
-   * warning is enabled in the buck config and the environment supports ANSI.
-   */
-  public static void maybePrintShowOutputWarning(
-      CliConfig cliConfig, Ansi ansi, BuckEventBus buckEventBus) {
-    if (ansi.isAnsiTerminal() && cliConfig.getEnableShowOutputWarning()) {
-      buckEventBus.post(
-          ConsoleEvent.warning(
-              "--show-output is being deprecated. Use --show-outputs instead. Note that with "
-                  + "--show-outputs, multiple files may be printed for each individual build "
-                  + "target."));
-    }
   }
 }
