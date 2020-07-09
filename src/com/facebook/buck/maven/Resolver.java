@@ -234,8 +234,14 @@ public class Resolver {
     // Populate deps
     Iterable<Artifact> incoming = graph.getIncomingNodesFor(artifactToDownload);
     for (Artifact artifact : incoming) {
-      String groupName = getProjectName(artifact);
-      library.addDep(buckThirdPartyRelativePath, artifact);
+      Path incomingPath = buckRepoRoot.resolve(buckThirdPartyRelativePath)
+                                    .resolve(getProjectName(artifact))
+                                    .resolve(artifact.getArtifactId());
+      if (artifactPath.equals(incomingPath)) {
+        continue;
+      } else {
+        library.addDep(buckThirdPartyRelativePath, artifact);
+      }
     }
 
     // Populate visibility
@@ -274,7 +280,7 @@ public class Resolver {
       throws ArtifactResolutionException, IOException {
     Optional<Path> newerVersionFile = getNewerVersionFile(artifact, project);
     if (newerVersionFile.isPresent()) {
-      return newerVersionFile.get();
+      return newerVersionFile.get().getFileName();
     }
     ArtifactResult result =
         repoSys.resolveArtifact(session, new ArtifactRequest(artifact, repos, null));
