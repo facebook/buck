@@ -20,7 +20,9 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.param.ParamName;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.Comparator;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -39,6 +41,20 @@ public abstract class ParamsInfo {
   public ImmutableMap<ParamName, ParamInfo<?>> getParamInfosByName() {
     return getParamInfosSorted().stream()
         .collect(ImmutableMap.toImmutableMap(ParamInfo::getName, p -> p));
+  }
+
+  @Value.Derived
+  public ImmutableSet<ParamName> getRequiredParams() {
+    return getParamInfosSorted().stream()
+        .flatMap(
+            p -> {
+              if (p.isOptional()) {
+                return Stream.empty();
+              } else {
+                return Stream.of(p.getName());
+              }
+            })
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Value.Derived

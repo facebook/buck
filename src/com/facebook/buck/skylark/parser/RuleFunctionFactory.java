@@ -29,19 +29,17 @@ import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.skylark.parser.pojoizer.BuildFileManifestPojoizer;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.BaseFunction;
-import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.Tuple;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -88,21 +86,17 @@ public class RuleFunctionFactory {
       }
 
       @Override
-      public Object call(
-          StarlarkThread thread, Location loc, Tuple<Object> args, Dict<String, Object> kwargs)
+      public Object fastcall(
+          StarlarkThread thread, Location loc, Object[] positional, Object[] named)
           throws EvalException, InterruptedException {
 
-        // sanity check; Starlark has already validated signature
-        Preconditions.checkArgument(
-            args.isEmpty(),
-            "When calling rule: %s with args: %s kwargs: %s",
-            getName(),
-            args,
-            kwargs);
+        if (positional.length != 0) {
+          throw new EvalException(loc, "rule functions only accept named arguments");
+        }
 
         ParseContext parseContext = ParseContext.getParseContext(thread, loc, name);
         ForwardRelativePath basePath = parseContext.getPackageContext().getBasePath();
-        RecordedRule recordedRule = populateAttributes(ruleClass, getName(), basePath, kwargs, loc);
+        RecordedRule recordedRule = populateAttributes(ruleClass, getName(), basePath, named, loc);
         parseContext.recordRule(recordedRule, loc);
         return Starlark.NONE;
       }
@@ -113,29 +107,18 @@ public class RuleFunctionFactory {
    * Validates attributes passed to the rule and in case any required attribute is not provided,
    * throws an {@link IllegalArgumentException}.
    *
-   * @param kwargs The keyword arguments passed to the rule.
-   * @param allParamInfo The mapping from build rule attributes to their information.
    * @param name The build rule name. (e.g. {@code java_library}).
    * @param loc Location of the invocation
    */
   private void throwOnMissingRequiredAttribute(
-      Map<String, Object> kwargs,
-      ImmutableMap<ParamName, ParamInfo<?>> allParamInfo,
-      String name,
-      Location loc)
-      throws EvalException {
-    ImmutableList<ParamInfo<?>> missingAttributes =
-        allParamInfo.values().stream()
-            .filter(
-                param -> !param.isOptional() && !kwargs.containsKey(param.getName().getSnakeCase()))
-            .collect(ImmutableList.toImmutableList());
+      Set<ParamName> missingAttributes, String name, Location loc) throws EvalException {
     if (!missingAttributes.isEmpty()) {
       throw new EvalException(
           loc,
           name
               + " requires "
               + missingAttributes.stream()
-                  .map(p -> p.getName().getSnakeCase())
+                  .map(ParamName::getSnakeCase)
                   .sorted(ParamInfo.NAME_COMPARATOR)
                   .collect(Collectors.joining(" and "))
               + " but they are not provided.\n"
@@ -156,7 +139,7 @@ public class RuleFunctionFactory {
       BaseDescription<?> ruleClass,
       String name,
       ForwardRelativePath basePath,
-      Map<String, Object> kwargs,
+      Object[] kwargs,
       Location loc)
       throws EvalException {
 
@@ -172,36 +155,59 @@ public class RuleFunctionFactory {
     ImmutableList<String> visibility = ImmutableList.of();
     ImmutableList<String> withinView = ImmutableList.of();
 
-    for (Map.Entry<String, Object> kwargEntry : kwargs.entrySet()) {
-      ParamName paramName = ParamName.bySnakeCase(kwargEntry.getKey());
-      Object value = kwargEntry.getValue();
+    HashSet<ParamName> missingRequiredParams = new HashSet<>(allParamInfo.getRequiredParams());
 
-      if (value == Starlark.NONE) {
+    for (int i = 0; i != kwargs.length; i += 2) {
+      ParamName paramName = ParamName.bySnakeCase((String) kwargs[i]);
+      Object value = kwargs[i + 1];
+      Object converted = BuildFileManifestPojoizer.convertToPojo(value);
+
+      missingRequiredParams.remove(paramName);
+
+      if (paramName == CommonParamNames.VISIBILITY) {
+        visibility = toListOfString(paramName, converted);
         continue;
       }
-
-      if (kwargEntry.getKey().equals(CommonParamNames.VISIBILITY.getSnakeCase())) {
-        visibility = toListOfString(kwargEntry.getKey(), value);
-        continue;
-      }
-      if (kwargEntry.getKey().equals(CommonParamNames.WITHIN_VIEW.getSnakeCase())) {
-        withinView = toListOfString(kwargEntry.getKey(), value);
+      if (paramName == CommonParamNames.WITHIN_VIEW) {
+        withinView = toListOfString(paramName, converted);
         continue;
       }
       if (!allParamInfo.getParamInfosByName().containsKey(paramName)) {
-        throw new EvalException(loc, kwargEntry.getKey() + " is not a recognized attribute");
+        throw new EvalException(loc, paramName + " is not a recognized attribute");
       }
-      Object converted = BuildFileManifestPojoizer.convertToPojo(value);
       if (converted != Starlark.NONE) {
         builder.put(paramName, converted);
       }
     }
 
-    throwOnMissingRequiredAttribute(kwargs, allParamInfo.getParamInfosByName(), name, loc);
-    return RecordedRule.of(basePath, name, visibility, withinView, builder.build());
+    throwOnMissingRequiredAttribute(missingRequiredParams, name, loc);
+
+    TwoArraysImmutableHashMap<ParamName, Object> attributes;
+
+    try {
+      attributes = builder.build();
+    } catch (IllegalStateException e) {
+      throw duplicateNamedArgs(loc, name, kwargs);
+    }
+    return RecordedRule.of(basePath, name, visibility, withinView, attributes);
   }
 
-  private static ImmutableList<String> toListOfString(String attrName, Object value) {
+  private EvalException duplicateNamedArgs(Location loc, String name, Object[] kwargs) {
+    HashSet<String> seen = new HashSet<>();
+    LinkedHashSet<String> duplicates = new LinkedHashSet<>();
+
+    for (int i = 0; i < kwargs.length; i += 2) {
+      String paramName = (String) kwargs[i];
+      if (!seen.add(paramName)) {
+        duplicates.add(paramName);
+      }
+    }
+
+    return new EvalException(
+        loc, "duplicate parameters: " + duplicates + " when creating rule: " + name);
+  }
+
+  private static ImmutableList<String> toListOfString(ParamName attrName, Object value) {
     if (value == Starlark.NONE) {
       return ImmutableList.of();
     } else if (value instanceof List<?>) {
