@@ -45,9 +45,10 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe {
   private static final WindowsNamedPipeLibrary API = WindowsNamedPipeLibrary.INSTANCE;
 
   private static final int KB_IN_BYTES = 1024;
-  // Linux has 64K buffer, MacOS 16K.
-  // Set buffer size to 32K (the number in the middle of Linux and MacOs sizes).
-  private static final int BUFFER_SIZE = 32 * KB_IN_BYTES;
+  // https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea?redirectedfrom=MSDN
+  // The buffer size specified should be small enough that your process will not run out of nonpaged
+  // pool, but large enough to accommodate typical requests.
+  private static final int BUFFER_SIZE = 2 * KB_IN_BYTES;
 
   private final LinkedBlockingQueue<HANDLE> openHandles;
   private final LinkedBlockingQueue<HANDLE> connectedHandles;
