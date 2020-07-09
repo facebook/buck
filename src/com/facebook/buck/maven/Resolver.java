@@ -224,17 +224,21 @@ public class Resolver {
       ImmutableMap<String, Dependency> specifiedDependencies)
       throws IOException, ArtifactResolutionException {
     String projectName = getProjectName(artifactToDownload);
-    Path project = buckRepoRoot.resolve(buckThirdPartyRelativePath).resolve(projectName);
-    Files.createDirectories(project);
+    Path artifactPath = buckRepoRoot.resolve(buckThirdPartyRelativePath)
+                               .resolve(projectName)
+                               .resolve(artifactToDownload.getArtifactId());
+    Files.createDirectories(artifactPath);
 
-    Prebuilt library = resolveLib(artifactToDownload, project);
+    Prebuilt library = resolveLib(artifactToDownload, artifactPath);
 
     // Populate deps
     Iterable<Artifact> incoming = graph.getIncomingNodesFor(artifactToDownload);
     for (Artifact artifact : incoming) {
-      String groupName = getProjectName(artifact);
-      if (projectName.equals(groupName)) {
-        library.addDep(String.format(":%s", artifact.getArtifactId()));
+      Path incomingPath = buckRepoRoot.resolve(buckThirdPartyRelativePath)
+                                    .resolve(getProjectName(artifact))
+                                    .resolve(artifact.getArtifactId());
+      if (artifactPath.equals(incomingPath)) {
+        continue;
       } else {
         library.addDep(buckThirdPartyRelativePath, artifact);
       }
@@ -254,20 +258,20 @@ public class Resolver {
         library.addVisibility(rule);
       }
     }
-    return Maps.immutableEntry(project, library);
+    return Maps.immutableEntry(artifactPath, library);
   }
 
-  private Prebuilt resolveLib(Artifact artifact, Path project)
+  private Prebuilt resolveLib(Artifact artifact, Path artifactPath)
       throws ArtifactResolutionException, IOException {
     Artifact jar =
         new DefaultArtifact(
             artifact.getGroupId(), artifact.getArtifactId(), "jar", artifact.getVersion());
 
-    Path relativePath = resolveArtifact(jar, project);
+    Path relativePath = resolveArtifact(jar, artifactPath);
 
     Prebuilt library = new Prebuilt(jar.getArtifactId(), jar.toString(), relativePath);
 
-    downloadSources(jar, project, library);
+    downloadSources(jar, artifactPath, library);
     return library;
   }
 
@@ -276,7 +280,7 @@ public class Resolver {
       throws ArtifactResolutionException, IOException {
     Optional<Path> newerVersionFile = getNewerVersionFile(artifact, project);
     if (newerVersionFile.isPresent()) {
-      return newerVersionFile.get();
+      return newerVersionFile.get().getFileName();
     }
     ArtifactResult result =
         repoSys.resolveArtifact(session, new ArtifactRequest(artifact, repos, null));
@@ -648,9 +652,10 @@ public class Resolver {
 
     private String formatDep(Path buckThirdPartyRelativePath, Artifact artifact) {
       return String.format(
-          "//%s/%s:%s",
+          "//%s/%s/%s:%s",
           PathFormatter.pathWithUnixSeparators(buckThirdPartyRelativePath),
           getProjectName(artifact),
+          artifact.getArtifactId(),
           artifact.getArtifactId());
     }
 
