@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.features.project.intellij.IjKotlinHelper;
 import com.facebook.buck.features.project.intellij.JavaLanguageLevelHelper;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
+import com.facebook.buck.features.project.intellij.Util;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
 import com.facebook.buck.features.project.intellij.lang.java.JavaLibraryRuleHelper;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
@@ -68,7 +69,7 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
           IjLibrary.builder()
               .setBinaryJars(ImmutableSet.of(dummyRDotJavaClassPath.get()))
               .setTargets(ImmutableSet.of(dummyRDotJavaTarget))
-              .setName(dummyRDotJavaTarget.getFullyQualifiedName())
+              .setName(Util.intelliJLibraryName(dummyRDotJavaTarget))
               .build();
       context.addExtraLibraryDependency(extraLibraryDependency);
       context.addExtraModuleDependency(dummyRDotJavaClassPath.get());
