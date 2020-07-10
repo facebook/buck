@@ -706,12 +706,14 @@ public class TestRunning {
       String name = Strings.nullToEmpty(testResult.getTestName());
       String time = Long.toString(testResult.getTime());
       String status = testResult.isSuccess() ? "PASS" : "FAIL";
+      String type = testResult.getType().name();
 
       // Create the tag: <testresult name="..." time="...">
       Element testResultEl = doc.createElement("testresult");
       testResultEl.setAttribute("name", name);
       testResultEl.setAttribute("time", time);
       testResultEl.setAttribute("status", status);
+      testResultEl.setAttribute("type", type);
       testEl.appendChild(testResultEl);
 
       // Create the tag: <message>(Error message here)</message>
