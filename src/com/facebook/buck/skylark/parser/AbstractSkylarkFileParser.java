@@ -39,11 +39,13 @@ import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
@@ -70,6 +72,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -238,12 +241,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       ReadConfigContext readConfigContext,
       @Nullable ExtensionData implicitLoadExtensionData)
       throws IOException, InterruptedException, BuildFileParseException {
-    ImmutableList<ExtensionData> dependencies =
+    ImmutableMap<String, ExtensionData> dependencies =
         loadExtensions(containingLabel, getImports(buildFileAst, containingLabel), LoadStack.EMPTY);
-    ImmutableMap<String, StarlarkThread.Extension> importMap = toImportMap(dependencies);
     StarlarkThread env =
         StarlarkThread.builder(mutability)
-            .setImportedExtensions(importMap)
+            .setImportedExtensions(Maps.transformValues(dependencies, ExtensionData::getExtension))
             .setGlobals(buckGlobals.getBuckBuildFileContextGlobals())
             .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .setEventHandler(eventHandler)
@@ -253,7 +255,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     readConfigContext.setup(env);
 
     return ImmutableEnvironmentData.ofImpl(
-        env, toLoadedPaths(buildFilePath, dependencies, implicitLoadExtensionData));
+        env, toLoadedPaths(buildFilePath, dependencies.values(), implicitLoadExtensionData));
   }
 
   private PackageContext createPackageContext(
@@ -287,22 +289,22 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    */
   private ImmutableList<String> toLoadedPaths(
       com.google.devtools.build.lib.vfs.Path containingPath,
-      ImmutableList<ExtensionData> dependencies,
+      ImmutableCollection<ExtensionData> dependencies,
       @Nullable ExtensionData implicitLoadExtensionData) {
     // expected size is used to reduce the number of unnecessary resize invocations
     int expectedSize = 1;
     if (implicitLoadExtensionData != null) {
       expectedSize += implicitLoadExtensionData.getLoadTransitiveClosure().size();
     }
-    for (int i = 0; i < dependencies.size(); ++i) {
-      expectedSize += dependencies.get(i).getLoadTransitiveClosure().size();
+    for (ExtensionData dependency : dependencies) {
+      expectedSize += dependency.getLoadTransitiveClosure().size();
     }
     ImmutableList.Builder<String> loadedPathsBuilder =
         ImmutableList.builderWithExpectedSize(expectedSize);
     // for loop is used instead of foreach to avoid iterator overhead, since it's a hot spot
     loadedPathsBuilder.add(containingPath.toString());
-    for (int i = 0; i < dependencies.size(); ++i) {
-      loadedPathsBuilder.addAll(dependencies.get(i).getLoadTransitiveClosure());
+    for (ExtensionData dependency : dependencies) {
+      loadedPathsBuilder.addAll(dependency.getLoadTransitiveClosure());
     }
     if (implicitLoadExtensionData != null) {
       loadedPathsBuilder.addAll(implicitLoadExtensionData.getLoadTransitiveClosure());
@@ -461,12 +463,12 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   }
 
   /** Loads all extensions identified by corresponding imports. */
-  protected ImmutableList<ExtensionData> loadExtensions(
+  protected ImmutableMap<String, ExtensionData> loadExtensions(
       Label containingLabel, ImmutableList<LoadImport> skylarkImports, LoadStack loadStack)
       throws BuildFileParseException, IOException, InterruptedException {
     Set<String> processed = new HashSet<>(skylarkImports.size());
-    ImmutableList.Builder<ExtensionData> extensions =
-        ImmutableList.builderWithExpectedSize(skylarkImports.size());
+    ImmutableMap.Builder<String, ExtensionData> extensions =
+        ImmutableMap.builderWithExpectedSize(skylarkImports.size());
     // foreach is not used to avoid iterator overhead
     for (int i = 0; i < skylarkImports.size(); ++i) {
       LoadImport skylarkImport = skylarkImports.get(i);
@@ -476,7 +478,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       // sometimes users include the same extension multiple times...
       if (!processed.add(skylarkImport.getImport())) continue;
       try {
-        extensions.add(
+        extensions.put(
+            skylarkImport.getImport(),
             loadExtension(skylarkImport, loadStack.child(skylarkImport.getImportLocation())));
       } catch (UncheckedExecutionException e) {
         propagateRootCause(e);
@@ -508,23 +511,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       throw (InterruptedException) rootCause;
     }
     throw e;
-  }
-
-  /**
-   * @return The map from skylark import string like {@code //pkg:build_rules.bzl} to an {@link
-   *     com.google.devtools.build.lib.syntax.StarlarkThread.Extension} for provided {@code
-   *     dependencies}.
-   */
-  private ImmutableMap<String, StarlarkThread.Extension> toImportMap(
-      ImmutableList<ExtensionData> dependencies) {
-    ImmutableMap.Builder<String, StarlarkThread.Extension> builder =
-        ImmutableMap.builderWithExpectedSize(dependencies.size());
-    // foreach is not used to avoid iterator overhead
-    for (int i = 0; i < dependencies.size(); ++i) {
-      ExtensionData extensionData = dependencies.get(i);
-      builder.put(extensionData.getImportString(), extensionData.getExtension());
-    }
-    return builder.build();
   }
 
   /**
@@ -609,19 +595,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    * @param dependencies list of load import dependencies
    * @returns list of ExtensionData
    */
-  private ImmutableList<ExtensionData> getDependenciesExtensionData(
+  private ImmutableMap<String, ExtensionData> getDependenciesExtensionData(
       Label label, Set<LoadImport> dependencies) throws BuildFileParseException {
-    ImmutableList.Builder<ExtensionData> depBuilder =
-        ImmutableList.builderWithExpectedSize(dependencies.size());
-
-    HashSet<String> visitedDependencies = new HashSet<>();
+    HashMap<String, ExtensionData> depBuilder = new HashMap<>();
 
     for (LoadImport dependency : dependencies) {
-      // No need to load the same extension twice even if it is imported twice
-      if (!visitedDependencies.add(dependency.getImport())) {
-        continue;
-      }
-
       ExtensionData extension =
           lookupExtensionForImport(
               getImportPath(dependency.getLabel(), dependency.getImport()), dependency.getImport());
@@ -632,10 +610,10 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
             label, dependency.getLabel());
       }
 
-      depBuilder.add(extension);
+      depBuilder.putIfAbsent(dependency.getImport(), extension);
     }
 
-    return depBuilder.build();
+    return ImmutableMap.copyOf(depBuilder);
   }
 
   /**
@@ -710,7 +688,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    */
   @VisibleForTesting
   protected ExtensionData buildExtensionData(ExtensionLoadState load) throws InterruptedException {
-    ImmutableList<ExtensionData> dependencies =
+    ImmutableMap<String, ExtensionData> dependencies =
         getDependenciesExtensionData(load.getLabel(), load.getDependencies());
     StarlarkThread.Extension loadedExtension;
     try (Mutability mutability = Mutability.create("importing extension")) {
@@ -718,7 +696,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
           StarlarkThread.builder(mutability)
               .setEventHandler(eventHandler)
               .setGlobals(buckGlobals.getBuckLoadContextGlobals().withLabel(load.getLabel()));
-      envBuilder.setImportedExtensions(toImportMap(dependencies));
+      envBuilder.setImportedExtensions(
+          Maps.transformValues(dependencies, ExtensionData::getExtension));
 
       // Create this extension.
       StarlarkThread extensionEnv =
@@ -765,9 +744,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     return ImmutableExtensionData.ofImpl(
         loadedExtension,
         load.getPath(),
-        dependencies,
+        dependencies.values(),
         load.getSkylarkImport(),
-        toLoadedPaths(load.getPath(), dependencies, null));
+        toLoadedPaths(load.getPath(), dependencies.values(), null));
   }
 
   /**
