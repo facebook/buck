@@ -36,17 +36,9 @@ abstract class ExtensionData {
   /** @return a set of dependencies that were required to evaluate this extension */
   public abstract ImmutableSet<ExtensionData> getDependencies();
 
-  /** @return a load function label that triggered load of this extension */
-  public abstract String getImportString();
-
   /**
    * @return the list of files loaded in order to parse this extension including the path of this
    *     extension, which is the first element of the list.
    */
   public abstract ImmutableSet<String> getLoadTransitiveClosure();
-
-  ExtensionData withImportString(String importString) {
-    return ImmutableExtensionData.ofImpl(
-        getExtension(), getPath(), getDependencies(), importString, getLoadTransitiveClosure());
-  }
 }

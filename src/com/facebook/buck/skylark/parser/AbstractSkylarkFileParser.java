@@ -601,8 +601,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     for (LoadImport dependency : dependencies) {
       ExtensionData extension =
-          lookupExtensionForImport(
-              getImportPath(dependency.getLabel(), dependency.getImport()), dependency.getImport());
+          lookupExtensionForImport(getImportPath(dependency.getLabel(), dependency.getImport()));
 
       if (extension == null) {
         throw BuildFileParseException.createForUnknownParseError(
@@ -621,14 +620,12 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    * import string.
    *
    * @param path a path for the extension to lookup
-   * @param importString a skylark import string for this extension load
    * @return {@link ExtensionData} suitable for the requested extension and importString, or null if
    *     no such extension found.
    */
   private @Nullable ExtensionData lookupExtensionForImport(
-      com.google.devtools.build.lib.vfs.Path path, String importString) {
-    ExtensionData ext = extensionDataCache.getIfPresent(path);
-    return ext == null ? ext : ext.withImportString(importString);
+      com.google.devtools.build.lib.vfs.Path path) {
+    return extensionDataCache.getIfPresent(path);
   }
 
   /**
@@ -745,7 +742,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         loadedExtension,
         load.getPath(),
         dependencies.values(),
-        load.getSkylarkImport(),
         toLoadedPaths(load.getPath(), dependencies.values(), null));
   }
 
@@ -797,7 +793,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     while (!work.isEmpty()) {
       ExtensionLoadState load = work.peek();
-      extension = lookupExtensionForImport(load.getPath(), load.getSkylarkImport());
+      extension = lookupExtensionForImport(load.getPath());
 
       if (extension != null) {
         // It's possible that some lower level dependencies already loaded
