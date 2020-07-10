@@ -3434,6 +3434,11 @@ public class ProjectGenerator {
       return Optional.of(
           CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.RESOURCES));
     } else if (targetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
+      PrebuiltAppleFrameworkDescriptionArg frameworkDescriptionArg =
+          (PrebuiltAppleFrameworkDescriptionArg) targetNode.getConstructorArg();
+      if (frameworkDescriptionArg.getPreferredLinkage() == NativeLinkableGroup.Linkage.STATIC) {
+        return Optional.empty();
+      }
       return Optional.of(
           CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS));
     } else if (targetNode.getDescription() instanceof PrebuiltCxxLibraryDescription) {
