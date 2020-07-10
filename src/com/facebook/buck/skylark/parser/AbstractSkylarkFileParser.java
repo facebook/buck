@@ -240,8 +240,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       throws IOException, InterruptedException, BuildFileParseException {
     ImmutableList<ExtensionData> dependencies =
         loadExtensions(containingLabel, getImports(buildFileAst, containingLabel), LoadStack.EMPTY);
-    ImmutableMap<String, StarlarkThread.Extension> importMap =
-        toImportMap(dependencies, implicitLoadExtensionData);
+    ImmutableMap<String, StarlarkThread.Extension> importMap = toImportMap(dependencies);
     StarlarkThread env =
         StarlarkThread.builder(mutability)
             .setImportedExtensions(importMap)
@@ -517,19 +516,13 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *     dependencies}.
    */
   private ImmutableMap<String, StarlarkThread.Extension> toImportMap(
-      ImmutableList<ExtensionData> dependencies,
-      @Nullable ExtensionData implicitLoadExtensionData) {
+      ImmutableList<ExtensionData> dependencies) {
     ImmutableMap.Builder<String, StarlarkThread.Extension> builder =
-        ImmutableMap.builderWithExpectedSize(
-            dependencies.size() + (implicitLoadExtensionData == null ? 0 : 1));
+        ImmutableMap.builderWithExpectedSize(dependencies.size());
     // foreach is not used to avoid iterator overhead
     for (int i = 0; i < dependencies.size(); ++i) {
       ExtensionData extensionData = dependencies.get(i);
       builder.put(extensionData.getImportString(), extensionData.getExtension());
-    }
-    if (implicitLoadExtensionData != null) {
-      builder.put(
-          implicitLoadExtensionData.getImportString(), implicitLoadExtensionData.getExtension());
     }
     return builder.build();
   }
@@ -725,7 +718,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
           StarlarkThread.builder(mutability)
               .setEventHandler(eventHandler)
               .setGlobals(buckGlobals.getBuckLoadContextGlobals().withLabel(load.getLabel()));
-      envBuilder.setImportedExtensions(toImportMap(dependencies, null));
+      envBuilder.setImportedExtensions(toImportMap(dependencies));
 
       // Create this extension.
       StarlarkThread extensionEnv =
