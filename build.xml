@@ -749,7 +749,7 @@
         <include name="ziprules.jar" />
       </additional-classpath-entries>
       <module-resources>
-        <include name="com/facebook/buck/features/project/intellij/templates/*.st"/>
+        <include name="com/facebook/buck/features/project/intellij/templates/*.stg"/>
       </module-resources>
     </build-buck-module-jar-with-resources>
   </target>
