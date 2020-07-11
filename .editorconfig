@@ -14,3 +14,7 @@ tab_width = 2
 [{*.yml,*.yaml}]
 indent_size = 2
 tab_width = 2
+
+[build.xml]
+indent_size = 2
+tab_width = 2
