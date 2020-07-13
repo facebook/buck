@@ -151,7 +151,7 @@ public class CxxCompilationDatabaseTest {
 
     CxxCompilationDatabase compilationDatabase =
         CxxCompilationDatabase.createCompilationDatabase(
-            testBuildTarget, filesystem, rules.build());
+            testBuildTarget, filesystem, rules.build(), ImmutableList.of());
     graphBuilder.addToIndex(compilationDatabase);
 
     assertThat(

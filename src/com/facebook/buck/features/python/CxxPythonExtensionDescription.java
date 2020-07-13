@@ -391,7 +391,7 @@ public class CxxPythonExtensionDescription
         requireCxxObjects(
             target, projectFilesystem, graphBuilder, cellRoots, cxxPlatform, args, deps);
     return CxxCompilationDatabase.createCompilationDatabase(
-        target, projectFilesystem, objects.keySet());
+        target, projectFilesystem, objects.keySet(), ImmutableList.of());
   }
 
   @Override

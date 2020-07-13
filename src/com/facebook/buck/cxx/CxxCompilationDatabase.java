@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -41,6 +42,7 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -55,34 +57,52 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
   public static final Flavor UBER_COMPILATION_DATABASE =
       InternalFlavor.of("uber-compilation-database");
 
+  @AddToRuleKey private final ImmutableList<SourcePath> dbEntryPaths;
   @AddToRuleKey private final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
 
   @AddToRuleKey(stringify = true)
   private final RelPath outputJsonFile;
 
+  private final ImmutableSortedSet<BuildRule> buildDeps;
   private final ImmutableSortedSet<BuildRule> runtimeDeps;
 
   public static CxxCompilationDatabase createCompilationDatabase(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules) {
-    ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+      Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules,
+      ImmutableList<BuildRule> dbEntryRules) {
+
+    ImmutableSortedSet.Builder<BuildRule> runtimeDeps = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> compileRules =
         ImmutableSortedSet.naturalOrder();
     for (CxxPreprocessAndCompile compileRule : compileAndPreprocessRules) {
       compileRules.add(compileRule);
-      deps.addAll(compileRule.getBuildDeps());
+      runtimeDeps.addAll(compileRule.getBuildDeps());
     }
 
+    ImmutableList<SourcePath> dbEntryOutputs =
+        dbEntryRules.stream()
+            .map(dbRule -> dbRule.getSourcePathToOutput())
+            .collect(ImmutableList.toImmutableList());
+
     return new CxxCompilationDatabase(
-        buildTarget, projectFilesystem, compileRules.build(), deps.build());
+        buildTarget,
+        projectFilesystem,
+        compileRules.build(),
+        // Runtime deps are executed in parallel with the rule, no guarantee on ordering
+        runtimeDeps.build(),
+        // Need to depend on `dbEntryRules` as their output is used as part of this rule
+        ImmutableSortedSet.copyOf(dbEntryRules),
+        dbEntryOutputs);
   }
 
   CxxCompilationDatabase(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ImmutableSortedSet<CxxPreprocessAndCompile> compileRules,
-      ImmutableSortedSet<BuildRule> runtimeDeps) {
+      ImmutableSortedSet<BuildRule> runtimeDeps,
+      ImmutableSortedSet<BuildRule> buildDeps,
+      ImmutableList<SourcePath> dbEntryPaths) {
     super(buildTarget, projectFilesystem);
     LOG.debug("Creating compilation database %s with runtime deps %s", buildTarget, runtimeDeps);
     this.compileRules = compileRules;
@@ -90,6 +110,8 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
         BuildTargetPaths.getGenPath(
             getProjectFilesystem(), buildTarget, "__%s/compile_commands.json");
     this.runtimeDeps = runtimeDeps;
+    this.dbEntryPaths = dbEntryPaths;
+    this.buildDeps = buildDeps;
   }
 
   @Override
@@ -122,7 +144,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
 
   @Override
   public ImmutableSortedSet<BuildRule> getBuildDeps() {
-    return ImmutableSortedSet.of();
+    return buildDeps;
   }
 
   @Override
@@ -158,6 +180,16 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
           for (Iterator<CxxCompilationDatabaseEntry> entry = createEntries().iterator();
               entry.hasNext(); ) {
             jsonGen.writeObject(entry.next());
+          }
+          for (SourcePath entrySourcePath : dbEntryPaths) {
+            AbsPath entryPath =
+                this.context.getSourcePathResolver().getAbsolutePath(entrySourcePath);
+            JsonParser jsonParser = ObjectMappers.createParser(entryPath.getPath());
+            CxxCompilationDatabaseEntry[] entries =
+                ObjectMappers.READER.readValue(jsonParser, CxxCompilationDatabaseEntry[].class);
+            for (CxxCompilationDatabaseEntry entry : entries) {
+              jsonGen.writeObject(entry);
+            }
           }
           jsonGen.writeEndArray();
         }

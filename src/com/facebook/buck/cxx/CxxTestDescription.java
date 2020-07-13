@@ -198,7 +198,7 @@ public class CxxTestDescription
               flavoredStripStyle,
               flavoredLinkerMapMode);
       return CxxCompilationDatabase.createCompilationDatabase(
-          buildTarget, projectFilesystem, cxxLinkAndCompileRules.compileRules);
+          buildTarget, projectFilesystem, cxxLinkAndCompileRules.compileRules, ImmutableList.of());
     }
 
     if (buildTarget.getFlavors().contains(CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE)) {

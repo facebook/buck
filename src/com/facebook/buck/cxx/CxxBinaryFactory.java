@@ -138,7 +138,7 @@ public class CxxBinaryFactory {
               flavoredStripStyle,
               flavoredLinkerMapMode);
       return CxxCompilationDatabase.createCompilationDatabase(
-          target, projectFilesystem, cxxLinkAndCompileRules.compileRules);
+          target, projectFilesystem, cxxLinkAndCompileRules.compileRules, ImmutableList.of());
     }
 
     FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =

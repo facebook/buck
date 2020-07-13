@@ -156,7 +156,7 @@ public class CxxLibraryFactory {
               transitiveCxxPreprocessorInputFunction,
               configuredDelegate);
       return CxxCompilationDatabase.createCompilationDatabase(
-          buildTarget, projectFilesystem, objects.keySet());
+          buildTarget, projectFilesystem, objects.keySet(), ImmutableList.of());
     } else if (buildTarget
         .getFlavors()
         .contains(CxxDiagnosticsEnhancer.DIAGNOSTIC_AGGREGATION_FLAVOR)) {
