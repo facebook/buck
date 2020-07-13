@@ -96,7 +96,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final boolean shouldEmitSwiftdocs;
 
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
+  @AddToRuleKey protected final ImmutableSortedSet<SourcePath> srcs;
   @AddToRuleKey private final SwiftTargetTriple swiftTarget;
   @AddToRuleKey private final Optional<String> version;
   @AddToRuleKey private final ImmutableList<? extends Arg> compilerFlags;

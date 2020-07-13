@@ -37,4 +37,9 @@ public abstract class CxxCompilationDatabaseEntry {
   public abstract String getFile();
 
   public abstract ImmutableList<String> getArguments();
+
+  public static CxxCompilationDatabaseEntry of(
+      String directory, String file, ImmutableList<String> arguments) {
+    return ImmutableCxxCompilationDatabaseEntry.ofImpl(directory, file, arguments);
+  }
 }
