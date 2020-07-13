@@ -1,0 +1,10 @@
+prebuilt_jar(
+    name = "truth",
+    binary_jar = "truth-0.45.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = [
+        "//third-party/java/bazel/...",
+    ],
+)
