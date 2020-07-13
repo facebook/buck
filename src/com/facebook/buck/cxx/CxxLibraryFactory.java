@@ -155,8 +155,12 @@ public class CxxLibraryFactory {
               cxxDeps.get(graphBuilder, cxxPlatformOrDefault),
               transitiveCxxPreprocessorInputFunction,
               configuredDelegate);
+
+      ImmutableList<BuildRule> dbRules =
+          configuredDelegate.map(d -> d.getCompilationDatabaseRules()).orElse(ImmutableList.of());
+
       return CxxCompilationDatabase.createCompilationDatabase(
-          buildTarget, projectFilesystem, objects.keySet(), ImmutableList.of());
+          buildTarget, projectFilesystem, objects.keySet(), dbRules);
     } else if (buildTarget
         .getFlavors()
         .contains(CxxDiagnosticsEnhancer.DIAGNOSTIC_AGGREGATION_FLAVOR)) {

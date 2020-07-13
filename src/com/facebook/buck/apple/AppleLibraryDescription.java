@@ -1126,6 +1126,11 @@ public class AppleLibraryDescription
           }
 
           @Override
+          public ImmutableList<BuildRule> getCompilationDatabaseRules() {
+            return ImmutableList.of();
+          }
+
+          @Override
           public Optional<ImmutableList<NativeLinkableGroup>> getNativeLinkableExportedDeps() {
             return swiftRuntimeNativeLinkables;
           }

@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -63,6 +64,13 @@ public interface CxxLibraryDescriptionDelegate {
      * are correctly set up.
      */
     ImmutableList<SourcePath> getObjectFilePaths();
+
+    /**
+     * Defines a list of rules which produce additional entries in the compilation database. Each
+     * rule must produce a standalone compilation database. The databases produces by the rules will
+     * be merged into a single database.
+     */
+    ImmutableList<BuildRule> getCompilationDatabaseRules();
 
     /**
      * Provides the ability for the plugin to provide additional {@link NativeLinkable}s that will
