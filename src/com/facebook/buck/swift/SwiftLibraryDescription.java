@@ -64,6 +64,8 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
@@ -78,6 +80,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -300,19 +303,13 @@ public class SwiftLibraryDescription
           graphBuilder,
           swiftPlatform.get().getSwiftc(),
           args.getFrameworks(),
-          CxxDescriptionEnhancer.frameworkPathToSearchPath(
-              cxxPlatform, graphBuilder.getSourcePathResolver()),
+          getFrameworkPathToSearchPath(cxxPlatform, graphBuilder),
           cxxPlatform.getFlavor(),
-          args.getModuleName().orElse(buildTarget.getShortName()),
+          getModuleName(buildTarget, args),
           BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").getPath(),
           args.getSrcs(),
           args.getVersion(),
-          RichStream.from(args.getCompilerFlags())
-              .map(
-                  CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
-                          buildTargetCopy, cellRoots, graphBuilder, cxxPlatform)
-                      ::convert)
-              .toImmutableList(),
+          getCompilerFlags(cxxPlatform, buildTargetCopy, graphBuilder, cellRoots, args),
           args.getEnableObjcInterop(),
           args.getBridgingHeader(),
           preprocessor,
@@ -449,6 +446,69 @@ public class SwiftLibraryDescription
     }
   }
 
+  /** Returns a rule which writes a list of compilation Swift commands to a JSON file. */
+  public static SwiftCompilationDatabase createSwiftCompilationDatabaseRule(
+      CxxPlatform cxxPlatform,
+      SwiftPlatform swiftPlatform,
+      SwiftBuckConfig swiftBuckConfig,
+      DownwardApiConfig downwardApiConfig,
+      BuildTarget buildTarget,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      ProjectFilesystem projectFilesystem,
+      SwiftLibraryDescriptionArg args,
+      Preprocessor preprocessor,
+      PreprocessorFlags preprocessFlags,
+      boolean importUnderlyingModule,
+      Optional<SwiftTargetTriple> swiftTarget) {
+    return new SwiftCompilationDatabase(
+        swiftBuckConfig,
+        buildTarget,
+        getSwiftTarget(swiftPlatform, swiftTarget),
+        projectFilesystem,
+        graphBuilder,
+        swiftPlatform.getSwiftc(),
+        args.getFrameworks(),
+        getFrameworkPathToSearchPath(cxxPlatform, graphBuilder),
+        cxxPlatform.getFlavor(),
+        getModuleName(buildTarget, args),
+        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").getPath(),
+        args.getSrcs(),
+        args.getVersion(),
+        getCompilerFlags(cxxPlatform, buildTarget, graphBuilder, cellRoots, args),
+        args.getEnableObjcInterop(),
+        args.getBridgingHeader(),
+        preprocessor,
+        preprocessFlags,
+        importUnderlyingModule,
+        downwardApiConfig.isEnabledForApple());
+  }
+
+  private static SwiftTargetTriple getSwiftTarget(
+      SwiftPlatform swiftPlatform, Optional<SwiftTargetTriple> swiftTarget) {
+    return swiftTarget.orElse(swiftPlatform.getSwiftTarget());
+  }
+
+  private static AddsToRuleKeyFunction<FrameworkPath, Path> getFrameworkPathToSearchPath(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return CxxDescriptionEnhancer.frameworkPathToSearchPath(
+        cxxPlatform, graphBuilder.getSourcePathResolver());
+  }
+
+  private static ImmutableList<Arg> getCompilerFlags(
+      CxxPlatform cxxPlatform,
+      BuildTarget buildTarget,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      SwiftLibraryDescriptionArg args) {
+    return RichStream.from(args.getCompilerFlags())
+        .map(
+            CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                    buildTarget, cellRoots, graphBuilder, cxxPlatform)
+                ::convert)
+        .toImmutableList();
+  }
+
   public static SwiftCompile createSwiftCompileRule(
       CxxPlatform cxxPlatform,
       SwiftPlatform swiftPlatform,
@@ -466,30 +526,28 @@ public class SwiftLibraryDescription
     return new SwiftCompile(
         swiftBuckConfig,
         buildTarget,
-        swiftTarget.orElse(swiftPlatform.getSwiftTarget()),
+        getSwiftTarget(swiftPlatform, swiftTarget),
         projectFilesystem,
         graphBuilder,
         swiftPlatform.getSwiftc(),
         args.getFrameworks(),
-        CxxDescriptionEnhancer.frameworkPathToSearchPath(
-            cxxPlatform, graphBuilder.getSourcePathResolver()),
+        getFrameworkPathToSearchPath(cxxPlatform, graphBuilder),
         cxxPlatform.getFlavor(),
-        args.getModuleName().orElse(buildTarget.getShortName()),
+        getModuleName(buildTarget, args),
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").getPath(),
         args.getSrcs(),
         args.getVersion(),
-        RichStream.from(args.getCompilerFlags())
-            .map(
-                CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
-                        buildTarget, cellRoots, graphBuilder, cxxPlatform)
-                    ::convert)
-            .toImmutableList(),
+        getCompilerFlags(cxxPlatform, buildTarget, graphBuilder, cellRoots, args),
         args.getEnableObjcInterop(),
         args.getBridgingHeader(),
         preprocessor,
         preprocessFlags,
         importUnderlyingModule,
         downwardApiConfig.isEnabledForApple());
+  }
+
+  private static String getModuleName(BuildTarget buildTarget, SwiftLibraryDescriptionArg args) {
+    return args.getModuleName().orElse(buildTarget.getShortName());
   }
 
   public static boolean isSwiftTarget(BuildTarget buildTarget) {

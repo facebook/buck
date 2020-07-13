@@ -152,6 +152,7 @@ public class AppleLibraryDescription
     MACH_O_BUNDLE(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR),
     FRAMEWORK(AppleDescriptions.FRAMEWORK_FLAVOR),
     SWIFT_COMPILE(AppleDescriptions.SWIFT_COMPILE_FLAVOR),
+    SWIFT_COMMAND(AppleDescriptions.SWIFT_COMMAND_FLAVOR),
     SWIFT_OBJC_GENERATED_HEADER(AppleDescriptions.SWIFT_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR),
     SWIFT_EXPORTED_OBJC_GENERATED_HEADER(
         AppleDescriptions.SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR),
@@ -319,7 +320,8 @@ public class AppleLibraryDescription
                     graphBuilder,
                     cxxPlatform,
                     HeaderVisibility.PRIVATE));
-          } else if (type.getValue().equals(Type.SWIFT_COMPILE)) {
+          } else if (type.getValue().equals(Type.SWIFT_COMPILE)
+              || type.getValue().equals(Type.SWIFT_COMMAND)) {
             CxxPlatform cxxPlatform =
                 cxxPlatforms
                     .getValue(buildTarget)
@@ -346,18 +348,33 @@ public class AppleLibraryDescription
                                 .getPreprocessorInputsForAppleLibrary(
                                     buildTarget, graphBuilder, cxxPlatform, args));
 
-            return Optional.of(
-                AppleLibraryDescriptionSwiftEnhancer.createSwiftCompileRule(
-                    buildTarget,
-                    cellRoots,
-                    graphBuilder,
-                    args,
-                    projectFilesystem,
-                    cxxPlatform,
-                    applePlatform,
-                    swiftBuckConfig,
-                    downwardApiConfig,
-                    preprocessorInputs));
+            if (type.getValue().equals(Type.SWIFT_COMPILE)) {
+              return Optional.of(
+                  AppleLibraryDescriptionSwiftEnhancer.createSwiftCompileRule(
+                      buildTarget,
+                      cellRoots,
+                      graphBuilder,
+                      args,
+                      projectFilesystem,
+                      cxxPlatform,
+                      applePlatform,
+                      swiftBuckConfig,
+                      downwardApiConfig,
+                      preprocessorInputs));
+            } else if (type.getValue().equals(Type.SWIFT_COMMAND)) {
+              return Optional.of(
+                  AppleLibraryDescriptionSwiftEnhancer.createSwiftCompilationDatabaseRule(
+                      buildTarget,
+                      cellRoots,
+                      graphBuilder,
+                      args,
+                      projectFilesystem,
+                      cxxPlatform,
+                      applePlatform,
+                      swiftBuckConfig,
+                      downwardApiConfig,
+                      preprocessorInputs));
+            }
           }
 
           return Optional.empty();
@@ -1082,6 +1099,9 @@ public class AppleLibraryDescription
         AppleLibraryDescriptionSwiftEnhancer.createBuildTargetForSwiftCompile(target, platform);
     SwiftCompile swiftCompileRule = (SwiftCompile) graphBuilder.requireRule(swiftCompileTarget);
 
+    ImmutableList<BuildRule> compDbRules =
+        getCompilationDatabaseRulesForDelegate(target, platform, graphBuilder);
+
     SwiftPlatformsProvider swiftPlatformsProvider =
         toolchainProvider.getByName(
             SwiftPlatformsProvider.DEFAULT_NAME,
@@ -1127,7 +1147,7 @@ public class AppleLibraryDescription
 
           @Override
           public ImmutableList<BuildRule> getCompilationDatabaseRules() {
-            return ImmutableList.of();
+            return compDbRules;
           }
 
           @Override
@@ -1145,6 +1165,18 @@ public class AppleLibraryDescription
             return true;
           }
         });
+  }
+
+  private ImmutableList<BuildRule> getCompilationDatabaseRulesForDelegate(
+      BuildTarget target, CxxPlatform platform, ActionGraphBuilder graphBuilder) {
+    ImmutableList<BuildRule> compDbRules = ImmutableList.of();
+    if (appleConfig.compilationDatabaseIncludesSwift()) {
+      BuildTarget swiftCommandTarget =
+          AppleLibraryDescriptionSwiftEnhancer.createBuildTargetForSwiftCommand(target, platform);
+      BuildRule swiftCommandRule = graphBuilder.requireRule(swiftCommandTarget);
+      compDbRules = ImmutableList.of(swiftCommandRule);
+    }
+    return compDbRules;
   }
 
   private CxxPlatformsProvider getCxxPlatformsProvider(

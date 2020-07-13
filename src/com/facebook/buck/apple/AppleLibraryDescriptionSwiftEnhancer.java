@@ -125,6 +125,39 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         target, graphBuilder, platform);
   }
 
+  /** Forwards to {@link SwiftLibraryDescription} to create a Swift command rule. */
+  public static BuildRule createSwiftCompilationDatabaseRule(
+      BuildTarget target,
+      CellPathResolver cellRoots,
+      ActionGraphBuilder graphBuilder,
+      AppleNativeTargetDescriptionArg args,
+      ProjectFilesystem filesystem,
+      CxxPlatform platform,
+      AppleCxxPlatform applePlatform,
+      SwiftBuckConfig swiftBuckConfig,
+      DownwardApiConfig downwardApiConfig,
+      ImmutableSet<CxxPreprocessorInput> inputs) {
+
+    Optional<CxxPreprocessorInput> underlyingModule =
+        getUnderlyingModulePreprocessorInput(target, graphBuilder, platform);
+    SwiftPlatform swiftPlatform = applePlatform.getSwiftPlatform().get();
+
+    return SwiftLibraryDescription.createSwiftCompilationDatabaseRule(
+        platform,
+        swiftPlatform,
+        swiftBuckConfig,
+        downwardApiConfig,
+        target,
+        graphBuilder,
+        cellRoots,
+        filesystem,
+        getSwiftArgs(target, graphBuilder, args, swiftBuckConfig),
+        getPreprocessor(target, graphBuilder, platform),
+        getPreprocessorFlags(inputs),
+        underlyingModule.isPresent(),
+        getSwiftTargetTruple(args, swiftPlatform));
+  }
+
   /**
    * Returns transitive preprocessor inputs excluding those from the swift delegate of the given
    * CxxLibrary.
@@ -219,5 +252,11 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     // Swift compile rules can be required by other rules (e.g., `apple_test`, `apple_binary` etc).
     return target.withFlavors(
         AppleLibraryDescription.Type.SWIFT_COMPILE.getFlavor(), cxxPlatform.getFlavor());
+  }
+
+  public static BuildTarget createBuildTargetForSwiftCommand(
+      BuildTarget target, CxxPlatform cxxPlatform) {
+    return target.withFlavors(
+        AppleLibraryDescription.Type.SWIFT_COMMAND.getFlavor(), cxxPlatform.getFlavor());
   }
 }

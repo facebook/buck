@@ -74,6 +74,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   private static final String PROJECT_EXCLUDE_LABEL = "exclude_from_xcode";
 
+  private static final String COMP_DB_INCLUDES_SWIFT = "compilation_database_includes_swift";
+
   private final BuckConfig delegate;
 
   // Reflection-based factory for ConfigView
@@ -525,6 +527,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean enableFilegroupsInProjectGeneration() {
     return delegate.getBooleanValue(APPLE_SECTION, "enable_filegroups_in_xcode", true);
+  }
+
+  public boolean compilationDatabaseIncludesSwift() {
+    return delegate.getBooleanValue(APPLE_SECTION, COMP_DB_INCLUDES_SWIFT, false);
   }
 
   @BuckStyleValue
