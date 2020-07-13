@@ -210,7 +210,11 @@ def compare_dirs(dirOne, dirTwo):
 
 if __name__ == "__main__":
     if compareRootDirs:
-        compare_dirs(dirOne, dirTwo, "root dirs")
+        print_hash_calculations(dirOne, dirTwo, "root dirs")
     else:
-        compare_dirs(os.path.join(dirOne, "bin"), os.path.join(dirTwo, "bin"), "bin")
-        compare_dirs(os.path.join(dirOne, "gen"), os.path.join(dirTwo, "gen"), "gen")
+        print_hash_calculations(
+            os.path.join(dirOne, "bin"), os.path.join(dirTwo, "bin"), "bin"
+        )
+        print_hash_calculations(
+            os.path.join(dirOne, "gen"), os.path.join(dirTwo, "gen"), "gen"
+        )
