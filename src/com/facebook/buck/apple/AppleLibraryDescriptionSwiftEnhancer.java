@@ -40,6 +40,7 @@ import com.facebook.buck.swift.SwiftDescriptions;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftLibraryDescriptionArg;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -60,23 +61,15 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       DownwardApiConfig downwardApiConfig,
       ImmutableSet<CxxPreprocessorInput> inputs) {
 
-    SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
-    SwiftDescriptions.populateSwiftLibraryDescriptionArg(
-        swiftBuckConfig, graphBuilder.getSourcePathResolver(), delegateArgsBuilder, args, target);
-    delegateArgsBuilder.setTargetSdkVersion(args.getTargetSdkVersion());
-    SwiftLibraryDescriptionArg swiftArgs = delegateArgsBuilder.build();
+    SwiftLibraryDescriptionArg swiftArgs =
+        getSwiftArgs(target, graphBuilder, args, swiftBuckConfig);
 
-    Preprocessor preprocessor =
-        platform.getCpp().resolve(graphBuilder, target.getTargetConfiguration());
+    Preprocessor preprocessor = getPreprocessor(target, graphBuilder, platform);
 
-    PreprocessorFlags.Builder flagsBuilder = PreprocessorFlags.builder();
-    inputs.forEach(input -> flagsBuilder.addAllIncludes(input.getIncludes()));
-    inputs.forEach(input -> flagsBuilder.addAllFrameworkPaths(input.getFrameworks()));
-    PreprocessorFlags preprocessorFlags = flagsBuilder.build();
+    PreprocessorFlags preprocessorFlags = getPreprocessorFlags(inputs);
 
     Optional<CxxPreprocessorInput> underlyingModule =
-        AppleLibraryDescription.underlyingModuleCxxPreprocessorInput(
-            target, graphBuilder, platform);
+        getUnderlyingModulePreprocessorInput(target, graphBuilder, platform);
 
     SwiftPlatform swiftPlatform = applePlatform.getSwiftPlatform().get();
 
@@ -93,8 +86,43 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         preprocessor,
         preprocessorFlags,
         underlyingModule.isPresent(),
-        args.getTargetSdkVersion()
-            .map(version -> swiftPlatform.getSwiftTarget().withTargetSdkVersion(version)));
+        getSwiftTargetTruple(args, swiftPlatform));
+  }
+
+  private static Optional<SwiftTargetTriple> getSwiftTargetTruple(
+      AppleNativeTargetDescriptionArg args, SwiftPlatform swiftPlatform) {
+    return args.getTargetSdkVersion()
+        .map(version -> swiftPlatform.getSwiftTarget().withTargetSdkVersion(version));
+  }
+
+  private static SwiftLibraryDescriptionArg getSwiftArgs(
+      BuildTarget target,
+      ActionGraphBuilder graphBuilder,
+      AppleNativeTargetDescriptionArg args,
+      SwiftBuckConfig swiftBuckConfig) {
+    SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
+    SwiftDescriptions.populateSwiftLibraryDescriptionArg(
+        swiftBuckConfig, graphBuilder.getSourcePathResolver(), delegateArgsBuilder, args, target);
+    delegateArgsBuilder.setTargetSdkVersion(args.getTargetSdkVersion());
+    return delegateArgsBuilder.build();
+  }
+
+  private static Preprocessor getPreprocessor(
+      BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform platform) {
+    return platform.getCpp().resolve(graphBuilder, target.getTargetConfiguration());
+  }
+
+  private static PreprocessorFlags getPreprocessorFlags(ImmutableSet<CxxPreprocessorInput> inputs) {
+    PreprocessorFlags.Builder flagsBuilder = PreprocessorFlags.builder();
+    inputs.forEach(input -> flagsBuilder.addAllIncludes(input.getIncludes()));
+    inputs.forEach(input -> flagsBuilder.addAllFrameworkPaths(input.getFrameworks()));
+    return flagsBuilder.build();
+  }
+
+  private static Optional<CxxPreprocessorInput> getUnderlyingModulePreprocessorInput(
+      BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform platform) {
+    return AppleLibraryDescription.underlyingModuleCxxPreprocessorInput(
+        target, graphBuilder, platform);
   }
 
   /**
@@ -115,8 +143,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     builder.addAll(transitiveMap.values());
     if (arg.isModular()) {
       Optional<CxxPreprocessorInput> underlyingModule =
-          AppleLibraryDescription.underlyingModuleCxxPreprocessorInput(
-              target, graphBuilder, platform);
+          getUnderlyingModulePreprocessorInput(target, graphBuilder, platform);
       underlyingModule.ifPresent(builder::add);
     } else {
       builder.add(lib.getPublicCxxPreprocessorInputExcludingDelegate(platform, graphBuilder));
