@@ -21,7 +21,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.Escaper;
@@ -36,20 +35,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /** A step that compiles Swift sources to a single module. */
-class SwiftCompileStep implements Step {
+class SwiftCompileStep extends SwiftCompileStepBase {
 
   private static final Logger LOG = Logger.get(SwiftCompileStep.class);
 
-  private final AbsPath compilerCwd;
   private final ImmutableMap<String, String> compilerEnvironment;
-  private final ImmutableList<String> compilerCommandPrefix;
-  private final ImmutableList<String> compilerCommandArguments;
-  private final ProjectFilesystem filesystem;
   private final Optional<AbsPath> argfilePath;
-  private final boolean withDownwardApi;
 
   SwiftCompileStep(
       AbsPath compilerCwd,
@@ -59,13 +52,10 @@ class SwiftCompileStep implements Step {
       ProjectFilesystem filesystem,
       Optional<AbsPath> argfilePath,
       boolean withDownwardApi) {
-    this.compilerCwd = compilerCwd;
+    super(
+        compilerCwd, compilerCommandPrefix, compilerCommandArguments, filesystem, withDownwardApi);
     this.compilerEnvironment = ImmutableMap.copyOf(compilerEnvironment);
-    this.compilerCommandPrefix = compilerCommandPrefix;
-    this.compilerCommandArguments = compilerCommandArguments;
-    this.filesystem = filesystem;
     this.argfilePath = argfilePath;
-    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -112,11 +102,6 @@ class SwiftCompileStep implements Step {
 
   private Iterable<String> getColorArguments(boolean allowColorInDiagnostics) {
     return allowColorInDiagnostics ? ImmutableList.of("-color-diagnostics") : ImmutableList.of();
-  }
-
-  private ImmutableList<String> getRawCommand() {
-    return Stream.concat(compilerCommandPrefix.stream(), compilerCommandArguments.stream())
-        .collect(ImmutableList.toImmutableList());
   }
 
   @Override
