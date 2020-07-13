@@ -51,7 +51,6 @@ import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxToolFlags;
-import com.facebook.buck.cxx.DepsBuilder;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -464,10 +463,6 @@ public class SwiftLibraryDescription
       PreprocessorFlags preprocessFlags,
       boolean importUnderlyingModule,
       Optional<SwiftTargetTriple> swiftTarget) {
-
-    DepsBuilder srcsDepsBuilder = new DepsBuilder(graphBuilder);
-    args.getSrcs().forEach(src -> srcsDepsBuilder.add(src));
-
     return new SwiftCompile(
         swiftBuckConfig,
         buildTarget,

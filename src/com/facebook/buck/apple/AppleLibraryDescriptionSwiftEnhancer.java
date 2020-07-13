@@ -40,10 +40,8 @@ import com.facebook.buck.swift.SwiftDescriptions;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftLibraryDescriptionArg;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
-import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -70,14 +68,6 @@ public class AppleLibraryDescriptionSwiftEnhancer {
 
     Preprocessor preprocessor =
         platform.getCpp().resolve(graphBuilder, target.getTargetConfiguration());
-
-    ImmutableSet<BuildRule> inputDeps =
-        RichStream.from(inputs)
-            .flatMap(input -> RichStream.from(input.getDeps(graphBuilder)))
-            .toImmutableSet();
-
-    ImmutableSortedSet.Builder<BuildRule> sortedDeps = ImmutableSortedSet.naturalOrder();
-    sortedDeps.addAll(inputDeps);
 
     PreprocessorFlags.Builder flagsBuilder = PreprocessorFlags.builder();
     inputs.forEach(input -> flagsBuilder.addAllIncludes(input.getIncludes()));
