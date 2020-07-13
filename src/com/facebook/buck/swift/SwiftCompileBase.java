@@ -216,8 +216,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         !buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR));
   }
 
-  /** Creates the step that compiles the Swift code. */
-  protected SwiftCompileStep makeCompileStep(SourcePathResolverAdapter resolver) {
+  private ImmutableList<String> constructCompilerArgs(SourcePathResolverAdapter resolver) {
     ImmutableList.Builder<String> compilerArgs = ImmutableList.builder();
     compilerArgs.add("-target", swiftTarget.getTriple());
 
@@ -286,14 +285,20 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       }
     }
 
+    return compilerArgs.build();
+  }
+
+  /** Creates the step that compiles the Swift code. */
+  protected SwiftCompileStep makeCompileStep(SourcePathResolverAdapter resolver) {
     ImmutableList<String> commandPrefix = swiftCompiler.getCommandPrefix(resolver);
+    ImmutableList<String> compilerArgs = constructCompilerArgs(resolver);
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return new SwiftCompileStep(
         projectFilesystem.getRootPath(),
         ImmutableMap.of(),
         commandPrefix,
-        compilerArgs.build(),
+        compilerArgs,
         projectFilesystem,
         argfilePath,
         withDownwardApi);
