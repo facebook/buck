@@ -55,7 +55,6 @@ import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -73,7 +72,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   private static final String INCLUDE_FLAG = "-I";
 
-  @AddToRuleKey private final Tool swiftCompiler;
+  @AddToRuleKey protected final Tool swiftCompiler;
 
   @AddToRuleKey private final String moduleName;
 
@@ -119,7 +118,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final boolean useArgfile;
 
-  @AddToRuleKey private final boolean withDownwardApi;
+  @AddToRuleKey protected final boolean withDownwardApi;
 
   @AddToRuleKey private final boolean inputBasedEnabled;
 
@@ -127,7 +126,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   private BuildableSupport.DepsSupplier depsSupplier;
   protected final Optional<AbsPath> swiftFileListPath; // internal scratch temp path
-  private final Optional<AbsPath> argfilePath; // internal scratch temp path
+  protected final Optional<AbsPath> argfilePath; // internal scratch temp path
 
   SwiftCompileBase(
       SwiftBuckConfig swiftBuckConfig,
@@ -216,7 +215,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         !buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR));
   }
 
-  private ImmutableList<String> constructCompilerArgs(SourcePathResolverAdapter resolver) {
+  /** Creates the list of arguments to pass to the Swift compiler */
+  protected ImmutableList<String> constructCompilerArgs(SourcePathResolverAdapter resolver) {
     ImmutableList.Builder<String> compilerArgs = ImmutableList.builder();
     compilerArgs.add("-target", swiftTarget.getTriple());
 
@@ -286,22 +286,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     }
 
     return compilerArgs.build();
-  }
-
-  /** Creates the step that compiles the Swift code. */
-  protected SwiftCompileStep makeCompileStep(SourcePathResolverAdapter resolver) {
-    ImmutableList<String> commandPrefix = swiftCompiler.getCommandPrefix(resolver);
-    ImmutableList<String> compilerArgs = constructCompilerArgs(resolver);
-
-    ProjectFilesystem projectFilesystem = getProjectFilesystem();
-    return new SwiftCompileStep(
-        projectFilesystem.getRootPath(),
-        ImmutableMap.of(),
-        commandPrefix,
-        compilerArgs,
-        projectFilesystem,
-        argfilePath,
-        withDownwardApi);
   }
 
   @VisibleForTesting

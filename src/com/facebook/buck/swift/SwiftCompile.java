@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
@@ -36,6 +37,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -101,6 +103,22 @@ public class SwiftCompile extends SwiftCompileBase {
     steps.add(makeCompileStep(context.getSourcePathResolver()));
 
     return steps.build();
+  }
+
+  /** Creates the step that compiles the Swift code. */
+  private SwiftCompileStep makeCompileStep(SourcePathResolverAdapter resolver) {
+    ImmutableList<String> commandPrefix = swiftCompiler.getCommandPrefix(resolver);
+    ImmutableList<String> compilerArgs = constructCompilerArgs(resolver);
+
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    return new SwiftCompileStep(
+        projectFilesystem.getRootPath(),
+        ImmutableMap.of(),
+        commandPrefix,
+        compilerArgs,
+        projectFilesystem,
+        argfilePath,
+        withDownwardApi);
   }
 
   @Override
