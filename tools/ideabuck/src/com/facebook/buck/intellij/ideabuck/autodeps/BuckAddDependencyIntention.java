@@ -420,9 +420,9 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
                     + " on "
                     + importModule.getName());
           }
-          if (addImportAction != null) {
-            addImportAction.execute(project, reference, editor, psiClass);
-          }
         }));
+    if (addImportAction != null) {
+      addImportAction.execute(project, reference, editor, psiClass);
+    }
   }
 }
