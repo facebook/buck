@@ -198,3 +198,49 @@ python_binary(
         ":lib",
     ],
 )
+
+genrule(
+    name = "empty.py",
+    out = "empty.py",
+    cmd = "touch $OUT",
+)
+
+python_library(
+    name = "empty-gen",
+    srcs = [
+        ":empty.py",
+    ],
+)
+
+python_library(
+    name = "empty",
+    srcs = [
+        "empty.py",
+    ],
+)
+
+python_binary(
+    name = "generated_source_conflict",
+    main_module = "empty",
+    deps = [
+        ":empty",
+        ":empty-gen",
+    ],
+)
+
+python_library(
+    name = "empty-dup",
+    srcs = [
+        "empty.py",
+    ],
+)
+
+python_binary(
+    name = "duplicate_compiled_source",
+    main_module = "empty",
+    compile = True,
+    deps = [
+        ":empty",
+        ":empty-dup",
+    ],
+)

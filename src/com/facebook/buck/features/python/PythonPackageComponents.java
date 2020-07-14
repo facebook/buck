@@ -70,16 +70,21 @@ public abstract class PythonPackageComponents implements AddsToRuleKey {
     return deps.build();
   }
 
-  public PythonResolvedPackageComponents resolve(SourcePathResolverAdapter resolver) {
+  public PythonResolvedPackageComponents resolve(
+      SourcePathResolverAdapter resolver, boolean canAccessComponentContents) {
     return ImmutablePythonResolvedPackageComponents.builder()
-        .setModules(getModules().resolve(resolver))
-        .setResources(getResources().resolve(resolver))
-        .setNativeLibraries(getNativeLibraries().resolve(resolver))
+        .setModules(getModules().resolve(resolver, canAccessComponentContents))
+        .setResources(getResources().resolve(resolver, canAccessComponentContents))
+        .setNativeLibraries(getNativeLibraries().resolve(resolver, canAccessComponentContents))
         .setDefaultInitPy(
             getDefaultInitPy()
                 .map((SourcePath sourcePath) -> resolver.getAbsolutePath(sourcePath).getPath()))
         .setZipSafe(isZipSafe())
         .build();
+  }
+
+  public PythonResolvedPackageComponents resolve(SourcePathResolverAdapter resolver) {
+    return resolve(resolver, true);
   }
 
   public Symlinks asSymlinks() {
@@ -105,7 +110,7 @@ public abstract class PythonPackageComponents implements AddsToRuleKey {
 
       @Override
       public SymlinkPaths resolveSymlinkPaths(SourcePathResolverAdapter resolver) {
-        return resolve(resolver).asSymlinkPaths();
+        return resolve(resolver, false).asSymlinkPaths();
       }
 
       @Override

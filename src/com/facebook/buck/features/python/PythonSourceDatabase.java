@@ -119,7 +119,7 @@ public class PythonSourceDatabase extends ModernBuildRule<PythonSourceDatabase.I
                     getProjectFilesystem().getRootPath().relativize(src).toString()));
     ImmutableMap.Builder<String, String> dependenciesBuilder = ImmutableMap.builder();
     dependencies
-        .resolve(resolver)
+        .resolve(resolver, true)
         .forEachModule(
             Optional.empty(),
             (dst, src) ->
@@ -159,7 +159,7 @@ public class PythonSourceDatabase extends ModernBuildRule<PythonSourceDatabase.I
             private final PythonComponents.Resolved resolvedSources =
                 sources.resolvePythonComponents(buildContext.getSourcePathResolver());
             private final PythonResolvedComponentsGroup resolvedDependencies =
-                dependencies.resolve(buildContext.getSourcePathResolver());
+                dependencies.resolve(buildContext.getSourcePathResolver(), true);
 
             @Override
             public StepExecutionResult execute(StepExecutionContext context) throws IOException {

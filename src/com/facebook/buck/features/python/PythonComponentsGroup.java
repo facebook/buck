@@ -38,9 +38,11 @@ public abstract class PythonComponentsGroup implements AddsToRuleKey {
     return Iterables.concat(getComponents().values());
   }
 
-  public PythonResolvedComponentsGroup resolve(SourcePathResolverAdapter resolver) {
+  public PythonResolvedComponentsGroup resolve(
+      SourcePathResolverAdapter resolver, boolean canAccessComponentContents) {
     ImmutablePythonResolvedComponentsGroup.Builder builder =
         ImmutablePythonResolvedComponentsGroup.builder();
+    builder.setCanAccessComponentContents(canAccessComponentContents);
     getComponents()
         .forEach(
             (target, components) ->

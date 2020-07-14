@@ -464,6 +464,39 @@ public class PythonBinaryIntegrationTest {
         Matchers.matchesPattern(Pattern.compile(expected, Pattern.MULTILINE | Pattern.DOTALL)));
   }
 
+  /** Verify that multiple sources trying to occupy the same module cause conflict errors. */
+  @Test
+  public void buildFailsWhenGeneratedSourcesConflicts() {
+    assertThat(
+        workspace.runBuckBuild("//:generated_source_conflict").assertFailure().getStderr(),
+        Matchers.matchesPattern(
+            Pattern.compile(
+                ".*found duplicate entries for module \\S+ when creating python package.*",
+                Pattern.MULTILINE | Pattern.DOTALL)));
+  }
+
+  /**
+   * Verify that bytecode compiled from identical sources owned by different rules are correctly
+   * deduplicated and don't cause conflict build errors.
+   */
+  @Test
+  public void deduplicateSameSourceCompiledFromDifferentRules() throws Exception {
+
+    // We currently don't really support compiling in-place binaries.
+    assumeThat(packageStyle, is(PackageStyle.STANDALONE));
+
+    Path py3 = PythonTestUtils.assumeInterpreter("python3");
+    PythonTestUtils.assumeVersion(
+        py3,
+        Matchers.any(String.class),
+        ComparatorMatcherBuilder.comparedBy(new VersionStringComparator())
+            .greaterThanOrEqualTo("3.7"));
+
+    workspace
+        .runBuckBuild("-c", "python.interpreter=" + py3, "//:duplicate_compiled_source")
+        .assertSuccess();
+  }
+
   /**
    * Test a bug where a C/C++ library that is transitively excluded by a `python_library` containing
    * native extensions (in this case, it has to be a 2nd-order dep of the `python_library`) but
