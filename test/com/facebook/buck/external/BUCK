@@ -4,6 +4,7 @@ standard_java_test(
     name = "external",
     deps = [
         "//src-gen:buildable-command-model",
+        "//src/com/facebook/buck/downwardapi/utils:utils",
         "//src/com/facebook/buck/external:external",
         "//src/com/facebook/buck/rules/modern:modern",
         "//test/com/facebook/buck/testutil:testutil",
