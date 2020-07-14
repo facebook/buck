@@ -11,6 +11,7 @@ java_test(
     deps = [
         "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/bazel:bazel",
+        "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
         "//tools/documentation_generator/src/com/facebook/buck/tools/documentation/generator/skylark/rendering:rendering",
     ],

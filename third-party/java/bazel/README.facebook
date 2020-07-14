@@ -1,8 +1,11 @@
-To re-build bazel_deploy.jar on the same commit in bazel repository use the following command:
+This version contains a copy of a subset of bazel repository (version
+2.1.0 at the moment of writing) with certain modifications needed
+for Buck.
 
-update.sh $(cat COMMIT_HASH.facebook)
-
-To build bazel_deploy.jar using master in bazel repository run `update.sh`
-
-NOTE: this is not an official public API and is a subject to change, so the
-process described above might have to be updated.
+Incomplete list of changes:
+* recursion is allowed
+* removed logger from NestedSet (the change is no longer needed,
+  since NestedSet no longer depends on flogger)
+* heavily changes Attribute and Label classes
+* many operations changed to public to be usable outside of the package
+* disabled certain tests for features not used in Buck (e. g. serialization)

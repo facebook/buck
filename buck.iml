@@ -136,7 +136,6 @@
     <orderEntry type="library" name="sqlite" level="project" />
     <orderEntry type="library" name="android-tools-25.3.0" level="project" />
     <orderEntry type="library" name="jmh" level="project" />
-    <orderEntry type="library" name="bazel" level="project" />
     <orderEntry type="library" name="pf4j-2.0.0-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="test-lib" level="project" />
     <orderEntry type="library" name="fastutil-7.2.0" level="project" />
@@ -161,9 +160,10 @@
     <orderEntry type="library" name="kotlinx-metadata" level="project" />
     <orderEntry type="library" name="jackson-module-kotlin-2.9.9" level="project" />
     <orderEntry type="library" name="log4j2" level="project" />
-    <orderEntry type="library" name="Bundled Protobuf Distribution" level="application" />
     <orderEntry type="library" name="dex-method-counts" level="project" />
     <orderEntry type="library" name="scribe-thrift" level="project" />
     <orderEntry type="library" name="error_prone" level="project" />
+    <orderEntry type="library" name="jsr305" level="project" />
+    <orderEntry type="module" module-name="bazel" />
   </component>
 </module>

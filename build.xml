@@ -130,7 +130,6 @@
     <include name="jna/jna-4.5.1.jar" />
     <include name="jna/jna-platform-4.5.1.jar" />
     <include name="sqlite/sqlite-jdbc-3.20.0.jar" />
-    <include name="bazel/bazel_deploy.jar" />
     <include name="remote-apis/remote-apis.jar" />
   </fileset>
 
@@ -263,6 +262,7 @@
 
   <path id="classpath-no-src">
     <path refid="classpath-no-src-no-aosp" />
+    <pathelement location="${build.dir}/bazel.jar"/>
     <pathelement location="${aosp.classes.dir}" />
   </path>
 
@@ -589,7 +589,7 @@
   <target name="compile"
           depends="compile-buck-modules-annotation-processor, compile-testrunner, compile-aosp,
                    compile-manual-gen-src, bootstrapper, buckfilesystem, package-resources,
-                   tracing-api, dx"
+                   tracing-api, dx, compile-bazel"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 
@@ -888,6 +888,32 @@
     </jar>
   </target>
 
+  <target name="compile-bazel">
+    <mkdir dir="${build.dir}/bazel"/>
+
+    <javac destdir="${build.dir}/bazel"
+      debug="on"
+      source="8"
+      target="8">
+      <compilerarg value="-processorpath" />
+      <compilerarg value="third-party/java/auto/auto-value-1.6.3rc1.jar" />
+      <src path="third-party/java/bazel/src"/>
+      <classpath>
+        <pathelement location="third-party/java/guava/guava-25.1-jre.jar" />
+        <pathelement location="third-party/java/jsr/jsr305.jar" />
+        <pathelement location="third-party/java/errorprone/error_prone_annotations-2.2.0.jar" />
+        <pathelement location="third-party/java/protobuf/protobuf-java-3.7.0.jar" />
+        <pathelement location="third-party/java/protobuf/protobuf-java-util-3.7.0.jar" />
+        <pathelement location="third-party/java/auto/auto-value-annotations-1.6.3rc1.jar" />
+        <pathelement location="third-party/java/gson/gson-2.8.2.jar" />
+      </classpath>
+    </javac>
+
+    <jar destfile="${build.dir}/bazel.jar">
+      <fileset dir="${build.dir}/bazel" />
+    </jar>
+  </target>
+
   <!--
        Note: two of the dx tests (the two tests for the merger) run the command
        "dalvik" and expect it to be a working dalvik virtual machine.
@@ -1027,6 +1053,7 @@
       <string value="${manual.gensrc.classes.dir}" />
       <string value="${android.annotations.classes.dir}" />
       <string value="${aosp.classes.dir}" />
+      <string value="${build.dir}/bazel"/>
       <string value="${dx.classes.dir}" />
       <string value="${tracing-api.classes.dir}" />
       <string value="${bootstrapper.classes.dir}" />
@@ -1040,7 +1067,7 @@
     <echo file="${build.dir}/classpath/classpaths">${classpaths}</echo>
   </target>
 
-  <target name="create-classpath-hash" depends="copy-resources, compile, dx, javac-plugin,
+  <target name="create-classpath-hash" depends="copy-resources, compile, dx, compile-bazel, javac-plugin,
                                                 report-generator-jar, create-classpath">
     <delete file="${buck.hash.file}"/>
     <checksum todir="${build.dir}/checksums" totalproperty="buck.hash.value">

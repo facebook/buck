@@ -1,13 +1,39 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_library(
     name = "bazel",
-    binary_jar = "bazel_deploy.jar",
+    srcs = glob([
+        "src/**/*.java",
+    ]),
     licenses = ["LICENSE"],
-    source_jar = "bazel_deploy-src.jar",
+    plugins = [
+        "//third-party/java/auto:auto_value_processor",
+    ],
+    required_for_source_only_abi = True,
     visibility = ["PUBLIC"],
     deps = [
+        "//third-party/java/auto:auto_value_annotations",
         "//third-party/java/errorprone:error-prone-annotations",
+        "//third-party/java/gson:gson",
         "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
         "//third-party/java/objenesis:objenesis",
         "//third-party/java/protobuf:protobuf",
+        "//third-party/java/protobuf:protobuf-util",
+    ],
+)
+
+java_test(
+    name = "tests",
+    srcs = glob([
+        "test/**/*.java",
+    ]),
+    deps = [
+        ":bazel",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
+        "//third-party/java/protobuf:protobuf",
+        "//third-party/java/truth:truth",
     ],
 )

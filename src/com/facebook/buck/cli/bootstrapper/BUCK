@@ -17,6 +17,7 @@ java_library(
     visibility = [
         "//test/...",
         "//third-party/java/aosp:tests",
+        "//third-party/java/bazel:tests",
         "//tools/...",
     ],
     deps = [

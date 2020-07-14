@@ -8,6 +8,7 @@ java_test(
         "//src/com/facebook/buck/parser/implicit:implicit",
         "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/bazel:bazel",
+        "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],
 )

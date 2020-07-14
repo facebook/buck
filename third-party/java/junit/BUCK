@@ -9,7 +9,7 @@ prebuilt_jar(
     visibility = [
         "//src/com/facebook/buck/testrunner:junit",
         "//test/...",
-        "//third-party/java/aosp/...",
+        "//third-party/java/...",
         "//tools/...",
     ],
     deps = [
