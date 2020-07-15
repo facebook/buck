@@ -362,13 +362,6 @@ public class AppleResourceProcessing {
       BuildTarget buildTarget,
       Optional<String> binaryName,
       boolean withDownwardApi) {
-    boolean hasNoResourceToCopy =
-        resources.getResourceDirs().isEmpty()
-            && resources.getDirsContainingResourceDirs().isEmpty()
-            && resources.getResourceFiles().isEmpty();
-    if (hasNoResourceToCopy) {
-      return;
-    }
     if (verifyResources) {
       verifyResourceConflicts(resources, context.getSourcePathResolver());
     }
