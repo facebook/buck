@@ -213,7 +213,8 @@ public class AndroidResourceDescription
         args.getManifest().orElse(null),
         args.getHasWhitelistedStrings(),
         args.getResourceUnion(),
-        androidBuckConfig.isGrayscaleImageProcessingEnabled());
+        androidBuckConfig.isGrayscaleImageProcessingEnabled(),
+        androidBuckConfig.isVerifyingStylesXmlEnabled());
   }
 
   private MappedSymlinkTree createSymlinkTree(

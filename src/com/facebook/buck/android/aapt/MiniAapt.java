@@ -94,6 +94,10 @@ public class MiniAapt implements Step {
               + "not(starts-with(., '@null'))) or "
               + "starts-with(., '?attr')]");
 
+  private static final XPathExpression ANDROID_ATTR_USAGE_FOR_STYLES =
+      createExpression(
+          "//item/@name[not(starts-with(., 'android'))] | //item[@name]/text()[starts-with(., '?attr')]");
+
   private static final XPathExpression ANDROID_ID_DEFINITION =
       createExpression("//@*[starts-with(., '@+') and " + "not(starts-with(., '@+android:id'))]");
 
@@ -122,6 +126,7 @@ public class MiniAapt implements Step {
   private final ImmutableSet<Path> pathsToSymbolsOfDeps;
   private final ResourceCollector resourceCollector;
   private final boolean isGrayscaleImageProcessingEnabled;
+  private final boolean isVerifyingStylesXmlEnabled;
   private final ResourceCollectionType resourceCollectionType;
 
   public MiniAapt(
@@ -137,6 +142,7 @@ public class MiniAapt implements Step {
         pathToTextSymbolsFile,
         pathsToSymbolsOfDeps,
         /* isGrayscaleImageProcessingEnabled */ false,
+        /* isVerifyingStylesXmlEnabled */ false,
         ResourceCollectionType.R_DOT_TXT);
   }
 
@@ -147,6 +153,7 @@ public class MiniAapt implements Step {
       Path pathToOutputFile,
       ImmutableSet<Path> pathsToSymbolsOfDeps,
       boolean isGrayscaleImageProcessingEnabled,
+      boolean isVerifyingStylesXmlEnabled,
       ResourceCollectionType resourceCollectionType) {
     this.resolver = resolver;
     this.filesystem = filesystem;
@@ -154,6 +161,7 @@ public class MiniAapt implements Step {
     this.pathToOutputFile = pathToOutputFile;
     this.pathsToSymbolsOfDeps = pathsToSymbolsOfDeps;
     this.isGrayscaleImageProcessingEnabled = isGrayscaleImageProcessingEnabled;
+    this.isVerifyingStylesXmlEnabled = isVerifyingStylesXmlEnabled;
     this.resourceCollectionType = resourceCollectionType;
 
     switch (resourceCollectionType) {
@@ -524,11 +532,31 @@ public class MiniAapt implements Step {
             input -> input.toString().endsWith(".xml"),
             EnumSet.of(FileVisitOption.FOLLOW_LINKS))) {
       String dirname = relativeResDir.relativize(path).getName(0).toString();
-      if (isAValuesDir(dirname)) {
+      if (isVerifyingStylesXmlEnabled && path.endsWith("styles.xml")) {
+        processStyleFile(filesystem, path, references);
+      } else if (!isAValuesDir(dirname)) {
         // Ignore files under values* directories.
-        continue;
+        processXmlFile(this.filesystem, path, references);
       }
-      processXmlFile(this.filesystem, path, references);
+    }
+  }
+
+  @VisibleForTesting
+  void processStyleFile(
+      ProjectFilesystem filesystem, Path xmlFile, ImmutableSet.Builder<RDotTxtEntry> references)
+      throws IOException, XPathExpressionException, ResourceParseException {
+    try (InputStream stream = filesystem.newFileInputStream(xmlFile)) {
+      Document dom = parseXml(xmlFile, stream);
+
+      XPathExpression expression = ANDROID_ATTR_USAGE_FOR_STYLES;
+      NodeList nodesUsingIds = (NodeList) expression.evaluate(dom, XPathConstants.NODESET);
+      for (int i = 0; i < nodesUsingIds.getLength(); i++) {
+        String resourceName = nodesUsingIds.item(i).getNodeValue();
+        if (resourceName.startsWith("?attr")) {
+          resourceName = resourceName.substring("?attr/".length());
+        }
+        references.add(new FakeRDotTxtEntry(IdType.INT, RType.ATTR, sanitizeName(resourceName)));
+      }
     }
   }
 
