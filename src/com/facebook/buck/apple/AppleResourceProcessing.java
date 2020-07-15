@@ -349,7 +349,6 @@ public class AppleResourceProcessing {
       ImmutableList.Builder<Step> stepsBuilder,
       ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
       AppleBundleResources resources,
-      boolean verifyResources,
       Path dirRoot,
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem,
@@ -362,10 +361,6 @@ public class AppleResourceProcessing {
       BuildTarget buildTarget,
       Optional<String> binaryName,
       boolean withDownwardApi) {
-    if (verifyResources) {
-      verifyResourceConflicts(resources, context.getSourcePathResolver());
-    }
-
     for (AppleBundleDestination bundleDestination : resources.getAllDestinations()) {
       Path bundleDestinationPath = dirRoot.resolve(bundleDestination.getPath(destinations));
       stepsBuilder.add(
@@ -436,7 +431,8 @@ public class AppleResourceProcessing {
     }
   }
 
-  private static void verifyResourceConflicts(
+  /** Checks and throws an exception if parts of bundle have conflicting paths */
+  public static void verifyResourceConflicts(
       AppleBundleResources resources, SourcePathResolverAdapter resolver) {
     // Ensure there are no resources that will overwrite each other
     // TODO: handle ResourceDirsContainingResourceDirs
