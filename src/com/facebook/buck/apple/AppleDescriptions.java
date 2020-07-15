@@ -936,26 +936,6 @@ public class AppleDescriptions {
                     SourcePathWithAppleBundleDestination.of(
                         sourcePath, AppleBundleDestination.RESOURCES, false))
             .collect(ImmutableSet.toImmutableSet()));
-    AppleBundleResources collectedResources = collectedResourcesBuilder.build();
-
-    BuildRuleParams bundleParamsWithFlavoredBinaryDep =
-        getBundleParamsWithUpdatedDeps(
-            params,
-            binaryTarget,
-            ImmutableSet.<BuildRule>builder()
-                .add(targetDebuggableBinaryRule)
-                .addAll(
-                    BuildRules.toBuildRulesFor(
-                        buildTarget,
-                        graphBuilder,
-                        RichStream.from(collectedResources.getAll())
-                            .concat(frameworks.stream())
-                            .filter(BuildTargetSourcePath.class)
-                            .map(BuildTargetSourcePath::getTarget)
-                            .collect(ImmutableSet.toImmutableSet())))
-                .addAll(RichStream.from(appleDsym).iterator())
-                .addAll(extraBinaries)
-                .build());
 
     ImmutableMap<SourcePath, String> extensionBundlePaths =
         collectFirstLevelAppleDependencyBundles(params.getBuildDeps(), destinations);
@@ -1070,6 +1050,37 @@ public class AppleDescriptions {
       codeSignIdentityFingerprint = Optional.empty();
     }
 
+    Path infoPlistFileBundlePath;
+    {
+      SourcePathWithAppleBundleDestination infoPlistFile =
+          SourcePathWithAppleBundleDestination.of(
+              infoPlistReadyToCopy, AppleBundleDestination.METADATA, false);
+      collectedResourcesBuilder.addResourceFiles(infoPlistFile);
+      infoPlistFileBundlePath =
+          infoPlistFile.getDestination().getPath(destinations).resolve("Info.plist");
+    }
+
+    AppleBundleResources collectedResources = collectedResourcesBuilder.build();
+
+    BuildRuleParams bundleParamsWithFlavoredBinaryDep =
+        getBundleParamsWithUpdatedDeps(
+            params,
+            binaryTarget,
+            ImmutableSet.<BuildRule>builder()
+                .add(targetDebuggableBinaryRule)
+                .addAll(
+                    BuildRules.toBuildRulesFor(
+                        buildTarget,
+                        graphBuilder,
+                        RichStream.from(collectedResources.getAll())
+                            .concat(frameworks.stream())
+                            .filter(BuildTargetSourcePath.class)
+                            .map(BuildTargetSourcePath::getTarget)
+                            .collect(ImmutableSet.toImmutableSet())))
+                .addAll(RichStream.from(appleDsym).iterator())
+                .addAll(extraBinaries)
+                .build());
+
     return new AppleBundle(
         buildTarget,
         projectFilesystem,
@@ -1077,7 +1088,7 @@ public class AppleDescriptions {
         graphBuilder,
         unwrappedExtension,
         productName,
-        infoPlistReadyToCopy,
+        infoPlistFileBundlePath,
         unwrappedBinary,
         appleDsym,
         extraBinaries,

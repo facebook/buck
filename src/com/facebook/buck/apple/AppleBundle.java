@@ -97,8 +97,6 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final Optional<String> productName;
 
-  @AddToRuleKey private final SourcePath infoPlistFile;
-
   @AddToRuleKey private final Optional<SourcePath> maybeEntitlementsFile;
 
   @AddToRuleKey private final Optional<SourcePath> maybeProvisioningProfileFile;
@@ -170,6 +168,8 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final Optional<SourcePath> maybeCodeSignIdentityFingerprintFile;
 
+  private final Path infoPlistBundlePath;
+
   AppleBundle(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -177,7 +177,7 @@ public class AppleBundle extends AbstractBuildRule
       ActionGraphBuilder graphBuilder,
       String extension,
       Optional<String> productName,
-      SourcePath infoPlistFile,
+      Path infoPlistBundlePath,
       BuildRule binary,
       Optional<AppleDsym> appleDsym,
       ImmutableSet<BuildRule> extraBinaries,
@@ -208,7 +208,6 @@ public class AppleBundle extends AbstractBuildRule
     this.buildRuleParams = params;
     this.extension = extension;
     this.productName = productName;
-    this.infoPlistFile = infoPlistFile;
     this.binary = binary;
     this.withDownwardApi = withDownwardApi;
     this.maybeEntitlementsFile = maybeEntitlementsFile;
@@ -260,6 +259,7 @@ public class AppleBundle extends AbstractBuildRule
 
     this.sliceAppPackageSwiftRuntime = sliceAppPackageSwiftRuntime;
     this.sliceAppBundleSwiftRuntime = sliceAppBundleSwiftRuntime;
+    this.infoPlistBundlePath = infoPlistBundlePath;
   }
 
   private boolean hasBinary() {
@@ -286,15 +286,11 @@ public class AppleBundle extends AbstractBuildRule
   }
 
   public Path getInfoPlistPath() {
-    return getMetadataPath().resolve("Info.plist");
+    return infoPlistBundlePath;
   }
 
   public Path getUnzippedOutputFilePathToBinary() {
     return this.binaryPath;
-  }
-
-  private Path getMetadataPath() {
-    return bundleRoot.resolve(destinations.getMetadataPath());
   }
 
   public String getPlatformName() {
@@ -318,8 +314,6 @@ public class AppleBundle extends AbstractBuildRule
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot)));
-
-    addCopyInfoPlistStep(context, stepsBuilder);
 
     if (hasBinary()) {
       appendCopyBinarySteps(stepsBuilder, context);
@@ -584,20 +578,6 @@ public class AppleBundle extends AbstractBuildRule
             },
             CopyStep.forFile(
                 getProjectFilesystem(), provisioningProfilePath, provisioningProfileBundlePath)));
-  }
-
-  private void addCopyInfoPlistStep(
-      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
-    Path metadataDestinationPath = bundleRoot.resolve(destinations.getMetadataPath());
-    stepsBuilder.add(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), metadataDestinationPath)));
-
-    Path infoPlistPath =
-        context.getSourcePathResolver().getCellUnsafeRelPath(infoPlistFile).getPath();
-    Path infoPlistBundlePath = getMetadataPath().resolve("Info.plist");
-    stepsBuilder.add(CopyStep.forFile(getProjectFilesystem(), infoPlistPath, infoPlistBundlePath));
   }
 
   private void addCopyCodeSignDryRunResultsStepsIfNeeded(
