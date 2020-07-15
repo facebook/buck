@@ -16,8 +16,6 @@ package com.google.devtools.build.lib.syntax;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
 /** Helper functions for implementing function calls. */
@@ -54,11 +51,15 @@ public final class CallUtils {
     if (cls == String.class) {
       cls = StringModule.class;
     }
-    try {
-      return cache.get(Pair.of(cls, semantics));
-    } catch (ExecutionException ex) {
-      throw new IllegalStateException("cache error", ex);
+    Pair<? extends Class<?>, StarlarkSemantics> key = Pair.of(cls, semantics);
+
+    // Speculatively call `get` because `computeIfAbsent` is more expensive
+    // even when the map already contains a value (common case).
+    CacheValue cacheValue = cache.get(key);
+    if (cacheValue == null) {
+      cacheValue = cache.computeIfAbsent(key, CallUtils::buildCacheValue);
     }
+    return cacheValue;
   }
 
   // Information derived from a SkylarkCallable-annotated class and a StarlarkSemantics.
@@ -70,74 +71,71 @@ public final class CallUtils {
   }
 
   // A cache of information derived from a SkylarkCallable-annotated class and a StarlarkSemantics.
-  private static final LoadingCache<Pair<Class<?>, StarlarkSemantics>, CacheValue> cache =
-      CacheBuilder.newBuilder()
-          .build(
-              new CacheLoader<Pair<Class<?>, StarlarkSemantics>, CacheValue>() {
-                @Override
-                public CacheValue load(Pair<Class<?>, StarlarkSemantics> key) throws Exception {
-                  Class<?> cls = key.first;
-                  StarlarkSemantics semantics = key.second;
+  private static final ConcurrentHashMap<Pair<? extends Class<?>, StarlarkSemantics>, CacheValue> cache =
+    new ConcurrentHashMap<>();
 
-                  MethodDescriptor selfCall = null;
-                  ImmutableMap.Builder<String, MethodDescriptor> methods = ImmutableMap.builder();
-                  Map<String, MethodDescriptor> fields = new HashMap<>();
+  public static CacheValue buildCacheValue(Pair<? extends Class<?>, StarlarkSemantics> key) {
+    Class<?> cls = key.first;
+    StarlarkSemantics semantics = key.second;
 
-                  // Sort methods by Java name, for determinism.
-                  Method[] classMethods = cls.getMethods();
-                  Arrays.sort(classMethods, Comparator.comparing(Method::getName));
-                  for (Method method : classMethods) {
-                    // Synthetic methods lead to false multiple matches
-                    if (method.isSynthetic()) {
-                      continue;
-                    }
+    MethodDescriptor selfCall = null;
+    ImmutableMap.Builder<String, MethodDescriptor> methods = ImmutableMap.builder();
+    Map<String, MethodDescriptor> fields = new HashMap<>();
 
-                    // annotated?
-                    SkylarkCallable callable = SkylarkInterfaceUtils.getSkylarkCallable(method);
-                    if (callable == null) {
-                      continue;
-                    }
+    // Sort methods by Java name, for determinism.
+    Method[] classMethods = cls.getMethods();
+    Arrays.sort(classMethods, Comparator.comparing(Method::getName));
+    for (Method method : classMethods) {
+      // Synthetic methods lead to false multiple matches
+      if (method.isSynthetic()) {
+        continue;
+      }
 
-                    // enabled by semantics?
-                    if (!semantics.isFeatureEnabledBasedOnTogglingFlags(
-                        callable.enableOnlyWithFlag(), callable.disableWithFlag())) {
-                      continue;
-                    }
+      // annotated?
+      SkylarkCallable callable = SkylarkInterfaceUtils.getSkylarkCallable(method);
+      if (callable == null) {
+        continue;
+      }
 
-                    MethodDescriptor descriptor = MethodDescriptor.of(method, callable, semantics);
+      // enabled by semantics?
+      if (!semantics.isFeatureEnabledBasedOnTogglingFlags(
+          callable.enableOnlyWithFlag(), callable.disableWithFlag())) {
+        continue;
+      }
 
-                    // self-call method?
-                    if (callable.selfCall()) {
-                      if (selfCall != null) {
-                        throw new IllegalArgumentException(
-                            String.format(
-                                "Class %s has two selfCall methods defined", cls.getName()));
-                      }
-                      selfCall = descriptor;
-                      continue;
-                    }
+      MethodDescriptor descriptor = MethodDescriptor.of(method, callable, semantics);
 
-                    // regular method
-                    methods.put(callable.name(), descriptor);
+      // self-call method?
+      if (callable.selfCall()) {
+        if (selfCall != null) {
+          throw new IllegalArgumentException(
+              String.format(
+                  "Class %s has two selfCall methods defined", cls.getName()));
+        }
+        selfCall = descriptor;
+        continue;
+      }
 
-                    // field method?
-                    if (descriptor.isStructField()
-                        && fields.put(callable.name(), descriptor) != null) {
-                      // TODO(b/72113542): Validate with annotation processor instead of at runtime.
-                      throw new IllegalArgumentException(
-                          String.format(
-                              "Class %s declares two structField methods named %s",
-                              cls.getName(), callable.name()));
-                    }
-                  }
+      // regular method
+      methods.put(callable.name(), descriptor);
 
-                  CacheValue value = new CacheValue();
-                  value.selfCall = selfCall;
-                  value.methods = methods.build();
-                  value.fields = ImmutableMap.copyOf(fields);
-                  return value;
-                }
-              });
+      // field method?
+      if (descriptor.isStructField()
+          && fields.put(callable.name(), descriptor) != null) {
+        // TODO(b/72113542): Validate with annotation processor instead of at runtime.
+        throw new IllegalArgumentException(
+            String.format(
+                "Class %s declares two structField methods named %s",
+                cls.getName(), callable.name()));
+      }
+    }
+
+    CacheValue value = new CacheValue();
+    value.selfCall = selfCall;
+    value.methods = methods.build();
+    value.fields = ImmutableMap.copyOf(fields);
+    return value;
+  }
 
   /**
    * Returns a map of methods and corresponding SkylarkCallable annotations of the methods of the
