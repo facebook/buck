@@ -93,40 +93,6 @@ public class MiniAaptTest {
   }
 
   @Test
-  public void testFindingResourceIdsInXml()
-      throws IOException, XPathExpressionException, ResourceParseException {
-    filesystem.writeLinesToPath(RESOURCES, Paths.get("resource.xml"));
-
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
-
-    ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
-    aapt.processXmlFile(filesystem, Paths.get("resource.xml"), references);
-
-    Set<RDotTxtEntry> definitions =
-        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
-
-    assertEquals(
-        createTestingFakes(definitions),
-        ImmutableSet.of(
-            FakeEntry.create(IdType.INT, RType.ID, "button1"),
-            FakeEntry.create(IdType.INT, RType.ID, "button3")));
-
-    assertEquals(
-        createTestingFakes(references.build()),
-        ImmutableSet.of(
-            FakeEntry.create(IdType.INT, RType.DRAWABLE, "some_image"),
-            FakeEntry.create(IdType.INT, RType.STRING, "text"),
-            FakeEntry.create(IdType.INT, RType.STYLE, "Buck_Theme"),
-            FakeEntry.create(IdType.INT, RType.ID, "button2")));
-  }
-
-  @Test
   public void testFindingResourceIdsInXmlWithStyleReferences()
       throws IOException, XPathExpressionException, ResourceParseException {
     filesystem.writeLinesToPath(RESOURCES, Paths.get("resource.xml"));
@@ -139,7 +105,6 @@ public class MiniAaptTest {
             Paths.get("R.txt"),
             ImmutableSet.of(),
             false,
-            true,
             MiniAapt.ResourceCollectionType.R_DOT_TXT);
 
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
@@ -430,7 +395,7 @@ public class MiniAaptTest {
             Paths.get("R.txt"),
             ImmutableSet.of(),
             /* isGrayscaleImageProcessingEnabled */ true,
-            /* isVerifyingStyleReferencesEnabled */ false,
+            /* isVerifyingStyleReferencesEnabled */
             MiniAapt.ResourceCollectionType.R_DOT_TXT);
     aapt.processDrawables(filesystem, Paths.get(grayscaleFilename));
 
@@ -608,40 +573,8 @@ public class MiniAaptTest {
             filesystem,
             FakeSourcePath.of(filesystem, "res"),
             Paths.get("R.txt"),
-            ImmutableSet.of(depRTxt));
-    ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
-    aapt.processXmlFile(filesystem, Paths.get("resource.xml"), references);
-
-    Set<RDotTxtEntry> missing = aapt.verifyReferences(filesystem, references.build());
-
-    assertEquals(
-        ImmutableSet.<RDotTxtEntry>of(FakeEntry.create(IdType.INT, RType.DRAWABLE, "some_image")),
-        createTestingFakes(missing));
-  }
-
-  @Test
-  public void testVerifyReferencesIncludingStyles()
-      throws IOException, XPathExpressionException, ResourceParseException {
-    filesystem.writeLinesToPath(RESOURCES, Paths.get("resource.xml"));
-
-    ImmutableList<String> rDotTxt =
-        ImmutableList.of(
-            "int string text 0x07010001",
-            "int style Buck_Theme 0x07020001",
-            "int id button2 0x07030001");
-
-    Path depRTxt = Paths.get("dep/R.txt");
-    filesystem.writeLinesToPath(rDotTxt, depRTxt);
-
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
             ImmutableSet.of(depRTxt),
             false,
-            true,
             MiniAapt.ResourceCollectionType.R_DOT_TXT);
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
     aapt.processXmlFile(filesystem, Paths.get("resource.xml"), references);

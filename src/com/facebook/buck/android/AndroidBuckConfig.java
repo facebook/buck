@@ -285,10 +285,6 @@ public class AndroidBuckConfig {
         delegate.getBooleanValue("resources", "resource_grayscale_enabled", false));
   }
 
-  public boolean isVerifyingStyleReferencesEnabled() {
-    return delegate.getBooleanValue("android", "verify_style_references", false);
-  }
-
   /**
    * Returns the CPU specific app platform, or the fallback one if set. If neither are set, returns
    * `Optional.empty` instead of a default value so callers can determine the difference between
