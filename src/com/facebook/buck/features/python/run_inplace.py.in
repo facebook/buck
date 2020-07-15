@@ -14,17 +14,47 @@ native_libs_preload_env_var = <NATIVE_LIBS_PRELOAD_ENV_VAR>
 native_libs_preload = <NATIVE_LIBS_PRELOAD>
 
 def try_resolve_possible_symlink(path):
-    p = subprocess.Popen(
-        ["powershell", "/c", "(Get-Item {}).Target".format(sys.argv[0])],
-        stdout=subprocess.PIPE,
-        shell=True,
-    )
-    stdout, _ = p.communicate()
-    if len(stdout) != 0:
-        return stdout
-    # if the file was not a symlink, powershell prints nothing
-    return path
+    import ctypes
+    import ctypes.wintypes
 
+    wintypes = ctypes.wintypes
+
+    OPEN_EXISTING = 3
+    FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
+    INVALID_HANDLE_VALUE = -1
+
+    CreateFile = ctypes.windll.kernel32.CreateFileW
+    CreateFile.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
+                           wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD,
+                           wintypes.HANDLE]
+    CreateFile.restype = wintypes.HANDLE
+
+    CloseHandle = ctypes.windll.kernel32.CloseHandle
+    CloseHandle.argtypes = [wintypes.HANDLE]
+    CloseHandle.restype = wintypes.BOOL
+
+    GetFinalPathNameByHandle = ctypes.windll.kernel32.GetFinalPathNameByHandleW
+    GetFinalPathNameByHandle.argtypes = [wintypes.HANDLE, wintypes.LPWSTR, wintypes.DWORD, wintypes.DWORD]
+    GetFinalPathNameByHandle.restype = wintypes.DWORD
+
+    handle = INVALID_HANDLE_VALUE
+    try:
+        handle = CreateFile(path, 0, 0, None, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, None)
+        if handle == INVALID_HANDLE_VALUE:
+            return path
+
+        path_buf = ctypes.create_unicode_buffer(wintypes.MAX_PATH + 1)
+        if GetFinalPathNameByHandle(handle, path_buf, wintypes.MAX_PATH + 1, 0) == 0:
+            return path
+
+        # avoid literal backslash (ASCII octal 134) to get out of multilevel quoting hell
+        if path_buf.value.startswith(chr(0o134) + chr(0o134) + '?' + chr(0o134)):
+            return path_buf.value[4:]
+
+        return path_buf.value
+    finally:
+        if handle != INVALID_HANDLE_VALUE:
+            CloseHandle(handle)
 
 dirpath = os.path.dirname(os.path.realpath(__file__))
 if platform.system() == "Windows":
