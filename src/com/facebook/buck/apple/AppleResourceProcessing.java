@@ -382,17 +382,23 @@ public class AppleResourceProcessing {
     }
 
     for (SourcePathWithAppleBundleDestination dirWithDestination : resources.getResourceDirs()) {
+      Path resolvedDirPath =
+          context
+              .getSourcePathResolver()
+              .getAbsolutePath(dirWithDestination.getSourcePath())
+              .getPath();
       Path bundleDestinationPath =
           dirRoot.resolve(dirWithDestination.getDestination().getPath(destinations));
       stepsBuilder.add(
           CopyStep.forDirectory(
               projectFilesystem,
-              context
-                  .getSourcePathResolver()
-                  .getAbsolutePath(dirWithDestination.getSourcePath())
-                  .getPath(),
+              resolvedDirPath,
               bundleDestinationPath,
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+      if (dirWithDestination.getCodesignOnCopy()) {
+        codeSignOnCopyPathsBuilder.add(
+            bundleDestinationPath.resolve(resolvedDirPath.getFileName()));
+      }
     }
 
     for (SourcePathWithAppleBundleDestination dirWithDestination :

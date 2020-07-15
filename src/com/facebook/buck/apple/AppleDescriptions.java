@@ -937,8 +937,8 @@ public class AppleDescriptions {
                         sourcePath, AppleBundleDestination.RESOURCES, false))
             .collect(ImmutableSet.toImmutableSet()));
 
-    ImmutableMap<SourcePath, String> extensionBundlePaths =
-        collectFirstLevelAppleDependencyBundles(params.getBuildDeps(), destinations);
+    collectedResourcesBuilder.addAllResourceDirs(
+        collectFirstLevelAppleDependencyBundles(params.getBuildDeps()));
 
     BuildRule unwrappedBinary = getBinaryFromBuildRuleWithBinary(flavoredBinaryRule);
 
@@ -1094,7 +1094,6 @@ public class AppleDescriptions {
         extraBinaries,
         destinations,
         collectedResources,
-        extensionBundlePaths,
         frameworks,
         appleCxxPlatform,
         tests,
@@ -1270,52 +1269,63 @@ public class AppleDescriptions {
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
-  private static ImmutableMap<SourcePath, String> collectFirstLevelAppleDependencyBundles(
-      SortedSet<BuildRule> deps, AppleBundleDestinations destinations) {
-    ImmutableMap.Builder<SourcePath, String> extensionBundlePaths = ImmutableMap.builder();
+  private static ImmutableSortedSet<SourcePathWithAppleBundleDestination>
+      collectFirstLevelAppleDependencyBundles(SortedSet<BuildRule> dependencies) {
+    ImmutableSortedSet.Builder<SourcePathWithAppleBundleDestination> extensionBundlePaths =
+        ImmutableSortedSet.naturalOrder();
     // We only care about the direct layer of dependencies. ExtensionBundles inside ExtensionBundles
     // do not get pulled in to the top-level Bundle.
-    for (BuildRule rule : deps) {
-      if (rule instanceof AppleBundle) {
-        AppleBundle appleBundle = (AppleBundle) rule;
-        SourcePath sourcePath =
-            Preconditions.checkNotNull(
-                appleBundle.getSourcePathToOutput(),
-                "Path cannot be null for AppleBundle [%s].",
-                appleBundle);
+    dependencies.stream()
+        .filter(d -> d instanceof AppleBundle)
+        .map(d -> (AppleBundle) d)
+        .forEach(
+            appleBundle -> {
+              SourcePath sourcePath =
+                  Preconditions.checkNotNull(
+                      appleBundle.getSourcePathToOutput(),
+                      "Path cannot be null for AppleBundle [%s].",
+                      appleBundle);
 
-        if (AppleBundleExtension.APPEX.fileExtension.equals(appleBundle.getExtension())
-            || AppleBundleExtension.APP.fileExtension.equals(appleBundle.getExtension())) {
-          Path destinationPath;
+              AppleBundleDestination destination;
+              boolean codeSignOnCopy = false;
 
-          String platformName = appleBundle.getPlatformName();
+              if (AppleBundleExtension.APPEX.fileExtension.equals(appleBundle.getExtension())
+                  || AppleBundleExtension.APP.fileExtension.equals(appleBundle.getExtension())) {
 
-          if ((platformName.equals(ApplePlatform.WATCHOS.getName())
-                  || platformName.equals(ApplePlatform.WATCHSIMULATOR.getName()))
-              && appleBundle.getExtension().equals(AppleBundleExtension.APP.fileExtension)) {
-            destinationPath = destinations.getWatchAppPath();
-          } else if (appleBundle.getIsLegacyWatchApp()) {
-            destinationPath = destinations.getResourcesPath();
-          } else {
-            destinationPath = destinations.getPlugInsPath();
-          }
+                String platformName = appleBundle.getPlatformName();
 
-          extensionBundlePaths.put(sourcePath, destinationPath.toString());
-        } else if (AppleBundleExtension.FRAMEWORK.fileExtension.equals(
-            appleBundle.getExtension())) {
-          extensionBundlePaths.put(sourcePath, destinations.getFrameworksPath().toString());
-        } else if (AppleBundleExtension.XPC.fileExtension.equals(appleBundle.getExtension())) {
-          extensionBundlePaths.put(sourcePath, destinations.getXPCServicesPath().toString());
-        } else if (AppleBundleExtension.QLGENERATOR.fileExtension.equals(
-            appleBundle.getExtension())) {
-          extensionBundlePaths.put(sourcePath, destinations.getQuickLookPath().toString());
-        } else if (AppleBundleExtension.PLUGIN.fileExtension.equals(appleBundle.getExtension())) {
-          extensionBundlePaths.put(sourcePath, destinations.getPlugInsPath().toString());
-        } else if (AppleBundleExtension.PREFPANE.fileExtension.equals(appleBundle.getExtension())) {
-          extensionBundlePaths.put(sourcePath, destinations.getResourcesPath().toString());
-        }
-      }
-    }
+                if ((platformName.equals(ApplePlatform.WATCHOS.getName())
+                        || platformName.equals(ApplePlatform.WATCHSIMULATOR.getName()))
+                    && appleBundle.getExtension().equals(AppleBundleExtension.APP.fileExtension)) {
+                  destination = AppleBundleDestination.WATCHAPP;
+                } else if (appleBundle.getIsLegacyWatchApp()) {
+                  destination = AppleBundleDestination.RESOURCES;
+                } else {
+                  destination = AppleBundleDestination.PLUGINS;
+                }
+              } else if (AppleBundleExtension.FRAMEWORK.fileExtension.equals(
+                  appleBundle.getExtension())) {
+                destination = AppleBundleDestination.FRAMEWORKS;
+                codeSignOnCopy = true;
+              } else if (AppleBundleExtension.XPC.fileExtension.equals(
+                  appleBundle.getExtension())) {
+                destination = AppleBundleDestination.XPCSERVICES;
+              } else if (AppleBundleExtension.QLGENERATOR.fileExtension.equals(
+                  appleBundle.getExtension())) {
+                destination = AppleBundleDestination.QUICKLOOK;
+              } else if (AppleBundleExtension.PLUGIN.fileExtension.equals(
+                  appleBundle.getExtension())) {
+                destination = AppleBundleDestination.PLUGINS;
+              } else if (AppleBundleExtension.PREFPANE.fileExtension.equals(
+                  appleBundle.getExtension())) {
+                destination = AppleBundleDestination.RESOURCES;
+              } else {
+                return;
+              }
+
+              extensionBundlePaths.add(
+                  SourcePathWithAppleBundleDestination.of(sourcePath, destination, codeSignOnCopy));
+            });
 
     return extensionBundlePaths.build();
   }

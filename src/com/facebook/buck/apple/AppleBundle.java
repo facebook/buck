@@ -69,7 +69,6 @@ import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -133,9 +132,6 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final Optional<String> codesignIdentitySubjectName;
 
-  // Need to use String here as RuleKeyBuilder requires that paths exist to compute hashes.
-  @AddToRuleKey private final ImmutableMap<SourcePath, String> extensionBundlePaths;
-
   @AddToRuleKey private final boolean copySwiftStdlibToFrameworks;
 
   @AddToRuleKey private final boolean sliceAppPackageSwiftRuntime;
@@ -181,7 +177,6 @@ public class AppleBundle extends AbstractBuildRule
       ImmutableSet<BuildRule> extraBinaries,
       AppleBundleDestinations destinations,
       AppleBundleResources resources,
-      ImmutableMap<SourcePath, String> extensionBundlePaths,
       Set<SourcePath> frameworks,
       AppleCxxPlatform appleCxxPlatform,
       Set<BuildTarget> tests,
@@ -214,7 +209,6 @@ public class AppleBundle extends AbstractBuildRule
     this.extraBinaries = extraBinaries;
     this.destinations = destinations;
     this.resources = resources;
-    this.extensionBundlePaths = extensionBundlePaths;
     this.frameworks = frameworks;
     this.ibtool = appleCxxPlatform.getIbtool();
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
@@ -339,8 +333,6 @@ public class AppleBundle extends AbstractBuildRule
         Optional.of(binaryName),
         withDownwardApi);
 
-    addStepsToCopyExtensionBundlesDependencies(context, stepsBuilder, codeSignOnCopyPathsBuilder);
-
     AppleResourceProcessing.addVariantFileProcessingSteps(
         resources,
         context,
@@ -357,6 +349,7 @@ public class AppleBundle extends AbstractBuildRule
         getBuildTarget(),
         Optional.of(binaryName),
         withDownwardApi);
+
     AppleResourceProcessing.addFrameworksProcessingSteps(
         frameworks,
         bundleRoot,
@@ -764,29 +757,6 @@ public class AppleBundle extends AbstractBuildRule
 
     // record dSYM so we can fetch it from cache
     buildableContext.recordArtifact(dsymDestinationPath);
-  }
-
-  private void addStepsToCopyExtensionBundlesDependencies(
-      BuildContext context,
-      ImmutableList.Builder<Step> stepsBuilder,
-      ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder) {
-    for (Map.Entry<SourcePath, String> entry : extensionBundlePaths.entrySet()) {
-      AbsPath srcPath = context.getSourcePathResolver().getAbsolutePath(entry.getKey());
-      Path destPath = bundleRoot.resolve(entry.getValue());
-      stepsBuilder.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), getProjectFilesystem(), destPath)));
-      stepsBuilder.add(
-          CopyStep.forDirectory(
-              getProjectFilesystem(),
-              srcPath.getPath(),
-              destPath,
-              CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
-      if (srcPath.toString().endsWith("." + AppleBundleExtension.FRAMEWORK.fileExtension)) {
-        codeSignOnCopyPathsBuilder.add(destPath.resolve(srcPath.getFileName()));
-      }
-    }
   }
 
   @Override
