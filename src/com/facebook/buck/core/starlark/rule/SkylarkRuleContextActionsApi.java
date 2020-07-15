@@ -20,7 +20,6 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilderApi;
 import com.facebook.buck.core.starlark.rule.artifact.SkylarkArtifactApi;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkbuildapi.CommandLineArgsApi;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.ParamType;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
@@ -162,7 +161,6 @@ public interface SkylarkRuleContextActionsApi extends StarlarkValue {
                     + "put on a single line by itself in `output`.",
             allowedTypes = {
               @ParamType(type = CommandLineArgsBuilderApi.class),
-              @ParamType(type = CommandLineArgsApi.class),
               @ParamType(type = String.class)
             },
             named = true),
