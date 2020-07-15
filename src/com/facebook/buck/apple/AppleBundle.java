@@ -86,8 +86,6 @@ public class AppleBundle extends AbstractBuildRule
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
   public static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
-  private static final String FRAMEWORK_EXTENSION =
-      AppleBundleExtension.FRAMEWORK.toFileExtension();
   private static final String PP_DRY_RUN_RESULT_FILE = "BUCK_pp_dry_run.plist";
   private static final String CODE_SIGN_DRY_RUN_ARGS_FILE = "BUCK_code_sign_args.plist";
   private static final String CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE =
@@ -397,7 +395,7 @@ public class AppleBundle extends AbstractBuildRule
           destinations,
           sliceAppPackageSwiftRuntime,
           sliceAppBundleSwiftRuntime,
-          isWithDownwardApi());
+          withDownwardApi);
 
       for (BuildRule extraBinary : extraBinaries) {
         Path outputPath = getBundleBinaryPathForBuildRule(extraBinary);
@@ -747,7 +745,7 @@ public class AppleBundle extends AbstractBuildRule
     Path dsymDestinationPath =
         bundleRoot
             .getParent()
-            .resolve(bundleRoot.getFileName() + "." + AppleBundleExtension.DSYM.toFileExtension());
+            .resolve(bundleRoot.getFileName() + "." + AppleBundleExtension.DSYM.fileExtension);
     stepsBuilder.add(
         RmStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -785,7 +783,7 @@ public class AppleBundle extends AbstractBuildRule
               srcPath.getPath(),
               destPath,
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
-      if (srcPath.toString().endsWith("." + FRAMEWORK_EXTENSION)) {
+      if (srcPath.toString().endsWith("." + AppleBundleExtension.FRAMEWORK.fileExtension)) {
         codeSignOnCopyPathsBuilder.add(destPath.resolve(srcPath.getFileName()));
       }
     }

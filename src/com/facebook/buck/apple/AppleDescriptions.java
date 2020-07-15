@@ -908,7 +908,7 @@ public class AppleDescriptions {
             graphBuilder);
 
     String unwrappedExtension =
-        extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
+        extension.isLeft() ? extension.getLeft().fileExtension : extension.getRight();
 
     if (ApplePkgInfo.isPkgInfoNeeded(unwrappedExtension)) {
       BuildTarget pkgInfoBuildTarget =
@@ -1284,15 +1284,15 @@ public class AppleDescriptions {
                 "Path cannot be null for AppleBundle [%s].",
                 appleBundle);
 
-        if (AppleBundleExtension.APPEX.toFileExtension().equals(appleBundle.getExtension())
-            || AppleBundleExtension.APP.toFileExtension().equals(appleBundle.getExtension())) {
+        if (AppleBundleExtension.APPEX.fileExtension.equals(appleBundle.getExtension())
+            || AppleBundleExtension.APP.fileExtension.equals(appleBundle.getExtension())) {
           Path destinationPath;
 
           String platformName = appleBundle.getPlatformName();
 
           if ((platformName.equals(ApplePlatform.WATCHOS.getName())
                   || platformName.equals(ApplePlatform.WATCHSIMULATOR.getName()))
-              && appleBundle.getExtension().equals(AppleBundleExtension.APP.toFileExtension())) {
+              && appleBundle.getExtension().equals(AppleBundleExtension.APP.fileExtension)) {
             destinationPath = destinations.getWatchAppPath();
           } else if (appleBundle.getIsLegacyWatchApp()) {
             destinationPath = destinations.getResourcesPath();
@@ -1301,23 +1301,17 @@ public class AppleDescriptions {
           }
 
           extensionBundlePaths.put(sourcePath, destinationPath.toString());
-        } else if (AppleBundleExtension.FRAMEWORK
-            .toFileExtension()
-            .equals(appleBundle.getExtension())) {
+        } else if (AppleBundleExtension.FRAMEWORK.fileExtension.equals(
+            appleBundle.getExtension())) {
           extensionBundlePaths.put(sourcePath, destinations.getFrameworksPath().toString());
-        } else if (AppleBundleExtension.XPC.toFileExtension().equals(appleBundle.getExtension())) {
+        } else if (AppleBundleExtension.XPC.fileExtension.equals(appleBundle.getExtension())) {
           extensionBundlePaths.put(sourcePath, destinations.getXPCServicesPath().toString());
-        } else if (AppleBundleExtension.QLGENERATOR
-            .toFileExtension()
-            .equals(appleBundle.getExtension())) {
+        } else if (AppleBundleExtension.QLGENERATOR.fileExtension.equals(
+            appleBundle.getExtension())) {
           extensionBundlePaths.put(sourcePath, destinations.getQuickLookPath().toString());
-        } else if (AppleBundleExtension.PLUGIN
-            .toFileExtension()
-            .equals(appleBundle.getExtension())) {
+        } else if (AppleBundleExtension.PLUGIN.fileExtension.equals(appleBundle.getExtension())) {
           extensionBundlePaths.put(sourcePath, destinations.getPlugInsPath().toString());
-        } else if (AppleBundleExtension.PREFPANE
-            .toFileExtension()
-            .equals(appleBundle.getExtension())) {
+        } else if (AppleBundleExtension.PREFPANE.fileExtension.equals(appleBundle.getExtension())) {
           extensionBundlePaths.put(sourcePath, destinations.getResourcesPath().toString());
         }
       }

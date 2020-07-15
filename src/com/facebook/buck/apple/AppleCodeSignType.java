@@ -31,7 +31,7 @@ public enum AppleCodeSignType {
         ApplePlatform.needsCodeSign(platform.getName())
             // .framework bundles will be code-signed when they're copied into the containing
             // bundle.
-            && !extension.equals(AppleBundleExtension.FRAMEWORK.toFileExtension());
+            && !extension.equals(AppleBundleExtension.FRAMEWORK.fileExtension);
     if (!isCodeSignNeeded) {
       return SKIP;
     }

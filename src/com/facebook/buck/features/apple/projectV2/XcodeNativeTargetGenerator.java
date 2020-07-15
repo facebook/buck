@@ -2389,7 +2389,7 @@ public class XcodeNativeTargetGenerator {
   }
 
   private static String getExtensionString(Either<AppleBundleExtension, String> extension) {
-    return extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
+    return extension.isLeft() ? extension.getLeft().fileExtension : extension.getRight();
   }
 
   private static boolean isFrameworkBundle(HasAppleBundleFields arg) {

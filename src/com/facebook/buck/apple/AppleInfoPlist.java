@@ -230,7 +230,7 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
     private boolean needsAppInfoPlistKeysOnMac() {
       // XPC bundles on macOS don't require app-specific keys
       // (which also confuses Finder in displaying the XPC bundles as apps)
-      return !extension.equals(AppleBundleExtension.XPC.toFileExtension());
+      return !extension.equals(AppleBundleExtension.XPC.fileExtension);
     }
 
     private ImmutableMap<String, NSObject> getInfoPlistOverrideKeys() {
@@ -248,7 +248,7 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
     }
 
     private boolean needsLSRequiresIPhoneOSInfoPlistKeyOnMac() {
-      return !extension.equals(AppleBundleExtension.XPC.toFileExtension());
+      return !extension.equals(AppleBundleExtension.XPC.fileExtension);
     }
   }
 }

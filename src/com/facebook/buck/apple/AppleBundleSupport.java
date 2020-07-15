@@ -24,7 +24,7 @@ public class AppleBundleSupport {
 
   /** Returns whether binary is a legacy watchOS application */
   public static boolean isLegacyWatchApp(String extension, BuildRule binary) {
-    return extension.equals(AppleBundleExtension.APP.toFileExtension())
+    return extension.equals(AppleBundleExtension.APP.fileExtension)
         && binary
             .getBuildTarget()
             .getFlavors()

@@ -41,8 +41,8 @@ public class ApplePkgInfo extends ModernBuildRule<ApplePkgInfo> implements Build
 
   // TODO(bhamiltoncx): This is only appropriate for .app bundles.
   public static boolean isPkgInfoNeeded(String extension) {
-    return !(extension.equals(AppleBundleExtension.XPC.toFileExtension())
-        || extension.equals(AppleBundleExtension.QLGENERATOR.toFileExtension()));
+    return !(extension.equals(AppleBundleExtension.XPC.fileExtension)
+        || extension.equals(AppleBundleExtension.QLGENERATOR.fileExtension));
   }
 
   @AddToRuleKey private final OutputPath output;

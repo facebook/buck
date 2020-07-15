@@ -237,8 +237,8 @@ public class AppleResourceProcessing {
     // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
     // are copied over).
     boolean shouldCopySwiftStdlib =
-        !bundleExtension.equals(AppleBundleExtension.APPEX.toFileExtension())
-            && (!bundleExtension.equals(AppleBundleExtension.FRAMEWORK.toFileExtension())
+        !bundleExtension.equals(AppleBundleExtension.APPEX.fileExtension)
+            && (!bundleExtension.equals(AppleBundleExtension.FRAMEWORK.fileExtension)
                 || copySwiftStdlibToFrameworks);
 
     if (swiftStdlibTool.isPresent() && shouldCopySwiftStdlib) {

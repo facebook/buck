@@ -18,41 +18,20 @@ package com.facebook.buck.apple;
 
 /** Known bundle extensions that have special handling. */
 public enum AppleBundleExtension {
-  APP,
-  FRAMEWORK,
-  APPEX,
-  PLUGIN,
-  BUNDLE,
-  XCTEST,
-  DSYM,
-  XPC,
-  PREFPANE,
-  QLGENERATOR;
+  APP("app"),
+  FRAMEWORK("framework"),
+  APPEX("appex"),
+  PLUGIN("plugin"),
+  BUNDLE("bundle"),
+  XCTEST("xctest"),
+  DSYM("dSYM"),
+  XPC("xpc"),
+  PREFPANE("prefPane"),
+  QLGENERATOR("qlgenerator");
 
-  public String toFileExtension() {
-    switch (this) {
-      case APP:
-        return "app";
-      case FRAMEWORK:
-        return "framework";
-      case APPEX:
-        return "appex";
-      case PLUGIN:
-        return "plugin";
-      case BUNDLE:
-        return "bundle";
-      case XCTEST:
-        return "xctest";
-      case DSYM:
-        return "dSYM";
-      case XPC:
-        return "xpc";
-      case PREFPANE:
-        return "prefPane";
-      case QLGENERATOR:
-        return "qlgenerator";
-      default:
-        throw new IllegalStateException("Invalid bundle extension value: " + this);
-    }
+  public final String fileExtension;
+
+  AppleBundleExtension(String fileExtension) {
+    this.fileExtension = fileExtension;
   }
 }
