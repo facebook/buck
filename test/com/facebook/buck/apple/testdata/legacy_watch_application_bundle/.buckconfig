@@ -1,6 +1,0 @@
-[cache]
-  mode = dir
-[cxx]
-  default_platform = iphonesimulator-x86_64
-[apple]
-  iphonesimulator_target_sdk_version = 10.0
