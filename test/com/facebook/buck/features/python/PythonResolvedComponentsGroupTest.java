@@ -60,6 +60,7 @@ public class PythonResolvedComponentsGroupTest {
     Files.write(foo2, "something else".getBytes(StandardCharsets.UTF_8));
     PythonResolvedComponentsGroup components =
         ImmutablePythonResolvedComponentsGroup.builder()
+            .setCanAccessComponentContents(true)
             .putComponents(
                 BuildTargetFactory.newInstance("//:target1"),
                 new PythonMappedComponents.Resolved(
@@ -76,6 +77,7 @@ public class PythonResolvedComponentsGroupTest {
   public void testDuplicateIdenticalSourcesInComponentsIsOk() throws IOException {
     PythonResolvedComponentsGroup components =
         ImmutablePythonResolvedComponentsGroup.builder()
+            .setCanAccessComponentContents(true)
             .putComponents(
                 BuildTargetFactory.newInstance("//:target1"),
                 new PythonMappedComponents.Resolved(
@@ -99,6 +101,7 @@ public class PythonResolvedComponentsGroupTest {
     BuildTarget target2 = BuildTargetFactory.newInstance("//:target2");
     PythonResolvedComponentsGroup components =
         ImmutablePythonResolvedComponentsGroup.builder()
+            .setCanAccessComponentContents(true)
             .putComponents(
                 target1,
                 new PythonMappedComponents.Resolved(

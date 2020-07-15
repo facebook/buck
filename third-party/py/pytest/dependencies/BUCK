@@ -48,7 +48,7 @@ prebuilt_python_library(
 
 prebuilt_python_library(
     name = "pyparsing-2.4.7",
-    binary_src = "py-1.8.1-py2.py3-none-any.whl",
+    binary_src = "pyparsing-2.4.7-py2.py3-none-any.whl",
     visibility = ["//third-party/py/pytest/..."],
 )
 

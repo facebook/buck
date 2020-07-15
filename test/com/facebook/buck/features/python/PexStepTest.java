@@ -64,6 +64,7 @@ public class PexStepTest {
       ImmutablePythonResolvedPackageComponents.builder()
           .setModules(
               ImmutablePythonResolvedComponentsGroup.builder()
+                  .setCanAccessComponentContents(true)
                   .putComponents(
                       TARGET,
                       new PythonMappedComponents.Resolved(
@@ -80,6 +81,7 @@ public class PexStepTest {
                   .build())
           .setResources(
               ImmutablePythonResolvedComponentsGroup.builder()
+                  .setCanAccessComponentContents(true)
                   .putComponents(
                       TARGET,
                       new PythonMappedComponents.Resolved(
@@ -88,6 +90,7 @@ public class PexStepTest {
                   .build())
           .setNativeLibraries(
               ImmutablePythonResolvedComponentsGroup.builder()
+                  .setCanAccessComponentContents(true)
                   .putComponents(
                       TARGET,
                       new PythonMappedComponents.Resolved(
@@ -177,6 +180,7 @@ public class PexStepTest {
                 .from(COMPONENTS)
                 .setModules(
                     ImmutablePythonResolvedComponentsGroup.builder()
+                        .setCanAccessComponentContents(true)
                         .setComponents(
                             ImmutableMultimap.of(
                                 TARGET,
