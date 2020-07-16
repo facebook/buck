@@ -19,34 +19,21 @@ package com.facebook.buck.support;
 import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import java.util.Comparator;
+import java.util.NavigableSet;
+import java.util.TreeSet;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
  * TopSlowTargetsBuilder is a builder that reacts to the completion of {@link BuildTarget}s and
  * records the top slow targets that it has seen. TopSlowTargetsBuilder efficiently tracks the top N
  * build targets that it sees, where N is a parameter to the constructor.
- *
- * <p>In terms of implementation strategy, this class keeps a doubly-linked list of slow targets of
- * length <= N at all times. This strategy minimizes the amount of bookkeeping that is done, keeping
- * it proportional to N, and also allows us to efficiently skip processing targets that aren't in
- * the top N rules that we've currently seen.
  */
 public final class TopSlowTargetsBuilder {
 
-  /** The head pointer of the slow target linked list. */
+  /** Slow target NavigableSet. */
   @GuardedBy("this")
-  private SlowTargetCandidate slowestTarget = null;
-
-  /** The tail pointer of the slow target linked list. */
-  @GuardedBy("this")
-  private SlowTargetCandidate slowestTargetTail = null;
-
-  /**
-   * The number of targets currently in the slow target linked list. Always in the range of 0 <=
-   * targetCount + 1.
-   */
-  @GuardedBy("this")
-  private int slowTargetsLength;
+  private final NavigableSet<SlowTarget> slowTargets;
 
   /** The number of top slow rules to track (a.k.a N), a parameter to the constructor. */
   private final int targetCount;
@@ -61,66 +48,34 @@ public final class TopSlowTargetsBuilder {
    *
    * @param ruleCount The number of top slow rules to keep track of.
    */
-  public TopSlowTargetsBuilder(int ruleCount) {
+  public TopSlowTargetsBuilder(final int ruleCount) {
     this.targetCount = ruleCount;
-    this.slowTargetsLength = 0;
+    this.slowTargets =
+        new TreeSet<>(
+            new Comparator<SlowTarget>() {
+              @Override
+              public int compare(final SlowTarget target1, final SlowTarget target2) {
+                if (target1.getDurationMilliseconds() == target2.getDurationMilliseconds()) {
+                  return target1.getTarget().compareTo(target2.getTarget());
+                }
+                return Long.compare(
+                    target1.getDurationMilliseconds(), target2.getDurationMilliseconds());
+              }
+            });
   }
 
   /**
    * Records the given target with associated execution time. If this target is one of the top N
-   * slow rules that we've seen, it's recorded in the top slow rules linked list.
+   * slow rules that we've seen, it's recorded in the top slow rules. For targets with same
+   * duration, we use the BuildTarget as key for comparator in the set.
    *
    * @param target The target that has just finished executing
    * @param durationMilliseconds The execution duration of the given target
    */
-  public synchronized void onTargetCompleted(BuildTarget target, long durationMilliseconds) {
-    SlowTargetCandidate newCandidate = new SlowTargetCandidate(target, durationMilliseconds);
-    insertCandidate(newCandidate);
+  public synchronized void onTargetCompleted(
+      final BuildTarget target, final long durationMilliseconds) {
+    slowTargets.add(ImmutableSlowTarget.ofImpl(target, durationMilliseconds));
     trimToRequestedLength();
-  }
-
-  /**
-   * Inserts a candidate slow node into the linked list. At the end of this method,
-   * slowTargetsLength might be larger than targetCount; it's up to {@link #trimToRequestedLength()}
-   * to drop excess nodes from the list.
-   *
-   * @param candidate The candidate slow target node
-   */
-  private void insertCandidate(SlowTargetCandidate candidate) {
-    if (slowestTarget == null) {
-      slowestTarget = slowestTargetTail = candidate;
-      slowTargetsLength++;
-      return;
-    }
-
-    Preconditions.checkState(slowestTargetTail != null);
-    if (slowTargetsLength == targetCount
-        && candidate.getDurationMilliseconds() < slowestTargetTail.getDurationMilliseconds()) {
-      return;
-    }
-
-    SlowTargetCandidate cursor = slowestTarget;
-    while (cursor != null) {
-      if (cursor.getDurationMilliseconds() < candidate.getDurationMilliseconds()) {
-        candidate.setNextSlowestTarget(cursor);
-        if (cursor.getPrevSlowestTarget() != null) {
-          cursor.getPrevSlowestTarget().setNextSlowestTarget(candidate);
-        } else {
-          slowestTarget = candidate;
-        }
-
-        cursor.setPrevSlowestTarget(candidate);
-        slowTargetsLength++;
-        return;
-      }
-
-      cursor = cursor.getNextSlowestTarget();
-    }
-
-    slowestTargetTail.setNextSlowestTarget(candidate);
-    candidate.setPrevSlowestTarget(slowestTargetTail);
-    slowestTargetTail = candidate;
-    slowTargetsLength++;
   }
 
   /**
@@ -128,25 +83,17 @@ public final class TopSlowTargetsBuilder {
    * {@link #targetCount}.
    */
   private void trimToRequestedLength() {
-    if (slowTargetsLength > targetCount) {
-      Preconditions.checkState(slowTargetsLength == targetCount + 1);
-      slowestTargetTail = slowestTargetTail.getPrevSlowestTarget();
-      if (slowestTargetTail != null) {
-        slowestTargetTail.setNextSlowestTarget(null);
-      }
+    if (slowTargets.size() > targetCount) {
+      Preconditions.checkState(slowTargets.size() == targetCount + 1);
+      slowTargets.pollFirst();
     }
   }
 
-  /** Returns a list of the top N slow rules that this builder has observed. */
+  /**
+   * Returns a list of the top N slow rules that this builder has observed, sorted from fastest to
+   * slowest.
+   */
   public synchronized ImmutableList<SlowTarget> getSlowRules() {
-    ImmutableList.Builder<SlowTarget> builder =
-        ImmutableList.builderWithExpectedSize(slowTargetsLength);
-    SlowTargetCandidate cursor = slowestTarget;
-    while (cursor != null) {
-      builder.add(ImmutableSlowTarget.ofImpl(cursor.getTarget(), cursor.getDurationMilliseconds()));
-      cursor = cursor.getNextSlowestTarget();
-    }
-
-    return builder.build();
+    return ImmutableList.copyOf(slowTargets);
   }
 }

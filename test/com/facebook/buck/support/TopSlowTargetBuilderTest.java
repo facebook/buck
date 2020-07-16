@@ -50,18 +50,14 @@ public class TopSlowTargetBuilderTest {
     BuildTarget c = BuildTargetFactory.newInstance("//foo/bar:c");
     builder.onTargetCompleted(a, 40);
     builder.onTargetCompleted(b, 30);
-
-    // Build target c is the new slowest rule and resets the slowestTarget head pointer.
-    // It also kicks b off the end of the list, since we're only keeping around the top 2 slow
-    // rules.
     builder.onTargetCompleted(c, 50);
 
     ImmutableList<SlowTarget> slowTargets = builder.getSlowRules();
     assertEquals(2, slowTargets.size());
-    assertEquals(c, slowTargets.get(0).getTarget());
-    assertEquals(50, slowTargets.get(0).getDurationMilliseconds());
-    assertEquals(a, slowTargets.get(1).getTarget());
-    assertEquals(40, slowTargets.get(1).getDurationMilliseconds());
+    assertEquals(a, slowTargets.get(0).getTarget());
+    assertEquals(40, slowTargets.get(0).getDurationMilliseconds());
+    assertEquals(c, slowTargets.get(1).getTarget());
+    assertEquals(50, slowTargets.get(1).getDurationMilliseconds());
   }
 
   @Test
@@ -76,9 +72,31 @@ public class TopSlowTargetBuilderTest {
 
     ImmutableList<SlowTarget> slowTargets = builder.getSlowRules();
     assertEquals(2, slowTargets.size());
-    assertEquals(a, slowTargets.get(0).getTarget());
-    assertEquals(40, slowTargets.get(0).getDurationMilliseconds());
-    assertEquals(c, slowTargets.get(1).getTarget());
+    assertEquals(c, slowTargets.get(0).getTarget());
+    assertEquals(35, slowTargets.get(0).getDurationMilliseconds());
+    assertEquals(a, slowTargets.get(1).getTarget());
+    assertEquals(40, slowTargets.get(1).getDurationMilliseconds());
+  }
+
+  @Test
+  public void testSameDuration() {
+    TopSlowTargetsBuilder builder = new TopSlowTargetsBuilder(3);
+    BuildTarget a = BuildTargetFactory.newInstance("//foo/bar:a");
+    BuildTarget b = BuildTargetFactory.newInstance("//foo/bar:b");
+    BuildTarget c = BuildTargetFactory.newInstance("//foo/bar:c");
+    BuildTarget d = BuildTargetFactory.newInstance("//foo/bar:d");
+    builder.onTargetCompleted(a, 40);
+    builder.onTargetCompleted(b, 30);
+    builder.onTargetCompleted(c, 35);
+    builder.onTargetCompleted(d, 35);
+
+    ImmutableList<SlowTarget> slowTargets = builder.getSlowRules();
+    assertEquals(3, slowTargets.size());
+    assertEquals(c, slowTargets.get(0).getTarget());
+    assertEquals(35, slowTargets.get(0).getDurationMilliseconds());
+    assertEquals(d, slowTargets.get(1).getTarget());
     assertEquals(35, slowTargets.get(1).getDurationMilliseconds());
+    assertEquals(a, slowTargets.get(2).getTarget());
+    assertEquals(40, slowTargets.get(2).getDurationMilliseconds());
   }
 }
