@@ -62,6 +62,7 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
           .setArchitectures(ImmutableList.of("i386", "x86_64"))
           .setMinVersionFlagPrefix("-mwatchos-simulator-version-min=")
           .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
+          .setSwiftName("watchos")
           .build();
   public static final ApplePlatform APPLETVOS =
       ImmutableApplePlatform.builder()

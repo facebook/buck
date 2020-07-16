@@ -1009,6 +1009,15 @@ public class AppleLibraryIntegrationTest {
     testBuildAppleLibraryThatHasSwiftWithLocalConfig(ImmutableMap.of());
   }
 
+  @Test
+  public void testBuildAppleLibraryThatHasSwiftBuildsOnWatchOSSimulator() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHOS));
+
+    UserFlavor watchosSimFlavor = UserFlavor.of("watchsimulator-i386", "buck boilerplate");
+    testBuildAppleLibraryThatHasSwiftWithLocalConfig(watchosSimFlavor, ImmutableMap.of());
+  }
+
   private void testBuildAppleLibraryThatHasSwiftWithLocalConfig(
       Map<String, Map<String, String>> localConfigs) throws IOException, InterruptedException {
     UserFlavor iosSimFlavor = UserFlavor.of("iphonesimulator-x86_64", "buck boilerplate");
