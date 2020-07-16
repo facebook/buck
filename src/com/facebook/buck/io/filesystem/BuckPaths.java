@@ -142,7 +142,7 @@ public abstract class BuckPaths {
 
   @Value.Derived
   public Path getEmbeddedCellsBuckOutBaseDir() {
-    return getBuckOut().resolve("cells");
+    return getConfiguredBuckOut().resolve("cells");
   }
 
   @Value.Derived
