@@ -32,6 +32,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -1010,13 +1011,21 @@ public class AppleLibraryIntegrationTest {
 
   private void testBuildAppleLibraryThatHasSwiftWithLocalConfig(
       Map<String, Map<String, String>> localConfigs) throws IOException, InterruptedException {
+    UserFlavor iosSimFlavor = UserFlavor.of("iphonesimulator-x86_64", "buck boilerplate");
+    testBuildAppleLibraryThatHasSwiftWithLocalConfig(iosSimFlavor, localConfigs);
+  }
+
+  private void testBuildAppleLibraryThatHasSwiftWithLocalConfig(
+      UserFlavor platformFlavor, Map<String, Map<String, String>> localConfigs)
+      throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty_source_targets", tmp);
     workspace.addBuckConfigLocalOptions(localConfigs);
     workspace.setUp();
     BuildTarget target =
         workspace
-            .newBuildTarget("//:none-swift#iphonesimulator-x86_64")
+            .newBuildTarget("//:none-swift")
+            .withAppendedFlavors(platformFlavor)
             .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
     ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
