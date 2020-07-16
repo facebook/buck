@@ -63,7 +63,8 @@ public class ResourceFilters {
           // "transition" is not documented in the above link,
           // but the docs below claim it can be used
           // https://developer.android.com/reference/android/transition/Transition
-          "transition");
+          "transition",
+          "navigation");
 
   /**
    * Represents the names and values of valid densities for resources as defined in

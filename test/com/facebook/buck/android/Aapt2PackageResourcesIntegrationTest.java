@@ -70,4 +70,20 @@ public class Aapt2PackageResourcesIntegrationTest {
     assertThat(logEntry.getStatus(), is(equalTo(BuildRuleStatus.SUCCESS)));
     assertThat(logEntry.getSuccessType().get(), is(equalTo(BuildRuleSuccessType.BUILT_LOCALLY)));
   }
+
+  @Test
+  public void aapt2ResNavigationExists() throws IOException {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeBundleBuildIsSupported();
+    workspace.runBuckCommand(BUILD, AAPT2_BUILD_TARGET);
+    verifyAapt2RuleInvocation(workspace.getBuildLog());
+
+    assertThat(
+        workspace.getFileContents("res/com/sample/navigation/res/navigation/some_navigation.xml"),
+        is(
+            equalTo(
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<navigation xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                    + "            xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                    + "            android:id=\"@+id/nav_graph\">\n</navigation>\n")));
+  }
 }

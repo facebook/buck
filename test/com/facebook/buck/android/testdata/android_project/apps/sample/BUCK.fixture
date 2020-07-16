@@ -20,6 +20,7 @@ android_bundle(
     deps = [
         "//java/com/sample/lib:lib",
         "//res/com/sample/base:base",
+        "//res/com/sample/navigation:res",
     ],
 )
 
