@@ -30,10 +30,12 @@ import com.google.gson.reflect.TypeToken;
 import com.intellij.codeInsight.daemon.impl.actions.AddImportAction;
 import com.intellij.codeInsight.intention.impl.BaseIntentionAction;
 import com.intellij.notification.Notification;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootModificationUtil;
 import com.intellij.openapi.roots.ProjectFileIndex;
@@ -222,7 +224,12 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
       throws IncorrectOperationException {
     String msg = "Invoked for project " + project.getName() + " and file " + psiFile.getName();
     LOGGER.info(msg);
-    queryBuckForTargets(editor);
+    // will run buck query in the background, no need to block the ui for that
+    ApplicationManager.getApplication()
+        .executeOnPooledThread(
+            () -> {
+              queryBuckForTargets(editor);
+            });
   }
 
   /** Queries buck for targets that own the editSourceFile and the importSourceFile. */
@@ -421,8 +428,18 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
                     + importModule.getName());
           }
         }));
-    if (addImportAction != null) {
-      addImportAction.execute(project, reference, editor, psiClass);
+    if (addImportAction == null || !psiClass.isValid()) {
+      // If the element is no longer valid, so Add Import Action won't work here anyway.
+      // user will have to manually add the import.
+      return;
     }
+    // Add import will run main thread since it's a write action and will block the IDE
+    DumbService.getInstance(project)
+        .smartInvokeLater(
+            () -> {
+              if (psiClass.isValid()) {
+                addImportAction.execute(project, reference, editor, psiClass);
+              }
+            });
   }
 }
