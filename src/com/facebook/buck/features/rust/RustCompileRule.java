@@ -82,6 +82,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       SourcePathRuleFinder ruleFinder,
       String filename,
       Tool compiler,
+      Tool rustdoc,
       Linker linker,
       ImmutableList<Arg> args,
       ImmutableList<Arg> depArgs,
@@ -98,6 +99,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         ruleFinder,
         new Impl(
             compiler,
+            rustdoc,
             linker,
             buildTarget,
             args,
@@ -118,6 +120,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       ProjectFilesystem projectFilesystem,
       String filename,
       Tool compiler,
+      Tool rustdoc,
       Linker linker,
       ImmutableList<Arg> args,
       ImmutableList<Arg> depArgs,
@@ -134,6 +137,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         ruleFinder,
         filename,
         compiler,
+        rustdoc,
         linker,
         args,
         depArgs,
@@ -162,6 +166,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
   /** internal buildable implementation */
   static class Impl implements Buildable {
     @AddToRuleKey private final Tool compiler;
+    @AddToRuleKey private final Tool rustdoc;
 
     @AddToRuleKey private final Linker linker;
 
@@ -188,6 +193,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
 
     public Impl(
         Tool compiler,
+        Tool rustdoc,
         Linker linker,
         BuildTarget buildTarget,
         ImmutableList<Arg> args,
@@ -201,6 +207,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         Optional<String> xcrunpath,
         boolean withDownwardApi) {
       this.compiler = compiler;
+      this.rustdoc = rustdoc;
       this.linker = linker;
       this.buildTarget = buildTarget;
       this.args = args;

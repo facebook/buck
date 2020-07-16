@@ -317,6 +317,7 @@ public class RustCompileUtils {
         projectFilesystem,
         filename,
         rustPlatform.getRustCompiler().resolve(graphBuilder, target.getTargetConfiguration()),
+        rustPlatform.getRustdoc().resolve(graphBuilder, target.getTargetConfiguration()),
         rustPlatform.getLinkerProvider().resolve(graphBuilder, target.getTargetConfiguration()),
         args.build(),
         depArgs.build(),

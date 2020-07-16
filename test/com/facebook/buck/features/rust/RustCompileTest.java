@@ -236,6 +236,7 @@ public class RustCompileTest {
           ruleFinder,
           String.format("lib%s.rlib", target.getShortName()),
           fakeTool(),
+          fakeTool(),
           fakeLinker(),
           Stream.of("--crate-name", target.getShortName(), "--crate-type", "rlib")
               .map(StringArg::of)
