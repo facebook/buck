@@ -14,10 +14,6 @@
 
 package com.google.devtools.build.lib.vfs;
 
-import com.google.devtools.build.lib.skyframe.serialization.DeserializationContext;
-import com.google.devtools.build.lib.skyframe.serialization.ObjectCodec;
-import com.google.devtools.build.lib.skyframe.serialization.SerializationContext;
-import com.google.devtools.build.lib.skyframe.serialization.SerializationException;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.CodedOutputStream;
 import java.io.IOException;
@@ -37,34 +33,5 @@ public class FileAccessException extends IOException {
    */
   public FileAccessException(String s) {
     super(s);
-  }
-
-  /**
-   * Codec for {@link FileAccessException}.
-   *
-   * <p>{@link com.google.devtools.build.lib.skyframe.serialization.AutoRegistry} blacklists the
-   * entire com.google.devtools.build.lib.vfs java package from having DynamicCodec support.
-   * Therefore, we need to provide our own codec for @link FileAccessException}.
-   */
-  @SuppressWarnings("unused") // found by CLASSPATH-scanning magic
-  private static class Codec implements ObjectCodec<FileAccessException> {
-    @Override
-    public Class<? extends FileAccessException> getEncodedClass() {
-      return FileAccessException.class;
-    }
-
-    @Override
-    public void serialize(
-        SerializationContext context, FileAccessException fae, CodedOutputStream codedOut)
-        throws SerializationException, IOException {
-      context.serialize(fae.getMessage(), codedOut);
-    }
-
-    @Override
-    public FileAccessException deserialize(DeserializationContext context, CodedInputStream codedIn)
-        throws SerializationException, IOException {
-      String message = context.deserialize(codedIn);
-      return new FileAccessException(message);
-    }
   }
 }

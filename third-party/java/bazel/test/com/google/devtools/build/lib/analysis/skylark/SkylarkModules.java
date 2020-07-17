@@ -16,7 +16,6 @@ package com.google.devtools.build.lib.analysis.skylark;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.packages.StructProvider;
-import com.google.devtools.build.lib.skylarkbuildapi.TopLevelBootstrap;
 import com.google.devtools.build.lib.syntax.Starlark;
 
 /**

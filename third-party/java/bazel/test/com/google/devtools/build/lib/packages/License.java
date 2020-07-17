@@ -23,8 +23,8 @@ import com.google.devtools.build.lib.concurrent.ThreadSafety.Immutable;
 import com.google.devtools.build.lib.concurrent.ThreadSafety.ThreadSafe;
 import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
 import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec.VisibleForSerialization;
-import com.google.devtools.build.lib.skylarkbuildapi.LicenseApi;
 import com.google.devtools.build.lib.syntax.Printer;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -36,7 +36,7 @@ import java.util.Set;
 @Immutable
 @ThreadSafe
 @AutoCodec
-public final class License implements LicenseApi {
+public final class License implements StarlarkValue {
   private final ImmutableSet<LicenseType> licenseTypes;
   private final ImmutableSet<Label> exceptions;
 

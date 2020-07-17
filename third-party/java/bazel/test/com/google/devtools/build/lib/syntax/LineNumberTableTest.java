@@ -16,10 +16,8 @@ package com.google.devtools.build.lib.syntax;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.devtools.build.lib.events.Location.LineAndColumn;
-import com.google.devtools.build.lib.skyframe.serialization.testutils.SerializationTester;
 import com.google.devtools.build.lib.util.Pair;
 import com.google.devtools.build.lib.vfs.PathFragment;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -83,20 +81,5 @@ public class LineNumberTableTest {
     assertThat(table.getLineAndColumn(12)).isEqualTo(new LineAndColumn(5, 1));
     assertThat(table.getLineAndColumn(16)).isEqualTo(new LineAndColumn(5, 5));
     assertThat(table.getOffsetsForLine(5)).isEqualTo(Pair.of(12, 17));
-  }
-
-  @Test
-  @Ignore
-  public void testCodec() throws Exception {
-    new SerializationTester(
-            create(
-                "#\n"
-                    + "#line 67 \"/foo\"\n"
-                    + "cc_binary(name='a',\n"
-                    + "          srcs=[])\n"
-                    + "#line 23 \"/ba.r\"\n"
-                    + "vardef(x,y)\n"),
-            create("\ntwo\nthree\n\nfive\n"))
-        .runTests();
   }
 }

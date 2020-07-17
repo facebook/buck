@@ -16,12 +16,7 @@ package com.google.devtools.build.lib.vfs;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.actions.CommandLineItem;
-import com.google.devtools.build.lib.skyframe.serialization.DeserializationContext;
-import com.google.devtools.build.lib.skyframe.serialization.ObjectCodec;
-import com.google.devtools.build.lib.skyframe.serialization.SerializationContext;
-import com.google.devtools.build.lib.skyframe.serialization.SerializationException;
 import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
-import com.google.devtools.build.lib.skyframe.serialization.strings.StringCodecs;
 import com.google.devtools.build.lib.util.FileType;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.CodedOutputStream;
@@ -750,28 +745,5 @@ public final class PathFragment
 
   private Object writeReplace() {
     return new PathFragmentSerializationProxy(normalizedPath);
-  }
-
-  @SuppressWarnings("unused") // found by CLASSPATH-scanning magic
-  private static class Codec implements ObjectCodec<PathFragment> {
-    private final ObjectCodec<String> stringCodec = StringCodecs.asciiOptimized();
-
-    @Override
-    public Class<? extends PathFragment> getEncodedClass() {
-      return PathFragment.class;
-    }
-
-    @Override
-    public void serialize(
-        SerializationContext context, PathFragment obj, CodedOutputStream codedOut)
-        throws SerializationException, IOException {
-      stringCodec.serialize(context, obj.normalizedPath, codedOut);
-    }
-
-    @Override
-    public PathFragment deserialize(DeserializationContext context, CodedInputStream codedIn)
-        throws SerializationException, IOException {
-      return PathFragment.createAlreadyNormalized(stringCodec.deserialize(context, codedIn));
-    }
   }
 }

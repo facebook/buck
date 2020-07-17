@@ -17,11 +17,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skyframe.serialization.testutils.SerializationTester;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -526,11 +524,5 @@ public class LexerTest {
         .isEqualTo(
             "/some/path.txt:1: Tab characters are not allowed for indentation. Use spaces"
                 + " instead.");
-  }
-
-  @Test
-  @Ignore
-  public void testLexerLocationCodec() throws Exception {
-    new SerializationTester(createLexer("foo").createLocation(0, 2)).runTests();
   }
 }
