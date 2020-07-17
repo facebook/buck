@@ -1717,4 +1717,75 @@ public class AppleBinaryIntegrationTest {
     assertTrue(Files.isSymbolicLink(link.getPath()));
     assertEquals(target, Files.readSymbolicLink(link.getPath()));
   }
+
+  @Test(timeout = 120000)
+  public void testAppleBinaryWithConditionalRelinking() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_conditional_relinking", tmp);
+    workspace.addBuckConfigLocalOption("apple", "conditional_relinking_enabled", "true");
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    // 1. On first build, check that we have a binary and have stored relinking info.
+
+    Path binaryOutputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
+    assertThat(Files.exists(binaryOutputPath), is(true));
+    assertThat(
+        workspace.runCommand("file", binaryOutputPath.toString()).getStdout().get(),
+        containsString("executable"));
+
+    String originalBinaryHash = workspace.getProjectFileSystem().computeSha256(binaryOutputPath);
+
+    // Check that relink info was generated
+    Path relinkInfoPath =
+        binaryOutputPath.resolveSibling(binaryOutputPath.getFileName() + ".relink-info.json");
+    assertThat(Files.exists(relinkInfoPath), is(true));
+
+    // The binary uses a special linker flag to generate a random UUID on each link, so if the
+    // linker runs, this can be detected by observing different UUIDs. Hashing the executable to
+    // determine if it was relinked does not work because the linker is deterministic.
+    Optional<String> initialUuid = getDwarfdumpUuidOutput(workspace, binaryOutputPath);
+
+    // 2. Add more symbols to the dylibs, binary should skip linking as ABI stayed the same
+
+    workspace.addBuckConfigLocalOption("test", "add_symbols", "true");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+    Optional<String> uuidAfterExpectedSkippedRelink =
+        getDwarfdumpUuidOutput(workspace, binaryOutputPath);
+
+    assertThat(Files.exists(relinkInfoPath), is(true));
+    assertThat(initialUuid, equalTo(uuidAfterExpectedSkippedRelink)); // i.e., linking was skipped
+
+    // 3. Swap symbols between dylibs, should be relinked as symbols would resolve to different
+    // dylibs
+
+    workspace.addBuckConfigLocalOption("test", "swap_symbols", "true");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+    Optional<String> uuidAfterExpectedRelink = getDwarfdumpUuidOutput(workspace, binaryOutputPath);
+
+    assertThat(Files.exists(relinkInfoPath), is(true));
+    assertThat(
+        initialUuid, not(equalTo(uuidAfterExpectedRelink))); // i.e., linking was _not_ skipped
+
+    String binaryHashAfterSymbolSwap =
+        workspace.getProjectFileSystem().computeSha256(binaryOutputPath);
+    assertThat(originalBinaryHash, not(equalTo(binaryHashAfterSymbolSwap)));
+  }
+
+  /**
+   * NOTE: This returns the output from dwarfdump with the additional binary path, _not_ just the
+   * UUID part of the output.
+   */
+  private static Optional<String> getDwarfdumpUuidOutput(
+      ProjectWorkspace workspace, Path executablePath) throws IOException, InterruptedException {
+    return workspace.runCommand("dwarfdump", "--uuid", executablePath.toString()).getStdout();
+  }
 }

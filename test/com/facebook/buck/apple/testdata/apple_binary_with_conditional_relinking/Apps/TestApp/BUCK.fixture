@@ -1,0 +1,11 @@
+apple_binary(
+    name = "TestApp",
+    srcs = ["main.c"],
+    info_plist = "Info.plist",
+    deps = [
+        "//Apps/Libraries:Contacts",
+        "//Apps/Libraries:Location",
+    ],
+    link_style = "shared",
+    linker_flags = ["-Wl,-random_uuid"],
+)

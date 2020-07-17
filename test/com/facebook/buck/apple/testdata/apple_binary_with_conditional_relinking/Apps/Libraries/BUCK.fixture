@@ -1,0 +1,29 @@
+LOCATION_PREPROCESSOR_FLAGS = []
+CONTACTS_PREPROCESSOR_FLAGS = []
+
+if read_config("test", "swap_symbols", False):
+    LOCATION_PREPROCESSOR_FLAGS.append("-DTEST_IMPLEMENT_CONTACTS_FUNCTION=1")
+    CONTACTS_PREPROCESSOR_FLAGS.append("-DTEST_IMPLEMENT_LOCATION_FUNCTION=1")
+else:
+    LOCATION_PREPROCESSOR_FLAGS.append("-DTEST_IMPLEMENT_LOCATION_FUNCTION=1")
+    CONTACTS_PREPROCESSOR_FLAGS.append("-DTEST_IMPLEMENT_CONTACTS_FUNCTION=1")
+
+if read_config("test", "add_symbols", False):
+    LOCATION_PREPROCESSOR_FLAGS.append("-DTEST_USE_STATIC_FUNCTION=1")
+    CONTACTS_PREPROCESSOR_FLAGS.append("-DTEST_USE_STATIC_FUNCTION=1")
+
+apple_library(
+    name = "Location",
+    srcs = ["lib.c"],
+    exported_headers = ["lib.h"],
+    preprocessor_flags = LOCATION_PREPROCESSOR_FLAGS,
+    visibility = ["//Apps/..."],
+)
+
+apple_library(
+    name = "Contacts",
+    srcs = ["lib.c"],
+    exported_headers = ["lib.h"],
+    preprocessor_flags = CONTACTS_PREPROCESSOR_FLAGS,
+    visibility = ["//Apps/..."],
+)
