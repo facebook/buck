@@ -117,7 +117,7 @@ cd "$DOCS_DIR"
 
 # Commit the new version of the docs:
 cd "$STATIC_FILES_DIR"
-if [ -z "${GIT_USER}" ]
+if [[ -n $GIT_USER ]]
 then
   git config --global user.name "${GIT_USER}"
 fi
