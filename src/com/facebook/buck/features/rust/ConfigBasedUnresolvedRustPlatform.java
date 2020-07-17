@@ -137,7 +137,7 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
                     .map(StringArg::of)
                     .collect(ImmutableList.toImmutableList()))
             .addAllRustDocFlags(
-                rustBuckConfig.getRustcDocFlags(name).stream()
+                rustBuckConfig.getRustDocFlags(name).stream()
                     .map(StringArg::of)
                     .collect(ImmutableList.toImmutableList()))
             .setLinker(linkerOverride)
