@@ -23,6 +23,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Functions;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -48,10 +50,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -106,6 +110,23 @@ public final class MostFiles {
 
   /** Utility class: do not instantiate. */
   private MostFiles() {}
+
+  /**
+   * Deletes the file tree rooted at {@code path} while excluding any paths from {@code
+   * excludedAbsPaths}. If any files are not deleted due to presence in {@code excludedAbsPaths},
+   * then any parent directories will not be deleted, either.
+   */
+  public static void deleteRecursivelyIfExists(AbsPath path, ImmutableSet<AbsPath> excludedAbsPaths)
+      throws IOException {
+    ImmutableSet<Path> excludedPaths =
+        excludedAbsPaths.stream()
+            .map(absPath -> absPath.getPath())
+            .collect(ImmutableSet.toImmutableSet());
+    deleteRecursivelyWithOptions(
+        path.getPath(),
+        EnumSet.of(DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION),
+        excludedPaths);
+  }
 
   public static void deleteRecursivelyIfExists(Path path) throws IOException {
     deleteRecursivelyWithOptions(
@@ -190,6 +211,32 @@ public final class MostFiles {
 
   public static void deleteRecursivelyWithOptions(
       Path path, EnumSet<DeleteRecursivelyOptions> options) throws IOException {
+    deleteRecursivelyWithOptions(path, options, ImmutableSet.of());
+  }
+
+  private static boolean shouldSkipDeletingPath(Path path, ImmutableSet<Path> excludedPaths) {
+    if (excludedPaths.contains(path)) {
+      return true;
+    }
+
+    for (Path excludedPath : excludedPaths) {
+      // Required so that `excludedPaths` can contain directories
+      if (path.startsWith(excludedPath)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Deletes the file element rooted at {@code path}, recursively if a directory, by excluding any
+   * elements from {@code excludedPaths}. If {@code excludedPaths} contains directories, then all
+   * elements contain in those directories are excluded as well.
+   */
+  public static void deleteRecursivelyWithOptions(
+      Path path, EnumSet<DeleteRecursivelyOptions> options, ImmutableSet<Path> excludedPaths)
+      throws IOException {
     try {
       if (!Files.isDirectory(path)) {
         if (options.contains(DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION)) {
@@ -200,8 +247,26 @@ public final class MostFiles {
         if (options.contains(DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY)) {
           throw new IOException(String.format("Can't delete contents of regular file %s.", path));
         }
+        Preconditions.checkArgument(excludedPaths.isEmpty());
         Files.delete(path);
       } else {
+        // `nonEmptyDirectories` is a list of directories which contains elements (files/dirs)
+        // that were excluded from deletion, so these parent directories must be kept. Note that
+        // semantics of `nonEmptyDirectories` are different from `excludedPaths`, namely:
+        // `excludedPaths` are _recursive_ while `nonEmptyDirectories` are _not_.
+        //
+        // That is, a directory in `nonEmptyDirectories` does not mean that _all_ elements
+        // inside that directories must be kept but only the directory _itself_.
+        Set<Path> nonEmptyDirectories = new HashSet<>();
+        Consumer<Path> skipDeletingParentsOf =
+            (Path excludedPath) -> {
+              Path currentParent = excludedPath.getParent();
+              while (currentParent != null) {
+                nonEmptyDirectories.add(currentParent);
+                currentParent = currentParent.getParent();
+              }
+            };
+
         // Adapted from http://codingjunkie.net/java-7-copy-move/.
         SimpleFileVisitor<Path> deleteDirVisitor =
             new SimpleFileVisitor<Path>() {
@@ -210,7 +275,11 @@ public final class MostFiles {
               public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                   throws IOException {
                 try {
-                  Files.delete(file);
+                  if (!shouldSkipDeletingPath(file, excludedPaths)) {
+                    Files.delete(file);
+                  } else {
+                    skipDeletingParentsOf.accept(file);
+                  }
                 } catch (IOException e) {
                   LOG.warn("%s, could not delete file", e);
                 }
@@ -225,9 +294,14 @@ public final class MostFiles {
                   // of
                   // the trash dir but not the trash dir itself)
                   if (!(options.contains(DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY)
-                      && dir.equals(path))) {
+                          && dir.equals(path))
+                      && !nonEmptyDirectories.contains(dir)) {
                     try {
-                      Files.delete(dir);
+                      if (!shouldSkipDeletingPath(dir, excludedPaths)) {
+                        Files.delete(dir);
+                      } else {
+                        skipDeletingParentsOf.accept(dir);
+                      }
                     } catch (DirectoryNotEmptyException notEmpty) {
                       try (Stream<Path> paths = Files.list(dir)) {
                         LOG.warn(

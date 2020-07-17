@@ -25,6 +25,8 @@ import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.StringJoiner;
@@ -36,6 +38,8 @@ public abstract class RmIsolatedStep extends IsolatedStep {
   abstract RelPath getPath();
 
   abstract boolean isRecursive();
+
+  public abstract ImmutableSet<RelPath> getExcludedPaths();
 
   @Override
   public String getShortName() {
@@ -50,16 +54,35 @@ public abstract class RmIsolatedStep extends IsolatedStep {
 
     if (isRecursive()) {
       // Delete a folder recursively
-      MostFiles.deleteRecursivelyIfExists(absolutePath);
+      MostFiles.deleteRecursivelyIfExists(absolutePath, getAbsoluteExcludedPaths(context));
     } else {
       // Delete a single file
+      Preconditions.checkState(
+          getExcludedPaths().isEmpty(), "Excluded paths only valid for recursive steps");
       Files.deleteIfExists(absolutePath.getPath());
     }
     return StepExecutionResults.SUCCESS;
   }
 
   private AbsPath getAbsPath(IsolatedExecutionContext context) {
-    return ProjectFilesystemUtils.getAbsPathForRelativePath(context.getRuleCellRoot(), getPath());
+    return convertRelPathToAbsPath(context, getPath());
+  }
+
+  private AbsPath convertRelPathToAbsPath(IsolatedExecutionContext context, RelPath relPath) {
+    return ProjectFilesystemUtils.getAbsPathForRelativePath(context.getRuleCellRoot(), relPath);
+  }
+
+  private ImmutableSet<AbsPath> getAbsoluteExcludedPaths(IsolatedExecutionContext context) {
+    ImmutableSet<RelPath> excludedRelPaths = getExcludedPaths();
+    if (excludedRelPaths.isEmpty()) {
+      // Avoid calls to .stream() and creation of new sets as almost all steps will not have
+      // any excluded paths
+      return ImmutableSet.of();
+    }
+
+    return excludedRelPaths.stream()
+        .map(relPath -> convertRelPathToAbsPath(context, relPath))
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
@@ -74,11 +97,20 @@ public abstract class RmIsolatedStep extends IsolatedStep {
 
     args.add(getAbsPath(context).toString());
 
+    if (!getExcludedPaths().isEmpty()) {
+      args.add("(with excluded paths)");
+    }
+
     return args.toString();
   }
 
+  public static RmIsolatedStep of(
+      RelPath path, boolean recursive, ImmutableSet<RelPath> excludedPaths) {
+    return ImmutableRmIsolatedStep.ofImpl(path, recursive, excludedPaths);
+  }
+
   public static RmIsolatedStep of(RelPath path, boolean recursive) {
-    return ImmutableRmIsolatedStep.ofImpl(path, recursive);
+    return of(path, recursive, ImmutableSet.of());
   }
 
   public static RmIsolatedStep of(RelPath path) {

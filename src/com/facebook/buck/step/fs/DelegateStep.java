@@ -61,11 +61,18 @@ abstract class DelegateStep<T extends IsolatedStep> implements Step {
     return delegate;
   }
 
-  protected static RelPath toCellRootRelativePath(
-      StepExecutionContext context, BuildCellRelativePath path) {
-    Path absolutePath =
-        context.getBuildCellRootPath().resolve(path.getPathRelativeToBuildCellRoot());
+  private static RelPath toCellRootRelativePath(StepExecutionContext context, Path relativePath) {
+    Path absolutePath = context.getBuildCellRootPath().resolve(relativePath);
     AbsPath ruleCellRoot = context.getRuleCellRoot();
     return ruleCellRoot.relativize(absolutePath);
+  }
+
+  protected static RelPath toCellRootRelativePath(
+      StepExecutionContext context, BuildCellRelativePath path) {
+    return toCellRootRelativePath(context, path.getPathRelativeToBuildCellRoot());
+  }
+
+  protected static RelPath toCellRootRelativePath(StepExecutionContext context, RelPath path) {
+    return toCellRootRelativePath(context, path.getPath());
   }
 }

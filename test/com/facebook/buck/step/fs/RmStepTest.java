@@ -23,10 +23,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
@@ -43,6 +45,9 @@ public class RmStepTest {
   private StepExecutionContext context;
   private ProjectFilesystem filesystem;
 
+  private StepExecutionContext tmpFilesystemContext;
+  private ProjectFilesystem tmpFilesystem;
+
   @Before
   public void setUp() {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
@@ -53,6 +58,15 @@ public class RmStepTest {
             .from(executionContext)
             .setBuildCellRootPath(rootPath.getPath())
             .setRuleCellRoot(rootPath)
+            .build();
+
+    // Real fs required to make certain APIs work as expected
+    tmpFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
+    StepExecutionContext tmpFileExecutionContext = TestExecutionContext.newInstance();
+    tmpFilesystemContext =
+        StepExecutionContext.builder()
+            .from(tmpFileExecutionContext)
+            .setBuildCellRootPath(tmpFilesystem.getRootPath().getPath())
             .build();
   }
 
@@ -132,6 +146,281 @@ public class RmStepTest {
     assertEquals(0, step.execute(context).getExitCode());
 
     assertFalse(Files.exists(file.getPath()));
+  }
+
+  @Test
+  public void excludeNonExistentFile() throws IOException, InterruptedException {
+    // - dir1
+    //   - dir2
+    //     - file1
+    //     - file2
+    //   - file3
+    //   - file4
+    // Exclude: dir1/dir3/file5
+
+    String file1Name = "dir1/dir2/file1";
+    String file2Name = "dir1/dir2/file2";
+    String file3Name = "dir1/file3";
+    String file4Name = "dir1/file4";
+
+    Path rootDir =
+        createDirectoryForFileNames(tmpFilesystem, file1Name, file2Name, file3Name, file4Name);
+    Path file1Path = rootDir.resolve(file1Name);
+    Path file2Path = rootDir.resolve(file2Name);
+    Path file3Path = rootDir.resolve(file3Name);
+    Path file4Path = rootDir.resolve(file4Name);
+
+    assertTrue(Files.exists(file1Path));
+    assertTrue(Files.exists(file2Path));
+    assertTrue(Files.exists(file3Path));
+    assertTrue(Files.exists(file4Path));
+
+    RmStep step =
+        RmStep.recursiveOf(
+            BuildCellRelativePath.fromCellRelativePath(
+                tmpFilesystem.getRootPath(), tmpFilesystem, rootDir),
+            ImmutableSet.of(tmpFilesystem.relativize(rootDir.resolve("dir1/dir3/file5"))));
+
+    assertEquals(0, step.execute(tmpFilesystemContext).getExitCode());
+
+    // Check that the root dir has been deleted
+
+    assertFalse(Files.exists(rootDir));
+  }
+
+  @Test
+  public void excludeAllFilesInDir() throws IOException, InterruptedException {
+    // - dir1
+    //   - dir2
+    //     - file1
+    //     - file2
+    //   - file3
+    //   - file4
+    // Exclude: dir1/dir2/file1, dir1/dir2/file2
+
+    String file1Name = "dir1/dir2/file1";
+    String file2Name = "dir1/dir2/file2";
+    String file3Name = "dir1/file3";
+    String file4Name = "dir1/file4";
+
+    Path rootDir =
+        createDirectoryForFileNames(tmpFilesystem, file1Name, file2Name, file3Name, file4Name);
+    Path file1Path = rootDir.resolve(file1Name);
+    Path file2Path = rootDir.resolve(file2Name);
+    Path file3Path = rootDir.resolve(file3Name);
+    Path file4Path = rootDir.resolve(file4Name);
+
+    assertTrue(Files.exists(file1Path));
+    assertTrue(Files.exists(file2Path));
+    assertTrue(Files.exists(file3Path));
+    assertTrue(Files.exists(file4Path));
+
+    ImmutableSet<RelPath> excludedPaths =
+        ImmutableSet.of(tmpFilesystem.relativize(file1Path), tmpFilesystem.relativize(file2Path));
+
+    RmStep step =
+        RmStep.recursiveOf(
+            BuildCellRelativePath.fromCellRelativePath(
+                tmpFilesystem.getRootPath(), tmpFilesystem, rootDir),
+            excludedPaths);
+
+    assertEquals(0, step.execute(tmpFilesystemContext).getExitCode());
+
+    // Check that file3 + file4 are deleted
+
+    assertTrue(Files.exists(file1Path));
+    assertTrue(Files.exists(file2Path));
+    assertFalse(Files.exists(file3Path));
+    assertFalse(Files.exists(file4Path));
+  }
+
+  @Test
+  public void excludeStrictSubsetOfFilesInDir() throws IOException, InterruptedException {
+    // - dir1
+    //   - dir2
+    //     - file1
+    //     - file2
+    //   - file3
+    //   - file4
+    // Exclude: dir1/dir2/file1
+
+    String file1Name = "dir1/dir2/file1";
+    String file2Name = "dir1/dir2/file2";
+    String file3Name = "dir1/file3";
+    String file4Name = "dir1/file4";
+
+    Path rootDir =
+        createDirectoryForFileNames(tmpFilesystem, file1Name, file2Name, file3Name, file4Name);
+    Path file1Path = rootDir.resolve(file1Name);
+    Path file2Path = rootDir.resolve(file2Name);
+    Path file3Path = rootDir.resolve(file3Name);
+    Path file4Path = rootDir.resolve(file4Name);
+
+    assertTrue(Files.exists(file1Path));
+    assertTrue(Files.exists(file2Path));
+    assertTrue(Files.exists(file3Path));
+    assertTrue(Files.exists(file4Path));
+
+    RelPath excludedPath = tmpFilesystem.relativize(file1Path);
+
+    RmStep step =
+        RmStep.recursiveOf(
+            BuildCellRelativePath.fromCellRelativePath(
+                tmpFilesystem.getRootPath(), tmpFilesystem, rootDir),
+            ImmutableSet.of(excludedPath));
+
+    assertEquals(0, step.execute(tmpFilesystemContext).getExitCode());
+
+    // Check that file2, file3 and file4 are deleted
+
+    assertTrue(Files.exists(file1Path));
+    assertFalse(Files.exists(file2Path));
+    assertFalse(Files.exists(file3Path));
+    assertFalse(Files.exists(file4Path));
+  }
+
+  @Test
+  public void excludeEmptyDirectory() throws IOException, InterruptedException {
+    // - dir1
+    //   - dir2
+    //   - file3
+    //   - file4
+    // Exclude: dir1/dir2
+
+    String file3Name = "dir1/file3";
+    String file4Name = "dir1/file4";
+
+    Path rootDir = createDirectoryForFileNames(tmpFilesystem, file3Name, file4Name);
+    Path file3Path = rootDir.resolve(file3Name);
+    Path file4Path = rootDir.resolve(file4Name);
+    Path dir2Path = rootDir.resolve("dir2");
+
+    Files.createDirectory(dir2Path);
+
+    RelPath excludedPath = tmpFilesystem.relativize(dir2Path);
+
+    assertTrue(Files.exists(dir2Path));
+    assertTrue(Files.exists(file3Path));
+    assertTrue(Files.exists(file4Path));
+
+    RmStep step =
+        RmStep.recursiveOf(
+            BuildCellRelativePath.fromCellRelativePath(
+                tmpFilesystem.getRootPath(), tmpFilesystem, rootDir),
+            ImmutableSet.of(excludedPath));
+
+    assertEquals(0, step.execute(tmpFilesystemContext).getExitCode());
+
+    // Check that file3 and file4 are deleted, dir2 preserved
+
+    assertTrue(Files.exists(dir2Path));
+    assertFalse(Files.exists(file3Path));
+    assertFalse(Files.exists(file4Path));
+  }
+
+  @Test
+  public void excludeNonEmptyDirectory() throws IOException, InterruptedException {
+    // - dir1
+    //   - dir2
+    //     - file1
+    //     - file2
+    //   - file3
+    //   - file4
+    // Exclude: dir1/dir2
+
+    String file1Name = "dir1/dir2/file1";
+    String file2Name = "dir1/dir2/file2";
+    String file3Name = "dir1/file3";
+    String file4Name = "dir1/file4";
+
+    Path rootDir =
+        createDirectoryForFileNames(tmpFilesystem, file1Name, file2Name, file3Name, file4Name);
+    Path file1Path = rootDir.resolve(file1Name);
+    Path file2Path = rootDir.resolve(file2Name);
+    Path file3Path = rootDir.resolve(file3Name);
+    Path file4Path = rootDir.resolve(file4Name);
+
+    assertTrue(Files.exists(file1Path));
+    assertTrue(Files.exists(file2Path));
+    assertTrue(Files.exists(file3Path));
+    assertTrue(Files.exists(file4Path));
+
+    RelPath excludedPath = tmpFilesystem.relativize(rootDir.resolve("dir1/dir2"));
+
+    RmStep step =
+        RmStep.recursiveOf(
+            BuildCellRelativePath.fromCellRelativePath(
+                tmpFilesystem.getRootPath(), tmpFilesystem, rootDir),
+            ImmutableSet.of(excludedPath));
+
+    assertEquals(0, step.execute(tmpFilesystemContext).getExitCode());
+
+    // Check all files outside of dir1/dir2 were deleted
+
+    assertTrue(Files.exists(file1Path));
+    assertTrue(Files.exists(file2Path));
+    assertFalse(Files.exists(file3Path));
+    assertFalse(Files.exists(file4Path));
+  }
+
+  @Test
+  public void excludeRootDirectory() throws IOException, InterruptedException {
+    // - dir1
+    //   - dir2
+    //     - file1
+    //     - file2
+    //   - file3
+    //   - file4
+    // Exclude: dir1
+
+    String file1Name = "dir1/dir2/file1";
+    String file2Name = "dir1/dir2/file2";
+    String file3Name = "dir1/file3";
+    String file4Name = "dir1/file4";
+
+    Path rootDir =
+        createDirectoryForFileNames(tmpFilesystem, file1Name, file2Name, file3Name, file4Name);
+    Path file1Path = rootDir.resolve(file1Name);
+    Path file2Path = rootDir.resolve(file2Name);
+    Path file3Path = rootDir.resolve(file3Name);
+    Path file4Path = rootDir.resolve(file4Name);
+
+    assertTrue(Files.exists(file1Path));
+    assertTrue(Files.exists(file2Path));
+    assertTrue(Files.exists(file3Path));
+    assertTrue(Files.exists(file4Path));
+
+    RelPath excludeRootDirPath = tmpFilesystem.relativize(rootDir);
+
+    RmStep step =
+        RmStep.recursiveOf(
+            BuildCellRelativePath.fromCellRelativePath(
+                tmpFilesystem.getRootPath(), tmpFilesystem, rootDir),
+            ImmutableSet.of(excludeRootDirPath));
+
+    assertEquals(0, step.execute(tmpFilesystemContext).getExitCode());
+
+    // Check that no files were deleted
+
+    assertTrue(Files.exists(file1Path));
+    assertTrue(Files.exists(file2Path));
+    assertTrue(Files.exists(file3Path));
+    assertTrue(Files.exists(file4Path));
+  }
+
+  private static Path createDirectoryForFileNames(ProjectFilesystem filesystem, String... fileNames)
+      throws IOException {
+    Path dir = Files.createTempDirectory(filesystem.getRootPath().getPath(), "buck");
+    assertTrue(Files.exists(dir));
+
+    for (String fileName : fileNames) {
+      Path filePath = dir.resolve(fileName);
+      Files.createDirectories(filePath.getParent());
+      Files.write(filePath, fileName.getBytes(UTF_8));
+      assertTrue(Files.exists(filePath));
+    }
+
+    return dir;
   }
 
   private Path createFile() throws IOException {
