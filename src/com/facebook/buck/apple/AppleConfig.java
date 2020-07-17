@@ -76,6 +76,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   private static final String COMP_DB_INCLUDES_SWIFT = "compilation_database_includes_swift";
 
+  private static final String CONDITIONAL_RELINKING_ENABLED = "conditional_relinking_enabled";
+
   private final BuckConfig delegate;
 
   // Reflection-based factory for ConfigView
@@ -531,6 +533,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean compilationDatabaseIncludesSwift() {
     return delegate.getBooleanValue(APPLE_SECTION, COMP_DB_INCLUDES_SWIFT, false);
+  }
+  
+  public boolean getConditionalRelinkingEnabled() {
+    return delegate.getBooleanValue(APPLE_SECTION, CONDITIONAL_RELINKING_ENABLED, false);
   }
 
   @BuckStyleValue
