@@ -171,7 +171,7 @@ public class AppleBundle extends AbstractBuildRule
       ActionGraphBuilder graphBuilder,
       String extension,
       Optional<String> productName,
-      Path infoPlistBundlePath,
+      RelPath infoPlistPathRelativeToBundle,
       BuildRule binary,
       Optional<AppleDsym> appleDsym,
       ImmutableSet<BuildRule> extraBinaries,
@@ -251,7 +251,7 @@ public class AppleBundle extends AbstractBuildRule
 
     this.sliceAppPackageSwiftRuntime = sliceAppPackageSwiftRuntime;
     this.sliceAppBundleSwiftRuntime = sliceAppBundleSwiftRuntime;
-    this.infoPlistBundlePath = infoPlistBundlePath;
+    this.infoPlistBundlePath = bundleRoot.resolve(infoPlistPathRelativeToBundle.getPath());
   }
 
   private boolean hasBinary() {

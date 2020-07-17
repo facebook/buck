@@ -1050,14 +1050,14 @@ public class AppleDescriptions {
       codeSignIdentityFingerprint = Optional.empty();
     }
 
-    Path infoPlistFileBundlePath;
+    RelPath infoPlistFileBundlePath;
     {
       SourcePathWithAppleBundleDestination infoPlistFile =
           SourcePathWithAppleBundleDestination.of(
               infoPlistReadyToCopy, AppleBundleDestination.METADATA, false);
       collectedResourcesBuilder.addResourceFiles(infoPlistFile);
       infoPlistFileBundlePath =
-          infoPlistFile.getDestination().getPath(destinations).resolve("Info.plist");
+          RelPath.of(infoPlistFile.getDestination().getPath(destinations)).resolveRel("Info.plist");
     }
 
     AppleBundleResources collectedResources = collectedResourcesBuilder.build();
