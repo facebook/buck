@@ -1028,7 +1028,8 @@ public class CxxDescriptionEnhancer {
       CommonArg args,
       ImmutableSet<BuildTarget> extraDeps,
       Optional<StripStyle> stripStyle,
-      Optional<LinkerMapMode> flavoredLinkerMapMode) {
+      Optional<LinkerMapMode> flavoredLinkerMapMode,
+      CxxConditionalLinkStrategyFactory linkStrategyFactory) {
 
     ImmutableMap<String, CxxSource> srcs = parseCxxSources(target, graphBuilder, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
@@ -1095,7 +1096,8 @@ public class CxxDescriptionEnhancer {
         args.getCxxRuntimeType(),
         args.getRawHeaders(),
         args.getIncludeDirectories(),
-        args.getExecutableName());
+        args.getExecutableName(),
+        linkStrategyFactory);
   }
 
   private static ImmutableList<Arg> createLinkArgsForCxxBinary(
@@ -1399,7 +1401,8 @@ public class CxxDescriptionEnhancer {
       Optional<CxxRuntimeType> cxxRuntimeType,
       ImmutableSortedSet<SourcePath> rawHeaders,
       ImmutableSortedSet<String> includeDirectories,
-      Optional<String> outputRootName) {
+      Optional<String> outputRootName,
+      CxxConditionalLinkStrategyFactory linkStrategyFactory) {
     //    TODO(beefon): should be:
     //    Path linkOutput = getLinkOutputPath(
     //        createCxxLinkTarget(params.getBuildTarget(), flavoredLinkerMapMode),
@@ -1497,7 +1500,8 @@ public class CxxDescriptionEnhancer {
                             .setLibraries(libraries)
                             .build(),
                         Optional.empty(),
-                        cellRoots));
+                        cellRoots,
+                        linkStrategyFactory));
 
     BuildRule binaryRuleForExecutable;
     Optional<CxxStrip> cxxStrip = Optional.empty();

@@ -96,7 +96,8 @@ public class CxxBinaryDescription
         actionGraphBuilder,
         context.getCellPathResolver(),
         args,
-        ImmutableSortedSet.of());
+        ImmutableSortedSet.of(),
+        CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY);
   }
 
   @Override

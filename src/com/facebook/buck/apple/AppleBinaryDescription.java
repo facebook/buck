@@ -52,6 +52,7 @@ import com.facebook.buck.cxx.CxxBinaryFlavored;
 import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
 import com.facebook.buck.cxx.CxxBinaryMetadataFactory;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
+import com.facebook.buck.cxx.CxxConditionalLinkStrategyFactoryAlwaysLink;
 import com.facebook.buck.cxx.CxxLinkGroupMapDatabase;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
@@ -583,7 +584,8 @@ public class AppleBinaryDescription
                 graphBuilder,
                 cellRoots,
                 delegateArg.build(),
-                extraCxxDeps);
+                extraCxxDeps,
+                CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY);
           }
         });
   }
