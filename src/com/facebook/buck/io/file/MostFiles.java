@@ -214,7 +214,13 @@ public final class MostFiles {
     deleteRecursivelyWithOptions(path, options, ImmutableSet.of());
   }
 
-  private static boolean shouldSkipDeletingPath(Path path, ImmutableSet<Path> excludedPaths) {
+  /**
+   * Returns {@code true} if the given {@code path} or any of its ancestors are contained in {@code
+   * excludedPaths}. For example, if {@code excludedPaths} contains "/a/b" and and {@code path} is
+   * "/a/b/c/d", then this function will return {@code true}. On the other hand, if {@code path} is
+   * "/a/f/g, then the function returns {@code false}.
+   */
+  public static boolean shouldSkipDeletingPath(Path path, ImmutableSet<Path> excludedPaths) {
     if (excludedPaths.contains(path)) {
       return true;
     }

@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -30,6 +31,7 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.DefaultInputRuleResolver;
@@ -201,6 +203,15 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     return buildable;
   }
 
+  /**
+   * As part of the setup for MBRs, the root output dir and scratch dir are removed and recreated.
+   * If an MBR needs to work incrementally, then this method can be overridden. NOTE: This only
+   * controls the behavior of the outputs _excluding_ the scratch dir.
+   */
+  public ImmutableList<OutputPath> getExcludedOutputPathsFromAutomaticSetup() {
+    return ImmutableList.of();
+  }
+
   @Nullable
   @Override
   public SourcePath getSourcePathToOutput() {
@@ -266,7 +277,13 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     recordOutputs(outputsBuilder::add);
     ImmutableList<Path> outputs = outputsBuilder.build();
     outputs.forEach(buildableContext::recordArtifact);
-    return stepsForBuildable(context, buildable, getProjectFilesystem(), getBuildTarget(), outputs);
+    return stepsForBuildable(
+        context,
+        buildable,
+        getProjectFilesystem(),
+        getBuildTarget(),
+        outputs,
+        getExcludedOutputPathsFromAutomaticSetup());
   }
 
   /**
@@ -278,10 +295,12 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
       T buildable,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
-      Iterable<Path> outputs) {
+      Iterable<Path> outputs,
+      ImmutableList<OutputPath> excludedPaths) {
     ImmutableList.Builder<Step> stepBuilder = ImmutableList.builder();
     OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, buildTarget);
-    getSetupStepsForBuildable(context, filesystem, outputs, stepBuilder, outputPathResolver);
+    getSetupStepsForBuildable(
+        context, filesystem, outputs, stepBuilder, outputPathResolver, excludedPaths);
 
     stepBuilder.addAll(
         buildable.getBuildSteps(
@@ -314,11 +333,30 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
       ProjectFilesystem filesystem,
       Iterable<Path> outputs,
       Builder<Step> stepBuilder,
-      OutputPathResolver outputPathResolver) {
+      OutputPathResolver outputPathResolver,
+      ImmutableList<OutputPath> excludedOutputPaths) {
+    RelPath tempPath = outputPathResolver.getTempPath();
+    ImmutableSet<RelPath> excludedRelPaths =
+        excludedOutputPaths.stream()
+            .map(
+                outputPath -> {
+                  RelPath relPath = outputPathResolver.resolvePath(outputPath);
+                  Preconditions.checkArgument(
+                      !relPath.startsWith(tempPath), "Cannot exclude temp paths from cleanup");
+                  return relPath;
+                })
+            .collect(ImmutableSet.toImmutableSet());
+    ImmutableSet<Path> excludedFullPaths =
+        excludedRelPaths.stream()
+            .map(relPath -> filesystem.resolve(relPath))
+            .map(absPath -> absPath.getPath())
+            .collect(ImmutableSet.toImmutableSet());
+
     // TODO(cjhopman): This should probably actually be handled by the build engine.
     for (Path output : outputs) {
       // Don't delete paths that are invalid now; leave it to the Buildable to handle this.
-      if (!isValidOutputPath(filesystem, output)) {
+      if (!isValidOutputPath(filesystem, output)
+          || MostFiles.shouldSkipDeletingPath(output, excludedFullPaths)) {
         continue;
       }
 
@@ -334,13 +372,14 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     }
 
     stepBuilder.addAll(
-        MakeCleanDirectoryStep.of(
+        MakeCleanDirectoryStep.ofExcludingPaths(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), filesystem, outputPathResolver.getRootPath())));
+                context.getBuildCellRootPath(), filesystem, outputPathResolver.getRootPath()),
+            excludedRelPaths));
     stepBuilder.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), filesystem, outputPathResolver.getTempPath())));
+                context.getBuildCellRootPath(), filesystem, tempPath)));
   }
 
   /**
@@ -382,14 +421,19 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
 
   /** Return the steps for a buildable. */
   public static <T extends Buildable> ImmutableList<Step> stepsForBuildable(
-      BuildContext context, T buildable, ProjectFilesystem filesystem, BuildTarget buildTarget) {
+      BuildContext context,
+      T buildable,
+      ProjectFilesystem filesystem,
+      BuildTarget buildTarget,
+      ImmutableList<OutputPath> excludedPaths) {
     ImmutableList.Builder<Path> outputs = ImmutableList.builder();
     recordOutputs(
         outputs::add,
         new DefaultOutputPathResolver(filesystem, buildTarget),
         DefaultClassInfoFactory.forInstance(buildable),
         buildable);
-    return stepsForBuildable(context, buildable, filesystem, buildTarget, outputs.build());
+    return stepsForBuildable(
+        context, buildable, filesystem, buildTarget, outputs.build(), excludedPaths);
   }
 
   /**

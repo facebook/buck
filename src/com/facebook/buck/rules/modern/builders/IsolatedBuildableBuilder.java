@@ -75,6 +75,7 @@ import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
@@ -355,7 +356,11 @@ public abstract class IsolatedBuildableBuilder {
           executionContextBuilder.setRuleCellRoot(filesystem.getRootPath()).build();
       for (Step step :
           ModernBuildRule.stepsForBuildable(
-              buildContext, reconstructed.buildable, filesystem, reconstructed.target)) {
+              buildContext,
+              reconstructed.buildable,
+              filesystem,
+              reconstructed.target,
+              ImmutableList.of())) {
         StepRunner.runStep(executionContext, step, Optional.of(reconstructed.target));
       }
 

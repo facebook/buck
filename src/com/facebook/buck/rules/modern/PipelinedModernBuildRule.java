@@ -49,7 +49,12 @@ public abstract class PipelinedModernBuildRule<
     OutputPathResolver outputPathResolver = getOutputPathResolver();
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
     ModernBuildRule.getSetupStepsForBuildable(
-        context, getProjectFilesystem(), outputs, stepsBuilder, outputPathResolver);
+        context,
+        getProjectFilesystem(),
+        outputs,
+        stepsBuilder,
+        outputPathResolver,
+        getExcludedOutputPathsFromAutomaticSetup());
     stepsBuilder.addAll(
         getBuildable()
             .getPipelinedBuildSteps(

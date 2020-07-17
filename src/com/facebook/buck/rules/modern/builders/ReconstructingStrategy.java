@@ -39,6 +39,7 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.Scope;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.ByteArrayInputStream;
@@ -131,7 +132,8 @@ class ReconstructingStrategy extends AbstractModernBuildRuleStrategy {
                             strategyContext.getBuildRuleBuildContext(),
                             reconstructed,
                             rule.getProjectFilesystem(),
-                            rule.getBuildTarget())) {
+                            rule.getBuildTarget(),
+                            ImmutableList.of())) {
                       StepRunner.runStep(
                           strategyContext.getExecutionContext(),
                           step,
