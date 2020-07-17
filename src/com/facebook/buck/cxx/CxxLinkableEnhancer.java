@@ -157,6 +157,7 @@ public class CxxLinkableEnhancer {
   }
 
   public static CxxLink createCxxLinkableBuildRule(
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellPathResolver,
       CxxBuckConfig cxxBuckConfig,
       DownwardApiConfig downwardApiConfig,
@@ -170,6 +171,41 @@ public class CxxLinkableEnhancer {
       LinkableDepType runtimeDepType,
       CxxLinkOptions linkOptions,
       Optional<LinkOutputPostprocessor> postprocessor) {
+    return createCxxRelinkableBuildRule(
+        graphBuilder,
+        cellPathResolver,
+        cxxBuckConfig,
+        downwardApiConfig,
+        cxxPlatform,
+        projectFilesystem,
+        ruleResolver,
+        target,
+        output,
+        extraOutputs,
+        args,
+        runtimeDepType,
+        linkOptions,
+        postprocessor,
+        CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY);
+  }
+
+  /** Creates a {@link CxxLink} rule which supports an optional relinking strategy. */
+  public static CxxLink createCxxRelinkableBuildRule(
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellPathResolver,
+      CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
+      CxxPlatform cxxPlatform,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleResolver ruleResolver,
+      BuildTarget target,
+      Path output,
+      ImmutableMap<String, Path> extraOutputs,
+      ImmutableList<Arg> args,
+      LinkableDepType runtimeDepType,
+      CxxLinkOptions linkOptions,
+      Optional<LinkOutputPostprocessor> postprocessor,
+      CxxConditionalLinkStrategyFactory linkStrategyFactory) {
 
     Linker linker = cxxPlatform.getLd().resolve(ruleResolver, target.getTargetConfiguration());
 
@@ -222,6 +258,10 @@ public class CxxLinkableEnhancer {
       }
     }
 
+    CxxConditionalLinkStrategy linkStrategy =
+        linkStrategyFactory.createStrategy(
+            graphBuilder, projectFilesystem, ruleResolver, target, ldArgs, linker, output);
+
     return new CxxLink(
         target,
         projectFilesystem,
@@ -236,7 +276,8 @@ public class CxxLinkableEnhancer {
         cxxBuckConfig.shouldCacheLinks(),
         linkOptions.getThinLto(),
         linkOptions.getFatLto(),
-        downwardApiConfig.isEnabledForCxx());
+        downwardApiConfig.isEnabledForCxx(),
+        linkStrategy);
   }
 
   private static ImmutableList<Arg> createDepSharedLibFrameworkArgsForLink(
@@ -410,6 +451,7 @@ public class CxxLinkableEnhancer {
     }
 
     return createCxxLinkableBuildRule(
+        graphBuilder,
         cellPathResolver,
         cxxBuckConfig,
         downwardApiConfig,
@@ -455,6 +497,7 @@ public class CxxLinkableEnhancer {
   }
 
   public static CxxLink createCxxLinkableSharedBuildRule(
+      ActionGraphBuilder graphBuilder,
       CxxBuckConfig cxxBuckConfig,
       DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
@@ -483,6 +526,7 @@ public class CxxLinkableEnhancer {
     linkArgsBuilder.addAll(args);
     ImmutableList<Arg> linkArgs = linkArgsBuilder.build();
     return createCxxLinkableBuildRule(
+        graphBuilder,
         cellPathResolver,
         cxxBuckConfig,
         downwardApiConfig,

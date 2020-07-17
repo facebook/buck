@@ -23,6 +23,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
@@ -42,11 +43,14 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.PublicOutputPath;
+import com.facebook.buck.rules.modern.RemoteExecutionEnabled;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -67,6 +71,10 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
 
   private final Optional<RuleScheduleInfo> ruleScheduleInfo;
   private final boolean cacheable;
+  private final boolean incremental;
+
+  @CustomFieldBehavior(RemoteExecutionEnabled.class)
+  private final boolean remoteExecutionEnabled;
   // Stored here so we can access it without an OutputPathResolver.
   private final Path output;
   private final ImmutableMap<String, Path> extraOutputs;
@@ -86,6 +94,40 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       boolean thinLto,
       boolean fatLto,
       boolean withDownwardApi) {
+    this(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
+        cellResolver,
+        linker,
+        output,
+        extraOutputs,
+        args,
+        postprocessor,
+        ruleScheduleInfo,
+        cacheable,
+        thinLto,
+        fatLto,
+        withDownwardApi,
+        CxxConditionalLinkStrategyAlwaysLink.STRATEGY);
+  }
+
+  public CxxLink(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
+      CellPathResolver cellResolver,
+      Linker linker,
+      Path output,
+      ImmutableMap<String, Path> extraOutputs,
+      ImmutableList<Arg> args,
+      Optional<LinkOutputPostprocessor> postprocessor,
+      Optional<RuleScheduleInfo> ruleScheduleInfo,
+      boolean cacheable,
+      boolean thinLto,
+      boolean fatLto,
+      boolean withDownwardApi,
+      CxxConditionalLinkStrategy linkStrategy) {
     super(
         buildTarget,
         projectFilesystem,
@@ -100,12 +142,32 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
             fatLto,
             buildTarget,
             computeCellRoots(cellResolver, buildTarget.getCell()),
-            withDownwardApi));
+            withDownwardApi,
+            linkStrategy));
     this.output = output;
     this.ruleScheduleInfo = ruleScheduleInfo;
-    this.cacheable = cacheable;
+    this.incremental = linkStrategy.isIncremental();
+    this.remoteExecutionEnabled = !this.incremental;
+    // Incremental (i.e., relinkable) rules should never be cached in order to guard
+    // against correctness issues
+    this.cacheable = cacheable && !this.incremental;
     this.extraOutputs = extraOutputs;
     performChecks(buildTarget);
+  }
+
+  @Override
+  public ImmutableList<OutputPath> getExcludedOutputPathsFromAutomaticSetup() {
+    if (!incremental) {
+      return ImmutableList.of();
+    }
+
+    CxxLink.Impl buildable = getBuildable();
+    ImmutableList.Builder<OutputPath> excludedPaths = ImmutableList.builder();
+    excludedPaths.add(buildable.output);
+    buildable.linkerMapPath.ifPresent(path -> excludedPaths.add(path));
+    excludedPaths.addAll(buildable.linkStrategy.getExcludedOutpathPathsFromAutomaticRemoval());
+
+    return excludedPaths.build();
   }
 
   private static ImmutableSortedSet<Path> computeCellRoots(
@@ -140,6 +202,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     @AddToRuleKey private final ImmutableList<PublicOutputPath> extraOutputs;
     @AddToRuleKey private final BuildTarget buildTarget;
     @AddToRuleKey private final boolean withDownwardApi;
+    @AddToRuleKey private final CxxConditionalLinkStrategy linkStrategy;
 
     public Impl(
         Linker linker,
@@ -151,7 +214,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
         boolean fatLto,
         BuildTarget buildTarget,
         ImmutableSortedSet<Path> relativeCellRoots,
-        boolean withDownwardApi) {
+        boolean withDownwardApi,
+        CxxConditionalLinkStrategy linkStrategy) {
       this.linker = linker;
       this.output = new PublicOutputPath(output);
       this.extraOutputs =
@@ -181,6 +245,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
               .map(Object::toString)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
       this.buildTarget = buildTarget;
+      this.linkStrategy = linkStrategy;
     }
 
     @Override
@@ -209,9 +274,44 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                       root -> MorePaths.normalize(filesystem.getRootPath().resolve(root).getPath()),
                       root -> Paths.get(root)));
 
+      ImmutableMap<String, String> env = linker.getEnvironment(context.getSourcePathResolver());
+      ImmutableList<String> commandPrefix =
+          linker.getCommandPrefix(context.getSourcePathResolver());
+
+      AbsPath skipLinkingPath = scratchDir.resolve("relink.skip-linking");
+      ImmutableList<Step> relinkCheckSteps = ImmutableList.of();
+      ImmutableList<Step> relinkWriteSteps = ImmutableList.of();
+      if (linkStrategy.isIncremental()) {
+        relinkCheckSteps =
+            linkStrategy.createConditionalLinkCheckSteps(
+                filesystem,
+                outputPathResolver,
+                context.getSourcePathResolver(),
+                argFilePath,
+                fileListPath,
+                skipLinkingPath,
+                outputPath,
+                env,
+                commandPrefix);
+        relinkWriteSteps =
+            linkStrategy.createConditionalLinkWriteSteps(
+                filesystem,
+                outputPathResolver,
+                context.getSourcePathResolver(),
+                argFilePath,
+                fileListPath,
+                skipLinkingPath,
+                outputPath,
+                env,
+                commandPrefix);
+      }
+
       Builder<Step> stepsBuilder =
           new Builder<Step>()
               .add(MkdirStep.of(buildCellPathFactory.from(outputPath.getParent())))
+              // The signal file must _always_ be deleted because scratch pad dir cleaning can be
+              // controlled by the user.
+              .add(RmStep.of(buildCellPathFactory.from(skipLinkingPath.getPath())))
               .addAll(
                   CxxPrepareForLinkStep.create(
                       argFilePath.getPath(),
@@ -223,14 +323,18 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                       buildTarget.getCell(),
                       filesystem.getRootPath().getPath(),
                       context.getSourcePathResolver()))
+              .addAll(relinkCheckSteps)
               .add(
                   new CxxLinkStep(
                       filesystem.getRootPath(),
-                      linker.getEnvironment(context.getSourcePathResolver()),
-                      linker.getCommandPrefix(context.getSourcePathResolver()),
+                      env,
+                      commandPrefix,
                       argFilePath.getPath(),
                       scratchDir.getPath(),
-                      withDownwardApi))
+                      withDownwardApi,
+                      linkStrategy.isIncremental()
+                          ? Optional.of(skipLinkingPath)
+                          : Optional.empty()))
               .addAll(
                   postprocessor
                       .map(
@@ -242,7 +346,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                       .orElse(ImmutableList.of()))
               .add(
                   new FileScrubberStep(
-                      filesystem, outputPath.getPath(), linker.getScrubbers(cellRootMap)));
+                      filesystem, outputPath.getPath(), linker.getScrubbers(cellRootMap)))
+              .addAll(relinkWriteSteps);
       if (linkerMapPath.isPresent()) {
         // In some case (when there are no `dll_export`s eg) an import library is not produced by
         // link.exe. An empty file is produced in this case (since an import library was already

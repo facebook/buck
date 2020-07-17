@@ -253,6 +253,7 @@ public class Omnibus {
     CxxLink rule =
         graphBuilder.addToIndex(
             CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
+                graphBuilder,
                 cxxBuckConfig,
                 downwardApiConfig,
                 cxxPlatform,
@@ -377,6 +378,7 @@ public class Omnibus {
           Optional<String> rootSoname = rootTargetMode.getLibraryName();
           rootLinkRule =
               CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
+                  graphBuilder,
                   cxxBuckConfig,
                   downwardApiConfig,
                   cxxPlatform,
@@ -403,6 +405,7 @@ public class Omnibus {
         {
           rootLinkRule =
               CxxLinkableEnhancer.createCxxLinkableBuildRule(
+                  graphBuilder,
                   cellPathResolver,
                   cxxBuckConfig,
                   downwardApiConfig,
@@ -617,6 +620,7 @@ public class Omnibus {
     CxxLink omnibusRule =
         graphBuilder.addToIndex(
             CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
+                graphBuilder,
                 cxxBuckConfig,
                 downwardApiConfig,
                 cxxPlatform,

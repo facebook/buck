@@ -275,6 +275,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                 buildTarget.withAppendedFlavors(InternalFlavor.of("cgo-second-step")),
                 target ->
                     CxxLinkableEnhancer.createCxxLinkableBuildRule(
+                        graphBuilder,
                         cellRoots,
                         cxxBuckConfig,
                         downwardApiConfig,

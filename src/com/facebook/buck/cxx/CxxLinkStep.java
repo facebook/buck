@@ -23,7 +23,9 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 class CxxLinkStep extends ShellStep {
 
@@ -34,6 +36,8 @@ class CxxLinkStep extends ShellStep {
   /** Directory to use to store intermediate/temp files used for linking. */
   private final Path scratchDir;
 
+  private final Optional<AbsPath> skipLinkingStep;
+
   public CxxLinkStep(
       AbsPath workingDirectory,
       ImmutableMap<String, String> environment,
@@ -41,15 +45,38 @@ class CxxLinkStep extends ShellStep {
       Path argFilePath,
       Path scratchDir,
       boolean withDownwardApi) {
+    this(
+        workingDirectory,
+        environment,
+        linker,
+        argFilePath,
+        scratchDir,
+        withDownwardApi,
+        Optional.empty());
+  }
+
+  public CxxLinkStep(
+      AbsPath workingDirectory,
+      ImmutableMap<String, String> environment,
+      ImmutableList<String> linker,
+      Path argFilePath,
+      Path scratchDir,
+      boolean withDownwardApi,
+      Optional<AbsPath> skipLinkingFilePath) {
     super(workingDirectory, withDownwardApi);
     this.environment = environment;
     this.linker = linker;
     this.argFilePath = argFilePath;
     this.scratchDir = scratchDir;
+    this.skipLinkingStep = skipLinkingFilePath;
   }
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+    if (skipLinkingStep.isPresent() && Files.exists(skipLinkingStep.get().getPath())) {
+      return ImmutableList.of();
+    }
+
     return ImmutableList.<String>builder().addAll(linker).add("@" + argFilePath).build();
   }
 

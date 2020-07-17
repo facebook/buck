@@ -254,6 +254,7 @@ public class HaskellGhciDescription
           // ----------------------------------------------------------------
           // Add to graphBuilder
           return CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
+              graphBuilder,
               cxxBuckConfig,
               downwardApiConfig,
               cxxPlatform,
