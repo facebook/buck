@@ -554,6 +554,11 @@ public class MiniAapt implements Step {
         String resourceName = nodesUsingIds.item(i).getNodeValue();
         if (resourceName.startsWith("?attr")) {
           resourceName = resourceName.substring("?attr/".length());
+        } else {
+          int colonPosition = resourceName.indexOf(":");
+          if (colonPosition > 0) {
+            resourceName = resourceName.substring(colonPosition + 1);
+          }
         }
         references.add(new FakeRDotTxtEntry(IdType.INT, RType.ATTR, sanitizeName(resourceName)));
       }

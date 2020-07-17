@@ -601,7 +601,8 @@ public class MiniAaptTest {
                 "  <style name=\"Style\">    ",
                 "    <item name=\"item_name1\">?attr/some_attr1</item>",
                 "    <item name=\"item_name2\">?attr/some_attr2</item>",
-                "    <item name=\"android:some_name\">4dp</item>",
+                "    <item name=\"android:some_name1\">4dp</item>",
+                "    <item name=\"app:some_name2\">4dp</item>",
                 "  </style>",
                 "</resources>")
             .build();
@@ -631,7 +632,8 @@ public class MiniAaptTest {
     assertEquals(
         ImmutableSet.<RDotTxtEntry>of(
             FakeEntry.create(IdType.INT, RType.ATTR, "some_attr1"),
-            FakeEntry.create(IdType.INT, RType.ATTR, "item_name2")),
+            FakeEntry.create(IdType.INT, RType.ATTR, "item_name2"),
+            FakeEntry.create(IdType.INT, RType.ATTR, "some_name2")),
         createTestingFakes(missing));
   }
 
