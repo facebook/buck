@@ -36,7 +36,6 @@ import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.SyntaxError;
 import java.util.Objects;
 import org.junit.Rule;
 import org.junit.Test;
@@ -108,7 +107,7 @@ public class UserDefinedProviderInfoTest {
   }
 
   @Test
-  public void worksInSkylark() throws InterruptedException, EvalException, SyntaxError {
+  public void worksInSkylark() throws Exception {
     UserDefinedProviderInfo info =
         new UserDefinedProviderInfo(
             new FakeUserDefinedProvider(),
@@ -120,15 +119,14 @@ public class UserDefinedProviderInfoTest {
                 "empty",
                 Starlark.NONE));
 
-    try (TestMutableEnv env = new TestMutableEnv(ImmutableMap.of("info", info))) {
-      assertEquals(info.getValue("foo"), TestStarlarkParser.eval(env.getEnv(), "info.foo"));
-      assertEquals(info.getValue("bar"), TestStarlarkParser.eval(env.getEnv(), "info.bar"));
-      assertEquals(info.getValue("empty"), TestStarlarkParser.eval(env.getEnv(), "info.empty"));
+    ImmutableMap<String, Object> map = ImmutableMap.of("info", info);
+    assertEquals(info.getValue("foo"), TestStarlarkParser.eval("info.foo", map));
+    assertEquals(info.getValue("bar"), TestStarlarkParser.eval("info.bar", map));
+    assertEquals(info.getValue("empty"), TestStarlarkParser.eval("info.empty", map));
 
-      thrown.expect(EvalException.class);
-      thrown.expectMessage("no field named invalid");
-      assertEquals(info.getValue("foo"), TestStarlarkParser.eval(env.getEnv(), "info.invalid"));
-    }
+    thrown.expect(EvalException.class);
+    thrown.expectMessage("no field named invalid");
+    assertEquals(info.getValue("foo"), TestStarlarkParser.eval("info.invalid", map));
   }
 
   @Test

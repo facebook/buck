@@ -21,18 +21,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Module;
-import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.SyntaxError;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -96,23 +92,12 @@ public class TestInfoTest {
   }
 
   @Test
-  public void usesDefaultSkylarkValues() throws InterruptedException, EvalException, SyntaxError {
-    Object raw;
-    try (Mutability mutability = Mutability.create("providertest")) {
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setGlobals(
-                  Module.createForBuiltins(
-                      ImmutableMap.of(TestInfo.PROVIDER.getName(), TestInfo.PROVIDER)))
-              .build();
-
-      raw =
-          TestStarlarkParser.eval(
-              env,
-              String.format(
-                  "TestInfo(test_name=\"%s\", test_case_name=\"%s\")", TEST_NAME, TEST_CASE_NAME));
-    }
+  public void usesDefaultSkylarkValues() throws Exception {
+    Object raw =
+        TestStarlarkParser.eval(
+            String.format(
+                "TestInfo(test_name=\"%s\", test_case_name=\"%s\")", TEST_NAME, TEST_CASE_NAME),
+            ImmutableMap.of(TestInfo.PROVIDER.getName(), TestInfo.PROVIDER));
     assertTrue(raw instanceof TestInfo);
     TestInfo testInfo = (TestInfo) raw;
 
@@ -128,37 +113,23 @@ public class TestInfoTest {
   @Test
   public void instantiatesFromSkylarkProperly()
       throws EvalException, InterruptedException, SyntaxError {
-    Object raw;
-    try (Mutability mutability = Mutability.create("providertest")) {
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setGlobals(
-                  Module.createForBuiltins(
-                      ImmutableMap.of(
-                          TestInfo.PROVIDER.getName(),
-                          TestInfo.PROVIDER,
-                          "None",
-                          Starlark.NONE,
-                          "True",
-                          true)))
-              .build();
+    ImmutableMap<String, Object> map =
+        ImmutableMap.of(TestInfo.PROVIDER.getName(), TestInfo.PROVIDER);
 
-      String buildFile =
-          String.format(
-              "TestInfo("
-                  + "\ntest_name=\"%s\","
-                  + "\ntest_case_name=\"%s\","
-                  + "\nlabels = [\"label1\", \"label2\", \"label1\"],"
-                  + "\ncontacts = [\"foo@example.com\", \"bar@example.com\", \"foo@example.com\"],"
-                  + "\nrun_tests_separately=True,"
-                  + "\ntimeout_ms=5,"
-                  + "\ntype=\"%s\""
-                  + "\n)",
-              TEST_NAME, TEST_CASE_NAME, TYPE);
+    String buildFile =
+        String.format(
+            "TestInfo("
+                + "\ntest_name=\"%s\","
+                + "\ntest_case_name=\"%s\","
+                + "\nlabels = [\"label1\", \"label2\", \"label1\"],"
+                + "\ncontacts = [\"foo@example.com\", \"bar@example.com\", \"foo@example.com\"],"
+                + "\nrun_tests_separately=True,"
+                + "\ntimeout_ms=5,"
+                + "\ntype=\"%s\""
+                + "\n)",
+            TEST_NAME, TEST_CASE_NAME, TYPE);
 
-      raw = TestStarlarkParser.eval(env, buildFile);
-    }
+    Object raw = TestStarlarkParser.eval(buildFile, map);
     assertTrue(raw instanceof TestInfo);
     TestInfo testInfo = (TestInfo) raw;
 
@@ -172,39 +143,32 @@ public class TestInfoTest {
   }
 
   @Test
-  public void coercesTimeout() throws InterruptedException, EvalException, SyntaxError {
+  public void coercesTimeout() throws Exception {
     Object raw1;
     Object raw2;
-    try (Mutability mutability = Mutability.create("providertest")) {
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setGlobals(
-                  Module.createForBuiltins(
-                      ImmutableMap.of(TestInfo.PROVIDER.getName(), TestInfo.PROVIDER)))
-              .build();
+    ImmutableMap<String, Object> map =
+        ImmutableMap.of(TestInfo.PROVIDER.getName(), TestInfo.PROVIDER);
 
-      raw1 =
-          TestStarlarkParser.eval(
-              env,
-              String.format(
-                  "TestInfo("
-                      + "\ntest_name=\"%s\","
-                      + "\ntest_case_name=\"%s\","
-                      + "\ntimeout_ms=TestInfo(test_name=\"%s\", test_case_name=\"%s\").timeout_ms"
-                      + "\n)",
-                  TEST_NAME, TEST_CASE_NAME, TEST_NAME, TEST_CASE_NAME));
-      raw2 =
-          TestStarlarkParser.eval(
-              env,
-              String.format(
-                  "TestInfo("
-                      + "\ntest_name=\"%s\","
-                      + "\ntest_case_name=\"%s\","
-                      + "\ntimeout_ms=TestInfo(test_name=\"%s\", test_case_name=\"%s\", timeout_ms=5).timeout_ms"
-                      + "\n)",
-                  TEST_NAME, TEST_CASE_NAME, TEST_NAME, TEST_CASE_NAME));
-    }
+    raw1 =
+        TestStarlarkParser.eval(
+            String.format(
+                "TestInfo("
+                    + "\ntest_name=\"%s\","
+                    + "\ntest_case_name=\"%s\","
+                    + "\ntimeout_ms=TestInfo(test_name=\"%s\", test_case_name=\"%s\").timeout_ms"
+                    + "\n)",
+                TEST_NAME, TEST_CASE_NAME, TEST_NAME, TEST_CASE_NAME),
+            map);
+    raw2 =
+        TestStarlarkParser.eval(
+            String.format(
+                "TestInfo("
+                    + "\ntest_name=\"%s\","
+                    + "\ntest_case_name=\"%s\","
+                    + "\ntimeout_ms=TestInfo(test_name=\"%s\", test_case_name=\"%s\", timeout_ms=5).timeout_ms"
+                    + "\n)",
+                TEST_NAME, TEST_CASE_NAME, TEST_NAME, TEST_CASE_NAME),
+            map);
     assertThat(raw1, Matchers.instanceOf(TestInfo.class));
     TestInfo val1 = (TestInfo) raw1;
     assertEquals(Starlark.NONE, val1.timeoutMs());

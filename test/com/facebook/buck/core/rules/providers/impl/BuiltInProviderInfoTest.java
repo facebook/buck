@@ -216,18 +216,10 @@ public class BuiltInProviderInfoTest {
     assertEquals("c", someInfo3.str());
     assertEquals(3, someInfo3.myInfo());
 
-    Object o;
-    try (Mutability mutability = Mutability.create("providertest")) {
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setGlobals(
-                  Module.createForBuiltins(
-                      ImmutableMap.of(SomeInfo.PROVIDER.getName(), SomeInfo.PROVIDER)))
-              .build();
-
-      o = TestStarlarkParser.eval(env, "SomeInfo(str='d', my_info=4)");
-    }
+    Object o =
+        TestStarlarkParser.eval(
+            "SomeInfo(str='d', my_info=4)",
+            ImmutableMap.of(SomeInfo.PROVIDER.getName(), SomeInfo.PROVIDER));
 
     assertThat(o, Matchers.instanceOf(SomeInfo.class));
     SomeInfo someInfo4 = (SomeInfo) o;
@@ -278,66 +270,34 @@ public class BuiltInProviderInfoTest {
   }
 
   @Test
-  public void defaultValuesWorkInStarlarkContext()
-      throws InterruptedException, EvalException, SyntaxError {
+  public void defaultValuesWorkInStarlarkContext() throws Exception {
 
-    try (Mutability mutability = Mutability.create("test")) {
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setGlobals(
-                  Module.createForBuiltins(
-                      ImmutableMap.of(
-                          ImmutableSomeInfo.PROVIDER.getName(), ImmutableSomeInfo.PROVIDER)))
-              .build();
-
-      assertEquals(
-          new ImmutableSomeInfo("default value", 2),
-          TestStarlarkParser.eval(env, ImmutableSomeInfo.PROVIDER.getName() + "(my_info=2)"));
-    }
+    assertEquals(
+        new ImmutableSomeInfo("default value", 2),
+        TestStarlarkParser.eval(
+            ImmutableSomeInfo.PROVIDER.getName() + "(my_info=2)",
+            ImmutableMap.of(ImmutableSomeInfo.PROVIDER.getName(), ImmutableSomeInfo.PROVIDER)));
   }
 
   @Test
-  public void infoWithNoDefaultValueOnAnnotationWorks()
-      throws InterruptedException, EvalException, SyntaxError {
+  public void infoWithNoDefaultValueOnAnnotationWorks() throws Exception {
 
-    try (Mutability mutability = Mutability.create("test")) {
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setGlobals(
-                  Module.createForBuiltins(
-                      ImmutableMap.of(
-                          InfoWithNoDefaultValOnAnnotation.PROVIDER.getName(),
-                          InfoWithNoDefaultValOnAnnotation.PROVIDER)))
-              .build();
-
-      assertEquals(
-          new ImmutableInfoWithNoDefaultValOnAnnotation(2),
-          TestStarlarkParser.eval(
-              env, ImmutableInfoWithNoDefaultValOnAnnotation.PROVIDER.getName() + "(val=2)"));
-    }
+    assertEquals(
+        new ImmutableInfoWithNoDefaultValOnAnnotation(2),
+        TestStarlarkParser.eval(
+            ImmutableInfoWithNoDefaultValOnAnnotation.PROVIDER.getName() + "(val=2)",
+            ImmutableMap.of(
+                InfoWithNoDefaultValOnAnnotation.PROVIDER.getName(),
+                InfoWithNoDefaultValOnAnnotation.PROVIDER)));
   }
 
   @Test
-  public void instantiatesFromStaticMethodIfPresent()
-      throws InterruptedException, EvalException, SyntaxError {
-    Object o;
-    try (Mutability mutability = Mutability.create("providertest")) {
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setGlobals(
-                  Module.createForBuiltins(
-                      ImmutableMap.of(
-                          SomeInfoWithInstantiate.PROVIDER.getName(),
-                          SomeInfoWithInstantiate.PROVIDER)))
-              .build();
-
-      o =
-          TestStarlarkParser.eval(
-              env, "SomeInfoWithInstantiate(str_list={'d': 'd_value'}, my_info=4)");
-    }
+  public void instantiatesFromStaticMethodIfPresent() throws Exception {
+    Object o =
+        TestStarlarkParser.eval(
+            "SomeInfoWithInstantiate(str_list={'d': 'd_value'}, my_info=4)",
+            ImmutableMap.of(
+                SomeInfoWithInstantiate.PROVIDER.getName(), SomeInfoWithInstantiate.PROVIDER));
 
     assertThat(o, Matchers.instanceOf(SomeInfoWithInstantiate.class));
     SomeInfoWithInstantiate someInfo4 = (SomeInfoWithInstantiate) o;
@@ -346,22 +306,12 @@ public class BuiltInProviderInfoTest {
   }
 
   @Test
-  public void instantiatesFromStaticMethodWithDefaultValuesIfPresent()
-      throws InterruptedException, EvalException, SyntaxError {
-    Object o;
-    try (Mutability mutability = Mutability.create("providertest")) {
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setGlobals(
-                  Module.createForBuiltins(
-                      ImmutableMap.of(
-                          SomeInfoWithInstantiate.PROVIDER.getName(),
-                          SomeInfoWithInstantiate.PROVIDER)))
-              .build();
-
-      o = TestStarlarkParser.eval(env, "SomeInfoWithInstantiate(my_info=4)");
-    }
+  public void instantiatesFromStaticMethodWithDefaultValuesIfPresent() throws Exception {
+    Object o =
+        TestStarlarkParser.eval(
+            "SomeInfoWithInstantiate(my_info=4)",
+            ImmutableMap.of(
+                SomeInfoWithInstantiate.PROVIDER.getName(), SomeInfoWithInstantiate.PROVIDER));
 
     assertThat(o, Matchers.instanceOf(SomeInfoWithInstantiate.class));
     SomeInfoWithInstantiate someInfo4 = (SomeInfoWithInstantiate) o;
@@ -370,29 +320,18 @@ public class BuiltInProviderInfoTest {
   }
 
   @Test
-  public void validatesTypesWhenInstantiatingFromStaticMethod()
-      throws InterruptedException, EvalException, SyntaxError {
-    try (Mutability mutability = Mutability.create("providertest")) {
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setGlobals(
-                  Module.createForBuiltins(
-                      ImmutableMap.of(
-                          SomeInfoWithInstantiate.PROVIDER.getName(),
-                          SomeInfoWithInstantiate.PROVIDER)))
-              .build();
+  public void validatesTypesWhenInstantiatingFromStaticMethod() throws Exception {
+    thrown.expect(EvalException.class);
+    thrown.expectMessage("expected value of type 'int'");
 
-      thrown.expect(EvalException.class);
-      thrown.expectMessage("expected value of type 'int'");
-
-      TestStarlarkParser.eval(env, "SomeInfoWithInstantiate(my_info='not a number')");
-    }
+    TestStarlarkParser.eval(
+        "SomeInfoWithInstantiate(my_info='not a number')",
+        ImmutableMap.of(
+            SomeInfoWithInstantiate.PROVIDER.getName(), SomeInfoWithInstantiate.PROVIDER));
   }
 
   @Test
-  public void passesLocationWhenInstantiatingFromStaticMethod()
-      throws InterruptedException, EvalException, SyntaxError {
+  public void passesLocationWhenInstantiatingFromStaticMethod() throws Exception {
     Location location =
         Location.fromPathAndStartColumn(
             PathFragment.create("foo/bar.bzl"), 0, 0, new Location.LineAndColumn(1, 1));
@@ -426,36 +365,23 @@ public class BuiltInProviderInfoTest {
   }
 
   @Test
-  public void allowsNoneAsAParamToStaticMethod()
-      throws InterruptedException, EvalException, SyntaxError {
-    try (Mutability mutability = Mutability.create("providertest")) {
+  public void allowsNoneAsAParamToStaticMethod() throws Exception {
+    ImmutableMap<String, Object> env =
+        ImmutableMap.of(SomeInfoWithNoneable.PROVIDER.getName(), SomeInfoWithNoneable.PROVIDER);
 
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setGlobals(
-                  Module.createForBuiltins(
-                      ImmutableMap.of(
-                          SomeInfoWithNoneable.PROVIDER.getName(),
-                          SomeInfoWithNoneable.PROVIDER,
-                          "None",
-                          Starlark.NONE)))
-              .build();
+    Object none = TestStarlarkParser.eval("SomeInfoWithNoneable(noneable_val=None, val=1)", env);
+    Object strValue =
+        TestStarlarkParser.eval("SomeInfoWithNoneable(noneable_val=\"foo\", val=1)", env);
 
-      Object none = TestStarlarkParser.eval(env, "SomeInfoWithNoneable(noneable_val=None, val=1)");
-      Object strValue =
-          TestStarlarkParser.eval(env, "SomeInfoWithNoneable(noneable_val=\"foo\", val=1)");
+    assertThat(none, Matchers.instanceOf(SomeInfoWithNoneable.class));
+    assertThat(strValue, Matchers.instanceOf(SomeInfoWithNoneable.class));
 
-      assertThat(none, Matchers.instanceOf(SomeInfoWithNoneable.class));
-      assertThat(strValue, Matchers.instanceOf(SomeInfoWithNoneable.class));
+    assertEquals(Starlark.NONE, ((SomeInfoWithNoneable) none).noneableVal());
+    assertEquals("foo", ((SomeInfoWithNoneable) strValue).noneableVal());
 
-      assertEquals(Starlark.NONE, ((SomeInfoWithNoneable) none).noneableVal());
-      assertEquals("foo", ((SomeInfoWithNoneable) strValue).noneableVal());
-
-      thrown.expect(EvalException.class);
-      thrown.expectMessage("cannot be None");
-      TestStarlarkParser.eval(env, "SomeInfoWithNoneable(noneable_val=None, val=None)");
-    }
+    thrown.expect(EvalException.class);
+    thrown.expectMessage("cannot be None");
+    TestStarlarkParser.eval("SomeInfoWithNoneable(noneable_val=None, val=None)", env);
   }
 
   @Test

@@ -50,12 +50,10 @@ import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.SyntaxError;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Rule;
@@ -145,27 +143,19 @@ public class RunInfoTest {
   }
 
   @Test
-  public void usesDefaultSkylarkValues() throws InterruptedException, EvalException, SyntaxError {
-    try (Mutability mutability = Mutability.create("providertest")) {
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setGlobals(
-                  Module.createForBuiltins(
-                      ImmutableMap.of(RunInfo.PROVIDER.getName(), RunInfo.PROVIDER)))
-              .build();
+  public void usesDefaultSkylarkValues() throws Exception {
+    Object raw =
+        TestStarlarkParser.eval(
+            "RunInfo()", ImmutableMap.of(RunInfo.PROVIDER.getName(), RunInfo.PROVIDER));
+    assertTrue(raw instanceof RunInfo);
+    RunInfo runInfo = (RunInfo) raw;
 
-      Object raw = TestStarlarkParser.eval(env, "RunInfo()");
-      assertTrue(raw instanceof RunInfo);
-      RunInfo runInfo = (RunInfo) raw;
+    CommandLine cli =
+        new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(new FakeProjectFilesystem()))
+            .build(runInfo.args());
 
-      CommandLine cli =
-          new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(new FakeProjectFilesystem()))
-              .build(runInfo.args());
-
-      assertEquals(ImmutableList.of(), cli.getCommandLineArgs());
-      assertEquals(ImmutableMap.of(), cli.getEnvironmentVariables());
-    }
+    assertEquals(ImmutableList.of(), cli.getCommandLineArgs());
+    assertEquals(ImmutableMap.of(), cli.getEnvironmentVariables());
   }
 
   @Test

@@ -33,8 +33,8 @@ public class TestMutableEnv implements AutoCloseable {
 
   public TestMutableEnv(ImmutableMap<String, Object> globals) {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
-    builder.putAll(globals);
     builder.putAll(Starlark.UNIVERSE);
+    builder.putAll(globals);
     mutability = Mutability.create("testing");
     env =
         StarlarkThread.builder(mutability)

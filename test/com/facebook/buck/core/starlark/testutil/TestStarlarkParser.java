@@ -16,6 +16,8 @@
 
 package com.facebook.buck.core.starlark.testutil;
 
+import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
+import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.CallExpression;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
@@ -24,6 +26,7 @@ import com.google.devtools.build.lib.syntax.ParserInput;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.SyntaxError;
 import com.google.devtools.build.lib.vfs.PathFragment;
+import java.util.Map;
 
 public class TestStarlarkParser {
 
@@ -40,5 +43,12 @@ public class TestStarlarkParser {
       throws EvalException, InterruptedException, SyntaxError {
     return EvalUtils.execAndEvalOptionalFinalExpression(
         ParserInput.create(expr, PathFragment.EMPTY_FRAGMENT), env);
+  }
+
+  public static Object eval(String expr, Map<String, Object> globals)
+      throws EvalException, InterruptedException, SyntaxError {
+    try (TestMutableEnv env = new TestMutableEnv(ImmutableMap.copyOf(globals))) {
+      return TestStarlarkParser.eval(env.getEnv(), expr);
+    }
   }
 }

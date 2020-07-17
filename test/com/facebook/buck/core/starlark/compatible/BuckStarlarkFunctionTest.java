@@ -24,12 +24,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Module;
-import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParamDescriptor;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -105,17 +102,10 @@ public class BuckStarlarkFunctionTest {
           }
         };
 
-    try (Mutability mutability = Mutability.create("test")) {
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setGlobals(
-                  Module.createForBuiltins(
-                      ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
-              .build();
-
-      assertEquals("1", TestStarlarkParser.eval(env, "toStr(num=1)"));
-    }
+    assertEquals(
+        "1",
+        TestStarlarkParser.eval(
+            "toStr(num=1)", ImmutableMap.of(function.getMethodDescriptor().getName(), function)));
   }
 
   @Test
@@ -128,17 +118,10 @@ public class BuckStarlarkFunctionTest {
           }
         };
 
-    try (Mutability mutability = Mutability.create("test")) {
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setGlobals(
-                  Module.createForBuiltins(
-                      ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
-              .build();
-
-      assertEquals("1", TestStarlarkParser.eval(env, "toStr(num=1)"));
-    }
+    assertEquals(
+        "1",
+        TestStarlarkParser.eval(
+            "toStr(num=1)", ImmutableMap.of(function.getMethodDescriptor().getName(), function)));
   }
 
   @Test
@@ -154,20 +137,17 @@ public class BuckStarlarkFunctionTest {
           }
         };
 
-    try (Mutability mutability = Mutability.create("test")) {
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setGlobals(
-                  Module.createForBuiltins(
-                      ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
-              .build();
+    assertEquals(
+        "111",
+        TestStarlarkParser.eval(
+            "myFoo(100, numNoDefault=10)",
+            ImmutableMap.of(function.getMethodDescriptor().getName(), function)));
 
-      assertEquals("111", TestStarlarkParser.eval(env, "myFoo(100, numNoDefault=10)"));
-
-      assertEquals(
-          "115", TestStarlarkParser.eval(env, "myFoo(100, numNoDefault=10, numWithDefault=5)"));
-    }
+    assertEquals(
+        "115",
+        TestStarlarkParser.eval(
+            "myFoo(100, numNoDefault=10, numWithDefault=5)",
+            ImmutableMap.of(function.getMethodDescriptor().getName(), function)));
   }
 
   @Test
@@ -211,30 +191,18 @@ public class BuckStarlarkFunctionTest {
           }
         };
 
-    try (Mutability mutability = Mutability.create("test")) {
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setGlobals(
-                  Module.createForBuiltins(
-                      ImmutableMap.of(
-                          function.getMethodDescriptor().getName(),
-                          function,
-                          "None",
-                          Starlark.NONE)))
-              .build();
+    ImmutableMap<String, Object> map =
+        ImmutableMap.of(function.getMethodDescriptor().getName(), function);
+    Object none = TestStarlarkParser.eval("withNone(noneable=None, non_noneable=1)[1]", map);
+    Object defaultNone = TestStarlarkParser.eval("withNone(non_noneable=1)[1]", map);
+    Object nonNull = TestStarlarkParser.eval("withNone(noneable=2, non_noneable=1)[1]", map);
 
-      Object none = TestStarlarkParser.eval(env, "withNone(noneable=None, non_noneable=1)[1]");
-      Object defaultNone = TestStarlarkParser.eval(env, "withNone(non_noneable=1)[1]");
-      Object nonNull = TestStarlarkParser.eval(env, "withNone(noneable=2, non_noneable=1)[1]");
+    assertEquals(Starlark.NONE, none);
+    assertEquals(Starlark.NONE, defaultNone);
+    assertEquals(2, nonNull);
 
-      assertEquals(Starlark.NONE, none);
-      assertEquals(Starlark.NONE, defaultNone);
-      assertEquals(2, nonNull);
-
-      expectedException.expect(EvalException.class);
-      expectedException.expectMessage("cannot be None");
-      TestStarlarkParser.eval(env, "withNone(noneable=2, non_noneable=None)[1]");
-    }
+    expectedException.expect(EvalException.class);
+    expectedException.expectMessage("cannot be None");
+    TestStarlarkParser.eval("withNone(noneable=2, non_noneable=None)[1]", map);
   }
 }

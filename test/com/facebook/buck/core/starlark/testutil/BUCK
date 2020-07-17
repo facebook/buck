@@ -8,5 +8,7 @@ java_library(
     ],
     deps = [
         "//third-party/java/bazel:bazel",
+        # TODO: merge these two packages
+        "//test/com/facebook/buck/core/starlark/compatible:testutil",
     ],
 )
