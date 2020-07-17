@@ -40,6 +40,8 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
   private final DeterministicZipBuilder zipBuilder;
   private final Set<String> entryNames = new HashSet<>();
   private final long linearAllocLimit;
+  private final long methodRefCountBufferSpace;
+  private final long fieldRefCountBufferSpace;
   private final Writer reportFileWriter;
   private final DalvikStatsCache dalvikStatsCache;
 
@@ -48,11 +50,18 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
   private long currentLinearAllocSize;
 
   DalvikAwareOutputStreamHelper(
-      Path outputFile, long linearAllocLimit, Path reportDir, DalvikStatsCache dalvikStatsCache)
+      Path outputFile,
+      long linearAllocLimit,
+      long methodRefCountBufferSpace,
+      long fieldRefCountBufferSpace,
+      Path reportDir,
+      DalvikStatsCache dalvikStatsCache)
       throws IOException {
     Preconditions.checkState(Files.exists(outputFile.getParent()));
     this.zipBuilder = new DeterministicZipBuilder(outputFile);
     this.linearAllocLimit = linearAllocLimit;
+    this.methodRefCountBufferSpace = methodRefCountBufferSpace;
+    this.fieldRefCountBufferSpace = fieldRefCountBufferSpace;
     Path reportFile = reportDir.resolve(outputFile.getFileName() + ".txt");
     this.reportFileWriter = Files.newBufferedWriter(reportFile, StandardCharsets.UTF_8);
     this.dalvikStatsCache = dalvikStatsCache;
@@ -64,11 +73,13 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
       return true;
     }
     int newMethodRefs = Sets.difference(stats.methodReferences, currentMethodReferences).size();
-    if (currentMethodReferences.size() + newMethodRefs > MAX_METHOD_REFERENCES) {
+    if (currentMethodReferences.size() + newMethodRefs
+        > (MAX_METHOD_REFERENCES - methodRefCountBufferSpace)) {
       return true;
     }
     int newFieldRefs = Sets.difference(stats.fieldReferences, currentFieldReferences).size();
-    return currentFieldReferences.size() + newFieldRefs > MAX_FIELD_REFERENCES;
+    return currentFieldReferences.size() + newFieldRefs
+        > (MAX_FIELD_REFERENCES - fieldRefCountBufferSpace);
   }
 
   @Override

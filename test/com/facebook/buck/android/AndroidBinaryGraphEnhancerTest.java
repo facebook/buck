@@ -677,6 +677,8 @@ public class AndroidBinaryGraphEnhancerTest {
             ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
             DexStore.JAR,
             DexSplitMode.DEFAULT_LINEAR_ALLOC_HARD_LIMIT,
+            0,
+            0,
             1,
             ImmutableList.of(),
             Optional.empty(),

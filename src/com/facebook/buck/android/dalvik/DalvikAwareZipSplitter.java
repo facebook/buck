@@ -71,6 +71,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   private final Set<String> wantedInPrimaryZip;
   private final Path reportDir;
   private final long linearAllocLimit;
+  private final long methodRefCountBufferSpace;
+  private final long fieldRefCountBufferSpace;
   private final DalvikStatsCache dalvikStatsCache;
   private final DexSplitStrategy dexSplitStrategy;
   private final ImmutableSet<String> secondaryHeadSet;
@@ -91,6 +93,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       String secondaryPattern,
       Path outDexStoresDir,
       long linearAllocLimit,
+      long methodRefCountBufferSpace,
+      long fieldRefCountBufferSpace,
       Predicate<String> requiredInPrimaryZip,
       Set<String> wantedInPrimaryZip,
       ImmutableSet<String> secondaryHeadSet,
@@ -127,6 +131,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     this.reportDir = reportDir;
     this.dexSplitStrategy = dexSplitStrategy;
     this.linearAllocLimit = linearAllocLimit;
+    this.methodRefCountBufferSpace = methodRefCountBufferSpace;
+    this.fieldRefCountBufferSpace = fieldRefCountBufferSpace;
     this.dalvikStatsCache = new DalvikStatsCache();
   }
 
@@ -138,6 +144,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       String secondaryPattern,
       Path outDexStoresDir,
       long linearAllocLimit,
+      long methodRefCountBufferSpace,
+      long fieldRefCountBufferSpace,
       Predicate<String> requiredInPrimaryZip,
       Set<String> wantedInPrimaryZip,
       ImmutableSet<String> secondaryHeadSet,
@@ -154,6 +162,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         secondaryPattern,
         outDexStoresDir,
         linearAllocLimit,
+        methodRefCountBufferSpace,
+        fieldRefCountBufferSpace,
         requiredInPrimaryZip,
         wantedInPrimaryZip,
         secondaryHeadSet,
@@ -306,7 +316,12 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
 
   private DalvikAwareOutputStreamHelper newZipOutput(Path file) throws IOException {
     return new DalvikAwareOutputStreamHelper(
-        filesystem.resolve(file), linearAllocLimit, reportDir, dalvikStatsCache);
+        filesystem.resolve(file),
+        linearAllocLimit,
+        methodRefCountBufferSpace,
+        fieldRefCountBufferSpace,
+        reportDir,
+        dalvikStatsCache);
   }
 
   private class MySecondaryDexHelper extends SecondaryDexHelper<DalvikAwareOutputStreamHelper> {

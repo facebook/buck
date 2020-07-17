@@ -27,10 +27,18 @@ import java.util.function.Predicate;
 public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
 
   private final long linearAllocLimit;
+  private final long methodRefCountBufferSpace;
+  private final long fieldRefCountBufferSpace;
   private final Set<String> wantedInPrimaryZip;
 
-  public DalvikAwareZipSplitterFactory(long linearAllocLimit, Set<String> wantedInPrimaryZip) {
+  public DalvikAwareZipSplitterFactory(
+      long linearAllocLimit,
+      long methodRefCountBufferSpace,
+      long fieldRefCountBufferSpace,
+      Set<String> wantedInPrimaryZip) {
     this.linearAllocLimit = linearAllocLimit;
+    this.methodRefCountBufferSpace = methodRefCountBufferSpace;
+    this.fieldRefCountBufferSpace = fieldRefCountBufferSpace;
     this.wantedInPrimaryZip = wantedInPrimaryZip;
   }
 
@@ -57,6 +65,8 @@ public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
         secondaryPattern,
         outDexStoresDir,
         linearAllocLimit,
+        methodRefCountBufferSpace,
+        fieldRefCountBufferSpace,
         requiredInPrimaryZip,
         wantedInPrimaryZip,
         secondaryHeadSet,

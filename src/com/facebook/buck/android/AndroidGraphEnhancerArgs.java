@@ -139,6 +139,16 @@ public interface AndroidGraphEnhancerArgs
 
   Optional<Integer> getSecondaryDexWeightLimit();
 
+  @Value.Default
+  default long getMethodRefCountBufferSpace() {
+    return 0;
+  }
+
+  @Value.Default
+  default long getFieldRefCountBufferSpace() {
+    return 0;
+  }
+
   Optional<String> getLocalizedStringFileName();
 
   @Value.Default

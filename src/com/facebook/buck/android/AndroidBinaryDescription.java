@@ -234,6 +234,8 @@ public class AndroidBinaryDescription
         dexSplitStrategy,
         args.getDexCompression().orElse(defaultDexStore),
         args.getLinearAllocHardLimit(),
+        args.getMethodRefCountBufferSpace(),
+        args.getFieldRefCountBufferSpace(),
         args.getDexGroupLibLimit(),
         args.getPrimaryDexPatterns(),
         args.getPrimaryDexClassesFile(),

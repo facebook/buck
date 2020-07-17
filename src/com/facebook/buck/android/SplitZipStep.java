@@ -188,7 +188,10 @@ public class SplitZipStep implements Step {
     ZipSplitterFactory zipSplitterFactory;
     zipSplitterFactory =
         new DalvikAwareZipSplitterFactory(
-            dexSplitMode.getLinearAllocHardLimit(), wantedInPrimaryZip);
+            dexSplitMode.getLinearAllocHardLimit(),
+            dexSplitMode.getMethodRefCountBufferSpace(),
+            dexSplitMode.getFieldRefCountBufferSpace(),
+            wantedInPrimaryZip);
 
     outputFiles =
         zipSplitterFactory

@@ -35,6 +35,8 @@ class DexSplitMode implements AddsToRuleKey {
           ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
           DexStore.JAR,
           /* linearAllocHardLimit */ 0,
+          /* methodRefCountBufferSpace */ 0,
+          /* fieldRefCountBufferSpace */ 0,
           /* splitDexLibLimit */ 0,
           /* primaryDexPatterns */ ImmutableSet.of(),
           /* primaryDexClassesFile */ Optional.empty(),
@@ -63,6 +65,20 @@ class DexSplitMode implements AddsToRuleKey {
   @AddToRuleKey private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
 
   @AddToRuleKey private final long linearAllocHardLimit;
+
+  /**
+   * Non-predexed builds count method and field refs to split secondary dexes when exactly 64k refs
+   * are reached.
+   *
+   * <p>This is a hack to leave extra field ref space when splitting dexes, to account for
+   * inaccuracies in how buck counts refs vs d8
+   *
+   * <p>TODO: use d8 to count refs/split dexes T70194276
+   */
+  @AddToRuleKey private final long methodRefCountBufferSpace;
+
+  /** See methodRefCountBufferSpace */
+  @AddToRuleKey private final long fieldRefCountBufferSpace;
 
   @AddToRuleKey private final int dexGroupLibLimit;
 
@@ -154,6 +170,8 @@ class DexSplitMode implements AddsToRuleKey {
       DexSplitStrategy dexSplitStrategy,
       DexStore dexStore,
       long linearAllocHardLimit,
+      long methodRefCountBufferSpace,
+      long fieldRefCountBufferSpace,
       int dexGroupLibLimit,
       Collection<String> primaryDexPatterns,
       Optional<SourcePath> primaryDexClassesFile,
@@ -166,6 +184,8 @@ class DexSplitMode implements AddsToRuleKey {
     this.dexSplitStrategy = dexSplitStrategy;
     this.dexStore = dexStore;
     this.linearAllocHardLimit = linearAllocHardLimit;
+    this.methodRefCountBufferSpace = methodRefCountBufferSpace;
+    this.fieldRefCountBufferSpace = fieldRefCountBufferSpace;
     this.dexGroupLibLimit = dexGroupLibLimit;
     this.primaryDexPatterns = ImmutableSortedSet.copyOf(primaryDexPatterns);
     this.primaryDexClassesFile = primaryDexClassesFile;
@@ -193,6 +213,8 @@ class DexSplitMode implements AddsToRuleKey {
         dexSplitStrategy,
         dexStore,
         linearAllocHardLimit,
+        0,
+        0,
         DEFAULT_DEX_GROUP_LIB_LIMIT,
         primaryDexPatterns,
         primaryDexClassesFile,
@@ -218,6 +240,14 @@ class DexSplitMode implements AddsToRuleKey {
 
   public long getLinearAllocHardLimit() {
     return linearAllocHardLimit;
+  }
+
+  public long getMethodRefCountBufferSpace() {
+    return methodRefCountBufferSpace;
+  }
+
+  public long getFieldRefCountBufferSpace() {
+    return fieldRefCountBufferSpace;
   }
 
   public int getDexGroupLibLimit() {
