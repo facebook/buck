@@ -171,7 +171,7 @@ public class CxxLinkableEnhancer {
       LinkableDepType runtimeDepType,
       CxxLinkOptions linkOptions,
       Optional<LinkOutputPostprocessor> postprocessor) {
-    return createCxxRelinkableBuildRule(
+    return createCxxLinkableBuildRule(
         graphBuilder,
         cellPathResolver,
         cxxBuckConfig,
@@ -190,7 +190,7 @@ public class CxxLinkableEnhancer {
   }
 
   /** Creates a {@link CxxLink} rule which supports an optional relinking strategy. */
-  public static CxxLink createCxxRelinkableBuildRule(
+  public static CxxLink createCxxLinkableBuildRule(
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellPathResolver,
       CxxBuckConfig cxxBuckConfig,
@@ -399,6 +399,54 @@ public class CxxLinkableEnhancer {
         linkable -> !blacklist.contains(linkable.getBuildTarget()));
   }
 
+  /** Forwards to the same method by passing an empty {@link CxxConditionalLinkStrategy}. */
+  public static CxxLink createCxxLinkableBuildRule(
+      CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
+      CxxPlatform cxxPlatform,
+      ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder graphBuilder,
+      BuildTarget target,
+      Linker.LinkType linkType,
+      Optional<String> soname,
+      Path output,
+      ImmutableList<String> extraOutputNames,
+      Linker.LinkableDepType depType,
+      Optional<LinkableListFilter> linkableListFilter,
+      CxxLinkOptions linkOptions,
+      Iterable<? extends NativeLinkable> nativeLinkableDeps,
+      Optional<Linker.CxxRuntimeType> cxxRuntimeType,
+      Optional<SourcePath> bundleLoader,
+      ImmutableSet<BuildTarget> blacklist,
+      ImmutableSet<BuildTarget> linkWholeDeps,
+      NativeLinkableInput immediateLinkableInput,
+      Optional<LinkOutputPostprocessor> postprocessor,
+      CellPathResolver cellPathResolver) {
+    return createCxxLinkableBuildRule(
+        cxxBuckConfig,
+        downwardApiConfig,
+        cxxPlatform,
+        projectFilesystem,
+        graphBuilder,
+        target,
+        linkType,
+        soname,
+        output,
+        extraOutputNames,
+        depType,
+        linkableListFilter,
+        linkOptions,
+        nativeLinkableDeps,
+        cxxRuntimeType,
+        bundleLoader,
+        blacklist,
+        linkWholeDeps,
+        immediateLinkableInput,
+        postprocessor,
+        cellPathResolver,
+        CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY);
+  }
+
   /**
    * Construct a {@link CxxLink} rule that builds a native linkable from top-level input objects and
    * a dependency tree of {@link NativeLinkableGroup} dependencies.
@@ -428,7 +476,8 @@ public class CxxLinkableEnhancer {
       ImmutableSet<BuildTarget> linkWholeDeps,
       NativeLinkableInput immediateLinkableInput,
       Optional<LinkOutputPostprocessor> postprocessor,
-      CellPathResolver cellPathResolver) {
+      CellPathResolver cellPathResolver,
+      CxxConditionalLinkStrategyFactory linkStrategyFactory) {
 
     ImmutableList<Arg> allArgs =
         createDepSharedLibFrameworkArgsForLink(
@@ -464,7 +513,8 @@ public class CxxLinkableEnhancer {
         allArgs,
         runtimeDepType,
         linkOptions,
-        postprocessor);
+        postprocessor,
+        linkStrategyFactory);
   }
 
   private static void addSharedLibrariesLinkerArgs(
@@ -539,7 +589,8 @@ public class CxxLinkableEnhancer {
         linkArgs,
         Linker.LinkableDepType.SHARED,
         CxxLinkOptions.of(),
-        Optional.empty());
+        Optional.empty(),
+        CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY);
   }
 
   /**

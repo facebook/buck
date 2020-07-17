@@ -51,6 +51,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
+import com.facebook.buck.cxx.CxxConditionalLinkStrategyFactoryAlwaysLink;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxDiagnosticsEnhancer;
 import com.facebook.buck.cxx.CxxHeaders;
@@ -734,7 +735,8 @@ public class AppleLibraryDescription
               blacklist,
               extraCxxDeps,
               transitiveCxxDeps,
-              cxxDelegate);
+              cxxDelegate,
+              CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY);
         });
   }
 
