@@ -105,7 +105,8 @@ public class ScalaTestDescription
             args.getCxxLibraryWhitelist(),
             graphBuilder,
             getCxxPlatform(buildTarget.getTargetConfiguration())
-                .resolve(graphBuilder, buildTarget.getTargetConfiguration()));
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+            javaBuckConfig.shouldAddBuckLDSymlinkTree());
     BuildRuleParams params = cxxLibraryEnhancement.updatedParams;
     BuildTarget javaLibraryBuildTarget =
         buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);

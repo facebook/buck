@@ -155,7 +155,8 @@ public class JavaTestDescription
             args.getCxxLibraryWhitelist(),
             graphBuilder,
             getUnresolvedCxxPlatform(args, buildTarget.getTargetConfiguration())
-                .resolve(graphBuilder, buildTarget.getTargetConfiguration()));
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+            javaBuckConfig.shouldAddBuckLDSymlinkTree());
     params = cxxLibraryEnhancement.updatedParams;
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =
@@ -345,7 +346,8 @@ public class JavaTestDescription
         Optional<Boolean> useCxxLibraries,
         ImmutableSet<BuildTarget> cxxLibraryWhitelist,
         ActionGraphBuilder graphBuilder,
-        CxxPlatform cxxPlatform) {
+        CxxPlatform cxxPlatform,
+        boolean isBuckLDSymLinkTreeSet) {
       if (useCxxLibraries.orElse(false)) {
         MappedSymlinkTree nativeLibsSymlinkTree =
             buildNativeLibsSymlinkTreeRule(
@@ -391,13 +393,20 @@ public class JavaTestDescription
                         graphBuilder.filterBuildRuleInputs(
                             nativeLibsSymlinkTree.getLinks().values()))
                     .build());
-        nativeLibsEnvironment =
-            ImmutableMap.of(
-                cxxPlatform
-                    .getLd()
-                    .resolve(graphBuilder, buildTarget.getTargetConfiguration())
-                    .searchPathEnvVar(),
-                nativeLibsSymlinkTree.getRoot().toString());
+
+        ImmutableMap.Builder<String, String> nativeLibsEnvMapBuilder =
+            new ImmutableMap.Builder<String, String>()
+                .put(
+                    cxxPlatform
+                        .getLd()
+                        .resolve(graphBuilder, buildTarget.getTargetConfiguration())
+                        .searchPathEnvVar(),
+                    nativeLibsSymlinkTree.getRoot().toString());
+        if (isBuckLDSymLinkTreeSet) {
+          nativeLibsEnvMapBuilder.put(
+              "BUCK_LD_SYMLINK_TREE", nativeLibsSymlinkTree.getRoot().toString());
+        }
+        nativeLibsEnvironment = nativeLibsEnvMapBuilder.build();
       } else {
         updatedParams = params;
         nativeLibsEnvironment = ImmutableMap.of();

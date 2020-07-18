@@ -345,7 +345,8 @@ public class RobolectricTestDescription
             args.getCxxLibraryWhitelist(),
             graphBuilder,
             getCxxPlatform(args, buildTarget.getTargetConfiguration())
-                .resolve(graphBuilder, buildTarget.getTargetConfiguration()));
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+            javaBuckConfig.shouldAddBuckLDSymlinkTree());
     params = cxxLibraryEnhancement.updatedParams;
 
     BuildTarget testLibraryBuildTarget =

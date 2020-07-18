@@ -182,6 +182,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getBoolean(SECTION, "desugar_interface_methods").orElse(false);
   }
 
+  public boolean shouldAddBuckLDSymlinkTree() {
+    return delegate.getBoolean(SECTION, "add_buck_ld_symlink_tre").orElse(false);
+  }
+
   public JavacSpec getJavacSpec(TargetConfiguration targetConfiguration) {
     return javacSpecSupplier.apply(targetConfiguration);
   }
