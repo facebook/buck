@@ -88,6 +88,7 @@ import java.util.stream.Collectors;
  *   outs = {
  *    'manifest': [ 'AndroidManifest.xml'] ,
  *   },
+ *   default_outs = [ 'AndroidManifest.xml' ],
  * )
  * </pre>
  *
@@ -106,9 +107,8 @@ import java.util.stream.Collectors;
  * )
  * </pre>
  *
- * <p>If a rule with 'outs' is consumed without an output label, the default output group is
- * returned. Currently, the default output group is an empty set. In the future, it would be the set
- * of all named outputs.
+ * <p>If a rule with 'outs' is consumed without an output label, the default output group defined by
+ * default_outs is returned.
  *
  * <p>A <code>genrule</code> is evaluated by running the shell command specified by {@code cmd} with
  * the following environment variable substitutions:
