@@ -30,6 +30,8 @@ You must be using Java 8 or 11 for this to compile successfully. If you see comp
 
 Pre-built binaries of buck for any buck `sha` can be downloaded from `https://jitpack.io/com/github/facebook/buck/<sha>/buck-<sha>.pex`. The very first time a version of buck is requested, it is built via [jitpack](https://jitpack.io/). As a result, it could take a few minutes for this initial binary to become available. Every subsequent request will just serve the built artifact directly. This functionality is available for any fork of buck as well, so you can fetch `https://jitpack.io/com/github/<github-user-or-org>/buck/<sha>/buck-<sha>.pex`
 
+For buck binaries built for JDK 11, modify end of the url to `buck-<sha>-java11.pex`.
+
 Feature Deprecation
 -------------------
 

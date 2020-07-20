@@ -8,3 +8,8 @@ install:
    - PEX=$(bin/buck build buck --show-output | awk '{print $2}')
    - SHA=$(git rev-parse HEAD)
    - mvn install:install-file -Dfile="$PEX" -DgroupId="$GROUP" -DartifactId="$ARTIFACT" -Dversion="$SHA" -Dpackaging="pex" -DgeneratePom=true
+   - export JAVA_HOME="/usr/lib/jvm/jdk-11"
+   - export PATH="/usr/lib/jvm/jdk-11:$PATH"
+   - ant clean && ant
+   - JAVA11_PEX=$(bin/buck build --config java.target_level=11 --config java.source_level=11 buck --show-output | awk '{print $2}')
+   - mvn install:install-file -Dfile="$JAVA11_PEX" -DgroupId="$GROUP" -DartifactId="$ARTIFACT" -Dversion="$SHA" -Dclassifier="java11" -Dpackaging="pex" -DgeneratePom=true
