@@ -49,7 +49,99 @@
 
 {call genrule_common.type_arg /}
 
-{call genrule_common.out_arg /}
+{call buck.arg}
+  {param name: 'out' /}
+  {{param default : 'None' /}}
+  {param desc}
+     The name of the output file or directory. The complete path to this
+     argument is provided to the shell command through
+     the <code>OUT</code> environment variable. Only one of<code>out</code>
+     or <code>outs</code> may be present.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'outs' /}
+  {{param default : '{}' /}}
+  {param desc}
+  <p>
+  Mapping defining <a href="{ROOT}concept/named_outputs.html">named outputs</a>
+  &nbsp;to output paths relative to the rule's output directory. Only one of
+  &nbsp;<code>out</code> or <code>outs</code> may be present.
+  </p>
+
+  <p>
+  Example:
+  </p>
+
+{literal}<pre class="prettyprint lang-py">
+genrule(
+  name = "named_outputs",
+  outs = {
+    "output1": [
+      "out1.txt",
+    ],
+    "output2": [
+      "out2.txt",
+    ],
+  },
+  default_outs = [ "out1.txt" ],
+  cmd = "echo something> $OUT/out1.txt && echo another> $OUT/out2.txt",
+)
+</pre>{/literal}
+
+  <p>
+      Note that a maximum of one value may be present in the list in this map. For example:
+
+{literal}<pre class="prettyprint lang-py">
+outs = {
+  "output1": [
+    "out1.txt",
+  ],
+},
+</pre>{/literal}
+
+      is valid, whereas
+
+{literal}<pre class="prettyprint lang-py">
+outs = {
+  "output1": [
+    "out1.txt",
+    "out2.txt",
+  ],
+},
+</pre>{/literal}
+
+      is not.
+  </p>
+
+
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'default_outs' /}
+  {param default : '[]' /}
+  {param desc}
+  <p>
+  Default output which must be present if the <code>outs</code> arg is present. Otherwise does not apply.
+  </p>
+  <p>
+  If a rule with <code>outs</code> is consumed without an output label, the default output is returned.
+  </p>
+  <p>
+      Note that a maximum of one value may be present in this list. For example:
+
+      {literal}<pre class="prettyprint lang-py">default_outs = [ "output_one", ]</pre>{/literal}
+
+      is valid, whereas
+
+      {literal}<pre class="prettyprint lang-py">default_outs = [ "output_one", "output_two", ]</pre>{/literal}
+
+      is not.
+  </p>
+  {/param}
+{/call}
 
 {call genrule_common.environment_expansion_separator /}
 
@@ -109,6 +201,61 @@ genrule(
   out = 'AndroidManifest.xml',
 )
 </pre>{/literal}
+
+{literal}<pre class="prettyprint lang-py">
+genrule(
+  name = 'generate_manifest_with_named_outputs',
+  srcs = [
+    'AndroidManifest.xml',
+  ],
+  bash = '$(exe //python/android:basic_to_full) ' \
+      '$SRCDIR/AndroidManifest.xml > $OUT/AndroidManifest.xml',
+  cmd_exe = '$(exe //python/android:basic_to_full) ' \
+      '%SRCDIR%\\AndroidManifest.xml > %OUT%\\AndroidManifest.xml',
+  outs =  {
+    "manifest": [ "AndroidManifest.xml" ],
+  },
+  default_outs = [ "AndroidManifest.xml" ],
+)
+</pre>{/literal}
+
+<p>
+For named outputs, build with any of the following:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+  buck build //:generate_manifest_with_named_outputs
+</pre>{/literal}
+
+{literal}<pre class="prettyprint lang-py">
+  buck build //:generate_manifest_with_named_outputs[manifest]
+</pre>{/literal}
+
+<p>
+Consume in <code>srcs</code> with:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+export_file(
+    name = "magic1",
+    src = ":generate_manifest_with_named_outputs",
+    out = "some_dir_to_copy_to/AndroidManifest.xml",
+)
+</pre>{/literal}
+
+{literal}<pre class="prettyprint lang-py">
+export_file(
+    name = "magic2",
+    src = ":generate_manifest_with_named_outputs[manifest]",
+    out = "some_dir_to_copy_to/AndroidManifest.xml",
+)
+</pre>{/literal}
+
+<p>
+Note that <code>magic1</code> consumes <code>generate_manifest_with_named_outputs</code>'s default
+output. <code>magic2</code> consumes <code>generate_manifest_with_named_outputs</code>'s named
+output "manifest," which happen to be pointing to the same output as the default output in this
+case, but they do not have to point to the same output.
 
 {/param} // examples
 

@@ -1,0 +1,86 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+{namespace buck.namedoutputs}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Named Outputs' /}
+    {param navid: 'concept_named_outputs' /}
+    {param prettify: true /}
+    {param description}
+        Provides a standard mechanism for accessing different output groups provided by build rules.
+    {/param}
+    {param content}
+
+<p>
+Named outputs provide standard mechanisms for accessing different output groups provided by build
+rules. Outputs are accessed via output labels indicated by square brackets at the end of target
+names. For example:
+</p>
+
+{literal}<pre class="prettyprint lang-bash">
+buck build //:foo[bar]
+</pre>{/literal}
+
+<p>
+Or in <code>srcs</code>:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+my_rule(
+  name = "my_rule",
+  srcs = [
+    ":foo[bar]",
+  ],
+)
+</pre>{/literal}
+
+<p>
+The string in the square brackets following the target name is referred to as an "output label." In
+the example above, the output label is <code>bar</code>.
+</p>
+
+<p>
+If a rule with named outputs is referred to without its output label, the default output is
+returned. For example, consider a target <code>foo</code> with named output <code>bar</code>
+&nbsp;pointing to output1 and named output <code>baz</code> pointing to output2. The default output
+is defined as output2.
+
+{literal}<pre class="prettyprint lang-py">
+buck build //:foo --show-output
+</pre>{/literal}
+
+will point to output2, but not output1.
+
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+my_rule(
+  name = "my_rule",
+  srcs = [
+    ":foo",
+  ],
+)
+</pre>{/literal}
+<p>
+will consume output2 in its <code>srcs</code>, but not output1.
+</p>
+
+    {/param}
+  {/call}
+{/template}

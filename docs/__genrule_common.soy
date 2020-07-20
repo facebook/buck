@@ -100,11 +100,17 @@
         <p>
           The output file or directory for the <code>genrule()</code>.
           This variable will have whatever value is specified by 
-          the <code>out</code> argument.  The value should be a valid
-          filepath.  The semantics of the shell command determine
-          whether this filepath is treated as a file or a directory.  If
-          the filepath is a directory, then the shell command needs to
-          create it.
+          the <code>out</code> argument if not using&nbsp;
+          <a href="{ROOT}concept/named_outputs.html">named outputs</a>. If
+          using named outputs, this variable will be the output directory.
+        </p>
+
+        <p>
+          The value should be a valid filepath. The semantics of the shell
+          command determine whether this filepath is treated as a file or a
+          directory. If the filepath is a directory, then the shell command
+          needs to create it if not using named outputs. Otherwise, it will
+          be automatically created.
         </p>
 
         <p>
