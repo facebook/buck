@@ -311,13 +311,17 @@ public class RustCompileUtils {
       args.add(StringArg.of("-Cprefer-dynamic"));
     }
 
+    Tool compiler =
+        (crateType.isDoc())
+            ? rustPlatform.getRustdoc().resolve(graphBuilder, target.getTargetConfiguration())
+            : rustPlatform.getRustCompiler().resolve(graphBuilder, target.getTargetConfiguration());
+
     return RustCompileRule.from(
         graphBuilder,
         target,
         projectFilesystem,
         filename,
-        rustPlatform.getRustCompiler().resolve(graphBuilder, target.getTargetConfiguration()),
-        rustPlatform.getRustdoc().resolve(graphBuilder, target.getTargetConfiguration()),
+        compiler,
         rustPlatform.getLinkerProvider().resolve(graphBuilder, target.getTargetConfiguration()),
         args.build(),
         depArgs.build(),
