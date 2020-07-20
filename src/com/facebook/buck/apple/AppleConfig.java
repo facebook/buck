@@ -534,7 +534,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   public boolean compilationDatabaseIncludesSwift() {
     return delegate.getBooleanValue(APPLE_SECTION, COMP_DB_INCLUDES_SWIFT, false);
   }
-  
+
   public boolean getConditionalRelinkingEnabled() {
     return delegate.getBooleanValue(APPLE_SECTION, CONDITIONAL_RELINKING_ENABLED, false);
   }
