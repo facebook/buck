@@ -15,7 +15,7 @@
 
 import xml.etree.ElementTree as ET
 from asyncio import subprocess
-from enum import Enum
+from enum import Enum, auto
 from typing import List
 
 
@@ -38,6 +38,25 @@ class ExitCode(Enum):
     TEST_ERROR = 32
     TEST_NOTHING = 64
     SIGNAL_INTERRUPT = 130
+
+
+class AutoName(Enum):
+    """Makes the value of the Enum its name"""
+
+    @staticmethod
+    def _generate_next_value_(name, start, count, last_values):
+        return name
+
+
+class ResultType(AutoName):
+    """Enum for result types of buck test"""
+
+    DRY_RUN = auto()
+    EXCLUDED = auto()
+    DISABLED = auto()
+    ASSUMPTION_VIOLATION = auto()
+    FAILURE = auto()
+    SUCCESS = auto()
 
 
 class BuckResult:
@@ -89,10 +108,10 @@ class BuildResult(BuckResult):
 class TestResultSummary:
     """Represents a summary of a test result"""
 
-    def __init__(self, name: str, status: str, result_type: str) -> None:
-        self.name = name
-        self.status = status
-        self.result_type = result_type
+    def __init__(self, name: str, status: str, result_type: ResultType) -> None:
+        self.name: str = name
+        self.status: str = status
+        self.result_type: ResultType = ResultType(result_type)
 
     def get_name(self) -> str:
         """Returns the name of the test"""
@@ -102,7 +121,7 @@ class TestResultSummary:
         """Returns the status of the test"""
         return self.status
 
-    def get_result_type(self) -> str:
+    def get_result_type(self) -> ResultType:
         """Returns the result type of the test"""
         return self.result_type
 
@@ -144,24 +163,29 @@ class TestResult(BuckResult):
             for testresult in tests.iter("testresult"):
                 name = testresult.get("name")
                 status = testresult.get("status")
-                result_type = testresult.get("type")
+                testresult_type = testresult.get("type")
+                assert testresult_type in (
+                    e.value for e in ResultType
+                ), f"Type {testresult_type} is not a ResultType Enum"
+                result_type = ResultType(testresult_type)
                 test_result_summary = TestResultSummary(name, status, result_type)
                 test_list.append(test_result_summary)
         return test_list
 
     def get_success_count(self) -> int:
         """Returns the number of successful tests"""
-        return self._get_count("PASS")
+        return self._get_count(ResultType.SUCCESS)
 
     def get_failure_count(self) -> int:
         """Returns the number of failed tests"""
-        return self._get_count("FAIL")
+        return self._get_count(ResultType.FAILURE)
 
     def get_skipped_count(self) -> int:
         """Returns the number of tests skipped"""
-        # TODO skips will show later
-        pass
+        return self._get_count(ResultType.EXCLUDED)
 
-    def _get_count(self, status: str) -> int:
+    def _get_count(self, result_type: ResultType) -> int:
         """Returns the number of tests with the given status"""
-        return sum(1 for test in self.get_tests() if test.get_status() == status)
+        return sum(
+            1 for test in self.get_tests() if test.get_result_type() == result_type
+        )

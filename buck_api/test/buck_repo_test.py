@@ -102,7 +102,7 @@ async def test_kill():
 
 
 @pytest.mark.asyncio
-async def test_test():
+async def test_test_passed():
     with tempfile.TemporaryDirectory() as temp_dir:
         path_of_cwd = Path(temp_dir)
         test_script = pkg_resources.resource_filename(
@@ -122,6 +122,30 @@ async def test_test():
         assert result.is_success()
         assert result.get_tests()[0].get_name() == "test1"
         assert result.get_success_count() == 1
+
+
+@pytest.mark.asyncio
+async def test_test_skipped():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        path_of_cwd = Path(temp_dir)
+        test_script = pkg_resources.resource_filename(
+            "test.buck_repo_test", "test_script.py"
+        )
+        repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
+        # test skipped test
+        _create_file(path_of_cwd, "target_file_skipped", "0")
+        result = await (await repo.test("//:target_file_skipped")).wait()
+        assert list(
+            (path_of_cwd / "buck-out").iterdir()
+        ), "test should have generated outputs in buck-out"
+        assert "target_file_skipped" in result.get_stdout()
+        assert (
+            '<tests><test name="target_file_skipped"><testresult name="test1" status="PASS" type="EXCLUDED" /></test></tests>'
+            in result.get_stdout()
+        )
+        assert result.is_success()
+        assert result.get_tests()[0].get_name() == "test1"
+        assert result.get_skipped_count() == 1
 
 
 @pytest.mark.asyncio
@@ -154,7 +178,7 @@ def _create_file(dirpath: Path, filepath: Path, exitcode: int) -> None:
     """ Writes out a message to a file given the path"""
     with open(os.path.join(dirpath, filepath), "w") as f1:
         target_name = str(filepath)
-        status = "PASS" if "success" in target_name else "FAIL"
+        status = "FAIL" if "failure" in target_name else "PASS"
         result_type = (
             "FAILURE"
             if "fail" in target_name
