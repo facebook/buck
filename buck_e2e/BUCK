@@ -1,0 +1,31 @@
+load("//tools/build_rules:python_rules.bzl", "pytest_test")
+
+python_library(
+    name = "repo_test_lib",
+    srcs = ["repo_test.py"],
+    base_module = "",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//buck_api/srcs:buck_repo_lib",
+    ],
+)
+
+pytest_test(
+    name = "repo_end_to_end_test",
+    srcs = ["repo_end_to_end_test.py"],
+    resources = ["//buck_api/test:test_script.py"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":repo_test_lib",
+        "//third-party/py/pytest-asyncio:pytest-asyncio",
+    ],
+)
+
+pytest_test(
+    name = "pytest",
+    srcs = glob(["*_test.py"]),
+)

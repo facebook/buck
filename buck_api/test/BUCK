@@ -35,3 +35,21 @@ pytest_test(
         "//third-party/py/pytest-asyncio:pytest-asyncio",
     ],
 )
+
+python_library(
+    name = "test_script_lib",
+    srcs = [
+        "test_script.py",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+export_file(
+    name = "test_script.py",
+    src = "test_script.py",
+    visibility = [
+        "PUBLIC",
+    ],
+)
