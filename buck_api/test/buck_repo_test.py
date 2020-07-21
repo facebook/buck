@@ -31,12 +31,13 @@ async def test_build():
             "test.buck_repo_test", "test_script.py"
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
-        _create_file(path_of_cwd, "target_file_success", "0")
+        _create_file(path_of_cwd, "target_file_success", 0)
         result = await (await repo.build("//:target_file_success")).wait()
         assert list(
             (path_of_cwd / "buck-out").iterdir()
         ), "build should have generated outputs in buck-out"
         assert "target_file_success" in result.get_stdout()
+        print(result.get_stdout())
         assert result.is_success()
 
 
@@ -50,11 +51,11 @@ async def test_build_failed():
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
 
         # testing failures
-        _create_file(path_of_cwd, "target_file_build_failure", "1")
+        _create_file(path_of_cwd, "target_file_build_failure", 1)
         result = await (await repo.build("//:target_file_build_failure")).wait()
         assert result.is_build_failure()
 
-        _create_file(path_of_cwd, "target_file_failure", "13")
+        _create_file(path_of_cwd, "target_file_failure", 13)
         result = await (await repo.build("//:target_file_failure")).wait()
         assert result.is_failure()
 
@@ -108,13 +109,19 @@ async def test_test():
             "test.buck_repo_test", "test_script.py"
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
-        _create_file(path_of_cwd, "target_file_success", "0")
+        _create_file(path_of_cwd, "target_file_success", 0)
         result = await (await repo.test("//:target_file_success")).wait()
         assert list(
             (path_of_cwd / "buck-out").iterdir()
         ), "test should have generated outputs in buck-out"
         assert "target_file_success" in result.get_stdout()
+        assert (
+            '<tests><test name="target_file_success"><testresult name="test1" status="PASS" type="SUCCESS" /></test></tests>\n'
+            in result.get_stdout()
+        )
         assert result.is_success()
+        assert result.get_tests()[0].get_name() == "test1"
+        assert result.get_success_count() == 1
 
 
 @pytest.mark.asyncio
@@ -127,21 +134,31 @@ async def test_test_failed():
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
 
         # testing failures
-        _create_file(path_of_cwd, "target_file_test_failure", "32")
+        _create_file(path_of_cwd, "target_file_test_failure", 32)
         result = await (await repo.test("//:target_file_test_failure")).wait()
         assert result.is_test_failure()
 
-        _create_file(path_of_cwd, "target_file_failure", "13")
+        _create_file(path_of_cwd, "target_file_failure", 13)
         result = await (await repo.test("//:target_file_failure")).wait()
         assert result.is_failure()
+        assert result.get_tests()[0].get_name() == "test1"
+        assert result.get_failure_count() == 1
 
         # testing failures
-        _create_file(path_of_cwd, "target_file_build_failure", "1")
+        _create_file(path_of_cwd, "target_file_build_failure", 1)
         result = await (await repo.test("//:target_file_build_failure")).wait()
         assert result.is_build_failure()
 
 
-def _create_file(dirpath: Path, filepath: Path, message: str) -> None:
+def _create_file(dirpath: Path, filepath: Path, exitcode: int) -> None:
     """ Writes out a message to a file given the path"""
     with open(os.path.join(dirpath, filepath), "w") as f1:
+        target_name = str(filepath)
+        status = "PASS" if "success" in target_name else "FAIL"
+        result_type = (
+            "FAILURE"
+            if "fail" in target_name
+            else ("SUCCESS" if "success" in target_name else "EXCLUDED")
+        )
+        message = f"{target_name}\n{status}\n{result_type}\n{exitcode}"
         f1.write(message)

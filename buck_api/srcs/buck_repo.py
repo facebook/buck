@@ -14,6 +14,8 @@
 # limitations under the License.
 
 from asyncio import subprocess
+from pathlib import Path
+from typing import Tuple
 
 from buck_process import BuckProcess
 from buck_result import BuckResult, BuildResult, TestResult
@@ -22,7 +24,7 @@ from buck_result import BuckResult, BuildResult, TestResult
 class BuckRepo:
     """ Instantiates a BuckRepo object with a exectuable path """
 
-    def __init__(self, path_to_buck: str, encoding: str, cwd: str = None) -> None:
+    def __init__(self, path_to_buck: str, encoding: str, cwd: str) -> None:
         # TODO change cwd to take Path object
         self.path_to_buck = path_to_buck
         self.cwd = cwd
@@ -63,8 +65,15 @@ class BuckRepo:
         created with the test command and any
         additional arguments
         """
-        process = await self._run_buck_command("test", *argv)
-        return BuckProcess(process, result_type=TestResult, encoding=self.encoding)
+        xml_flag, test_output_file = self._create_xml_file()
+        process = await self._run_buck_command("test", *argv, xml_flag)
+        return BuckProcess(
+            process,
+            result_type=lambda proc, stdin, stdout, encoding: TestResult(
+                proc, stdin, stdout, encoding, str(Path(self.cwd) / test_output_file)
+            ),
+            encoding=self.encoding,
+        )
 
     async def _run_buck_command(self, cmd: str, *argv: str) -> subprocess.Process:
         """
@@ -80,3 +89,17 @@ class BuckRepo:
             stderr=subprocess.PIPE
         )
         return process
+
+    def _create_xml_file(self, *argv: str) -> Tuple[str, str]:
+        """
+        Creates a xml file used for the test output. Ensures an xml file
+        is created if not specified.
+        """
+        xml_flag = ""
+        test_output_file = "testOutput.xml"
+        # ensures xml file is always generated
+        if "--xml" not in argv:
+            xml_flag = "--xml testOutput.xml"
+        else:
+            test_output_file = argv[argv.index("--xml") + 1]
+        return xml_flag, test_output_file

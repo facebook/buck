@@ -13,8 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import xml.etree.ElementTree as ET
 from asyncio import subprocess
 from enum import Enum
+from typing import List
 
 
 class ExitCode(Enum):
@@ -77,7 +79,6 @@ class BuildResult(BuckResult):
 
     def is_failure(self) -> bool:
         """Returns if a Build Result fails for any reason"""
-        print(self.get_exit_code())
         return self.get_exit_code() != ExitCode.SUCCESS
 
     def is_build_failure(self) -> bool:
@@ -85,12 +86,39 @@ class BuildResult(BuckResult):
         return self.get_exit_code() == ExitCode.BUILD_ERROR
 
 
+class TestResultSummary:
+    """Represents a summary of a test result"""
+
+    def __init__(self, name: str, status: str, result_type: str) -> None:
+        self.name = name
+        self.status = status
+        self.result_type = result_type
+
+    def get_name(self) -> str:
+        """Returns the name of the test"""
+        return self.name
+
+    def get_status(self) -> str:
+        """Returns the status of the test"""
+        return self.status
+
+    def get_result_type(self) -> str:
+        """Returns the result type of the test"""
+        return self.result_type
+
+
 class TestResult(BuckResult):
     """ Represents a Buck process  of a test command that has finished running """
 
     def __init__(
-        self, process: subprocess.Process, stdout: bytes, stderr: bytes, encoding: str
+        self,
+        process: subprocess.Process,
+        stdout: bytes,
+        stderr: bytes,
+        encoding: str,
+        test_output_file: str,
     ) -> None:
+        self.test_root = ET.parse(test_output_file).getroot()
         super().__init__(process, stdout, stderr, encoding)
 
     def is_success(self) -> bool:
@@ -108,3 +136,32 @@ class TestResult(BuckResult):
     def is_build_failure(self) -> bool:
         """Returns if a Test Result fails because of a build failure only"""
         return self.get_exit_code() == ExitCode.BUILD_ERROR
+
+    def get_tests(self) -> List[TestResultSummary]:
+        """Returns a list of test result summaries"""
+        test_list = []
+        for tests in self.test_root:
+            for testresult in tests.iter("testresult"):
+                name = testresult.get("name")
+                status = testresult.get("status")
+                result_type = testresult.get("type")
+                test_result_summary = TestResultSummary(name, status, result_type)
+                test_list.append(test_result_summary)
+        return test_list
+
+    def get_success_count(self) -> int:
+        """Returns the number of successful tests"""
+        return self._get_count("PASS")
+
+    def get_failure_count(self) -> int:
+        """Returns the number of failed tests"""
+        return self._get_count("FAIL")
+
+    def get_skipped_count(self) -> int:
+        """Returns the number of tests skipped"""
+        # TODO skips will show later
+        pass
+
+    def _get_count(self, status: str) -> int:
+        """Returns the number of tests with the given status"""
+        return sum(1 for test in self.get_tests() if test.get_status() == status)

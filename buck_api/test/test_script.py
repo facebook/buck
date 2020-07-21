@@ -18,6 +18,7 @@ import hashlib
 import os
 import shutil
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
@@ -42,7 +43,7 @@ def run_build(remain_args):
         sock.write("buck daemon exists")
     print(args)
     with open(target, "r") as target_file:
-        sys.exit(int(target_file.read()))
+        sys.exit(int(target_file.readlines()[-1]))
 
 
 def run_clean(remain_args):
@@ -61,16 +62,42 @@ def run_kill(remain_args):
 def run_test(remain_args):
     parser = argparse.ArgumentParser()
     parser.add_argument("target")
+    parser.add_argument("xml")
     args = parser.parse_args(remain_args)
     target = Path(args.target.replace(":", "/").strip("/"))
     conf_dir = hashlib.md5(args.target.encode()).hexdigest()
     output = Path("buck-out", "gen") / Path(conf_dir) / target
-    os.makedirs(output.parent)
+    # creating a path to a buck-out directory in a temp directory
+    conf_dir = hashlib.md5(args.target.encode()).hexdigest()
+    output = Path("buck-out", "gen") / Path(conf_dir) / target
+    os.makedirs(output.parent, exist_ok=True)
     with open(output, "w") as f1:
         f1.write("Hello, World!")
-    print(args)
+    data = None
     with open(target, "r") as target_file:
-        sys.exit(int(target_file.read()))
+        data = target_file.readlines()
+    target_name = data[0].rstrip("\n")
+    status = data[1].rstrip("\n")
+    result_type = data[2].rstrip("\n")
+    exitcode = data[3]
+    # creating xml file structure
+    data = ET.Element("tests")
+    test = ET.SubElement(data, "test")
+    test1 = ET.SubElement(test, "testresult")
+    test1.set("name", "test1")
+    test.set("name", target_name)
+    test1.set("status", status)
+    test1.set("type", result_type)
+    mydata = ET.tostring(data).decode("utf-8")
+    # creating a path to a xml file for test output
+    test_output_file = Path(args.xml.replace("--xml ", ""))
+    os.makedirs(test_output_file.parent, exist_ok=True)
+    with open(test_output_file, "w") as f2:
+        f2.write(mydata)
+    print(args)
+    print(mydata)
+    with open(target, "r") as target_file:
+        sys.exit(int(exitcode))
 
 
 FUNCTION_MAP = {
