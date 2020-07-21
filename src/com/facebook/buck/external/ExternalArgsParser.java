@@ -17,7 +17,6 @@
 package com.facebook.buck.external;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -40,16 +39,16 @@ class ExternalArgsParser {
 
   /** Returns the {@link ParsedArgs} from the args passed directly to StepsExecutable. */
   @SuppressWarnings("unchecked")
-  ParsedArgs parse(String[] args, ImmutableSet<Class<? extends Buildable>> validClasses) {
+  ParsedArgs parse(String[] args, ImmutableSet<Class<? extends ExternalAction>> validClasses) {
     Preconditions.checkNotNull(args, "Expected %s args. Received null args", NUM_EXPECTED_ARGS);
     Preconditions.checkArgument(
         args.length == NUM_EXPECTED_ARGS,
         "Expected %s args. Received %s",
         NUM_EXPECTED_ARGS,
         args.length);
-    Class<? extends Buildable> buildableClass;
+    Class<? extends ExternalAction> buildableClass;
     try {
-      buildableClass = (Class<? extends Buildable>) Class.forName(args[0]);
+      buildableClass = (Class<? extends ExternalAction>) Class.forName(args[0]);
       Preconditions.checkArgument(
           validClasses.contains(buildableClass), "Invalid buildable class: %s", args[0]);
     } catch (ClassNotFoundException e) {
@@ -67,12 +66,12 @@ class ExternalArgsParser {
   /** Data class representing args passed to StepsExecutable. */
   @BuckStyleValue
   abstract static class ParsedArgs {
-    abstract Class<? extends Buildable> getBuildableClass();
+    abstract Class<? extends ExternalAction> getBuildableClass();
 
     abstract BuildableCommand getBuildableCommand();
 
     static ParsedArgs of(
-        Class<? extends Buildable> buildableName, BuildableCommand buildableCommand) {
+        Class<? extends ExternalAction> buildableName, BuildableCommand buildableCommand) {
       return ImmutableParsedArgs.ofImpl(buildableName, buildableCommand);
     }
   }

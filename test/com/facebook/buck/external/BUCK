@@ -7,6 +7,7 @@ standard_java_test(
         "//src/com/facebook/buck/downwardapi/utils:utils",
         "//src/com/facebook/buck/external:external",
         "//src/com/facebook/buck/rules/modern:modern",
+        "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/guava:guava",

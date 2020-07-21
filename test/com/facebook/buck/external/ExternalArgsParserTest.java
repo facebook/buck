@@ -19,13 +19,8 @@ package com.facebook.buck.external;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
-import com.facebook.buck.rules.modern.Buildable;
-import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
-import com.facebook.buck.step.Step;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -59,11 +54,11 @@ public class ExternalArgsParserTest {
   public void throwsIfInvalidClass() {
     exception.expect(IllegalArgumentException.class);
     exception.expectMessage(
-        String.format("Invalid buildable class: %s", TestBuildableClassBar.class.getName()));
+        String.format("Invalid buildable class: %s", TestExternalActionClassBar.class.getName()));
     new ExternalArgsParser()
         .parse(
-            new String[] {TestBuildableClassBar.class.getName(), "path"},
-            ImmutableSet.of(TestBuildableClassFoo.class));
+            new String[] {TestExternalActionClassBar.class.getName(), "path"},
+            ImmutableSet.of(TestExternalActionClassFoo.class));
   }
 
   @Test
@@ -72,8 +67,8 @@ public class ExternalArgsParserTest {
     exception.expectMessage("Cannot read buildable command");
     new ExternalArgsParser()
         .parse(
-            new String[] {TestBuildableClassFoo.class.getName(), "nonexistent_path"},
-            ImmutableSet.of(TestBuildableClassFoo.class));
+            new String[] {TestExternalActionClassFoo.class.getName(), "nonexistent_path"},
+            ImmutableSet.of(TestExternalActionClassFoo.class));
   }
 
   @Test
@@ -85,7 +80,7 @@ public class ExternalArgsParserTest {
     new ExternalArgsParser()
         .parse(
             new String[] {"com.facebook.buck.android.foo", tempFile.getAbsolutePath()},
-            ImmutableSet.of(TestBuildableClassFoo.class));
+            ImmutableSet.of(TestExternalActionClassFoo.class));
   }
 
   @Test
@@ -104,31 +99,26 @@ public class ExternalArgsParserTest {
     ExternalArgsParser.ParsedArgs parsedArgs =
         new ExternalArgsParser()
             .parse(
-                new String[] {TestBuildableClassFoo.class.getName(), tempFile.getAbsolutePath()},
-                ImmutableSet.of(TestBuildableClassFoo.class, TestBuildableClassBar.class));
+                new String[] {
+                  TestExternalActionClassFoo.class.getName(), tempFile.getAbsolutePath()
+                },
+                ImmutableSet.of(
+                    TestExternalActionClassFoo.class, TestExternalActionClassBar.class));
 
-    assertThat(parsedArgs.getBuildableClass(), equalTo(TestBuildableClassFoo.class));
+    assertThat(parsedArgs.getBuildableClass(), equalTo(TestExternalActionClassFoo.class));
     assertThat(parsedArgs.getBuildableCommand(), equalTo(buildableCommand));
   }
 
-  private static class TestBuildableClassFoo implements Buildable {
+  private static class TestExternalActionClassFoo implements ExternalAction {
     @Override
-    public ImmutableList<Step> getBuildSteps(
-        BuildContext buildContext,
-        ProjectFilesystem filesystem,
-        OutputPathResolver outputPathResolver,
-        BuildCellRelativePathFactory buildCellPathFactory) {
+    public ImmutableList<IsolatedStep> getSteps(BuildableCommand buildableCommand) {
       return ImmutableList.of();
     }
   }
 
-  private static class TestBuildableClassBar implements Buildable {
+  private static class TestExternalActionClassBar implements ExternalAction {
     @Override
-    public ImmutableList<Step> getBuildSteps(
-        BuildContext buildContext,
-        ProjectFilesystem filesystem,
-        OutputPathResolver outputPathResolver,
-        BuildCellRelativePathFactory buildCellPathFactory) {
+    public ImmutableList<IsolatedStep> getSteps(BuildableCommand buildableCommand) {
       return ImmutableList.of();
     }
   }
