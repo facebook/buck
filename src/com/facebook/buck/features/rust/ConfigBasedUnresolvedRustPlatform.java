@@ -136,10 +136,6 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
                 rustBuckConfig.getRustcCheckFlags(name).stream()
                     .map(StringArg::of)
                     .collect(ImmutableList.toImmutableList()))
-            .addAllRustDocFlags(
-                rustBuckConfig.getRustDocFlags(name).stream()
-                    .map(StringArg::of)
-                    .collect(ImmutableList.toImmutableList()))
             .setLinker(linkerOverride)
             .setLinkerProvider(linkerProvider)
             .addAllLinkerArgs(
@@ -167,7 +163,6 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
         ImmutableList.<BuildTarget>builder()
             .addAll(unresolvedCxxPlatform.getParseTimeDeps(targetConfiguration));
     deps.addAll(rustCompiler.getParseTimeDeps(targetConfiguration));
-    deps.addAll(rustdoc.getParseTimeDeps(targetConfiguration));
     linkerOverride.ifPresent(l -> deps.addAll(l.getParseTimeDeps(targetConfiguration)));
     return deps.build();
   }

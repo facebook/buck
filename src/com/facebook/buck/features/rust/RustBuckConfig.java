@@ -162,8 +162,8 @@ public class RustBuckConfig {
         .build();
   }
 
-  /** Preliminary: get rust flags for #doc flavored builds. */
-  public ImmutableList<String> getRustDocFlags(String platform) {
+  /** Preliminary: get rustc flags for #doc flavored builds. */
+  public ImmutableList<String> getRustcDocFlags(String platform) {
     return ImmutableList.<String>builder()
         .addAll(getRustCompilerFlags(platform))
         .addAll(getCompilerFlags(platform, RUSTDOC_FLAGS))

@@ -42,7 +42,7 @@ interface RustPlatform extends FlavorConvertible {
 
   ToolProvider getRustCompiler();
 
-  ToolProvider getRustdoc();
+  Optional<ToolProvider> getRustdoc();
 
   /**
    * Get rustc flags for rust_library() rules.
@@ -72,13 +72,6 @@ interface RustPlatform extends FlavorConvertible {
    * @return List of rustc_check_flags.
    */
   ImmutableList<StringArg> getRustCheckFlags();
-
-  /**
-   * Get rustdoc flags for #doc flavored builds.
-   *
-   * @return List of rustdoc_flags.
-   */
-  ImmutableList<StringArg> getRustDocFlags();
 
   Optional<ToolProvider> getLinker();
 

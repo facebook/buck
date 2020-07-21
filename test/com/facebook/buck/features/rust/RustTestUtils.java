@@ -33,7 +33,6 @@ public class RustTestUtils {
   public static final RustPlatform DEFAULT_PLATFORM =
       ImmutableRustPlatform.builder()
           .setRustCompiler(new ConstantToolProvider(new CommandTool.Builder().build()))
-          .setRustdoc(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setLinker(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setLinkerProvider(
               new DefaultLinkerProvider(
