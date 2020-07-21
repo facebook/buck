@@ -108,6 +108,7 @@ import com.facebook.buck.event.listener.SilentConsoleEventBusListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleConfig;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
+import com.facebook.buck.event.listener.TopSlowTargetsEventListener;
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
 import com.facebook.buck.event.listener.util.ProgressEstimator;
 import com.facebook.buck.httpserver.WebServer;
@@ -2217,6 +2218,8 @@ public final class MainRunner {
     CriticalPathEventListener criticalPathEventListener =
         new CriticalPathEventListener(logStreamFactory, criticalPathLog);
     buckEventBus.register(criticalPathEventListener);
+    TopSlowTargetsEventListener slowTargetsEventListener = new TopSlowTargetsEventListener();
+    buckEventBus.register(slowTargetsEventListener);
 
     ChromeTraceBuckConfig chromeTraceConfig = buckConfig.getView(ChromeTraceBuckConfig.class);
     if (chromeTraceConfig.isChromeTraceCreationEnabled()) {
