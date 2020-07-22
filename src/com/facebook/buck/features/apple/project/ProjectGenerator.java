@@ -1721,8 +1721,11 @@ public class ProjectGenerator {
           s -> extraSettingsBuilder.put("PRODUCT_MODULE_NAME", getModuleName(targetNode)));
 
       if (hasSwiftVersionArg && containsSwiftCode && isFocusedOnTarget) {
-        extraSettingsBuilder.put(
-            "SWIFT_OBJC_INTERFACE_HEADER_NAME", getSwiftObjCGeneratedHeaderName(buildTargetNode));
+        // Do not override user's value
+        if (!extraSettingsBuilder.build().containsKey("SWIFT_OBJC_INTERFACE_HEADER_NAME")) {
+          extraSettingsBuilder.put(
+              "SWIFT_OBJC_INTERFACE_HEADER_NAME", getSwiftObjCGeneratedHeaderName(buildTargetNode));
+        }
 
         if (swiftBuckConfig.getProjectWMO()) {
           // We must disable "Index While Building" as there's a bug in the LLVM infra which
