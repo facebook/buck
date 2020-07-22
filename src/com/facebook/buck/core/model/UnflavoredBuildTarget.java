@@ -43,7 +43,7 @@ public class UnflavoredBuildTarget
   private final int hash;
 
   private UnflavoredBuildTarget(CellRelativePath cellRelativeBasePath, String localName) {
-    LocalName.validate(localName);
+    LocalName.validate(cellRelativeBasePath, localName);
     this.cellRelativeBasePath = cellRelativeBasePath;
     this.localName = localName;
     this.hash = Objects.hash(cellRelativeBasePath, localName);

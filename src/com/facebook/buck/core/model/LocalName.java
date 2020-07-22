@@ -23,8 +23,9 @@ class LocalName {
 
   private LocalName() {}
 
-  static void validate(String localName) {
-    Preconditions.checkArgument(!localName.isEmpty(), "Build target name must not be empty");
+  static void validate(CellRelativePath cellRelativeBasePath, String localName) {
+    Preconditions.checkArgument(
+        !localName.isEmpty(), "Build target name in %s must not be empty", cellRelativeBasePath);
     Preconditions.checkArgument(
         !localName.contains("#"), "Build target name cannot contain '#' but was: %s.", localName);
   }
