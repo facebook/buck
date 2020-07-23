@@ -131,6 +131,11 @@ public class ProjectFilesystemUtils {
     return root.relativize(path);
   }
 
+  /** Construct a relative path between the project root and a given path. */
+  public static RelPath relativize(AbsPath root, AbsPath path) {
+    return root.relativize(path);
+  }
+
   /**
    * @param path the path to check.
    * @return whether ignored paths contains path or any of its ancestors.
