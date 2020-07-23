@@ -58,16 +58,26 @@ public class StepFailedException extends Exception implements WrapsException, Ex
   /** Creates a StepFailedException based on a StepExecutionResult. */
   public static StepFailedException createForFailingStepWithExitCode(
       Step step, StepExecutionContext context, StepExecutionResult executionResult) {
+    return createForFailingStepWithExitCode(
+        step,
+        descriptionForStep(step, context),
+        context.isTruncateFailingCommandEnabled(),
+        executionResult);
+  }
+
+  /** Creates a StepFailedException based on a StepExecutionResult. */
+  public static StepFailedException createForFailingStepWithExitCode(
+      Step step,
+      String descriptionForStep,
+      boolean isTruncateFailingCommandEnabled,
+      StepExecutionResult executionResult) {
     int exitCode = executionResult.getExitCode();
     StringBuilder messageBuilder = new StringBuilder();
     messageBuilder.append(String.format("Command failed with exit code %d.", exitCode));
     ImmutableList<String> executedCommand = executionResult.getExecutedCommand();
     if (!executedCommand.isEmpty()) {
       appendToErrorMessage(
-          messageBuilder,
-          "command",
-          executedCommand.toString(),
-          context.isTruncateFailingCommandEnabled());
+          messageBuilder, "command", executedCommand.toString(), isTruncateFailingCommandEnabled);
     }
 
     executionResult
@@ -81,7 +91,7 @@ public class StepFailedException extends Exception implements WrapsException, Ex
                 .map(cause -> new HumanReadableException(cause, messageBuilder.toString()))
                 .orElse(new HumanReadableException(messageBuilder.toString())),
             step,
-            descriptionForStep(step, context),
+            descriptionForStep,
             OptionalInt.of(exitCode));
     return ret;
   }
@@ -108,10 +118,14 @@ public class StepFailedException extends Exception implements WrapsException, Ex
         .append(truncate ? MoreStrings.truncateTail(value, KEEP_FIRST_CHARS) : value);
   }
 
-  static StepFailedException createForFailingStepWithException(
+  public static StepFailedException createForFailingStepWithException(
       Step step, StepExecutionContext context, Throwable throwable) {
-    return new StepFailedException(
-        throwable, step, descriptionForStep(step, context), OptionalInt.empty());
+    return createForFailingStepWithException(step, descriptionForStep(step, context), throwable);
+  }
+
+  public static StepFailedException createForFailingStepWithException(
+      Step step, String descriptionForStep, Throwable throwable) {
+    return new StepFailedException(throwable, step, descriptionForStep, OptionalInt.empty());
   }
 
   private static String descriptionForStep(Step step, StepExecutionContext context) {
