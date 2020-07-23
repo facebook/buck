@@ -41,6 +41,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -292,7 +293,8 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
                   linker,
                   buildTarget.getCell(),
                   filesystem.getRootPath().getPath(),
-                  sourcePathResolverAdapter))
+                  sourcePathResolverAdapter,
+                  ImmutableMap.of()))
           .add(
               new CxxLinkStep(
                   filesystem.getRootPath(),

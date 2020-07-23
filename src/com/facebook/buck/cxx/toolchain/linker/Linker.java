@@ -39,10 +39,24 @@ import java.util.Optional;
 public interface Linker extends Tool {
 
   /**
+   * If the linker supports normalization arguments, see {@link
+   * #pathNormalizationArgs(ImmutableMap)}.
+   *
    * @param cellRootMap Replacement map for cell roots found in paths, to some suitably normalized
    *     form (such as a relative path from root cell).
    */
   ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap);
+
+  /**
+   * Provides a way to pass normalization arguments to the linker. If the linker does not support
+   * such arguments, then {@link #getScrubbers(ImmutableMap)} can be used to perform post-processing
+   * instead.
+   *
+   * @param cellRootMap Replacement map for cell roots found in paths.
+   */
+  default Iterable<Arg> pathNormalizationArgs(ImmutableMap<Path, Path> cellRootMap) {
+    return ImmutableList.of();
+  }
 
   // TODO(cjhopman): We should only require SourcePathResolverAdapter at the action execution phase,
   // not

@@ -37,6 +37,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -71,7 +72,8 @@ public class CxxPrepareForLinkStepTest {
                 .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
             CanonicalCellName.rootCell(),
             dummyPath,
-            buildRuleResolver.getSourcePathResolver());
+            buildRuleResolver.getSourcePathResolver(),
+            ImmutableMap.of());
 
     assertThat(cxxPrepareForLinkStepSupportFileList.size(), Matchers.equalTo(2));
     Step firstStep = cxxPrepareForLinkStepSupportFileList.get(0);
@@ -92,7 +94,8 @@ public class CxxPrepareForLinkStepTest {
                 .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
             CanonicalCellName.rootCell(),
             dummyPath,
-            buildRuleResolver.getSourcePathResolver());
+            buildRuleResolver.getSourcePathResolver(),
+            ImmutableMap.of());
 
     assertThat(cxxPrepareForLinkStepNoSupportFileList.size(), Matchers.equalTo(1));
     assertThat(
@@ -182,7 +185,8 @@ public class CxxPrepareForLinkStepTest {
                 .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
             CanonicalCellName.rootCell(),
             currentCellPath.getPath(),
-            buildRuleResolver.getSourcePathResolver());
+            buildRuleResolver.getSourcePathResolver(),
+            ImmutableMap.of());
 
     for (Step step : steps) {
       step.execute(context);
@@ -250,7 +254,8 @@ public class CxxPrepareForLinkStepTest {
                 .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
             CanonicalCellName.rootCell(),
             currentCellPath.getPath(),
-            buildRuleResolver.getSourcePathResolver());
+            buildRuleResolver.getSourcePathResolver(),
+            ImmutableMap.of());
 
     for (Step step : steps) {
       step.execute(context);

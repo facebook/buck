@@ -34,6 +34,7 @@ public class DefaultLinkerProvider implements LinkerProvider {
   private final ToolProvider toolProvider;
   private final boolean cacheLinks;
   private final boolean scrubConcurrently;
+  private final boolean usePathNormalizationArgs;
 
   private final LoadingCache<BuildRuleResolver, BuildRuleResolverCacheByTargetConfiguration<Linker>>
       cache =
@@ -48,26 +49,42 @@ public class DefaultLinkerProvider implements LinkerProvider {
                       return new BuildRuleResolverCacheByTargetConfiguration<>(
                           buildRuleResolver,
                           toolProvider,
-                          tool -> build(type, tool, cacheLinks, scrubConcurrently));
+                          tool ->
+                              build(
+                                  type,
+                                  tool,
+                                  cacheLinks,
+                                  scrubConcurrently,
+                                  usePathNormalizationArgs));
                     }
                   });
 
   public DefaultLinkerProvider(Type type, ToolProvider toolProvider, boolean cacheLinks) {
-    this(type, toolProvider, cacheLinks, false);
+    this(type, toolProvider, cacheLinks, false, false);
   }
 
   public DefaultLinkerProvider(
-      Type type, ToolProvider toolProvider, boolean cacheLinks, boolean scrubConcurrently) {
+      Type type,
+      ToolProvider toolProvider,
+      boolean cacheLinks,
+      boolean scrubConcurrently,
+      boolean usePathNormalizationArgs) {
     this.type = type;
     this.toolProvider = toolProvider;
     this.cacheLinks = cacheLinks;
     this.scrubConcurrently = scrubConcurrently;
+    this.usePathNormalizationArgs = usePathNormalizationArgs;
   }
 
-  private static Linker build(Type type, Tool tool, boolean cacheLinks, boolean scrubConcurrently) {
+  private static Linker build(
+      Type type,
+      Tool tool,
+      boolean cacheLinks,
+      boolean scrubConcurrently,
+      boolean usePathNormalizationArgs) {
     switch (type) {
       case DARWIN:
-        return new DarwinLinker(tool, cacheLinks, scrubConcurrently);
+        return new DarwinLinker(tool, cacheLinks, scrubConcurrently, usePathNormalizationArgs);
       case GNU:
         return new GnuLinker(tool);
       case WINDOWS:

@@ -46,6 +46,7 @@ import com.facebook.buck.step.fs.TouchStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -144,7 +145,8 @@ public class CxxThinLTOIndex extends ModernBuildRule<CxxThinLTOIndex.Impl>
                       linker,
                       targetName.getCell(),
                       filesystem.getRootPath().getPath(),
-                      context.getSourcePathResolver()))
+                      context.getSourcePathResolver(),
+                      ImmutableMap.of()))
               .add(
                   new CxxLinkStep(
                       filesystem.getRootPath(),

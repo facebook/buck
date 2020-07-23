@@ -322,7 +322,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                       linker,
                       buildTarget.getCell(),
                       filesystem.getRootPath().getPath(),
-                      context.getSourcePathResolver()))
+                      context.getSourcePathResolver(),
+                      cellRootMap))
               .addAll(relinkCheckSteps)
               .add(
                   new CxxLinkStep(

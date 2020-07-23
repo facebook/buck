@@ -90,6 +90,8 @@ public class CxxBuckConfig {
   private static final String HEADERS_SYMLINKS_ENABLED = "headers_symlinks_enabled";
   private static final String LINK_WEIGHT = "link_weight";
   private static final String CACHE_LINKS = "cache_links";
+  private static final String LINK_PATH_NORMALIZATION_ARGS_ENABLED =
+      "link_path_normalization_args_enabled";
   private static final String CACHE_STRIPS = "cache_strips";
   private static final String CACHE_BINARIES = "cache_binaries";
   private static final String PCH_ENABLED = "pch_enabled";
@@ -455,6 +457,15 @@ public class CxxBuckConfig {
   public Optional<RuleScheduleInfo> getLinkScheduleInfo() {
     Optional<Long> linkWeight = delegate.getLong(cxxSection, LINK_WEIGHT);
     return linkWeight.map(weight -> RuleScheduleInfo.of(weight.intValue()));
+  }
+
+  /**
+   * Determines whether linking operations should use path normalization arguments (vs scrubbers).
+   * Path normalization argument support depends on the linker.
+   */
+  public boolean getLinkPathNormalizationArgsEnabled() {
+    // ld64 only supports -oso_prefix from Xcode 11, so cannot be enable globally for now.
+    return delegate.getBooleanValue(cxxSection, LINK_PATH_NORMALIZATION_ARGS_ENABLED, false);
   }
 
   public boolean shouldCacheLinks() {

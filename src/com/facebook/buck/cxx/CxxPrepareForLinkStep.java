@@ -26,6 +26,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -47,13 +48,15 @@ public class CxxPrepareForLinkStep {
       Linker linker,
       CanonicalCellName currentCellName,
       Path currentCellPath,
-      SourcePathResolverAdapter resolver) {
+      SourcePathResolverAdapter resolver,
+      ImmutableMap<Path, Path> cellRootMap) {
 
     ImmutableList<Arg> allArgs =
         new ImmutableList.Builder<Arg>()
             .addAll(StringArg.from(linker.outputArgs(output.toString())))
             .addAll(args)
             .addAll(linkerArgsToSupportFileList)
+            .addAll(linker.pathNormalizationArgs(cellRootMap))
             .build();
 
     boolean hasLinkArgsToSupportFileList = linkerArgsToSupportFileList.iterator().hasNext();

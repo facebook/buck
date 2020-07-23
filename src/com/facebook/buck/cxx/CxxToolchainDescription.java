@@ -186,9 +186,14 @@ public class CxxToolchainDescription
             ToolProviders.getToolProvider(args.getCxxCompiler()), compilerType, ToolType.CXXPP));
     cxxPlatform.setCxxppflags(ImmutableList.of());
 
+    boolean scrubConcurrently = false;
     cxxPlatform.setLd(
         new DefaultLinkerProvider(
-            linkerType, ToolProviders.getToolProvider(args.getLinker()), args.getCacheLinks()));
+            linkerType,
+            ToolProviders.getToolProvider(args.getLinker()),
+            args.getCacheLinks(),
+            scrubConcurrently,
+            args.getLinkPathNormalizationArgsEnabled()));
 
     if (linkerType == LinkerProvider.Type.GNU) {
       cxxPlatform.setLdflags(
@@ -333,6 +338,11 @@ public class CxxToolchainDescription
     @Value.Default
     default boolean getCacheLinks() {
       return true;
+    }
+
+    @Value.Default
+    default boolean getLinkPathNormalizationArgsEnabled() {
+      return false;
     }
 
     /** Extension of shared library files. */

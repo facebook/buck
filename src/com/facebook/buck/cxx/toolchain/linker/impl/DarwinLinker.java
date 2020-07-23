@@ -57,22 +57,47 @@ public class DarwinLinker extends DelegatingTool
   private final boolean cacheLinks;
   private final boolean scrubConcurrently;
 
-  public DarwinLinker(Tool tool, boolean cacheLinks, boolean scrubConcurrently) {
+  @AddToRuleKey private final boolean usePathNormalizationArgs;
+
+  public DarwinLinker(
+      Tool tool, boolean cacheLinks, boolean scrubConcurrently, boolean usePathNormalizationArgs) {
     super(tool);
     this.cacheLinks = cacheLinks;
     this.scrubConcurrently = scrubConcurrently;
+    this.usePathNormalizationArgs = usePathNormalizationArgs;
   }
 
   @Override
   public ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap) {
     if (cacheLinks) {
-      return ImmutableList.of(
-          new OsoSymbolsContentsScrubber(cellRootMap),
-          new LcUuidContentsScrubber(scrubConcurrently));
+      FileScrubber uuidScrubber = new LcUuidContentsScrubber(scrubConcurrently);
+      if (usePathNormalizationArgs) {
+        // Path normalization would happen via pathNormalizationArgs()
+        return ImmutableList.of(uuidScrubber);
+      }
+
+      return ImmutableList.of(new OsoSymbolsContentsScrubber(cellRootMap), uuidScrubber);
     } else {
       // there's no point scrubbing the debug info if the linked objects are never getting cached
       return ImmutableList.of();
     }
+  }
+
+  @Override
+  public Iterable<Arg> pathNormalizationArgs(ImmutableMap<Path, Path> cellRootMap) {
+    if (cacheLinks && usePathNormalizationArgs) {
+      Optional<String> maybeOsoPrefix =
+          OsoSymbolsContentsScrubber.computeOsoPrefixForCellRootMap(cellRootMap);
+      return maybeOsoPrefix
+          .map(
+              osoPrefix ->
+                  ImmutableList.<Arg>of(
+                      StringArg.of("-Xlinker"), StringArg.of("-oso_prefix"),
+                      StringArg.of("-Xlinker"), StringArg.of(osoPrefix)))
+          .orElse(ImmutableList.of());
+    }
+
+    return ImmutableList.of();
   }
 
   @Override

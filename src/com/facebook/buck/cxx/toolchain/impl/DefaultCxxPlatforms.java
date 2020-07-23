@@ -255,7 +255,9 @@ public class DefaultCxxPlatforms {
             linkerType,
             new ConstantToolProvider(
                 getToolchainTool(() -> cxxBuckConfig.getSourcePath(defaultLinker))),
-            cxxBuckConfig.shouldCacheLinks()),
+            cxxBuckConfig.shouldCacheLinks(),
+            false,
+            cxxBuckConfig.getLinkPathNormalizationArgsEnabled()),
         ImmutableList.of(),
         ImmutableMultimap.of(),
         getHashedFileTool(cxxBuckConfig, "strip", DEFAULT_STRIP, env),

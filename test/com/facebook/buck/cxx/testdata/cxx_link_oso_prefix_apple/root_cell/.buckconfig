@@ -1,0 +1,5 @@
+[cxx]
+link_path_normalization_args_enabled = true
+
+[repositories]
+other_cell = ../other_cell

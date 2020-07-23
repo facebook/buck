@@ -16,12 +16,12 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItemInArray;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.model.BuildTarget;
@@ -95,6 +95,28 @@ public class CxxLinkIntegrationTest {
     //        "Path in non-root cell is relativized relative to root cell",
     //        lines,
     //        hasItemInArray(matchesPattern(".*N_OSO.*'\\.\\./other_cell/buck-out/.*")));
+  }
+
+  @Test
+  public void osoPrefixDarwinLinkerNormalizes() throws Exception {
+    Assume.assumeThat(Platform.detect(), equalTo(Platform.MACOS));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_link_oso_prefix_apple", tmp);
+    workspace.setUp();
+    Path resultPath = workspace.getPath("result");
+    workspace.runBuckBuild("root_cell//:binary", "--out", resultPath.toString()).assertSuccess();
+    String output =
+        workspace.runCommand("dsymutil", "-s", resultPath.toString()).getStdout().toString();
+    String[] lines = output.split("\n");
+    assertThat(
+        "Path in root cell is relativized relative to common parent cells",
+        lines,
+        hasItemInArray(
+            matchesPattern(".*N_OSO.*'root_cell/\\.\\./buck-out/cells/root_cell/gen/.*")));
+    assertThat(
+        "Path in non-root cell is relativized relative to common parent cells",
+        lines,
+        hasItemInArray(matchesPattern(".*N_OSO.*'buck-out/cells/other_cell/gen/.*")));
   }
 
   @Test

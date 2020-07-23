@@ -266,7 +266,8 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
               linker,
               buildTarget.getCell(),
               filesystem.getRootPath().getPath(),
-              resolver));
+              resolver,
+              ImmutableMap.of()));
 
       steps.add(
           new IsolatedShellStep(
