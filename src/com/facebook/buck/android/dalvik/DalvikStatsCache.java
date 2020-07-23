@@ -33,7 +33,7 @@ class DalvikStatsCache {
 
   DalvikStatsTool.Stats getStats(FileLike entry) {
     String name = entry.getRelativePath();
-    if (!name.endsWith(".class") || name.endswith("module-info.class")) {
+    if (!name.endsWith(".class") || name.endsWith("module-info.class")) {
       // Probably something like a pom.properties file in a JAR: this does not contribute
       // to the linear alloc size, so return zero.
       return DalvikStatsTool.Stats.ZERO;
