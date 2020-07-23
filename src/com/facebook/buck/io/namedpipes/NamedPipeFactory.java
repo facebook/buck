@@ -28,7 +28,7 @@ public interface NamedPipeFactory {
   /** Creates platform specific named pipe and named pipe object and returns writer interface. */
   NamedPipeWriter createAsWriter() throws IOException;
 
-  /** Creates platform specific named pipe and named pipe object and returns reader interface.. */
+  /** Creates platform specific named pipe and named pipe object and returns reader interface. */
   NamedPipeReader createAsReader() throws IOException;
 
   /**

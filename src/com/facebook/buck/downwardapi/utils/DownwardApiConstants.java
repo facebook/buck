@@ -18,6 +18,9 @@ package com.facebook.buck.downwardapi.utils;
 
 /** Constants related to Downward API. */
 public class DownwardApiConstants {
+
+  private DownwardApiConstants() {}
+
   public static final String ENV_VERBOSITY = "BUCK_VERBOSITY";
 
   public static final String ENV_ANSI_ENABLED = "BUCK_ANSI_ENABLED";
