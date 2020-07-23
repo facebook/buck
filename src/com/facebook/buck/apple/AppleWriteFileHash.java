@@ -37,8 +37,9 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 
 /**
- * Computes the hash of a file and writes it out as the output. Includes special configurable logic
- * to extract UUIDs from Mach-O files, which can be used instead, as to avoid re-hashing.
+ * Computes the hash of the given file or integral hash of directory content and writes it out as
+ * the output. Includes special configurable logic to extract UUIDs from Mach-O files, which can be
+ * used instead, as to avoid re-hashing.
  */
 public class AppleWriteFileHash extends ModernBuildRule<AppleWriteFileHash> implements Buildable {
   @AddToRuleKey private final SourcePath inputPath;
@@ -68,7 +69,21 @@ public class AppleWriteFileHash extends ModernBuildRule<AppleWriteFileHash> impl
     AbsPath absInputPath = buildContext.getSourcePathResolver().getAbsolutePath(inputPath);
 
     return ImmutableList.of(
-        new AppleComputeFileHashStep(hashBuilder, absInputPath, useMachoUuid, filesystem),
+        new AbstractExecutionStep("compute_filesystem_item_hash") {
+          @Override
+          public StepExecutionResult execute(StepExecutionContext context)
+              throws IOException, InterruptedException {
+            Step step;
+            if (filesystem.isDirectory(absInputPath)) {
+              step =
+                  new AppleComputeDirectoryContentHashStep(hashBuilder, absInputPath, filesystem);
+            } else {
+              step =
+                  new AppleComputeFileHashStep(hashBuilder, absInputPath, useMachoUuid, filesystem);
+            }
+            return step.execute(context);
+          }
+        },
         new AbstractExecutionStep("writing_apple_file_hash") {
           @Override
           public StepExecutionResult execute(StepExecutionContext context) throws IOException {
