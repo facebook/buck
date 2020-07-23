@@ -183,7 +183,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public boolean shouldAddBuckLDSymlinkTree() {
-    return delegate.getBoolean(SECTION, "add_buck_ld_symlink_tre").orElse(false);
+    return delegate.getBoolean(SECTION, "add_buck_ld_symlink_tree").orElse(false);
   }
 
   public JavacSpec getJavacSpec(TargetConfiguration targetConfiguration) {

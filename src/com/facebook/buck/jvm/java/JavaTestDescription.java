@@ -80,6 +80,8 @@ public class JavaTestDescription
   public static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
       ImmutableList.of(LocationMacroExpander.INSTANCE, AbsoluteOutputMacroExpander.INSTANCE);
 
+  public static final String SYMLINK_TREE_ENV_VAR = "BUCK_LD_SYMLINK_TREE";
+
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
@@ -404,7 +406,7 @@ public class JavaTestDescription
                     nativeLibsSymlinkTree.getRoot().toString());
         if (isBuckLDSymLinkTreeSet) {
           nativeLibsEnvMapBuilder.put(
-              "BUCK_LD_SYMLINK_TREE", nativeLibsSymlinkTree.getRoot().toString());
+              SYMLINK_TREE_ENV_VAR, nativeLibsSymlinkTree.getRoot().toString());
         }
         nativeLibsEnvironment = nativeLibsEnvMapBuilder.build();
       } else {

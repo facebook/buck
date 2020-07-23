@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -329,6 +330,26 @@ public class JavaTestIntegrationTest {
     ProcessResult result2 =
         workspace.runBuckCommand("test", "//:jtest-pernicious", "//:jtest-symlink");
     result2.assertSuccess();
+  }
+
+  @Test
+  public void testLDSymlinkTreeEnvVar() throws Exception {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
+    workspace.addBuckConfigLocalOption("java", "add_buck_ld_symlink_tree", "true");
+
+    workspace.runBuckCommand("test", "//:jtest").assertSuccess();
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    JsonParser parser = ObjectMappers.createParser(specOutput);
+
+    ArrayNode node = parser.readValueAsTree();
+    JsonNode env = node.get(0).get("env");
+    assertNotNull(env.get(JavaTestDescription.SYMLINK_TREE_ENV_VAR));
   }
 
   @Test
