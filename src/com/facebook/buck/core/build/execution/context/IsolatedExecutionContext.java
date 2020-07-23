@@ -39,6 +39,22 @@ import org.immutables.value.Value;
 @BuckStyleValueWithBuilder
 public abstract class IsolatedExecutionContext implements Closeable {
 
+  /** Returns an {@link IsolatedExecutionContext}. */
+  public static IsolatedExecutionContext of(
+      BuckEventBus eventBus,
+      Console console,
+      Platform platform,
+      ProcessExecutor processExecutor,
+      AbsPath ruleCellRoot) {
+    return ImmutableIsolatedExecutionContext.builder()
+        .setBuckEventBus(eventBus)
+        .setConsole(console)
+        .setPlatform(platform)
+        .setProcessExecutor(processExecutor)
+        .setRuleCellRoot(ruleCellRoot)
+        .build();
+  }
+
   public abstract Console getConsole();
 
   public abstract BuckEventBus getBuckEventBus();
