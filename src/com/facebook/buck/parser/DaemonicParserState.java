@@ -372,7 +372,7 @@ public class DaemonicParserState {
    * root path). If this value changes, then we need to invalidate all the caches.
    */
   @GuardedBy("cachedStateLock")
-  private Map<AbsPath, Iterable<String>> cachedIncludes;
+  private Map<AbsPath, Iterable<String>> defaultIncludesByCellRoot;
 
   private final AutoCloseableReadWriteLock cachedStateLock;
   private final AutoCloseableReadWriteLock cellStateLock;
@@ -412,7 +412,7 @@ public class DaemonicParserState {
                         cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
                   }
                 });
-    this.cachedIncludes = new ConcurrentHashMap<>();
+    this.defaultIncludesByCellRoot = new ConcurrentHashMap<>();
     this.cellPathToDaemonicState =
         new ConcurrentHashMap<>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, parsingThreads);
 
@@ -689,7 +689,7 @@ public class DaemonicParserState {
     boolean invalidatedByDefaultIncludesChange = false;
     Iterable<String> expected;
     try (AutoCloseableLock readLock = cachedStateLock.readLock()) {
-      expected = cachedIncludes.get(cell.getRoot());
+      expected = defaultIncludesByCellRoot.get(cell.getRoot());
 
       if (expected == null || !Iterables.elementsEqual(defaultIncludes, expected)) {
         // Someone's changed the default includes. That's almost definitely caused all our lovingly
@@ -702,7 +702,7 @@ public class DaemonicParserState {
       }
     }
     try (AutoCloseableLock writeLock = cachedStateLock.writeLock()) {
-      cachedIncludes.put(cell.getRoot(), defaultIncludes);
+      defaultIncludesByCellRoot.put(cell.getRoot(), defaultIncludes);
     }
     if (invalidateCellCaches(cell)) {
       LOG.warn(
