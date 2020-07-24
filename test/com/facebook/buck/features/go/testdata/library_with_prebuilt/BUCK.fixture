@@ -25,5 +25,5 @@ genrule(
     name = "generated_foo",
     srcs = ["foo.go"],
     out = "foo.a",
-    cmd = "go build -a -o $OUT -buildmode=archive $SRCS",
+    cmd = "go tool compile -pack -o $OUT $SRCS",
 )
