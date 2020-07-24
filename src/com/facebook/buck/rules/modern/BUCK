@@ -75,6 +75,7 @@ java_library(
     ],
     exported_deps = [
         ":types",
+        "//src-gen:buildable-command-model",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/rules/modern/annotations:annotations",
         "//src/com/facebook/buck/rules/keys:keys",
