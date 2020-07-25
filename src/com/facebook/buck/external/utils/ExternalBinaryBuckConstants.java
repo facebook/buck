@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.external;
+package com.facebook.buck.external.utils;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 

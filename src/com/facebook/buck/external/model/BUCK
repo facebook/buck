@@ -1,0 +1,14 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "model",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src-gen:buildable-command-model",
+        "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
+        "//third-party/java/guava:guava",
+    ],
+)

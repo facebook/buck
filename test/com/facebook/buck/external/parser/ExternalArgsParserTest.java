@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.external;
+package com.facebook.buck.external.parser;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
+import com.facebook.buck.external.model.ExternalAction;
+import com.facebook.buck.external.model.ParsedArgs;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -96,7 +98,7 @@ public class ExternalArgsParserTest {
       buildableCommand.writeTo(outputStream);
     }
 
-    ExternalArgsParser.ParsedArgs parsedArgs =
+    ParsedArgs parsedArgs =
         new ExternalArgsParser()
             .parse(
                 new String[] {

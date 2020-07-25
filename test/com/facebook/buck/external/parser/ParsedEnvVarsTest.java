@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.external;
+package com.facebook.buck.external.parser;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.downwardapi.utils.DownwardApiConstants;
+import com.facebook.buck.external.utils.ExternalBinaryBuckConstants;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Paths;
@@ -49,7 +50,9 @@ public class ParsedEnvVarsTest {
     builder.put(DownwardApiConstants.ENV_ACTION_ID, "my_action");
     builder.put(DownwardApiConstants.ENV_BUILD_UUID, "my_build");
     builder.put(DownwardApiConstants.ENV_EVENT_PIPE, "my_pipe");
-    builder.put(ExternalBinaryBuckConstants.ENV_RULE_CELL_ROOT, "/abs_path");
+    builder.put(
+        ExternalBinaryBuckConstants.ENV_RULE_CELL_ROOT,
+        Paths.get("abs_path").toAbsolutePath().toString());
     ImmutableMap<String, String> envs = builder.build();
 
     ParsedEnvVars parsedEnvVars = ParsedEnvVars.parse(envs);
@@ -58,6 +61,8 @@ public class ParsedEnvVarsTest {
     assertThat(parsedEnvVars.getActionId(), equalTo("my_action"));
     assertThat(parsedEnvVars.getBuildUuid(), equalTo(new BuildId("my_build")));
     assertThat(parsedEnvVars.getEventPipe(), equalTo(Paths.get("my_pipe")));
-    assertThat(parsedEnvVars.getRuleCellRoot(), equalTo(AbsPath.of(Paths.get("/abs_path"))));
+    assertThat(
+        parsedEnvVars.getRuleCellRoot(),
+        equalTo(AbsPath.of(Paths.get("abs_path").toAbsolutePath())));
   }
 }

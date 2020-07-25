@@ -1,16 +1,13 @@
 load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 
 standard_java_test(
-    name = "external",
+    name = "utils",
     deps = [
         "//src-gen:buildable-command-model",
-        "//src/com/facebook/buck/downwardapi/utils:utils",
-        "//src/com/facebook/buck/external:external",
-        "//src/com/facebook/buck/rules/modern:modern",
+        "//src/com/facebook/buck/external/model:model",
+        "//src/com/facebook/buck/external/utils:utils",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//src/com/facebook/buck/step/isolatedsteps/common:common",
-        "//test/com/facebook/buck/testutil:testutil",
-        "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],

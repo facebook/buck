@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.external;
+package com.facebook.buck.external.model;
 
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;

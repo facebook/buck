@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.external;
+package com.facebook.buck.external.parser;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.downwardapi.utils.DownwardApiConstants;
+import com.facebook.buck.external.utils.ExternalBinaryBuckConstants;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -30,17 +31,17 @@ import java.nio.file.Paths;
 @BuckStyleValue
 abstract class ParsedEnvVars {
 
-  abstract Verbosity getVerbosity();
+  public abstract Verbosity getVerbosity();
 
-  abstract boolean isAnsiTerminal();
+  public abstract boolean isAnsiTerminal();
 
-  abstract BuildId getBuildUuid();
+  public abstract BuildId getBuildUuid();
 
-  abstract String getActionId();
+  public abstract String getActionId();
 
-  abstract Path getEventPipe();
+  public abstract Path getEventPipe();
 
-  abstract AbsPath getRuleCellRoot();
+  public abstract AbsPath getRuleCellRoot();
 
   public static ParsedEnvVars parse(ImmutableMap<String, String> envs) {
     return ImmutableParsedEnvVars.ofImpl(

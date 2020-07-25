@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.external;
+package com.facebook.buck.external.utils;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.external.model.ExternalAction;
+import com.facebook.buck.external.model.ParsedArgs;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.collect.ImmutableList;
 import java.lang.reflect.Constructor;
@@ -30,8 +32,7 @@ class BuildStepsRetriever {
 
   private BuildStepsRetriever() {}
 
-  static ImmutableList<IsolatedStep> getStepsForBuildable(
-      ExternalArgsParser.ParsedArgs parsedArgs) {
+  static ImmutableList<IsolatedStep> getStepsForBuildable(ParsedArgs parsedArgs) {
     Class<? extends ExternalAction> buildableClass = parsedArgs.getBuildableClass();
     try {
       Constructor<? extends ExternalAction> constructor = buildableClass.getDeclaredConstructor();

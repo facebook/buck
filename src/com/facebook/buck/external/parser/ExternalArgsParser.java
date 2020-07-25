@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.external;
+package com.facebook.buck.external.parser;
 
-import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.external.model.ExternalAction;
+import com.facebook.buck.external.model.ParsedArgs;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -34,12 +35,13 @@ import java.io.InputStream;
  *   <li>Path to a file containing a {@link BuildableCommand}
  * </ol>
  */
-class ExternalArgsParser {
+public class ExternalArgsParser {
   private static final int NUM_EXPECTED_ARGS = 2;
 
   /** Returns the {@link ParsedArgs} from the args passed directly to StepsExecutable. */
   @SuppressWarnings("unchecked")
-  ParsedArgs parse(String[] args, ImmutableSet<Class<? extends ExternalAction>> validClasses) {
+  public ParsedArgs parse(
+      String[] args, ImmutableSet<Class<? extends ExternalAction>> validClasses) {
     Preconditions.checkNotNull(args, "Expected %s args. Received null args", NUM_EXPECTED_ARGS);
     Preconditions.checkArgument(
         args.length == NUM_EXPECTED_ARGS,
@@ -60,19 +62,6 @@ class ExternalArgsParser {
       return ParsedArgs.of(buildableClass, buildableCommand);
     } catch (IOException e) {
       throw new IllegalArgumentException("Cannot read buildable command", e);
-    }
-  }
-
-  /** Data class representing args passed to StepsExecutable. */
-  @BuckStyleValue
-  abstract static class ParsedArgs {
-    abstract Class<? extends ExternalAction> getBuildableClass();
-
-    abstract BuildableCommand getBuildableCommand();
-
-    static ParsedArgs of(
-        Class<? extends ExternalAction> buildableName, BuildableCommand buildableCommand) {
-      return ImmutableParsedArgs.ofImpl(buildableName, buildableCommand);
     }
   }
 }

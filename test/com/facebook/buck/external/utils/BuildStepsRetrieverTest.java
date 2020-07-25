@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.external;
+package com.facebook.buck.external.utils;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.external.model.ExternalAction;
+import com.facebook.buck.external.model.ParsedArgs;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
@@ -40,7 +42,7 @@ public class BuildStepsRetrieverTest {
   public void canRetrieveStep() {
     ImmutableList<IsolatedStep> steps =
         BuildStepsRetriever.getStepsForBuildable(
-            ExternalArgsParser.ParsedArgs.of(
+            ParsedArgs.of(
                 FakeWorkingExternalBuildableWithOneStep.class,
                 BuildableCommand.newBuilder()
                     .addArgs("fake_path")
@@ -53,7 +55,7 @@ public class BuildStepsRetrieverTest {
   public void canRetrieveSteps() {
     ImmutableList<IsolatedStep> steps =
         BuildStepsRetriever.getStepsForBuildable(
-            ExternalArgsParser.ParsedArgs.of(
+            ParsedArgs.of(
                 FakeWorkingExternalBuildableWithMoreThanOneStep.class,
                 BuildableCommand.newBuilder()
                     .addAllArgs(ImmutableList.of("dir_to_create", "path_to_remove"))
@@ -72,7 +74,7 @@ public class BuildStepsRetrieverTest {
     exception.expectMessage("FakeNotWorkingExternalBuildable must have empty constructor");
 
     BuildStepsRetriever.getStepsForBuildable(
-        ExternalArgsParser.ParsedArgs.of(
+        ParsedArgs.of(
             FakeNotWorkingExternalBuildable.class,
             BuildableCommand.newBuilder()
                 .addArgs("fake_path")

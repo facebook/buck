@@ -1,0 +1,18 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "parser",
+    deps = [
+        "//src-gen:buildable-command-model",
+        "//src/com/facebook/buck/downwardapi/utils:utils",
+        "//src/com/facebook/buck/external/model:model",
+        "//src/com/facebook/buck/external/parser:parser",
+        "//src/com/facebook/buck/external/utils:utils",
+        "//src/com/facebook/buck/rules/modern:modern",
+        "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)
