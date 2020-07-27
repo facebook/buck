@@ -532,6 +532,8 @@ public class RealAndroidDevice implements AndroidDevice {
       return false;
     }
 
+    LOG.debug("Installing %s on %s, installViaSd=%s", apk, name, installViaSd);
+    long start = System.currentTimeMillis();
     if (!quiet) {
       eventBus.post(ConsoleEvent.info("Installing apk on %s.", name));
     }
@@ -552,6 +554,9 @@ public class RealAndroidDevice implements AndroidDevice {
         console.printBuildFailure(String.format("Failed to install apk on %s: %s.", name, reason));
         return false;
       }
+      long elapsed = System.currentTimeMillis() - start;
+      double kbps = (apk.length() / 1024.0) / (elapsed / 1000.0);
+      LOG.debug("Installed %s (%,d bytes) in %,dms (%,.2f kB/s)", apk, apk.length(), elapsed, kbps);
       return true;
     } catch (InstallException ex) {
       console.printBuildFailure(String.format("Failed to install apk on %s.", name));
