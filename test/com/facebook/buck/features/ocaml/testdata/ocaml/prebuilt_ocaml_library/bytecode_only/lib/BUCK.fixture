@@ -1,0 +1,10 @@
+# These files are built from ./src by OCamlIntegrationTest#setUpPrebuiltLibraryBytecodeOnly
+prebuilt_ocaml_library(
+    name = "plus",
+    bytecode_lib = "plus.cma",
+    bytecode_only = True,
+    lib_dir = "",
+    visibility = [
+        "PUBLIC",
+    ],
+)

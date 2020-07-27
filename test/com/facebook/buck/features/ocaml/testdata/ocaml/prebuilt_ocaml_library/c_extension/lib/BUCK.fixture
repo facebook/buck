@@ -1,0 +1,11 @@
+# These files are built from ./src by OCamlIntegrationTest#setUpPrebuiltLibraryWithC
+prebuilt_ocaml_library(
+    name = "plus",
+    bytecode_lib = "plus.cma",
+    c_libs = ["libplus_stubs.a"],
+    native_lib = "plus.cmxa",
+    lib_dir = "",
+    visibility = [
+        "PUBLIC",
+    ],
+)

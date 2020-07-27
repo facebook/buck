@@ -1,0 +1,30 @@
+ocaml_binary(
+    name = "c_extension",
+    srcs = [
+        "main_plus.ml",
+    ],
+    deps = [
+        "//prebuilt_ocaml_library/c_extension/lib:plus",
+    ],
+)
+
+ocaml_binary(
+    name = "bytecode_only",
+    srcs = [
+        "main_plus.ml",
+    ],
+    deps = [
+        "//prebuilt_ocaml_library/bytecode_only/lib:plus",
+    ],
+    bytecode_only = True,
+)
+
+ocaml_binary(
+    name = "bytecode_and_native",
+    srcs = [
+        "main_plus.ml",
+    ],
+    deps = [
+        "//prebuilt_ocaml_library/bytecode_and_native/lib:plus",
+    ],
+)

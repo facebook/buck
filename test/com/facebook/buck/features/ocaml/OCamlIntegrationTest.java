@@ -72,7 +72,6 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -358,13 +357,45 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
   }
 
+  /**
+   * Manually compiles a library to be used via prebuilt_ocaml_library
+   *
+   * @throws IOException
+   * @throws InterruptedException
+   */
+  private void setUpPrebuiltLibraryBytecodeOnly(ProjectWorkspace workspace)
+      throws IOException, InterruptedException {
+    Path ocamlc =
+        new ExecutableFinder(Platform.detect())
+            .getExecutable(Paths.get("ocamlc"), EnvVariablesProvider.getSystemEnv());
+
+    ProcessExecutor.Result result;
+
+    // Compile .cma (bytecode archive)
+    result =
+        workspace.runCommand(
+            ocamlc.toString(),
+            "-a",
+            "-o",
+            "prebuilt_ocaml_library/bytecode_only/lib/plus.cma",
+            "prebuilt_ocaml_library/bytecode_only/src/plus.ml");
+    assertEquals(0, result.getExitCode());
+
+    // Copy compiled header
+    workspace.move(
+        "prebuilt_ocaml_library/bytecode_only/src/plus.cmi",
+        "prebuilt_ocaml_library/bytecode_only/lib/plus.cmi");
+  }
+
   @Test
-  @Ignore("Redesign test so it does not depend on compiler/platform-specific binary artifacts.")
-  public void testPrebuiltLibraryBytecodeOnly() throws IOException {
-    BuildTarget target = BuildTargetFactory.newInstance("//ocaml_ext_bc:ocaml_ext");
+  public void testPrebuiltLibraryBytecodeOnly() throws IOException, InterruptedException {
+    setUpPrebuiltLibraryBytecodeOnly(workspace);
+
+    BuildTarget target = BuildTargetFactory.newInstance("//prebuilt_ocaml_library:bytecode_only");
     BuildTarget binary = createOcamlLinkTarget(target);
     BuildTarget bytecode = OcamlBuildRulesGenerator.addBytecodeFlavor(binary);
-    BuildTarget libplus = BuildTargetFactory.newInstance("//ocaml_ext_bc:plus");
+    BuildTarget libplus =
+        BuildTargetFactory.newInstance("//prebuilt_ocaml_library/bytecode_only/lib:plus");
     ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, bytecode, libplus);
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
@@ -375,85 +406,182 @@ public class OCamlIntegrationTest {
     buildLog.assertTargetBuiltLocally(bytecode);
   }
 
-  @Test
-  @Ignore("Redesign test so it does not depend on compiler/platform-specific binary artifacts.")
-  public void testPrebuiltLibraryMac() throws IOException {
-    if (Platform.detect() == Platform.MACOS) {
-      BuildTarget target = BuildTargetFactory.newInstance("//ocaml_ext_mac:ocaml_ext");
-      BuildTarget binary = createOcamlLinkTarget(target);
-      BuildTarget bytecode = OcamlBuildRulesGenerator.addBytecodeFlavor(binary);
-      BuildTarget libplus = BuildTargetFactory.newInstance("//ocaml_ext_mac:plus");
-      ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary, bytecode, libplus);
+  /**
+   * Manually compiles a library to be used via prebuilt_ocaml_library
+   *
+   * @throws IOException
+   * @throws InterruptedException
+   */
+  private void setUpPrebuiltLibraryWithC(ProjectWorkspace workspace)
+      throws IOException, InterruptedException {
+    Path ocamlc =
+        new ExecutableFinder(Platform.detect())
+            .getExecutable(Paths.get("ocamlc"), EnvVariablesProvider.getSystemEnv());
+    Path ocamlopt =
+        new ExecutableFinder(Platform.detect())
+            .getExecutable(Paths.get("ocamlopt"), EnvVariablesProvider.getSystemEnv());
+    Path ocamlmklib =
+        new ExecutableFinder(Platform.detect())
+            .getExecutable(Paths.get("ocamlmklib"), EnvVariablesProvider.getSystemEnv());
 
-      workspace.runBuckCommand("build", target.toString()).assertSuccess();
-      BuckBuildLog buildLog = workspace.getBuildLog();
-      for (BuildTarget t : targets) {
-        assertTrue(
-            String.format("Expected %s to be built", t.toString()),
-            buildLog.getAllTargets().contains(t));
-      }
-      buildLog.assertTargetBuiltLocally(target);
-      buildLog.assertTargetBuiltLocally(binary);
+    ProcessExecutor.Result result;
 
-      workspace.resetBuildLogFile();
-      workspace.runBuckCommand("build", target.toString()).assertSuccess();
-      for (BuildTarget t : targets) {
-        assertTrue(
-            String.format("Expected %s to be built", t.toString()),
-            buildLog.getAllTargets().contains(t));
-      }
-      buildLog.assertTargetHadMatchingRuleKey(target);
-      buildLog.assertTargetHadMatchingRuleKey(binary);
+    // Compile stubs .o
+    result =
+        workspace.runCommand(
+            ocamlc.toString(),
+            "-o",
+            "plus_stubs.o",
+            "prebuilt_ocaml_library/c_extension/src/plus_stubs.c");
+    assertEquals(0, result.getExitCode());
+    workspace.move("plus_stubs.o", "prebuilt_ocaml_library/c_extension/lib/plus_stubs.o");
 
-      workspace.resetBuildLogFile();
-      workspace.replaceFileContents("ocaml_ext_mac/BUCK", "libplus_lib", "libplus_lib1");
-      workspace.runBuckCommand("build", target.toString()).assertSuccess();
-      buildLog = workspace.getBuildLog();
-      assertTrue(buildLog.getAllTargets().containsAll(targets));
-      buildLog.assertTargetBuiltLocally(target);
-      buildLog.assertTargetBuiltLocally(binary);
-    }
+    // Compile stubs lib
+    result =
+        workspace.runCommand(
+            ocamlmklib.toString(),
+            "-o",
+            "prebuilt_ocaml_library/c_extension/lib/plus_stubs",
+            "prebuilt_ocaml_library/c_extension/lib/plus_stubs.o");
+    assertEquals(0, result.getExitCode());
+
+    // Compile .cmxa (native archive)
+    result =
+        workspace.runCommand(
+            ocamlopt.toString(),
+            "-a",
+            "-o",
+            "prebuilt_ocaml_library/c_extension/lib/plus.cmxa",
+            "prebuilt_ocaml_library/c_extension/src/plus.ml");
+    assertEquals(0, result.getExitCode());
+
+    // Compile .cma (bytecode archive)
+    result =
+        workspace.runCommand(
+            ocamlc.toString(),
+            "-a",
+            "-o",
+            "prebuilt_ocaml_library/c_extension/lib/plus.cma",
+            "prebuilt_ocaml_library/c_extension/src/plus.ml",
+            "prebuilt_ocaml_library/c_extension/src/plus_stubs.c");
+    assertEquals(0, result.getExitCode());
+
+    // Copy compiled header
+    workspace.move(
+        "prebuilt_ocaml_library/c_extension/src/plus.cmi",
+        "prebuilt_ocaml_library/c_extension/lib/plus.cmi");
   }
 
   @Test
-  @Ignore("Redesign test so it does not depend on compiler/platform-specific binary artifacts.")
-  public void testPrebuiltLibraryMacWithNativeBytecode() throws IOException {
-    if (Platform.detect() == Platform.MACOS) {
-      BuildTarget target =
-          BuildTargetFactory.newInstance("//ocaml_ext_mac:ocaml_ext_native_bytecode");
-      BuildTarget binary = createOcamlLinkTarget(target);
-      BuildTarget bytecode = OcamlBuildRulesGenerator.addBytecodeFlavor(binary);
-      BuildTarget libplus = BuildTargetFactory.newInstance("//ocaml_ext_mac:plus_native_bytecode");
-      ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary, bytecode, libplus);
+  public void testPrebuiltLibraryWithC() throws IOException, InterruptedException {
+    setUpPrebuiltLibraryWithC(workspace);
 
-      workspace.runBuckCommand("build", target.toString()).assertSuccess();
-      BuckBuildLog buildLog = workspace.getBuildLog();
-      for (BuildTarget t : targets) {
-        assertTrue(
-            String.format("Expected %s to be built", t.toString()),
-            buildLog.getAllTargets().contains(t));
-      }
-      buildLog.assertTargetBuiltLocally(target);
-      buildLog.assertTargetBuiltLocally(binary);
+    BuildTarget target = BuildTargetFactory.newInstance("//prebuilt_ocaml_library:c_extension");
+    BuildTarget binary = createOcamlLinkTarget(target);
+    BuildTarget bytecode = OcamlBuildRulesGenerator.addBytecodeFlavor(binary);
+    BuildTarget libplus =
+        BuildTargetFactory.newInstance("//prebuilt_ocaml_library/c_extension/lib:plus");
+    ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary, bytecode, libplus);
 
-      workspace.resetBuildLogFile();
-      workspace.runBuckCommand("build", target.toString()).assertSuccess();
-      for (BuildTarget t : targets) {
-        assertTrue(
-            String.format("Expected %s to be built", t.toString()),
-            buildLog.getAllTargets().contains(t));
-      }
-      buildLog.assertTargetHadMatchingRuleKey(target);
-      buildLog.assertTargetHadMatchingRuleKey(binary);
-
-      workspace.resetBuildLogFile();
-      workspace.replaceFileContents("ocaml_ext_mac/BUCK", "libplus_lib", "libplus_lib1");
-      workspace.runBuckCommand("build", target.toString()).assertSuccess();
-      buildLog = workspace.getBuildLog();
-      assertTrue(buildLog.getAllTargets().containsAll(targets));
-      buildLog.assertTargetBuiltLocally(target);
-      buildLog.assertTargetBuiltLocally(binary);
+    workspace.runBuckCommand("build", target.toString()).assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    for (BuildTarget t : targets) {
+      assertTrue(
+          String.format("Expected %s to be built", t.toString()),
+          buildLog.getAllTargets().contains(t));
     }
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetBuiltLocally(binary);
+
+    /* TODO: caching is disabled for ocaml. ideally it would not rebuild
+    workspace.resetBuildLogFile();
+    workspace.runBuckCommand("build", target.toString()).assertSuccess();
+    for (BuildTarget t : targets) {
+      assertTrue(
+          String.format("Expected %s to be built", t.toString()),
+          buildLog.getAllTargets().contains(t));
+    }
+    buildLog.assertTargetHadMatchingRuleKey(target);
+    buildLog.assertTargetHadMatchingRuleKey(binary);
+    */
+  }
+
+  /**
+   * Manually compiles a library to be used via prebuilt_ocaml_library
+   *
+   * @throws IOException
+   * @throws InterruptedException
+   */
+  private void setUpPrebuiltLibraryBytecodeAndNative(ProjectWorkspace workspace)
+      throws IOException, InterruptedException {
+    Path ocamlc =
+        new ExecutableFinder(Platform.detect())
+            .getExecutable(Paths.get("ocamlc"), EnvVariablesProvider.getSystemEnv());
+    Path ocamlopt =
+        new ExecutableFinder(Platform.detect())
+            .getExecutable(Paths.get("ocamlopt"), EnvVariablesProvider.getSystemEnv());
+
+    ProcessExecutor.Result result;
+
+    // Compile .cmxa (native archive)
+    result =
+        workspace.runCommand(
+            ocamlopt.toString(),
+            "-a",
+            "-o",
+            "prebuilt_ocaml_library/bytecode_and_native/lib/plus.cmxa",
+            "prebuilt_ocaml_library/bytecode_and_native/src/plus.ml");
+    assertEquals(0, result.getExitCode());
+
+    // Compile .cma (bytecode archive)
+    result =
+        workspace.runCommand(
+            ocamlc.toString(),
+            "-a",
+            "-o",
+            "prebuilt_ocaml_library/bytecode_and_native/lib/plus.cma",
+            "prebuilt_ocaml_library/bytecode_and_native/src/plus.ml");
+    assertEquals(0, result.getExitCode());
+
+    // Copy compiled header
+    workspace.move(
+        "prebuilt_ocaml_library/bytecode_and_native/src/plus.cmi",
+        "prebuilt_ocaml_library/bytecode_and_native/lib/plus.cmi");
+  }
+
+  @Test
+  public void testPrebuiltLibraryWithBytecodeAndNative() throws IOException, InterruptedException {
+    setUpPrebuiltLibraryBytecodeAndNative(workspace);
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//prebuilt_ocaml_library:bytecode_and_native");
+    BuildTarget binary = createOcamlLinkTarget(target);
+    BuildTarget bytecode = OcamlBuildRulesGenerator.addBytecodeFlavor(binary);
+    BuildTarget libplus =
+        BuildTargetFactory.newInstance("//prebuilt_ocaml_library/bytecode_and_native/lib:plus");
+    ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary, bytecode, libplus);
+
+    workspace.runBuckCommand("build", target.toString()).assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    for (BuildTarget t : targets) {
+      assertTrue(
+          String.format("Expected %s to be built", t.toString()),
+          buildLog.getAllTargets().contains(t));
+    }
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetBuiltLocally(binary);
+
+    /* TODO: caching is disabled for ocaml. ideally it would not rebuild
+    workspace.resetBuildLogFile();
+    workspace.runBuckCommand("build", target.toString()).assertSuccess();
+    for (BuildTarget t : targets) {
+      assertTrue(
+          String.format("Expected %s to be built", t.toString()),
+          buildLog.getAllTargets().contains(t));
+    }
+    buildLog.assertTargetHadMatchingRuleKey(target);
+    buildLog.assertTargetHadMatchingRuleKey(binary);
+    */
   }
 
   @Test
