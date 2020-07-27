@@ -245,7 +245,7 @@ public class MainWithNailgun extends AbstractMain {
       if (exitCode == ExitCode.SUCCESS
           && globalState != null
           && !globalState
-              .getRootCell()
+              .getCells()
               .getBuckConfig()
               .getView(CliConfig.class)
               .getFlushEventsBeforeExit()) {

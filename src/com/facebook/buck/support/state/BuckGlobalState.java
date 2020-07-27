@@ -16,7 +16,7 @@
 
 package com.facebook.buck.support.state;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.files.DirectoryListCache;
 import com.facebook.buck.core.files.FileTreeCache;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -64,7 +64,7 @@ import java.util.concurrent.ConcurrentMap;
 public final class BuckGlobalState implements Closeable {
   private static final Logger LOG = Logger.get(BuckGlobalState.class);
 
-  private final Cell rootCell;
+  private final Cells cells;
   private final TypeCoercerFactory typeCoercerFactory;
   private final DaemonicParserState daemonicParserState;
   private final ImmutableList<ProjectFileHashCache> hashCaches;
@@ -84,7 +84,7 @@ public final class BuckGlobalState implements Closeable {
   private final boolean usesWatchman;
 
   BuckGlobalState(
-      Cell rootCell,
+      Cells cells,
       TypeCoercerFactory typeCoercerFactory,
       DaemonicParserState daemonicParserState,
       ImmutableList<ProjectFileHashCache> hashCaches,
@@ -101,7 +101,7 @@ public final class BuckGlobalState implements Closeable {
       KnownRuleTypesProvider knownRuleTypesProvider,
       Clock clock,
       boolean usesWatchman) {
-    this.rootCell = rootCell;
+    this.cells = cells;
     this.typeCoercerFactory = typeCoercerFactory;
     this.daemonicParserState = daemonicParserState;
     this.hashCaches = hashCaches;
@@ -122,8 +122,8 @@ public final class BuckGlobalState implements Closeable {
     this.startTime = clock.currentTimeMillis();
   }
 
-  public Cell getRootCell() {
-    return rootCell;
+  public Cells getCells() {
+    return cells;
   }
 
   public Optional<WebServer> getWebServer() {

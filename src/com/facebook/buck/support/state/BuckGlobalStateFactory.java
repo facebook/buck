@@ -72,7 +72,7 @@ public class BuckGlobalStateFactory {
 
   /** @return a new instance of {@link BuckGlobalState} for execution of buck */
   public static BuckGlobalState create(
-      Cells rootCell,
+      Cells cells,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Watchman watchman,
       Optional<WebServer> webServerToReuse,
@@ -81,9 +81,9 @@ public class BuckGlobalStateFactory {
       Clock clock) {
     EventBus fileEventBus = new EventBus("file-change-events");
 
-    ImmutableList<Cell> allCells = rootCell.getAllCells();
+    ImmutableList<Cell> allCells = cells.getAllCells();
     BuildBuckConfig buildBuckConfig =
-        rootCell.getRootCell().getBuckConfig().getView(BuildBuckConfig.class);
+        cells.getRootCell().getBuckConfig().getView(BuildBuckConfig.class);
 
     // Setup the stacked file hash cache from all cells.
     ImmutableList.Builder<ProjectFileHashCache> hashCachesBuilder =
@@ -96,7 +96,7 @@ public class BuckGlobalStateFactory {
     }
     hashCachesBuilder.add(
         DefaultFileHashCache.createBuckOutFileHashCache(
-            rootCell.getRootCell().getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
+            cells.getRootCell().getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
     ImmutableList<ProjectFileHashCache> hashCaches = hashCachesBuilder.build();
 
     // Setup file list cache and file tree cache from all cells
@@ -106,13 +106,13 @@ public class BuckGlobalStateFactory {
         createFileTreeCachePerCellMap(fileEventBus);
     LoadingCache<Path, BuildFileManifestCache> buildFileManifestCachePerRoot =
         createBuildFileManifestCachePerCellMap(
-            fileEventBus, rootCell.getCellProvider(), rootCell.getSuperRootPath());
+            fileEventBus, cells.getCellProvider(), cells.getSuperRootPath());
     ActionGraphCache actionGraphCache =
         new ActionGraphCache(buildBuckConfig.getMaxActionGraphCacheEntries());
     VersionedTargetGraphCache versionedTargetGraphCache = new VersionedTargetGraphCache();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ParserConfig parserConfig = rootCell.getRootCell().getBuckConfig().getView(ParserConfig.class);
+    ParserConfig parserConfig = cells.getRootCell().getBuckConfig().getView(ParserConfig.class);
     DaemonicParserState daemonicParserState =
         new DaemonicParserState(parserConfig.getNumParsingThreads());
     fileEventBus.register(daemonicParserState);
@@ -130,25 +130,23 @@ public class BuckGlobalStateFactory {
     } else {
       webServer =
           createWebServer(
-              rootCell.getRootCell().getBuckConfig(),
-              rootCell.getRootCell().getFilesystem(),
-              clock);
+              cells.getRootCell().getBuckConfig(), cells.getRootCell().getFilesystem(), clock);
     }
     if (webServer.isPresent()) {
       Optional<ArtifactCache> servedCache =
           ArtifactCaches.newServedCache(
-              new ArtifactCacheBuckConfig(rootCell.getRootCell().getBuckConfig()),
+              new ArtifactCacheBuckConfig(cells.getRootCell().getBuckConfig()),
               target ->
                   unconfiguredBuildTargetFactory.create(
-                      target, rootCell.getRootCell().getCellNameResolver()),
+                      target, cells.getRootCell().getCellNameResolver()),
               targetConfigurationSerializer,
-              rootCell.getRootCell().getFilesystem());
+              cells.getRootCell().getFilesystem());
       if (!initWebServer(webServer, servedCache)) {
         LOG.warn("Can't start web server");
       }
     }
     ImmutableMap<AbsPath, WatchmanCursor> cursor;
-    if (rootCell.getRootCell().getBuckConfig().getView(ParserConfig.class).getWatchmanCursor()
+    if (cells.getRootCell().getBuckConfig().getView(ParserConfig.class).getWatchmanCursor()
             == WatchmanWatcher.CursorType.CLOCK_ID
         && !watchman.getClockIds().isEmpty()) {
       cursor = watchman.buildClockWatchmanCursorMap();
@@ -160,7 +158,7 @@ public class BuckGlobalStateFactory {
     ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools = new ConcurrentHashMap<>();
 
     return new BuckGlobalState(
-        rootCell.getRootCell(),
+        cells,
         typeCoercerFactory,
         daemonicParserState,
         hashCaches,

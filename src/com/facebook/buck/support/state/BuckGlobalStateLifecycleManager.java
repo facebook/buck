@@ -109,8 +109,8 @@ public class BuckGlobalStateLifecycleManager {
 
   public synchronized Optional<BuckConfig> getBuckConfig() {
     return Optional.ofNullable(buckGlobalState)
-        .map(BuckGlobalState::getRootCell)
-        .map(Cell::getBuckConfig);
+        .map(BuckGlobalState::getCells)
+        .map(Cells::getBuckConfig);
   }
 
   /** Get or create Daemon. */
@@ -152,16 +152,17 @@ public class BuckGlobalStateLifecycleManager {
     if (buckGlobalState != null) {
       // Check if current cell and cell for cached state are similar enough to re-use global state.
       // Considers only a subset of the information provided by the cells.
-      Cell stateCell = buckGlobalState.getRootCell();
-      if (!stateCell.getFilesystem().equals(rootCell.getFilesystem())) {
+      Cells stateCells = buckGlobalState.getCells();
+      if (!stateCells.getRootCell().getFilesystem().equals(rootCell.getFilesystem())) {
         lifecycleStatus = LifecycleStatus.INVALIDATED_FILESYSTEM_CHANGED;
       } else {
         configDifference =
-            ConfigDifference.compareForCaching(stateCell.getBuckConfig(), rootCell.getBuckConfig());
+            ConfigDifference.compareForCaching(
+                stateCells.getBuckConfig(), rootCell.getBuckConfig());
         if (!configDifference.isEmpty()) {
           lifecycleStatus = LifecycleStatus.INVALIDATED_BUCK_CONFIG_CHANGED;
         } else if (!BuckGlobalStateCompatibilityCellChecker.areToolchainsCompatibleForCaching(
-            stateCell, rootCell)) {
+            stateCells.getRootCell(), rootCell)) {
           lifecycleStatus = LifecycleStatus.INVALIDATED_TOOLCHAINS_INCOMPATIBLE;
         }
       }
@@ -169,7 +170,7 @@ public class BuckGlobalStateLifecycleManager {
       if (lifecycleStatus != LifecycleStatus.REUSED) {
         LOG.info(
             "Shutting down and restarting daemon state on config or directory graphBuilder change (%s != %s)",
-            stateCell, rootCell);
+            stateCells.getRootCell(), rootCell);
         buckGlobalState = null;
       }
     }
