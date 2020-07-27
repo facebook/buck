@@ -48,6 +48,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.function.QuadFunction;
 import com.facebook.buck.util.stream.RichStream;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
@@ -512,7 +513,13 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
     BuildRule sharedLibraryBuildRule =
         requireBuildRule(
             graphBuilder, cxxPlatform.getFlavor(), CxxDescriptionEnhancer.SHARED_FLAVOR);
-    return ImmutableMap.of(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
+    SourcePath sourcePathToOutput = sharedLibraryBuildRule.getSourcePathToOutput();
+    Preconditions.checkNotNull(
+        sourcePathToOutput,
+        "rule output is null: %s; for so: %s",
+        sharedLibraryBuildRule,
+        sharedLibrarySoname);
+    return ImmutableMap.of(sharedLibrarySoname, sourcePathToOutput);
   }
 
   @Override
