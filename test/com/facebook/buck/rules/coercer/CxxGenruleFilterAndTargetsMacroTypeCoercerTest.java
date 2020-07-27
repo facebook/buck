@@ -20,6 +20,8 @@ import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -37,22 +39,25 @@ import org.junit.Test;
 
 public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
 
+  private final CxxGenruleFilterAndTargetsMacroTypeCoercer<UnconfiguredCppFlagsMacro, CppFlagsMacro>
+      cppFlagsMacroCoercer =
+          new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+              Optional.empty(),
+              new ListTypeCoercer<>(
+                  new BuildTargetWithOutputsTypeCoercer(
+                      new UnconfiguredBuildTargetWithOutputsTypeCoercer(
+                          new UnconfiguredBuildTargetTypeCoercer(
+                              new ParsingUnconfiguredBuildTargetViewFactory())))),
+              UnconfiguredCppFlagsMacro.class,
+              CppFlagsMacro.class,
+              UnconfiguredCppFlagsMacro::of);
+
   @Test
   public void testNoPattern() throws CoerceFailedException {
     ForwardRelativePath basePath = ForwardRelativePath.of("java/com/facebook/buck/example");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CxxGenruleFilterAndTargetsMacroTypeCoercer<UnconfiguredCppFlagsMacro, CppFlagsMacro> coercer =
-        new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
-            Optional.empty(),
-            new ListTypeCoercer<>(
-                new BuildTargetTypeCoercer(
-                    new UnconfiguredBuildTargetTypeCoercer(
-                        new ParsingUnconfiguredBuildTargetViewFactory()))),
-            UnconfiguredCppFlagsMacro.class,
-            CppFlagsMacro.class,
-            UnconfiguredCppFlagsMacro::of);
     CppFlagsMacro result =
-        coercer.coerceBoth(
+        cppFlagsMacroCoercer.coerceBoth(
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
@@ -63,7 +68,32 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
         result,
         Matchers.equalTo(
             CppFlagsMacro.of(
-                Optional.empty(), ImmutableList.of(BuildTargetFactory.newInstance("//:a")))));
+                Optional.empty(),
+                ImmutableList.of(
+                    BuildTargetWithOutputs.of(
+                        BuildTargetFactory.newInstance("//:a"), OutputLabel.defaultLabel())))));
+  }
+
+  @Test
+  public void testNoPatternWithOutputLabel() throws CoerceFailedException {
+    ForwardRelativePath basePath = ForwardRelativePath.of("java/com/facebook/buck/example");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CppFlagsMacro result =
+        cppFlagsMacroCoercer.coerceBoth(
+            createCellRoots(filesystem).getCellNameResolver(),
+            filesystem,
+            basePath,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            ImmutableList.of("//:a[b]"));
+    assertThat(
+        result,
+        Matchers.equalTo(
+            CppFlagsMacro.of(
+                Optional.empty(),
+                ImmutableList.of(
+                    BuildTargetWithOutputs.of(
+                        BuildTargetFactory.newInstance("//:a"), OutputLabel.of("b"))))));
   }
 
   @Test
@@ -75,9 +105,10 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
             new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
                 Optional.of(new PatternTypeCoercer()),
                 new ListTypeCoercer<>(
-                    new BuildTargetTypeCoercer(
-                        new UnconfiguredBuildTargetTypeCoercer(
-                            new ParsingUnconfiguredBuildTargetViewFactory()))),
+                    new BuildTargetWithOutputsTypeCoercer(
+                        new UnconfiguredBuildTargetWithOutputsTypeCoercer(
+                            new UnconfiguredBuildTargetTypeCoercer(
+                                new ParsingUnconfiguredBuildTargetViewFactory())))),
                 UnconfiguredLdflagsStaticMacro.class,
                 LdflagsStaticMacro.class,
                 UnconfiguredLdflagsStaticMacro::of);
@@ -91,7 +122,10 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
             ImmutableList.of("hello", "//:a"));
     assertThat(result.getFilter().map(Pattern::pattern), Matchers.equalTo(Optional.of("hello")));
     assertThat(
-        result.getTargets(),
-        Matchers.equalTo(ImmutableList.of(BuildTargetFactory.newInstance("//:a"))));
+        result.getTargetsWithOutputs(),
+        Matchers.equalTo(
+            ImmutableList.of(
+                BuildTargetWithOutputs.of(
+                    BuildTargetFactory.newInstance("//:a"), OutputLabel.defaultLabel()))));
   }
 }

@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
@@ -430,10 +431,11 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       extends AbstractMacroExpanderWithoutPrecomputedWork<M> {
 
     protected ImmutableList<BuildRule> resolve(
-        BuildRuleResolver resolver, ImmutableList<BuildTarget> input) throws MacroException {
+        BuildRuleResolver resolver, ImmutableList<BuildTargetWithOutputs> input)
+        throws MacroException {
       ImmutableList.Builder<BuildRule> rules = ImmutableList.builder();
-      for (BuildTarget ruleTarget : input) {
-        Optional<BuildRule> rule = resolver.getRuleOptional(ruleTarget);
+      for (BuildTargetWithOutputs ruleTarget : input) {
+        Optional<BuildRule> rule = resolver.getRuleOptional(ruleTarget.getBuildTarget());
         if (!rule.isPresent()) {
           throw new MacroException(String.format("no rule %s", ruleTarget));
         }
@@ -454,7 +456,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       return expand(
           graphBuilder,
           target.getTargetConfiguration(),
-          resolve(graphBuilder, input.getTargets()),
+          resolve(graphBuilder, input.getTargetsWithOutputs()),
           input.getFilter());
     }
   }
@@ -484,7 +486,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     /** Make sure all resolved targets are instances of {@link CxxPreprocessorDep}. */
     @Override
     protected ImmutableList<BuildRule> resolve(
-        BuildRuleResolver resolver, ImmutableList<BuildTarget> input) throws MacroException {
+        BuildRuleResolver resolver, ImmutableList<BuildTargetWithOutputs> input)
+        throws MacroException {
       return FluentIterable.from(super.resolve(resolver, input))
           .filter(CxxPreprocessorDep.class::isInstance)
           .toList();
@@ -678,7 +681,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     /** Make sure all resolved targets are instances of {@link NativeLinkableGroup}. */
     @Override
     protected ImmutableList<BuildRule> resolve(
-        BuildRuleResolver resolver, ImmutableList<BuildTarget> input) throws MacroException {
+        BuildRuleResolver resolver, ImmutableList<BuildTargetWithOutputs> input)
+        throws MacroException {
       return FluentIterable.from(super.resolve(resolver, input))
           .filter(NativeLinkableGroup.class::isInstance)
           .toList();
