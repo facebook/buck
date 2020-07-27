@@ -26,7 +26,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
-public class ResourcesExoHelper {
+/** Installs resources for exo. */
+public class ResourcesExoHelper implements ExoHelper {
   @VisibleForTesting public static final Path RESOURCES_DIR = Paths.get("resources");
 
   private final SourcePathResolverAdapter pathResolver;
@@ -42,12 +43,27 @@ public class ResourcesExoHelper {
     this.resourcesInfo = resourcesInfo;
   }
 
-  public static ImmutableMap<Path, Path> getFilesToInstall(ImmutableMap<String, Path> filesByHash) {
+  /** Get an instance configured for the resource installer. */
+  public static ResourcesExoHelper getResourceInstallerInstance(
+      SourcePathResolverAdapter resolver,
+      ProjectFilesystem projectFilesystem,
+      Stream<ExopackagePathAndHash> resourcesPaths) {
+    return new ResourcesExoHelper(resolver, projectFilesystem, null) {
+      @Override
+      public ImmutableMap<Path, Path> getFilesToInstall() {
+        return ResourcesExoHelper.getFilesToInstall(
+            getResourceFilesByHash(resolver, projectFilesystem, resourcesPaths));
+      }
+    };
+  }
+
+  private static ImmutableMap<Path, Path> getFilesToInstall(
+      ImmutableMap<String, Path> filesByHash) {
     return ExopackageUtil.applyFilenameFormat(filesByHash, RESOURCES_DIR, "%s.apk");
   }
 
   /** Returns a map of hash to path for resource files. */
-  public static ImmutableMap<String, Path> getResourceFilesByHash(
+  private static ImmutableMap<String, Path> getResourceFilesByHash(
       SourcePathResolverAdapter pathResolver,
       ProjectFilesystem projectFilesystem,
       Stream<ExopackagePathAndHash> resourcesPaths) {
@@ -67,10 +83,17 @@ public class ResourcesExoHelper {
                         pathResolver.getAbsolutePath(i.getPath()).getPath())));
   }
 
+  @Override
+  public String getType() {
+    return "resources";
+  }
+
+  @Override
   public ImmutableMap<Path, Path> getFilesToInstall() {
     return getFilesToInstall(getResourceFilesByHash());
   }
 
+  @Override
   public ImmutableMap<Path, String> getMetadataToInstall() {
     return ImmutableMap.of(
         RESOURCES_DIR.resolve("metadata.txt"),

@@ -100,7 +100,7 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
 
-/** Command so a user can build and install an APK. */
+/** Command to build and install a mobile application. */
 public class InstallCommand extends BuildCommand {
 
   private static final Logger LOG = Logger.get(InstallCommand.class);
@@ -120,8 +120,6 @@ public class InstallCommand extends BuildCommand {
   @VisibleForTesting static final String INSTALL_VIA_SD_SHORT_ARG = "-S";
   @VisibleForTesting static final String ACTIVITY_LONG_ARG = "--activity";
   @VisibleForTesting static final String ACTIVITY_SHORT_ARG = "-a";
-  @VisibleForTesting static final String PROCESS_LONG_ARG = "--process";
-  @VisibleForTesting static final String PROCESS_SHORT_ARG = "-p";
   @VisibleForTesting static final String UNINSTALL_LONG_ARG = "--uninstall";
   @VisibleForTesting static final String UNINSTALL_SHORT_ARG = "-u";
 
@@ -171,14 +169,6 @@ public class InstallCommand extends BuildCommand {
   @Nullable
   private String activity = null;
 
-  @Option(
-      name = PROCESS_LONG_ARG,
-      aliases = {PROCESS_SHORT_ARG},
-      metaVar = "<pkg:process>",
-      usage = "Process to kill after install e.g. com.facebook.katana[:proc1]. Implies -r.")
-  @Nullable
-  private String process = null;
-
   public AdbOptions adbOptions(BuckConfig buckConfig) {
     return adbOptions.getAdbOptions(buckConfig);
   }
@@ -196,7 +186,7 @@ public class InstallCommand extends BuildCommand {
   }
 
   public boolean shouldStartActivity() {
-    return (activity != null) || (process != null) || run;
+    return (activity != null) || run;
   }
 
   public boolean shouldInstallViaSd() {
@@ -437,7 +427,7 @@ public class InstallCommand extends BuildCommand {
         // Perhaps the app wasn't installed to begin with, shouldn't stop us.
       }
 
-      adbHelper.installApk(pathResolver, hasInstallableApk, shouldInstallViaSd(), false, process);
+      adbHelper.installApk(pathResolver, hasInstallableApk, shouldInstallViaSd(), /*quiet=*/ false);
     } else if (shouldUninstallFirst()) {
       // TODO(cjhopman): Figure out how to support this (maybe write some options to the trigger
       // file).
@@ -463,7 +453,7 @@ public class InstallCommand extends BuildCommand {
     }
 
     // We've installed the application successfully.
-    // Are any of --activity, --process, or --run present?
+    // Are any of --activity or --run present?
     if (shouldStartActivity()) {
       try {
         adbHelper.startActivity(

@@ -25,6 +25,7 @@ import com.facebook.buck.android.AndroidBinaryDescription.AbstractAndroidBinaryD
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
+import com.facebook.buck.android.exopackage.AdbConfig;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.android.toolchain.ndk.impl.TestNdkCxxPlatformsProviderFactory;
@@ -68,6 +69,7 @@ public class AndroidBinaryBuilder
             new ProGuardConfig(buckConfig),
             new AndroidBuckConfig(buckConfig, Platform.detect()),
             new AndroidInstallConfig(buckConfig),
+            buckConfig.getView(AdbConfig.class),
             CxxPlatformUtils.DEFAULT_CONFIG,
             new DxConfig(buckConfig),
             DEFAULT_DOWNWARD_API_CONFIG,

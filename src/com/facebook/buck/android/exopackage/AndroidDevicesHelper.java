@@ -68,14 +68,13 @@ public interface AndroidDevicesHelper extends Closeable {
       SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean installViaSd,
-      boolean quiet,
-      @Nullable String packageName)
+      boolean quiet)
       throws InterruptedException;
 
   /**
    * Uninstall apk from all matching devices.
    *
-   * @see #installApk(SourcePathResolverAdapter, HasInstallableApk, boolean, boolean, String)
+   * @see #installApk(SourcePathResolverAdapter, HasInstallableApk, boolean, boolean)
    */
   void uninstallApp(String packageName, boolean shouldKeepUserData) throws InterruptedException;
 

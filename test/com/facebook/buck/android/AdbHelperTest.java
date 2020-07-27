@@ -90,7 +90,8 @@ public class AdbHelperTest {
         () -> executionContext,
         true,
         ImmutableList.of(),
-        /* chmodExoFilesRemotely= */ true);
+        /* chmodExoFilesRemotely= */ true,
+        /* skipMetadataIfNoInstalls= */ false);
   }
 
   /** Verify that null is returned when no devices are present. */
@@ -410,7 +411,8 @@ public class AdbHelperTest {
         () -> testContext,
         true,
         ImmutableList.of(),
-        /* chmodExoFilesRemotely= */ true) {
+        /* chmodExoFilesRemotely= */ true,
+        /* skipMetadataIfNoInstalls= */ false) {
       @Override
       public ImmutableList<AndroidDevice> getDevices(boolean quiet) {
         return deviceList.stream()

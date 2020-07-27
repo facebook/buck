@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.exopackage.AdbConfig;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
@@ -58,6 +59,7 @@ public class ExopackageFilesInstaller extends AbstractBuildRule {
 
   private final Supplier<ImmutableSortedSet<BuildRule>> depsSupplier;
   private final ExopackageInfo exopackageInfo;
+  private final AdbConfig adbConfig;
 
   public ExopackageFilesInstaller(
       BuildTarget buildTarget,
@@ -65,13 +67,15 @@ public class ExopackageFilesInstaller extends AbstractBuildRule {
       SourcePathRuleFinder sourcePathRuleFinder,
       SourcePath deviceExoContents,
       SourcePath manifestPath,
-      ExopackageInfo exopackageInfo) {
+      ExopackageInfo exopackageInfo,
+      AdbConfig adbConfig) {
     super(buildTarget, projectFilesystem);
     this.trigger = new InstallTrigger(projectFilesystem);
     this.deviceExoContents = deviceExoContents;
     this.manifestPath = manifestPath;
     this.exopackageInfo = exopackageInfo;
     this.exoSourcePaths = getExopackageSourcePaths(exopackageInfo);
+    this.adbConfig = adbConfig;
 
     this.depsSupplier =
         MoreSuppliers.memoize(
@@ -128,7 +132,8 @@ public class ExopackageFilesInstaller extends AbstractBuildRule {
                               context.getBuckEventBus(),
                               getProjectFilesystem(),
                               packageName,
-                              device)
+                              device,
+                              adbConfig.getSkipInstallMetadata())
                           .installMissingExopackageFiles(presentFiles, exopackageInfo);
                       return true;
                     },

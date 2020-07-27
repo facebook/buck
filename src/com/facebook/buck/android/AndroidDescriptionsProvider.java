@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.exopackage.AdbConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
@@ -59,6 +60,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
     CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
+    AdbConfig adbConfig = buckConfig.getView(AdbConfig.class);
 
     AndroidLibraryCompilerFactory defaultAndroidCompilerFactory =
         new DefaultAndroidLibraryCompilerFactory(
@@ -76,6 +78,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             proGuardConfig,
             androidBuckConfig,
             androidInstallConfig,
+            adbConfig,
             cxxBuckConfig,
             dxConfig,
             downwardApiConfig,

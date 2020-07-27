@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.exopackage.AdbConfig;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
 import com.facebook.buck.android.exopackage.ResourcesExoHelper;
@@ -55,6 +56,7 @@ public class ExopackageResourcesInstaller extends AbstractBuildRule {
   @AddToRuleKey private final SourcePath deviceExoContents;
 
   private final Supplier<SortedSet<BuildRule>> depsSupplier;
+  private final AdbConfig adbConfig;
 
   public ExopackageResourcesInstaller(
       BuildTarget buildTarget,
@@ -62,13 +64,15 @@ public class ExopackageResourcesInstaller extends AbstractBuildRule {
       SourcePathRuleFinder ruleFinder,
       Collection<ExopackagePathAndHash> paths,
       SourcePath manifestPath,
-      SourcePath deviceExoContents) {
+      SourcePath deviceExoContents,
+      AdbConfig adbConfig) {
     super(buildTarget, projectFilesystem);
     this.trigger = new InstallTrigger(projectFilesystem);
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
     this.paths = ImmutableList.copyOf(paths);
     this.manifestPath = manifestPath;
     this.deviceExoContents = deviceExoContents;
+    this.adbConfig = adbConfig;
   }
 
   @Override
@@ -102,18 +106,19 @@ public class ExopackageResourcesInstaller extends AbstractBuildRule {
                     device -> {
                       ImmutableSortedSet<Path> presentFiles =
                           Objects.requireNonNull(contents.get(device.getSerialNumber()));
+                      // TODO(bduff): this bypasses metadata installation. Is that correct?
                       new ExopackageInstaller(
                               resolver,
                               context.getBuckEventBus(),
                               getProjectFilesystem(),
                               packageName,
-                              device)
+                              device,
+                              adbConfig.getSkipInstallMetadata())
                           .installMissingFiles(
                               presentFiles,
-                              ResourcesExoHelper.getFilesToInstall(
-                                  ResourcesExoHelper.getResourceFilesByHash(
-                                      resolver, getProjectFilesystem(), paths.stream())),
-                              ExopackageInstaller.RESOURCES_TYPE);
+                              ResourcesExoHelper.getResourceInstallerInstance(
+                                  resolver, getProjectFilesystem(), paths.stream()),
+                              /*metadataToInstall=*/ null);
                       return true;
                     },
                     true);

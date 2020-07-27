@@ -20,6 +20,7 @@ import static com.facebook.buck.android.AndroidBinaryResourcesGraphEnhancer.PACK
 
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
+import com.facebook.buck.android.exopackage.AdbConfig;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
@@ -91,6 +92,7 @@ public class AndroidBinaryDescription
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
   private final AndroidInstallConfig androidInstallConfig;
+  private final AdbConfig adbConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final ToolchainProvider toolchainProvider;
   private final AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory;
@@ -101,6 +103,7 @@ public class AndroidBinaryDescription
       ProGuardConfig proGuardConfig,
       AndroidBuckConfig androidBuckConfig,
       AndroidInstallConfig androidInstallConfig,
+      AdbConfig adbConfig,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
       DownwardApiConfig downwardApiConfig,
@@ -116,6 +119,7 @@ public class AndroidBinaryDescription
     this.dxConfig = dxConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.androidInstallConfig = androidInstallConfig;
+    this.adbConfig = adbConfig;
     this.toolchainProvider = toolchainProvider;
     this.androidBinaryGraphEnhancerFactory = androidBinaryGraphEnhancerFactory;
     this.androidBinaryFactory = androidBinaryFactory;
@@ -215,7 +219,7 @@ public class AndroidBinaryDescription
     // The exo installer is always added to the index so that the action graph is the same
     // between build and install calls.
     new AndroidBinaryInstallGraphEnhancer(
-            androidInstallConfig, projectFilesystem, buildTarget, androidBinary)
+            androidInstallConfig, adbConfig, projectFilesystem, buildTarget, androidBinary)
         .enhance(graphBuilder);
     return androidBinary;
   }

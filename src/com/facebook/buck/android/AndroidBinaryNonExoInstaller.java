@@ -74,7 +74,11 @@ public class AndroidBinaryNonExoInstaller extends AbstractBuildRule implements H
             context
                 .getAndroidDevicesHelper()
                 .get()
-                .installApk(buildContext.getSourcePathResolver(), apk, false, true, null);
+                .installApk(
+                    buildContext.getSourcePathResolver(),
+                    apk,
+                    /*installViaSd=*/ false,
+                    /*quiet=*/ true);
             return StepExecutionResults.SUCCESS;
           }
         });

@@ -20,6 +20,7 @@ import static com.facebook.buck.android.AndroidBinaryResourcesGraphEnhancer.PACK
 
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
+import com.facebook.buck.android.exopackage.AdbConfig;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
@@ -88,6 +89,7 @@ public class AndroidBundleDescription
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
   private final AndroidInstallConfig androidInstallConfig;
+  private final AdbConfig adbConfig;
   private final ToolchainProvider toolchainProvider;
   private final AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory;
   private final AndroidBundleFactory androidBundleFactory;
@@ -112,6 +114,7 @@ public class AndroidBundleDescription
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
     this.androidInstallConfig = new AndroidInstallConfig(buckConfig);
+    this.adbConfig = buckConfig.getView(AdbConfig.class);
     this.toolchainProvider = toolchainProvider;
     this.androidBinaryGraphEnhancerFactory = androidBinaryGraphEnhancerFactory;
     this.androidBundleFactory = androidBundleFactory;
@@ -211,7 +214,7 @@ public class AndroidBundleDescription
     // The exo installer is always added to the index so that the action graph is the same
     // between build and install calls.
     new AndroidBinaryInstallGraphEnhancer(
-            androidInstallConfig, projectFilesystem, buildTarget, androidBundle)
+            androidInstallConfig, adbConfig, projectFilesystem, buildTarget, androidBundle)
         .enhance(graphBuilder);
     return androidBundle;
   }

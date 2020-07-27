@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  * An ExoHelper which provides a mapping of host source path to device install path for modular dex
  * files when exopackage-for-modules is enabled
  */
-public class ModuleExoHelper {
+public class ModuleExoHelper implements ExoHelper {
   @VisibleForTesting public static final Path MODULAR_DEX_DIR = Paths.get("modular-dex");
   private final SourcePathResolverAdapter pathResolver;
   private final ProjectFilesystem projectFilesystem;
@@ -57,10 +57,16 @@ public class ModuleExoHelper {
     this.dexInfoForModules = dexInfoForModules;
   }
 
+  @Override
+  public String getType() {
+    return "modular_dex";
+  }
+
   /**
    * @return the list of modular dex files which are installable for this build The returned map
    *     contains entries of the form destination_file_path => local_src_file_path
    */
+  @Override
   public ImmutableMap<Path, Path> getFilesToInstall() throws IOException {
     return ExopackageUtil.applyFilenameFormat(
         getRequiredDexFiles(), MODULAR_DEX_DIR, "module-%s.dex.jar");
@@ -75,6 +81,7 @@ public class ModuleExoHelper {
    *     module_name" and provides a top-level listing of all jars included in the build along with
    *     a mapping back to the module name where they came from
    */
+  @Override
   public ImmutableMap<Path, String> getMetadataToInstall() throws IOException {
     Builder<Path, String> builder = ImmutableMap.builder();
     for (DexInfo info : dexInfoForModules) {

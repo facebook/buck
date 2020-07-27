@@ -55,4 +55,13 @@ public abstract class AdbConfig implements ConfigView<BuckConfig> {
   public boolean getChmodExoFilesRemotely() {
     return getDelegate().getBooleanValue("adb", "chmod_exo_files_remotely", true);
   }
+
+  /**
+   * Whether to skip installing metadata when there are no files to install in a given category. If
+   * exo metadata is derived from the set of installed files, it's not necessary to reinstall.
+   */
+  @Value.Lazy
+  public boolean getSkipInstallMetadata() {
+    return getDelegate().getBooleanValue("adb", "skip_install_metadata", true);
+  }
 }

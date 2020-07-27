@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -55,10 +56,21 @@ import javax.annotation.Nullable;
 public class ExopackageInstaller {
   private static final Logger LOG = Logger.get(ExopackageInstaller.class);
 
+  // When there are a small number of files to delete, it's faster (we issue
+  // fewer rm commands over adb) if we group them by the data root, so
+  //   cd /data/local/tmp/exopackage/foo && rm resources/bar.txt native-libs/baz.txt
+  // But when there are more files, because of the way RealAndroidDevice splits up
+  // commandlines to avoid hitting limits, it's more efficient to group by the
+  // subdirectories, so
+  //   cd /data/local/tmp/exopackage/foo/resources && rm bar.txt bap.txt boz.txt
+  //   cd /data/local/tmp/exopackage/foo/native-libs && rm baz.txt zog.txt
+  // We pick a heuristic number of files (10) at which to change behavior for this based
+  // on these assumptions:
+  //    approx available commandline length = 800
+  //    max length of a path from the dataRoot for a well known app = 77
+  private static final int RM_GROUPING_THRESHOLD = 10;
+
   public static final Path EXOPACKAGE_INSTALL_ROOT = Paths.get("/data/local/tmp/exopackage/");
-  public static final String SECONDARY_DEX_TYPE = "secondary_dex";
-  public static final String NATIVE_LIBRARY_TYPE = "native_library";
-  public static final String RESOURCES_TYPE = "resources";
 
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
@@ -66,27 +78,28 @@ public class ExopackageInstaller {
   private final AndroidDevice device;
   private final String packageName;
   private final Path dataRoot;
+  private final boolean skipMetadataIfNoInstalls;
 
   public ExopackageInstaller(
       SourcePathResolverAdapter pathResolver,
       BuckEventBus eventBus,
       ProjectFilesystem projectFilesystem,
       String packageName,
-      AndroidDevice device) {
+      AndroidDevice device,
+      boolean skipMetadataIfNoInstalls) {
     this.pathResolver = pathResolver;
     this.projectFilesystem = projectFilesystem;
     this.eventBus = eventBus;
     this.device = device;
     this.packageName = packageName;
     this.dataRoot = EXOPACKAGE_INSTALL_ROOT.resolve(packageName);
+    this.skipMetadataIfNoInstalls = skipMetadataIfNoInstalls;
 
     Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
   }
 
-  /** @return Returns true. */
-  // TODO(cjhopman): This return value is silly. Change it to be void.
-  public boolean doInstall(HasInstallableApk.ApkInfo apkInfo, @Nullable String processName)
-      throws Exception {
+  /** Installs an apk, restarting the running app if necessary. */
+  public void doInstall(HasInstallableApk.ApkInfo apkInfo) throws Exception {
     if (exopackageEnabled(apkInfo)) {
       device.mkDirP(dataRoot.toString());
       ImmutableSortedSet<Path> presentFiles = device.listDirRecursive(dataRoot);
@@ -94,33 +107,20 @@ public class ExopackageInstaller {
       installMissingExopackageFiles(presentFiles, exoInfo);
       finishExoFileInstallation(presentFiles, exoInfo);
     }
+    installAndRestartApk(apkInfo);
+  }
+
+  public void installAndRestartApk(HasInstallableApk.ApkInfo apkInfo) throws Exception {
     installApkIfNecessary(apkInfo);
-    killApp(apkInfo, processName);
-    return true;
+    killApp();
   }
 
-  public void killApp(HasInstallableApk.ApkInfo apkInfo, @Nullable String processName)
-      throws Exception {
-    // TODO(dreiss): Make this work on Gingerbread.
-    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "kill_app")) {
-      // If a specific process name is given and we're not installing a full APK,
-      // just kill that process, otherwise kill everything in the package
-      if (shouldAppBeInstalled(apkInfo) || processName == null) {
-        device.stopPackage(packageName);
-      } else {
-        device.killProcess(processName);
-      }
-    }
-  }
-
-  public void installApkIfNecessary(HasInstallableApk.ApkInfo apkInfo) throws Exception {
+  private void installApkIfNecessary(HasInstallableApk.ApkInfo apkInfo) throws Exception {
     File apk = pathResolver.getAbsolutePath(apkInfo.getApkPath()).toFile();
-    // TODO(dreiss): Support SD installation.
-    boolean installViaSd = false;
 
     if (shouldAppBeInstalled(apkInfo)) {
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_exo_apk")) {
-        boolean success = device.installApkOnDevice(apk, installViaSd, false);
+        boolean success = device.installApkOnDevice(apk, /*installViaSd=*/ false, false);
         if (!success) {
           throw new RuntimeException("Installing Apk failed.");
         }
@@ -128,16 +128,67 @@ public class ExopackageInstaller {
     }
   }
 
+  private void killApp() throws Exception {
+    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "kill_app")) {
+      device.stopPackage(packageName);
+    }
+  }
+
+  private void addPaths(ExoHelper helper, ImmutableSet.Builder<Path> wantedPaths) throws Exception {
+    wantedPaths.addAll(helper.getFilesToInstall().keySet());
+    wantedPaths.addAll(helper.getMetadataToInstall().keySet());
+  }
+
   public void finishExoFileInstallation(
       ImmutableSortedSet<Path> presentFiles, ExopackageInfo exoInfo) throws Exception {
     ImmutableSet.Builder<Path> wantedPaths = ImmutableSet.builder();
+
+    if (exoInfo.getDexInfo().isPresent()) {
+      DexExoHelper helper =
+          new DexExoHelper(pathResolver, projectFilesystem, exoInfo.getDexInfo().get());
+      addPaths(helper, wantedPaths);
+    }
+
+    if (exoInfo.getNativeLibsInfo().isPresent()) {
+      NativeExoHelper helper =
+          new NativeExoHelper(
+              () -> {
+                try {
+                  return device.getDeviceAbis();
+                } catch (Exception e) {
+                  throw new HumanReadableException("Unable to communicate with device", e);
+                }
+              },
+              pathResolver,
+              projectFilesystem,
+              exoInfo.getNativeLibsInfo().get());
+      addPaths(helper, wantedPaths);
+    }
+
+    if (exoInfo.getResourcesInfo().isPresent()) {
+      ResourcesExoHelper helper =
+          new ResourcesExoHelper(pathResolver, projectFilesystem, exoInfo.getResourcesInfo().get());
+      addPaths(helper, wantedPaths);
+    }
+
+    if (exoInfo.getModuleInfo().isPresent()) {
+      ModuleExoHelper helper =
+          new ModuleExoHelper(pathResolver, projectFilesystem, exoInfo.getModuleInfo().get());
+      addPaths(helper, wantedPaths);
+    }
+
+    deleteUnwantedFiles(presentFiles, wantedPaths.build());
+  }
+
+  public void installMissingExopackageFiles(
+      ImmutableSortedSet<Path> presentFiles, ExopackageInfo exoInfo) throws Exception {
+
     ImmutableMap.Builder<Path, String> metadata = ImmutableMap.builder();
 
     if (exoInfo.getDexInfo().isPresent()) {
       DexExoHelper dexExoHelper =
           new DexExoHelper(pathResolver, projectFilesystem, exoInfo.getDexInfo().get());
-      wantedPaths.addAll(dexExoHelper.getFilesToInstall().keySet());
-      metadata.putAll(dexExoHelper.getMetadataToInstall());
+      installMissingFiles(presentFiles, dexExoHelper, metadata);
     }
 
     if (exoInfo.getNativeLibsInfo().isPresent()) {
@@ -153,63 +204,22 @@ public class ExopackageInstaller {
               pathResolver,
               projectFilesystem,
               exoInfo.getNativeLibsInfo().get());
-      wantedPaths.addAll(nativeExoHelper.getFilesToInstall().keySet());
-      metadata.putAll(nativeExoHelper.getMetadataToInstall());
+      installMissingFiles(presentFiles, nativeExoHelper, metadata);
     }
 
     if (exoInfo.getResourcesInfo().isPresent()) {
       ResourcesExoHelper resourcesExoHelper =
           new ResourcesExoHelper(pathResolver, projectFilesystem, exoInfo.getResourcesInfo().get());
-      wantedPaths.addAll(resourcesExoHelper.getFilesToInstall().keySet());
-      metadata.putAll(resourcesExoHelper.getMetadataToInstall());
+      installMissingFiles(presentFiles, resourcesExoHelper, metadata);
     }
 
     if (exoInfo.getModuleInfo().isPresent()) {
       ModuleExoHelper moduleExoHelper =
           new ModuleExoHelper(pathResolver, projectFilesystem, exoInfo.getModuleInfo().get());
-      wantedPaths.addAll(moduleExoHelper.getFilesToInstall().keySet());
-      metadata.putAll(moduleExoHelper.getMetadataToInstall());
+      installMissingFiles(presentFiles, moduleExoHelper, metadata);
     }
 
-    deleteUnwantedFiles(presentFiles, wantedPaths.build());
     installMetadata(metadata.build());
-  }
-
-  public void installMissingExopackageFiles(
-      ImmutableSortedSet<Path> presentFiles, ExopackageInfo exoInfo) throws Exception {
-    if (exoInfo.getDexInfo().isPresent()) {
-      DexExoHelper dexExoHelper =
-          new DexExoHelper(pathResolver, projectFilesystem, exoInfo.getDexInfo().get());
-      installMissingFiles(presentFiles, dexExoHelper.getFilesToInstall(), SECONDARY_DEX_TYPE);
-    }
-
-    if (exoInfo.getNativeLibsInfo().isPresent()) {
-      NativeExoHelper nativeExoHelper =
-          new NativeExoHelper(
-              () -> {
-                try {
-                  return device.getDeviceAbis();
-                } catch (Exception e) {
-                  throw new HumanReadableException("Unable to communicate with device", e);
-                }
-              },
-              pathResolver,
-              projectFilesystem,
-              exoInfo.getNativeLibsInfo().get());
-      installMissingFiles(presentFiles, nativeExoHelper.getFilesToInstall(), NATIVE_LIBRARY_TYPE);
-    }
-
-    if (exoInfo.getResourcesInfo().isPresent()) {
-      ResourcesExoHelper resourcesExoHelper =
-          new ResourcesExoHelper(pathResolver, projectFilesystem, exoInfo.getResourcesInfo().get());
-      installMissingFiles(presentFiles, resourcesExoHelper.getFilesToInstall(), RESOURCES_TYPE);
-    }
-
-    if (exoInfo.getModuleInfo().isPresent()) {
-      ModuleExoHelper moduleExoHelper =
-          new ModuleExoHelper(pathResolver, projectFilesystem, exoInfo.getModuleInfo().get());
-      installMissingFiles(presentFiles, moduleExoHelper.getFilesToInstall(), "modular_dex");
-    }
   }
 
   /**
@@ -274,17 +284,21 @@ public class ExopackageInstaller {
 
   public void installMissingFiles(
       ImmutableSortedSet<Path> presentFiles,
-      ImmutableMap<Path, Path> wantedFilesToInstall,
-      String filesType)
+      ExoHelper helper,
+      @Nullable ImmutableMap.Builder<Path, String> metadataToInstall)
       throws Exception {
     ImmutableSortedMap<Path, Path> filesToInstall =
-        wantedFilesToInstall.entrySet().stream()
+        helper.getFilesToInstall().entrySet().stream()
             .filter(entry -> !presentFiles.contains(entry.getKey()))
             .collect(
                 ImmutableSortedMap.toImmutableSortedMap(
                     Ordering.natural(), Map.Entry::getKey, Map.Entry::getValue));
 
-    installFiles(filesType, filesToInstall);
+    installFiles(helper.getType(), filesToInstall);
+
+    if (metadataToInstall != null && (!skipMetadataIfNoInstalls || !filesToInstall.isEmpty())) {
+      metadataToInstall.putAll(helper.getMetadataToInstall());
+    }
   }
 
   private void deleteUnwantedFiles(
@@ -297,10 +311,17 @@ public class ExopackageInstaller {
   }
 
   private void deleteFiles(ImmutableSortedSet<Path> filesToDelete) {
+    Function<Path, Path> toRootDirFn =
+        filesToDelete.size() <= RM_GROUPING_THRESHOLD
+            ? path -> dataRoot
+            : path -> dataRoot.resolve(path).getParent();
+    Function<Path, String> toFileFn =
+        filesToDelete.size() <= RM_GROUPING_THRESHOLD
+            ? path -> path.toString()
+            : path -> path.getFileName().toString();
+
     filesToDelete.stream()
-        .collect(
-            ImmutableListMultimap.toImmutableListMultimap(
-                path -> dataRoot.resolve(path).getParent(), path -> path.getFileName().toString()))
+        .collect(ImmutableListMultimap.toImmutableListMultimap(toRootDirFn, toFileFn))
         .asMap()
         .forEach(
             (dir, files) -> {

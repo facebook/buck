@@ -915,6 +915,9 @@ public class RealAndroidDevice implements AndroidDevice {
   }
 
   private void doMultiInstall(String filesType, Map<Path, Path> installPaths) throws Exception {
+    if (installPaths.isEmpty()) {
+      return;
+    }
     Closer closer = Closer.create();
     BuckInitiatedInstallReceiver receiver =
         new BuckInitiatedInstallReceiver(closer, filesType, installPaths);

@@ -37,7 +37,8 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public class NativeExoHelper {
+/** Installs native code for exo. */
+public class NativeExoHelper implements ExoHelper {
   @VisibleForTesting public static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
   private final Supplier<List<String>> abiSupplier;
   private final SourcePathResolverAdapter pathResolver;
@@ -55,7 +56,13 @@ public class NativeExoHelper {
     this.nativeLibsInfo = nativeLibsInfo;
   }
 
+  @Override
+  public String getType() {
+    return "native_library";
+  }
+
   /** @return a mapping from destinationPathOnDevice -> localPath */
+  @Override
   public ImmutableMap<Path, Path> getFilesToInstall() throws IOException {
     ImmutableMap.Builder<Path, Path> filesToInstallBuilder = ImmutableMap.builder();
     ImmutableMap<String, ImmutableMultimap<String, Path>> filesByHashForAbis =
@@ -80,6 +87,7 @@ public class NativeExoHelper {
    * @return a mapping from destinationPathOnDevice -> contents of file for all native-libs metadata
    *     files (one per abi)
    */
+  @Override
   public ImmutableMap<Path, String> getMetadataToInstall() throws IOException {
     ImmutableMap<String, ImmutableMultimap<String, Path>> filesByHashForAbis =
         getFilesByHashForAbis();

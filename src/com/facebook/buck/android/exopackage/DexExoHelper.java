@@ -27,7 +27,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
-public class DexExoHelper {
+/** Installs secondary dexes for exo. */
+public class DexExoHelper implements ExoHelper {
   @VisibleForTesting public static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
   private final SourcePathResolverAdapter pathResolver;
   private final ProjectFilesystem projectFilesystem;
@@ -42,11 +43,18 @@ public class DexExoHelper {
     this.dexInfo = dexInfo;
   }
 
+  @Override
+  public String getType() {
+    return "secondary_dex";
+  }
+
+  @Override
   public ImmutableMap<Path, Path> getFilesToInstall() throws IOException {
     return ExopackageUtil.applyFilenameFormat(
         getRequiredDexFiles(), SECONDARY_DEX_DIR, "secondary-%s.dex.jar");
   }
 
+  @Override
   public ImmutableMap<Path, String> getMetadataToInstall() throws IOException {
     return ImmutableMap.of(
         SECONDARY_DEX_DIR.resolve("metadata.txt"), getSecondaryDexMetadataContents());

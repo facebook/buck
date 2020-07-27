@@ -208,7 +208,7 @@ public class TestAndroidDevice implements AndroidDevice {
       assertTrue(source.isAbsolute());
       Path targetPath = resolve(targetDevicePath);
       assertTrue(targetPath.getParent().toFile().exists());
-      Files.copy(source, targetPath);
+      Files.copy(source, targetPath, StandardCopyOption.REPLACE_EXISTING);
     }
   }
 

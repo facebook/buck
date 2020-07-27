@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.exopackage.AdbConfig;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
 import com.facebook.buck.core.model.BuildTarget;
@@ -46,10 +47,13 @@ class AndroidBinaryInstallGraphEnhancer {
   private ProjectFilesystem projectFilesystem;
   private BuildTarget buildTarget;
   private HasInstallableApk installableApk;
+  // TODO(bduff): Merge these
   private AndroidInstallConfig androidInstallConfig;
+  private AdbConfig adbConfig;
 
   AndroidBinaryInstallGraphEnhancer(
       AndroidInstallConfig androidInstallConfig,
+      AdbConfig adbConfig,
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
       HasInstallableApk installableApk) {
@@ -57,6 +61,7 @@ class AndroidBinaryInstallGraphEnhancer {
     this.buildTarget = buildTarget.withFlavors(INSTALL_FLAVOR);
     this.installableApk = installableApk;
     this.androidInstallConfig = androidInstallConfig;
+    this.adbConfig = adbConfig;
   }
 
   public void enhance(ActionGraphBuilder graphBuilder) {
@@ -100,7 +105,8 @@ class AndroidBinaryInstallGraphEnhancer {
               graphBuilder,
               directoryLister.getSourcePathToOutput(),
               apkInfo.getManifestPath(),
-              filteredExopackageInfo);
+              filteredExopackageInfo,
+              adbConfig);
       graphBuilder.addToIndex(fileInstaller);
       finisherDeps.add(fileInstaller);
     }
@@ -122,7 +128,8 @@ class AndroidBinaryInstallGraphEnhancer {
             graphBuilder,
             apkInfo,
             directoryLister,
-            finisherDeps.build());
+            finisherDeps.build(),
+            adbConfig);
 
     graphBuilder.addToIndex(directoryLister);
     graphBuilder.addToIndex(apkInstaller);
@@ -156,7 +163,8 @@ class AndroidBinaryInstallGraphEnhancer {
               ruleFinder,
               paths,
               manifestPath,
-              deviceExoContents));
+              deviceExoContents,
+              adbConfig));
       index++;
     }
     return installers;

@@ -113,6 +113,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   private final ImmutableList<String> rapidInstallTypes;
   private final Supplier<ImmutableList<AndroidDevice>> devicesSupplier;
   private final boolean chmodExoFilesRemotely;
+  private final boolean skipMetadataIfNoInstalls;
 
   @Nullable private ListeningExecutorService executorService = null;
 
@@ -123,7 +124,8 @@ public class AdbHelper implements AndroidDevicesHelper {
       Supplier<ExecutionContext> contextSupplier,
       boolean restartAdbOnFailure,
       ImmutableList<String> rapidInstallTypes,
-      boolean chmodExoFilesRemotely) {
+      boolean chmodExoFilesRemotely,
+      boolean skipMetadataIfNoInstalls) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
     this.toolchainProvider = toolchainProvider;
@@ -132,6 +134,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     this.rapidInstallTypes = rapidInstallTypes;
     this.devicesSupplier = MoreSuppliers.memoize(this::getDevicesImpl);
     this.chmodExoFilesRemotely = chmodExoFilesRemotely;
+    this.skipMetadataIfNoInstalls = skipMetadataIfNoInstalls;
   }
 
   @VisibleForTesting
@@ -267,8 +270,7 @@ public class AdbHelper implements AndroidDevicesHelper {
       SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean installViaSd,
-      boolean quiet,
-      @Nullable String processName)
+      boolean quiet)
       throws InterruptedException {
     InstallEvent.Started started = InstallEvent.started(hasInstallableApk.getBuildTarget());
     if (!quiet) {
@@ -311,7 +313,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
       Optional<ExopackageInfo> exopackageInfo = hasInstallableApk.getApkInfo().getExopackageInfo();
       if (exopackageInfo.isPresent()) {
-        installApkExopackage(pathResolver, hasInstallableApk, quiet, processName);
+        installApkExopackage(pathResolver, hasInstallableApk, quiet);
       } else {
         installApkDirectly(pathResolver, hasInstallableApk, installViaSd, quiet);
       }
@@ -437,7 +439,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   /**
    * Uninstall apk from all matching devices.
    *
-   * @see #installApk(SourcePathResolverAdapter, HasInstallableApk, boolean, boolean, String)
+   * @see #installApk(SourcePathResolverAdapter, HasInstallableApk, boolean, boolean)
    */
   @Override
   public void uninstallApp(String packageName, boolean shouldKeepUserData)
@@ -739,22 +741,21 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private void installApkExopackage(
-      SourcePathResolverAdapter pathResolver,
-      HasInstallableApk hasInstallableApk,
-      boolean quiet,
-      @Nullable String processName)
+      SourcePathResolverAdapter pathResolver, HasInstallableApk hasInstallableApk, boolean quiet)
       throws InterruptedException {
     adbCall(
         "install exopackage apk",
-        device ->
-            new ExopackageInstaller(
-                    pathResolver,
-                    contextSupplier.get().getBuckEventBus(),
-                    hasInstallableApk.getProjectFilesystem(),
-                    tryToExtractPackageNameFromManifest(
-                        pathResolver, hasInstallableApk.getApkInfo()),
-                    device)
-                .doInstall(hasInstallableApk.getApkInfo(), processName),
+        device -> {
+          new ExopackageInstaller(
+                  pathResolver,
+                  contextSupplier.get().getBuckEventBus(),
+                  hasInstallableApk.getProjectFilesystem(),
+                  tryToExtractPackageNameFromManifest(pathResolver, hasInstallableApk.getApkInfo()),
+                  device,
+                  skipMetadataIfNoInstalls)
+              .doInstall(hasInstallableApk.getApkInfo());
+          return true;
+        },
         quiet);
   }
 

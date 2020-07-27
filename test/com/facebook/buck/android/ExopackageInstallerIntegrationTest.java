@@ -681,14 +681,14 @@ public class ExopackageInstallerIntegrationTest {
         expectedResourcesInstalled,
         expectedModulesInstalled);
     try {
-      assertTrue(
-          new ExopackageInstaller(
-                  new TestActionGraphBuilder().getSourcePathResolver(),
-                  executionContext.getBuckEventBus(),
-                  filesystem,
-                  FAKE_PACKAGE_NAME,
-                  device)
-              .doInstall(apkInfo, null));
+      new ExopackageInstaller(
+              new TestActionGraphBuilder().getSourcePathResolver(),
+              executionContext.getBuckEventBus(),
+              filesystem,
+              FAKE_PACKAGE_NAME,
+              device,
+              /* skipMetadataIfNoInstalls= */ false)
+          .doInstall(apkInfo);
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }

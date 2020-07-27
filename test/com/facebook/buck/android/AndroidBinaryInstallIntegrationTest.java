@@ -39,7 +39,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -663,7 +662,13 @@ public class AndroidBinaryInstallIntegrationTest {
     AbsPath installRoot =
         deviceStateDirectory.getRoot().resolve(INSTALL_ROOT.getRoot().relativize(INSTALL_ROOT));
 
-    List<String> dexDevicePaths = Lists.newArrayList("secondary-dex", "modular-dex");
+    List<String> dexDevicePaths = new ArrayList<>();
+    if (expectedDexesInstalled > 0) {
+      dexDevicePaths.add("secondary-dex");
+    }
+    if (expectedModulesInstalled > 0) {
+      dexDevicePaths.add("modular-dex");
+    }
 
     for (String dexDevicePath : dexDevicePaths) {
       AbsPath metadataPath = installRoot.resolve(dexDevicePath).resolve("metadata.txt");

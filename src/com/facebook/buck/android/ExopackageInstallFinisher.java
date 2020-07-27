@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.exopackage.AdbConfig;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
@@ -62,6 +63,7 @@ public class ExopackageInstallFinisher extends AbstractBuildRule {
 
   private final Supplier<ImmutableSortedSet<BuildRule>> depsSupplier;
   private final HasInstallableApk.ApkInfo apkInfo;
+  private final AdbConfig adbConfig;
 
   public ExopackageInstallFinisher(
       BuildTarget installerTarget,
@@ -69,13 +71,15 @@ public class ExopackageInstallFinisher extends AbstractBuildRule {
       SourcePathRuleFinder sourcePathRuleFinder,
       HasInstallableApk.ApkInfo apkInfo,
       ExopackageDeviceDirectoryLister directoryLister,
-      ImmutableList<BuildRule> extraDeps) {
+      ImmutableList<BuildRule> extraDeps,
+      AdbConfig adbConfig) {
     super(installerTarget, projectFilesystem);
     this.trigger = new InstallTrigger(projectFilesystem);
     this.deviceExoContents = directoryLister.getSourcePathToOutput();
     this.apkInfo = apkInfo;
     this.apkPath = apkInfo.getApkPath();
     this.manifestPath = apkInfo.getManifestPath();
+    this.adbConfig = adbConfig;
 
     this.depsSupplier =
         MoreSuppliers.memoize(
@@ -127,12 +131,12 @@ public class ExopackageInstallFinisher extends AbstractBuildRule {
                               context.getBuckEventBus(),
                               getProjectFilesystem(),
                               packageName,
-                              device);
+                              device,
+                              adbConfig.getSkipInstallMetadata());
                       installer.finishExoFileInstallation(
                           ImmutableSortedSet.copyOf(contents.get(device.getSerialNumber())),
                           exoInfo);
-                      installer.installApkIfNecessary(apkInfo);
-                      installer.killApp(apkInfo, null);
+                      installer.installAndRestartApk(apkInfo);
                       return true;
                     },
                     true);
