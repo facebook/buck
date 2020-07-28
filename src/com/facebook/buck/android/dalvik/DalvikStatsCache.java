@@ -35,7 +35,8 @@ class DalvikStatsCache {
     String name = entry.getRelativePath();
     if (!name.endsWith(".class") || name.endsWith("module-info.class")) {
       // Probably something like a pom.properties file in a JAR: this does not contribute
-      //skipping special class files like module descriptor - here no classes will be declared and class visitor thows error
+      
+       //skipping special class files like module descriptor - here no classes will be declared and class visitor thows error
       // to the linear alloc size, so return zero.
       return DalvikStatsTool.Stats.ZERO;
     }
