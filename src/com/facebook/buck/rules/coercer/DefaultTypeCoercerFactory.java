@@ -20,10 +20,9 @@ import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.linkgroup.UnconfiguredCxxLinkGroupMappingTarget;
-import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -155,11 +154,8 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         new NeededCoverageSpecTypeCoercer(
             intTypeCoercer, buildTargetTypeCoercer, stringTypeCoercer);
     TypeCoercer<UnconfiguredQuery, Query> queryTypeCoercer = new QueryCoercer();
-    TypeCoercer<
-            ImmutableList<UnconfiguredBuildTargetWithOutputs>,
-            ImmutableList<BuildTargetWithOutputs>>
-        buildTargetsWithOutputsTypeCoercer =
-            new ListTypeCoercer<>(buildTargetWithOutputsTypeCoercer);
+    TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ImmutableList<BuildTarget>>
+        buildTargetsTypeCoercer = new ListTypeCoercer<>(buildTargetTypeCoercer);
     TypeCoercer<CxxLinkGroupMappingTarget.Traversal, CxxLinkGroupMappingTarget.Traversal>
         linkGroupMappingTraversalCoercer = new CxxLinkGroupMappingTargetTraversalCoercer();
     CxxLinkGroupMappingTargetCoercer linkGroupMappingTargetCoercer =
@@ -275,7 +271,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 CppFlagsMacro.class,
                 new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
                     Optional.empty(),
-                    buildTargetsWithOutputsTypeCoercer,
+                    buildTargetsTypeCoercer,
                     UnconfiguredCppFlagsMacro.class,
                     CppFlagsMacro.class,
                     UnconfiguredCppFlagsMacro::of))
@@ -293,7 +289,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 CxxppFlagsMacro.class,
                 new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
                     Optional.empty(),
-                    buildTargetsWithOutputsTypeCoercer,
+                    buildTargetsTypeCoercer,
                     UnconfiguredCxxppFlagsMacro.class,
                     CxxppFlagsMacro.class,
                     UnconfiguredCxxppFlagsMacro::of))
@@ -311,7 +307,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 CudappFlagsMacro.class,
                 new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
                     Optional.empty(),
-                    buildTargetsWithOutputsTypeCoercer,
+                    buildTargetsTypeCoercer,
                     UnconfiguredCudappFlagsMacro.class,
                     CudappFlagsMacro.class,
                     UnconfiguredCudappFlagsMacro::of))
@@ -324,7 +320,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 LdflagsSharedMacro.class,
                 new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
                     Optional.empty(),
-                    buildTargetsWithOutputsTypeCoercer,
+                    buildTargetsTypeCoercer,
                     UnconfiguredLdflagsSharedMacro.class,
                     LdflagsSharedMacro.class,
                     UnconfiguredLdflagsSharedMacro::of))
@@ -333,7 +329,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 LdflagsSharedFilterMacro.class,
                 new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
                     Optional.of(patternTypeCoercer),
-                    buildTargetsWithOutputsTypeCoercer,
+                    buildTargetsTypeCoercer,
                     UnconfiguredLdflagsSharedFilterMacro.class,
                     LdflagsSharedFilterMacro.class,
                     UnconfiguredLdflagsSharedFilterMacro::of))
@@ -342,7 +338,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 LdflagsStaticMacro.class,
                 new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
                     Optional.empty(),
-                    buildTargetsWithOutputsTypeCoercer,
+                    buildTargetsTypeCoercer,
                     UnconfiguredLdflagsStaticMacro.class,
                     LdflagsStaticMacro.class,
                     UnconfiguredLdflagsStaticMacro::of))
@@ -351,7 +347,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 LdflagsStaticFilterMacro.class,
                 new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
                     Optional.of(patternTypeCoercer),
-                    buildTargetsWithOutputsTypeCoercer,
+                    buildTargetsTypeCoercer,
                     UnconfiguredLdflagsStaticFilterMacro.class,
                     LdflagsStaticFilterMacro.class,
                     UnconfiguredLdflagsStaticFilterMacro::of))
@@ -360,7 +356,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 LdflagsStaticPicMacro.class,
                 new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
                     Optional.empty(),
-                    buildTargetsWithOutputsTypeCoercer,
+                    buildTargetsTypeCoercer,
                     UnconfiguredLdflagsStaticPicMacro.class,
                     LdflagsStaticPicMacro.class,
                     UnconfiguredLdflagsStaticPicMacro::of))
@@ -369,7 +365,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 LdflagsStaticPicFilterMacro.class,
                 new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
                     Optional.of(patternTypeCoercer),
-                    buildTargetsWithOutputsTypeCoercer,
+                    buildTargetsTypeCoercer,
                     UnconfiguredLdflagsStaticPicFilterMacro.class,
                     LdflagsStaticPicFilterMacro.class,
                     UnconfiguredLdflagsStaticPicFilterMacro::of))

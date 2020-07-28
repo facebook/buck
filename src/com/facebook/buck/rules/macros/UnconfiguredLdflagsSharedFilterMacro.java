@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -30,9 +30,8 @@ public abstract class UnconfiguredLdflagsSharedFilterMacro
     extends UnconfiguredCxxGenruleFilterAndTargetsMacro {
 
   public static UnconfiguredLdflagsSharedFilterMacro of(
-      Optional<Pattern> pattern,
-      ImmutableList<UnconfiguredBuildTargetWithOutputs> targetsWithOutputs) {
-    return ImmutableUnconfiguredLdflagsSharedFilterMacro.ofImpl(pattern, targetsWithOutputs);
+      Optional<Pattern> pattern, ImmutableList<UnconfiguredBuildTarget> buildTargets) {
+    return ImmutableUnconfiguredLdflagsSharedFilterMacro.ofImpl(pattern, buildTargets);
   }
 
   @Override
@@ -41,8 +40,7 @@ public abstract class UnconfiguredLdflagsSharedFilterMacro
   }
 
   @Override
-  public BiFunction<
-          Optional<Pattern>, ImmutableList<BuildTargetWithOutputs>, CxxGenruleFilterAndTargetsMacro>
+  public BiFunction<Optional<Pattern>, ImmutableList<BuildTarget>, CxxGenruleFilterAndTargetsMacro>
       getConfiguredFactory() {
     return LdflagsSharedFilterMacro::of;
   }
