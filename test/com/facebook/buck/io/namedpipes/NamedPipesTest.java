@@ -210,10 +210,7 @@ public class NamedPipesTest {
 
     AbstractMessage event = createEvent(eventType, namedPipeJsonMessageString);
 
-    // write event_type
-    downwardProtocol.write(eventTypeMessage, outputStream);
-    // write event
-    downwardProtocol.write(event, outputStream);
+    downwardProtocol.write(eventTypeMessage, event, outputStream);
     outputStream.flush();
   }
 

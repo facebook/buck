@@ -31,8 +31,13 @@ enum BinaryDownwardProtocol implements DownwardProtocol {
   INSTANCE;
 
   @Override
-  public void write(AbstractMessage message, OutputStream outputStream) throws IOException {
-    message.writeDelimitedTo(outputStream);
+  public void write(EventTypeMessage eventType, AbstractMessage message, OutputStream outputStream)
+      throws IOException {
+    DownwardProtocolUtils.checkMessageType(eventType, message);
+    synchronized (this) {
+      eventType.writeDelimitedTo(outputStream);
+      message.writeDelimitedTo(outputStream);
+    }
   }
 
   @Override

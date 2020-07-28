@@ -481,11 +481,9 @@ public class DownwardApiProcessExecutorTest {
       EventTypeMessage.EventType eventType,
       AbstractMessage message)
       throws IOException {
-    EventTypeMessage typeMessage = EventTypeMessage.newBuilder().setEventType(eventType).build();
-
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    downwardProtocol.write(typeMessage, outputStream);
-    downwardProtocol.write(message, outputStream);
+    downwardProtocol.write(
+        EventTypeMessage.newBuilder().setEventType(eventType).build(), message, outputStream);
     return outputStream.toString(StandardCharsets.UTF_8.name());
   }
 }

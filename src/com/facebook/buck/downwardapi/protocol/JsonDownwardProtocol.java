@@ -25,6 +25,7 @@ import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.StepEvent;
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Message;
+import com.google.protobuf.MessageOrBuilder;
 import com.google.protobuf.util.JsonFormat;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,15 +39,13 @@ enum JsonDownwardProtocol implements DownwardProtocol {
   private final JsonFormat.Printer printer = JsonFormat.printer();
 
   @Override
-  public void write(AbstractMessage message, OutputStream outputStream) throws IOException {
-    String json = printer.print(message);
-    byte[] bytes = json.getBytes(UTF_8);
-    // write json length
-    outputStream.write(String.valueOf(bytes.length).getBytes(UTF_8));
-    // write delimiter
-    DownwardProtocolUtils.writeDelimiter(outputStream);
-    // write json
-    outputStream.write(bytes);
+  public void write(EventTypeMessage eventType, AbstractMessage message, OutputStream outputStream)
+      throws IOException {
+    DownwardProtocolUtils.checkMessageType(eventType, message);
+    synchronized (this) {
+      writeJson(eventType, outputStream);
+      writeJson(message, outputStream);
+    }
   }
 
   @Override
@@ -98,5 +97,17 @@ enum JsonDownwardProtocol implements DownwardProtocol {
       default:
         throw new IllegalStateException("Unexpected value: " + eventType);
     }
+  }
+
+  private void writeJson(MessageOrBuilder messageOrBuilder, OutputStream outputStream)
+      throws IOException {
+    String json = printer.print(messageOrBuilder);
+    byte[] bytes = json.getBytes(UTF_8);
+    // write json length
+    outputStream.write(String.valueOf(bytes.length).getBytes(UTF_8));
+    // write delimiter
+    DownwardProtocolUtils.writeDelimiter(outputStream);
+    // write json
+    outputStream.write(bytes);
   }
 }

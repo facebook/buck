@@ -18,6 +18,13 @@ package com.facebook.buck.downwardapi.protocol;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.facebook.buck.downward.model.ChromeTraceEvent;
+import com.facebook.buck.downward.model.ConsoleEvent;
+import com.facebook.buck.downward.model.EventTypeMessage;
+import com.facebook.buck.downward.model.LogEvent;
+import com.facebook.buck.downward.model.StepEvent;
+import com.google.common.base.Preconditions;
+import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,8 +37,35 @@ class DownwardProtocolUtils {
 
   private DownwardProtocolUtils() {}
 
+  /** Asserts that the given {@code message} matches the type from the given {@code eventType}. */
+  static void checkMessageType(EventTypeMessage eventType, AbstractMessage message) {
+    Class<? extends AbstractMessage> clazz = DownwardProtocolUtils.getExpectedClass(eventType);
+    Preconditions.checkArgument(
+        message.getClass().isAssignableFrom(clazz),
+        "Expected %s, got %s",
+        clazz.getName(),
+        message.getClass().getName());
+  }
+
   static void writeDelimiter(OutputStream outputStream) throws IOException {
     outputStream.write(DELIMITER.getBytes(UTF_8));
+  }
+
+  private static Class<? extends AbstractMessage> getExpectedClass(EventTypeMessage eventType) {
+    switch (eventType.getEventType()) {
+      case CONSOLE_EVENT:
+        return ConsoleEvent.class;
+      case LOG_EVENT:
+        return LogEvent.class;
+      case STEP_EVENT:
+        return StepEvent.class;
+      case CHROME_TRACE_EVENT:
+        return ChromeTraceEvent.class;
+      case UNKNOWN:
+      case UNRECOGNIZED:
+      default:
+        throw new IllegalStateException("Unexpected value: " + eventType);
+    }
   }
 
   static <T> T readFromStream(InputStream inputStream, Function<String, T> converter)

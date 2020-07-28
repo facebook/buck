@@ -26,7 +26,8 @@ import java.io.OutputStream;
 public interface DownwardProtocol {
 
   /** Writes {@code message} into {@code outputStream}. */
-  void write(AbstractMessage message, OutputStream outputStream) throws IOException;
+  void write(EventTypeMessage eventType, AbstractMessage message, OutputStream outputStream)
+      throws IOException;
 
   /** Reads {@code EventTypeMessage.EventType} from {@code inputStream}. */
   EventTypeMessage.EventType readEventType(InputStream inputStream) throws IOException;
