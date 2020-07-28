@@ -40,6 +40,9 @@ public class BuckConstant {
   public static final boolean IS_LOGD_ENABLED =
       Boolean.parseBoolean(System.getProperty("logd.enabled", "false"));
 
+  public static final boolean IS_SCRIBED_LOGGING_ENABLED =
+      Boolean.parseBoolean(System.getProperty("scribed.jul_enabled", "false"));
+
   private BuckConstant() {}
 
   /**

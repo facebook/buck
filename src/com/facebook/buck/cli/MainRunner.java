@@ -317,6 +317,7 @@ public final class MainRunner {
 
   private static final int COMMAND_PATH_MAX_LENGTH = 150;
 
+
   private final InputStream stdIn;
 
   private final Architecture architecture;
@@ -575,6 +576,7 @@ public final class MainRunner {
       LOG.debug("Rotating log.");
       LogConfig.flushLogs();
       LogConfig.setupLogging(command.getLogConfig());
+
 
       if (LOG.isDebugEnabled()) {
         Long gitCommitTimestamp = Long.getLong("buck.git_commit_timestamp");
