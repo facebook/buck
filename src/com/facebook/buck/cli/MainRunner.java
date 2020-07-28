@@ -684,23 +684,7 @@ public final class MainRunner {
       throw new CommandLineException(e, e.getLocalizedMessage() + "\nFor help see 'buck --help'.");
     }
 
-    command
-        .getWriteBuildIdFile()
-        .ifPresent(
-            writeBuildIdFile -> {
-              try (OutputStream outputStream =
-                  new BufferedOutputStream(
-                      Files.newOutputStream(
-                          writeBuildIdFile,
-                          StandardOpenOption.CREATE,
-                          StandardOpenOption.TRUNCATE_EXISTING,
-                          StandardOpenOption.WRITE,
-                          StandardOpenOption.SYNC))) {
-                outputStream.write(buildId.toString().getBytes(StandardCharsets.UTF_8));
-              } catch (IOException e) {
-                LOG.debug("Cannot write build ID to '%s': %s", writeBuildIdFile, e);
-              }
-            });
+    maybeWriteBuildId(command);
 
     // Return help strings fast if the command is a help request.
     Optional<ExitCode> result = command.runHelp(printConsole.getStdOut());
@@ -715,23 +699,10 @@ public final class MainRunner {
     try (CloseableWrapper<Unit> semaphore =
         commandManager.getSemaphoreWrapper(
             command, unexpandedCommandLineArgs, previousCommandArgsBuilder)) {
-      if (!command.isReadOnly() && semaphore == null) {
-        // buck_tool will set BUCK_BUSY_DISPLAYED if it already displayed the busy error
-        if (!clientEnvironment.containsKey("BUCK_BUSY_DISPLAYED")) {
-          String activeCommandLine = "buck " + String.join(" ", previousCommandArgsBuilder.build());
-          if (activeCommandLine.length() > COMMAND_PATH_MAX_LENGTH) {
-            String ending = "...";
-            activeCommandLine =
-                activeCommandLine.substring(0, COMMAND_PATH_MAX_LENGTH - ending.length()) + ending;
-          }
 
-          System.err.println(
-              String.format("Buck Daemon is busy executing '%s'.", activeCommandLine));
-          LOG.info(
-              "Buck server was busy executing '%s'. Maybe retrying later will help.",
-              activeCommandLine);
-        }
-        return ExitCode.BUSY;
+      Optional<ExitCode> busy = handleBusy(command, previousCommandArgsBuilder, semaphore);
+      if (busy.isPresent()) {
+        return busy.get();
       }
 
       // statically configure Buck logging environment based on Buck config, usually buck-x.log
@@ -808,67 +779,20 @@ public final class MainRunner {
       // Remote Execution is in use. All RE builds should not use distributed build.
       final boolean isRemoteExecutionBuild =
           isRemoteExecutionBuild(command, buckConfig, executionEnvironment.getUsername());
-      Optional<String> projectPrefix = Optional.empty();
-      if (command.subcommand instanceof BuildCommand) {
-        BuildCommand subcommand = (BuildCommand) command.subcommand;
-        executionEnvironment.getUsername();
 
-        projectPrefix =
-            RemoteExecutionUtil.getCommonProjectPrefix(subcommand.getArguments(), buckConfig);
-      }
+      Optional<String> projectPrefix = projectPrefix(command, buckConfig, executionEnvironment);
 
       RuleKeyConfiguration ruleKeyConfiguration =
           ConfigRuleKeyConfigurationFactory.create(buckConfig, moduleManager);
 
-      String previousBuckCoreKey;
-      if (!command.isReadOnly()) {
-        Optional<String> currentBuckCoreKey =
-            filesystem.readFileIfItExists(filesystem.getBuckPaths().getCurrentVersionFile());
-        BuckPaths unconfiguredPaths =
-            filesystem.getBuckPaths().withConfiguredBuckOut(filesystem.getBuckPaths().getBuckOut());
-
-        previousBuckCoreKey = currentBuckCoreKey.orElse("<NOT_FOUND>");
-
-        if (!currentBuckCoreKey.isPresent()
-            || !currentBuckCoreKey.get().equals(ruleKeyConfiguration.getCoreKey())
-            || (filesystem.exists(unconfiguredPaths.getGenDir(), LinkOption.NOFOLLOW_LINKS)
-                && (filesystem.isSymLink(unconfiguredPaths.getGenDir())
-                    ^ buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink()))) {
-          // Migrate any version-dependent directories (which might be huge) to a trash directory
-          // so we can delete it asynchronously after the command is done.
-          moveToTrash(
-              filesystem,
-              printConsole,
-              buildId,
-              filesystem.getBuckPaths().getAnnotationDir(),
-              filesystem.getBuckPaths().getGenDir(),
-              filesystem.getBuckPaths().getScratchDir(),
-              filesystem.getBuckPaths().getResDir());
-          filesystem.mkdirs(filesystem.getBuckPaths().getCurrentVersionFile().getParent());
-          filesystem.writeContentsToPath(
-              ruleKeyConfiguration.getCoreKey(), filesystem.getBuckPaths().getCurrentVersionFile());
-        }
-      } else {
-        previousBuckCoreKey = "";
-      }
-
-      LOG.verbose("Buck core key from the previous Buck instance: %s", previousBuckCoreKey);
+          previousBuckCoreKey(command, filesystem, buckConfig, ruleKeyConfiguration);
 
       ProcessExecutor processExecutor = new DefaultProcessExecutor(printConsole);
 
       SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory =
           new PlatformSandboxExecutionStrategyFactory();
 
-      Clock clock;
-      boolean enableThreadCpuTime =
-          buckConfig.getBooleanValue("build", "enable_thread_cpu_time", true);
-      if (BUCKD_LAUNCH_TIME_NANOS.isPresent()) {
-        long nanosEpoch = Long.parseLong(BUCKD_LAUNCH_TIME_NANOS.get(), 10);
-        LOG.verbose("Using nanos epoch: %d", nanosEpoch);
-        clock = new NanosAdjustedClock(nanosEpoch, enableThreadCpuTime);
-      } else {
-        clock = new DefaultClock(enableThreadCpuTime);
-      }
+      Clock clock = makeClock(buckConfig);
 
       ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
       Watchman watchman =
@@ -1282,28 +1206,7 @@ public final class MainRunner {
                   ExecutorPool.PROJECT,
                   projectExecutorService.get());
 
-          // No need to kick off ProgressEstimator for commands that
-          // don't build anything -- it has overhead and doesn't seem
-          // to work for (e.g.) query anyway. ProgressEstimator has
-          // special support for project so we have to include it
-          // there too.
-          if (consoleListener.displaysEstimatedProgress()
-              && (command.performsBuild()
-                  || command.subcommand instanceof ProjectCommand
-                  || command.subcommand instanceof AbstractQueryCommand)) {
-            boolean persistent = !(command.subcommand instanceof AbstractQueryCommand);
-            ProgressEstimator progressEstimator =
-                new ProgressEstimator(
-                    persistent
-                        ? Optional.of(
-                            filesystem
-                                .resolve(filesystem.getBuckPaths().getBuckOut())
-                                .resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON)
-                                .getPath())
-                        : Optional.empty(),
-                    buildEventBus);
-            consoleListener.setProgressEstimator(progressEstimator);
-          }
+          maybeSetupProgressEstimator(command, filesystem, buildEventBus, consoleListener);
 
           BuildEnvironmentDescription buildEnvironmentDescription =
               getBuildEnvironmentDescription(
@@ -1592,6 +1495,103 @@ public final class MainRunner {
       }
     }
     return exitCode;
+  }
+
+  private Optional<String> projectPrefix(
+      BuckCommand command, BuckConfig buckConfig, ExecutionEnvironment executionEnvironment) {
+    if (command.subcommand instanceof BuildCommand) {
+      BuildCommand subcommand = (BuildCommand) command.subcommand;
+      executionEnvironment.getUsername();
+
+      return RemoteExecutionUtil.getCommonProjectPrefix(subcommand.getArguments(), buckConfig);
+    } else {
+      return Optional.empty();
+    }
+  }
+
+  private void maybeSetupProgressEstimator(
+      BuckCommand command,
+      ProjectFilesystem filesystem,
+      DefaultBuckEventBus buildEventBus,
+      AbstractConsoleEventBusListener consoleListener) {
+    // No need to kick off ProgressEstimator for commands that
+    // don't build anything -- it has overhead and doesn't seem
+    // to work for (e.g.) query anyway. ProgressEstimator has
+    // special support for project so we have to include it
+    // there too.
+    if (consoleListener.displaysEstimatedProgress()
+        && (command.performsBuild()
+            || command.subcommand instanceof ProjectCommand
+            || command.subcommand instanceof AbstractQueryCommand)) {
+      boolean persistent = !(command.subcommand instanceof AbstractQueryCommand);
+      ProgressEstimator progressEstimator =
+          new ProgressEstimator(
+              persistent
+                  ? Optional.of(
+                      filesystem
+                          .resolve(filesystem.getBuckPaths().getBuckOut())
+                          .resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON)
+                          .getPath())
+                  : Optional.empty(),
+              buildEventBus);
+      consoleListener.setProgressEstimator(progressEstimator);
+    }
+  }
+
+  private Optional<ExitCode> handleBusy(
+      BuckCommand command,
+      ImmutableList.Builder<String> previousCommandArgsBuilder,
+      CloseableWrapper<Unit> semaphore) {
+    if (!command.isReadOnly() && semaphore == null) {
+      // buck_tool will set BUCK_BUSY_DISPLAYED if it already displayed the busy error
+      if (!clientEnvironment.containsKey("BUCK_BUSY_DISPLAYED")) {
+        String activeCommandLine = "buck " + String.join(" ", previousCommandArgsBuilder.build());
+        if (activeCommandLine.length() > COMMAND_PATH_MAX_LENGTH) {
+          String ending = "...";
+          activeCommandLine =
+              activeCommandLine.substring(0, COMMAND_PATH_MAX_LENGTH - ending.length()) + ending;
+        }
+
+        System.err.println(String.format("Buck Daemon is busy executing '%s'.", activeCommandLine));
+        LOG.info(
+            "Buck server was busy executing '%s'. Maybe retrying later will help.",
+            activeCommandLine);
+      }
+      return Optional.of(ExitCode.BUSY);
+    }
+    return Optional.empty();
+  }
+
+  private void maybeWriteBuildId(BuckCommand command) {
+    command
+        .getWriteBuildIdFile()
+        .ifPresent(
+            writeBuildIdFile -> {
+              try (OutputStream outputStream =
+                  new BufferedOutputStream(
+                      Files.newOutputStream(
+                          writeBuildIdFile,
+                          StandardOpenOption.CREATE,
+                          StandardOpenOption.TRUNCATE_EXISTING,
+                          StandardOpenOption.WRITE,
+                          StandardOpenOption.SYNC))) {
+                outputStream.write(buildId.toString().getBytes(StandardCharsets.UTF_8));
+              } catch (IOException e) {
+                LOG.debug("Cannot write build ID to '%s': %s", writeBuildIdFile, e);
+              }
+            });
+  }
+
+  private Clock makeClock(BuckConfig buckConfig) {
+    boolean enableThreadCpuTime =
+        buckConfig.getBooleanValue("build", "enable_thread_cpu_time", true);
+    if (BUCKD_LAUNCH_TIME_NANOS.isPresent()) {
+      long nanosEpoch = Long.parseLong(BUCKD_LAUNCH_TIME_NANOS.get(), 10);
+      LOG.verbose("Using nanos epoch: %d", nanosEpoch);
+      return new NanosAdjustedClock(nanosEpoch, enableThreadCpuTime);
+    } else {
+      return new DefaultClock(enableThreadCpuTime);
+    }
   }
 
   private void setWatchmanIfEdenProjectFileSystemDelegate(
@@ -2019,6 +2019,48 @@ public final class MainRunner {
         e.printStackTrace(stdErr);
       }
     }
+  }
+
+  private String previousBuckCoreKey(
+      BuckCommand command,
+      ProjectFilesystem filesystem,
+      BuckConfig buckConfig,
+      RuleKeyConfiguration ruleKeyConfiguration)
+      throws IOException {
+    String previousBuckCoreKey;
+    if (!command.isReadOnly()) {
+      Optional<String> currentBuckCoreKey =
+          filesystem.readFileIfItExists(filesystem.getBuckPaths().getCurrentVersionFile());
+      BuckPaths unconfiguredPaths =
+          filesystem.getBuckPaths().withConfiguredBuckOut(filesystem.getBuckPaths().getBuckOut());
+
+      previousBuckCoreKey = currentBuckCoreKey.orElse("<NOT_FOUND>");
+
+      if (!currentBuckCoreKey.isPresent()
+          || !currentBuckCoreKey.get().equals(ruleKeyConfiguration.getCoreKey())
+          || (filesystem.exists(unconfiguredPaths.getGenDir(), LinkOption.NOFOLLOW_LINKS)
+              && (filesystem.isSymLink(unconfiguredPaths.getGenDir())
+                  ^ buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink()))) {
+        // Migrate any version-dependent directories (which might be huge) to a trash directory
+        // so we can delete it asynchronously after the command is done.
+        moveToTrash(
+            filesystem,
+            printConsole,
+            buildId,
+            filesystem.getBuckPaths().getAnnotationDir(),
+            filesystem.getBuckPaths().getGenDir(),
+            filesystem.getBuckPaths().getScratchDir(),
+            filesystem.getBuckPaths().getResDir());
+        filesystem.mkdirs(filesystem.getBuckPaths().getCurrentVersionFile().getParent());
+        filesystem.writeContentsToPath(
+            ruleKeyConfiguration.getCoreKey(), filesystem.getBuckPaths().getCurrentVersionFile());
+      }
+    } else {
+      previousBuckCoreKey = "";
+    }
+
+    LOG.verbose("Buck core key from the previous Buck instance: %s", previousBuckCoreKey);
+    return previousBuckCoreKey;
   }
 
   private static void moveToTrash(
