@@ -24,12 +24,10 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteSource;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -85,7 +83,7 @@ public class AppleComputeDirectoryContentHashStep extends AbstractExecutionStep 
                 Sha1HashCode sha1;
                 if (projectFilesystem.isSymLink(file)) {
                   Path resolvedSymlink = projectFilesystem.readSymLink(file);
-                  sha1 = computeHash(resolvedSymlink.toString());
+                  sha1 = AppleComputeHashSupport.computeHash(resolvedSymlink.toString());
                 } else {
                   sha1 = projectFilesystem.computeSha1(file);
                 }
@@ -110,7 +108,7 @@ public class AppleComputeDirectoryContentHashStep extends AbstractExecutionStep 
                 boolean isCurrentDirectoryEmpty = directoryStackEmptiness.pop();
                 if (!isRootDirectory && isCurrentDirectoryEmpty) {
                   Path path = pathRelativeToRootDirectory(dir).getPath();
-                  pathToHashBuilder.put(path, computeHash(""));
+                  pathToHashBuilder.put(path, AppleComputeHashSupport.computeHash(""));
                 }
                 return FileVisitResult.CONTINUE;
               }
@@ -122,17 +120,12 @@ public class AppleComputeDirectoryContentHashStep extends AbstractExecutionStep 
 
     Hasher hasher = Hashing.sha1().newHasher();
     for (Map.Entry<Path, Sha1HashCode> entry : pathToHashBuilder.build().entrySet()) {
-      computeHash(entry.getKey().toString()).update(hasher);
+      AppleComputeHashSupport.computeHash(entry.getKey().toString()).update(hasher);
       entry.getValue().update(hasher);
     }
 
     hashBuilder.append(hasher.hash().toString());
 
     return StepExecutionResults.SUCCESS;
-  }
-
-  private Sha1HashCode computeHash(String data) throws IOException {
-    return Sha1HashCode.fromHashCode(
-        ByteSource.wrap(data.getBytes(Charsets.UTF_8)).hash(Hashing.sha1()));
   }
 }
