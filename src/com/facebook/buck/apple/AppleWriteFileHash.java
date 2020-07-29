@@ -79,7 +79,8 @@ public class AppleWriteFileHash extends ModernBuildRule<AppleWriteFileHash> impl
                   new AppleComputeDirectoryContentHashStep(hashBuilder, absInputPath, filesystem);
             } else {
               step =
-                  new AppleComputeFileHashStep(hashBuilder, absInputPath, useMachoUuid, filesystem);
+                  new AppleComputeFileHashStep(
+                      hashBuilder, absInputPath, useMachoUuid, filesystem, false);
             }
             return step.execute(context);
           }

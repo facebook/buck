@@ -25,8 +25,10 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.nio.ByteBufferUnmapper;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 
@@ -40,22 +42,32 @@ public class AppleComputeFileHashStep extends AbstractExecutionStep {
   private final boolean useMachoUuid;
   private final AbsPath filePath;
   private final ProjectFilesystem projectFilesystem;
+  private final boolean symlinksHashResolvedPath;
 
   public AppleComputeFileHashStep(
       StringBuilder hashBuilder,
       AbsPath filePath,
       boolean useMachoUuid,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      boolean symlinksHashResolvedPath) {
     super("apple-compute-file-hash");
     this.hashBuilder = hashBuilder;
     this.useMachoUuid = useMachoUuid;
     this.filePath = filePath;
     this.projectFilesystem = projectFilesystem;
+    this.symlinksHashResolvedPath = symlinksHashResolvedPath;
   }
 
   @Override
   public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
+
+    if (symlinksHashResolvedPath && projectFilesystem.isSymLink(filePath)) {
+      Path resolvedSymlink = projectFilesystem.readSymLink(filePath.getPath());
+      Sha1HashCode sha1 = AppleComputeHashSupport.computeHash(resolvedSymlink.toString());
+      hashBuilder.append(sha1);
+      return StepExecutionResults.SUCCESS;
+    }
 
     if (useMachoUuid) {
       Optional<String> maybeUuid = getMachoUuid(filePath);

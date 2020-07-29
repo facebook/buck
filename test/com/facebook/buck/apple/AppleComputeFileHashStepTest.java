@@ -52,7 +52,7 @@ public class AppleComputeFileHashStepTest {
     StringBuilder hashBuilder = new StringBuilder();
     AbsPath testFilePath = AbsPath.of(filesystemRootPath.resolve("foo"));
     AppleComputeFileHashStep step =
-        new AppleComputeFileHashStep(hashBuilder, testFilePath, false, filesystem);
+        new AppleComputeFileHashStep(hashBuilder, testFilePath, false, filesystem, false);
     step.execute(context);
     assertEquals("4e1243bd22c66e76c2ba9eddc1f91394e57f9f83", hashBuilder.toString());
   }
@@ -64,7 +64,7 @@ public class AppleComputeFileHashStepTest {
     StringBuilder hashBuilder = new StringBuilder();
     AbsPath testFilePath = AbsPath.of(filesystemRootPath.resolve("bar"));
     AppleComputeFileHashStep step =
-        new AppleComputeFileHashStep(hashBuilder, testFilePath, false, filesystem);
+        new AppleComputeFileHashStep(hashBuilder, testFilePath, false, filesystem, false);
     step.execute(context);
     assertEquals("4b6891845922afb60f019e7ec9e8a216689aa750", hashBuilder.toString());
   }
@@ -76,7 +76,7 @@ public class AppleComputeFileHashStepTest {
     StringBuilder hashBuilder = new StringBuilder();
     AbsPath testFilePath = AbsPath.of(filesystemRootPath.resolve("foo"));
     AppleComputeFileHashStep step =
-        new AppleComputeFileHashStep(hashBuilder, testFilePath, true, filesystem);
+        new AppleComputeFileHashStep(hashBuilder, testFilePath, true, filesystem, false);
     step.execute(context);
     assertEquals("sha1:4e1243bd22c66e76c2ba9eddc1f91394e57f9f83", hashBuilder.toString());
   }
@@ -88,8 +88,32 @@ public class AppleComputeFileHashStepTest {
     StringBuilder hashBuilder = new StringBuilder();
     AbsPath testFilePath = AbsPath.of(filesystemRootPath.resolve("bar"));
     AppleComputeFileHashStep step =
-        new AppleComputeFileHashStep(hashBuilder, testFilePath, true, filesystem);
+        new AppleComputeFileHashStep(hashBuilder, testFilePath, true, filesystem, false);
     step.execute(context);
     assertEquals("uuid:24896723764e73118173419116bb4477", hashBuilder.toString());
+  }
+
+  @Test
+  public void
+      test_givenHashOnlyResolvedPathIfSymlink_whenHashOfSymlinkIsComputed_thenResultHashIsEqualToHashOfResolvedSymlinkPath()
+          throws IOException, InterruptedException {
+    StringBuilder hashBuilder = new StringBuilder();
+    AbsPath testFilePath = AbsPath.of(filesystemRootPath.resolve("symlink"));
+    AppleComputeFileHashStep step =
+        new AppleComputeFileHashStep(hashBuilder, testFilePath, false, filesystem, true);
+    step.execute(context);
+    assertEquals("0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33", hashBuilder.toString());
+  }
+
+  @Test
+  public void
+      test_givenHashContentIfSymlink_whenHashOfSymlinkIsComputed_thenResultHashIsEqualToContentHash()
+          throws IOException, InterruptedException {
+    StringBuilder hashBuilder = new StringBuilder();
+    AbsPath testFilePath = AbsPath.of(filesystemRootPath.resolve("symlink"));
+    AppleComputeFileHashStep step =
+        new AppleComputeFileHashStep(hashBuilder, testFilePath, false, filesystem, false);
+    step.execute(context);
+    assertEquals("4e1243bd22c66e76c2ba9eddc1f91394e57f9f83", hashBuilder.toString());
   }
 }
