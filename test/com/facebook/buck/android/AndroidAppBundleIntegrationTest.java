@@ -111,7 +111,7 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     }
 
     Assets assets = Assets.parseFrom(zipInspector.getFileContents("base/assets.pb"));
-    assertEquals(2, assets.getDirectoryList().size());
+    assertEquals(3, assets.getDirectoryList().size());
 
     BundleConfig bundleConfig =
         BundleConfig.parseFrom(zipInspector.getFileContents("BundleConfig.pb"));

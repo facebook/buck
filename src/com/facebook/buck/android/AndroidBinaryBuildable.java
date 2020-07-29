@@ -64,7 +64,11 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 class AndroidBinaryBuildable implements AddsToRuleKey {
@@ -406,10 +410,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ImmutableModuleInfo.Builder baseModuleInfo,
       ImmutableSet.Builder<ModuleInfo> modulesInfo) {
     boolean addThisModule = false;
-    ImmutableMap.Builder<Path, String> assetDirectoriesBuilderForThisModule =
-        ImmutableMap.builder();
-    ImmutableSet.Builder<Path> nativeLibraryDirectoriesBuilderForThisModule =
-        ImmutableSet.builder();
+    Map<Path, String> assetDirectoriesForThisModule = new HashMap<>();
+    Set<Path> nativeLibraryDirectoriesForThisModule = new HashSet<>();
     Path resourcesDirectoryForThisModule = null;
     ImmutableSet.Builder<Path> dexFileDirectoriesBuilderForThisModule = ImmutableSet.builder();
 
@@ -419,7 +421,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           module,
           mapOfModuleToSecondaryDexSourcePaths,
           dexFileDirectoriesBuilderForThisModule,
-          assetDirectoriesBuilderForThisModule);
+          assetDirectoriesForThisModule);
     }
 
     boolean shouldPackageAssetLibraries = packageAssetLibraries || !module.isRootModule();
@@ -432,7 +434,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           module,
           pathResolver,
           nativeLibraryDirectoriesBuilder,
-          nativeLibraryDirectoriesBuilderForThisModule);
+          nativeLibraryDirectoriesForThisModule);
     }
 
     // Package prebuilt libs which need to be loaded by `System.loadLibrary` in the standard dir,
@@ -442,17 +444,13 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       RelPath relativePath =
           pathResolver.getCellUnsafeRelPath(nativeFilesInfo.nativeLibsDirForSystemLoader.get());
       nativeLibraryDirectoriesBuilder.add(relativePath.getPath());
-      nativeLibraryDirectoriesBuilderForThisModule.add(relativePath.getPath());
+      nativeLibraryDirectoriesForThisModule.add(relativePath.getPath());
     }
 
     if (shouldPackageAssetLibraries) {
       addThisModule = true;
       addNativeLibraryAsAssetDirectory(
-          module,
-          context,
-          nativeLibraryAsAssetDirectories,
-          assetDirectoriesBuilderForThisModule,
-          steps);
+          module, context, nativeLibraryAsAssetDirectories, assetDirectoriesForThisModule, steps);
     }
 
     if (moduleResourceApkPaths.get(module) != null) {
@@ -467,8 +465,9 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     if (module.isRootModule()) {
       baseModuleInfo
-          .putAllAssetDirectories(assetDirectoriesBuilderForThisModule.build())
-          .addAllNativeLibraryDirectories(nativeLibraryDirectoriesBuilderForThisModule.build())
+          .putAllAssetDirectories(ImmutableMap.copyOf(assetDirectoriesForThisModule))
+          .addAllNativeLibraryDirectories(
+              ImmutableSet.copyOf(nativeLibraryDirectoriesForThisModule))
           .addAllDexFile(dexFileDirectoriesBuilderForThisModule.build());
     } else {
       String moduleName = module.getName();
@@ -477,10 +476,10 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               moduleName,
               resourcesDirectoryForThisModule,
               dexFileDirectoriesBuilderForThisModule.build(),
-              assetDirectoriesBuilderForThisModule.build(),
-              nativeLibraryDirectoriesBuilderForThisModule.build(),
-              ImmutableSet.<Path>builder().build(),
-              ImmutableSet.<Path>builder().build()));
+              ImmutableMap.copyOf(assetDirectoriesForThisModule),
+              ImmutableSet.copyOf(nativeLibraryDirectoriesForThisModule),
+              ImmutableSet.<Path>of(),
+              ImmutableSet.<Path>of()));
     }
   }
 
@@ -489,7 +488,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       APKModule module,
       ImmutableMap<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths,
       ImmutableSet.Builder<Path> dexFileDirectoriesBuilderForThisModule,
-      ImmutableMap.Builder<Path, String> assetDirectoriesBuilderForThisModule) {
+      Map<Path, String> assetDirectoriesForThisModule) {
     File[] dexFiles =
         filesystem
             .getPathForRelativePath(
@@ -509,7 +508,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             pathResolver.getCellUnsafeRelPath(
                 mapOfModuleToSecondaryDexSourcePaths.get(module.getName()));
         String prefix = current.getParent().getParent().relativize(current).toString();
-        assetDirectoriesBuilderForThisModule.put(current.getPath(), prefix);
+        assetDirectoriesForThisModule.put(current.getPath(), prefix);
       }
     }
   }
@@ -519,12 +518,12 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       APKModule module,
       SourcePathResolverAdapter pathResolver,
       ImmutableSet.Builder<Path> nativeLibraryDirectoriesBuilder,
-      ImmutableSet.Builder<Path> nativeLibraryDirectoriesBuilderForThisModule) {
+      Set<Path> nativeLibraryDirectoriesForThisModule) {
     nativeLibraryDirectoriesBuilder.add(
         pathResolver
             .getCellUnsafeRelPath(nativeFilesInfo.nativeLibsDirs.get().get(module))
             .getPath());
-    nativeLibraryDirectoriesBuilderForThisModule.add(
+    nativeLibraryDirectoriesForThisModule.add(
         pathResolver
             .getCellUnsafeRelPath(nativeFilesInfo.nativeLibsDirs.get().get(module))
             .getPath());
@@ -535,7 +534,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         pathResolver
             .getCellUnsafeRelPath(nativeFilesInfo.nativeLibsAssetsDirs.get().get(module))
             .getPath());
-    nativeLibraryDirectoriesBuilderForThisModule.add(
+    nativeLibraryDirectoriesForThisModule.add(
         pathResolver
             .getCellUnsafeRelPath(nativeFilesInfo.nativeLibsAssetsDirs.get().get(module))
             .getPath());
@@ -545,7 +544,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       APKModule module,
       BuildContext context,
       ImmutableSet.Builder<Path> nativeLibraryAsAssetDirectories,
-      ImmutableMap.Builder<Path, String> assetDirectoriesBuilderForThisModule,
+      Map<Path, String> assetDirectoriesForThisModule,
       ImmutableList.Builder<Step> steps) {
     Preconditions.checkState(
         ExopackageMode.enabledForModules(exopackageModes)
@@ -566,7 +565,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     nativeLibraryAsAssetDirectories.add(pathForNativeLibsAsAssets.getPath());
 
-    assetDirectoriesBuilderForThisModule.put(pathForNativeLibsAsAssets.getPath(), "");
+    assetDirectoriesForThisModule.put(pathForNativeLibsAsAssets.getPath(), "");
   }
 
   private Path addModuleResourceDirectory(
