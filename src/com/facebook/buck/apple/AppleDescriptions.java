@@ -1112,6 +1112,7 @@ public class AppleDescriptions {
         withDownwardApi,
         entitlementsReadyForCodeSign,
         provisioningProfileReadyToCopy,
+        dryRunCodeSigning,
         dryCodeSignResultsReadyToCopy,
         codeSignIdentityFingerprint);
   }

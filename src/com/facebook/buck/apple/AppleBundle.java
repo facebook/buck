@@ -158,6 +158,8 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final AppleCodeSignType codeSignType;
 
+  @AddToRuleKey private final boolean dryRunCodeSigning;
+
   @AddToRuleKey private final Optional<SourcePath> maybeDryCodeSignResultFile;
 
   @AddToRuleKey private final Optional<SourcePath> maybeCodeSignIdentityFingerprintFile;
@@ -195,6 +197,7 @@ public class AppleBundle extends AbstractBuildRule
       boolean withDownwardApi,
       Optional<SourcePath> maybeEntitlementsFile,
       Optional<SourcePath> maybeProvisioningProfileFile,
+      boolean dryRunCodeSigning,
       Optional<SourcePath> maybeDryCodeSignResultFile,
       Optional<SourcePath> maybeCodeSignIdentityFingerprintFile) {
     super(buildTarget, projectFilesystem);
@@ -226,6 +229,7 @@ public class AppleBundle extends AbstractBuildRule
     this.ibtoolModuleFlag = ibtoolModuleFlag.orElse(false);
     this.ibtoolFlags = ibtoolFlags;
     this.maybeProvisioningProfileFile = maybeProvisioningProfileFile;
+    this.dryRunCodeSigning = dryRunCodeSigning;
     this.maybeDryCodeSignResultFile = maybeDryCodeSignResultFile;
     this.maybeCodeSignIdentityFingerprintFile = maybeCodeSignIdentityFingerprintFile;
 
@@ -375,9 +379,7 @@ public class AppleBundle extends AbstractBuildRule
           context.getSourcePathResolver(),
           bundleRoot.resolve(destinations.getFrameworksPath()),
           bundleRoot,
-          maybeDryCodeSignResultFile.isPresent()
-              ? Optional.empty()
-              : Optional.of(codeSignIdentitySupplier),
+          dryRunCodeSigning ? Optional.empty() : Optional.of(codeSignIdentitySupplier),
           stepsBuilder,
           false,
           extension,
@@ -404,7 +406,7 @@ public class AppleBundle extends AbstractBuildRule
           maybeEntitlementsFile.map(
               sourcePath -> context.getSourcePathResolver().getAbsolutePath(sourcePath).getPath());
 
-      if (maybeDryCodeSignResultFile.isPresent()) {
+      if (dryRunCodeSigning) {
         final boolean shouldUseEntitlements = entitlementsPlist.isPresent();
         appendDryCodeSignSteps(
             stepsBuilder, codeSignOnCopyPaths, codeSignIdentitySupplier, shouldUseEntitlements);
@@ -566,7 +568,7 @@ public class AppleBundle extends AbstractBuildRule
               boolean provisioningProfileFileExist =
                   getProjectFilesystem().exists(provisioningProfilePath);
               Preconditions.checkState(
-                  provisioningProfileFileExist || maybeDryCodeSignResultFile.isPresent(),
+                  provisioningProfileFileExist || dryRunCodeSigning,
                   ".mobileprovision file could be missing only when code sign is dry");
               return getProjectFilesystem().exists(provisioningProfilePath);
             },
