@@ -171,6 +171,11 @@ public class WatchmanFactory {
       return Optional.empty();
     }
 
+    if (env.containsKey("WATCHMAN_SOCK")) {
+      LOG.info("WATCHMAN_SOCK set in env, using %s", env.get("WATCHMAN_SOCK"));
+      return Optional.of(Paths.get(env.get("WATCHMAN_SOCK")));
+    }
+
     Path watchmanPath = watchmanPathOpt.get().toAbsolutePath();
     Optional<? extends Map<String, ?>> result =
         execute(
@@ -192,6 +197,7 @@ public class WatchmanFactory {
     }
 
     Path transportPath = Paths.get(rawSockname);
+
     LOG.info("Connecting to Watchman version %s at %s", result.get().get("version"), transportPath);
     return Optional.of(transportPath);
   }
