@@ -34,17 +34,21 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Contains shared logic for adding resource processing steps to apple build rules */
 public class AppleResourceProcessing {
@@ -506,23 +510,45 @@ public class AppleResourceProcessing {
 
   /** Checks and throws an exception if parts of bundle have conflicting paths */
   public static void verifyResourceConflicts(
-      AppleBundleResources resources, SourcePathResolverAdapter resolver) {
+      AppleBundleResources resources,
+      SourcePathResolverAdapter resolver,
+      AppleBundleDestinations destinations) {
     // Ensure there are no resources that will overwrite each other
     // TODO: handle ResourceDirsContainingResourceDirs
-    for (AppleBundleDestination destination : resources.getAllDestinations()) {
-      Set<Path> resourcePaths = new HashSet<>();
-      for (SourcePath path :
-          Iterables.concat(
-              resources.getResourceDirsForDestination(destination),
-              resources.getResourceFilesForDestination(destination))) {
-        Path pathInBundle = resolver.getCellUnsafeRelPath(path).getFileName();
-        if (resourcePaths.contains(pathInBundle)) {
-          throw new HumanReadableException(
-              "Bundle contains multiple resources with path %s", pathInBundle);
-        } else {
-          resourcePaths.add(pathInBundle);
-        }
+    List<Pair<AbsPath, RelPath>> allSourceWithDestinationPaths =
+        Stream.concat(resources.getResourceDirs().stream(), resources.getResourceFiles().stream())
+            .map(
+                s -> {
+                  AbsPath sourcePath = resolver.getAbsolutePath(s.getSourcePath());
+                  RelPath destinationPath =
+                      destinationPathRelativeToBundleRoot(
+                          resolver, destinations, s.getSourcePath(), s.getDestination());
+                  return new Pair<>(sourcePath, destinationPath);
+                })
+            .collect(Collectors.toList());
+    Map<RelPath, AbsPath> encounteredDestinationToSourcePaths = new HashMap<>();
+    for (Pair<AbsPath, RelPath> sourceWithDestination : allSourceWithDestinationPaths) {
+      AbsPath sourcePath = sourceWithDestination.getFirst();
+      RelPath destinationPath = sourceWithDestination.getSecond();
+      if (encounteredDestinationToSourcePaths.containsKey(destinationPath)) {
+        AbsPath encounteredSourcePath = encounteredDestinationToSourcePaths.get(destinationPath);
+        throw new HumanReadableException(
+            "Bundle contains multiple resources with path '%s'. Source files are '%s' and '%s'",
+            destinationPath, sourcePath, encounteredSourcePath);
+      } else {
+        encounteredDestinationToSourcePaths.put(destinationPath, sourcePath);
       }
     }
+  }
+
+  private static RelPath destinationPathRelativeToBundleRoot(
+      SourcePathResolverAdapter sourcePathResolver,
+      AppleBundleDestinations destinations,
+      SourcePath sourcePath,
+      AppleBundleDestination destination) {
+    RelPath destinationDirectoryPath = RelPath.of(destination.getPath(destinations));
+    AbsPath resolvedSourcePath = sourcePathResolver.getAbsolutePath(sourcePath);
+    String destinationFileName = resolvedSourcePath.getFileName().toString();
+    return destinationDirectoryPath.resolveRel(destinationFileName);
   }
 }

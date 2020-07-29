@@ -319,7 +319,8 @@ public class AppleBundle extends AbstractBuildRule
     ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder = ImmutableList.builder();
 
     if (verifyResources) {
-      AppleResourceProcessing.verifyResourceConflicts(resources, context.getSourcePathResolver());
+      AppleResourceProcessing.verifyResourceConflicts(
+          resources, context.getSourcePathResolver(), destinations);
     }
 
     AppleResourceProcessing.addStepsToCopyResources(
