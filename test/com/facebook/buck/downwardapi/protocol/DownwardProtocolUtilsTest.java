@@ -42,7 +42,7 @@ public class DownwardProtocolUtilsTest {
   }
 
   @Test
-  public void succeedsIfPayloadDoesNotMatchEventType() {
+  public void succeedsIfPayloadMatchesEventType() {
     DownwardProtocolUtils.checkMessageType(
         createEventTypeMessage(EventTypeMessage.EventType.LOG_EVENT),
         LogEvent.newBuilder()
