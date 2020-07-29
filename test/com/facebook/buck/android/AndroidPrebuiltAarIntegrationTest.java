@@ -64,7 +64,7 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
         .runBuckCommandWithEnvironmentOverridesAndContext(
             tmp.getRoot(),
             Optional.empty(),
-            ImmutableMap.of("ANDROID_SDK", badSdkPath, "ANDROID_HOME", badSdkPath),
+            ImmutableMap.of("ANDROID_SDK", badSdkPath, "ANDROID_HOME", badSdkPath, "ANDROID_SDK_ROOT", badSdkPath),
             "targets",
             "--show-rulekey",
             "//:aar")

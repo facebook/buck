@@ -270,7 +270,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               pathToKeystore,
               keystoreProperties,
               false,
-              javaRuntimeLauncher.getCommandPrefix(pathResolver)));
+              javaRuntimeLauncher.getCommandPrefix(pathResolver),
+              androidSdkLocation));
     } else {
       ImmutableSet<String> moduleNames =
           apkModules.stream().map(APKModule::getName).collect(ImmutableSet.toImmutableSet());
