@@ -361,6 +361,44 @@ public class AppleResourceProcessing {
       BuildTarget buildTarget,
       Optional<String> binaryName,
       boolean withDownwardApi) {
+    addStepsToCreateDirectoriesWhereBundlePartsAreCopied(
+        context, stepsBuilder, resources, dirRoot, destinations, projectFilesystem);
+    addStepsToCopyDirectories(
+        context,
+        stepsBuilder,
+        codeSignOnCopyPathsBuilder,
+        resources,
+        dirRoot,
+        destinations,
+        projectFilesystem);
+    addStepsToCopyContentOfDirectories(
+        context, stepsBuilder, resources, dirRoot, destinations, projectFilesystem);
+    addStepsToProcessAndCopyFiles(
+        context,
+        stepsBuilder,
+        codeSignOnCopyPathsBuilder,
+        resources,
+        dirRoot,
+        destinations,
+        projectFilesystem,
+        ibtoolFlags,
+        isLegacyWatchApp,
+        platform,
+        LOG,
+        ibtool,
+        ibtoolModuleFlag,
+        buildTarget,
+        binaryName,
+        withDownwardApi);
+  }
+
+  private static void addStepsToCreateDirectoriesWhereBundlePartsAreCopied(
+      BuildContext context,
+      ImmutableList.Builder<Step> stepsBuilder,
+      AppleBundleResources resources,
+      Path dirRoot,
+      AppleBundleDestinations destinations,
+      ProjectFilesystem projectFilesystem) {
     for (AppleBundleDestination bundleDestination : resources.getAllDestinations()) {
       Path bundleDestinationPath = dirRoot.resolve(bundleDestination.getPath(destinations));
       stepsBuilder.add(
@@ -368,7 +406,16 @@ public class AppleResourceProcessing {
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(), projectFilesystem, bundleDestinationPath)));
     }
+  }
 
+  private static void addStepsToCopyDirectories(
+      BuildContext context,
+      ImmutableList.Builder<Step> stepsBuilder,
+      ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
+      AppleBundleResources resources,
+      Path dirRoot,
+      AppleBundleDestinations destinations,
+      ProjectFilesystem projectFilesystem) {
     for (SourcePathWithAppleBundleDestination dirWithDestination : resources.getResourceDirs()) {
       Path resolvedDirPath =
           context
@@ -388,7 +435,15 @@ public class AppleResourceProcessing {
             bundleDestinationPath.resolve(resolvedDirPath.getFileName()));
       }
     }
+  }
 
+  private static void addStepsToCopyContentOfDirectories(
+      BuildContext context,
+      ImmutableList.Builder<Step> stepsBuilder,
+      AppleBundleResources resources,
+      Path dirRoot,
+      AppleBundleDestinations destinations,
+      ProjectFilesystem projectFilesystem) {
     for (SourcePathWithAppleBundleDestination dirWithDestination :
         resources.getDirsContainingResourceDirs()) {
       Path bundleDestinationPath =
@@ -403,7 +458,25 @@ public class AppleResourceProcessing {
               bundleDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
+  }
 
+  public static void addStepsToProcessAndCopyFiles(
+      BuildContext context,
+      ImmutableList.Builder<Step> stepsBuilder,
+      ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
+      AppleBundleResources resources,
+      Path dirRoot,
+      AppleBundleDestinations destinations,
+      ProjectFilesystem projectFilesystem,
+      ImmutableList<String> ibtoolFlags,
+      boolean isLegacyWatchApp,
+      ApplePlatform platform,
+      Logger LOG,
+      Tool ibtool,
+      boolean ibtoolModuleFlag,
+      BuildTarget buildTarget,
+      Optional<String> binaryName,
+      boolean withDownwardApi) {
     for (SourcePathWithAppleBundleDestination fileWithDestination : resources.getResourceFiles()) {
       AbsPath resolvedFilePath =
           context.getSourcePathResolver().getAbsolutePath(fileWithDestination.getSourcePath());
