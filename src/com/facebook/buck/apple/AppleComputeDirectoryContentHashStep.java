@@ -18,14 +18,11 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
@@ -33,13 +30,11 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Map;
-import java.util.Stack;
 
 /**
- * Computes the integral hash of the content of the given directory. Content of fils which are being
- * pointed at by symbolic link contained by this directory is not hashed, instead, the symbolic link
- * resolved path is hashed.
+ * Computes the integral hash of the content of the given directory. Content of files which are
+ * being pointed at by symbolic link contained by this directory is not hashed, instead, the
+ * symbolic link resolved path is hashed.
  */
 public class AppleComputeDirectoryContentHashStep extends AbstractExecutionStep {
 
@@ -59,8 +54,7 @@ public class AppleComputeDirectoryContentHashStep extends AbstractExecutionStep 
   public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
 
-    ImmutableSortedMap.Builder<Path, Sha1HashCode> pathToHashBuilder =
-        ImmutableSortedMap.naturalOrder();
+    Hasher hasher = Hashing.sha1().newHasher();
 
     projectFilesystem
         .asView()
@@ -69,29 +63,29 @@ public class AppleComputeDirectoryContentHashStep extends AbstractExecutionStep 
             ImmutableSet.of(),
             new FileVisitor<Path>() {
 
-              private Stack<Boolean> directoryStackEmptiness = new Stack<>();
-
               @Override
-              public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                directoryStackEmptiness.push(true);
+              public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+                  throws IOException {
+                if (!dir.equals(dirPath.getPath())) {
+                  AppleComputeHashSupport.computeHash(pathRelativeToRootDirectory(dir).toString())
+                      .update(hasher);
+                }
                 return FileVisitResult.CONTINUE;
               }
 
               @Override
               public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                   throws IOException {
-                Sha1HashCode sha1;
+                if (!file.equals(dirPath.getPath())) {
+                  AppleComputeHashSupport.computeHash(pathRelativeToRootDirectory(file).toString())
+                      .update(hasher);
+                }
                 if (projectFilesystem.isSymLink(file)) {
                   Path resolvedSymlink = projectFilesystem.readSymLink(file);
-                  sha1 = AppleComputeHashSupport.computeHash(resolvedSymlink.toString());
+                  AppleComputeHashSupport.computeHash(resolvedSymlink.toString()).update(hasher);
                 } else {
-                  sha1 = projectFilesystem.computeSha1(file);
+                  projectFilesystem.computeSha1(file).update(hasher);
                 }
-                if (directoryStackEmptiness.peek()) {
-                  directoryStackEmptiness.pop();
-                  directoryStackEmptiness.push(false);
-                }
-                pathToHashBuilder.put(pathRelativeToRootDirectory(file).getPath(), sha1);
                 return FileVisitResult.CONTINUE;
               }
 
@@ -102,27 +96,14 @@ public class AppleComputeDirectoryContentHashStep extends AbstractExecutionStep 
               }
 
               @Override
-              public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                  throws IOException {
-                boolean isRootDirectory = dir.equals(dirPath.getPath());
-                boolean isCurrentDirectoryEmpty = directoryStackEmptiness.pop();
-                if (!isRootDirectory && isCurrentDirectoryEmpty) {
-                  Path path = pathRelativeToRootDirectory(dir).getPath();
-                  pathToHashBuilder.put(path, AppleComputeHashSupport.computeHash(""));
-                }
+              public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
                 return FileVisitResult.CONTINUE;
               }
 
-              private RelPath pathRelativeToRootDirectory(Path item) {
-                return dirPath.relativize(AbsPath.of(item));
+              private Path pathRelativeToRootDirectory(Path item) {
+                return dirPath.relativize(AbsPath.of(item)).getPath();
               }
             });
-
-    Hasher hasher = Hashing.sha1().newHasher();
-    for (Map.Entry<Path, Sha1HashCode> entry : pathToHashBuilder.build().entrySet()) {
-      AppleComputeHashSupport.computeHash(entry.getKey().toString()).update(hasher);
-      entry.getValue().update(hasher);
-    }
 
     hashBuilder.append(hasher.hash().toString());
 

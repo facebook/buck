@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
@@ -27,6 +28,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -59,7 +61,7 @@ public class AppleComputeDirectoryContentHashStepTest {
         new AppleComputeDirectoryContentHashStep(
             hashBuilder, AbsPath.of(filesystemRootPath.resolve(testDirPath)), filesystem);
     step.execute(context);
-    assertEquals("da39a3ee5e6b4b0d3255bfef95601890afd80709", hashBuilder.toString());
+    assertEquals(emptyDataHash(), hashBuilder.toString());
   }
 
   @Test
@@ -140,6 +142,10 @@ public class AppleComputeDirectoryContentHashStepTest {
         new AppleComputeDirectoryContentHashStep(
             hashBuilder, AbsPath.of(filesystemRootPath.resolve(testDirPath)), filesystem);
     step.execute(context);
-    assertEquals("b26e86fea81d09fd659d237b43826a2e7b67cbec", hashBuilder.toString());
+    assertNotEquals(emptyDataHash(), hashBuilder.toString());
+  }
+
+  private static String emptyDataHash() {
+    return Hashing.sha1().hashBytes(new byte[] {}).toString();
   }
 }

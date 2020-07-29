@@ -70,7 +70,7 @@ public class AppleComputeDirectoryFirstLevelContentHashesStepTest {
     assertEquals(
         "0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33", pathToHash.get(RelPath.get("symlink")));
     assertEquals(
-        "b25c3cf0a85cbe36c0f74877e72922a1853f13ac",
+        "9a4343c72454d6b65b3ec0b409d8196aa87df593",
         pathToHash.get(RelPath.get("nested_dirs_with_file")));
   }
 }
