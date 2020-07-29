@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 
 public final class CellProvider {
 
@@ -46,13 +45,11 @@ public final class CellProvider {
   public CellProvider(
       NewCellPathResolver newCellPathResolver,
       Function<CellProvider, CacheLoader<AbsPath, Cell>> cellCacheLoader,
-      @Nullable Function<CellProvider, Cell> rootCellLoader) {
+      Function<CellProvider, Cell> rootCellLoader) {
     this.newCellPathResolver = newCellPathResolver;
     this.cells = CacheBuilder.newBuilder().build(cellCacheLoader.apply(this));
-    if (rootCellLoader != null) {
-      Cell rootCell = rootCellLoader.apply(this);
-      cells.put(rootCell.getRoot(), rootCell);
-    }
+    Cell rootCell = rootCellLoader.apply(this);
+    cells.put(rootCell.getRoot(), rootCell);
   }
 
   // TODO(cjhopman): Shouldn't this be based on CanonicalCellName instead?
