@@ -106,6 +106,13 @@ public class CompileStringsStep implements Step {
   static final Pattern R_DOT_TXT_STRING_RESOURCE_PATTERN =
       Pattern.compile("^int (string|plurals|array) (\\w+) 0x([0-9a-f]+)$");
 
+  /**
+   * The pattern to be bypassed if we see mcc qualifier in the path. See more context in:
+   * https://fb.workplace.com/groups/i18n.QandA/permalink/4066577280057523/
+   */
+  private static final Pattern BYPASSING_STRING_PATH_PATTERN =
+      Pattern.compile(".*res/values-mcc[0-9]{3}/strings.xml");
+
   private final ProjectFilesystem filesystem;
   private final ImmutableList<Path> stringFiles;
   private final Path rDotTxtFile;
@@ -232,6 +239,11 @@ public class CompileStringsStep implements Step {
         localeToFiles.put(locale, filepath);
       } else {
         if (!path.endsWith(ENGLISH_STRING_PATH_SUFFIX)) {
+          Matcher bypassingPathMatcher = BYPASSING_STRING_PATH_PATTERN.matcher(path);
+          if (bypassingPathMatcher.matches()) {
+            continue;
+          }
+
           throw new HumanReadableException(
               "Invalid path passed to compile strings. Expected path to end with %s, got path %s.",
               ENGLISH_STRING_PATH_SUFFIX, path);

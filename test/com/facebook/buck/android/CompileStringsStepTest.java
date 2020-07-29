@@ -139,7 +139,10 @@ public class CompileStringsStepTest {
     Path path3 = Paths.get("project/groupme/res/values-da/strings.xml");
     Path path4 = Paths.get("project/groupmetoo/res/values-da-rAB/strings.xml");
     Path path5 = Paths.get("project/foreveralone/res/values-es/strings.xml");
-    ImmutableList<Path> files = ImmutableList.of(path0, path1, path2, path3, path4, path5);
+    Path bypassedPath0 = Paths.get("project/leftover/res/values-mcc310/strings.xml");
+    Path bypassedPath1 = Paths.get("project/leftover/res/values-mcc530/strings.xml");
+    ImmutableList<Path> files =
+        ImmutableList.of(path0, path1, path2, path3, path4, path5, bypassedPath0, bypassedPath1);
 
     ImmutableMultimap<String, Path> groupedByLocale =
         createNonExecutingStep().groupFilesByLocale(ImmutableList.copyOf(files));
