@@ -36,7 +36,7 @@ public class Tools {
     }
     Verify.verify(sourcePath instanceof BuildTargetSourcePath);
     BuildRule rule = resolver.getRule(((BuildTargetSourcePath) sourcePath).getTarget());
-    Verify.verify(rule instanceof BinaryBuildRule);
+    Verify.verify(rule instanceof BinaryBuildRule, "rule %s is not a BinaryBuildRule", rule);
     return ((BinaryBuildRule) rule).getExecutableCommand(OutputLabel.defaultLabel());
   }
 }
