@@ -86,7 +86,7 @@ final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFileP
     ImmutableList.Builder<TwoArraysImmutableHashMap<String, Object>> result =
         ImmutableList.builder();
     while ((token = jp.nextToken()) == JsonToken.START_OBJECT) {
-      result.add(deserializeObject(jp));
+      result.add(requireNonNull(jp, deserializeObject(jp)));
     }
     if (token != JsonToken.END_ARRAY) {
       throw new JsonParseException(jp, "Missing expected END_ARRAY");
@@ -111,7 +111,7 @@ final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFileP
     ImmutableList.Builder<Object> builder = ImmutableList.builder();
     JsonToken token;
     while ((token = jp.nextToken()) != JsonToken.END_ARRAY) {
-      builder.add(deserializeRecursive(jp, token));
+      builder.add(requireNonNull(jp, deserializeRecursive(jp, token)));
     }
     if (token != JsonToken.END_ARRAY) {
       throw new JsonParseException(jp, "Missing expected END_ARRAY");
@@ -142,5 +142,12 @@ final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFileP
       default:
         throw new JsonParseException(jp, "Unexpected token: " + token);
     }
+  }
+
+  private static <T> T requireNonNull(JsonParser jp, @Nullable T t) throws JsonParseException {
+    if (t == null) {
+      throw new JsonParseException(jp, "Unexpected `null` value");
+    }
+    return t;
   }
 }
