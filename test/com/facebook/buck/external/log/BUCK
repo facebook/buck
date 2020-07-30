@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "log",
+    deps = [
+        "//src-gen:downward-model",
+        "//src/com/facebook/buck/downwardapi/protocol:protocol",
+        "//src/com/facebook/buck/external/log:log",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/junit:junit",
+    ],
+)

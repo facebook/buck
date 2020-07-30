@@ -1,0 +1,16 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "log",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/external/...",
+        "//test/com/facebook/buck/external/...",
+    ],
+    deps = [
+        "//src-gen:downward-model",
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/downwardapi/protocol:protocol",
+        "//third-party/java/guava:guava",
+    ],
+)
