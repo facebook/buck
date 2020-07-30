@@ -17,75 +17,22 @@
 package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.UncheckedExecutionException;
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
 
-public final class CellProvider {
+/** Implementation of this interface holds all the cells. */
+public interface CellProvider {
 
-  private final NewCellPathResolver newCellPathResolver;
-  private final LoadingCache<AbsPath, Cell> cells;
-
-  /**
-   * Create a cell provider with a specific cell loader, and optionally a special factory function
-   * for the root cell.
-   *
-   * <p>The indirection for passing in CellProvider allows cells to reference the current
-   * CellProvider object.
-   */
-  public CellProvider(
-      NewCellPathResolver newCellPathResolver,
-      Function<CellProvider, CacheLoader<AbsPath, Cell>> cellCacheLoader,
-      Function<CellProvider, Cell> rootCellLoader) {
-    this.newCellPathResolver = newCellPathResolver;
-    this.cells = CacheBuilder.newBuilder().build(cellCacheLoader.apply(this));
-    Cell rootCell = rootCellLoader.apply(this);
-    cells.put(rootCell.getRoot(), rootCell);
-  }
+  Cell getCellByPath(AbsPath path);
 
   // TODO(cjhopman): Shouldn't this be based on CanonicalCellName instead?
-  public Cell getCellByPath(Path path) {
-    try {
-      return cells.get(AbsPath.of(path));
-    } catch (ExecutionException e) {
-      if (e.getCause() instanceof IOException) {
-        throw new HumanReadableException(e.getCause(), "Failed to load Cell at: %s", path);
-      } else if (e.getCause() instanceof InterruptedException) {
-        throw new RuntimeException("Interrupted while loading Cell: " + path, e);
-      } else {
-        throw new IllegalStateException(
-            "Unexpected checked exception thrown from cell loader.", e.getCause());
-      }
-    } catch (UncheckedExecutionException e) {
-      Throwables.throwIfUnchecked(e.getCause());
-      throw e;
-    }
-  }
-
-  public Cell getCellByPath(AbsPath path) {
-    return getCellByPath(path.getPath());
-  }
+  Cell getCellByPath(Path path);
 
   /** Get cell object by canonicall cell name */
-  public Cell getCellByCanonicalCellName(CanonicalCellName canonicalCellName) {
-    // TODO(nga): skip resolving to cell path
-    return getCellByPath(newCellPathResolver.getCellPath(canonicalCellName));
-  }
+  Cell getCellByCanonicalCellName(CanonicalCellName canonicalCellName);
 
-  public Cells getRootCell() {
-    return new Cells(getCellByCanonicalCellName(CanonicalCellName.rootCell()));
-  }
+  Cells getRootCell();
 
-  public ImmutableMap<AbsPath, Cell> getLoadedCells() {
-    return ImmutableMap.copyOf(cells.asMap());
-  }
+  ImmutableMap<AbsPath, Cell> getLoadedCells();
 }
