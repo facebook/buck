@@ -17,6 +17,7 @@
 package com.facebook.buck.features.rust;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.either;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.ProcessResult;
@@ -96,7 +97,8 @@ public class RustLibraryIntegrationTest {
                 "rust.rustc_check_flags=-Dwarnings --cfg \"feature=\\\"warning\\\"\"",
                 "//messenger:messenger#check")
             .getStderr(),
-        containsString("error: method is never used: `unused`"));
+        either(containsString("error: method is never used: `unused`"))
+            .or(containsString("error: associated function is never used: `unused`")));
   }
 
   @Test
