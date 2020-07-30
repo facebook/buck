@@ -33,6 +33,7 @@ public class AndroidSdkDirectoryResolverTest {
 
   @Rule public TemporaryPaths tmpDir = new TemporaryPaths();
   @Rule public TemporaryPaths tmpDir2 = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpDir3 = new TemporaryPaths();
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
@@ -122,12 +123,13 @@ public class AndroidSdkDirectoryResolverTest {
   public void testFirstEnvVariableInSdkPathSearchOrderIsUsed() throws IOException {
     Path env1Dir = tmpDir.newFolder("sdk");
     Path env2Dir = tmpDir2.newFolder("sdk");
+    Path env3Dir = tmpDir3.newFolder("sdk");
     AndroidSdkDirectoryResolver resolver =
         new AndroidSdkDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
-            ImmutableMap.of("ANDROID_SDK", env1Dir.toString(), "ANDROID_HOME", env2Dir.toString()),
+            ImmutableMap.of("ANDROID_SDK", env1Dir.toString(), "ANDROID_HOME", env2Dir.toString(), "ANDROID_SDK_ROOT", env3Dir.toString()),
             FakeAndroidBuckConfig.builder()
-                .setSdkPathSearchOrder("ANDROID_SDK, ANDROID_HOME")
+                .setSdkPathSearchOrder("ANDROID_SDK, ANDROID_HOME, ANDROID_SDK_ROOT")
                 .build());
     assertEquals(env1Dir, resolver.getSdkOrThrow());
   }

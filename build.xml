@@ -121,6 +121,24 @@
   <property name="release.version" value=""/>
   <property name="release.timestamp" value=""/>
 
+  <condition
+          property="android.sdk.root"
+          value="${env.ANDROID_SDK_ROOT}"
+          else="">
+    <and>
+      <isset property="env.ANDROID_SDK_ROOT"/>
+    </and>
+  </condition>
+  <condition
+          property="android.sdk"
+          value="${env.ANDROID_HOME}"
+          else="${android.sdk.root}">
+    <and>
+      <isset property="env.ANDROID_HOME"/>
+    </and>
+          
+  </condition>
+
   <fileset dir="${third-party.dir}/java" id="buck.jars">
     <include name="args4j/args4j-2.0.30.jar" />
     <include name="android/ddmlib-25.3.0.jar" />
@@ -1248,14 +1266,23 @@
   <path id="javadoc-with-android.classpath">
     <path refid="javadoc.classpath" />
     <!-- Buck's Android support library has references to Android. -->
-    <pathelement location="${env.ANDROID_HOME}/platforms/android-16/android.jar" />
+    <pathelement location="${android.sdk}/platforms/android-16/android.jar" />
   </path>
 
   <macrodef name="javadoc-with-android">
     <attribute name="destdir" />
     <attribute name="access" />
     <sequential>
-      <fail unless="env.ANDROID_HOME" message="ANDROID_HOME not set." />
+      <fail message="Either ANDROID_SDK_ROOT or ANDROID_HOME(deprecated) must be set.">
+        <condition>
+          <or>
+            <not>
+              <isset property="android.sdk"/>
+            </not>
+            <equals arg1="${android.sdk}" arg2=""/>
+          </or>
+        </condition>
+      </fail>
 
       <buck-javadoc destdir="@{destdir}"
                     classpathref="javadoc-with-android.classpath"
@@ -1270,7 +1297,7 @@
             Surprisingly, the generated Javadoc does link to http://d.android.com/
             rather than a local file:/// URI that points to the local $ANDROID_HOME.
           -->
-          <link offline="true" href="http://d.android.com/reference" packagelistLoc="${env.ANDROID_HOME}/docs/reference"/>
+          <link offline="true" href="http://d.android.com/reference" packagelistLoc="${android.sdk}/docs/reference"/>
         </additional-links>
       </buck-javadoc>
     </sequential>

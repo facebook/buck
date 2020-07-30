@@ -468,6 +468,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         .setFilesystem(filesystem)
         .addEnvironmentVariable("ANDROID_HOME", androidSdkPath.toString())
         .addEnvironmentVariable("ANDROID_SDK", androidSdkPath.toString())
+        .addEnvironmentVariable("ANDROID_SDK_ROOT", androidSdkPath.toString())
         .build();
   }
 

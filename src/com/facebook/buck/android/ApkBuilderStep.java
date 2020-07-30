@@ -26,6 +26,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -58,6 +59,7 @@ public class ApkBuilderStep implements Step {
   private final boolean debugMode;
   private final ImmutableList<String> javaRuntimeLauncher;
   private final AppBuilderBase appBuilderBase;
+  private final AndroidSdkLocation androidSdkLocation;
 
   /**
    * @param resourceApk Path to the Apk which only contains resources, no dex files.
@@ -80,7 +82,8 @@ public class ApkBuilderStep implements Step {
       Path pathToKeystore,
       Supplier<KeystoreProperties> keystorePropertiesSupplier,
       boolean debugMode,
-      ImmutableList<String> javaRuntimeLauncher) {
+      ImmutableList<String> javaRuntimeLauncher,
+      AndroidSdkLocation androidSdkLocation) {
     this.filesystem = filesystem;
     this.resourceApk = resourceApk;
     this.pathToOutputApkFile = pathToOutputApkFile;
@@ -93,6 +96,7 @@ public class ApkBuilderStep implements Step {
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.appBuilderBase =
         new AppBuilderBase(filesystem, keystorePropertiesSupplier, pathToKeystore);
+    this.androidSdkLocation = androidSdkLocation;
   }
 
   @Override
@@ -161,9 +165,7 @@ public class ApkBuilderStep implements Step {
     args.addAll(javaRuntimeLauncher);
     args.add(
         "-classpath",
-        // TODO(mbolin): Make the directory that corresponds to $ANDROID_HOME a field that is
-        // accessible via an AndroidPlatformTarget and insert that here in place of "$ANDROID_HOME".
-        "$ANDROID_HOME/tools/lib/sdklib.jar",
+        androidSdkLocation.getSdkRootPath().toString() + "/tools/lib/sdklib.jar",
         "com.android.sdklib.build.ApkBuilderMain");
     args.add(String.valueOf(pathToOutputApkFile));
     args.add("-v" /* verbose */);
