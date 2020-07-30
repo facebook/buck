@@ -103,8 +103,7 @@ abstract class CellImpl implements Cell {
   @Override
   public ImmutableList<Cell> getAllCells() {
     return RichStream.from(getKnownRootsOfAllCells())
-        .map(AbsPath::getPath)
-        .concat(RichStream.of(getRoot().getPath()))
+        .concat(RichStream.of(getRoot()))
         .distinct()
         .map(getCellProvider()::getCellByPath)
         .toImmutableList();

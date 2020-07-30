@@ -111,7 +111,7 @@ public class TargetSpecResolver implements AutoCloseable {
             .build(
                 CacheLoader.from(
                     path -> {
-                      Cell cell = cellProvider.getCellByPath(path.getPath());
+                      Cell cell = cellProvider.getCellByPath(path);
                       String buildFileName =
                           cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
                       ProjectFilesystemView fileSystemView = cell.getFilesystemViewForSourceFiles();

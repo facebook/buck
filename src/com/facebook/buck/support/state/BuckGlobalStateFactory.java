@@ -215,7 +215,7 @@ public class BuckGlobalStateFactory {
             new CacheLoader<Path, BuildFileManifestCache>() {
               @Override
               public BuildFileManifestCache load(Path path) {
-                Cell cell = cellProvider.getCellByPath(path);
+                Cell cell = cellProvider.getCellByPath(AbsPath.of(path));
                 String buildFileName =
                     cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
                 BuildFileManifestCache cache =

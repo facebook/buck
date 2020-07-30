@@ -54,7 +54,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
@@ -232,9 +231,9 @@ final class CellProviderImpl implements CellProvider {
   }
 
   @Override
-  public Cell getCellByPath(Path path) {
+  public Cell getCellByPath(AbsPath path) {
     try {
-      return cells.get(AbsPath.of(path));
+      return cells.get(path);
     } catch (ExecutionException e) {
       if (e.getCause() instanceof IOException) {
         throw new HumanReadableException(e.getCause(), "Failed to load Cell at: %s", path);
@@ -248,11 +247,6 @@ final class CellProviderImpl implements CellProvider {
       Throwables.throwIfUnchecked(e.getCause());
       throw e;
     }
-  }
-
-  @Override
-  public Cell getCellByPath(AbsPath path) {
-    return getCellByPath(path.getPath());
   }
 
   @Override
