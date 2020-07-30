@@ -106,9 +106,12 @@ install_python: &install_python
     fi
     pyenv versions
     export PATH="$(pyenv root)/shims:${PATH}"
-    python_version=`python --version`
+    python_version=`python --version` || python_version="Python Not Found"
     # Skip installation if Python 3.6.2 restored frm cache.
     if [ "${python_version}" != "Python 3.6.2" ]; then
+      # In the case that pyenv is upgraded to a new version, the cached python
+      # is broken and should be uninstalled.
+      pyenv uninstall -f 3.6.2
       pyenv install -s 3.6.2
       pyenv global 3.6.2 system
     else
