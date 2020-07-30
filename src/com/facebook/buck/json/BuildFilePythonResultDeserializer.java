@@ -49,32 +49,36 @@ final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFileP
   @Override
   public BuildFilePythonResult deserialize(JsonParser jp, DeserializationContext ctxt)
       throws IOException {
-    if (jp.getCurrentToken() != JsonToken.START_OBJECT) {
-      throw new JsonParseException(jp, "Missing expected START_OBJECT");
-    }
-    ImmutableList<TwoArraysImmutableHashMap<String, Object>> values = ImmutableList.of();
-    ImmutableList<TwoArraysImmutableHashMap<String, Object>> diagnostics = ImmutableList.of();
-    Optional<String> profile = Optional.empty();
-    String fieldName;
-    while ((fieldName = jp.nextFieldName()) != null) {
-      switch (fieldName) {
-        case "values":
-          values = deserializeObjectList(jp);
-          break;
-        case "diagnostics":
-          diagnostics = deserializeObjectList(jp);
-          break;
-        case "profile":
-          profile = Optional.of(jp.nextTextValue());
-          break;
-        default:
-          throw new JsonParseException(jp, "Unexpected field name: " + fieldName);
+    try {
+      if (jp.getCurrentToken() != JsonToken.START_OBJECT) {
+        throw new JsonParseException(jp, "Missing expected START_OBJECT");
       }
+      ImmutableList<TwoArraysImmutableHashMap<String, Object>> values = ImmutableList.of();
+      ImmutableList<TwoArraysImmutableHashMap<String, Object>> diagnostics = ImmutableList.of();
+      Optional<String> profile = Optional.empty();
+      String fieldName;
+      while ((fieldName = jp.nextFieldName()) != null) {
+        switch (fieldName) {
+          case "values":
+            values = deserializeObjectList(jp);
+            break;
+          case "diagnostics":
+            diagnostics = deserializeObjectList(jp);
+            break;
+          case "profile":
+            profile = Optional.of(jp.nextTextValue());
+            break;
+          default:
+            throw new JsonParseException(jp, "Unexpected field name: " + fieldName);
+        }
+      }
+      if (jp.getCurrentToken() != JsonToken.END_OBJECT) {
+        throw new JsonParseException(jp, "Missing expected END_OBJECT");
+      }
+      return BuildFilePythonResult.of(values, diagnostics, profile);
+    } catch (JsonParseException e) {
+      throw withContext(e, "When de-serializing build file JSON");
     }
-    if (jp.getCurrentToken() != JsonToken.END_OBJECT) {
-      throw new JsonParseException(jp, "Missing expected END_OBJECT");
-    }
-    return BuildFilePythonResult.of(values, diagnostics, profile);
   }
 
   private static ImmutableList<TwoArraysImmutableHashMap<String, Object>> deserializeObjectList(
@@ -99,7 +103,15 @@ final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFileP
     TwoArraysImmutableHashMap.Builder<String, Object> builder = TwoArraysImmutableHashMap.builder();
     String fieldName;
     while ((fieldName = jp.nextFieldName()) != null) {
-      builder.put(STRING_INTERNER.intern(fieldName), deserializeRecursive(jp, jp.nextToken()));
+      try {
+        builder.put(STRING_INTERNER.intern(fieldName), deserializeRecursive(jp, jp.nextToken()));
+      } catch (JsonParseException e) {
+        throw withContext(
+            e,
+            "When parsing field `%s` of target name `%s`",
+            fieldName,
+            builder.build().getOrDefault("name", "<unknown>"));
+      }
     }
     if (jp.getCurrentToken() != JsonToken.END_OBJECT) {
       throw new JsonParseException(jp, "Missing expected END_OBJECT");
@@ -111,8 +123,13 @@ final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFileP
     ImmutableList.Builder<Object> builder = ImmutableList.builder();
     JsonToken token;
     while ((token = jp.nextToken()) != JsonToken.END_ARRAY) {
-      builder.add(requireNonNull(jp, deserializeRecursive(jp, token)));
+      try {
+        builder.add(requireNonNull(jp, deserializeRecursive(jp, token)));
+      } catch (JsonParseException e) {
+        throw withContext(e, "When parsing an array");
+      }
     }
+
     if (token != JsonToken.END_ARRAY) {
       throw new JsonParseException(jp, "Missing expected END_ARRAY");
     }
@@ -149,5 +166,15 @@ final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFileP
       throw new JsonParseException(jp, "Unexpected `null` value");
     }
     return t;
+  }
+
+  private static JsonParseException withContext(
+      JsonParseException root, String fmt, Object... args) {
+    return withContext(root, String.format(fmt, args));
+  }
+
+  private static JsonParseException withContext(JsonParseException root, String more) {
+    return new JsonParseException(
+        root.getProcessor(), String.format("%s;\n%s", root.getOriginalMessage(), more), root);
   }
 }
