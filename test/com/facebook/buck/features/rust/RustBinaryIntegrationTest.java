@@ -17,6 +17,7 @@
 package com.facebook.buck.features.rust;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.either;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -199,7 +200,8 @@ public class RustBinaryIntegrationTest {
     assertThat(
         workspace.runBuckBuild("//:xyzzy").assertSuccess().getStderr(),
         Matchers.allOf(
-            containsString("warning: constant item is never used: `foo`"),
+            either(containsString("warning: constant item is never used: `foo`"))
+                .or(containsString("warning: constant is never used: `foo`")),
             containsString("warning: constant `foo` should have an upper case name")));
 
     BuckBuildLog buildLog = workspace.getBuildLog();
