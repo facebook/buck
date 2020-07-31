@@ -496,8 +496,9 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     long artifactSizeBytes = getFileSize(output.getPath());
     if (artifactExceedsMaximumSize(artifactSizeBytes)) {
       LOG.info(
-          "Artifact too big so not storing it in the %s cache. " + "file=[%s] buildTarget=[%s]",
-          name, output.getPath(), info.getBuildTarget());
+          "Artifact too big so not storing it in the %s cache. "
+              + "file=[%s] buildTarget=[%s] size=[%d]",
+          name, output.getPath(), info.getBuildTarget(), artifactSizeBytes);
       return Futures.immediateFuture(Unit.UNIT);
     }
 
