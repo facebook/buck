@@ -79,13 +79,13 @@ public class TargetGraphVisibilityIntegrationTest {
 
   @Test
   public void singleWithinViewError() {
-    ProcessResult result = workspace.runBuckCommand("targets", "//bar:Lib4");
+    ProcessResult result = workspace.runBuckCommand("targets", "//bar:Lib5");
     result.assertFailure();
 
     verifyErrorOutputContains(
         result,
         VisibilityError.errorString(
-            VisibilityError.ErrorType.WITHIN_VIEW, "//bar:Lib4", "//bar:Lib2"));
+            VisibilityError.ErrorType.WITHIN_VIEW, "//bar:Lib5", "//foo:Lib2"));
   }
 
   @Test
@@ -110,10 +110,6 @@ public class TargetGraphVisibilityIntegrationTest {
         result,
         VisibilityError.errorString(
             VisibilityError.ErrorType.WITHIN_VIEW, "//foo:Lib4", "//bar:Lib4"));
-    verifyErrorOutputContains(
-        result,
-        VisibilityError.errorString(
-            VisibilityError.ErrorType.WITHIN_VIEW, "//bar:Lib4", "//bar:Lib2"));
   }
 
   private void verifyErrorOutputContains(ProcessResult result, String error) {

@@ -35,6 +35,15 @@ public class VisibilityChecker {
 
   /** Check whether {@code viewer} is within view or visible to this checker. */
   public Optional<VisibilityError> isVisibleTo(ObeysVisibility viewer) {
+    // Nodes in the same package are always visible and within view to other nodes in the package,
+    // so we can skip visibility checking.
+    if (owner
+        .getBuildTarget()
+        .getCellRelativeBasePath()
+        .equals(viewer.getBuildTarget().getCellRelativeBasePath())) {
+      return Optional.empty();
+    }
+
     // Check that the owner (dep) is within_view of the viewer (node).s
     if (!viewer.getVisibilityChecker().withinViewPatterns.isEmpty()) {
       boolean withinView = false;
@@ -51,15 +60,6 @@ public class VisibilityChecker {
                 viewer.getBuildTarget(),
                 owner.getBuildTarget()));
       }
-    }
-
-    // Nodes in the same package are always visible to other nodes in the package, so we can skip
-    // visibility checking.
-    if (owner
-        .getBuildTarget()
-        .getCellRelativeBasePath()
-        .equals(viewer.getBuildTarget().getCellRelativeBasePath())) {
-      return Optional.empty();
     }
 
     // Check that the owner (dep) is visible to the viewer (node).

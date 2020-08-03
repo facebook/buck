@@ -28,7 +28,7 @@ java_library(
     visibility = ["//foo:Lib1"],
 )
 
-# Package level target is not within view
+# Package level target is within view even if not listed
 java_library(
     name = "Lib4",
     srcs = [
@@ -41,4 +41,18 @@ java_library(
         "//bar:Lib3",
     ],
     visibility = ["//foo:Lib1"],
+)
+
+# Depends on target not within view
+java_library(
+    name = "Lib5",
+    srcs = [
+        "Lib5.java",
+    ],
+    deps = [
+        "//foo:Lib2",
+    ],
+    within_view = [
+        "//bar:Lib3",
+    ],
 )

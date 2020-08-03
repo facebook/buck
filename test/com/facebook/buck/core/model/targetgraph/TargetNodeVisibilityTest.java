@@ -65,6 +65,8 @@ public class TargetNodeVisibilityTest {
       BuildTargetFactory.newInstance("//src/com/facebook/something1", "nonPublic");
   private static final BuildTarget nonPublicTarget2 =
       BuildTargetFactory.newInstance("//src/com/facebook/something2", "nonPublic");
+  private static final BuildTarget nonPublicTarget3 =
+      BuildTargetFactory.newInstance("//src/com/facebook/something1", "nonPublic3");
   private static final Path nonPublicBuildFile = Paths.get("/src/com/facebook/BUCK");
 
   private static final ImmutableList<String> DEFAULT = ImmutableList.of();
@@ -209,6 +211,17 @@ public class TargetNodeVisibilityTest {
 
     assertVisibilityError(
         error, VisibilityError.ErrorType.WITHIN_VIEW, publicTargetNode, publicOrcaRule);
+  }
+
+  @Test
+  public void packageTargetsAreVisibleAndWithinViewToEachOther() throws NoSuchBuildTargetException {
+    TargetNode<?> nonPublicTargetNode1 =
+        createTargetNode(nonPublicTarget1, nonPublicBuildFile, SOME_OTHER, SOME_OTHER);
+    TargetNode<?> nonPublicTargetNode2 =
+        createTargetNode(nonPublicTarget3, nonPublicBuildFile, SOME_OTHER, SOME_OTHER);
+
+    assertTrue(isVisible(nonPublicTargetNode1, nonPublicTargetNode2));
+    assertTrue(isVisible(nonPublicTargetNode2, nonPublicTargetNode1));
   }
 
   private String shouldBeVisibleMessage(TargetNode<?> rule, BuildTarget target) {
