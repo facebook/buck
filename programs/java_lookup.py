@@ -132,7 +132,7 @@ def get_java_path(required_java_version):
             if os.getenv("BUCK_RESPECT_JAVA_HOME") != "1":
                 message += " Ignoring JAVA_HOME. Set BUCK_RESPECT_JAVA_HOME to 1 to disable this behavior."
                 java_home_path = None
-            logging.warning(message)
+            logging.debug(message)
     if java_home_path is None:
         # Default to a known location of the JDK for the right version of Java, regardless of what
         # version of Java is on the PATH.
