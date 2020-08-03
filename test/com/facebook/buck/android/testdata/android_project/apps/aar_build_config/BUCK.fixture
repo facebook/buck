@@ -46,3 +46,16 @@ android_aar(
         "//res/com/sample/base:base",
     ],
 )
+
+android_aar(
+    name = "app_with_relinker_whitelist",
+    enable_relinker = True,
+    manifest_skeleton = "AndroidManifestSkeleton.xml",
+    relinker_whitelist = [
+        "^_Z12preserved(Bot|Mid)v$",
+    ],
+    deps = [
+        "//native/xdsodce:top",
+        "//res/com/sample/base:base",
+    ],
+)

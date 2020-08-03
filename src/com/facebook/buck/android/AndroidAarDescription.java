@@ -55,6 +55,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
@@ -248,7 +249,7 @@ public class AndroidAarDescription
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
             args.isEnableRelinker() ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
-            ImmutableList.of(),
+            args.getRelinkerWhitelist(),
             apkModuleGraph,
             new NoopAndroidNativeTargetConfigurationMatcher());
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> nativeLibrariesOptional =
@@ -314,6 +315,8 @@ public class AndroidAarDescription
     default boolean isEnableRelinker() {
       return false;
     }
+
+    ImmutableList<Pattern> getRelinkerWhitelist();
 
     @Override
     default AndroidAarDescriptionArg withDepsQuery(Query query) {

@@ -246,7 +246,7 @@ public class AndroidAarIntegrationTest {
     zipInspector.assertFileExists("jni/x86/libnative.so");
   }
 
-  @Test
+  @Test(timeout = 120000)
   public void testNativeLibraryDependent() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -305,6 +305,36 @@ public class AndroidAarIntegrationTest {
     assertTrue(sym.global.contains("_Z10botFromTopi"));
     assertTrue(sym.global.contains("_Z10botFromMidi"));
     assertFalse(sym.all.contains("_Z6unusedi"));
+  }
+
+  @Test
+  public void testNativeLibraryRelinkerWhitelist() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
+    workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
+    String target = "//apps/aar_build_config:app_with_relinker_whitelist";
+    workspace.runBuckBuild(target).assertSuccess();
+    SymbolGetter syms = AndroidNdkHelper.getSymbolGetter(workspace.getProjectFileSystem(), tmp);
+    Symbols sym;
+
+    Path aar =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance(target),
+                AndroidAar.AAR_FORMAT));
+
+    // The test data has "^_Z12preserved(Bot|Mid)v$" as the only whitelist pattern, so
+    // we don't expect preservedTop to survive.
+    sym = syms.getDynamicSymbols(aar, "assets/lib/x86/libnative_xdsodce_top.so");
+    assertFalse(sym.all.contains("_Z12preservedTopv"));
+
+    sym = syms.getDynamicSymbols(aar, "jni/x86/libnative_xdsodce_mid.so");
+    assertTrue(sym.global.contains("_Z12preservedMidv"));
+
+    sym = syms.getDynamicSymbols(aar, "jni/x86/libnative_xdsodce_bot.so");
+    assertTrue(sym.global.contains("_Z12preservedBotv"));
   }
 
   @Test
