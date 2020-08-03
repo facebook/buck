@@ -39,11 +39,11 @@ public enum CrateType {
   DOC(
       "lib",
       RustDescriptionEnhancer.RFDOC,
-      (target, crate, plat) -> hashed_filename(target, "lib", crate, "rmeta")),
+      (target, crate, plat) -> ""), // #doc builds emit a tree of files.
   DOCBIN(
       "bin",
       RustDescriptionEnhancer.RFDOC,
-      (target, crate, plat) -> hashed_filename(target, "lib", crate, "rmeta")),
+      (target, crate, plat) -> ""), // #doc builds emit a tree of files.
   SAVEANALYSIS(
       "lib",
       RustDescriptionEnhancer.RFSAVEANALYSIS,
