@@ -422,7 +422,7 @@ public class TestRunning {
         DefaultJavaPackageFinder defaultJavaPackageFinder =
             javaBuckConfig.createDefaultJavaPackageFinder();
 
-        JavaOptions javaOptions = javaBuckConfig.getDefaultJavaOptions();
+        JavaOptions javaOptions = javaBuckConfig.getDefaultJavaOptionsForCodeCoverage();
         ToolProvider javaRuntimeProvider = javaOptions.getJavaRuntimeProvider();
         Preconditions.checkState(
             Iterables.isEmpty(
