@@ -1009,7 +1009,6 @@ public class AppleDescriptions {
 
     Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier;
     SourcePath infoPlistReadyToCopy;
-    Optional<SourcePath> provisioningProfileReadyToCopy;
     Optional<SourcePath> entitlementsReadyForCodeSign;
     Optional<SourcePath> codeSignIdentityFingerprint;
     if (codeSignType == DISTRIBUTION) {
@@ -1032,8 +1031,6 @@ public class AppleDescriptions {
                           codeSignIdentitiesSupplier,
                           dryRunCodeSigning));
       infoPlistReadyToCopy = codeSignPrepRule.getSourcePathToInfoPlistOutput();
-      provisioningProfileReadyToCopy =
-          Optional.of(codeSignPrepRule.getSourcePathToProvisioningProfile());
       entitlementsReadyForCodeSign =
           Optional.of(codeSignPrepRule.getSourcePathToEntitlementsOutput());
       codeSignIdentityFingerprint =
@@ -1063,10 +1060,22 @@ public class AppleDescriptions {
                 Optional.of("BUCK_code_sign_entitlements.plist"),
                 ignoreMissingSource));
       }
+
+      {
+        final boolean codeSignOnCopy = false;
+        final boolean ignoreIfMissing = dryRunCodeSigning;
+        Optional<String> newNameAfterCopy = Optional.empty();
+        bundlePartsReadyToCopy.add(
+            FileAppleBundlePart.of(
+                codeSignPrepRule.getSourcePathToProvisioningProfile(),
+                AppleBundleDestination.RESOURCES,
+                codeSignOnCopy,
+                newNameAfterCopy,
+                ignoreIfMissing));
+      }
     } else {
       codeSignIdentitiesSupplier = Suppliers.ofInstance(ImmutableList.of());
       infoPlistReadyToCopy = infoPlist.getSourcePathToOutput();
-      provisioningProfileReadyToCopy = Optional.empty();
       if (useEntitlementsWhenAdhocCodeSigning && codeSignType == ADHOC) {
         entitlementsReadyForCodeSign = maybeEntitlements;
       } else {
@@ -1109,21 +1118,6 @@ public class AppleDescriptions {
                 Optional.of("WK"),
                 ignoreIfMissing));
       }
-    }
-
-    {
-      final boolean codeSignOnCopy = false;
-      final boolean ignoreIfMissing = dryRunCodeSigning;
-      Optional<String> newNameAfterCopy = Optional.empty();
-      provisioningProfileReadyToCopy.ifPresent(
-          sourcePath ->
-              bundlePartsReadyToCopy.add(
-                  FileAppleBundlePart.of(
-                      sourcePath,
-                      AppleBundleDestination.RESOURCES,
-                      codeSignOnCopy,
-                      newNameAfterCopy,
-                      ignoreIfMissing)));
     }
 
     AppleBundleResources collectedResources =
