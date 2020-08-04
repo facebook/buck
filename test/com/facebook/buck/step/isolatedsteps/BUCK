@@ -10,6 +10,7 @@ standard_java_test(
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//src/com/facebook/buck/step/isolatedsteps/common:common",
+        "//test/com/facebook/buck/downwardapi/testutil:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/testutil:testutil",

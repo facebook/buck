@@ -17,11 +17,13 @@
 package com.facebook.buck.step.isolatedsteps;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.StepFailedException;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.util.UUID;
 
 /**
  * Step runner that executes the steps the given {@link IsolatedStep}s.
@@ -48,16 +50,16 @@ class IsolatedStepsRunner {
     return StepExecutionResults.ERROR;
   }
 
-  @SuppressWarnings(
-      "PMD.EmptyFinallyBlock") // TODO(irenewchen): Remove this once step events are logged
   private static void runStep(IsolatedExecutionContext context, IsolatedStep step)
       throws InterruptedException, StepFailedException {
     if (context.getVerbosity().shouldPrintCommand()) {
       context.getStdErr().println(step.getIsolatedStepDescription(context));
     }
 
-    // TODO(irenewchen): Log step event started and post to event bus
-
+    UUID uuid = UUID.randomUUID();
+    StepEvent.Started started =
+        StepEvent.started(step.getShortName(), step.getIsolatedStepDescription(context), uuid);
+    context.getBuckEventBus().post(started);
     StepExecutionResult executionResult = StepExecutionResults.ERROR;
     try {
       executionResult = step.executeIsolatedStep(context);
@@ -65,7 +67,7 @@ class IsolatedStepsRunner {
       throw StepFailedException.createForFailingStepWithException(
           step, step.getIsolatedStepDescription(context), e);
     } finally {
-      // TODO(irenewchen): Log step event finished event
+      context.getBuckEventBus().post(StepEvent.finished(started, executionResult.getExitCode()));
     }
     if (!executionResult.isSuccess()) {
       throw StepFailedException.createForFailingStepWithExitCode(

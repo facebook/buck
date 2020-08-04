@@ -28,8 +28,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.downward.model.ConsoleEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
+import com.facebook.buck.downward.model.StepEvent;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
+import com.facebook.buck.downwardapi.testutil.StepEventMatcher;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.isolated.DefaultIsolatedEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -89,38 +91,52 @@ public class IsolatedStepsRunnerTest {
             projectFilesystem.getRootPath(), relativeDirToCreate);
     assertFalse(dirToCreate.toFile().exists());
 
-    ImmutableList<IsolatedStep> steps =
-        ImmutableList.of(
-            RmIsolatedStep.of(relativeTempFile), MkdirIsolatedStep.of(relativeDirToCreate));
+    RmIsolatedStep rmIsolatedStep = RmIsolatedStep.of(relativeTempFile);
+    MkdirIsolatedStep mkdirIsolatedStep = MkdirIsolatedStep.of(relativeDirToCreate);
+    ImmutableList<IsolatedStep> steps = ImmutableList.of(rmIsolatedStep, mkdirIsolatedStep);
 
-    StepExecutionResult result =
-        IsolatedStepsRunner.execute(steps, createContext(projectFilesystem.getRootPath()));
+    IsolatedExecutionContext context = createContext(projectFilesystem.getRootPath());
+    StepExecutionResult result = IsolatedStepsRunner.execute(steps, context);
 
     assertThat(result, equalTo(StepExecutionResults.SUCCESS));
     assertFalse(tempFile.toFile().exists());
     assertTrue(dirToCreate.toFile().exists());
+
+    DownwardProtocol protocol = DownwardProtocolType.BINARY.getDownwardProtocol();
+    InputStream inputStream = new FileInputStream(downwardApiFile);
+
+    assertEventIdsAreEqual(
+        getAndAssertStepEvent(
+            rmIsolatedStep, StepEvent.StepStatus.STARTED, protocol, inputStream, context),
+        getAndAssertStepEvent(
+            rmIsolatedStep, StepEvent.StepStatus.FINISHED, protocol, inputStream, context));
+    assertEventIdsAreEqual(
+        getAndAssertStepEvent(
+            mkdirIsolatedStep, StepEvent.StepStatus.STARTED, protocol, inputStream, context),
+        getAndAssertStepEvent(
+            mkdirIsolatedStep, StepEvent.StepStatus.FINISHED, protocol, inputStream, context));
   }
 
   @Test
   public void logsErrorIfStepExecutionFails() throws Exception {
-    ImmutableList<IsolatedStep> step =
-        ImmutableList.of(
-            new IsolatedStep() {
-              @Override
-              public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context) {
-                return StepExecutionResults.ERROR;
-              }
+    IsolatedStep isolatedStep =
+        new IsolatedStep() {
+          @Override
+          public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context) {
+            return StepExecutionResults.ERROR;
+          }
 
-              @Override
-              public String getIsolatedStepDescription(IsolatedExecutionContext context) {
-                return "test_description";
-              }
+          @Override
+          public String getIsolatedStepDescription(IsolatedExecutionContext context) {
+            return "test_description";
+          }
 
-              @Override
-              public String getShortName() {
-                return "test_short_name";
-              }
-            });
+          @Override
+          public String getShortName() {
+            return "test_short_name";
+          }
+        };
+    ImmutableList<IsolatedStep> step = ImmutableList.of(isolatedStep);
     IsolatedExecutionContext context = createContext(projectFilesystem.getRootPath());
 
     StepExecutionResult result = IsolatedStepsRunner.execute(step, context);
@@ -136,34 +152,39 @@ public class IsolatedStepsRunnerTest {
     DownwardProtocol protocol = DownwardProtocolType.BINARY.getDownwardProtocol();
     InputStream inputStream = new FileInputStream(downwardApiFile);
 
+    assertEventIdsAreEqual(
+        getAndAssertStepEvent(
+            isolatedStep, StepEvent.StepStatus.STARTED, protocol, inputStream, context),
+        getAndAssertStepEvent(
+            isolatedStep, StepEvent.StepStatus.FINISHED, protocol, inputStream, context));
+
     EventTypeMessage.EventType actualEventType = protocol.readEventType(inputStream);
     ConsoleEvent actualConsoleEvent = protocol.readEvent(inputStream, actualEventType);
-
     assertThat(actualEventType, equalTo(EventTypeMessage.EventType.CONSOLE_EVENT));
     assertThat(actualConsoleEvent.getMessage(), Matchers.containsStringIgnoringCase(expected));
   }
 
   @Test
   public void logsErrorIfInterrupted() throws Exception {
-    ImmutableList<IsolatedStep> step =
-        ImmutableList.of(
-            new IsolatedStep() {
-              @Override
-              public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context) {
-                Thread.currentThread().interrupt();
-                return StepExecutionResults.SUCCESS;
-              }
+    IsolatedStep isolatedStep =
+        new IsolatedStep() {
+          @Override
+          public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context) {
+            Thread.currentThread().interrupt();
+            return StepExecutionResults.SUCCESS;
+          }
 
-              @Override
-              public String getIsolatedStepDescription(IsolatedExecutionContext context) {
-                return "test_description";
-              }
+          @Override
+          public String getIsolatedStepDescription(IsolatedExecutionContext context) {
+            return "test_description";
+          }
 
-              @Override
-              public String getShortName() {
-                return "test_short_name";
-              }
-            });
+          @Override
+          public String getShortName() {
+            return "test_short_name";
+          }
+        };
+    ImmutableList<IsolatedStep> step = ImmutableList.of(isolatedStep);
     IsolatedExecutionContext context = createContext(projectFilesystem.getRootPath());
 
     StepExecutionResult result = IsolatedStepsRunner.execute(step, context);
@@ -177,9 +198,14 @@ public class IsolatedStepsRunnerTest {
     DownwardProtocol protocol = DownwardProtocolType.BINARY.getDownwardProtocol();
     InputStream inputStream = new FileInputStream(downwardApiFile);
 
+    assertEventIdsAreEqual(
+        getAndAssertStepEvent(
+            isolatedStep, StepEvent.StepStatus.STARTED, protocol, inputStream, context),
+        getAndAssertStepEvent(
+            isolatedStep, StepEvent.StepStatus.FINISHED, protocol, inputStream, context));
+
     EventTypeMessage.EventType actualEventType = protocol.readEventType(inputStream);
     ConsoleEvent actualConsoleEvent = protocol.readEvent(inputStream, actualEventType);
-
     assertThat(actualEventType, equalTo(EventTypeMessage.EventType.CONSOLE_EVENT));
     assertThat(actualConsoleEvent.getMessage(), Matchers.containsStringIgnoringCase(expected));
   }
@@ -201,5 +227,29 @@ public class IsolatedStepsRunnerTest {
         Platform.detect(),
         defaultProcessExecutor,
         AbsPath.get(root.toString()));
+  }
+
+  private StepEvent getAndAssertStepEvent(
+      IsolatedStep step,
+      StepEvent.StepStatus stepStatus,
+      DownwardProtocol protocol,
+      InputStream inputStream,
+      IsolatedExecutionContext context)
+      throws Exception {
+    StepEvent expectedStepStartEvent =
+        StepEvent.newBuilder()
+            .setDescription(step.getIsolatedStepDescription(context))
+            .setStepType(step.getShortName())
+            .setStepStatus(stepStatus)
+            .build();
+    EventTypeMessage.EventType actualEventType = protocol.readEventType(inputStream);
+    StepEvent actualEvent = protocol.readEvent(inputStream, actualEventType);
+    assertThat(actualEventType, equalTo(EventTypeMessage.EventType.STEP_EVENT));
+    assertThat(actualEvent, StepEventMatcher.equalsStepEvent(expectedStepStartEvent));
+    return actualEvent;
+  }
+
+  private void assertEventIdsAreEqual(StepEvent event1, StepEvent event2) {
+    assertThat(event1.getEventId(), equalTo(event2.getEventId()));
   }
 }
