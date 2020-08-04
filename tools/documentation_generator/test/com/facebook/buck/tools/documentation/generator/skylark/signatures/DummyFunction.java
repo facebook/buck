@@ -16,14 +16,14 @@
 
 package com.facebook.buck.tools.documentation.generator.skylark.signatures;
 
-import com.google.devtools.build.lib.skylarkinterface.Param;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Collections;
+import net.starlark.java.annot.Param;
+import net.starlark.java.annot.StarlarkMethod;
 
 public class DummyFunction {
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "dummy",
       doc = "Returns a dummy list of strings.",
       parameters = {

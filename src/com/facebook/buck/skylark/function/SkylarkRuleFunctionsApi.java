@@ -20,24 +20,23 @@ import com.facebook.buck.core.rules.providers.impl.UserDefinedProvider;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.Param;
-import com.google.devtools.build.lib.skylarkinterface.ParamType;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkConstructor;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkGlobalLibrary;
-import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.StarlarkFunction;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
+import net.starlark.java.annot.Param;
+import net.starlark.java.annot.ParamType;
+import net.starlark.java.annot.StarlarkConstructor;
+import net.starlark.java.annot.StarlarkGlobalLibrary;
+import net.starlark.java.annot.StarlarkMethod;
 
 /**
  * Interface for a global Skylark library containing rule-related helper and registration functions.
  */
-@SkylarkGlobalLibrary
+@StarlarkGlobalLibrary
 public interface SkylarkRuleFunctionsApi {
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "Label",
       doc =
           "Creates a Label referring to a BUILD target. Use "
@@ -47,12 +46,11 @@ public interface SkylarkRuleFunctionsApi {
       parameters = {
         @Param(name = "label_string", type = String.class, doc = "the label string."),
       },
-      useLocation = true,
       useStarlarkThread = true)
-  @SkylarkConstructor(objectType = Label.class)
-  Label label(String labelString, Location loc, StarlarkThread env) throws EvalException;
+  @StarlarkConstructor(objectType = Label.class)
+  Label label(String labelString, StarlarkThread env) throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "rule",
       doc =
           "Declares a User Defined Rule. The result is a callable that, when called by user, "
@@ -63,7 +61,7 @@ public interface SkylarkRuleFunctionsApi {
       parameters = {
         @Param(
             name = "implementation",
-            type = BaseFunction.class,
+            type = StarlarkFunction.class,
             noneable = false,
             positional = true,
             named = true,
@@ -104,18 +102,16 @@ public interface SkylarkRuleFunctionsApi {
                     + "must be returned. If a TestInfo provider is not returned, Buck will attempt "
                     + "to create one from various implicit parameters.")
       },
-      useStarlarkThread = true,
-      useLocation = true)
+      useStarlarkThread = true)
   SkylarkUserDefinedRule rule(
-      BaseFunction implementation,
+      StarlarkFunction implementation,
       Dict<String, AttributeHolder> attrs,
       boolean executable,
       boolean test,
-      Location loc,
       StarlarkThread env)
       throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "provider",
       doc =
           "Creates a declared provider, which is both an identifier of, and constructor "
@@ -160,6 +156,7 @@ public interface SkylarkRuleFunctionsApi {
             positional = false,
             defaultValue = "[]")
       },
-      useLocation = true)
-  UserDefinedProvider provider(String doc, Object fields, Location location) throws EvalException;
+      useStarlarkThread = true)
+  UserDefinedProvider provider(String doc, Object fields, StarlarkThread thread)
+      throws EvalException;
 }

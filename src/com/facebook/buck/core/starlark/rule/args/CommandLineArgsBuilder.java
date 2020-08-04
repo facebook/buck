@@ -24,7 +24,6 @@ import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsFactory;
 import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.actions.CommandLineItem;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Starlark;
@@ -63,8 +62,7 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
   }
 
   @Override
-  public CommandLineArgsBuilder add(
-      Object argNameOrValue, Object value, String formatString, Location location)
+  public CommandLineArgsBuilder add(Object argNameOrValue, Object value, String formatString)
       throws EvalException {
     formatString = CommandLineArgsFactory.validateFormatString(formatString);
     try {
@@ -76,15 +74,15 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
       }
       argsBuilder.add(CommandLineArgsFactory.from(args, formatString));
     } catch (CommandLineArgException e) {
-      throw new EvalException(location, e.getHumanReadableErrorMessage());
+      throw new EvalException(e.getHumanReadableErrorMessage());
     }
 
     return this;
   }
 
   @Override
-  public CommandLineArgsBuilder addAll(
-      StarlarkList<?> values, String formatString, Location location) throws EvalException {
+  public CommandLineArgsBuilder addAll(StarlarkList<?> values, String formatString)
+      throws EvalException {
 
     try {
       for (Object value : values) {
@@ -94,7 +92,7 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
           CommandLineArgsFactory.from(
               BuckSkylarkTypes.toJavaList(values, Object.class, "object class"), formatString));
     } catch (CommandLineArgException e) {
-      throw new EvalException(location, e.getHumanReadableErrorMessage());
+      throw new EvalException(e.getHumanReadableErrorMessage());
     }
     return this;
   }

@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.function;
 
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -25,6 +26,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.syntax.EvalException;
@@ -32,12 +34,15 @@ import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
+import com.google.devtools.build.lib.syntax.Resolver;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
+import com.google.devtools.build.lib.syntax.SyntaxError;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
 import org.junit.Before;
 import org.junit.Test;
@@ -78,42 +83,50 @@ public class ReadConfigTest {
         evaluate("value = read_config('foo', 'bar')").getGlobals().get("value"), equalTo("value"));
   }
 
-  private StarlarkThread evaluate(String expression) throws IOException, InterruptedException {
+  private Module evaluate(String expression) throws IOException, InterruptedException {
     Path buildFile = root.getChild("BUCK");
     FileSystemUtils.writeContentAsLatin1(buildFile, expression);
     return evaluate(buildFile);
   }
 
-  private StarlarkThread evaluate(Path buildFile) throws IOException, InterruptedException {
+  private Module evaluate(Path buildFile) throws IOException, InterruptedException {
     try (Mutability mutability = Mutability.create("BUCK")) {
       return evaluate(buildFile, mutability);
     }
   }
 
-  private StarlarkThread evaluate(Path buildFile, Mutability mutability)
+  private Module evaluate(Path buildFile, Mutability mutability)
       throws IOException, InterruptedException {
     byte[] buildFileContent =
         FileSystemUtils.readWithKnownFileSize(buildFile, buildFile.getFileSize());
     StarlarkFile buildFileAst =
-        StarlarkFile.parse(ParserInput.create(buildFileContent, buildFile.asFragment()));
+        StarlarkFile.parse(
+            ParserInput.create(
+                new String(buildFileContent, StandardCharsets.UTF_8), buildFile.toString()));
 
-    ImmutableMap.Builder<String, Object> module = ImmutableMap.builder();
-    module.putAll(Starlark.UNIVERSE);
-    Starlark.addMethods(module, SkylarkBuildModule.BUILD_MODULE);
+    ImmutableMap.Builder<String, Object> vars = ImmutableMap.builder();
+    vars.putAll(Starlark.UNIVERSE);
+    Starlark.addMethods(vars, SkylarkBuildModule.BUILD_MODULE);
 
-    StarlarkThread env =
-        StarlarkThread.builder(mutability)
-            .setGlobals(Module.createForBuiltins(module.build()))
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .build();
+    Module module = Module.withPredeclared(BuckStarlark.BUCK_STARLARK_SEMANTICS, vars.build());
+
+    StarlarkThread env = new StarlarkThread(mutability, BuckStarlark.BUCK_STARLARK_SEMANTICS);
     ReadConfigContext readConfigContext = new ReadConfigContext(rawConfig);
     readConfigContext.setup(env);
 
+    Resolver.resolveFile(buildFileAst, module);
+    if (!buildFileAst.errors().isEmpty()) {
+      for (SyntaxError error : buildFileAst.errors()) {
+        eventHandler.handle(Event.error(error.location(), error.message()));
+      }
+      fail();
+    }
+
     try {
-      EvalUtils.exec(buildFileAst, env);
+      EvalUtils.exec(buildFileAst, module, env);
     } catch (EvalException e) {
       throw new RuntimeException(e);
     }
-    return env;
+    return module;
   }
 }

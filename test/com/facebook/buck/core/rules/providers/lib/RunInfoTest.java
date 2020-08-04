@@ -47,9 +47,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
@@ -65,9 +65,7 @@ public class RunInfoTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   private static StarlarkThread getEnv(Mutability mutability) {
-    return StarlarkThread.builder(mutability)
-        .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-        .build();
+    return new StarlarkThread(mutability, BuckStarlark.BUCK_STARLARK_SEMANTICS);
   }
 
   @Test
@@ -102,11 +100,11 @@ public class RunInfoTest {
   public void handlesPartiallyBuiltCommandLineArgs() throws EvalException {
     CommandLineArgsBuilder builder =
         new CommandLineArgsBuilder()
-            .add("foo", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
-            .add("bar", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN);
+            .add("foo", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING)
+            .add("bar", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING);
 
     RunInfo runInfo = RunInfo.instantiateFromSkylark(Dict.empty(), builder);
-    builder.add("baz", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN);
+    builder.add("baz", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING);
 
     CommandLine cli =
         new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(new FakeProjectFilesystem()))
@@ -118,8 +116,8 @@ public class RunInfoTest {
   public void handlesCommandLineArgs() throws EvalException {
     CommandLineArgs args =
         new CommandLineArgsBuilder()
-            .add("foo", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
-            .add("bar", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
+            .add("foo", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING)
+            .add("bar", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING)
             .build();
 
     RunInfo runInfo = RunInfo.instantiateFromSkylark(Dict.empty(), args);
@@ -168,8 +166,7 @@ public class RunInfoTest {
       BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
       ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
       Artifact artifact2 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
-      OutputArtifact artifact2Output =
-          (OutputArtifact) artifact2.asSkylarkOutputArtifact(Location.BUILTIN);
+      OutputArtifact artifact2Output = (OutputArtifact) artifact2.asSkylarkOutputArtifact();
       Path artifact2Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
 
       StarlarkThread environment = getEnv(mut);
@@ -227,11 +224,7 @@ public class RunInfoTest {
       UserDefinedProviderInfo providerInfo =
           (UserDefinedProviderInfo)
               Starlark.call(
-                  env.getEnv(),
-                  provider,
-                  Location.BUILTIN,
-                  ImmutableList.of(),
-                  ImmutableMap.of("foo", args));
+                  env.getEnv(), provider, ImmutableList.of(), ImmutableMap.of("foo", args));
       assertEquals(args, providerInfo.getValue("foo"));
       assertTrue(providerInfo.isImmutable());
     }

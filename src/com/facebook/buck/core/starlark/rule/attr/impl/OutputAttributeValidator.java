@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.Location;
 
 /**
  * Simple container class for shared logic between {@link OutputAttribute} and {@link

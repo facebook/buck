@@ -20,6 +20,8 @@ import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
+import com.facebook.buck.core.starlark.compatible.BuckStarlarkModule;
+import com.facebook.buck.core.starlark.compatible.BuckStarlarkPrintHandler;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.parser.api.FileManifest;
@@ -31,6 +33,7 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.skylark.function.LoadSymbolsContext;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.packages.PackageContext;
+import com.facebook.buck.skylark.parser.context.BuckHasRepoMapping;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.annotations.VisibleForTesting;
@@ -53,17 +56,17 @@ import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventHandler;
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.packages.SkylarkExportable;
+import com.google.devtools.build.lib.packages.StarlarkExportable;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.LoadStatement;
+import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
+import com.google.devtools.build.lib.syntax.Resolver;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.ValidationEnvironment;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.PathFragment;
@@ -74,7 +77,6 @@ import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
@@ -146,7 +148,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
             ImmutableLoadImport.ofImpl(
                 containingLabel, implicitInclude.get().getLoadPath(), Location.BUILTIN),
             loadStack);
-    ImmutableMap<String, Object> symbols = data.getExtension().getBindings();
+    ImmutableMap<String, Object> symbols = data.getExtension().getExportedGlobals();
     ImmutableMap<String, String> expectedSymbols = implicitInclude.get().getSymbols();
     Builder<String, Object> loaded = ImmutableMap.builderWithExpectedSize(expectedSymbols.size());
     for (Entry<String, String> kvp : expectedSymbols.entrySet()) {
@@ -175,13 +177,14 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     Label containingLabel = createContainingLabel(basePath);
     ImplicitlyLoadedExtension implicitLoad =
         loadImplicitExtension(
-            basePath, containingLabel, LoadStack.top(Location.fromFile(buildFilePath)));
+            basePath, containingLabel, LoadStack.top(Location.fromFile(parseFile.toString())));
 
     StarlarkFile buildFileAst =
         parseSkylarkFile(
             buildFilePath,
-            LoadStack.top(Location.fromFile(buildFilePath)),
-            getBuckOrPackage().fileKind);
+            LoadStack.top(Location.fromFile(parseFile.toString())),
+            getBuckOrPackage().fileKind,
+            containingLabel);
     Globber globber = getGlobber(parseFile.getPath());
     PackageContext packageContext =
         createPackageContext(basePath, globber, implicitLoad.getLoadedSymbols());
@@ -198,7 +201,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
               readConfigContext,
               implicitLoad.getExtensionData());
 
-      exec(buildFileAst, envData.getEnvironment(), "file %s", parseFile);
+      Module module = getGlobals(getBuckOrPackage().fileKind, containingLabel);
+      BuckStarlarkModule.setClientData(module, createContainingLabel(basePath));
+      exec(buildFileAst, module, envData.getEnvironment(), "file %s", parseFile);
 
       ImmutableList.Builder<String> loadedPaths =
           ImmutableList.builderWithExpectedSize(envData.getLoadedPaths().size() + 1);
@@ -210,10 +215,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     }
   }
 
-  private void exec(StarlarkFile file, StarlarkThread thread, String what, Object... whatArgs)
+  private void exec(
+      StarlarkFile file, Module module, StarlarkThread thread, String what, Object... whatArgs)
       throws InterruptedException {
     try {
-      EvalUtils.exec(file, thread);
+      EvalUtils.exec(file, module, thread);
     } catch (EvalException e) {
       eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
       // buildFileAst.exec reports extended error information to console with eventHandler
@@ -243,16 +249,13 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       throws IOException, InterruptedException, BuildFileParseException {
     ImmutableMap<String, ExtensionData> dependencies =
         loadExtensions(containingLabel, getImports(buildFileAst, containingLabel), LoadStack.EMPTY);
-    StarlarkThread env =
-        StarlarkThread.builder(mutability)
-            .setImportedExtensions(Maps.transformValues(dependencies, ExtensionData::getExtension))
-            .setGlobals(buckGlobals.getBuckBuildFileContextGlobals())
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setEventHandler(eventHandler)
-            .build();
+    StarlarkThread env = new StarlarkThread(mutability, BuckStarlark.BUCK_STARLARK_SEMANTICS);
+    env.setPrintHandler(new BuckStarlarkPrintHandler(eventHandler));
+    env.setLoader(Maps.transformValues(dependencies, ExtensionData::getExtension)::get);
 
     parseContext.setup(env);
     readConfigContext.setup(env);
+    BuckHasRepoMapping.HAS_REPO_MAPPING.setup(env);
 
     return ImmutableEnvironmentData.ofImpl(
         env, toLoadedPaths(buildFilePath, dependencies.values(), implicitLoadExtensionData));
@@ -323,20 +326,26 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       throws IOException {
     ParserInput input =
         ParserInput.create(
-            FileSystemUtils.readContent(path, StandardCharsets.UTF_8), path.asFragment());
+            FileSystemUtils.readContent(path, StandardCharsets.UTF_8), path.toString());
     StarlarkFile file = StarlarkFile.parse(input);
     Event.replayEventsOn(eventHandler, file.errors());
     return file;
   }
 
-  private Module getGlobals(FileKind fileKind) {
-    return fileKind == FileKind.BZL
-        ? buckGlobals.getBuckLoadContextGlobals()
-        : buckGlobals.getBuckBuildFileContextGlobals();
+  private Module getGlobals(FileKind fileKind, Label label) {
+    Module module =
+        fileKind == FileKind.BZL
+            ? buckGlobals.makeBuckLoadContextGlobals()
+            : buckGlobals.makeBuckBuildFileContextGlobals();
+    BuckStarlarkModule.setClientData(module, label);
+    return module;
   }
 
   private StarlarkFile parseSkylarkFile(
-      com.google.devtools.build.lib.vfs.Path path, LoadStack loadStack, FileKind fileKind)
+      com.google.devtools.build.lib.vfs.Path path,
+      LoadStack loadStack,
+      FileKind fileKind,
+      Label label)
       throws BuildFileParseException, IOException {
     StarlarkFile result = astCache.getIfPresent(path);
     if (result == null) {
@@ -351,8 +360,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
             loadStack.toDependencyStack(), "Cannot parse %s", path);
       }
 
-      ValidationEnvironment.validateFile(
-          result, getGlobals(fileKind), BuckStarlark.BUCK_STARLARK_SEMANTICS, false);
+      // TODO(nga): here we crate a module
+      //  hoping we will create identical module during evaluation.
+      //  This is not right.
+      //  We should delay validation until extension construction.
+      Resolver.resolveFile(result, getGlobals(fileKind, label));
       Event.replayEventsOn(eventHandler, result.errors());
 
       if (!result.errors().isEmpty()) {
@@ -379,7 +391,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
               if (s instanceof LoadStatement) {
                 return Stream.of(
                     ImmutableLoadImport.ofImpl(
-                        fileLabel, ((LoadStatement) s).getImport().getValue(), s.getLocation()));
+                        fileLabel,
+                        ((LoadStatement) s).getImport().getValue(),
+                        s.getStartLocation()));
               } else {
                 return Stream.empty();
               }
@@ -397,7 +411,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     Label label = loadImport.getLabel();
     com.google.devtools.build.lib.vfs.Path filePath = getImportPath(label, loadImport.getImport());
 
-    StarlarkFile fileAst = parseSkylarkFile(filePath, loadStack, FileKind.BZL);
+    StarlarkFile fileAst = parseSkylarkFile(filePath, loadStack, FileKind.BZL, label);
     ImmutableList<IncludesData> dependencies =
         loadIncludes(label, getImports(fileAst, label), loadStack);
 
@@ -638,7 +652,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     if (load.haveAST()) {
       return false;
     }
-    load.setAST(parseSkylarkFile(load.getPath(), loadStack, FileKind.BZL));
+    load.setAST(parseSkylarkFile(load.getPath(), loadStack, FileKind.BZL, load.getLabel()));
     return true;
   }
 
@@ -687,20 +701,24 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   protected ExtensionData buildExtensionData(ExtensionLoadState load) throws InterruptedException {
     ImmutableMap<String, ExtensionData> dependencies =
         getDependenciesExtensionData(load.getLabel(), load.getDependencies());
-    StarlarkThread.Extension loadedExtension;
+    Module loadedExtension;
     try (Mutability mutability = Mutability.create("importing extension")) {
-      StarlarkThread.Builder envBuilder =
-          StarlarkThread.builder(mutability)
-              .setEventHandler(eventHandler)
-              .setGlobals(buckGlobals.getBuckLoadContextGlobals().withLabel(load.getLabel()));
-      envBuilder.setImportedExtensions(
-          Maps.transformValues(dependencies, ExtensionData::getExtension));
+      //      StarlarkThread.Builder envBuilder =
+      //          StarlarkThread.builder(mutability)
+      //              .setEventHandler(eventHandler)
+      //
+      // .setGlobals(buckGlobals.getBuckLoadContextGlobals().withLabel(load.getLabel()));
+      //      envBuilder.setImportedExtensions(
+      //          Maps.transformValues(dependencies, ExtensionData::getExtension));
 
       // Create this extension.
       StarlarkThread extensionEnv =
-          envBuilder.setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS).build();
+          new StarlarkThread(mutability, BuckStarlark.BUCK_STARLARK_SEMANTICS);
+      extensionEnv.setPrintHandler(new BuckStarlarkPrintHandler(eventHandler));
+      extensionEnv.setLoader(Maps.transformValues(dependencies, ExtensionData::getExtension)::get);
 
       readConfigContext.setup(extensionEnv);
+      BuckHasRepoMapping.HAS_REPO_MAPPING.setup(extensionEnv);
 
       LoadSymbolsContext loadSymbolsContext = new LoadSymbolsContext();
 
@@ -709,7 +727,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       extensionEnv.setPostAssignHook(
           (n, v) -> {
             try {
-              ensureExportedIfExportable(extensionEnv, n, v);
+              ensureExportedIfExportable(load.getLabel(), n, v);
             } catch (EvalException e) {
               // TODO(nga): what about stack trace
               eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
@@ -719,23 +737,23 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
       StarlarkFile ast = load.getAST();
       buckGlobals.getKnownUserDefinedRuleTypes().invalidateExtension(load.getLabel());
+      Module module = getGlobals(FileKind.BZL, load.getLabel());
+      BuckStarlarkModule.setClientData(module, load.getLabel());
       exec(
           ast,
+          module,
           extensionEnv,
           "extension %s referenced from %s",
           load.getLabel(),
           load.getParentLabel());
 
-      Map<String, Object> exportedBindings = extensionEnv.getGlobals().getExportedBindings();
-      Map<String, Object> loadedSymbols = loadSymbolsContext.getLoadedSymbols();
-      ImmutableMap.Builder<String, Object> exports =
-          ImmutableMap.builderWithExpectedSize(exportedBindings.size() + loadedSymbols.size());
-      exports.putAll(exportedBindings);
-      exports.putAll(loadedSymbols);
+      for (Entry<String, Object> entry : loadSymbolsContext.getLoadedSymbols().entrySet()) {
+        module.setExportedGlobal(entry.getKey(), entry.getValue());
+      }
 
-      loadedExtension =
-          new StarlarkThread.Extension(
-              exports.build(), extensionEnv.getTransitiveContentHashCode());
+      extensionEnv.mutability().freeze();
+
+      loadedExtension = module;
     }
 
     return ImmutableExtensionData.ofImpl(
@@ -746,32 +764,27 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   }
 
   /**
-   * Call {@link com.google.devtools.build.lib.packages.SkylarkExportable#export(Label, String)} on
+   * Call {@link com.google.devtools.build.lib.packages.StarlarkExportable#export(Label, String)} on
    * any objects that are assigned to
    *
    * <p>This is primarily used to make sure that {@link SkylarkUserDefinedRule} and {@link
    * com.facebook.buck.core.rules.providers.impl.UserDefinedProvider} instances set their name
    * properly upon assignment
    *
-   * @param extensionEnv The environment where an exportable variable with the name in {@code stmt}
-   *     is bound
    * @param identifier the name of the variable
    * @param lookedUp exported value
    */
-  private void ensureExportedIfExportable(
-      StarlarkThread extensionEnv, String identifier, Object lookedUp)
+  private void ensureExportedIfExportable(Label extensionLabel, String identifier, Object lookedUp)
       throws BuildFileParseException, EvalException {
-    if (lookedUp instanceof SkylarkExportable) {
-      SkylarkExportable exportable = (SkylarkExportable) lookedUp;
+    if (lookedUp instanceof StarlarkExportable) {
+      StarlarkExportable exportable = (StarlarkExportable) lookedUp;
       if (!exportable.isExported()) {
-        Label extensionLabel = (Label) extensionEnv.getGlobals().getLabel();
-        if (extensionLabel != null) {
-          exportable.export(extensionLabel, identifier);
-          if (lookedUp instanceof SkylarkUserDefinedRule) {
-            this.buckGlobals
-                .getKnownUserDefinedRuleTypes()
-                .addRule((SkylarkUserDefinedRule) exportable);
-          }
+        Preconditions.checkState(extensionLabel != null);
+        exportable.export(extensionLabel, identifier);
+        if (lookedUp instanceof SkylarkUserDefinedRule) {
+          this.buckGlobals
+              .getKnownUserDefinedRuleTypes()
+              .addRule((SkylarkUserDefinedRule) exportable);
         }
       }
     }
@@ -878,7 +891,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     ImplicitlyLoadedExtension implicitLoad =
         loadImplicitExtension(basePath, containingLabel, LoadStack.EMPTY);
     StarlarkFile buildFileAst =
-        parseSkylarkFile(buildFilePath, LoadStack.EMPTY, getBuckOrPackage().fileKind);
+        parseSkylarkFile(
+            buildFilePath, LoadStack.EMPTY, getBuckOrPackage().fileKind, containingLabel);
     ImmutableList<IncludesData> dependencies =
         loadIncludes(containingLabel, getImports(buildFileAst, containingLabel), LoadStack.EMPTY);
 

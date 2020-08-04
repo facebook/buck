@@ -17,7 +17,6 @@
 package com.facebook.buck.skylark.parser.context;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.HashMap;
@@ -63,14 +62,13 @@ public class ReadConfigContext {
   }
 
   /** Get the {@link ParseContext} by looking up in the environment. */
-  public static ReadConfigContext getContext(StarlarkThread env, Location loc)
-      throws EvalException {
+  public static ReadConfigContext getContext(StarlarkThread env) throws EvalException {
     @Nullable ReadConfigContext value = env.getThreadLocal(ReadConfigContext.class);
     if (value == null) {
       // If PARSE_CONTEXT is missing, we exported `read_config` function, but
       // did not export `ReadConfigContext`. This should not happen since
       // we enabled `read_config` in top-level `.bzl`.
-      throw new EvalException(loc, "Context is not set for read_config function.");
+      throw new EvalException("Context is not set for read_config function.");
     }
     return value;
   }

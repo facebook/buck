@@ -108,15 +108,15 @@ public class BuildFileManifestPojoizer {
       return convertMapToPojo((Map<?, ?>) obj);
     } else if (obj instanceof Set<?>) {
       return convertSetToPojo((Set<?>) obj);
-    } else if (obj instanceof com.google.devtools.build.lib.syntax.SelectorList) {
-      com.google.devtools.build.lib.syntax.SelectorList skylarkSelectorList =
-          (com.google.devtools.build.lib.syntax.SelectorList) obj;
+    } else if (obj instanceof com.google.devtools.build.lib.packages.SelectorList) {
+      com.google.devtools.build.lib.packages.SelectorList skylarkSelectorList =
+          (com.google.devtools.build.lib.packages.SelectorList) obj;
       // recursively convert list elements
       ImmutableList<Object> elements = convertListToPojo(skylarkSelectorList.getElements());
       return ListWithSelects.of(elements, skylarkSelectorList.getType());
-    } else if (obj instanceof com.google.devtools.build.lib.syntax.SelectorValue) {
-      com.google.devtools.build.lib.syntax.SelectorValue skylarkSelectorValue =
-          (com.google.devtools.build.lib.syntax.SelectorValue) obj;
+    } else if (obj instanceof com.google.devtools.build.lib.packages.SelectorValue) {
+      com.google.devtools.build.lib.packages.SelectorValue skylarkSelectorValue =
+          (com.google.devtools.build.lib.packages.SelectorValue) obj;
       // recursively convert dictionary elements
       @SuppressWarnings("unchecked")
       TwoArraysImmutableHashMap<String, Object> dictionary =
@@ -125,11 +125,11 @@ public class BuildFileManifestPojoizer {
                   convertMapToPojo(skylarkSelectorValue.getDictionary());
       return SelectorValue.of(
           ImmutableMap.copyOf(dictionary), skylarkSelectorValue.getNoMatchError());
-    } else if (obj instanceof com.google.devtools.build.lib.syntax.Depset) {
-      com.google.devtools.build.lib.syntax.Depset skylarkNestedSet =
-          (com.google.devtools.build.lib.syntax.Depset) obj;
+    } else if (obj instanceof com.google.devtools.build.lib.collect.nestedset.Depset) {
+      com.google.devtools.build.lib.collect.nestedset.Depset skylarkNestedSet =
+          (com.google.devtools.build.lib.collect.nestedset.Depset) obj;
       // recursively convert set elements
-      return convertToPojo(skylarkNestedSet.toCollection());
+      return convertToPojo(skylarkNestedSet.toList());
     } else if (obj instanceof Optional<?>) {
       // TODO(nga): how Optional can appear here? It is not a valid Starlark value.
       //   Remove and fix tests UDR tests.

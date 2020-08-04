@@ -14,18 +14,26 @@
 package com.google.devtools.build.lib.syntax;
 
 import com.google.common.base.Joiner;
-import com.google.devtools.build.lib.vfs.PathFragment;
-import javax.annotation.Nullable;
+import com.google.common.base.Preconditions;
+import java.nio.charset.StandardCharsets;
 
-/** The apparent name and contents of a source file, for consumption by the parser. */
+/**
+ * The apparent name and contents of a source file, for consumption by the parser. The file name
+ * appears in the location information in the syntax tree, and in error messages, but the Starlark
+ * interpreter will not attempt to open the file.
+ *
+ * <p>The parser consumes a stream of chars (UTF-16 codes), and the syntax positions reported by
+ * {@link Node#getStartOffset} and {@link Location.column} are effectively indices into a char
+ * array.
+ */
 public final class ParserInput {
 
+  private final String file;
   private final char[] content;
-  private final PathFragment path;
 
-  private ParserInput(char[] content, @Nullable PathFragment path) {
+  private ParserInput(char[] content, String file) {
     this.content = content;
-    this.path = path == null ? PathFragment.EMPTY_FRAGMENT : path;
+    this.file = Preconditions.checkNotNull(file);
   }
 
   /** Returns the content of the input source. Callers must not modify the result. */
@@ -33,53 +41,57 @@ public final class ParserInput {
     return content;
   }
 
-  /**
-   * Returns the (non-null) apparent file name of the input source, for use in error messages; the
-   * file will not be opened.
-   */
-  // TODO(adonovan): use Strings, to avoid dependency on vfs; but first we need to avoid depending
-  // on events.Location.
-  public PathFragment getPath() {
-    return path;
+  /** Returns the apparent file name of the input source. */
+  public String getFile() {
+    return file;
   }
 
   /** Returns an unnamed input source that reads from a list of strings, joined by newlines. */
   public static ParserInput fromLines(String... lines) {
-    return create(Joiner.on("\n").join(lines), null);
+    return fromString(Joiner.on("\n").join(lines), "");
   }
 
   /**
-   * Returns an import source that reads from a Latin-1 encoded byte array. The path specifies the
-   * name of the file, for use in source locations and error messages; a null path implies the empty
-   * string.
+   * Returns an input source that reads from a UTF-8-encoded byte array. The caller is free to
+   * subsequently mutate the array.
    */
-  public static ParserInput create(byte[] bytes, @Nullable PathFragment path) {
-    char[] content = convertFromLatin1(bytes);
-    return new ParserInput(content, path);
+  public static ParserInput fromUTF8(byte[] bytes, String file) {
+    // TODO(adonovan): opt: avoid one of the two copies.
+    return fromString(new String(bytes, StandardCharsets.UTF_8), file);
   }
 
   /**
-   * Create an input source from the given content, and associate path with this source. Path will
-   * be used in error messages etc. but we will *never* attempt to read the content from path. A
-   * null path implies the empty string.
+   * Returns an input source that reads from a Latin1-encoded byte array. The caller is free to
+   * subsequently mutate the array.
+   *
+   * @deprecated this function exists to support legacy uses of Latin1 in Bazel. Do not use Latin1
+   *     in new applications.
    */
-  public static ParserInput create(String content, @Nullable PathFragment path) {
-    return create(content.toCharArray(), path);
-  }
-
-  /**
-   * Create an input source from the given content, and associate path with this source. Path will
-   * be used in error messages etc. but we will *never* attempt to read the content from path.
-   */
-  public static ParserInput create(char[] content, PathFragment path) {
-    return new ParserInput(content, path);
-  }
-
-  private static char[] convertFromLatin1(byte[] content) {
-    char[] latin1 = new char[content.length];
-    for (int i = 0; i < latin1.length; i++) { // yeah, latin1 is this easy! :-)
-      latin1[i] = (char) (0xff & content[i]);
+  @Deprecated
+  public static ParserInput fromLatin1(byte[] bytes, String file) {
+    char[] chars = new char[bytes.length];
+    for (int i = 0; i < bytes.length; i++) {
+      chars[i] = (char) (0xff & bytes[i]);
     }
-    return latin1;
+    return new ParserInput(chars, file);
+  }
+
+  /** Returns an input source that reads from the given string. */
+  public static ParserInput fromString(String content, String file) {
+    return fromCharArray(content.toCharArray(), file);
+  }
+
+  /** Deprecated alias for {@link #fromString}. */
+  @Deprecated
+  public static ParserInput create(String content, String file) {
+    return fromString(content, file);
+  }
+
+  /**
+   * Returns an input source that reads from the given char array. The caller must not subsequently
+   * modify the array.
+   */
+  public static ParserInput fromCharArray(char[] content, String file) {
+    return new ParserInput(content, file);
   }
 }

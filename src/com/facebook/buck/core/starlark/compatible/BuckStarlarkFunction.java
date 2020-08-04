@@ -17,29 +17,37 @@
 package com.facebook.buck.core.starlark.compatible;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.profiler.Profiler;
 import com.google.devtools.build.lib.profiler.ProfilerTask;
 import com.google.devtools.build.lib.profiler.SilentCloseable;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
-import com.google.devtools.build.lib.syntax.CallUtils;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.MethodDescriptor;
+import com.google.devtools.build.lib.syntax.ParamDescriptor;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkCallable;
+import com.google.devtools.build.lib.syntax.StarlarkSemantics;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
+import com.google.devtools.build.lib.syntax.Tuple;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.WrongMethodTypeException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
+import net.starlark.java.annot.StarlarkMethod;
+import net.starlark.java.spelling.SpellChecker;
 
 /**
  * Marker class that makes some method exposable to skylark.
@@ -87,7 +95,7 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
    *
    * @param methodName the function name exposed to skylark
    * @param method a method that will eventually be called in {@link #fastcall(StarlarkThread,
-   *     Location, Object[], Object[])}
+   *     Object[], Object[])}
    * @param namedParams a list of named parameters for skylark. The names are mapped in order to the
    *     parameters of {@code method}
    * @param defaultSkylarkValues a list of default values for parameters in skylark. The values are
@@ -158,14 +166,12 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
   }
 
   @Override
-  public Object fastcall(StarlarkThread env, Location loc, Object[] args, Object[] kwargs)
+  public Object fastcall(StarlarkThread thread, Object[] positional, Object[] named)
       throws EvalException, InterruptedException {
     // this is the effectively the same as bazel's {@BuiltInCallable}
     try (SilentCloseable c =
         Profiler.instance().profile(ProfilerTask.STARLARK_BUILTIN_FN, methodDescriptor.getName())) {
-      Object[] javaArguments =
-          CallUtils.convertStarlarkArgumentsToJavaMethodArguments(
-              env, getName(), loc, methodDescriptor, getClass(), args, kwargs);
+      Object[] javaArguments = getArgumentVector(thread, methodDescriptor, positional, named);
 
       // TODO: deal with Optionals and some java/skylark object coercing
       ImmutableList<Object> argsForReflectionBuilder = ImmutableList.copyOf(javaArguments);
@@ -181,7 +187,6 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
             return Starlark.NONE;
           } else {
             throw new EvalException(
-                loc,
                 "method invocation returned None, please file a bug report: "
                     + getName()
                     + "(...)");
@@ -189,23 +194,22 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
         }
         if (!Starlark.valid(result)) {
           throw new EvalException(
-              loc,
               String.format(
                   "method '%s' returns an object of invalid type %s",
                   getName(), result.getClass().getName()));
         }
         return result;
       } catch (WrongMethodTypeException e) {
-        throw new EvalException(loc, "Method invocation failed: " + e);
+        throw new EvalException("Method invocation failed: " + e);
       } catch (Throwable e) {
         if (e.getCause() instanceof EvalException) {
           throw (EvalException) e.getCause();
         } else if (e.getCause() != null) {
           Throwables.throwIfInstanceOf(e.getCause(), InterruptedException.class);
-          throw new EvalException(loc, e.getCause());
+          throw new EvalException(null, "method invocation failed: " + e, e.getCause());
         } else {
           // This is unlikely to happen
-          throw new EvalException(loc, "method invocation failed: " + e);
+          throw new EvalException("method invocation failed: " + e);
         }
       }
     }
@@ -251,7 +255,7 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
     return methodDescriptor;
   }
 
-  private SkylarkCallable inferSkylarkCallableAnnotationFromMethod(
+  private StarlarkMethod inferSkylarkCallableAnnotationFromMethod(
       String methodName,
       MethodHandle method,
       List<String> namedParams,
@@ -264,4 +268,251 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
   // a fake method to hand to the MethodDescriptor that this uses.
   @SuppressWarnings("unused")
   private void fake() {}
+
+  private Object[] getArgumentVector(
+      StarlarkThread thread,
+      MethodDescriptor desc, // intentionally shadows this.desc
+      Object[] positional,
+      Object[] named)
+      throws EvalException {
+
+    // Overview of steps:
+    // - allocate vector of actual arguments of correct size.
+    // - process positional arguments, accumulating surplus ones into *args.
+    // - process named arguments, accumulating surplus ones into **kwargs.
+    // - set default values for missing optionals, and report missing mandatory parameters.
+    // - set special parameters.
+    // The static checks ensure that positional parameters appear before named,
+    // and mandatory positionals appear before optional.
+    // No additional memory allocation occurs in the common (success) case.
+    // Flag-disabled parameters are skipped during argument matching, as if they do not exist. They
+    // are instead assigned their flag-disabled values.
+
+    ParamDescriptor[] parameters = desc.getParameters();
+
+    // Allocate argument vector.
+    int n = parameters.length;
+    if (desc.acceptsExtraArgs()) {
+      n++;
+    }
+    if (desc.acceptsExtraKwargs()) {
+      n++;
+    }
+    if (desc.isUseStarlarkThread()) {
+      n++;
+    }
+    Object[] vector = new Object[n];
+
+    // positional arguments
+    int paramIndex = 0;
+    int argIndex = 0;
+    for (; argIndex < positional.length && paramIndex < parameters.length; paramIndex++) {
+      ParamDescriptor param = parameters[paramIndex];
+      if (!param.isPositional()) {
+        break;
+      }
+
+      // disabled?
+      if (param.disabledByFlag() != null) {
+        // Skip disabled parameter as if not present at all.
+        // The default value will be filled in below.
+        continue;
+      }
+
+      Object value = positional[argIndex++];
+      checkParamValue(param, value);
+      vector[paramIndex] = value;
+    }
+
+    // *args
+    Tuple<Object> varargs = null;
+    if (desc.acceptsExtraArgs()) {
+      varargs = Tuple.wrap(Arrays.copyOfRange(positional, argIndex, positional.length));
+    } else if (argIndex < positional.length) {
+      if (argIndex == 0) {
+        throw Starlark.errorf("%s() got unexpected positional argument", getName());
+      } else {
+        throw Starlark.errorf(
+            "%s() accepts no more than %d positional argument%s but got %d",
+            getName(), argIndex, plural(argIndex), positional.length);
+      }
+    }
+
+    // named arguments
+    LinkedHashMap<String, Object> kwargs = desc.acceptsExtraKwargs() ? new LinkedHashMap<>() : null;
+    for (int i = 0; i < named.length; i += 2) {
+      String name = (String) named[i]; // safe
+      Object value = named[i + 1];
+
+      // look up parameter
+      int index = desc.getParameterIndex(name);
+      // unknown parameter?
+      if (index < 0) {
+        // spill to **kwargs
+        if (kwargs == null) {
+          List<String> allNames =
+              Arrays.stream(parameters)
+                  .map(ParamDescriptor::getName)
+                  .collect(ImmutableList.toImmutableList());
+          throw Starlark.errorf(
+              "%s() got unexpected keyword argument '%s'%s",
+              getName(), name, SpellChecker.didYouMean(name, allNames));
+        }
+
+        // duplicate named argument?
+        if (kwargs.put(name, value) != null) {
+          throw Starlark.errorf(
+              "%s() got multiple values for keyword argument '%s'", getName(), name);
+        }
+        continue;
+      }
+      ParamDescriptor param = parameters[index];
+
+      // positional-only param?
+      if (!param.isNamed()) {
+        // spill to **kwargs
+        if (kwargs == null) {
+          throw Starlark.errorf(
+              "%s() got named argument for positional-only parameter '%s'", getName(), name);
+        }
+
+        // duplicate named argument?
+        if (kwargs.put(name, value) != null) {
+          throw Starlark.errorf(
+              "%s() got multiple values for keyword argument '%s'", getName(), name);
+        }
+        continue;
+      }
+
+      // disabled?
+      String flag = param.disabledByFlag();
+      if (flag != null) {
+        // spill to **kwargs
+        if (kwargs == null) {
+          throw Starlark.errorf(
+              "in call to %s(), parameter '%s' is %s",
+              getName(), param.getName(), disabled(flag, thread.getSemantics()));
+        }
+
+        // duplicate named argument?
+        if (kwargs.put(name, value) != null) {
+          throw Starlark.errorf(
+              "%s() got multiple values for keyword argument '%s'", getName(), name);
+        }
+        continue;
+      }
+
+      checkParamValue(param, value);
+
+      // duplicate?
+      if (vector[index] != null) {
+        throw Starlark.errorf("%s() got multiple values for argument '%s'", getName(), name);
+      }
+
+      vector[index] = value;
+    }
+
+    // Set default values for missing parameters,
+    // and report any that are still missing.
+    List<String> missingPositional = null;
+    List<String> missingNamed = null;
+    for (int i = 0; i < parameters.length; i++) {
+      if (vector[i] == null) {
+        ParamDescriptor param = parameters[i];
+        vector[i] = param.getDefaultValue();
+        if (vector[i] == null) {
+          if (param.isPositional()) {
+            if (missingPositional == null) {
+              missingPositional = new ArrayList<>();
+            }
+            missingPositional.add(param.getName());
+          } else {
+            if (missingNamed == null) {
+              missingNamed = new ArrayList<>();
+            }
+            missingNamed.add(param.getName());
+          }
+        }
+      }
+    }
+    if (missingPositional != null) {
+      throw Starlark.errorf(
+          "%s() missing %d required positional argument%s: %s",
+          getName(),
+          missingPositional.size(),
+          plural(missingPositional.size()),
+          Joiner.on(", ").join(missingPositional));
+    }
+    if (missingNamed != null) {
+      throw Starlark.errorf(
+          "%s() missing %d required named argument%s: %s",
+          getName(),
+          missingNamed.size(),
+          plural(missingNamed.size()),
+          Joiner.on(", ").join(missingNamed));
+    }
+
+    // special parameters
+    int i = parameters.length;
+    if (desc.acceptsExtraArgs()) {
+      vector[i++] = varargs;
+    }
+    if (desc.acceptsExtraKwargs()) {
+      vector[i++] = Dict.wrap(thread.mutability(), kwargs);
+    }
+    if (desc.isUseStarlarkThread()) {
+      vector[i++] = thread;
+    }
+
+    return vector;
+  }
+
+  private void checkParamValue(ParamDescriptor param, Object value) throws EvalException {
+    // Value must belong to one of the specified classes.
+    boolean ok = false;
+    for (Class<?> cls : param.getAllowedClasses()) {
+      if (cls.isInstance(value)) {
+        ok = true;
+        break;
+      }
+    }
+    if (!ok) {
+      throw Starlark.errorf(
+          "in call, parameter '%s' got value of type '%s', want '%s'",
+          param.getName(), Starlark.type(value), param.getTypeErrorMessage());
+    }
+
+    // None is valid if and only if the parameter is marked noneable,
+    // in which case the above check passes as the list of classes will include NoneType.
+    // The reason for this check is to ensure that merely having type=Object.class
+    // does not allow None as an argument value; I'm not sure why, that but that's the
+    // historical behavior.
+    //
+    // We do this check second because the first check prints a better error
+    // that enumerates the allowed types.
+    if (value == Starlark.NONE && !param.isNoneable()) {
+      throw Starlark.errorf("in call, parameter '%s' cannot be None", param.getName());
+    }
+  }
+
+  private static String plural(int n) {
+    return n == 1 ? "" : "s";
+  }
+
+  // Returns a phrase meaning "disabled" appropriate to the specified flag.
+  private static String disabled(String flag, StarlarkSemantics semantics) {
+    // If the flag is True, it must be a deprecation flag. Otherwise it's an experimental flag.
+    // TODO(adonovan): is that assumption sound?
+    if (semantics.flagValue(flag)) {
+      return String.format(
+          "deprecated and will be removed soon. It may be temporarily re-enabled by setting"
+              + " --%s=false",
+          flag);
+    } else {
+      return String.format(
+          "experimental and thus unavailable with the current flags. It may be enabled by setting"
+              + " --%s",
+          flag);
+    }
+  }
 }

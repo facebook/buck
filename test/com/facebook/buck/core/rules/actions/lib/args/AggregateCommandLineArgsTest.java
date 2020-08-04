@@ -50,8 +50,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Starlark;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -77,8 +77,7 @@ public class AggregateCommandLineArgsTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
     ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
     Artifact artifact3 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
-    OutputArtifact artifact3Output =
-        (OutputArtifact) artifact3.asSkylarkOutputArtifact(Location.BUILTIN);
+    OutputArtifact artifact3Output = (OutputArtifact) artifact3.asSkylarkOutputArtifact();
     Path artifact3Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
 
     CommandLineArgs args =
@@ -278,11 +277,7 @@ public class AggregateCommandLineArgsTest {
       UserDefinedProviderInfo providerInfo =
           (UserDefinedProviderInfo)
               Starlark.call(
-                  env.getEnv(),
-                  provider,
-                  Location.BUILTIN,
-                  ImmutableList.of(),
-                  ImmutableMap.of("foo", args));
+                  env.getEnv(), provider, ImmutableList.of(), ImmutableMap.of("foo", args));
       assertEquals(args, providerInfo.getValue("foo"));
       assertTrue(providerInfo.isImmutable());
     }

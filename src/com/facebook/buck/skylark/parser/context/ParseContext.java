@@ -21,7 +21,6 @@ import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.HashMap;
@@ -47,16 +46,16 @@ public class ParseContext {
   }
 
   /** Records the parsed {@code rawPackage}. */
-  public void recordPackage(PackageMetadata pkg, Location loc) throws EvalException {
+  public void recordPackage(PackageMetadata pkg) throws EvalException {
     Preconditions.checkState(rawRules.isEmpty(), "Package files cannot contain rules.");
     if (this.pkg != null) {
-      throw new EvalException(loc, String.format("Only one package is allow per package file."));
+      throw new EvalException(String.format("Only one package is allow per package file."));
     }
     this.pkg = pkg;
   }
 
   /** Records the parsed {@code rawRule}. */
-  public void recordRule(RecordedRule rawRule, Location loc) throws EvalException {
+  public void recordRule(RecordedRule rawRule) throws EvalException {
     Preconditions.checkState(pkg == null, "Build files cannot contain package definitions.");
     Object nameObject =
         Objects.requireNonNull(
@@ -72,7 +71,6 @@ public class ParseContext {
     String name = (String) nameObject;
     if (rawRules.containsKey(name)) {
       throw new EvalException(
-          loc,
           String.format(
               "Cannot register rule %s:%s of type %s with content %s again.",
               rawRule.getBasePath(), name, rawRule.getBuckType(), rawRule.getRawRule()));
@@ -107,14 +105,12 @@ public class ParseContext {
   }
 
   /** Get the {@link ParseContext} by looking up in the environment. */
-  public static ParseContext getParseContext(
-      StarlarkThread env, @Nullable Location loc, String name) throws EvalException {
+  public static ParseContext getParseContext(StarlarkThread env, String name) throws EvalException {
     @Nullable ParseContext value = env.getThreadLocal(ParseContext.class);
     if (value == null) {
       // if PARSE_CONTEXT is missing, we're not called from a build file. This happens if someone
       // uses native.some_func() in the wrong place.
       throw new EvalException(
-          loc,
           "Top-level invocations of "
               + name
               + " are not allowed in .bzl files. Wrap it in a macro and call it from a BUCK file.");

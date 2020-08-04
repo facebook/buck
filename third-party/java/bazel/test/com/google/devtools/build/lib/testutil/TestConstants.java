@@ -14,7 +14,6 @@
 
 package com.google.devtools.build.lib.testutil;
 
-
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -86,10 +85,6 @@ public class TestConstants {
       "com.google.devtools.build.lib.bazel.rules.BazelStrategyModule";
   public static final String TEST_REAL_UNIX_FILE_SYSTEM =
       "com.google.devtools.build.lib.unix.UnixFileSystem";
-  public static final String TEST_WORKSPACE_STATUS_MODULE =
-      "com.google.devtools.build.lib.bazel.BazelWorkspaceStatusModule";
-
-//  public static void processSkyframeExecutorForTesting(SkyframeExecutor skyframeExecutor) {}
 
   public static final ImmutableList<String> IGNORED_MESSAGE_PREFIXES = ImmutableList.<String>of();
 
@@ -101,7 +96,7 @@ public class TestConstants {
   /** The workspace repository label under which built-in tools reside. */
   public static final String TOOLS_REPOSITORY = "@bazel_tools";
   /** The file path in which to create files so that they end up under {@link #TOOLS_REPOSITORY}. */
-  public static final String TOOLS_REPOSITORY_SCRATCH = "/bazel_tools_workspace/";
+  public static final String TOOLS_REPOSITORY_SCRATCH = "bazel_tools_workspace/";
 
   /** The output file path prefix for tool file dependencies. */
   public static final String TOOLS_REPOSITORY_PATH_PREFIX = "external/bazel_tools/";
@@ -111,7 +106,7 @@ public class TestConstants {
   /**
    * The file path in which to create files so that they end up under {@link #RULES_CC_REPOSITORY}.
    */
-  public static final String RULES_CC_REPOSITORY_SCRATCH = "/rules_cc_workspace/";
+  public static final String RULES_CC_REPOSITORY_SCRATCH = "rules_cc_workspace/";
   /** The directory in which rules_cc repo resides in execroot. */
   public static final String RULES_CC_REPOSITORY_EXECROOT = "external/rules_cc/";
 
@@ -121,12 +116,6 @@ public class TestConstants {
   // Constants used to determine how genrule pulls in the setup script.
   public static final String GENRULE_SETUP = "@bazel_tools//tools/genrule:genrule-setup.sh";
   public static final String GENRULE_SETUP_PATH = "genrule-setup.sh";
-
-  /**
-   * A list of flags required to support use of the crosstool on OSX.
-   */
-  public static final ImmutableList<String> OSX_CROSSTOOL_FLAGS =
-      ImmutableList.of();
 
   /**
    * Flags that must be set for Bazel to work properly, if the default values are unusable for some
@@ -140,24 +129,15 @@ public class TestConstants {
           // TODO(#7903): Remove once our own tests are migrated.
           "--incompatible_py3_is_default=false",
           "--incompatible_py2_outputs_are_suffixed=false",
-          // TODO(#7899): Remove once we flip the flag default.
-          "--incompatible_use_python_toolchains=true",
           // TODO(#7849): Remove after flag flip.
           "--incompatible_use_toolchain_resolution_for_java_rules");
-
-//  public static final BuilderFactoryForTesting PACKAGE_FACTORY_BUILDER_FACTORY_FOR_TESTING =
-//      PackageFactoryBuilderFactoryForBazelUnitTests.INSTANCE;
-
-  /** Partial query to filter out implicit dependencies of C/C++ rules. */
-//  public static final String CC_DEPENDENCY_CORRECTION =
-//      " - deps(" + TOOLS_REPOSITORY + CROSSTOOL_LABEL + ")";
 
   public static final String PLATFORM_PACKAGE_ROOT = "@bazel_tools//platforms";
   public static final String CONSTRAINTS_PACKAGE_ROOT = "@platforms//";
 
-  public static final String PLATFORMS_PATH = "/bazel_tools_workspace/platforms";
-  public static final String CONSTRAINTS_PATH = "/platforms";
-  public static final String LOCAL_CONFIG_PLATFORM_PATH = "/local_config_platform_workspace";
+  public static final String PLATFORMS_PATH = "bazel_tools_workspace/platforms";
+  public static final String CONSTRAINTS_PATH = "platforms_workspace";
+  public static final String LOCAL_CONFIG_PLATFORM_PATH = "local_config_platform_workspace";
 
   public static final String PLATFORM_LABEL =
       PLATFORM_PACKAGE_ROOT + ":default_host + " + PLATFORM_PACKAGE_ROOT + ":default_target";

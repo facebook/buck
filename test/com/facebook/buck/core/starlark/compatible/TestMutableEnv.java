@@ -25,6 +25,7 @@ import com.google.devtools.build.lib.syntax.StarlarkThread;
 /** Simple try-with-resources class that creates and cleans up a mutable environment */
 public class TestMutableEnv implements AutoCloseable {
   private final Mutability mutability;
+  private final Module module;
   private final StarlarkThread env;
 
   public TestMutableEnv() {
@@ -35,12 +36,14 @@ public class TestMutableEnv implements AutoCloseable {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
     builder.putAll(Starlark.UNIVERSE);
     builder.putAll(globals);
+    builder.putAll(Starlark.UNIVERSE);
+    module = Module.withPredeclared(BuckStarlark.BUCK_STARLARK_SEMANTICS, globals);
     mutability = Mutability.create("testing");
-    env =
-        StarlarkThread.builder(mutability)
-            .setGlobals(Module.createForBuiltins(builder.build()))
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .build();
+    env = new StarlarkThread(mutability, BuckStarlark.BUCK_STARLARK_SEMANTICS);
+  }
+
+  public Module getModule() {
+    return module;
   }
 
   public StarlarkThread getEnv() {

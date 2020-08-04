@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
-import com.google.devtools.build.lib.syntax.BaseFunction;
+import com.google.devtools.build.lib.syntax.StarlarkCallable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -149,7 +149,7 @@ public class SkylarkDescriptionArg
     return rule.getParamsInfo();
   }
 
-  public BaseFunction getImplementation() {
+  public StarlarkCallable getImplementation() {
     return rule.getImplementation();
   }
 

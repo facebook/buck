@@ -44,7 +44,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.events.EventHandler;
-import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -217,9 +217,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
                   return importS != null
                       ? Stream.of(
                           ImmutableLoadImport.ofImpl(
-                              containingLabel,
-                              importS,
-                              Location.fromFile(absPathToStarlarkPath(buildFile))))
+                              containingLabel, importS, Location.fromFile(buildFile.toString())))
                       : Stream.empty();
                 })
             .distinct()

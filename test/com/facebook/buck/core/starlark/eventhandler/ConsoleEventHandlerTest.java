@@ -26,8 +26,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventKind;
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.vfs.PathFragment;
+import com.google.devtools.build.lib.syntax.Location;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.logging.Level;
@@ -78,79 +77,58 @@ public class ConsoleEventHandlerTest {
     toSendBuilder.add(
         Event.of(
             EventKind.WARNING,
-            Location.fromPathAndStartColumn(
-                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(1, 1)),
+            Location.fromFileLineColumn("foo/bar", 1, 1),
             "Message at level WARNING"),
         Event.of(
             EventKind.STDERR,
-            Location.fromPathAndStartColumn(
-                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(2, 1)),
+            Location.fromFileLineColumn("foo/bar", 2, 1),
             "Message at level STDERR"),
         Event.of(
-            EventKind.INFO,
-            Location.fromPathAndStartColumn(
-                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(3, 1)),
-            "Message at level INFO"),
+            EventKind.INFO, Location.fromFileLineColumn("foo/bar", 3, 1), "Message at level INFO"),
         Event.of(
             EventKind.PROGRESS,
-            Location.fromPathAndStartColumn(
-                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(4, 1)),
+            Location.fromFileLineColumn("foo/bar", 4, 1),
             "Message at level PROGRESS"),
         Event.of(
             EventKind.START,
-            Location.fromPathAndStartColumn(
-                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(5, 1)),
+            Location.fromFileLineColumn("foo/bar", 5, 1),
             "Message at level START"),
         Event.of(
             EventKind.FINISH,
-            Location.fromPathAndStartColumn(
-                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(6, 1)),
+            Location.fromFileLineColumn("foo/bar", 6, 1),
             "Message at level FINISH"),
         Event.of(
             EventKind.SUBCOMMAND,
-            Location.fromPathAndStartColumn(
-                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(7, 1)),
+            Location.fromFileLineColumn("foo/bar", 7, 1),
             "Message at level SUBCOMMAND"),
         Event.of(
-            EventKind.FAIL,
-            Location.fromPathAndStartColumn(
-                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(8, 1)),
-            "Message at level FAIL"),
+            EventKind.FAIL, Location.fromFileLineColumn("foo/bar", 8, 1), "Message at level FAIL"),
         Event.of(
             EventKind.TIMEOUT,
-            Location.fromPathAndStartColumn(
-                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(9, 1)),
+            Location.fromFileLineColumn("foo/bar", 9, 1),
             "Message at level TIMEOUT"),
         Event.of(
             EventKind.DEPCHECKER,
-            Location.fromPathAndStartColumn(
-                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(10, 1)),
+            Location.fromFileLineColumn("foo/bar", 10, 1),
             "Message at level DEPCHECKER"),
         Event.of(
             EventKind.ERROR,
-            Location.fromPathAndStartColumn(
-                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(11, 1)),
+            Location.fromFileLineColumn("foo/bar", 11, 1),
             "Message at level ERROR"),
         Event.of(
             EventKind.DEBUG,
-            Location.fromPathAndStartColumn(
-                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(12, 1)),
+            Location.fromFileLineColumn("foo/bar", 12, 1),
             "Message at level DEBUG"),
         Event.of(
-            EventKind.PASS,
-            Location.fromPathAndStartColumn(
-                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(13, 1)),
-            "Message at level PASS"),
+            EventKind.PASS, Location.fromFileLineColumn("foo/bar", 13, 1), "Message at level PASS"),
         Event.of(
             EventKind.STDOUT,
-            Location.fromPathAndStartColumn(
-                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(14, 1)),
+            Location.fromFileLineColumn("foo/bar", 14, 1),
             "Message at level STDOUT"),
         Event.of(EventKind.ERROR, null, "No location given"),
         Event.of(
             EventKind.ERROR,
-            Location.fromPathAndStartColumn(
-                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(15, 1)),
+            Location.fromFileLineColumn("foo/bar", 15, 1),
             "Traceback (most recent call last):\n"
                 + "\tFile \"/Users/pjameson/local/buck/BUCK\", line 2\n"
                 + "\t\tfoo()\n"
@@ -159,8 +137,7 @@ public class ConsoleEventHandlerTest {
                 + "name 'unknown_function' is not defined"),
         Event.of(
             EventKind.ERROR,
-            Location.fromPathAndStartColumn(
-                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(16, 1)),
+            Location.fromFileLineColumn("foo/bar", 16, 1),
             "Traceback (most recent call last):\n"
                 + "\tFile \"/Users/pjameson/local/buck/BUCK\", line 2\n"
                 + "\t\tfoo()\n"
@@ -214,15 +191,10 @@ public class ConsoleEventHandlerTest {
       eventHandler.handle(
           Event.of(
               EventKind.WARNING,
-              Location.fromPathAndStartColumn(
-                  PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(1, 1)),
+              Location.fromFileLineColumn("foo/bar", 1, 1),
               "Message at level WARNING"));
       eventHandler.handle(
-          Event.of(
-              EventKind.ERROR,
-              Location.fromPathAndStartColumn(
-                  PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(2, 1)),
-              "Testing"));
+          Event.of(EventKind.ERROR, Location.fromFileLineColumn("foo/bar", 2, 1), "Testing"));
     }
 
     Assert.assertEquals(

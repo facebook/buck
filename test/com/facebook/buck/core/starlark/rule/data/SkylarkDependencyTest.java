@@ -54,7 +54,9 @@ public class SkylarkDependencyTest {
       boolean labelString =
           (boolean)
               TestStarlarkParser.eval(
-                  env.getEnv(), "dep.label.name == \"bar\" and dep.label.package == \"foo\"");
+                  env.getEnv(),
+                  env.getModule(),
+                  "dep.label.name == \"bar\" and dep.label.package == \"foo\"");
       assertTrue(labelString);
     }
   }
@@ -82,9 +84,10 @@ public class SkylarkDependencyTest {
     try (TestMutableEnv env = env(dep)) {
       boolean presentProvider =
           (boolean)
-              TestStarlarkParser.eval(env.getEnv(), "len(dep[DefaultInfo].default_outputs) == 0");
+              TestStarlarkParser.eval(
+                  env.getEnv(), env.getModule(), "len(dep[DefaultInfo].default_outputs) == 0");
       boolean missingProvider =
-          (boolean) TestStarlarkParser.eval(env.getEnv(), "dep[FakeInfo] == None");
+          (boolean) TestStarlarkParser.eval(env.getEnv(), env.getModule(), "dep[FakeInfo] == None");
       assertTrue(presentProvider);
       assertTrue(missingProvider);
     }
@@ -100,8 +103,9 @@ public class SkylarkDependencyTest {
 
     try (TestMutableEnv env = env(dep)) {
       boolean presentProvider =
-          (boolean) TestStarlarkParser.eval(env.getEnv(), "DefaultInfo in dep");
-      boolean missingProvider = (boolean) TestStarlarkParser.eval(env.getEnv(), "FakeInfo in dep");
+          (boolean) TestStarlarkParser.eval(env.getEnv(), env.getModule(), "DefaultInfo in dep");
+      boolean missingProvider =
+          (boolean) TestStarlarkParser.eval(env.getEnv(), env.getModule(), "FakeInfo in dep");
       assertTrue(presentProvider);
       assertFalse(missingProvider);
     }

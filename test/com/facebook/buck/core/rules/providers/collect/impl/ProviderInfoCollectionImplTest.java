@@ -32,7 +32,6 @@ import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.starlark.compatible.MutableObjectException;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Starlark;
@@ -54,7 +53,7 @@ public class ProviderInfoCollectionImplTest {
     expectedException.expect(EvalException.class);
     ProviderInfoCollection providerInfoCollection =
         ProviderInfoCollectionImpl.builder().build(DEFAULT_INFO);
-    providerInfoCollection.getIndex(new Object(), Location.BUILTIN);
+    providerInfoCollection.getIndex(new Object());
   }
 
   @Test
@@ -62,7 +61,7 @@ public class ProviderInfoCollectionImplTest {
     expectedException.expect(EvalException.class);
     ProviderInfoCollection providerInfoCollection =
         ProviderInfoCollectionImpl.builder().build(DEFAULT_INFO);
-    providerInfoCollection.containsKey(new Object(), Location.BUILTIN);
+    providerInfoCollection.containsKey(new Object());
   }
 
   @Test
@@ -70,11 +69,9 @@ public class ProviderInfoCollectionImplTest {
     ProviderInfoCollection providerInfoCollection =
         ProviderInfoCollectionImpl.builder().build(DEFAULT_INFO);
 
-    assertTrue(providerInfoCollection.containsKey(DEFAULT_INFO.getProvider(), Location.BUILTIN));
+    assertTrue(providerInfoCollection.containsKey(DEFAULT_INFO.getProvider()));
     assertEquals(Optional.of(DEFAULT_INFO), providerInfoCollection.get(DEFAULT_INFO.getProvider()));
-    assertSame(
-        DEFAULT_INFO,
-        providerInfoCollection.getIndex(DEFAULT_INFO.getProvider(), Location.BUILTIN));
+    assertSame(DEFAULT_INFO, providerInfoCollection.getIndex(DEFAULT_INFO.getProvider()));
   }
 
   @Test
@@ -83,7 +80,7 @@ public class ProviderInfoCollectionImplTest {
     ProviderInfoCollection providerInfoCollection =
         ProviderInfoCollectionImpl.builder().build(DEFAULT_INFO);
 
-    assertFalse(providerInfoCollection.containsKey(provider, Location.BUILTIN));
+    assertFalse(providerInfoCollection.containsKey(provider));
     assertEquals(Optional.empty(), providerInfoCollection.get(provider));
   }
 
@@ -101,8 +98,8 @@ public class ProviderInfoCollectionImplTest {
     assertEquals(Optional.of(fakeInfo1), providerInfoCollection.get(builtinProvider1));
     assertEquals(Optional.of(fakeInfo2), providerInfoCollection.get(builtInProvider2));
 
-    assertEquals(fakeInfo1, providerInfoCollection.getIndex(builtinProvider1, Location.BUILTIN));
-    assertEquals(fakeInfo2, providerInfoCollection.getIndex(builtInProvider2, Location.BUILTIN));
+    assertEquals(fakeInfo1, providerInfoCollection.getIndex(builtinProvider1));
+    assertEquals(fakeInfo2, providerInfoCollection.getIndex(builtInProvider2));
   }
 
   @Test
@@ -136,9 +133,8 @@ public class ProviderInfoCollectionImplTest {
     ProviderInfoCollection providerInfoCollection =
         ProviderInfoCollectionImpl.builder().put(fakeInfo1).build(DEFAULT_INFO);
 
-    assertEquals(fakeInfo1, providerInfoCollection.getIndex(builtinProvider1, Location.BUILTIN));
-    assertEquals(
-        Starlark.NONE, providerInfoCollection.getIndex(builtinProvider2, Location.BUILTIN));
+    assertEquals(fakeInfo1, providerInfoCollection.getIndex(builtinProvider1));
+    assertEquals(Starlark.NONE, providerInfoCollection.getIndex(builtinProvider2));
   }
 
   @Test

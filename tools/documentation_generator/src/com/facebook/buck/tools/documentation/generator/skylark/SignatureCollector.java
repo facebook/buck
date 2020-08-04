@@ -18,30 +18,30 @@ package com.facebook.buck.tools.documentation.generator.skylark;
 
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+import net.starlark.java.annot.StarlarkMethod;
 
 /** Class responsible discovering Skylark function signature metadata in the classpath. */
 public class SignatureCollector {
   /**
-   * Returns a stream of Skylark function signatures (identified by {@link SkylarkCallable}
+   * Returns a stream of Skylark function signatures (identified by {@link StarlarkMethod}
    * annotation found in the current classpath.
    *
    * @param classInfoPredicate predicate to use in order to filter out classes that should not be
    *     loaded. It's best to make it as precise as possible to avoid expensive loading - checking
    *     for class name and package is ideal.
    */
-  public static Stream<SkylarkCallable> getSkylarkCallables(Predicate<ClassInfo> classInfoPredicate)
+  public static Stream<StarlarkMethod> getSkylarkCallables(Predicate<ClassInfo> classInfoPredicate)
       throws IOException {
     return ClassPath.from(ClassPath.class.getClassLoader()).getAllClasses().stream()
         .filter(classInfoPredicate)
         .map(ClassInfo::load)
         .flatMap(clazz -> Arrays.stream(clazz.getMethods()))
-        .map(field -> field.getAnnotation(SkylarkCallable.class))
+        .map(field -> field.getAnnotation(StarlarkMethod.class))
         .filter(Objects::nonNull);
   }
 }

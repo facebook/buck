@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
@@ -38,12 +37,11 @@ public class SkylarkRuleContextArgsTest {
   public void addAddsArg() throws EvalException, LabelSyntaxException {
     CommandLineArgs args =
         new CommandLineArgsBuilder()
-            .add(1, Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
+            .add(1, Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING)
             .add(
                 "--foo",
                 Label.parseAbsolute("//foo:bar", ImmutableMap.of()),
-                CommandLineArgs.DEFAULT_FORMAT_STRING,
-                Location.BUILTIN)
+                CommandLineArgs.DEFAULT_FORMAT_STRING)
             .build();
     ImmutableList<String> stringified =
         new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(new FakeProjectFilesystem()))
@@ -61,8 +59,7 @@ public class SkylarkRuleContextArgsTest {
                 StarlarkList.immutableCopyOf(
                     ImmutableList.of(
                         1, "--foo", Label.parseAbsolute("//foo:bar", ImmutableMap.of()))),
-                CommandLineArgs.DEFAULT_FORMAT_STRING,
-                Location.BUILTIN)
+                CommandLineArgs.DEFAULT_FORMAT_STRING)
             .build();
 
     ImmutableList<String> stringified =

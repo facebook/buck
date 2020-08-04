@@ -16,31 +16,27 @@
 
 package com.facebook.buck.core.starlark.compatible;
 
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.Param;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
-import com.google.devtools.build.lib.syntax.StarlarkSemantics;
+import com.google.devtools.build.lib.syntax.Location;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import net.starlark.java.annot.Param;
+import net.starlark.java.annot.StarlarkMethod;
 
 /**
  * An instance of the skylark annotation that we create and pass around to piggy-back off skylark
  * functions.
  */
 @SuppressWarnings("all")
-class BuckStarlarkCallable implements SkylarkCallable {
+class BuckStarlarkCallable implements StarlarkMethod {
 
   private final String methodName;
   private final Param[] skylarkParams;
-  private final boolean useLocation;
 
-  private BuckStarlarkCallable(String methodName, Param[] skylarkParams, boolean useLocation) {
+  private BuckStarlarkCallable(String methodName, Param[] skylarkParams) {
     this.methodName = methodName;
     this.skylarkParams = skylarkParams;
-    this.useLocation = useLocation;
   }
 
   /**
@@ -63,12 +59,10 @@ class BuckStarlarkCallable implements SkylarkCallable {
       List<String> defaultSkylarkValues,
       Set<String> noneableParams) {
     Class<?>[] parameters = method.type().parameterArray();
-    boolean useLocation = false;
     // Use class equality here because otherwise a last argument of 'Object' could get confused
     // for a location
     if (parameters.length > 0 && parameters[parameters.length - 1] == Location.class) {
-      useLocation = true;
-      parameters = Arrays.copyOf(parameters, parameters.length - 1);
+      throw new IllegalStateException("Location parameter is no longer supported: " + method);
     }
 
     Param[] skylarkParams = new Param[parameters.length];
@@ -99,7 +93,7 @@ class BuckStarlarkCallable implements SkylarkCallable {
           BuckStarlarkParam.fromParam(parameters[i], namedParam, defaultValue, noneable);
     }
 
-    return new BuckStarlarkCallable(name, skylarkParams, useLocation);
+    return new BuckStarlarkCallable(name, skylarkParams);
   }
 
   @Override
@@ -114,7 +108,7 @@ class BuckStarlarkCallable implements SkylarkCallable {
 
   @Override
   public Class<? extends Annotation> annotationType() {
-    return SkylarkCallable.class;
+    return StarlarkMethod.class;
   }
 
   @Override
@@ -153,11 +147,6 @@ class BuckStarlarkCallable implements SkylarkCallable {
   }
 
   @Override
-  public boolean useLocation() {
-    return useLocation;
-  }
-
-  @Override
   public boolean useStarlarkThread() {
     return false;
   }
@@ -168,12 +157,12 @@ class BuckStarlarkCallable implements SkylarkCallable {
   }
 
   @Override
-  public StarlarkSemantics.FlagIdentifier enableOnlyWithFlag() {
-    return StarlarkSemantics.FlagIdentifier.NONE;
+  public String enableOnlyWithFlag() {
+    return "";
   }
 
   @Override
-  public StarlarkSemantics.FlagIdentifier disableWithFlag() {
-    return StarlarkSemantics.FlagIdentifier.NONE;
+  public String disableWithFlag() {
+    return "";
   }
 }

@@ -17,22 +17,20 @@
 package com.facebook.buck.core.starlark.rule;
 
 import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
 import com.google.devtools.build.lib.syntax.StarlarkValue;
+import net.starlark.java.annot.StarlarkBuiltin;
+import net.starlark.java.annot.StarlarkMethod;
 
 /** The `ctx` variable that is passed to user implementation functions */
-@SkylarkModule(
+@StarlarkBuiltin(
     name = "ctx",
     doc =
         "The ctx variable that is passed to rule implementation functions. "
             + "Provides information about dependencies, attributes, actions, etc",
-    title = "ctx",
-    category = SkylarkModuleCategory.BUILTIN)
+    title = "ctx")
 interface SkylarkRuleContextApi extends StarlarkValue {
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "actions",
       doc =
           "Struct containing methods to create and interact with actions within a rule's "
@@ -40,7 +38,7 @@ interface SkylarkRuleContextApi extends StarlarkValue {
       structField = true)
   SkylarkRuleContextActionsApi getActions();
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "attr",
       doc =
           "A struct is used to access the parameters that were passed in by a user. \n"
@@ -52,7 +50,7 @@ interface SkylarkRuleContextApi extends StarlarkValue {
       structField = true)
   SkylarkRuleContextAttr getAttr();
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "label",
       doc = "The `Label` for the target that is currently being evaluated",
       structField = true)

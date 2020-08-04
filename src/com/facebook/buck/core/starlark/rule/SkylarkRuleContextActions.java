@@ -34,12 +34,12 @@ import com.facebook.buck.util.CommandLineException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -57,27 +57,27 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
   }
 
   @Override
-  public Artifact declareFile(String path, Location location) throws EvalException {
+  public Artifact declareFile(String path, StarlarkThread thread) throws EvalException {
     try {
-      return registry.declareArtifact(Paths.get(path), location);
+      return registry.declareArtifact(Paths.get(path), thread.getCallerLocation());
     } catch (InvalidPathException e) {
-      throw new EvalException(location, String.format("Invalid path '%s' provided", path));
+      throw new EvalException(String.format("Invalid path '%s' provided", path));
     } catch (ArtifactDeclarationException e) {
-      throw new EvalException(location, e.getHumanReadableErrorMessage());
+      throw new EvalException(e.getHumanReadableErrorMessage());
     }
   }
 
   @Override
-  public Artifact copyFile(Artifact src, Object dest, Location location) throws EvalException {
-    Artifact destArtifact = getArtifactFromArtifactOrString(location, dest);
+  public Artifact copyFile(Artifact src, Object dest, StarlarkThread thread) throws EvalException {
+    Artifact destArtifact = getArtifactFromArtifactOrString(dest, thread);
     new CopyAction(registry, src, destArtifact.asOutputArtifact(), CopySourceMode.FILE);
     return destArtifact;
   }
 
   @Override
-  public Artifact write(Object output, Object content, boolean isExecutable, Location location)
+  public Artifact write(Object output, Object content, boolean isExecutable, StarlarkThread thread)
       throws EvalException {
-    Artifact destArtifact = getArtifactFromArtifactOrString(location, output);
+    Artifact destArtifact = getArtifactFromArtifactOrString(output, thread);
     try {
       ImmutableSortedSet<OutputArtifact> outputs =
           ImmutableSortedSet.of(destArtifact.asOutputArtifact());
@@ -94,13 +94,12 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
         new WriteAction(
             registry, ImmutableSortedSet.of(), outputs, (CommandLineArgs) content, isExecutable);
       } else {
-        throw new EvalException(
-            location, String.format("Invalid type for content: %s", content.getClass()));
+        throw new EvalException(String.format("Invalid type for content: %s", content.getClass()));
       }
 
       return destArtifact;
     } catch (HumanReadableException e) {
-      throw new EvalException(location, e.getHumanReadableErrorMessage());
+      throw new EvalException(e.getHumanReadableErrorMessage());
     }
   }
 
@@ -108,11 +107,11 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
    * @return An output artifact. If {@code arg} is a string, a new artifact is declared and
    *     returned. If {@code arg} is an artifact, it is returned without any changes
    */
-  private Artifact getArtifactFromArtifactOrString(Location location, Object arg)
+  private Artifact getArtifactFromArtifactOrString(Object arg, StarlarkThread thread)
       throws EvalException {
     Artifact destArtifact;
     if (arg instanceof String) {
-      destArtifact = declareFile((String) arg, location);
+      destArtifact = declareFile((String) arg, thread);
     } else if (arg instanceof Artifact) {
       destArtifact = (Artifact) arg;
     } else {
@@ -120,20 +119,19 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
        * Should not be hit; these types are validated in the {@link
        * com.google.devtools.build.lib.skylarkinterface.SkylarkCallable} decorators
        */
-      throw new EvalException(location, "Invalid output object provided");
+      throw new EvalException("Invalid output object provided");
     }
     return destArtifact;
   }
 
   @Override
-  public CommandLineArgsBuilderApi args(Object args, String formatString, Location location)
-      throws EvalException {
+  public CommandLineArgsBuilderApi args(Object args, String formatString) throws EvalException {
     CommandLineArgsBuilder builder = new CommandLineArgsBuilder();
     if (!EvalUtils.isNullOrNone(args)) {
       if (args instanceof StarlarkList) {
-        builder.addAll((StarlarkList<?>) args, formatString, location);
+        builder.addAll((StarlarkList<?>) args, formatString);
       } else {
-        builder.add(args, Starlark.NONE, formatString, location);
+        builder.add(args, Starlark.NONE, formatString);
       }
     }
     return builder;
@@ -148,11 +146,10 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
   }
 
   @Override
-  public void run(
-      StarlarkList<Object> arguments, Object shortName, Object userEnv, Location location)
+  public void run(StarlarkList<Object> arguments, Object shortName, Object userEnv)
       throws EvalException {
     Map<String, String> userEnvValidated =
-        Dict.castSkylarkDictOrNoneToDict(userEnv, String.class, String.class, null);
+        Dict.noneableCast(userEnv, String.class, String.class, "env");
 
     CommandLineArgs argumentsValidated;
     Object firstArgument;
@@ -167,13 +164,10 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
               .getArgsAndFormatStrings()
               .findFirst()
               .orElseThrow(
-                  () ->
-                      new EvalException(
-                          location, "At least one argument must be provided to 'run()'"))
+                  () -> new EvalException("At least one argument must be provided to 'run()'"))
               .getObject();
     } catch (CommandLineException e) {
       throw new EvalException(
-          location,
           String.format(
               "Invalid type for %s. Must be one of string, int, Artifact, Label, or the result of ctx.actions.args()",
               e.getHumanReadableErrorMessage()));

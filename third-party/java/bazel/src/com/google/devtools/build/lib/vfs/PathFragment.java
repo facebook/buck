@@ -16,12 +16,15 @@ package com.google.devtools.build.lib.vfs;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.actions.CommandLineItem;
-import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
+import com.google.devtools.build.lib.skyframe.serialization.DeserializationContext;
+import com.google.devtools.build.lib.skyframe.serialization.ObjectCodec;
+import com.google.devtools.build.lib.skyframe.serialization.SerializationContext;
+import com.google.devtools.build.lib.skyframe.serialization.SerializationException;
+import com.google.devtools.build.lib.skyframe.serialization.autocodec.SerializationConstant;
 import com.google.devtools.build.lib.util.FileType;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.CodedOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -47,12 +50,11 @@ import javax.annotation.Nullable;
  */
 public final class PathFragment
     implements Comparable<PathFragment>,
-        Serializable,
         FileType.HasFileType,
         CommandLineItem {
   private static final OsPathPolicy OS = OsPathPolicy.getFilePathOs();
 
-  @AutoCodec public static final PathFragment EMPTY_FRAGMENT = new PathFragment("", 0);
+  @SerializationConstant public static final PathFragment EMPTY_FRAGMENT = new PathFragment("", 0);
   public static final char SEPARATOR_CHAR = OS.getSeparator();
   public static final int INVALID_SEGMENT = -1;
 
@@ -89,7 +91,6 @@ public final class PathFragment
    *
    * <p>Should only be used internally.
    */
-  @AutoCodec.Instantiator
   static PathFragment createAlreadyNormalized(String normalizedPath, int driveStrLength) {
     if (normalizedPath.isEmpty()) {
       return EMPTY_FRAGMENT;
@@ -743,7 +744,24 @@ public final class PathFragment
     }
   }
 
-  private Object writeReplace() {
-    return new PathFragmentSerializationProxy(normalizedPath);
+  @SuppressWarnings("unused") // found by CLASSPATH-scanning magic
+  private static class Codec implements ObjectCodec<PathFragment> {
+    @Override
+    public Class<? extends PathFragment> getEncodedClass() {
+      return PathFragment.class;
+    }
+
+    @Override
+    public void serialize(
+        SerializationContext context, PathFragment obj, CodedOutputStream codedOut)
+        throws SerializationException, IOException {
+      context.serialize(obj.normalizedPath, codedOut);
+    }
+
+    @Override
+    public PathFragment deserialize(DeserializationContext context, CodedInputStream codedIn)
+        throws SerializationException, IOException {
+      return PathFragment.createAlreadyNormalized(context.deserialize(codedIn));
+    }
   }
 }

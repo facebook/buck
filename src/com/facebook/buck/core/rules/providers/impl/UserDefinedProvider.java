@@ -23,11 +23,11 @@ import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.packages.SkylarkExportable;
+import com.google.devtools.build.lib.packages.StarlarkExportable;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
+import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
@@ -48,7 +48,7 @@ import javax.annotation.Nullable;
  * the user defined name of the class) are not safe to call.
  */
 public class UserDefinedProvider extends BaseFunction
-    implements Provider<UserDefinedProviderInfo>, StarlarkValue, SkylarkExportable {
+    implements Provider<UserDefinedProviderInfo>, StarlarkValue, StarlarkExportable {
 
   private final Key key;
   private final Location location;
@@ -63,8 +63,8 @@ public class UserDefinedProvider extends BaseFunction
    *
    * @param location The location where the provider was defined by the user
    * @param fieldNames List of kwargs that will be available when {@link #fastcall(StarlarkThread,
-   *     Location, Object[], Object[])} is called, and will be available as fields on the resulting
-   *     {@link UserDefinedProviderInfo} object
+   *     Object[], Object[])} is called, and will be available as fields on the resulting {@link
+   *     UserDefinedProviderInfo} object
    */
   public UserDefinedProvider(Location location, String[] fieldNames) {
     this.functionSignature = FunctionSignature.namedOnly(0, fieldNames);
@@ -137,12 +137,12 @@ public class UserDefinedProvider extends BaseFunction
   }
 
   @Override
-  public Object fastcall(StarlarkThread thread, Location loc, Object[] positional, Object[] named)
+  public Object fastcall(StarlarkThread thread, Object[] positional, Object[] named)
       throws EvalException, InterruptedException {
     Verify.verify(isExported, "Tried to call a Provider before exporting it");
 
     Object[] args =
-        Starlark.matchSignature(
+        BaseFunction.matchSignature(
             functionSignature, this, defaultValues, thread.mutability(), positional, named);
 
     ImmutableList<String> fieldNames = Objects.requireNonNull(getSignature()).getParameterNames();

@@ -18,24 +18,22 @@ package com.facebook.buck.skylark.function.attr;
 
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.Param;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkValue;
+import net.starlark.java.annot.Param;
+import net.starlark.java.annot.StarlarkBuiltin;
+import net.starlark.java.annot.StarlarkDocumentationCategory;
+import net.starlark.java.annot.StarlarkMethod;
 
 /** Skylark module used to configure the attribute schema for user defined rules */
-@SkylarkModule(
+@StarlarkBuiltin(
     name = "attr",
     title = "attr",
     doc = "A module which contains methods to define parameters for user defined rules",
-    category = SkylarkModuleCategory.BUILTIN,
-    namespace = true)
+    category = StarlarkDocumentationCategory.TOP_LEVEL_TYPE)
 public interface AttrModuleApi extends StarlarkValue {
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "int",
       doc = "Specifies a parameter for a User Defined Rule that is an integer.",
       parameters = {
@@ -77,7 +75,7 @@ public interface AttrModuleApi extends StarlarkValue {
       Integer defaultValue, String doc, Boolean mandatory, StarlarkList<Integer> values)
       throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "int_list",
       doc = "Specifies a parameter for a User Defined Rule that is a list of integers.",
       parameters = {
@@ -118,7 +116,7 @@ public interface AttrModuleApi extends StarlarkValue {
       StarlarkList<Integer> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "string",
       doc = "Specifies a parameter for a User Defined Rule that is a string.",
       parameters = {
@@ -160,7 +158,7 @@ public interface AttrModuleApi extends StarlarkValue {
       String defaultValue, String doc, Boolean mandatory, StarlarkList<String> values)
       throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "string_list",
       doc = "Specifies a parameter for a User Defined Rule that is a list of strings.",
       parameters = {
@@ -201,7 +199,7 @@ public interface AttrModuleApi extends StarlarkValue {
       StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "bool",
       doc = "Specifies a parameter for a User Defined Rule that is a boolean.",
       parameters = {
@@ -233,7 +231,7 @@ public interface AttrModuleApi extends StarlarkValue {
   AttributeHolder boolAttribute(boolean defaultValue, String doc, boolean mandatory)
       throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "source",
       doc =
           "Specifies a parameter for User Defined Rules that is a source."
@@ -274,7 +272,7 @@ public interface AttrModuleApi extends StarlarkValue {
   AttributeHolder sourceAttribute(Object defaultValue, String doc, boolean mandatory)
       throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "source_list",
       doc =
           "Specifies a parameter for User Defined Rules that is a list of sources. These can be "
@@ -322,7 +320,7 @@ public interface AttrModuleApi extends StarlarkValue {
       StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "dep",
       doc =
           "Specifies a parameter for User Defined Rules that is a dependency's build target.\n"
@@ -369,7 +367,7 @@ public interface AttrModuleApi extends StarlarkValue {
       Object defaultValue, String doc, boolean mandatory, StarlarkList<Provider<?>> providers)
       throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "dep_list",
       doc =
           "Specifies a parameter for User Defined Rules that is a list of build targets\n"
@@ -427,7 +425,7 @@ public interface AttrModuleApi extends StarlarkValue {
       StarlarkList<Provider<?>> providers)
       throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "output",
       doc =
           "Specifies a parameter for User Defined Rules that is an output `Artifact`.\n"
@@ -462,12 +460,11 @@ public interface AttrModuleApi extends StarlarkValue {
             positional = false,
             named = true,
             type = Boolean.class),
-      },
-      useLocation = true)
-  AttributeHolder outputAttribute(
-      Object defaultValue, String doc, boolean mandatory, Location location) throws EvalException;
+      })
+  AttributeHolder outputAttribute(Object defaultValue, String doc, boolean mandatory)
+      throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "output_list",
       doc =
           "Specifies a parameter for User Defined Rules that is a list of output `Artifact`s.\n"

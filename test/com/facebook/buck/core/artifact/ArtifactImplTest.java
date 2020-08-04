@@ -30,10 +30,9 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.vfs.PathFragment;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Rule;
@@ -250,9 +249,7 @@ public class ArtifactImplTest {
   public void toStringMakesSense() throws EvalException {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     Path packagePath = Paths.get("my", "foo__");
-    Location location =
-        Location.fromPathAndStartColumn(
-            PathFragment.create("foo").getChild("bar.bzl"), 0, 5, new Location.LineAndColumn(3, 4));
+    Location location = Location.fromFileLineColumn("foo/bar.bzl", 3, 4);
     ActionAnalysisDataKey key1 = ActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
     ActionAnalysisDataKey key2 = ActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
 
@@ -293,14 +290,13 @@ public class ArtifactImplTest {
 
     assertEquals(expectedWithLocation, declaredWithLocation.toString());
     assertEquals(
-        expectedWithLocationAsOutput,
-        declaredWithLocation.asSkylarkOutputArtifact(Location.BUILTIN).toString());
+        expectedWithLocationAsOutput, declaredWithLocation.asSkylarkOutputArtifact().toString());
     assertEquals(expectedWithLocationAsOutput, declaredWithLocation.asOutputArtifact().toString());
     assertEquals(expectedBoundWithLocation, boundWithLocation.toString());
     assertEquals(expectedWithoutLocation, declaredWithoutLocation.toString());
     assertEquals(
         expectedWithoutLocationAsOutput,
-        declaredWithoutLocation.asSkylarkOutputArtifact(Location.BUILTIN).toString());
+        declaredWithoutLocation.asSkylarkOutputArtifact().toString());
     assertEquals(
         expectedWithoutLocationAsOutput, declaredWithoutLocation.asOutputArtifact().toString());
     assertEquals(expectedBoundWithoutLocation, boundWithoutLocation.toString());
@@ -319,7 +315,7 @@ public class ArtifactImplTest {
 
     expectedException.expect(EvalException.class);
     expectedException.expectMessage("cannot be used as an output artifact");
-    artifact.asSkylarkOutputArtifact(Location.BUILTIN);
+    artifact.asSkylarkOutputArtifact();
   }
 
   @Test
@@ -348,7 +344,7 @@ public class ArtifactImplTest {
     assertFalse(artifact.isBound());
     assertTrue(artifact.isImmutable());
 
-    assertTrue(artifact.asSkylarkOutputArtifact(Location.BUILTIN).isImmutable());
+    assertTrue(artifact.asSkylarkOutputArtifact().isImmutable());
 
     ActionAnalysisDataKey key = ActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
     BuildArtifact materialized = artifact.materialize(key);

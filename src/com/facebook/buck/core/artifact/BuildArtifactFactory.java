@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Verify;
-import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.Location;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Optional;
@@ -59,7 +59,7 @@ public class BuildArtifactFactory {
               .findFirst()
               .map(ArtifactImpl::getDeclaredLocation)
               .filter(a -> !a.equals(Location.BUILTIN))
-              .map(Location::print);
+              .map(Location::toString);
 
       if (existingDeclaredLocation.isPresent()) {
         throw new HumanReadableException(
@@ -130,7 +130,7 @@ public class BuildArtifactFactory {
               "Artifact %s declared by %s is not bound to an action. Originally declared at %s",
               artifact.getOutputPath(),
               artifact.getBuildTarget().getFullyQualifiedName(),
-              artifact.getDeclaredLocation().print());
+              artifact.getDeclaredLocation().toString());
         }
       }
     }

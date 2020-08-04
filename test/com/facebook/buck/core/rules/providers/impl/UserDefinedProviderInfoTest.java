@@ -25,12 +25,12 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
+import com.facebook.buck.core.starlark.testutil.TestStarlarkThread;
 import com.facebook.buck.parser.LabelCache;
 import com.facebook.buck.skylark.function.SkylarkRuleFunctions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Printer;
@@ -144,7 +144,7 @@ public class UserDefinedProviderInfoTest {
         functions.provider(
             "",
             StarlarkList.immutableCopyOf(ImmutableList.of("value", "immutable", "mutable")),
-            Location.BUILTIN);
+            TestStarlarkThread.dummyStarlarkThread());
     userInfo.export(Label.parseAbsolute("//:foo.bzl", ImmutableMap.of()), "UserInfo");
     StarlarkList<Integer> immutableList = StarlarkList.immutableCopyOf(ImmutableList.of(1, 2, 3));
 
@@ -156,11 +156,14 @@ public class UserDefinedProviderInfoTest {
             ImmutableMap.of("immutable_list", immutableList, "UserInfo", userInfo))) {
 
       StarlarkList<Integer> mutableList = StarlarkList.of(env.getEnv().mutability(), 4, 5, 6);
-      env.getEnv().getGlobals().put("mutable_list", mutableList);
+      // TODO: unmodifyable
+      env.getModule().setGlobal("mutable_list", mutableList);
 
       assertFalse(mutableList.isImmutable());
 
-      out2 = (UserDefinedProviderInfo) TestStarlarkParser.eval(env.getEnv(), buildFile);
+      out2 =
+          (UserDefinedProviderInfo)
+              TestStarlarkParser.eval(env.getEnv(), env.getModule(), buildFile);
 
       assertNotNull(out2);
       out1 = (UserDefinedProviderInfo) out2.getValue("value");

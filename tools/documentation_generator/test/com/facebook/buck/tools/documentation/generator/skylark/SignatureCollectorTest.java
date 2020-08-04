@@ -22,9 +22,9 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.reflect.ClassPath.ClassInfo;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import net.starlark.java.annot.StarlarkMethod;
 import org.junit.Test;
 
 public class SignatureCollectorTest {
@@ -43,7 +43,7 @@ public class SignatureCollectorTest {
 
     assertThat(
         SignatureCollector.getSkylarkCallables(CLASS_INFO_PREDICATE)
-            .map(SkylarkCallable::name)
+            .map(StarlarkMethod::name)
             .collect(Collectors.toList()),
         contains("dummy"));
   }

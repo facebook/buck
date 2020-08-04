@@ -28,8 +28,8 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Printer;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -227,7 +227,7 @@ class ArtifactImpl extends AbstractArtifact
   }
 
   @Override
-  public SkylarkOutputArtifactApi asSkylarkOutputArtifact(Location location) throws EvalException {
+  public SkylarkOutputArtifactApi asSkylarkOutputArtifact() throws EvalException {
     if (isBound()) {
       throw new EvalException(
           location,
@@ -285,7 +285,7 @@ class ArtifactImpl extends AbstractArtifact
       if (artifact.isBound()) {
         builder.append(", declared");
       }
-      builder.append(" at ").append(artifact.location.print());
+      builder.append(" at ").append(artifact.location);
     }
     return builder.append(">").toString();
   }

@@ -17,7 +17,6 @@
 package com.facebook.buck.core.starlark.rule;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.model.BuildId;
@@ -25,6 +24,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.actions.ActionWrapperData;
 import com.facebook.buck.core.rules.analysis.impl.RuleAnalysisContextImpl;
+import com.facebook.buck.core.starlark.testutil.TestStarlarkThread;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -32,12 +32,9 @@ import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.vfs.PathFragment;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -60,43 +57,32 @@ public class SkylarkRuleContextActionsTest {
 
   @Test
   public void writingAFileAddsToListOfOutputs() throws EvalException {
-    Location testLocation = Location.fromPathFragment(PathFragment.create("sample_location.bzl"));
     CapturingActionRegistry registry = new CapturingActionRegistry(context.actionRegistry());
     SkylarkRuleContextActions actions = new SkylarkRuleContextActions(registry);
-    Artifact artifact = actions.declareFile("bar.sh", testLocation);
-    actions.write(artifact, "contents", false, Location.BUILTIN);
+    Artifact artifact = actions.declareFile("bar.sh", TestStarlarkThread.dummyStarlarkThread());
+    actions.write(artifact, "contents", false, TestStarlarkThread.dummyStarlarkThread());
 
-    assertThat(
-        artifact.toString(),
-        Matchers.containsString(String.format("declared at %s", testLocation.print())));
+    // TODO: test location
     assertEquals(ImmutableSet.of(artifact), registry.getOutputs());
   }
 
   @Test
   public void shortNameMakesSenseForRun() throws EvalException {
-    Location testLocation = Location.fromPathFragment(PathFragment.create("sample_location.bzl"));
     CapturingActionRegistry registry = new CapturingActionRegistry(context.actionRegistry());
     SkylarkRuleContextActions actions = new SkylarkRuleContextActions(registry);
-    Artifact artifact1 = actions.declareFile("bar1.sh", testLocation);
-    Artifact artifact2 = actions.declareFile("bar2.sh", testLocation);
+    Artifact artifact1 = actions.declareFile("bar1.sh", TestStarlarkThread.dummyStarlarkThread());
+    Artifact artifact2 = actions.declareFile("bar2.sh", TestStarlarkThread.dummyStarlarkThread());
 
     actions.run(
-        StarlarkList.immutableCopyOf(
-            ImmutableList.of(artifact1.asSkylarkOutputArtifact(Location.BUILTIN))),
+        StarlarkList.immutableCopyOf(ImmutableList.of(artifact1.asSkylarkOutputArtifact())),
         Starlark.NONE,
-        Starlark.NONE,
-        Location.BUILTIN);
+        Starlark.NONE);
     actions.run(
-        StarlarkList.immutableCopyOf(
-            ImmutableList.of("echo", artifact2.asSkylarkOutputArtifact(Location.BUILTIN))),
+        StarlarkList.immutableCopyOf(ImmutableList.of("echo", artifact2.asSkylarkOutputArtifact())),
         Starlark.NONE,
-        Starlark.NONE,
-        Location.BUILTIN);
+        Starlark.NONE);
     actions.run(
-        StarlarkList.immutableCopyOf(ImmutableList.of(artifact1)),
-        "some script",
-        Starlark.NONE,
-        Location.BUILTIN);
+        StarlarkList.immutableCopyOf(ImmutableList.of(artifact1)), "some script", Starlark.NONE);
 
     ImmutableSet<String> actionNames =
         context.getRegisteredActionData().values().stream()

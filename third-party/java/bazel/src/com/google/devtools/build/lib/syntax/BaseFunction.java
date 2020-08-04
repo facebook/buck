@@ -55,13 +55,13 @@ public abstract class BaseFunction implements StarlarkCallable {
 
   // TODO(adonovan): This has nothing to do with BaseFunction.
   // Move it to Starlark.matchSignature (in a follow-up, for ease of review).
-  static Object[] matchSignature(
-      FunctionSignature signature,
-      StarlarkCallable func, // only for use in error messages
-      Tuple<Object> defaults,
-      @Nullable Mutability mu,
-      Object[] positional,
-      Object[] named)
+  public static Object[] matchSignature(
+    FunctionSignature signature,
+    StarlarkCallable func, // only for use in error messages
+    Tuple<Object> defaults,
+    @Nullable Mutability mu,
+    Object[] positional,
+    Object[] named)
       throws EvalException {
     // TODO(adonovan): simplify this function. Combine cases 1 and 2 without loss of efficiency.
     // TODO(adonovan): reduce the verbosity of errors. Printing func.toString is often excessive.

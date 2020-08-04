@@ -41,7 +41,7 @@ import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.events.EventKind;
-import com.google.devtools.build.lib.packages.SkylarkInfo;
+import com.google.devtools.build.lib.packages.StarlarkInfo;
 import com.google.devtools.build.lib.syntax.EvalException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -53,11 +53,11 @@ import org.junit.Test;
 
 public class HostInfoTest {
 
-  private void validateSkylarkStruct(SkylarkInfo struct, String topLevel, String trueKey)
+  private void validateSkylarkStruct(StarlarkInfo struct, String topLevel, String trueKey)
       throws EvalException {
     // Assert that all keys are false except the one specified by {@code trueKey}
 
-    SkylarkInfo topLevelStruct = struct.getValue(topLevel, SkylarkInfo.class);
+    StarlarkInfo topLevelStruct = struct.getValue(topLevel, StarlarkInfo.class);
     for (String key : topLevelStruct.getFieldNames()) {
       if (key.equals(trueKey)) {
         continue;
@@ -151,7 +151,7 @@ public class HostInfoTest {
   public void isUseableInBuildFile() throws EvalException, InterruptedException, IOException {
     String expectedOutput = "";
     String macroFile = "";
-    SkylarkInfo realHostInfo =
+    StarlarkInfo realHostInfo =
         HostInfo.createHostInfoStruct(Platform::detect, Architecture::detect);
 
     macroFile =
@@ -193,8 +193,8 @@ public class HostInfoTest {
             + "arch.is_unknown: False\n"
             + "arch.is_x86_64: False\n";
     // Make sure we set the current system's os/arch to True
-    SkylarkInfo realHostOs = realHostInfo.getValue("os", SkylarkInfo.class);
-    SkylarkInfo realHostArch = realHostInfo.getValue("arch", SkylarkInfo.class);
+    StarlarkInfo realHostOs = realHostInfo.getValue("os", StarlarkInfo.class);
+    StarlarkInfo realHostArch = realHostInfo.getValue("arch", StarlarkInfo.class);
     String trueOsKey =
         realHostOs.getFieldNames().stream()
             .filter(

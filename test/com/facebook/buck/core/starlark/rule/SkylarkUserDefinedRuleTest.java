@@ -40,14 +40,13 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.events.EventKind;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.CallExpression;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
-import com.google.devtools.build.lib.syntax.Module;
+import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
@@ -117,8 +116,7 @@ public class SkylarkUserDefinedRuleTest {
     }
 
     @Override
-    public Object call(
-        StarlarkThread thread, Location loc, Tuple<Object> args, Dict<String, Object> kwargs)
+    public Object call(StarlarkThread thread, Tuple<Object> args, Dict<String, Object> kwargs)
         throws EvalException, InterruptedException {
       throw new UnsupportedOperationException();
     }
@@ -139,11 +137,7 @@ public class SkylarkUserDefinedRuleTest {
                 eventHandler,
                 ImmutableMap.of()));
 
-    StarlarkThread env =
-        StarlarkThread.builder(mutability)
-            .setGlobals(Module.createForBuiltins(Starlark.UNIVERSE))
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .build();
+    StarlarkThread env = new StarlarkThread(mutability, BuckStarlark.BUCK_STARLARK_SEMANTICS);
     parseContext.setup(env);
     return env;
   }
@@ -332,15 +326,10 @@ public class SkylarkUserDefinedRuleTest {
       StarlarkThread env = newEnvironment(mutability);
 
       Object res =
-          Starlark.call(
-              env,
-              rule,
-              getJunkAst().getLocation(),
-              ImmutableList.of(),
-              ImmutableMap.of("name", "some_rule_name"));
+          Starlark.call(env, rule, ImmutableList.of(), ImmutableMap.of("name", "some_rule_name"));
 
       TwoArraysImmutableHashMap<String, RecordedRule> rules =
-          ParseContext.getParseContext(env, Location.BUILTIN, "some_rule_name").getRecordedRules();
+          ParseContext.getParseContext(env, "some_rule_name").getRecordedRules();
 
       assertEquals(Starlark.NONE, res);
       assertEquals(1, rules.size());
@@ -389,12 +378,11 @@ public class SkylarkUserDefinedRuleTest {
           Starlark.call(
               env,
               rule,
-              getJunkAst().getLocation(),
               ImmutableList.of(),
               ImmutableMap.of("name", "some_rule_name", "arg2", "arg2_val", "arg4", 2));
 
       TwoArraysImmutableHashMap<String, RecordedRule> rules =
-          ParseContext.getParseContext(env, Location.BUILTIN, "some_rule_name").getRecordedRules();
+          ParseContext.getParseContext(env, "some_rule_name").getRecordedRules();
 
       assertEquals(Starlark.NONE, res);
       assertEquals(1, rules.size());
@@ -437,7 +425,6 @@ public class SkylarkUserDefinedRuleTest {
       Starlark.call(
           env,
           rule,
-          getJunkAst().getLocation(),
           ImmutableList.of(),
           ImmutableMap.of("name", "some_rule_name", "arg2", "arg2_val"));
     }
@@ -482,7 +469,6 @@ public class SkylarkUserDefinedRuleTest {
           Starlark.call(
               env,
               rule,
-              getJunkAst().getLocation(),
               ImmutableList.of(),
               ImmutableMap.of(
                   "name",
@@ -497,7 +483,7 @@ public class SkylarkUserDefinedRuleTest {
                   2));
 
       TwoArraysImmutableHashMap<String, RecordedRule> rules =
-          ParseContext.getParseContext(env, Location.BUILTIN, "some_rule_name").getRecordedRules();
+          ParseContext.getParseContext(env, "some_rule_name").getRecordedRules();
 
       assertEquals(Starlark.NONE, res);
       assertEquals(1, rules.size());

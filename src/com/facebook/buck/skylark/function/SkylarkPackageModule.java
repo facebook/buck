@@ -20,24 +20,22 @@ import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.Param;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
+import net.starlark.java.annot.Param;
+import net.starlark.java.annot.StarlarkBuiltin;
+import net.starlark.java.annot.StarlarkDocumentationCategory;
+import net.starlark.java.annot.StarlarkMethod;
 
 /**
  * A class for the Skylark native module providing functions for parsing package files. It provides
  * package() and other shared functions that are available also using {@code native.foo} in build
  * file extensions and just {@code foo} in package files.
  */
-@SkylarkModule(
+@StarlarkBuiltin(
     name = "native",
-    namespace = true,
-    category = SkylarkModuleCategory.BUILTIN,
+    category = StarlarkDocumentationCategory.BUILTIN,
     doc =
         "A built-in module providing native rules and other package helper functions. "
             + "All native rules appear as functions in this module, e.g. "
@@ -45,11 +43,11 @@ import com.google.devtools.build.lib.syntax.StarlarkThread;
 public class SkylarkPackageModule extends AbstractSkylarkFunctions
     implements SkylarkFunctionModule {
 
-  @SkylarkCallable(
+  /** {@code package} */
+  @StarlarkMethod(
       name = "package",
       doc = "Allows defining attributes applied to all targets in the build file.",
       documented = true,
-      useLocation = true,
       useStarlarkThread = true,
       allowReturnNones = true,
       parameters = {
@@ -81,14 +79,12 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
       Boolean inherit,
       StarlarkList<String> visibility,
       StarlarkList<String> within_view,
-      Location loc,
       StarlarkThread env)
       throws EvalException {
-    ParseContext.getParseContext(env, loc, "package")
+    ParseContext.getParseContext(env, "package")
         .recordPackage(
             PackageMetadata.of(
-                inherit, ImmutableList.copyOf(visibility), ImmutableList.copyOf(within_view)),
-            loc);
+                inherit, ImmutableList.copyOf(visibility), ImmutableList.copyOf(within_view)));
   }
 
   public static final SkylarkPackageModule PACKAGE_MODULE = new SkylarkPackageModule();

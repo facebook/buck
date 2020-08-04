@@ -20,24 +20,23 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsApi;
 import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.Param;
-import com.google.devtools.build.lib.skylarkinterface.ParamType;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkValue;
+import net.starlark.java.annot.Param;
+import net.starlark.java.annot.ParamType;
+import net.starlark.java.annot.StarlarkBuiltin;
+import net.starlark.java.annot.StarlarkMethod;
 
 /**
  * Struct for creating more efficient and validated lists of arguments to pass to actions' command
  * lines. Exposed via ctx.actions.args()
  */
-@SkylarkModule(
+@StarlarkBuiltin(
     name = "args",
     doc = "Struct for creating lists of arguments to use in command lines of actions")
 public interface CommandLineArgsBuilderApi extends StarlarkValue {
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "add",
       doc =
           "Adds an argument to an existing `Args` object. Returns the original `Args` object "
@@ -86,13 +85,11 @@ public interface CommandLineArgsBuilderApi extends StarlarkValue {
             named = true,
             positional = false,
             defaultValue = "\"%s\"")
-      },
-      useLocation = true)
-  CommandLineArgsBuilderApi add(
-      Object argNameOrValue, Object value, String formatString, Location location)
+      })
+  CommandLineArgsBuilderApi add(Object argNameOrValue, Object value, String formatString)
       throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "add_all",
       doc =
           "Adds a list of arguments to an existing `Args` object. Returns the original `Args` "
@@ -112,8 +109,7 @@ public interface CommandLineArgsBuilderApi extends StarlarkValue {
             type = String.class,
             named = true,
             defaultValue = "\"%s\"")
-      },
-      useLocation = true)
-  CommandLineArgsBuilderApi addAll(StarlarkList<?> values, String formatString, Location location)
+      })
+  CommandLineArgsBuilderApi addAll(StarlarkList<?> values, String formatString)
       throws EvalException;
 }

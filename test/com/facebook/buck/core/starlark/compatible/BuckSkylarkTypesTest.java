@@ -25,15 +25,13 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.packages.SkylarkInfo;
+import com.google.devtools.build.lib.packages.StarlarkInfo;
 import com.google.devtools.build.lib.packages.StructProvider;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.Tuple;
-import com.google.devtools.build.lib.vfs.PathFragment;
 import java.util.Objects;
 import org.junit.Rule;
 import org.junit.Test;
@@ -112,7 +110,7 @@ public class BuckSkylarkTypesTest {
   public void asDeepImmutableReturnsIdentityForImmutableSkylarkValues() {
     StarlarkList<String> list = StarlarkList.immutableCopyOf(ImmutableList.of("foo", "bar"));
     Dict<String, String> dict = Dict.of(null, "foo", "bar");
-    SkylarkInfo struct = StructProvider.STRUCT.create(ImmutableMap.of("foo", "bar"), "not found");
+    StarlarkInfo struct = StructProvider.STRUCT.create(ImmutableMap.of("foo", "bar"), "not found");
 
     assertTrue(list.isImmutable());
     assertTrue(dict.isImmutable());
@@ -236,32 +234,24 @@ public class BuckSkylarkTypesTest {
   }
 
   @Test
-  public void asDeepImmutableFailsIfNonSkylarkValueNonPrimitiveTypeIsPassed() {
-    thrown.expect(MutableObjectException.class);
-    BuckSkylarkTypes.asDeepImmutable(ImmutableList.of());
-  }
-
-  @Test
   public void validateKwargNameHandlesValidNames() throws EvalException {
-    Location location = Location.fromPathFragment(PathFragment.create("foo"));
-    BuckSkylarkTypes.validateKwargName(location, "foo");
-    BuckSkylarkTypes.validateKwargName(location, "foo_bar");
-    BuckSkylarkTypes.validateKwargName(location, "foo_bar1");
-    BuckSkylarkTypes.validateKwargName(location, "_foo");
-    BuckSkylarkTypes.validateKwargName(location, "_foo_bar2");
+    BuckSkylarkTypes.validateKwargName("foo");
+    BuckSkylarkTypes.validateKwargName("foo_bar");
+    BuckSkylarkTypes.validateKwargName("foo_bar1");
+    BuckSkylarkTypes.validateKwargName("_foo");
+    BuckSkylarkTypes.validateKwargName("_foo_bar2");
   }
 
   @Test
   public void validateKwargNameRejectsEmpty() throws EvalException {
     thrown.expect(EvalException.class);
-    BuckSkylarkTypes.validateKwargName(Location.fromPathFragment(PathFragment.create("foo")), "");
+    BuckSkylarkTypes.validateKwargName("");
   }
 
   @Test
   public void validateKwargNameRejectsHyphenated() throws EvalException {
     thrown.expect(EvalException.class);
-    BuckSkylarkTypes.validateKwargName(
-        Location.fromPathFragment(PathFragment.create("foo")), "foo-bar");
+    BuckSkylarkTypes.validateKwargName("foo-bar");
   }
 
   @Test
@@ -278,13 +268,11 @@ public class BuckSkylarkTypesTest {
   @Test
   public void optionalFromNoneOrType() throws EvalException {
     String foo = "foo";
-    assertSame(foo, BuckSkylarkTypes.validateNoneOrType(Location.BUILTIN, String.class, foo));
-    assertSame(
-        Starlark.NONE,
-        BuckSkylarkTypes.validateNoneOrType(Location.BUILTIN, String.class, Starlark.NONE));
+    assertSame(foo, BuckSkylarkTypes.validateNoneOrType(String.class, foo));
+    assertSame(Starlark.NONE, BuckSkylarkTypes.validateNoneOrType(String.class, Starlark.NONE));
     thrown.expect(EvalException.class);
     thrown.expectMessage("Invalid type provided");
-    BuckSkylarkTypes.validateNoneOrType(Location.BUILTIN, String.class, 1);
+    BuckSkylarkTypes.validateNoneOrType(String.class, 1);
   }
 
   @Test

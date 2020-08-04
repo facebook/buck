@@ -35,7 +35,7 @@ class StarlarkBuckFileSyntax {
     NodeVisitor checker =
         new NodeVisitor() {
           private void error(Node node, String message) {
-            eventHandler.handle(Event.error(node.getLocation(), message));
+            eventHandler.handle(Event.error(node.getStartLocation(), message));
             success[0] = false;
           }
 

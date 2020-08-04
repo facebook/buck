@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataRegistry;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
-import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.Location;
 import java.nio.file.Path;
 
 /** The action registry that should be used throughout Buck to handle registering actions. */

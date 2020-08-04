@@ -21,7 +21,6 @@ import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProviderInfo;
 import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
@@ -92,21 +91,19 @@ public abstract class TestInfo extends BuiltInProviderInfo<TestInfo> {
   public static TestInfo instantiateFromSkylark(
       String testName,
       String testCaseName,
-      StarlarkList<String> labels,
-      StarlarkList<String> contacts,
+      StarlarkList<?> labels,
+      StarlarkList<?> contacts,
       Object timeoutMs,
       boolean runTestsSeparately,
-      String type,
-      Location location)
+      String type)
       throws EvalException {
 
     return new ImmutableTestInfo(
         testName,
         testCaseName,
-        ImmutableSet.copyOf(labels.getContents(String.class, "labels must be a list of strings")),
-        ImmutableSet.copyOf(
-            contacts.getContents(String.class, "contacts must be a list of strings")),
-        BuckSkylarkTypes.validateNoneOrType(location, Number.class, timeoutMs),
+        BuckSkylarkTypes.toJavaList(labels, String.class, "labels must be a list of strings"),
+        BuckSkylarkTypes.toJavaList(contacts, String.class, "contacts must be a list of strings"),
+        BuckSkylarkTypes.validateNoneOrType(Number.class, timeoutMs),
         runTestsSeparately,
         type);
   }

@@ -17,11 +17,10 @@
 package com.facebook.buck.core.starlark.compatible;
 
 import com.google.common.primitives.Primitives;
-import com.google.devtools.build.lib.skylarkinterface.Param;
-import com.google.devtools.build.lib.skylarkinterface.ParamType;
-import com.google.devtools.build.lib.syntax.StarlarkSemantics;
 import java.lang.annotation.Annotation;
 import javax.annotation.Nullable;
+import net.starlark.java.annot.Param;
+import net.starlark.java.annot.ParamType;
 
 /**
  * An instance of the skylark annotation that we create and pass around to piggy-back off skylark
@@ -122,23 +121,18 @@ class BuckStarlarkParam implements Param {
   }
 
   @Override
-  public boolean legacyNamed() {
-    return false;
-  }
-
-  @Override
   public boolean positional() {
     return true;
   }
 
   @Override
-  public StarlarkSemantics.FlagIdentifier enableOnlyWithFlag() {
-    return StarlarkSemantics.FlagIdentifier.NONE;
+  public String enableOnlyWithFlag() {
+    return "";
   }
 
   @Override
-  public StarlarkSemantics.FlagIdentifier disableWithFlag() {
-    return StarlarkSemantics.FlagIdentifier.NONE;
+  public String disableWithFlag() {
+    return "";
   }
 
   @Override

@@ -19,7 +19,7 @@ package com.facebook.buck.skylark.parser;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.Location;
 
 /** Stack of load statements in .bzl files. */
 abstract class LoadStack {
@@ -40,7 +40,7 @@ abstract class LoadStack {
   private boolean contains(Location location) {
     LoadStack stack = this;
     while (stack instanceof Child) {
-      if (((Child) stack).location.getPath().equals(location.getPath())) {
+      if (((Child) stack).location.file().equals(location.file())) {
         return true;
       }
       stack = ((Child) stack).parent;

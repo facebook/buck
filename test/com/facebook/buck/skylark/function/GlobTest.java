@@ -20,6 +20,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
@@ -42,14 +43,17 @@ import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
+import com.google.devtools.build.lib.syntax.Resolver;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
+import com.google.devtools.build.lib.syntax.SyntaxError;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
 import org.junit.Before;
 import org.junit.Test;
@@ -155,30 +159,30 @@ public class GlobTest {
                 + "Please use an empty list ([]) instead."));
   }
 
-  private StarlarkThread assertEvaluate(Path buildFile)
+  private Module assertEvaluate(Path buildFile)
       throws IOException, InterruptedException, EvalException {
     try (Mutability mutability = Mutability.create("BUCK")) {
       return assertEvaluate(buildFile, mutability);
     }
   }
 
-  private StarlarkThread assertEvaluate(Path buildFile, Mutability mutability)
+  private Module assertEvaluate(Path buildFile, Mutability mutability)
       throws IOException, InterruptedException, EvalException {
     byte[] buildFileContent =
         FileSystemUtils.readWithKnownFileSize(buildFile, buildFile.getFileSize());
     StarlarkFile buildFileAst =
-        StarlarkFile.parse(ParserInput.create(buildFileContent, buildFile.asFragment()));
+        StarlarkFile.parse(
+            ParserInput.create(
+                new String(buildFileContent, StandardCharsets.UTF_8), buildFile.toString()));
 
-    ImmutableMap.Builder<String, Object> module = ImmutableMap.builder();
-    module.putAll(Starlark.UNIVERSE);
+    ImmutableMap.Builder<String, Object> vars = ImmutableMap.builder();
+    vars.putAll(Starlark.UNIVERSE);
     // only "glob" function is neede from the module
-    Starlark.addMethods(module, SkylarkBuildModule.BUILD_MODULE);
+    Starlark.addMethods(vars, SkylarkBuildModule.BUILD_MODULE);
 
-    StarlarkThread env =
-        StarlarkThread.builder(mutability)
-            .setGlobals(Module.createForBuiltins(module.build()))
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .build();
+    Module module = Module.withPredeclared(BuckStarlark.BUCK_STARLARK_SEMANTICS, vars.build());
+
+    StarlarkThread env = new StarlarkThread(mutability, BuckStarlark.BUCK_STARLARK_SEMANTICS);
 
     new ParseContext(
             PackageContext.of(
@@ -190,8 +194,16 @@ public class GlobTest {
                 ImmutableMap.of()))
         .setup(env);
 
-    EvalUtils.exec(buildFileAst, env);
+    Resolver.resolveFile(buildFileAst, module);
+    if (!buildFileAst.errors().isEmpty()) {
+      for (SyntaxError error : buildFileAst.errors()) {
+        eventHandler.handle(Event.error(error.location(), error.message()));
+      }
+      fail();
+    }
 
-    return env;
+    EvalUtils.exec(buildFileAst, module, env);
+
+    return module;
   }
 }

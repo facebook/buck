@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.Location;
 import java.nio.file.Path;
 
 /**

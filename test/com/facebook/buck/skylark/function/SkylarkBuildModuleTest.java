@@ -39,13 +39,16 @@ import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
+import com.google.devtools.build.lib.syntax.Resolver;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
+import com.google.devtools.build.lib.syntax.SyntaxError;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
 import org.junit.Assert;
 import org.junit.Before;
@@ -79,36 +82,36 @@ public class SkylarkBuildModuleTest {
     assertEquals(eventHandler.iterator().next().getMessage(), "name 'package' is not defined");
   }
 
-  private StarlarkThread evaluate(String expression, boolean expectSuccess)
+  private Module evaluate(String expression, boolean expectSuccess)
       throws IOException, InterruptedException {
     Path buildFile = root.getChild("BUCK");
     FileSystemUtils.writeContentAsLatin1(buildFile, expression);
     return evaluate(buildFile, expectSuccess);
   }
 
-  private StarlarkThread evaluate(Path buildFile, boolean expectSuccess)
+  private Module evaluate(Path buildFile, boolean expectSuccess)
       throws IOException, InterruptedException {
     try (Mutability mutability = Mutability.create("BUCK")) {
       return evaluate(buildFile, mutability, expectSuccess);
     }
   }
 
-  private StarlarkThread evaluate(Path buildFile, Mutability mutability, boolean expectSuccess)
+  private Module evaluate(Path buildFile, Mutability mutability, boolean expectSuccess)
       throws IOException, InterruptedException {
     byte[] buildFileContent =
         FileSystemUtils.readWithKnownFileSize(buildFile, buildFile.getFileSize());
     StarlarkFile buildFileAst =
-        StarlarkFile.parse(ParserInput.create(buildFileContent, buildFile.asFragment()));
+        StarlarkFile.parse(
+            ParserInput.create(
+                new String(buildFileContent, StandardCharsets.UTF_8), buildFile.toString()));
 
-    ImmutableMap.Builder<String, Object> module = ImmutableMap.builder();
-    module.putAll(Starlark.UNIVERSE);
-    Starlark.addMethods(module, SkylarkBuildModule.BUILD_MODULE);
+    ImmutableMap.Builder<String, Object> vars = ImmutableMap.builder();
+    vars.putAll(Starlark.UNIVERSE);
+    Starlark.addMethods(vars, SkylarkBuildModule.BUILD_MODULE);
 
-    StarlarkThread env =
-        StarlarkThread.builder(mutability)
-            .setGlobals(Module.createForBuiltins(module.build()))
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .build();
+    StarlarkThread env = new StarlarkThread(mutability, BuckStarlark.BUCK_STARLARK_SEMANTICS);
+
+    Module module = Module.withPredeclared(BuckStarlark.BUCK_STARLARK_SEMANTICS, vars.build());
     new ParseContext(
             PackageContext.of(
                 NativeGlobber.create(root),
@@ -118,13 +121,23 @@ public class SkylarkBuildModuleTest {
                 eventHandler,
                 ImmutableMap.of()))
         .setup(env);
+
+    Resolver.resolveFile(buildFileAst, module);
+    if (!buildFileAst.errors().isEmpty()) {
+      for (SyntaxError error : buildFileAst.errors()) {
+        eventHandler.handle(Event.error(error.location(), error.message()));
+      }
+      Assert.assertFalse(expectSuccess);
+      return module;
+    }
+
     try {
-      EvalUtils.exec(buildFileAst, env);
+      EvalUtils.exec(buildFileAst, module, env);
       Assert.assertTrue(expectSuccess);
     } catch (EvalException e) {
       eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
       Assert.assertFalse(expectSuccess);
     }
-    return env;
+    return module;
   }
 }

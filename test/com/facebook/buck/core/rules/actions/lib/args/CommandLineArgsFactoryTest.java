@@ -33,8 +33,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Location;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Before;
@@ -140,8 +140,7 @@ public class CommandLineArgsFactoryTest {
         artifactFactory.createDeclaredArtifact(Paths.get("out.txt"), Location.BUILTIN);
 
     CommandLineArgs args =
-        CommandLineArgsFactory.from(
-            ImmutableList.of(artifact.asSkylarkOutputArtifact(Location.BUILTIN)));
+        CommandLineArgsFactory.from(ImmutableList.of(artifact.asSkylarkOutputArtifact()));
 
     ImmutableList.Builder<Artifact> inputs = ImmutableList.builder();
     ImmutableList.Builder<OutputArtifact> outputs = ImmutableList.builder();

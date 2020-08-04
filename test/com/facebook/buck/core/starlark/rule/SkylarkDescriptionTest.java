@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.analysis.impl.RuleAnalysisContextImpl;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
+import com.facebook.buck.core.starlark.testutil.TestStarlarkThread;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -40,7 +41,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Starlark;
@@ -76,8 +76,11 @@ public class SkylarkDescriptionTest {
         FakeSkylarkUserDefinedRuleFactory.createSimpleRuleFromCallable(
             ctx -> {
               try {
-                Artifact f = ctx.getActions().declareFile("baz.sh", Location.BUILTIN);
-                ctx.getActions().write(f, "content", false, Location.BUILTIN);
+                Artifact f =
+                    ctx.getActions()
+                        .declareFile("baz.sh", TestStarlarkThread.dummyStarlarkThread());
+                ctx.getActions()
+                    .write(f, "content", false, TestStarlarkThread.dummyStarlarkThread());
               } catch (EvalException e) {
                 throw new RuntimeException(e);
               }
@@ -111,10 +114,16 @@ public class SkylarkDescriptionTest {
         FakeSkylarkUserDefinedRuleFactory.createSimpleRuleFromCallable(
             ctx -> {
               try {
-                Artifact f = ctx.getActions().declareFile("baz1.sh", Location.BUILTIN);
-                ctx.getActions().write(f, "content", false, Location.BUILTIN);
-                Artifact g = ctx.getActions().declareFile("baz2.sh", Location.BUILTIN);
-                ctx.getActions().write(g, "content", false, Location.BUILTIN);
+                Artifact f =
+                    ctx.getActions()
+                        .declareFile("baz1.sh", TestStarlarkThread.dummyStarlarkThread());
+                ctx.getActions()
+                    .write(f, "content", false, TestStarlarkThread.dummyStarlarkThread());
+                Artifact g =
+                    ctx.getActions()
+                        .declareFile("baz2.sh", TestStarlarkThread.dummyStarlarkThread());
+                ctx.getActions()
+                    .write(g, "content", false, TestStarlarkThread.dummyStarlarkThread());
                 return StarlarkList.immutableCopyOf(
                     ImmutableList.of(
                         new ImmutableDefaultInfo(
@@ -150,8 +159,11 @@ public class SkylarkDescriptionTest {
         FakeSkylarkUserDefinedRuleFactory.createSimpleRuleFromCallable(
             ctx -> {
               try {
-                Artifact f = ctx.getActions().declareFile("baz.sh", Location.BUILTIN);
-                ctx.getActions().write(f, "content", false, Location.BUILTIN);
+                Artifact f =
+                    ctx.getActions()
+                        .declareFile("baz.sh", TestStarlarkThread.dummyStarlarkThread());
+                ctx.getActions()
+                    .write(f, "content", false, TestStarlarkThread.dummyStarlarkThread());
               } catch (EvalException e) {
                 throw new RuntimeException(e);
               }

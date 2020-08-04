@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.core.rules.providers.impl.UserDefinedProvider;
 import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
+import com.facebook.buck.core.starlark.compatible.BuckStarlarkModule;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
@@ -31,10 +32,10 @@ import com.google.common.collect.Sets;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.cmdline.LabelValidator;
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Sequence;
+import com.google.devtools.build.lib.syntax.StarlarkFunction;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.Map;
@@ -69,47 +70,45 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
   }
 
   @Override
-  public Label label(String labelString, Location loc, StarlarkThread env) throws EvalException {
+  public Label label(String labelString, StarlarkThread env) throws EvalException {
     // There is some extra implementation work in the Bazel version. At the moment we do not do
     // cell remapping, so we take a simpler approach of making sure that root-relative labels map
     // to whatever cell we're currently executing within. This has the side effect of making any
     // non-root cell labels become absolute.
+
     try {
-      Label parentLabel = (Label) env.getGlobals().getLabel();
-      if (parentLabel != null) {
-        LabelValidator.parseAbsoluteLabel(labelString);
-        labelString =
-            parentLabel
-                .getRelativeWithRemapping(labelString, ImmutableMap.of())
-                .getUnambiguousCanonicalForm();
-      }
+      // Label parentLabel = (Label) env.getGlobals().getLabel();
+      Label parentLabel = BuckStarlarkModule.ofInnermostEnclosingStarlarkFunction(env);
+      LabelValidator.parseAbsoluteLabel(labelString);
+      labelString =
+          parentLabel
+              .getRelativeWithRemapping(labelString, ImmutableMap.of())
+              .getUnambiguousCanonicalForm();
       return labelCache.get(labelString);
     } catch (LabelValidator.BadLabelException | LabelSyntaxException | ExecutionException e) {
-      throw new EvalException(loc, "Illegal absolute label syntax: " + labelString);
+      throw new EvalException("Illegal absolute label syntax: " + labelString);
     }
   }
 
   @Override
   public SkylarkUserDefinedRule rule(
-      BaseFunction implementation,
+      StarlarkFunction implementation,
       Dict<String, AttributeHolder> attrs,
       boolean inferRunInfo,
       boolean test,
-      Location loc,
       StarlarkThread env)
       throws EvalException {
     Map<String, AttributeHolder> attributesByString =
-        attrs.getContents(String.class, AttributeHolder.class, "attrs keyword of rule()");
+        Dict.cast(attrs, String.class, AttributeHolder.class, "attrs keyword of rule()");
     ImmutableMap.Builder<ParamName, AttributeHolder> checkedAttributes =
         ImmutableMap.builderWithExpectedSize(attrs.size());
 
     for (Map.Entry<String, AttributeHolder> entry : attributesByString.entrySet()) {
-      checkedAttributes.put(
-          BuckSkylarkTypes.validateKwargName(loc, entry.getKey()), entry.getValue());
+      checkedAttributes.put(BuckSkylarkTypes.validateKwargName(entry.getKey()), entry.getValue());
     }
 
     return SkylarkUserDefinedRule.of(
-        loc,
+        env.getCallerLocation(),
         implementation,
         test ? IMPLICIT_TEST_ATTRIBUTES : IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,
@@ -119,23 +118,21 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
   }
 
   @Override
-  public UserDefinedProvider provider(String doc, Object fields, Location location)
+  public UserDefinedProvider provider(String doc, Object fields, StarlarkThread thread)
       throws EvalException {
     Iterable<String> fieldNames;
     if (fields instanceof StarlarkList<?>) {
-      fieldNames = ((StarlarkList<?>) fields).getContents(String.class, "fields parameter");
+      fieldNames = Sequence.cast(fields, String.class, "fields parameter");
     } else if (fields instanceof Dict) {
-      fieldNames =
-          ((Dict<?, ?>) fields)
-              .getContents(String.class, String.class, "fields parameter")
-              .keySet();
+      fieldNames = Dict.cast(fields, String.class, String.class, "fields").keySet();
     } else {
-      throw new EvalException(location, "fields attribute must be either list or dict.");
+      throw new EvalException("fields attribute must be either list or dict.");
     }
 
     for (String field : fieldNames) {
-      BuckSkylarkTypes.validateKwargName(location, field);
+      BuckSkylarkTypes.validateKwargName(field);
     }
-    return new UserDefinedProvider(location, Iterables.toArray(fieldNames, String.class));
+    return new UserDefinedProvider(
+        thread.getCallerLocation(), Iterables.toArray(fieldNames, String.class));
   }
 }

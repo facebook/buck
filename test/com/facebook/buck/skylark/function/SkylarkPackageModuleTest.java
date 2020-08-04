@@ -40,13 +40,16 @@ import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
+import com.google.devtools.build.lib.syntax.Resolver;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
+import com.google.devtools.build.lib.syntax.SyntaxError;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
 import org.junit.Before;
 import org.junit.Test;
@@ -102,17 +105,17 @@ public class SkylarkPackageModuleTest {
     byte[] buildFileContent =
         FileSystemUtils.readWithKnownFileSize(buildFile, buildFile.getFileSize());
     StarlarkFile buildFileAst =
-        StarlarkFile.parse(ParserInput.create(buildFileContent, buildFile.asFragment()));
+        StarlarkFile.parse(
+            ParserInput.create(
+                new String(buildFileContent, StandardCharsets.UTF_8), buildFile.toString()));
 
-    ImmutableMap.Builder<String, Object> module = ImmutableMap.builder();
-    module.putAll(Starlark.UNIVERSE);
-    Starlark.addMethods(module, SkylarkPackageModule.PACKAGE_MODULE);
+    ImmutableMap.Builder<String, Object> vars = ImmutableMap.builder();
+    vars.putAll(Starlark.UNIVERSE);
+    Starlark.addMethods(vars, SkylarkPackageModule.PACKAGE_MODULE);
 
-    StarlarkThread env =
-        StarlarkThread.builder(mutability)
-            .setGlobals(Module.createForBuiltins(module.build()))
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .build();
+    Module module = Module.withPredeclared(BuckStarlark.BUCK_STARLARK_SEMANTICS, vars.build());
+
+    StarlarkThread env = new StarlarkThread(mutability, BuckStarlark.BUCK_STARLARK_SEMANTICS);
     ParseContext parseContext =
         new ParseContext(
             PackageContext.of(
@@ -123,8 +126,18 @@ public class SkylarkPackageModuleTest {
                 eventHandler,
                 ImmutableMap.of()));
     parseContext.setup(env);
+
+    Resolver.resolveFile(buildFileAst, module);
+    if (!buildFileAst.errors().isEmpty()) {
+      for (SyntaxError error : buildFileAst.errors()) {
+        eventHandler.handle(Event.error(error.location(), error.message()));
+      }
+      assertFalse(expectSuccess);
+      return parseContext;
+    }
+
     try {
-      EvalUtils.exec(buildFileAst, env);
+      EvalUtils.exec(buildFileAst, module, env);
       assertTrue(expectSuccess);
     } catch (EvalException e) {
       eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));

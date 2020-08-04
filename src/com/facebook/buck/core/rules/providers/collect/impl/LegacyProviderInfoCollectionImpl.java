@@ -20,9 +20,7 @@ import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.Optional;
 
@@ -35,16 +33,16 @@ public class LegacyProviderInfoCollectionImpl implements ProviderInfoCollection 
   private LegacyProviderInfoCollectionImpl() {}
 
   @Override
-  public Object getIndex(Object key, Location loc) throws EvalException {
+  public Object getIndex(Object key) throws EvalException {
     verifyKeyIsProvider(
-        key, loc, "Type Target only supports indexing by object constructors, got %s instead");
+        key, "Type Target only supports indexing by object constructors, got %s instead");
     return Starlark.NONE;
   }
 
   @Override
-  public boolean containsKey(Object key, Location loc) throws EvalException {
+  public boolean containsKey(Object key) throws EvalException {
     verifyKeyIsProvider(
-        key, loc, "Type Target only supports querying by object constructors, got %s instead");
+        key, "Type Target only supports querying by object constructors, got %s instead");
     return false;
   }
 
@@ -68,9 +66,9 @@ public class LegacyProviderInfoCollectionImpl implements ProviderInfoCollection 
         "Attempting to access DefaultInfo on a legacy rule that does not expose providers");
   }
 
-  private void verifyKeyIsProvider(Object key, Location loc, String s) throws EvalException {
+  private void verifyKeyIsProvider(Object key, String s) throws EvalException {
     if (!(key instanceof Provider)) {
-      throw new EvalException(loc, String.format(s, EvalUtils.getDataTypeName(key)));
+      throw new EvalException(String.format(s, Starlark.type(key)));
     }
   }
 }

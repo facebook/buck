@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
+import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.parser.options.ImplicitNativeRulesState;
@@ -50,16 +51,6 @@ import org.immutables.value.Value.Lazy;
 @BuckStyleValue
 public abstract class BuckGlobals {
 
-  static {
-    /**
-     * Ensure that we make a reference to the default builtins so that they are registered with
-     * {@link Runtime#getBuiltinRegistry()} before we freeze that BuiltinRegistry This also
-     * indirectly initializes {@link MethodLibrary} properly before freezing.
-     */
-    @SuppressWarnings("unused")
-    Module globals = Module.createForBuiltins(Starlark.UNIVERSE);
-  }
-
   abstract SkylarkFunctionModule getSkylarkFunctionModule();
 
   /** @return A set of rules supported by Buck. */
@@ -85,9 +76,9 @@ public abstract class BuckGlobals {
 
   abstract ImmutableSet<BuiltInProvider<?>> getPerFeatureProviders();
 
-  /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
+  /** bzl initial contents. */
   @Lazy
-  Module getBuckLoadContextGlobals() {
+  protected ImmutableMap<String, Object> getBuckLoadContextGlobals() {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
     addBuckGlobals(builder);
     builder.put("native", getNativeModule());
@@ -103,12 +94,18 @@ public abstract class BuckGlobals {
       Starlark.addMethods(builder, new SkylarkProviderFunction());
     }
     addNativeModuleFunctions(builder);
-    return Module.createForBuiltins(builder.build());
+    return builder.build();
   }
 
-  /** Disable implicit native rules depending on configuration */
+  /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
+  Module makeBuckLoadContextGlobals() {
+    return Module.withPredeclared(
+        BuckStarlark.BUCK_STARLARK_SEMANTICS, getBuckLoadContextGlobals());
+  }
+
+  /** {@code BUCK} file initial contents. */
   @Lazy
-  Module getBuckBuildFileContextGlobals() {
+  protected ImmutableMap<String, Object> getMakeBuckBuildFileContextGlobals() {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
     addBuckGlobals(builder);
     if (getImplicitNativeRulesState() == ImplicitNativeRulesState.ENABLED) {
@@ -116,7 +113,13 @@ public abstract class BuckGlobals {
     }
     Starlark.addModule(builder, getSkylarkFunctionModule());
     addNativeModuleFunctions(builder);
-    return Module.createForBuiltins(builder.build());
+    return builder.build();
+  }
+
+  /** Disable implicit native rules depending on configuration */
+  Module makeBuckBuildFileContextGlobals() {
+    ImmutableMap<String, Object> map = getMakeBuckBuildFileContextGlobals();
+    return Module.withPredeclared(BuckStarlark.BUCK_STARLARK_SEMANTICS, map);
   }
 
   /**

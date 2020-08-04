@@ -159,8 +159,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(
-        eventCollector, parser, buildFile, "expected type 'int' but got type 'string' instead");
+    assertParserFails(eventCollector, parser, buildFile, "got element of type string, want int");
   }
 
   @Test
@@ -182,7 +181,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "expected value of type 'bool'");
+    assertParserFails(eventCollector, parser, buildFile, "got value of type 'string', want 'bool'");
   }
 
   @Test
@@ -205,8 +204,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(
-        eventCollector, parser, buildFile, "expected type 'string' but got type 'int' instead");
+    assertParserFails(eventCollector, parser, buildFile, "got element of type int, want string");
   }
 
   @Test
@@ -233,7 +231,10 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(eventCollector);
 
     assertParserFails(
-        eventCollector, parser, buildFile, "expected value of type 'list of strings'");
+        eventCollector,
+        parser,
+        buildFile,
+        "parameter 'default' got value of type 'int', want 'list'");
   }
 
   @Test
@@ -268,7 +269,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "expected value of type 'string");
+    assertParserFails(eventCollector, parser, buildFile, "want 'string or NoneType'");
   }
 
   @Test
@@ -283,7 +284,8 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "expected value of type 'string");
+    assertParserFails(
+        eventCollector, parser, buildFile, "got value of type 'int', want 'string or NoneType'");
   }
 
   @Test
@@ -298,7 +300,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "expected type 'Provider'");
+    assertParserFails(eventCollector, parser, buildFile, "expected a sequence of 'Provider'");
   }
 
   @Test
@@ -324,8 +326,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(
-        eventCollector, parser, buildFile, "expected value of type 'list of strings'");
+    assertParserFails(eventCollector, parser, buildFile, "got value of type 'int', want 'list'");
   }
 
   @Test
@@ -340,7 +341,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "expected type 'Provider'");
+    assertParserFails(eventCollector, parser, buildFile, "expected a sequence of 'Provider'");
   }
 
   @Test
@@ -366,8 +367,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(
-        eventCollector, parser, buildFile, "expected value of type 'list of strings'");
+    assertParserFails(eventCollector, parser, buildFile, "want 'list'");
   }
 
   @Test
@@ -391,7 +391,11 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "expected value of type 'list of ints'");
+    assertParserFails(
+        eventCollector,
+        parser,
+        buildFile,
+        "parameter 'default' got value of type 'int', want 'list'");
   }
 
   @Test
@@ -414,8 +418,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(
-        eventCollector, parser, buildFile, "expected value of type 'string or NoneType'");
+    assertParserFails(eventCollector, parser, buildFile, "want 'string or NoneType'");
   }
 
   @Test
@@ -457,8 +460,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(
-        eventCollector, parser, buildFile, "expected value of type 'list of strings'");
+    assertParserFails(eventCollector, parser, buildFile, "got value of type 'int', want 'list'");
   }
 
   @Test
@@ -475,7 +477,7 @@ public class SkylarkUserDefinedRulesParserTest {
         eventCollector,
         parser,
         buildFile,
-        "expected value of type 'function' for parameter 'implementation'");
+        "parameter 'implementation' got value of type 'string', want 'function'");
   }
 
   @Test
@@ -487,8 +489,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(
-        eventCollector, parser, buildFile, "expected value of type 'dict' for parameter 'attrs'");
+    assertParserFails(eventCollector, parser, buildFile, "got value of type 'int', want 'dict'");
   }
 
   @Test
@@ -538,7 +539,7 @@ public class SkylarkUserDefinedRulesParserTest {
         eventCollector,
         parser,
         buildFile,
-        "expected value of type 'bool' for parameter 'infer_run_info'");
+        "parameter 'infer_run_info' got value of type 'int', want 'bool'");
   }
 
   @Test
@@ -552,7 +553,7 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(eventCollector);
 
     assertParserFails(
-        eventCollector, parser, buildFile, "expected value of type 'bool' for parameter 'test'");
+        eventCollector, parser, buildFile, "parameter 'test' got value of type 'int', want 'bool'");
   }
 
   @Test
@@ -585,7 +586,7 @@ public class SkylarkUserDefinedRulesParserTest {
         eventCollector,
         parser,
         buildFile,
-        "expected type 'AttributeHolder' for 'attrs keyword of rule()' value but got type 'int' instead");
+        "got dict<string, int> for 'attrs keyword of rule()', want dict<string, AttributeHolder>");
   }
 
   @Test

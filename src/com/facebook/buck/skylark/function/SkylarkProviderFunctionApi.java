@@ -16,15 +16,15 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkbuildapi.core.ProviderApi;
-import com.google.devtools.build.lib.skylarkinterface.Param;
-import com.google.devtools.build.lib.skylarkinterface.ParamType;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkGlobalLibrary;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.StarlarkList;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
+import net.starlark.java.annot.Param;
+import net.starlark.java.annot.ParamType;
+import net.starlark.java.annot.StarlarkGlobalLibrary;
+import net.starlark.java.annot.StarlarkMethod;
 
 /**
  * Interface for a global Skylark library containing the provider method.
@@ -32,10 +32,10 @@ import com.google.devtools.build.lib.syntax.StarlarkList;
  * <p>This is only separate from {@link SkylarkRuleFunctionsApi} at the moment so that new
  * extensibility functionality can be disabled behind configuration until it has stabilized.
  */
-@SkylarkGlobalLibrary
+@StarlarkGlobalLibrary
 public interface SkylarkProviderFunctionApi {
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "provider",
       doc =
           "Creates a declared provider, which is both an identifier of, and constructor "
@@ -47,7 +47,7 @@ public interface SkylarkProviderFunctionApi {
         @Param(
             name = "doc",
             type = String.class,
-            legacyNamed = true,
+            named = true,
             defaultValue = "''",
             doc =
                 "A description of the provider that can be extracted by documentation generating tools."),
@@ -73,6 +73,6 @@ public interface SkylarkProviderFunctionApi {
             positional = false,
             defaultValue = "None")
       },
-      useLocation = true)
-  ProviderApi provider(String doc, Object fields, Location location) throws EvalException;
+      useStarlarkThread = true)
+  ProviderApi provider(String doc, Object fields, StarlarkThread thread) throws EvalException;
 }

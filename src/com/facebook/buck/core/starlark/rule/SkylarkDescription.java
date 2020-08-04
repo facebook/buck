@@ -36,6 +36,7 @@ import com.facebook.buck.core.rules.providers.lib.ImmutableTestInfo;
 import com.facebook.buck.core.rules.providers.lib.RunInfo;
 import com.facebook.buck.core.rules.providers.lib.TestInfo;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
+import com.facebook.buck.core.starlark.compatible.BuckStarlarkPrintHandler;
 import com.facebook.buck.core.starlark.eventhandler.ConsoleEventHandler;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -44,13 +45,12 @@ import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.EventKind;
-import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Sequence;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkCallable;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.HashMap;
@@ -77,7 +77,7 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
 
     try {
       Object implResult;
-      BaseFunction implementation;
+      StarlarkCallable implementation;
       SkylarkRuleContext ctx =
           new SkylarkRuleContext(
               context,
@@ -85,30 +85,22 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
               args.getCoercedAttrValues(context));
 
       try (Mutability mutability = Mutability.create("analysing target")) {
-        StarlarkThread env =
-            StarlarkThread.builder(mutability)
-                .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-                .setEventHandler(
-                    new ConsoleEventHandler(
-                        context.getEventBus(),
-                        EventKind.ALL_EVENTS,
-                        ImmutableSet.of(),
-                        new HumanReadableExceptionAugmentor(ImmutableMap.of())))
-                .build();
+        StarlarkThread env = new StarlarkThread(mutability, BuckStarlark.BUCK_STARLARK_SEMANTICS);
+        env.setPrintHandler(
+            new BuckStarlarkPrintHandler(
+                new ConsoleEventHandler(
+                    context.getEventBus(),
+                    EventKind.ALL_EVENTS,
+                    ImmutableSet.of(),
+                    new HumanReadableExceptionAugmentor(ImmutableMap.of()))));
 
         implementation = args.getImplementation();
 
-        implResult =
-            Starlark.call(
-                env,
-                implementation,
-                implementation.getLocation(),
-                ImmutableList.of(ctx),
-                ImmutableMap.of());
+        implResult = Starlark.call(env, implementation, ImmutableList.of(ctx), ImmutableMap.of());
       }
 
       List<SkylarkProviderInfo> returnedProviders =
-          Sequence.castSkylarkListOrNoneToList(implResult, SkylarkProviderInfo.class, null);
+          Sequence.noneableCast(implResult, SkylarkProviderInfo.class, null);
 
       // TODO: Verify that we get providers back, validate types, etc, etc
       return getProviderInfos(returnedProviders, ImmutableSet.of(), ctx, implementation, args);
@@ -126,18 +118,15 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
     return args.getRule().getName();
   }
 
-  private static String getFullName(BaseFunction function) {
-    return (function.getClass() != null
-            ? EvalUtils.getDataTypeNameFromClass(function.getClass(), false) + "."
-            : "")
-        + function.getName();
+  private static String getFullName(StarlarkCallable function) {
+    return Starlark.classType(function.getClass()) + "." + function.getName();
   }
 
   private ProviderInfoCollection getProviderInfos(
       List<SkylarkProviderInfo> implResult,
       ImmutableSet<Artifact> declaredOutputs,
       SkylarkRuleContext ctx,
-      BaseFunction implementation,
+      StarlarkCallable implementation,
       SkylarkDescriptionArg args)
       throws EvalException {
 

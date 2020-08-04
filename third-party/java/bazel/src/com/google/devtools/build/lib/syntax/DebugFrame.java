@@ -16,7 +16,6 @@ package com.google.devtools.build.lib.syntax;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.events.Location;
 import javax.annotation.Nullable;
 
 /** The information about a single frame in a thread's stack trace relevant to the debugger. */

@@ -23,9 +23,8 @@ import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.facebook.buck.core.starlark.compatible.MutableObjectException;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.EvalUtils;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -40,16 +39,16 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
   }
 
   @Override
-  public Object getIndex(Object key, Location loc) throws EvalException {
+  public Object getIndex(Object key) throws EvalException {
     verifyKeyIsProvider(
-        key, loc, "Type Target only supports indexing by object constructors, got %s instead");
+        key, "Type Target only supports indexing by object constructors, got %s instead");
     return BuckSkylarkTypes.skylarkValueFromNullable(getNullable(((Provider<?>) key)));
   }
 
   @Override
-  public boolean containsKey(Object key, Location loc) throws EvalException {
+  public boolean containsKey(Object key) throws EvalException {
     verifyKeyIsProvider(
-        key, loc, "Type Target only supports querying by object constructors, got %s instead");
+        key, "Type Target only supports querying by object constructors, got %s instead");
     return contains((Provider<?>) key);
   }
 
@@ -82,9 +81,9 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
     return (T) infoMap.get(provider.getKey());
   }
 
-  private void verifyKeyIsProvider(Object key, Location loc, String s) throws EvalException {
+  private void verifyKeyIsProvider(Object key, String s) throws EvalException {
     if (!(key instanceof Provider)) {
-      throw new EvalException(loc, String.format(s, EvalUtils.getDataTypeName(key)));
+      throw new EvalException(String.format(s, Starlark.type(key)));
     }
   }
 

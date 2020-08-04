@@ -26,11 +26,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.vfs.PathFragment;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,12 +38,7 @@ import org.junit.rules.ExpectedException;
 public class UserDefinedProviderTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  final Location location =
-      Location.fromPathAndStartColumn(
-          PathFragment.create("package").getChild("file.bzl"),
-          0,
-          10,
-          new Location.LineAndColumn(5, 6));
+  final Location location = Location.fromFileLineColumn("package/file.bzl", 5, 6);
 
   @Test
   public void reprIsReasonable() throws LabelSyntaxException, EvalException {
@@ -93,7 +87,6 @@ public class UserDefinedProviderTest {
               Starlark.call(
                   env.getEnv(),
                   provider,
-                  Location.BUILTIN,
                   ImmutableList.of(),
                   ImmutableMap.of("foo", "val_1", "bar", "val_2", "baz", "val_3"));
       Assert.assertTrue(providerInfo.isImmutable());
@@ -117,11 +110,7 @@ public class UserDefinedProviderTest {
       thrown.expect(Exception.class);
       thrown.expectMessage("Tried to call a Provider before exporting it");
       Starlark.call(
-          env.getEnv(),
-          provider,
-          Location.BUILTIN,
-          ImmutableList.of(),
-          ImmutableMap.of("foo", "foo_value"));
+          env.getEnv(), provider, ImmutableList.of(), ImmutableMap.of("foo", "foo_value"));
     }
   }
 
@@ -137,7 +126,6 @@ public class UserDefinedProviderTest {
           Starlark.call(
               env.getEnv(),
               provider,
-              Location.BUILTIN,
               ImmutableList.of(),
               ImmutableMap.of("foo", "foo_value", "baz", "baz_value"));
 
@@ -162,7 +150,6 @@ public class UserDefinedProviderTest {
           Starlark.call(
               env.getEnv(),
               provider,
-              Location.BUILTIN,
               ImmutableList.of(),
               ImmutableMap.of("foo", "foo_value", "bar", "bar_value", "baz", "baz_value"));
 

@@ -19,30 +19,29 @@ package com.facebook.buck.core.starlark.rule;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilderApi;
 import com.facebook.buck.core.starlark.rule.artifact.SkylarkArtifactApi;
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.Param;
-import com.google.devtools.build.lib.skylarkinterface.ParamType;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.StarlarkList;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.StarlarkValue;
+import net.starlark.java.annot.Param;
+import net.starlark.java.annot.ParamType;
+import net.starlark.java.annot.StarlarkBuiltin;
+import net.starlark.java.annot.StarlarkMethod;
 
 /**
  * Struct containing methods that create actions within the implementation function of a user
  * defined rule
  */
-@SkylarkModule(
+@StarlarkBuiltin(
     name = "actions",
     title = "actions",
     doc = "Struct containing methods to create actions within a rule's implementation method")
 public interface SkylarkRuleContextActionsApi extends StarlarkValue {
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "args",
       doc = "Get an instance of `Args` to construct command lines for actions",
-      useLocation = true,
       parameters = {
         @Param(
             name = "args",
@@ -63,13 +62,11 @@ public interface SkylarkRuleContextActionsApi extends StarlarkValue {
             named = true,
             defaultValue = "\"%s\"")
       })
-  CommandLineArgsBuilderApi args(Object args, String formatString, Location location)
-      throws EvalException;
+  CommandLineArgsBuilderApi args(Object args, String formatString) throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "copy_file",
       doc = "Copies a file from `src` to `dst`",
-      useLocation = true,
       parameters = {
         @Param(name = "src", doc = "The file to copy", type = Artifact.class, named = true),
         @Param(
@@ -81,16 +78,16 @@ public interface SkylarkRuleContextActionsApi extends StarlarkValue {
             type = Object.class,
             allowedTypes = {@ParamType(type = Artifact.class), @ParamType(type = String.class)},
             named = true),
-      })
-  Artifact copyFile(Artifact src, Object dest, Location location) throws EvalException;
+      },
+      useStarlarkThread = true)
+  Artifact copyFile(Artifact src, Object dest, StarlarkThread thread) throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "declare_file",
       doc =
           "Creates an `Artifact` for the given filename within this build rule. "
               + "The returned `Artifact` must be used as an output by an action within the same "
               + "rule in which it is declared.",
-      useLocation = true,
       parameters = {
         @Param(
             name = "filename",
@@ -99,13 +96,13 @@ public interface SkylarkRuleContextActionsApi extends StarlarkValue {
                     + "upward in the filesystem",
             type = String.class,
             named = true)
-      })
-  Artifact declareFile(String path, Location location) throws EvalException;
+      },
+      useStarlarkThread = true)
+  Artifact declareFile(String path, StarlarkThread thread) throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "run",
       doc = "Creates an action that runs a given executable in a specific environment.",
-      useLocation = true,
       parameters = {
         @Param(
             name = "arguments",
@@ -131,16 +128,14 @@ public interface SkylarkRuleContextActionsApi extends StarlarkValue {
             type = Dict.class,
             defaultValue = "None")
       })
-  void run(StarlarkList<Object> arguments, Object shortName, Object userEnv, Location location)
-      throws EvalException;
+  void run(StarlarkList<Object> arguments, Object shortName, Object userEnv) throws EvalException;
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "write",
       doc =
           "Creates a file write action. When the action is executed, it will write the given "
               + "content to a file. This is used to generate files using information available "
               + "when a rule's implementation function is called.",
-      useLocation = true,
       parameters = {
         @Param(
             name = "output",
@@ -170,7 +165,8 @@ public interface SkylarkRuleContextActionsApi extends StarlarkValue {
             type = Boolean.class,
             named = true,
             defaultValue = "False")
-      })
-  Artifact write(Object output, Object content, boolean isExecutable, Location location)
+      },
+      useStarlarkThread = true)
+  Artifact write(Object output, Object content, boolean isExecutable, StarlarkThread thread)
       throws EvalException;
 }

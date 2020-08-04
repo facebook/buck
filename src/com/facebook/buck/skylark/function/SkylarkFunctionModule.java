@@ -16,8 +16,6 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
-
 /**
  * Generic interface for any {@link SkylarkModule} module defining functions to make available to
  * the Skylark parser.

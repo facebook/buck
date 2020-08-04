@@ -27,8 +27,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /**
@@ -42,18 +40,14 @@ import java.util.stream.Stream;
  */
 public class CodecScanner {
 
-  private static final Logger log = Logger.getLogger(CodecScanner.class.getName());
-
   /**
    * Initializes an {@link ObjectCodecRegistry} builder by scanning a given package prefix.
    *
    * @param packagePrefix processes only classes in packages having this prefix
    * @see CodecRegisterer
    */
-  @SuppressWarnings("unchecked")
   static ObjectCodecRegistry.Builder initializeCodecRegistry(String packagePrefix)
       throws IOException, ReflectiveOperationException {
-    log.info("Building ObjectCodecRegistry");
     ArrayList<Class<? extends ObjectCodec<?>>> codecs = new ArrayList<>();
     ArrayList<Class<? extends CodecRegisterer<?>>> registerers = new ArrayList<>();
     ObjectCodecRegistry.Builder builder = ObjectCodecRegistry.newBuilder();
@@ -141,7 +135,7 @@ public class CodecScanner {
     return registered;
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
+  @SuppressWarnings("rawtypes")
   private static void applyDefaultRegistration(
       ObjectCodecRegistry.Builder builder,
       HashSet<Class<? extends ObjectCodec<?>>> alreadyRegistered,
@@ -156,9 +150,6 @@ public class CodecScanner {
         constructor.setAccessible(true);
         builder.add((ObjectCodec<?>) constructor.newInstance());
       } catch (NoSuchMethodException e) {
-        log.log(
-            Level.FINE,
-            "Skipping registration of " + codecType + " because it had no default constructor.");
       }
     }
   }

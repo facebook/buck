@@ -15,9 +15,7 @@ package com.google.devtools.build.lib.syntax;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.devtools.build.lib.events.Event;
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.vfs.PathFragment;
+import com.google.common.base.Joiner;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
@@ -32,39 +30,48 @@ public class LexerTest {
 
   // TODO(adonovan): make these these tests less unnecessarily stateful.
 
-  private final List<Event> errors = new ArrayList<>();
+  private final List<SyntaxError> errors = new ArrayList<>();
   private String lastError;
-  private Location lastErrorLocation;
 
   /**
    * Create a lexer which takes input from the specified string. Resets the
    * error handler beforehand.
    */
   private Lexer createLexer(String input) {
-    PathFragment somePath = PathFragment.create("/some/path.txt");
-    ParserInput inputSource = ParserInput.create(input, somePath);
+    ParserInput inputSource = ParserInput.fromString(input, "/some/path.txt");
     errors.clear();
-    lastErrorLocation = null;
     lastError = null;
-    return new Lexer(inputSource, errors);
+    return new Lexer(inputSource, FileOptions.DEFAULT, errors);
+  }
+
+  private static class Token {
+    TokenKind kind;
+    int start;
+    int end;
+    Object value;
+
+    @Override
+    public String toString() {
+      return kind == TokenKind.STRING
+          ? "\"" + value + "\""
+          : value == null ? kind.toString() : value.toString();
+    }
   }
 
   private ArrayList<Token> allTokens(Lexer lexer) {
     ArrayList<Token> result = new ArrayList<>();
-    Token tok;
     do {
-      tok = lexer.nextToken();
-      result.add(tok.copy());
-    } while (tok.kind != TokenKind.EOF);
+      lexer.nextToken();
+      Token tok = new Token();
+      tok.kind = lexer.kind;
+      tok.start = lexer.start;
+      tok.end = lexer.end;
+      tok.value = lexer.value;
+      result.add(tok);
+    } while (lexer.kind != TokenKind.EOF);
 
-    for (Event error : errors) {
-      lastErrorLocation = error.getLocation();
-      lastError =
-          error.getLocation().getPath()
-              + ":"
-              + error.getLocation().getStartLineAndColumn().getLine()
-              + ": "
-              + error.getMessage();
+    for (SyntaxError error : errors) {
+      lastError = error.location().file() + ":" + error.location().line() + ": " + error.message();
     }
 
     return result;
@@ -76,8 +83,8 @@ public class LexerTest {
   }
 
   /**
-   * Lexes the specified input string, and returns a string containing just the
-   * linenumbers of each token.
+   * Lexes the specified input string, and returns a string containing just the line numbers of each
+   * token.
    */
   private String linenums(String input) {
     Lexer lexer = createLexer(input);
@@ -86,8 +93,7 @@ public class LexerTest {
       if (buf.length() > 0) {
         buf.append(' ');
       }
-      int line =
-        lexer.createLocation(tok.left, tok.left).getStartLineAndColumn().getLine();
+      int line = lexer.locs.getLocation(tok.start).line();
       buf.append(line);
     }
     return buf.toString();
@@ -135,11 +141,7 @@ public class LexerTest {
       if (buf.length() > 0) {
         buf.append(' ');
       }
-      buf.append('[')
-         .append(tok.left)
-         .append(',')
-         .append(tok.right)
-         .append(')');
+      buf.append('[').append(tok.start).append(',').append(tok.end).append(')');
     }
     return buf.toString();
   }
@@ -504,8 +506,6 @@ public class LexerTest {
     lexerFail = createLexer(s);
     allTokens(lexerFail);
     assertThat(errors).isNotEmpty();
-    assertThat(lastErrorLocation.getStartOffset()).isEqualTo(0);
-    assertThat(lastErrorLocation.getEndOffset()).isEqualTo(s.length());
     assertThat(values(tokens(s))).isEqualTo("STRING(unterminated) NEWLINE EOF");
   }
 
@@ -518,11 +518,29 @@ public class LexerTest {
   @Test
   public void testFirstCharIsTab() {
     assertThat(names(tokens("\t"))).isEqualTo("NEWLINE EOF");
-    assertThat(lastErrorLocation.getStartOffset()).isEqualTo(0);
-    assertThat(lastErrorLocation.getEndOffset()).isEqualTo(0);
     assertThat(lastError)
         .isEqualTo(
             "/some/path.txt:1: Tab characters are not allowed for indentation. Use spaces"
                 + " instead.");
+  }
+
+  /**
+   * Returns the first error whose string form contains the specified substring, or throws an
+   * informative AssertionError if there is none.
+   *
+   * <p>Exposed for use by other frontend tests.
+   */
+  static SyntaxError assertContainsError(List<SyntaxError> errors, String substr) {
+    for (SyntaxError error : errors) {
+      if (error.toString().contains(substr)) {
+        return error;
+      }
+    }
+    if (errors.isEmpty()) {
+      throw new AssertionError("no errors, want '" + substr + "'");
+    } else {
+      throw new AssertionError(
+          "error '" + substr + "' not found, but got these:\n" + Joiner.on("\n").join(errors));
+    }
   }
 }

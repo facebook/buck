@@ -25,11 +25,9 @@ import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.SyntaxError;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -58,8 +56,7 @@ public class TestInfoTest {
         contacts,
         Starlark.NONE,
         false,
-        TYPE,
-        Location.BUILTIN);
+        TYPE);
   }
 
   @Test
@@ -76,8 +73,7 @@ public class TestInfoTest {
         (StarlarkList<String>) contacts,
         Starlark.NONE,
         false,
-        TYPE,
-        Location.BUILTIN);
+        TYPE);
   }
 
   @Test
@@ -88,7 +84,7 @@ public class TestInfoTest {
         StarlarkList.immutableCopyOf(ImmutableList.of("foo@example.com"));
     thrown.expect(EvalException.class);
     TestInfo.instantiateFromSkylark(
-        TEST_NAME, TEST_CASE_NAME, labels, contacts, "not an int", false, TYPE, Location.BUILTIN);
+        TEST_NAME, TEST_CASE_NAME, labels, contacts, "not an int", false, TYPE);
   }
 
   @Test
@@ -111,8 +107,7 @@ public class TestInfoTest {
   }
 
   @Test
-  public void instantiatesFromSkylarkProperly()
-      throws EvalException, InterruptedException, SyntaxError {
+  public void instantiatesFromSkylarkProperly() throws Exception {
     ImmutableMap<String, Object> map =
         ImmutableMap.of(TestInfo.PROVIDER.getName(), TestInfo.PROVIDER);
 

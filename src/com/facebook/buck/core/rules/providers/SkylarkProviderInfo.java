@@ -19,9 +19,7 @@ package com.facebook.buck.core.rules.providers;
 /**
  * An interface to {@link ProviderInfo} to use in skylark methods. This allows us to more easily
  * validate user provided {@link com.google.devtools.build.lib.syntax.StarlarkList} and {@link
- * com.google.devtools.build.lib.syntax.Dict} objects which have problems with generic subtypes. See
- * {@link com.google.devtools.build.lib.syntax.StarlarkList#getContents(Class, String)} for an
- * example of a problem method
+ * com.google.devtools.build.lib.syntax.Dict} objects which have problems with generic subtypes.
  */
 public interface SkylarkProviderInfo {
   /** @return The original provider info */

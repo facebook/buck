@@ -16,51 +16,47 @@ package com.google.devtools.build.lib.syntax;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import javax.annotation.Nullable;
+import net.starlark.java.annot.StarlarkMethod;
 
 /**
- * A value class to store Methods with their corresponding {@link SkylarkCallable} annotation
+ * A value class to store Methods with their corresponding {@link StarlarkMethod} annotation
  * metadata. This is needed because the annotation is sometimes in a superclass.
  *
  * <p>The annotation metadata is duplicated in this class to avoid usage of Java dynamic proxies
- * which are ~7X slower.
+ * which are ~7× slower.
  */
 public final class MethodDescriptor {
   private final Method method;
-  private final SkylarkCallable annotation;
+  private final StarlarkMethod annotation;
 
   private final String name;
   private final String doc;
   private final boolean documented;
   private final boolean structField;
-  private final ImmutableList<ParamDescriptor> parameters;
-  private final ParamDescriptor extraPositionals;
-  private final ParamDescriptor extraKeywords;
+  private final ParamDescriptor[] parameters;
+  private final boolean extraPositionals;
+  private final boolean extraKeywords;
   private final boolean selfCall;
   private final boolean allowReturnNones;
-  private final boolean useLocation;
   private final boolean useStarlarkThread;
   private final boolean useStarlarkSemantics;
 
   private MethodDescriptor(
       Method method,
-      SkylarkCallable annotation,
+      StarlarkMethod annotation,
       String name,
       String doc,
       boolean documented,
       boolean structField,
-      ImmutableList<ParamDescriptor> parameters,
-      ParamDescriptor extraPositionals,
-      ParamDescriptor extraKeywords,
+      ParamDescriptor[] parameters,
+      boolean extraPositionals,
+      boolean extraKeywords,
       boolean selfCall,
       boolean allowReturnNones,
-      boolean useLocation,
       boolean useStarlarkThread,
       boolean useStarlarkSemantics) {
     this.method = method;
@@ -74,19 +70,18 @@ public final class MethodDescriptor {
     this.extraKeywords = extraKeywords;
     this.selfCall = selfCall;
     this.allowReturnNones = allowReturnNones;
-    this.useLocation = useLocation;
     this.useStarlarkThread = useStarlarkThread;
     this.useStarlarkSemantics = useStarlarkSemantics;
   }
 
-  /** Returns the SkylarkCallable annotation corresponding to this method. */
-  SkylarkCallable getAnnotation() {
+  /** Returns the StarlarkMethod annotation corresponding to this method. */
+  StarlarkMethod getAnnotation() {
     return annotation;
   }
 
-  /** @return Skylark method descriptor for provided Java method and signature annotation. */
+  /** @return Starlark method descriptor for provided Java method and signature annotation. */
   public static MethodDescriptor of(
-      Method method, SkylarkCallable annotation, StarlarkSemantics semantics) {
+      Method method, StarlarkMethod annotation, StarlarkSemantics semantics) {
     // This happens when the interface is public but the implementation classes
     // have reduced visibility.
     method.setAccessible(true);
@@ -99,12 +94,11 @@ public final class MethodDescriptor {
         annotation.structField(),
         Arrays.stream(annotation.parameters())
             .map(param -> ParamDescriptor.of(param, semantics))
-            .collect(ImmutableList.toImmutableList()),
-        ParamDescriptor.of(annotation.extraPositionals(), semantics),
-        ParamDescriptor.of(annotation.extraKeywords(), semantics),
+            .toArray(ParamDescriptor[]::new),
+        !annotation.extraPositionals().name().isEmpty(),
+        !annotation.extraKeywords().name().isEmpty(),
         annotation.selfCall(),
         annotation.allowReturnNones(),
-        annotation.useLocation(),
         annotation.useStarlarkThread(),
         annotation.useStarlarkSemantics());
   }
@@ -112,7 +106,7 @@ public final class MethodDescriptor {
   private static final Object[] EMPTY = {};
 
   /** Calls this method, which must have {@code structField=true}. */
-  Object callField(Object obj, Location loc, StarlarkSemantics semantics, @Nullable Mutability mu)
+  Object callField(Object obj, StarlarkSemantics semantics, @Nullable Mutability mu)
       throws EvalException, InterruptedException {
     if (!structField) {
       throw new IllegalStateException("not a struct field: " + name);
@@ -172,7 +166,7 @@ public final class MethodDescriptor {
     return Starlark.fromJava(result, mu);
   }
 
-  /** @see SkylarkCallable#name() */
+  /** @see StarlarkMethod#name() */
   public String getName() {
     return name;
   }
@@ -181,66 +175,62 @@ public final class MethodDescriptor {
     return method;
   }
 
-  /** @see SkylarkCallable#structField() */
+  /** @see StarlarkMethod#structField() */
   boolean isStructField() {
     return structField;
   }
 
-  /** @see SkylarkCallable#useStarlarkThread() */
-  boolean isUseStarlarkThread() {
+  /** @see StarlarkMethod#useStarlarkThread() */
+  public boolean isUseStarlarkThread() {
     return useStarlarkThread;
   }
 
-  /** @see SkylarkCallable#useStarlarkSemantics() */
+  /** @see StarlarkMethod#useStarlarkSemantics() */
   boolean isUseStarlarkSemantics() {
     return useStarlarkSemantics;
   }
 
-  /** @see SkylarkCallable#useLocation() */
-  boolean isUseLocation() {
-    return useLocation;
-  }
-
-  /** @see SkylarkCallable#allowReturnNones() */
+  /** @see StarlarkMethod#allowReturnNones() */
   public boolean isAllowReturnNones() {
     return allowReturnNones;
   }
 
-  /** @see SkylarkCallable#extraPositionals() */
-  ParamDescriptor getExtraPositionals() {
+  /** @return {@code true} if this method accepts extra arguments ({@code *args}) */
+  public boolean acceptsExtraArgs() {
     return extraPositionals;
   }
 
-  ParamDescriptor getExtraKeywords() {
+  /** @see StarlarkMethod#extraKeywords() */
+  public boolean acceptsExtraKwargs() {
     return extraKeywords;
   }
 
-  /** @return {@code true} if this method accepts extra arguments ({@code *args}) */
-  boolean isAcceptsExtraArgs() {
-    return !getExtraPositionals().getName().isEmpty();
-  }
-
-  /** @see SkylarkCallable#extraKeywords() */
-  boolean isAcceptsExtraKwargs() {
-    return !getExtraKeywords().getName().isEmpty();
-  }
-
-  /** @see SkylarkCallable#parameters() */
-  public ImmutableList<ParamDescriptor> getParameters() {
+  /** @see StarlarkMethod#parameters() */
+  public ParamDescriptor[] getParameters() {
     return parameters;
   }
 
-  /** @see SkylarkCallable#documented() */
+  /** Returns the index of the named parameter or -1 if not found. */
+  public int getParameterIndex(String name) {
+    for (int i = 0; i < parameters.length; i++) {
+      if (parameters[i].getName().equals(name)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /** @see StarlarkMethod#documented() */
   boolean isDocumented() {
     return documented;
   }
 
-  /** @see SkylarkCallable#doc() */
+  /** @see StarlarkMethod#doc() */
   String getDoc() {
     return doc;
   }
 
-  /** @see SkylarkCallable#selfCall() */
+  /** @see StarlarkMethod#selfCall() */
   boolean isSelfCall() {
     return selfCall;
   }

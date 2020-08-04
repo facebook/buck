@@ -43,12 +43,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Module;
+import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.io.IOException;
@@ -176,11 +174,7 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
     ImmutableMap<String, ImmutableSet<String>> namedOuts = args.getNamedOuts().get();
     Dict<String, ImmutableList<Artifact>> dict;
     try (Mutability mutability = Mutability.create("test")) {
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setGlobals(Module.createForBuiltins(Starlark.UNIVERSE))
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .build();
+      StarlarkThread env = new StarlarkThread(mutability, BuckStarlark.BUCK_STARLARK_SEMANTICS);
       dict = Dict.of(env.mutability());
 
       for (Map.Entry<String, ImmutableSet<String>> labelsToNamedOutnames : namedOuts.entrySet()) {

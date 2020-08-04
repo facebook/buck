@@ -21,14 +21,27 @@ import javax.annotation.Nullable;
 public final class IfStatement extends Statement {
 
   private final TokenKind token; // IF or ELIF
+  private final int ifOffset;
   private final Expression condition;
+  // These blocks may be non-null but empty after a misparse:
   private final ImmutableList<Statement> thenBlock; // non-empty
-  @Nullable ImmutableList<Statement> elseBlock; // non-empty if non-null; set after construction
 
-  IfStatement(TokenKind token, Expression condition, List<Statement> thenBlock) {
+  @Nullable
+  final ImmutableList<Statement> elseBlock; // non-empty if non-null; set after construction
+
+  IfStatement(
+      FileLocations locs,
+      TokenKind token,
+      int ifOffset,
+      Expression condition,
+      List<Statement> thenBlock,
+      @Nullable List<Statement> elseBlock) {
+    super(locs);
     this.token = token;
+    this.ifOffset = ifOffset;
     this.condition = condition;
     this.thenBlock = ImmutableList.copyOf(thenBlock);
+    this.elseBlock = elseBlock != null ? ImmutableList.copyOf(elseBlock) : null;
   }
 
   /**
@@ -54,8 +67,17 @@ public final class IfStatement extends Statement {
     return elseBlock;
   }
 
-  void setElseBlock(List<Statement> elseBlock) {
-    this.elseBlock = ImmutableList.copyOf(elseBlock);
+  @Override
+  public int getStartOffset() {
+    return ifOffset;
+  }
+
+  @Override
+  public int getEndOffset() {
+    List<Statement> body = elseBlock != null ? elseBlock : thenBlock;
+    return body.isEmpty()
+        ? condition.getEndOffset() // wrong, but tree is ill formed
+        : body.get(body.size() - 1).getEndOffset();
   }
 
   @Override

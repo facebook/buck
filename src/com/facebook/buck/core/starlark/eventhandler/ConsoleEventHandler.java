@@ -64,7 +64,7 @@ public class ConsoleEventHandler implements EventHandler {
     StringBuilder builder = new StringBuilder();
     builder.append(event.getKind()).append(": ");
     if (event.getLocation() != null) {
-      builder.append(event.getLocation().print()).append(": ");
+      builder.append(event.getLocation().toString()).append(": ");
     }
     builder.append(event.getMessage());
     return builder.toString();

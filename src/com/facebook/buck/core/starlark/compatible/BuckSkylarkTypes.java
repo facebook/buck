@@ -21,14 +21,12 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Sequence;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
-import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -43,9 +41,6 @@ public class BuckSkylarkTypes {
   /**
    * Validate that all objects are of a given type and return an {@link ImmutableList} containing
    * those objects.
-   *
-   * <p>This is a workaround for {@link StarlarkList#getContents(Class, String)} being unable to
-   * handle generic types correctly. e.g. it is currently impossible to do:
    *
    * <pre>{@code
    * StarlarkList<?> skyList = // Provided by user
@@ -80,9 +75,34 @@ public class BuckSkylarkTypes {
   @SuppressWarnings("unchecked")
   public static <NonWildcardType, DestType extends NonWildcardType>
       ImmutableList<DestType> toJavaList(
-          Sequence<?> list, Class<NonWildcardType> elementClass, @Nullable String description)
+          Sequence<?> list, Class<NonWildcardType> elementClass, String description)
           throws EvalException {
-    return ImmutableList.copyOf((List<DestType>) list.getContents(elementClass, description));
+    for (Object o : list) {
+      if (!(elementClass.isInstance(o))) {
+        throw new EvalException(
+            String.format(
+                "%s: expected a sequence of '%s'", description, elementClass.getSimpleName()));
+      }
+    }
+
+    return ImmutableList.copyOf((Sequence<DestType>) list);
+  }
+
+  /** Runtime check dict keys and values. */
+  @SuppressWarnings("unchecked")
+  public static <K, V> ImmutableMap<K, V> toJavaMap(
+      Dict<?, ?> dict, Class<K> keyClass, Class<V> valueClass, String description)
+      throws EvalException {
+    for (Map.Entry<?, ?> entry : dict.entrySet()) {
+      if (!keyClass.isInstance(entry.getKey())) {
+        throw new EvalException(description);
+      }
+      if (!valueClass.isInstance(entry.getValue())) {
+        throw new EvalException(description);
+      }
+    }
+
+    return ImmutableMap.copyOf((Dict<K, V>) dict);
   }
 
   /**
@@ -154,10 +174,9 @@ public class BuckSkylarkTypes {
    *
    * <p>This is useful as Skylark does not validate these by default when creating a signature
    *
-   * @param location location of the kwarg currently being evaluated
    * @param kwarg the name of a kwarg / field
    */
-  public static ParamName validateKwargName(Location location, String kwarg) throws EvalException {
+  public static ParamName validateKwargName(String kwarg) throws EvalException {
     /**
      * Identifier regex is taken from Bazel's skylark {@link Lexer} line 884 (where @{link
      * Lexer#identifierOrKeyword} is called.
@@ -171,7 +190,7 @@ public class BuckSkylarkTypes {
       return ParamName.bySnakeCase(kwarg);
     } catch (IllegalArgumentException e) {
       throw new EvalException(
-          location, String.format("Attribute name '%s' is not a valid identifier", kwarg));
+          String.format("Attribute name '%s' is not a valid identifier", kwarg));
     }
   }
 
@@ -187,19 +206,16 @@ public class BuckSkylarkTypes {
   /**
    * Check that a value is either {@link Starlark#NONE} or an instance of {@code clazz}
    *
-   * @param location location of evaluation
    * @param clazz the class that the object should be an instance of if not {@link Starlark#NONE}
    * @param object the object to check
    * @return the original value if it is of a correct type
    * @throws EvalException if the object is not of the correct type
    */
-  public static Object validateNoneOrType(Location location, Class<?> clazz, Object object)
-      throws EvalException {
+  public static Object validateNoneOrType(Class<?> clazz, Object object) throws EvalException {
     if (object == Starlark.NONE || clazz.isAssignableFrom(object.getClass())) {
       return object;
     }
     throw new EvalException(
-        location,
         String.format(
             "Invalid type provided. Expected %s, got %s",
             clazz.getSimpleName(), object.getClass().getSimpleName()));

@@ -16,12 +16,10 @@
 
 package com.facebook.buck.core.starlark.rule.artifact;
 
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.StarlarkValue;
+import net.starlark.java.annot.StarlarkBuiltin;
+import net.starlark.java.annot.StarlarkMethod;
 
 /**
  * Helper struct fields that should be available to users of Artifact inside of user defined rules
@@ -30,20 +28,19 @@ import com.google.devtools.build.lib.syntax.StarlarkValue;
  * presently expose root, dirname, or path to give a fully constructed path from the repository
  * root. Should this be necessary in the future, we may expose those things.
  */
-@SkylarkModule(
+@StarlarkBuiltin(
     name = "Artifact",
     doc = "Represents either a generated file, or a source file",
-    title = "Artifact",
-    category = SkylarkModuleCategory.BUILTIN)
+    title = "Artifact")
 public interface SkylarkArtifactApi extends StarlarkValue {
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "basename",
       doc = "The base name of this artifact. e.g. for an artifact at `foo/bar`, this is `bar`",
       structField = true)
   String getBasename();
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "extension",
       doc =
           "The file extension of this artifact. e.g. for an artifact at foo/bar.sh, this is "
@@ -51,13 +48,13 @@ public interface SkylarkArtifactApi extends StarlarkValue {
       structField = true)
   String getExtension();
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "is_source",
       doc = "Whether the artifact represents a source file",
       structField = true)
   boolean isSource();
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "owner",
       doc =
           "The `Label` of the rule that originally created this artifact. May also be None in "
@@ -65,7 +62,7 @@ public interface SkylarkArtifactApi extends StarlarkValue {
       structField = true)
   Object getOwner();
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "short_path",
       doc =
           "The partial path of this artifact.\n"
@@ -79,13 +76,12 @@ public interface SkylarkArtifactApi extends StarlarkValue {
       structField = true)
   String getShortPath();
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "as_output",
       doc =
           "Get an instance of this artifact that signals it is intended to be used as an output. "
-              + "This is normally only of use with `ctx.actions.run()`, or `ctx.actions.args()`",
-      useLocation = true)
-  SkylarkOutputArtifactApi asSkylarkOutputArtifact(Location location) throws EvalException;
+              + "This is normally only of use with `ctx.actions.run()`, or `ctx.actions.args()`")
+  SkylarkOutputArtifactApi asSkylarkOutputArtifact() throws EvalException;
 
   @Override
   default boolean isImmutable() {

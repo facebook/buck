@@ -21,20 +21,20 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.io.Resources;
-import com.google.devtools.build.lib.skylarkinterface.Param;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
+import net.starlark.java.annot.Param;
+import net.starlark.java.annot.StarlarkMethod;
 import org.junit.Before;
 import org.junit.Test;
 
 public class SoyTemplateSkylarkSignatureRendererTest {
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "dummy",
       doc = "Returns a dummy list of strings.",
       parameters = {
@@ -46,7 +46,7 @@ public class SoyTemplateSkylarkSignatureRendererTest {
     return StarlarkList.immutableCopyOf(Collections.singleton(seed));
   }
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "dummy",
       doc = "Returns a dummy list of strings.",
       documented = false,
@@ -55,7 +55,7 @@ public class SoyTemplateSkylarkSignatureRendererTest {
     return StarlarkList.immutableCopyOf(Collections.emptyList());
   }
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "dummy",
       doc = "Returns a dummy list of strings.",
       extraKeywords = @Param(name = "kwargs", doc = "the dummy attributes."),
@@ -65,7 +65,7 @@ public class SoyTemplateSkylarkSignatureRendererTest {
     return StarlarkList.immutableCopyOf(kwargs.keySet());
   }
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "dummy",
       doc = "Doc with {} inside.",
       documented = false,
@@ -85,7 +85,7 @@ public class SoyTemplateSkylarkSignatureRendererTest {
     SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
     Method dummyField = getClass().getMethod("dummy", String.class);
     String expectedContent = getExpectedContent("data/expected_dummy_function.soy");
-    String actualContent = renderer.render(dummyField.getAnnotation(SkylarkCallable.class));
+    String actualContent = renderer.render(dummyField.getAnnotation(StarlarkMethod.class));
     assertEquals(expectedContent, actualContent);
   }
 
@@ -94,7 +94,7 @@ public class SoyTemplateSkylarkSignatureRendererTest {
     SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
     Method dummyField = getClass().getMethod("dummyWithKwargs", Map.class);
     String expectedContent = getExpectedContent("data/expected_dummy_function_with_kwargs.soy");
-    String actualContent = renderer.render(dummyField.getAnnotation(SkylarkCallable.class));
+    String actualContent = renderer.render(dummyField.getAnnotation(StarlarkMethod.class));
     assertEquals(expectedContent, actualContent);
   }
 
@@ -103,7 +103,7 @@ public class SoyTemplateSkylarkSignatureRendererTest {
     SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
     Method dummyField = getClass().getMethod("dummyWithoutArgs");
     String expectedContent = getExpectedContent("data/expected_dummy_function_without_args.soy");
-    String actualContent = renderer.render(dummyField.getAnnotation(SkylarkCallable.class));
+    String actualContent = renderer.render(dummyField.getAnnotation(StarlarkMethod.class));
     assertEquals(expectedContent, actualContent);
   }
 
@@ -113,7 +113,7 @@ public class SoyTemplateSkylarkSignatureRendererTest {
     Method dummyField = getClass().getMethod("dummyWithBracesInside");
     String expectedContent =
         getExpectedContent("data/expected_dummy_function_with_braces_inside.soy");
-    String actualContent = renderer.render(dummyField.getAnnotation(SkylarkCallable.class));
+    String actualContent = renderer.render(dummyField.getAnnotation(StarlarkMethod.class));
     assertEquals(expectedContent, actualContent);
   }
 
@@ -124,7 +124,7 @@ public class SoyTemplateSkylarkSignatureRendererTest {
     String expectedContent = getExpectedContent("data/expected_dummy_toc.soy");
     String actualContent =
         renderer.renderTableOfContents(
-            Collections.singleton(dummyField.getAnnotation(SkylarkCallable.class)));
+            Collections.singleton(dummyField.getAnnotation(StarlarkMethod.class)));
     assertEquals(expectedContent, actualContent);
   }
 

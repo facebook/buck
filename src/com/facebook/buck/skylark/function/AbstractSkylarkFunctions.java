@@ -20,18 +20,20 @@ import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.Param;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
+import com.google.devtools.build.lib.packages.SelectorList;
+import com.google.devtools.build.lib.packages.SelectorValue;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkCallable;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.Tuple;
 import java.nio.charset.StandardCharsets;
 import javax.annotation.Nullable;
+import net.starlark.java.annot.Param;
+import net.starlark.java.annot.StarlarkMethod;
 
 /**
  * Abstract class containing function definitions shared by {@link SkylarkBuildModule} and {@link
@@ -53,7 +55,7 @@ public abstract class AbstractSkylarkFunctions {
    * <p>Example, when buck is invoked with {@code --config user.value=my_value} an invocation of
    * {@code read_config("user", "value", "default_value")} will return {@code my_value}.
    */
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "read_config",
       doc =
           "Returns a configuration value of <code>.buckconfig</code> or <code>--config</code> flag."
@@ -77,12 +79,10 @@ public abstract class AbstractSkylarkFunctions {
       },
       documented = false, // this is an API that we should remove once select is available
       allowReturnNones = true,
-      useLocation = true,
       useStarlarkThread = true)
-  public Object readConfig(
-      String section, String field, Object defaultValue, Location loc, StarlarkThread env)
+  public Object readConfig(String section, String field, Object defaultValue, StarlarkThread env)
       throws EvalException {
-    ReadConfigContext configContext = ReadConfigContext.getContext(env, loc);
+    ReadConfigContext configContext = ReadConfigContext.getContext(env);
     @Nullable
     String value = configContext.getRawConfig().getOrDefault(section, ImmutableMap.of()).get(field);
 
@@ -90,7 +90,8 @@ public abstract class AbstractSkylarkFunctions {
     return value != null ? value : defaultValue;
   }
 
-  @SkylarkCallable(
+  /** {@code sha256} */
+  @StarlarkMethod(
       name = "sha256",
       doc = "Computes a sha256 digest for a string. Returns the hex representation of the digest.",
       parameters = {@Param(name = "value", type = String.class, named = true)})
@@ -98,7 +99,8 @@ public abstract class AbstractSkylarkFunctions {
     return Hashing.sha256().hashString(value, StandardCharsets.UTF_8).toString();
   }
 
-  @SkylarkCallable(
+  /** {@code load_symbols} */
+  @StarlarkMethod(
       name = "load_symbols",
       doc = "Loads symbols into the current build context.",
       parameters = {@Param(name = "symbols", type = Dict.class, named = true)},
@@ -117,27 +119,26 @@ public abstract class AbstractSkylarkFunctions {
     }
   }
 
-  @SkylarkCallable(
+  /** {@code partial} */
+  @StarlarkMethod(
       name = "partial",
       doc =
           "new function with partial application of the given arguments and keywords. "
               + "Roughly equivalent to functools.partial.",
-      parameters = {@Param(name = "func", type = BaseFunction.class)},
+      parameters = {@Param(name = "func", type = StarlarkCallable.class)},
       extraPositionals = @Param(name = "args"),
       extraKeywords = @Param(name = "kwargs"))
-  public BaseFunction partial(BaseFunction func, Tuple<Object> args, Dict<String, Object> kwargs) {
+  public BaseFunction partial(
+      StarlarkCallable func, Tuple<Object> args, Dict<String, Object> kwargs) {
     return new BaseFunction() {
       @Override
       public Object call(
-          StarlarkThread thread,
-          Location loc,
-          Tuple<Object> inner_args,
-          Dict<String, Object> inner_kwargs)
+          StarlarkThread thread, Tuple<Object> inner_args, Dict<String, Object> inner_kwargs)
           throws EvalException, InterruptedException {
         // Sadly, neither Dict.plus() nor MethodLibrary.dict() are accessible.
         Dict<String, Object> merged_args = Dict.copyOf(thread.mutability(), kwargs);
         merged_args.update(inner_kwargs, Dict.empty(), thread);
-        return Starlark.call(thread, func, loc, Tuple.concat(args, inner_args), merged_args);
+        return Starlark.call(thread, func, Tuple.concat(args, inner_args), merged_args);
       }
 
       @Override
@@ -150,5 +151,40 @@ public abstract class AbstractSkylarkFunctions {
         return FunctionSignature.ANY;
       }
     };
+  }
+
+  /**
+   * Returns a function-value implementing "select" (i.e. configurable attributes) in the specified
+   * package context.
+   */
+  @StarlarkMethod(
+      name = "select",
+      doc =
+          "<code>select()</code> is the helper function that makes a rule attribute "
+              + "<a href=\"$BE_ROOT/common-definitions.html#configurable-attributes\">"
+              + "configurable</a>. See "
+              + "<a href=\"$BE_ROOT/functions.html#select\">build encyclopedia</a> for details.",
+      parameters = {
+        @Param(name = "x", type = Dict.class, doc = "The parameter to convert."),
+        @Param(
+            name = "no_match_error",
+            type = String.class,
+            defaultValue = "''",
+            doc = "Optional custom error to report if no condition matches.",
+            named = true)
+      })
+  public Object select(Dict<?, ?> dict, String noMatchError) throws EvalException {
+    if (dict.isEmpty()) {
+      throw Starlark.errorf(
+          "select({}) with an empty dictionary can never resolve because it includes no conditions"
+              + " to match");
+    }
+    for (Object key : dict.keySet()) {
+      if (!(key instanceof String)) {
+        throw Starlark.errorf("Invalid key: %s. select keys must be label references", key);
+      }
+    }
+    // TODO(nga): use our version of selectors
+    return SelectorList.of(new SelectorValue(dict, noMatchError));
   }
 }

@@ -68,7 +68,7 @@ public abstract class RunInfo extends BuiltInProviderInfo<RunInfo> implements Co
    */
   public static RunInfo instantiateFromSkylark(Dict<String, String> env, Object args)
       throws EvalException {
-    Map<String, String> validatedEnv = env.getContents(String.class, String.class, "environment");
+    Map<String, String> validatedEnv = Dict.cast(env, String.class, String.class, "environment");
     CommandLineArgs commandLineArgs;
     if (args instanceof CommandLineArgsBuilder) {
       commandLineArgs = ((CommandLineArgsBuilder) args).build();
@@ -76,7 +76,7 @@ public abstract class RunInfo extends BuiltInProviderInfo<RunInfo> implements Co
       commandLineArgs = (CommandLineArgs) args;
     } else if (args instanceof StarlarkList) {
       ImmutableList<Object> validatedArgs =
-          BuckSkylarkTypes.toJavaList((StarlarkList<?>) args, Object.class, "getting args");
+          BuckSkylarkTypes.toJavaList((StarlarkList<?>) args, Object.class, "args");
       commandLineArgs = CommandLineArgsFactory.from(validatedArgs);
     } else {
       throw new HumanReadableException(

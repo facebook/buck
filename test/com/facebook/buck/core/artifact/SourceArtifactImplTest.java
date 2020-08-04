@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Starlark;
@@ -63,7 +62,7 @@ public class SourceArtifactImplTest {
         ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("foo", "bar.cpp")));
 
     thrown.expect(EvalException.class);
-    artifact.asSkylarkOutputArtifact(Location.BUILTIN);
+    artifact.asSkylarkOutputArtifact();
   }
 
   @Test

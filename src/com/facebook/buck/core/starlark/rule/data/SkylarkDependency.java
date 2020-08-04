@@ -21,19 +21,20 @@ import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.SkylarkIndexable;
+import com.google.devtools.build.lib.syntax.StarlarkIndexable;
+import com.google.devtools.build.lib.syntax.StarlarkSemantics;
 import com.google.devtools.build.lib.syntax.StarlarkValue;
+import net.starlark.java.annot.StarlarkMethod;
 
 /**
  * Skylark object provided to users to get extra information about a dependency, including its
  * original build target, its {@link ProviderInfoCollection}, and more in the future. {@link
  * SkylarkIndexable} operations are proxied to the provided {@link ProviderInfoCollection}
  */
-public class SkylarkDependency implements StarlarkValue, SkylarkIndexable {
+public class SkylarkDependency implements StarlarkValue, StarlarkIndexable {
 
   private final Label label;
   private final ProviderInfoCollection providerInfos;
@@ -52,7 +53,7 @@ public class SkylarkDependency implements StarlarkValue, SkylarkIndexable {
     this.providerInfos = providerInfos;
   }
 
-  @SkylarkCallable(
+  @StarlarkMethod(
       name = "label",
       structField = true,
       doc = "The build target that this dependency represents")
@@ -70,12 +71,12 @@ public class SkylarkDependency implements StarlarkValue, SkylarkIndexable {
   }
 
   @Override
-  public Object getIndex(Object key, Location loc) throws EvalException {
-    return providerInfos.getIndex(key, loc);
+  public Object getIndex(StarlarkSemantics semantics, Object key) throws EvalException {
+    return providerInfos.getIndex(key);
   }
 
   @Override
-  public boolean containsKey(Object key, Location loc) throws EvalException {
-    return providerInfos.containsKey(key, loc);
+  public boolean containsKey(StarlarkSemantics semantics, Object key) throws EvalException {
+    return providerInfos.containsKey(key);
   }
 }

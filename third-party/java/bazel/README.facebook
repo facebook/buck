@@ -9,3 +9,4 @@ Incomplete list of changes:
 * heavily changes Attribute and Label classes
 * many operations changed to public to be usable outside of the package
 * disabled certain tests for features not used in Buck (e. g. serialization)
+* Remove CPU profiler

@@ -25,24 +25,15 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
 import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
-import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.EvalUtils;
-import com.google.devtools.build.lib.syntax.Module;
-import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.ParserInput;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.SyntaxError;
-import com.google.devtools.build.lib.vfs.PathFragment;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Set;
@@ -123,31 +114,9 @@ public class BuiltInProviderInfoTest {
 
     public static SomeInfoWithInstantiate instantiateFromSkylark(Dict<String, String> s, int myInfo)
         throws EvalException {
-      Map<String, String> validated = s.getContents(String.class, String.class, "stuff");
+      Map<String, String> validated = Dict.cast(s, String.class, String.class, "stuff");
       return new ImmutableSomeInfoWithInstantiate(
           ImmutableList.copyOf(validated.keySet()), Integer.toString(myInfo));
-    }
-  }
-
-  @ImmutableInfo(
-      args = {"str_list", "my_info"},
-      defaultSkylarkValues = {"{\"foo\":\"bar\"}", "1"})
-  public abstract static class SomeInfoWithInstantiateAndLocation
-      extends BuiltInProviderInfo<SomeInfoWithInstantiateAndLocation> {
-    public static final BuiltInProvider<SomeInfoWithInstantiateAndLocation> PROVIDER =
-        BuiltInProvider.of(ImmutableSomeInfoWithInstantiateAndLocation.class);
-
-    public abstract ImmutableList<String> str_list();
-
-    public abstract String myInfo();
-
-    public abstract Location location();
-
-    public static SomeInfoWithInstantiateAndLocation instantiateFromSkylark(
-        Dict<String, String> s, int myInfo, Location location) throws EvalException {
-      Map<String, String> validated = s.getContents(String.class, String.class, "stuff");
-      return new ImmutableSomeInfoWithInstantiateAndLocation(
-          ImmutableList.copyOf(validated.keySet()), Integer.toString(myInfo), location);
     }
   }
 
@@ -201,9 +170,7 @@ public class BuiltInProviderInfoTest {
   }
 
   @Test
-  public void someInfoProviderCreatesCorrectInfo()
-      throws IllegalAccessException, InstantiationException, InvocationTargetException,
-          InterruptedException, EvalException, SyntaxError {
+  public void someInfoProviderCreatesCorrectInfo() throws Exception {
     SomeInfo someInfo1 = new ImmutableSomeInfo("a", 1);
     assertEquals("a", someInfo1.str());
     assertEquals(1, someInfo1.myInfo());
@@ -322,46 +289,12 @@ public class BuiltInProviderInfoTest {
   @Test
   public void validatesTypesWhenInstantiatingFromStaticMethod() throws Exception {
     thrown.expect(EvalException.class);
-    thrown.expectMessage("expected value of type 'int'");
+    thrown.expectMessage("got value of type 'string', want 'int'");
 
     TestStarlarkParser.eval(
         "SomeInfoWithInstantiate(my_info='not a number')",
         ImmutableMap.of(
             SomeInfoWithInstantiate.PROVIDER.getName(), SomeInfoWithInstantiate.PROVIDER));
-  }
-
-  @Test
-  public void passesLocationWhenInstantiatingFromStaticMethod() throws Exception {
-    Location location =
-        Location.fromPathAndStartColumn(
-            PathFragment.create("foo/bar.bzl"), 0, 0, new Location.LineAndColumn(1, 1));
-    Object o;
-    try (Mutability mutability = Mutability.create("providertest")) {
-
-      StarlarkThread env =
-          StarlarkThread.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setGlobals(
-                  Module.createForBuiltins(
-                      ImmutableMap.of(
-                          SomeInfoWithInstantiateAndLocation.PROVIDER.getName(),
-                          SomeInfoWithInstantiateAndLocation.PROVIDER)))
-              .build();
-
-      o =
-          EvalUtils.execAndEvalOptionalFinalExpression(
-              ParserInput.create(
-                  "SomeInfoWithInstantiateAndLocation(my_info=1)",
-                  PathFragment.create("foo/bar.bzl")),
-              env);
-    }
-
-    assertThat(o, Matchers.instanceOf(SomeInfoWithInstantiateAndLocation.class));
-    SomeInfoWithInstantiateAndLocation someInfo = (SomeInfoWithInstantiateAndLocation) o;
-    assertEquals(ImmutableList.of("foo"), someInfo.str_list());
-    assertEquals("1", someInfo.myInfo());
-    assertEquals(location.getPath(), someInfo.location().getPath());
-    assertEquals(location.getStartLineAndColumn(), someInfo.location().getStartLineAndColumn());
   }
 
   @Test
@@ -407,9 +340,11 @@ public class BuiltInProviderInfoTest {
             ImmutableMap.of(
                 "SomeInfoWithMutableAndImmutable", SomeInfoWithMutableAndImmutable.PROVIDER))) {
       StarlarkList<Integer> mutableList = StarlarkList.of(env.getEnv().mutability(), 1, 2, 3);
-      env.getEnv().getGlobals().put("mutable_list", mutableList);
+      env.getModule().setGlobal("mutable_list", mutableList);
 
-      out = (SomeInfoWithMutableAndImmutable) TestStarlarkParser.eval(env.getEnv(), buildFile);
+      out =
+          (SomeInfoWithMutableAndImmutable)
+              TestStarlarkParser.eval(env.getEnv(), env.getModule(), buildFile);
 
       assertNotNull(out);
       assertFalse(out.isImmutable());

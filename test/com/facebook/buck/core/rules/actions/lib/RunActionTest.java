@@ -39,7 +39,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.sun.jna.Platform;
 import java.io.IOException;
@@ -229,11 +228,7 @@ public class RunActionTest {
             "list",
             CommandLineArgsFactory.from(
                 ImmutableList.of(
-                    script,
-                    "--foo",
-                    "bar",
-                    otherInput,
-                    output.asSkylarkOutputArtifact(Location.BUILTIN))),
+                    script, "--foo", "bar", otherInput, output.asSkylarkOutputArtifact())),
             ImmutableMap.of());
 
     assertEquals(ImmutableSortedSet.of(otherInput, script), action.getInputs());

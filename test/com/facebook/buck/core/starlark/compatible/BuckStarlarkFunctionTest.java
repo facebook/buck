@@ -27,6 +27,7 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.ParamDescriptor;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
+import java.util.Arrays;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -47,10 +48,10 @@ public class BuckStarlarkFunctionTest {
 
     assertEquals("foo", function.getMethodDescriptor().getName());
     ParamDescriptor param =
-        Iterables.getOnlyElement(function.getMethodDescriptor().getParameters());
+        Iterables.getOnlyElement(Arrays.asList(function.getMethodDescriptor().getParameters()));
 
     assertEquals("i", param.getName());
-    assertEquals(Integer.class, param.getType());
+    assertEquals(ImmutableList.of(Integer.class), param.getAllowedClasses());
   }
 
   @Test
@@ -65,12 +66,12 @@ public class BuckStarlarkFunctionTest {
 
     assertEquals("manyArgs", function.getMethodDescriptor().getName());
 
-    ImmutableList<ParamDescriptor> parameters = function.getMethodDescriptor().getParameters();
-    assertEquals("a", parameters.get(0).getName());
-    assertEquals(String.class, parameters.get(0).getType());
+    ParamDescriptor[] parameters = function.getMethodDescriptor().getParameters();
+    assertEquals("a", parameters[0].getName());
+    assertEquals(ImmutableList.of(String.class), parameters[0].getAllowedClasses());
 
-    assertEquals("b", parameters.get(1).getName());
-    assertEquals(String.class, parameters.get(1).getType());
+    assertEquals("b", parameters[1].getName());
+    assertEquals(ImmutableList.of(String.class), parameters[1].getAllowedClasses());
   }
 
   @Test
@@ -86,10 +87,10 @@ public class BuckStarlarkFunctionTest {
     assertEquals("skylarkLists", function.getMethodDescriptor().getName());
 
     ParamDescriptor param =
-        Iterables.getOnlyElement(function.getMethodDescriptor().getParameters());
+        Iterables.getOnlyElement(Arrays.asList(function.getMethodDescriptor().getParameters()));
 
     assertEquals("list", param.getName());
-    assertEquals(StarlarkList.class, param.getType());
+    assertEquals(ImmutableList.of(StarlarkList.class), param.getAllowedClasses());
   }
 
   @Test

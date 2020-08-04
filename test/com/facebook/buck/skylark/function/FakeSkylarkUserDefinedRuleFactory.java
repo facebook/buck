@@ -29,11 +29,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
+import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.Tuple;
@@ -104,8 +104,7 @@ public class FakeSkylarkUserDefinedRuleFactory {
           }
 
           @Override
-          public Object call(
-              StarlarkThread thread, Location loc, Tuple<Object> args, Dict<String, Object> kwargs)
+          public Object call(StarlarkThread thread, Tuple<Object> args, Dict<String, Object> kwargs)
               throws EvalException, InterruptedException {
             Preconditions.checkArgument(args.size() == 1);
             Preconditions.checkArgument(args.get(0) instanceof SkylarkRuleContext);

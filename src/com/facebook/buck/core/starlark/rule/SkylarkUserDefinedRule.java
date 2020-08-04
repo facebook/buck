@@ -33,12 +33,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.packages.SkylarkExportable;
+import com.google.devtools.build.lib.packages.StarlarkExportable;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
+import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkCallable;
+import com.google.devtools.build.lib.syntax.StarlarkFunction;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.Tuple;
 import java.util.Arrays;
@@ -54,7 +56,7 @@ import javax.annotation.Nullable;
  * adds invocations to the parse context. Type checking is done with coercion later; it is not
  * checked in this class.
  */
-public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExportable {
+public class SkylarkUserDefinedRule extends BaseFunction implements StarlarkExportable {
 
   private static final String TEST_RULE_SUFFIX = "_test";
 
@@ -65,7 +67,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   private final FunctionSignature signature;
   private final Tuple<Object> defaultValues;
   private final Location location;
-  private final BaseFunction implementation;
+  private final StarlarkCallable implementation;
   private final ImmutableMap<ParamName, Attribute<?>> attrs;
   private final Set<ParamName> hiddenImplicitAttributes;
   private final boolean shouldInferRunInfo;
@@ -76,7 +78,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       FunctionSignature signature,
       ImmutableList<Object> defaultValues,
       Location location,
-      BaseFunction implementation,
+      StarlarkCallable implementation,
       ImmutableMap<ParamName, Attribute<?>> attrs,
       Set<ParamName> hiddenImplicitAttributes,
       boolean shouldInferRunInfo,
@@ -114,17 +116,17 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
 
   @SuppressWarnings("unchecked")
   @Override
-  public Object fastcall(StarlarkThread thread, Location loc, Object[] positional, Object[] named)
+  public Object fastcall(StarlarkThread thread, Object[] positional, Object[] named)
       throws EvalException, InterruptedException {
 
     Object[] args =
-        Starlark.matchSignature(
+        BaseFunction.matchSignature(
             signature, this, defaultValues, thread.mutability(), positional, named);
 
     // We're being called directly somewhere that is not in the parser (e.g. with Location.BuiltIn)
     ImmutableList<String> names = Objects.requireNonNull(this.getSignature()).getParameterNames();
 
-    ParseContext parseContext = ParseContext.getParseContext(thread, loc, getName());
+    ParseContext parseContext = ParseContext.getParseContext(thread, getName());
     String basePath =
         parseContext
             .getPackageContext()
@@ -166,15 +168,14 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
             this.getName(),
             visibility,
             withinView,
-            builder.build()),
-        loc);
+            builder.build()));
     return Starlark.NONE;
   }
 
   /** Create an instance of {@link SkylarkUserDefinedRule} */
   public static SkylarkUserDefinedRule of(
       Location location,
-      BaseFunction implementation,
+      StarlarkCallable implementation,
       ImmutableMap<ParamName, Attribute<?>> implicitAttributes,
       Set<ParamName> hiddenImplicitAttributes,
       Map<ParamName, AttributeHolder> attrs,
@@ -200,10 +201,18 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
         test);
   }
 
-  private static void validateImplementation(Location location, BaseFunction implementation)
+  private static void validateImplementation(Location location, StarlarkCallable implementation)
       throws EvalException {
+    int numArgs;
+    if (implementation instanceof StarlarkFunction) {
+      numArgs = ((StarlarkFunction) implementation).getParameterNames().size();
+    } else if (implementation instanceof BaseFunction) {
+      numArgs = ((BaseFunction) implementation).getSignature().numParameters();
+    } else {
+      // unknown callable, cannot validate
+      return;
+    }
     // Make sure we only take a single (ctx) argument
-    int numArgs = Objects.requireNonNull(implementation.getSignature()).getParameterNames().size();
     if (numArgs != 1) {
       throw new EvalException(
           location,
@@ -363,7 +372,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   }
 
   /** The implementation function used during the analysis phase */
-  BaseFunction getImplementation() {
+  StarlarkCallable getImplementation() {
     return implementation;
   }
 

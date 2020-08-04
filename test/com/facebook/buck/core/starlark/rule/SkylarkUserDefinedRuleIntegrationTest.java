@@ -116,7 +116,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         result.getStderr(),
         Matchers.matchesPattern(
             Pattern.compile(
-                ".*^DEBUG: \\S+defs.bzl:4:5: printing at debug level.*",
+                ".*^DEBUG: \\S+defs.bzl:4:10: printing at debug level.*",
                 Pattern.MULTILINE | Pattern.DOTALL)));
   }
 
@@ -227,7 +227,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
     assertThat(
         workspace.runBuckBuild("//foo:return_non_list").assertFailure().getStderr(),
-        Matchers.containsString("is not of expected type"));
+        Matchers.containsString("got int, want sequence"));
   }
 
   @Test
@@ -236,7 +236,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
     assertThat(
         workspace.runBuckBuild("//foo:return_non_info_in_list").assertFailure().getStderr(),
-        Matchers.containsString("expected type 'SkylarkProviderInfo'"));
+        Matchers.containsString("got element of type int, want SkylarkProviderInfo"));
   }
 
   @Test
@@ -469,13 +469,13 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
     assertThat(
         workspace.runBuckBuild("//:add_failure").assertFailure().getStderr(),
-        Matchers.containsString("expected value of type"));
+        Matchers.containsString("got value of type 'list', want"));
     assertThat(
         workspace.runBuckBuild("//:add_all_failure").assertFailure().getStderr(),
         Matchers.containsString("Invalid command line argument type"));
     assertThat(
         workspace.runBuckBuild("//:add_args_failure").assertFailure().getStderr(),
-        Matchers.containsString("expected value of type"));
+        Matchers.containsString("got value of type 'args', want"));
     assertThat(
         workspace.runBuckBuild("//:add_all_args_failure").assertFailure().getStderr(),
         Matchers.containsString("Invalid command line argument type"));
@@ -585,7 +585,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
     assertThat(
         workspace.runBuckBuild("//foo:invalid_env").assertFailure().getStderr(),
-        Matchers.containsString("expected type"));
+        Matchers.containsString("got dict<string, int> for 'env', want dict<string, string>"));
 
     assertThat(
         workspace.runBuckBuild("//foo:invalid_zeroargs").assertFailure().getStderr(),

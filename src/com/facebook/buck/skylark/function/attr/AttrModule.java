@@ -31,7 +31,6 @@ import com.facebook.buck.core.starlark.rule.attr.impl.SourceListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.StringListAttribute;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Sequence;
@@ -51,7 +50,7 @@ public class AttrModule implements AttrModuleApi {
   public AttributeHolder intAttribute(
       Integer defaultValue, String doc, Boolean mandatory, StarlarkList<Integer> values)
       throws EvalException {
-    List<Integer> validatedValues = Sequence.castList(values, Integer.class, null);
+    List<Integer> validatedValues = Sequence.cast(values, Integer.class, null);
     return IntAttribute.of(defaultValue, doc, mandatory, validatedValues);
   }
 
@@ -60,7 +59,7 @@ public class AttrModule implements AttrModuleApi {
       StarlarkList<Integer> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException {
     ImmutableList<Integer> validatedDefaultValue =
-        ImmutableList.copyOf(defaultValue.getContents(Integer.class, null));
+        ImmutableList.copyOf(Sequence.cast(defaultValue, Integer.class, null));
 
     return IntListAttribute.of(validatedDefaultValue, doc, mandatory, allowEmpty);
   }
@@ -69,7 +68,7 @@ public class AttrModule implements AttrModuleApi {
   public AttributeHolder stringAttribute(
       String defaultValue, String doc, Boolean mandatory, StarlarkList<String> values)
       throws EvalException {
-    List<String> validatedValues = Sequence.castList(values, String.class, null);
+    List<String> validatedValues = Sequence.cast(values, String.class, null);
 
     return StringAttribute.of(defaultValue, doc, mandatory, validatedValues);
   }
@@ -79,7 +78,7 @@ public class AttrModule implements AttrModuleApi {
       StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException {
     ImmutableList<String> validatedDefaultValue =
-        ImmutableList.copyOf(defaultValue.getContents(String.class, null));
+        ImmutableList.copyOf(Sequence.cast(defaultValue, String.class, null));
 
     return StringListAttribute.of(validatedDefaultValue, doc, mandatory, allowEmpty);
   }
@@ -110,7 +109,7 @@ public class AttrModule implements AttrModuleApi {
       Object defaultValue, String doc, boolean mandatory, StarlarkList<Provider<?>> providers)
       throws EvalException {
     ImmutableList<Provider<?>> validatedProviders =
-        BuckSkylarkTypes.toJavaList(providers, Provider.class, null);
+        BuckSkylarkTypes.toJavaList(providers, Provider.class, "dep");
 
     return DepAttribute.of(defaultValue, doc, mandatory, validatedProviders);
   }
@@ -124,20 +123,19 @@ public class AttrModule implements AttrModuleApi {
       StarlarkList<Provider<?>> providers)
       throws EvalException {
     ImmutableList<String> validatedDefaultValues =
-        BuckSkylarkTypes.toJavaList(defaultValue, String.class, null);
+        BuckSkylarkTypes.toJavaList(defaultValue, String.class, "depList");
     ImmutableList<Provider<?>> validatedProviders =
-        BuckSkylarkTypes.toJavaList(providers, Provider.class, null);
+        BuckSkylarkTypes.toJavaList(providers, Provider.class, "depList");
 
     return DepListAttribute.of(
         validatedDefaultValues, doc, mandatory, allowEmpty, validatedProviders);
   }
 
   @Override
-  public AttributeHolder outputAttribute(
-      Object defaultValue, String doc, boolean mandatory, Location location) throws EvalException {
+  public AttributeHolder outputAttribute(Object defaultValue, String doc, boolean mandatory)
+      throws EvalException {
     if (defaultValue == Starlark.NONE && !mandatory) {
-      throw new EvalException(
-          location, "output attributes must have a default value, or be mandatory");
+      throw new EvalException("output attributes must have a default value, or be mandatory");
     }
     return OutputAttribute.of(defaultValue, doc, mandatory);
   }
@@ -146,7 +144,7 @@ public class AttrModule implements AttrModuleApi {
   public AttributeHolder outputListAttribute(
       StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException {
-    List<String> validatedValues = defaultValue.getContents(String.class, null);
+    List<String> validatedValues = Sequence.cast(defaultValue, String.class, null);
     return OutputListAttribute.of(validatedValues, doc, mandatory, allowEmpty);
   }
 }
