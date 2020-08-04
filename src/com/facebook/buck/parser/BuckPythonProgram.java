@@ -100,7 +100,7 @@ class BuckPythonProgram implements AutoCloseable {
           // zipimport, and look into the `buck_parser` directory in the root of the jar.
           JarURLConnection connection = (JarURLConnection) url.openConnection();
           Preconditions.checkState(
-              connection.getEntryName().equals("buck_parser"),
+              connection.getEntryName().matches("buck_parser[/]?"),
               "buck_parser directory should be at the root of the jar file: %s; entry name: %s",
               url,
               connection.getEntryName());

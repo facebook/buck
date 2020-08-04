@@ -246,6 +246,19 @@ java_immutables_library(
 
 java_binary(
     name = "main",
+    blacklist = [
+        "META-INF/MANIFEST.MF",
+        "META-INF/(?!services|native).*",
+        "^.api_description",
+        "^.options",
+        "^LICENSE",
+        "^NOTICE",
+        "^about.html",
+        "^about_files.*",
+        "^javax/annotation/.*\\.java",
+        "^plugin.properties",
+        "^plugin.xml",
+    ],
     main_class = "com.facebook.buck.cli.MainWithoutNailgun",
     visibility = [
         "PUBLIC",
@@ -359,28 +372,5 @@ java_binary(
         "//third-party/java/okio:okio",
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/thrift:libthrift",
-    ],
-)
-
-zip_file(
-    name = "main-fixed",
-    out = "main-fixed.jar",
-    entries_to_exclude = [
-        "META-INF/MANIFEST.MF",
-        "META-INF/(?!services|native).*",
-        "^.api_description",
-        "^.options",
-        "^NOTICE",
-        "^about.html",
-        "^about_files.*",
-        "^javax/annotation/.*\\.java",
-        "^plugin.properties",
-        "^plugin.xml",
-    ],
-    visibility = [
-        "PUBLIC",
-    ],
-    zip_srcs = [
-        ":main",
     ],
 )

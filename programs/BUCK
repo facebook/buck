@@ -114,7 +114,7 @@ RESOURCES_VERSION_INFO_NAME = "buck_package_info"
 # set to True.
 RESOURCES_AFFECTING_BUILD_ARTIFACTS = {
     "bootstrapper_jar": "//src/com/facebook/buck/cli/bootstrapper:bootstrapper",
-    "buck_server": "//src/com/facebook/buck/cli:main-fixed",
+    "buck_server": "//src/com/facebook/buck/cli:main",
     "buckfilesystem_jar": "//src/com/facebook/buck/core/filesystems:filesystems",
     "dx": "//third-party/java/dx:etc_dx",
     "native_exopackage_fake_path": "//assets/android:native-exopackage-fakes.apk",
