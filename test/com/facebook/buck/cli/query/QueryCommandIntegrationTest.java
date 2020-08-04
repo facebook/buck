@@ -1570,8 +1570,8 @@ public class QueryCommandIntegrationTest {
         result.getStderr(),
         containsIgnoringPlatformNewlines(
             "Cannot use select() expression when target platform is not specified\n"
-                + "    At //:a\n"
-                + "    At //:b"));
+                + "    At //:a (builtin//platform:unconfigured)\n"
+                + "    At //:b (builtin//platform:unconfigured)"));
   }
 
   @Test

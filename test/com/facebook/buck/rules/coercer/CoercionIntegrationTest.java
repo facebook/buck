@@ -40,7 +40,7 @@ public class CoercionIntegrationTest {
         processResult.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "cannot coerce '1' to com.google.common.collect.ImmutableList<com.facebook.buck.core.sourcepath.SourcePath>\n"
-                + "    At //:a\n"
-                + "    At //:b"));
+                + "    At //:a (builtin//platform:unconfigured)\n"
+                + "    At //:b (builtin//platform:unconfigured)"));
   }
 }

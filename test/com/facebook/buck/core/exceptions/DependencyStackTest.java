@@ -72,4 +72,25 @@ public class DependencyStackTest {
             .child(ElementImpl.B)
             .collectStringsFilterAdjacentDupes());
   }
+
+  private enum ElementImplWithCustomToString implements DependencyStack.Element {
+    A,
+    B,
+    ;
+
+    @Override
+    public String elementToString() {
+      return name() + "!";
+    }
+  }
+
+  @Test
+  public void withCustomToString() {
+    ImmutableList<String> strings =
+        DependencyStack.root()
+            .child(ElementImplWithCustomToString.A)
+            .child(ElementImplWithCustomToString.B)
+            .collectStringsFilterAdjacentDupes();
+    Assert.assertEquals(ImmutableList.of("B!", "A!"), strings);
+  }
 }

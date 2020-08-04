@@ -233,4 +233,9 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
         .compare(targetConfiguration, that.targetConfiguration)
         .result();
   }
+
+  @Override
+  public String elementToString() {
+    return toStringWithConfiguration();
+  }
 }

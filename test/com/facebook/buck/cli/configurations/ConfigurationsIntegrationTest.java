@@ -270,9 +270,9 @@ public class ConfigurationsIntegrationTest {
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "Cannot use select() expression when target platform is not specified\n"
-                + "    At //default_platform_only_leaf:dep\n"
-                + "    At //default_platform_only_leaf:intermediate\n"
-                + "    At //default_platform_only_leaf:leaf"));
+                + "    At //default_platform_only_leaf:dep (builtin//platform:unconfigured)\n"
+                + "    At //default_platform_only_leaf:intermediate (builtin//platform:unconfigured)\n"
+                + "    At //default_platform_only_leaf:leaf (builtin//platform:unconfigured)"));
   }
 
   @Test

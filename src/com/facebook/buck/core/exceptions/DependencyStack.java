@@ -18,7 +18,6 @@ package com.facebook.buck.core.exceptions;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -35,6 +34,10 @@ public final class DependencyStack {
     @Override
     default Element getElement() {
       return this;
+    }
+
+    default String elementToString() {
+      return toString();
     }
   }
 
@@ -98,6 +101,16 @@ public final class DependencyStack {
     return builder.build();
   }
 
+  private static String elementToString(Object o) {
+    if (o == null) {
+      return "null";
+    } else if (o instanceof Element) {
+      return ((Element) o).elementToString();
+    } else {
+      return o.toString();
+    }
+  }
+
   /**
    * Collect the stack elements, top first, converting all elements to strings, and filtering out
    * adjacent duplicates.
@@ -108,7 +121,7 @@ public final class DependencyStack {
     DependencyStack next = this;
     String prevString = null;
     while (next.parent != null) {
-      String string = Objects.toString(next.where);
+      String string = elementToString(next.where);
       if (prevString == null || !prevString.equals(string)) {
         builder.add(string);
       }
