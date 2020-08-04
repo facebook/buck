@@ -113,7 +113,6 @@ public class TestCellBuilder {
                 filesystem,
                 config,
                 cellConfig,
-                rootCellCellPathResolver.getPathMapping(),
                 rootCellCellPathResolver,
                 TestBuckModuleManagerFactory.create(pluginManager),
                 toolchainProviderFactory,

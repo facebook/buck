@@ -831,7 +831,6 @@ public final class MainRunner {
                       filesystem,
                       buckConfig,
                       command.getConfigOverrides(rootCellMapping),
-                      rootCellCellPathResolver.getPathMapping(),
                       rootCellCellPathResolver,
                       moduleManager,
                       toolchainProviderFactory,

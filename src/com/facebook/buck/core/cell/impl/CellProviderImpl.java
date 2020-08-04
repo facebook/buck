@@ -83,8 +83,7 @@ final class CellProviderImpl implements CellProvider {
       ProjectFilesystem rootFilesystem,
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
-      ImmutableMap<CellName, AbsPath> cellPathMapping,
-      CellPathResolver rootCellCellPathResolver,
+      DefaultCellPathResolver rootCellCellPathResolver,
       BuckModuleManager moduleManager,
       ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystemFactory projectFilesystemFactory,
@@ -96,6 +95,8 @@ final class CellProviderImpl implements CellProvider {
     this.toolchainProviderFactory = toolchainProviderFactory;
     this.projectFilesystemFactory = projectFilesystemFactory;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
+
+    ImmutableMap<CellName, AbsPath> cellPathMapping = rootCellCellPathResolver.getPathMapping();
 
     try {
       pathToConfigOverrides = rootCellConfigOverrides.getOverridesByPath(cellPathMapping);

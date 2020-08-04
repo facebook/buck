@@ -17,17 +17,13 @@
 package com.facebook.buck.core.cell.impl;
 
 import com.facebook.buck.core.cell.CellConfig;
-import com.facebook.buck.core.cell.CellName;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
-import com.google.common.collect.ImmutableMap;
 
 /** Creates a {@link CellProvider} to be used in a local (non-distributed) build. */
 public class LocalCellProviderFactory {
@@ -37,8 +33,7 @@ public class LocalCellProviderFactory {
       ProjectFilesystem rootFilesystem,
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
-      ImmutableMap<CellName, AbsPath> cellPathMapping,
-      CellPathResolver rootCellCellPathResolver,
+      DefaultCellPathResolver rootCellCellPathResolver,
       BuckModuleManager moduleManager,
       ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystemFactory projectFilesystemFactory,
@@ -48,7 +43,6 @@ public class LocalCellProviderFactory {
         rootFilesystem,
         rootConfig,
         rootCellConfigOverrides,
-        cellPathMapping,
         rootCellCellPathResolver,
         moduleManager,
         toolchainProviderFactory,

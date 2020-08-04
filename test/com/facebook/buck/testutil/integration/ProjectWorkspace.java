@@ -690,7 +690,6 @@ public class ProjectWorkspace extends AbstractWorkspace {
             filesystem,
             buckConfig,
             CellConfig.EMPTY_INSTANCE,
-            rootCellCellPathResolver.getPathMapping(),
             rootCellCellPathResolver,
             TestBuckModuleManagerFactory.create(pluginManager),
             toolchainProviderFactory,

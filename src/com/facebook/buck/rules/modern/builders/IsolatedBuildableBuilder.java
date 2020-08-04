@@ -186,7 +186,6 @@ public abstract class IsolatedBuildableBuilder {
             filesystem,
             buckConfig,
             CellConfig.EMPTY_INSTANCE,
-            cellPathResolver.getPathMapping(),
             cellPathResolver,
             moduleManager,
             toolchainProviderFactory,
