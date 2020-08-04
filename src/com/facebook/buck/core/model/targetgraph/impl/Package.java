@@ -30,6 +30,8 @@ import com.google.common.collect.ImmutableSet;
 @BuckStyleValue
 public abstract class Package {
 
+  public static final String EXTEND_PACKAGE = "EXTEND_PACKAGE";
+
   public abstract boolean getInherit();
 
   public abstract ImmutableSet<VisibilityPattern> getVisibilityPatterns();

@@ -82,7 +82,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
   }
 
   @Test
-  public void testCreatePopulatesNode() {
+  public void createPopulatesNode() {
     UnconfiguredBuildTarget buildTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c");
 
@@ -163,12 +163,82 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
 
     assertEquals(
         "//a/...",
-        Iterables.getFirst(unconfiguredTargetNode.getVisibilityPatterns(), null)
+        Iterables.getOnlyElement(unconfiguredTargetNode.getVisibilityPatterns())
             .getRepresentation());
+
     assertEquals(
         "//b/...",
-        Iterables.getFirst(unconfiguredTargetNode.getWithinViewPatterns(), null)
+        Iterables.getOnlyElement(unconfiguredTargetNode.getWithinViewPatterns())
             .getRepresentation());
+  }
+
+  @Test
+  public void createWithVisibilityEntriesAndExcludePackage() {
+    UnconfiguredBuildTarget buildTarget =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c");
+
+    ImmutableMap<String, Object> inputAttributes =
+        ImmutableMap.<String, Object>builder().put("name", "c").build();
+
+    UnconfiguredTargetNode unconfiguredTargetNode =
+        factory.create(
+            cell.getRootCell(),
+            cell.getRootCell().getRoot().resolve("a/b/BUCK"),
+            buildTarget,
+            DependencyStack.root(),
+            RawTargetNode.copyOf(
+                ForwardRelativePath.of("a/b"),
+                "java_library",
+                ImmutableList.of("//a/..."),
+                ImmutableList.of("//b/..."),
+                TwoArraysImmutableHashMap.copyOf(inputAttributes)),
+            getPackage());
+
+    assertEquals(
+        "//a/...",
+        Iterables.getOnlyElement(unconfiguredTargetNode.getVisibilityPatterns())
+            .getRepresentation());
+
+    assertEquals(
+        "//b/...",
+        Iterables.getOnlyElement(unconfiguredTargetNode.getWithinViewPatterns())
+            .getRepresentation());
+  }
+
+  @Test
+  public void createWithVisibilityEntriesAndIncludePackage() {
+    UnconfiguredBuildTarget buildTarget =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c");
+
+    ImmutableMap<String, Object> inputAttributes =
+        ImmutableMap.<String, Object>builder().put("name", "c").build();
+
+    UnconfiguredTargetNode unconfiguredTargetNode =
+        factory.create(
+            cell.getRootCell(),
+            cell.getRootCell().getRoot().resolve("a/b/BUCK"),
+            buildTarget,
+            DependencyStack.root(),
+            RawTargetNode.copyOf(
+                ForwardRelativePath.of("a/b"),
+                "java_library",
+                ImmutableList.of("//a/...", "EXTEND_PACKAGE"),
+                ImmutableList.of("//b/...", "EXTEND_PACKAGE"),
+                TwoArraysImmutableHashMap.copyOf(inputAttributes)),
+            getPackage());
+
+    assertEquals(
+        "//a/...",
+        Iterables.getOnlyElement(unconfiguredTargetNode.getVisibilityPatterns())
+            .getRepresentation());
+
+    assertEquals(unconfiguredTargetNode.getWithinViewPatterns().size(), 2);
+    assertEquals(
+        "//b/...",
+        Iterables.get(unconfiguredTargetNode.getWithinViewPatterns(), 0).getRepresentation());
+    assertEquals(
+        "//d/...",
+        Iterables.get(unconfiguredTargetNode.getWithinViewPatterns(), 1).getRepresentation());
   }
 
   Package getPackage() {

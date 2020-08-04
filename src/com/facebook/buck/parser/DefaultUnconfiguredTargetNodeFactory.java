@@ -50,6 +50,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
+import java.util.ArrayList;
 import java.util.Optional;
 
 /**
@@ -177,28 +178,22 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
         cell, descriptor.getRuleType(), buildFile, target, description, rawAttributes);
 
     ImmutableSet<VisibilityPattern> visibilityPatterns =
-        VisibilityPatterns.createFromStringList(
-            cell.getCellPathResolver(),
-            CommonParamNames.VISIBILITY.getSnakeCase(),
+        getProcessedVisibilityEntries(
+            cell,
+            buildFile,
+            target,
             rawAttributes.getVisibility(),
-            buildFile.getPath(),
-            target::getFullyQualifiedName);
-
-    if (visibilityPatterns.isEmpty()) {
-      visibilityPatterns = pkg.getVisibilityPatterns();
-    }
+            CommonParamNames.VISIBILITY,
+            pkg.getVisibilityPatterns());
 
     ImmutableSet<VisibilityPattern> withinViewPatterns =
-        VisibilityPatterns.createFromStringList(
-            cell.getCellPathResolver(),
-            CommonParamNames.WITHIN_VIEW.getSnakeCase(),
+        getProcessedVisibilityEntries(
+            cell,
+            buildFile,
+            target,
             rawAttributes.getWithinView(),
-            buildFile.getPath(),
-            target::getFullyQualifiedName);
-
-    if (withinViewPatterns.isEmpty()) {
-      withinViewPatterns = pkg.getWithinViewPatterns();
-    }
+            CommonParamNames.WITHIN_VIEW,
+            pkg.getWithinViewPatterns());
 
     TwoArraysImmutableHashMap<ParamName, Object> withSelects =
         convertSelects(
@@ -261,5 +256,33 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
   private static RuleDescriptor<?> parseRuleTypeFromRawRule(
       KnownRuleTypes knownRuleTypes, RawTargetNode attributes) {
     return knownRuleTypes.getDescriptorByName(attributes.getBuckType());
+  }
+
+  private static ImmutableSet<VisibilityPattern> getProcessedVisibilityEntries(
+      Cell cell,
+      AbsPath buildFile,
+      UnconfiguredBuildTarget target,
+      ImmutableList<String> targetEntries,
+      ParamName entryType,
+      ImmutableSet<VisibilityPattern> packageEntries) {
+    ArrayList<String> entries = new ArrayList<>(targetEntries);
+    boolean addPackageEntries = entries.remove(Package.EXTEND_PACKAGE);
+
+    ImmutableSet<VisibilityPattern> entryPatterns =
+        VisibilityPatterns.createFromStringList(
+            cell.getCellPathResolver(),
+            entryType.getSnakeCase(),
+            entries,
+            buildFile.getPath(),
+            target::getFullyQualifiedName);
+
+    if (entryPatterns.isEmpty() || addPackageEntries) {
+      entryPatterns =
+          ImmutableSet.<VisibilityPattern>builder()
+              .addAll(entryPatterns)
+              .addAll(packageEntries)
+              .build();
+    }
+    return entryPatterns;
   }
 }

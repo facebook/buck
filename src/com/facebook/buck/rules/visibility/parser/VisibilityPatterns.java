@@ -19,9 +19,9 @@ package com.facebook.buck.rules.visibility.parser;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.function.Supplier;
 
 /** Provides additional ways to create {@link VisibilityPattern}s. */
@@ -33,7 +33,7 @@ public class VisibilityPatterns {
   public static ImmutableSet<VisibilityPattern> createFromStringList(
       CellPathResolver cellNames,
       String paramName,
-      ImmutableList<String> value,
+      List<String> value,
       Path definingPath,
       Supplier<String> visibilityDefinerDescription) {
     ImmutableSet.Builder<VisibilityPattern> patterns =
