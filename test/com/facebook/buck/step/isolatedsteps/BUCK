@@ -3,7 +3,11 @@ load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 standard_java_test(
     name = "isolatedsteps",
     deps = [
+        "//src-gen:downward-model",
+        "//src/com/facebook/buck/downwardapi/protocol:protocol",
         "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/event/isolated:isolated",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//src/com/facebook/buck/step/isolatedsteps/common:common",
         "//test/com/facebook/buck/event:testutil",

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -124,7 +124,7 @@ public interface ProcessExecutor {
 
   /** Creates a {@code ProcessExecutor} that supports Downward API */
   ProcessExecutor withDownwardAPI(
-      DownwardApiProcessExecutorFactory factory, BuckEventBus buckEventBus);
+      DownwardApiProcessExecutorFactory factory, IsolatedEventBus buckEventBus);
 
   /**
    * Options for {@link ProcessExecutor#launchAndExecute(ProcessExecutorParams, Set, Optional,

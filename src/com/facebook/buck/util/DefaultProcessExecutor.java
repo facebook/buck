@@ -21,7 +21,7 @@ import static com.google.common.base.Predicates.not;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Unit;
@@ -103,7 +103,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
 
   @Override
   public ProcessExecutor withDownwardAPI(
-      DownwardApiProcessExecutorFactory factory, BuckEventBus buckEventBus) {
+      DownwardApiProcessExecutorFactory factory, IsolatedEventBus buckEventBus) {
     return factory.create(
         this,
         ConsoleParams.of(ansi.isAnsiTerminal(), verbosity),

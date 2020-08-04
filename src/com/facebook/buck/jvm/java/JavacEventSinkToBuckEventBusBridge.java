@@ -17,10 +17,10 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckTracingEventBusBridge;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.jvm.java.AnnotationProcessingEvent.Operation;
@@ -39,7 +39,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 
 public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
-  private final BuckEventBus eventBus;
+  private final IsolatedEventBus eventBus;
   private final LoadingCache<BuildTarget, BuckTracingEventBusBridge> buckTracingBridgeCache =
       CacheBuilder.newBuilder()
           .build(
@@ -55,7 +55,7 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
   private final Map<String, EventKey> startedAnnotationProcessingEvents = new ConcurrentHashMap<>();
   private final Map<Long, SimplePerfEvent.Scope> perfEventScopes = new ConcurrentHashMap<>();
 
-  public JavacEventSinkToBuckEventBusBridge(BuckEventBus eventBus) {
+  public JavacEventSinkToBuckEventBusBridge(IsolatedEventBus eventBus) {
     this.eventBus = eventBus;
   }
 

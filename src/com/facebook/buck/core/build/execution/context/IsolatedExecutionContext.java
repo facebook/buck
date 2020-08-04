@@ -20,7 +20,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.event.BuckEvent;
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -41,7 +41,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
 
   /** Returns an {@link IsolatedExecutionContext}. */
   public static IsolatedExecutionContext of(
-      BuckEventBus eventBus,
+      IsolatedEventBus eventBus,
       Console console,
       Platform platform,
       ProcessExecutor processExecutor,
@@ -57,7 +57,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
 
   public abstract Console getConsole();
 
-  public abstract BuckEventBus getBuckEventBus();
+  public abstract IsolatedEventBus getBuckEventBus();
 
   public abstract Platform getPlatform();
 

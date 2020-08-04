@@ -29,11 +29,11 @@ import java.util.Map;
 public class BuckTracingEventBusBridge implements BuckTracingInterface {
   private static final Logger LOG = Logger.get(BuckTracingEventBusBridge.class);
 
-  private final BuckEventBus eventBus;
+  private final IsolatedEventBus eventBus;
   private final BuildTarget buildTarget;
   private final Deque<CompilerPluginDurationEvent.Started> eventStack = new ArrayDeque<>();
 
-  public BuckTracingEventBusBridge(BuckEventBus eventBus, BuildTarget buildTarget) {
+  public BuckTracingEventBusBridge(IsolatedEventBus eventBus, BuildTarget buildTarget) {
     this.eventBus = eventBus;
     this.buildTarget = buildTarget;
   }

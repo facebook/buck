@@ -24,8 +24,8 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.DefaultClassUsageFileReader;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
@@ -320,10 +320,10 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
   /** Writes messages to the console as warnings. */
   static class ConsoleMessageHandler implements MessageHandler {
 
-    private final BuckEventBus buckEventBus;
+    private final IsolatedEventBus buckEventBus;
     private boolean encounteredMessage = false;
 
-    ConsoleMessageHandler(BuckEventBus buckEventBus) {
+    ConsoleMessageHandler(IsolatedEventBus buckEventBus) {
       this.buckEventBus = buckEventBus;
     }
 

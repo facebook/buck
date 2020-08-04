@@ -70,7 +70,6 @@ public class JarDirectoryStep extends IsolatedStep {
   @Override
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException {
-
     JavacEventSinkToBuckEventBusBridge eventSink =
         new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus());
     LoggingJarBuilderObserver loggingObserver =

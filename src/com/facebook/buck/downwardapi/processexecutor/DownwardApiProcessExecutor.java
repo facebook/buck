@@ -24,7 +24,7 @@ import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.downwardapi.utils.DownwardApiConstants;
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
@@ -84,7 +84,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     public DownwardApiProcessExecutor create(
         ProcessExecutor delegate,
         ConsoleParams consoleParams,
-        BuckEventBus buckEventBus,
+        IsolatedEventBus buckEventBus,
         String actionId) {
       return new DownwardApiProcessExecutor(
           delegate, consoleParams, buckEventBus, actionId, NamedPipeFactory.getFactory());
@@ -106,14 +106,14 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
   private final String isAnsiTerminal;
   private final String verbosity;
   private final String actionId;
-  private final BuckEventBus buckEventBus;
+  private final IsolatedEventBus buckEventBus;
   private final NamedPipeFactory namedPipeFactory;
 
   @VisibleForTesting
   DownwardApiProcessExecutor(
       ProcessExecutor delegate,
       ConsoleParams consoleParams,
-      BuckEventBus buckEventBus,
+      IsolatedEventBus buckEventBus,
       String actionId,
       NamedPipeFactory namedPipeFactory) {
     super(delegate);
@@ -326,7 +326,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
 
   @Override
   public ProcessExecutor withDownwardAPI(
-      DownwardApiProcessExecutorFactory factory, BuckEventBus buckEventBus) {
+      DownwardApiProcessExecutorFactory factory, IsolatedEventBus buckEventBus) {
     return this;
   }
 }

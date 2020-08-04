@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.IsolatedEventBus;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -102,7 +102,7 @@ public class ContextualProcessExecutor extends DelegateProcessExecutor {
 
   @Override
   public ProcessExecutor withDownwardAPI(
-      DownwardApiProcessExecutorFactory factory, BuckEventBus buckEventBus) {
+      DownwardApiProcessExecutorFactory factory, IsolatedEventBus buckEventBus) {
     String actionId = context.get(ACTION_ID);
     Preconditions.checkNotNull(actionId, ACTION_ID + " key is not provided");
     Preconditions.checkState(!actionId.isEmpty(), "Action id can't be empty");

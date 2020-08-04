@@ -26,9 +26,12 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.downward.model.ConsoleEvent;
+import com.facebook.buck.downward.model.EventTypeMessage;
+import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
+import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
+import com.facebook.buck.event.IsolatedEventBus;
+import com.facebook.buck.event.isolated.DefaultIsolatedEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
@@ -46,8 +49,11 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -61,11 +67,13 @@ public class IsolatedStepsRunnerTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   private ProjectFilesystem projectFilesystem;
+  private File downwardApiFile;
 
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     projectFilesystem =
         new FakeProjectFilesystem(CanonicalCellName.rootCell(), temporaryFolder.getRoot());
+    downwardApiFile = temporaryFolder.newFile("tmp").toFile();
   }
 
   @Test
@@ -94,7 +102,7 @@ public class IsolatedStepsRunnerTest {
   }
 
   @Test
-  public void logsErrorIfStepExecutionFails() {
+  public void logsErrorIfStepExecutionFails() throws Exception {
     ImmutableList<IsolatedStep> step =
         ImmutableList.of(
             new IsolatedStep() {
@@ -114,9 +122,6 @@ public class IsolatedStepsRunnerTest {
               }
             });
     IsolatedExecutionContext context = createContext(projectFilesystem.getRootPath());
-    BuckEventBusForTests.CapturingConsoleEventListener listener =
-        new BuckEventBusForTests.CapturingConsoleEventListener();
-    context.getBuckEventBus().register(listener);
 
     StepExecutionResult result = IsolatedStepsRunner.execute(step, context);
 
@@ -127,13 +132,19 @@ public class IsolatedStepsRunnerTest {
             + "com.facebook.buck.step.StepFailedException: Command failed with exit code 1."
             + System.lineSeparator()
             + "  When running <test_description>.";
-    List<String> actual = listener.getLogMessages();
-    assertThat(actual, Matchers.hasSize(1));
-    assertThat(actual.get(0), Matchers.containsString(expected));
+
+    DownwardProtocol protocol = DownwardProtocolType.BINARY.getDownwardProtocol();
+    InputStream inputStream = new FileInputStream(downwardApiFile);
+
+    EventTypeMessage.EventType actualEventType = protocol.readEventType(inputStream);
+    ConsoleEvent actualConsoleEvent = protocol.readEvent(inputStream, actualEventType);
+
+    assertThat(actualEventType, equalTo(EventTypeMessage.EventType.CONSOLE_EVENT));
+    assertThat(actualConsoleEvent.getMessage(), Matchers.containsStringIgnoringCase(expected));
   }
 
   @Test
-  public void logsErrorIfInterrupted() {
+  public void logsErrorIfInterrupted() throws Exception {
     ImmutableList<IsolatedStep> step =
         ImmutableList.of(
             new IsolatedStep() {
@@ -154,9 +165,6 @@ public class IsolatedStepsRunnerTest {
               }
             });
     IsolatedExecutionContext context = createContext(projectFilesystem.getRootPath());
-    BuckEventBusForTests.CapturingConsoleEventListener listener =
-        new BuckEventBusForTests.CapturingConsoleEventListener();
-    context.getBuckEventBus().register(listener);
 
     StepExecutionResult result = IsolatedStepsRunner.execute(step, context);
 
@@ -165,18 +173,25 @@ public class IsolatedStepsRunnerTest {
         "Received interrupt"
             + System.lineSeparator()
             + "java.lang.InterruptedException: Thread was interrupted inside the executed step: test_short_name";
-    List<String> actual = listener.getLogMessages();
-    assertThat(actual, Matchers.hasSize(1));
-    assertThat(actual.get(0), Matchers.containsString(expected));
+
+    DownwardProtocol protocol = DownwardProtocolType.BINARY.getDownwardProtocol();
+    InputStream inputStream = new FileInputStream(downwardApiFile);
+
+    EventTypeMessage.EventType actualEventType = protocol.readEventType(inputStream);
+    ConsoleEvent actualConsoleEvent = protocol.readEvent(inputStream, actualEventType);
+
+    assertThat(actualEventType, equalTo(EventTypeMessage.EventType.CONSOLE_EVENT));
+    assertThat(actualConsoleEvent.getMessage(), Matchers.containsStringIgnoringCase(expected));
   }
 
-  private static IsolatedExecutionContext createContext(AbsPath root) {
-    BuckEventBus buckEventBus =
-        new DefaultBuckEventBus(
-            new DefaultClock(),
+  private IsolatedExecutionContext createContext(AbsPath root) throws Exception {
+    IsolatedEventBus buckEventBus =
+        new DefaultIsolatedEventBus(
             BUILD_UUID_FOR_TEST,
-            DefaultBuckEventBus.DEFAULT_SHUTDOWN_TIMEOUT_MS,
-            MoreExecutors.newDirectExecutorService());
+            new FileOutputStream(downwardApiFile),
+            new DefaultClock(),
+            MoreExecutors.newDirectExecutorService(),
+            DefaultIsolatedEventBus.DEFAULT_SHUTDOWN_TIMEOUT_MS);
     Console console = new Console(VERBOSITY_FOR_TEST, System.out, System.err, ANSI_FOR_TEST);
     ProcessExecutor defaultProcessExecutor = new DefaultProcessExecutor(console);
 

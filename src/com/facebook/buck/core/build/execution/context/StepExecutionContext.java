@@ -21,6 +21,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Verbosity;
@@ -35,6 +36,8 @@ import org.immutables.value.Value;
 
 /** The context exposed for executing {@link com.facebook.buck.step.Step}s */
 @BuckStyleValueWithBuilder
+@SuppressWarnings(
+    "immutables:from") // Suppress warning for event bus being different type in superclass
 public abstract class StepExecutionContext extends IsolatedExecutionContext {
 
   /** Creates {@link StepExecutionContext} from {@link ExecutionContext} and {@code ruleCellRoot} */
@@ -59,6 +62,9 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
         .setRuleCellRoot(ruleCellRoot)
         .build();
   }
+
+  @Override
+  public abstract BuckEventBus getBuckEventBus();
 
   public abstract Optional<AndroidDevicesHelper> getAndroidDevicesHelper();
 

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.IsolatedEventBus;
 
 /** Factory interface that creates {@code ProcessExecutor} which supports Downward API. */
 public interface DownwardApiProcessExecutorFactory {
@@ -25,6 +25,6 @@ public interface DownwardApiProcessExecutorFactory {
   ProcessExecutor create(
       ProcessExecutor delegate,
       ConsoleParams consoleParams,
-      BuckEventBus buckEventBus,
+      IsolatedEventBus buckEventBus,
       String actionId);
 }

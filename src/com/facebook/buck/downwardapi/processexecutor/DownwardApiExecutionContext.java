@@ -18,7 +18,7 @@ package com.facebook.buck.downwardapi.processexecutor;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEvent;
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.step.StepEvent;
 import java.time.Instant;
@@ -36,7 +36,7 @@ public abstract class DownwardApiExecutionContext {
   /** Returns {@code Instant} when execution started. */
   public abstract Instant getStartExecutionInstant();
 
-  abstract BuckEventBus getBuckEventBus();
+  abstract IsolatedEventBus getBuckEventBus();
 
   abstract long getInvokingThreadId();
 
@@ -58,7 +58,7 @@ public abstract class DownwardApiExecutionContext {
     getBuckEventBus().post(event, atTime, getInvokingThreadId());
   }
 
-  static DownwardApiExecutionContext of(BuckEventBus buckEventBus) {
+  static DownwardApiExecutionContext of(IsolatedEventBus buckEventBus) {
     return ImmutableDownwardApiExecutionContext.ofImpl(
         Instant.now(), buckEventBus, Thread.currentThread().getId());
   }
