@@ -34,7 +34,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -353,6 +352,7 @@ public class AppleResourceProcessing {
       ImmutableList.Builder<Step> stepsBuilder,
       ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
       AppleBundleResources resources,
+      ImmutableList<AppleBundlePart> bundleParts,
       Path dirRoot,
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem,
@@ -366,17 +366,18 @@ public class AppleResourceProcessing {
       Optional<String> binaryName,
       boolean withDownwardApi) {
     addStepsToCreateDirectoriesWhereBundlePartsAreCopied(
-        context, stepsBuilder, resources, dirRoot, destinations, projectFilesystem);
+        context, stepsBuilder, resources, bundleParts, dirRoot, destinations, projectFilesystem);
     addStepsToCopyDirectories(
         context,
         stepsBuilder,
         codeSignOnCopyPathsBuilder,
         resources,
+        bundleParts,
         dirRoot,
         destinations,
         projectFilesystem);
     addStepsToCopyContentOfDirectories(
-        context, stepsBuilder, resources, dirRoot, destinations, projectFilesystem);
+        context, stepsBuilder, resources, bundleParts, dirRoot, destinations, projectFilesystem);
     addStepsToProcessAndCopyFiles(
         context,
         stepsBuilder,
@@ -394,16 +395,30 @@ public class AppleResourceProcessing {
         buildTarget,
         binaryName,
         withDownwardApi);
+    addStepsToCopyFilesNotNeedingProcessing(
+        context,
+        stepsBuilder,
+        codeSignOnCopyPathsBuilder,
+        bundleParts,
+        dirRoot,
+        destinations,
+        projectFilesystem);
   }
 
   private static void addStepsToCreateDirectoriesWhereBundlePartsAreCopied(
       BuildContext context,
       ImmutableList.Builder<Step> stepsBuilder,
       AppleBundleResources resources,
+      ImmutableList<AppleBundlePart> bundleParts,
       Path dirRoot,
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem) {
-    for (AppleBundleDestination bundleDestination : resources.getAllDestinations()) {
+    Set<AppleBundleDestination> usedDestinations =
+        Stream.concat(
+                resources.getAllDestinations().stream(),
+                bundleParts.stream().map(AppleBundlePart::getDestination))
+            .collect(Collectors.toSet());
+    for (AppleBundleDestination bundleDestination : usedDestinations) {
       Path bundleDestinationPath = dirRoot.resolve(bundleDestination.getPath(destinations));
       stepsBuilder.add(
           MkdirStep.of(
@@ -417,10 +432,27 @@ public class AppleResourceProcessing {
       ImmutableList.Builder<Step> stepsBuilder,
       ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
       AppleBundleResources resources,
+      ImmutableList<AppleBundlePart> bundleParts,
       Path dirRoot,
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem) {
-    for (SourcePathWithAppleBundleDestination dirWithDestination : resources.getResourceDirs()) {
+
+    List<DirectoryAppleBundlePart> directoryBundleParts =
+        bundleParts.stream()
+            .filter(p -> p instanceof DirectoryAppleBundlePart)
+            .map(p -> (DirectoryAppleBundlePart) p)
+            .collect(Collectors.toList());
+
+    List<SourcePathWithAppleBundleDestination> directoriesToCopy =
+        Stream.concat(
+                resources.getResourceDirs().stream(),
+                directoryBundleParts.stream()
+                    .map(
+                        p ->
+                            SourcePathWithAppleBundleDestination.of(
+                                p.getSourcePath(), p.getDestination(), p.getCodesignOnCopy())))
+            .collect(Collectors.toList());
+    for (SourcePathWithAppleBundleDestination dirWithDestination : directoriesToCopy) {
       Path resolvedDirPath =
           context
               .getSourcePathResolver()
@@ -445,11 +477,27 @@ public class AppleResourceProcessing {
       BuildContext context,
       ImmutableList.Builder<Step> stepsBuilder,
       AppleBundleResources resources,
+      ImmutableList<AppleBundlePart> bundleParts,
       Path dirRoot,
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem) {
-    for (SourcePathWithAppleBundleDestination dirWithDestination :
-        resources.getDirsContainingResourceDirs()) {
+
+    List<DirectoryContentAppleBundlePart> directoriesWithContentBundleParts =
+        bundleParts.stream()
+            .filter(p -> p instanceof DirectoryContentAppleBundlePart)
+            .map(p -> (DirectoryContentAppleBundlePart) p)
+            .collect(Collectors.toList());
+
+    List<SourcePathWithAppleBundleDestination> directoriesWithContent =
+        Stream.concat(
+                resources.getDirsContainingResourceDirs().stream(),
+                directoriesWithContentBundleParts.stream()
+                    .map(
+                        p ->
+                            SourcePathWithAppleBundleDestination.of(
+                                p.getSourcePath(), p.getDestination())))
+            .collect(Collectors.toList());
+    for (SourcePathWithAppleBundleDestination dirWithDestination : directoriesWithContent) {
       Path bundleDestinationPath =
           dirRoot.resolve(dirWithDestination.getDestination().getPath(destinations));
       stepsBuilder.add(
@@ -508,28 +556,65 @@ public class AppleResourceProcessing {
     }
   }
 
+  private static void addStepsToCopyFilesNotNeedingProcessing(
+      BuildContext context,
+      ImmutableList.Builder<Step> stepsBuilder,
+      ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
+      ImmutableList<AppleBundlePart> bundleParts,
+      Path dirRoot,
+      AppleBundleDestinations destinations,
+      ProjectFilesystem projectFilesystem) {
+
+    List<FileAppleBundlePart> filesToCopyWithoutProcessing =
+        bundleParts.stream()
+            .filter(p -> p instanceof FileAppleBundlePart)
+            .map(p -> (FileAppleBundlePart) p)
+            .collect(Collectors.toList());
+
+    for (FileAppleBundlePart fileWithDestination : filesToCopyWithoutProcessing) {
+      AbsPath resolvedFilePath =
+          context.getSourcePathResolver().getAbsolutePath(fileWithDestination.getSourcePath());
+      Path destinationDirectoryPath =
+          dirRoot.resolve(fileWithDestination.getDestination().getPath(destinations));
+      String destinationFileName = resolvedFilePath.getFileName().toString();
+      Path destinationPath = destinationDirectoryPath.resolve(destinationFileName);
+      stepsBuilder.add(
+          CopyStep.forFile(projectFilesystem, resolvedFilePath.getPath(), destinationPath));
+      if (fileWithDestination.getCodesignOnCopy()) {
+        codeSignOnCopyPathsBuilder.add(destinationPath);
+      }
+    }
+  }
+
   /** Checks and throws an exception if parts of bundle have conflicting paths */
   public static void verifyResourceConflicts(
       AppleBundleResources resources,
+      ImmutableList<AppleBundlePart> bundleParts,
       SourcePathResolverAdapter resolver,
       AppleBundleDestinations destinations) {
     // Ensure there are no resources that will overwrite each other
     // TODO: handle ResourceDirsContainingResourceDirs
-    List<Pair<AbsPath, RelPath>> allSourceWithDestinationPaths =
-        Stream.concat(resources.getResourceDirs().stream(), resources.getResourceFiles().stream())
-            .map(
-                s -> {
-                  AbsPath sourcePath = resolver.getAbsolutePath(s.getSourcePath());
-                  RelPath destinationPath =
-                      destinationPathRelativeToBundleRoot(
-                          resolver, destinations, s.getSourcePath(), s.getDestination());
-                  return new Pair<>(sourcePath, destinationPath);
-                })
+
+    List<CopySpec> copySpecs =
+        Stream.concat(
+                Stream.concat(
+                        resources.getResourceDirs().stream(), resources.getResourceFiles().stream())
+                    .map(e -> new CopySpec(e, resolver, destinations)),
+                Stream.concat(
+                    bundleParts.stream()
+                        .filter(p -> p instanceof DirectoryAppleBundlePart)
+                        .map(p -> (DirectoryAppleBundlePart) p)
+                        .map(e -> new CopySpec(e, resolver, destinations)),
+                    bundleParts.stream()
+                        .filter(p -> p instanceof FileAppleBundlePart)
+                        .map(p -> (FileAppleBundlePart) p)
+                        .map(e -> new CopySpec(e, resolver, destinations))))
             .collect(Collectors.toList());
+
     Map<RelPath, AbsPath> encounteredDestinationToSourcePaths = new HashMap<>();
-    for (Pair<AbsPath, RelPath> sourceWithDestination : allSourceWithDestinationPaths) {
-      AbsPath sourcePath = sourceWithDestination.getFirst();
-      RelPath destinationPath = sourceWithDestination.getSecond();
+    for (CopySpec copySpec : copySpecs) {
+      AbsPath sourcePath = copySpec.getSourcePath();
+      RelPath destinationPath = copySpec.getDestinationPathRelativeToBundleRoot();
       if (encounteredDestinationToSourcePaths.containsKey(destinationPath)) {
         AbsPath encounteredSourcePath = encounteredDestinationToSourcePaths.get(destinationPath);
         throw new HumanReadableException(
@@ -541,14 +626,66 @@ public class AppleResourceProcessing {
     }
   }
 
-  private static RelPath destinationPathRelativeToBundleRoot(
-      SourcePathResolverAdapter sourcePathResolver,
-      AppleBundleDestinations destinations,
-      SourcePath sourcePath,
-      AppleBundleDestination destination) {
-    RelPath destinationDirectoryPath = RelPath.of(destination.getPath(destinations));
-    AbsPath resolvedSourcePath = sourcePathResolver.getAbsolutePath(sourcePath);
-    String destinationFileName = resolvedSourcePath.getFileName().toString();
-    return destinationDirectoryPath.resolveRel(destinationFileName);
+  private static class CopySpec {
+    private final AbsPath sourcePath;
+    private final RelPath destinationPathRelativeToBundleRoot;
+
+    public CopySpec(
+        SourcePathWithAppleBundleDestination pathWithDestination,
+        SourcePathResolverAdapter sourcePathResolver,
+        AppleBundleDestinations destinations) {
+      this.sourcePath = sourcePathResolver.getAbsolutePath(pathWithDestination.getSourcePath());
+      this.destinationPathRelativeToBundleRoot =
+          destinationPathRelativeToBundleRoot(
+              sourcePathResolver,
+              destinations,
+              pathWithDestination.getSourcePath(),
+              pathWithDestination.getDestination());
+    }
+
+    public CopySpec(
+        FileAppleBundlePart bundlePart,
+        SourcePathResolverAdapter sourcePathResolver,
+        AppleBundleDestinations destinations) {
+      this.sourcePath = sourcePathResolver.getAbsolutePath(bundlePart.getSourcePath());
+      this.destinationPathRelativeToBundleRoot =
+          destinationPathRelativeToBundleRoot(
+              sourcePathResolver,
+              destinations,
+              bundlePart.getSourcePath(),
+              bundlePart.getDestination());
+    }
+
+    public CopySpec(
+        DirectoryAppleBundlePart bundlePart,
+        SourcePathResolverAdapter sourcePathResolver,
+        AppleBundleDestinations destinations) {
+      this.sourcePath = sourcePathResolver.getAbsolutePath(bundlePart.getSourcePath());
+      this.destinationPathRelativeToBundleRoot =
+          destinationPathRelativeToBundleRoot(
+              sourcePathResolver,
+              destinations,
+              bundlePart.getSourcePath(),
+              bundlePart.getDestination());
+    }
+
+    public AbsPath getSourcePath() {
+      return sourcePath;
+    }
+
+    public RelPath getDestinationPathRelativeToBundleRoot() {
+      return destinationPathRelativeToBundleRoot;
+    }
+
+    private static RelPath destinationPathRelativeToBundleRoot(
+        SourcePathResolverAdapter sourcePathResolver,
+        AppleBundleDestinations destinations,
+        SourcePath sourcePath,
+        AppleBundleDestination destination) {
+      RelPath destinationDirectoryPath = RelPath.of(destination.getPath(destinations));
+      AbsPath resolvedSourcePath = sourcePathResolver.getAbsolutePath(sourcePath);
+      String destinationFileName = resolvedSourcePath.getFileName().toString();
+      return destinationDirectoryPath.resolveRel(destinationFileName);
+    }
   }
 }

@@ -743,17 +743,6 @@ public class AppleDescriptions {
               appleCxxPlatform.getAppleSdk().getApplePlatform());
     }
 
-    AppleBundleResources.Builder collectedResourcesBuilder =
-        AppleResources.collectResourceDirsAndFiles(
-            xcodeDescriptions,
-            targetGraph,
-            graphBuilder,
-            Optional.empty(),
-            targetGraph.get(buildTarget),
-            appleCxxPlatform,
-            RecursiveDependenciesMode.COPYING,
-            filter);
-
     ImmutableSet.Builder<SourcePath> frameworksBuilder = ImmutableSet.builder();
     if (INCLUDE_FRAMEWORKS.getRequiredValue(buildTarget)) {
       for (BuildTarget dep : deps) {
@@ -907,6 +896,8 @@ public class AppleDescriptions {
             defaultPlatform,
             graphBuilder);
 
+    ImmutableList.Builder<AppleBundlePart> bundlePartsReadyToCopy = ImmutableList.builder();
+
     String unwrappedExtension =
         extension.isLeft() ? extension.getLeft().fileExtension : extension.getRight();
 
@@ -919,26 +910,20 @@ public class AppleDescriptions {
                   pkgInfoBuildTarget,
                   pkgInfoTarget ->
                       new ApplePkgInfo(pkgInfoBuildTarget, projectFilesystem, graphBuilder));
-      collectedResourcesBuilder.addResourceFiles(
-          SourcePathWithAppleBundleDestination.of(
-              pkgInfo.getSourcePathToOutput(), AppleBundleDestination.METADATA, false));
+      bundlePartsReadyToCopy.add(
+          FileAppleBundlePart.of(pkgInfo.getSourcePathToOutput(), AppleBundleDestination.METADATA));
     }
 
-    collectedResourcesBuilder.addAllDirsContainingResourceDirs(
-        Stream.of(
-                assetCatalog.map(AppleAssetCatalog::getSourcePathToOutput),
-                coreDataModel.map(CoreDataModel::getSourcePathToOutput),
-                sceneKitAssets.map(SceneKitAssets::getSourcePathToOutput))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .map(
-                sourcePath ->
-                    SourcePathWithAppleBundleDestination.of(
-                        sourcePath, AppleBundleDestination.RESOURCES, false))
-            .collect(ImmutableSet.toImmutableSet()));
+    Stream.of(assetCatalog, coreDataModel, sceneKitAssets)
+        .map(buildRule -> buildRule.map(b -> Objects.requireNonNull(b.getSourcePathToOutput())))
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .map(
+            sourcePath ->
+                DirectoryContentAppleBundlePart.of(sourcePath, AppleBundleDestination.RESOURCES))
+        .forEach(bundlePartsReadyToCopy::add);
 
-    collectedResourcesBuilder.addAllResourceDirs(
-        collectFirstLevelAppleDependencyBundles(params.getBuildDeps()));
+    addFirstLevelDependencyBundlesToBundleParts(params.getBuildDeps(), bundlePartsReadyToCopy);
 
     BuildRule unwrappedBinary = getBinaryFromBuildRuleWithBinary(flavoredBinaryRule);
 
@@ -1052,15 +1037,22 @@ public class AppleDescriptions {
 
     RelPath infoPlistFileBundlePath;
     {
-      SourcePathWithAppleBundleDestination infoPlistFile =
-          SourcePathWithAppleBundleDestination.of(
-              infoPlistReadyToCopy, AppleBundleDestination.METADATA, false);
-      collectedResourcesBuilder.addResourceFiles(infoPlistFile);
+      AppleBundleDestination destination = AppleBundleDestination.METADATA;
+      bundlePartsReadyToCopy.add(FileAppleBundlePart.of(infoPlistReadyToCopy, destination));
       infoPlistFileBundlePath =
-          RelPath.of(infoPlistFile.getDestination().getPath(destinations)).resolveRel("Info.plist");
+          RelPath.of(destination.getPath(destinations)).resolveRel("Info.plist");
     }
 
-    AppleBundleResources collectedResources = collectedResourcesBuilder.build();
+    AppleBundleResources collectedResources =
+        AppleResources.collectResourceDirsAndFiles(
+            xcodeDescriptions,
+            targetGraph,
+            graphBuilder,
+            Optional.empty(),
+            targetGraph.get(buildTarget),
+            appleCxxPlatform,
+            RecursiveDependenciesMode.COPYING,
+            filter);
 
     BuildRuleParams bundleParamsWithFlavoredBinaryDep =
         getBundleParamsWithUpdatedDeps(
@@ -1094,6 +1086,7 @@ public class AppleDescriptions {
         extraBinaries,
         destinations,
         collectedResources,
+        bundlePartsReadyToCopy.build(),
         frameworks,
         appleCxxPlatform,
         tests,
@@ -1270,10 +1263,9 @@ public class AppleDescriptions {
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
-  private static ImmutableSortedSet<SourcePathWithAppleBundleDestination>
-      collectFirstLevelAppleDependencyBundles(SortedSet<BuildRule> dependencies) {
-    ImmutableSortedSet.Builder<SourcePathWithAppleBundleDestination> extensionBundlePaths =
-        ImmutableSortedSet.naturalOrder();
+  private static void addFirstLevelDependencyBundlesToBundleParts(
+      SortedSet<BuildRule> dependencies,
+      ImmutableList.Builder<AppleBundlePart> bundlePartsBuilder) {
     // We only care about the direct layer of dependencies. ExtensionBundles inside ExtensionBundles
     // do not get pulled in to the top-level Bundle.
     dependencies.stream()
@@ -1324,11 +1316,9 @@ public class AppleDescriptions {
                 return;
               }
 
-              extensionBundlePaths.add(
-                  SourcePathWithAppleBundleDestination.of(sourcePath, destination, codeSignOnCopy));
+              bundlePartsBuilder.add(
+                  DirectoryAppleBundlePart.of(sourcePath, destination, codeSignOnCopy));
             });
-
-    return extensionBundlePaths.build();
   }
 
   private static ImmutableSet<BuildRule> collectFirstLevelExtraBinariesFromDeps(

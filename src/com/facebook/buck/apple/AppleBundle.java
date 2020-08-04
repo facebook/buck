@@ -110,6 +110,8 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final AppleBundleResources resources;
 
+  @AddToRuleKey private final ImmutableList<AppleBundlePart> bundleParts;
+
   @AddToRuleKey private final Set<SourcePath> frameworks;
 
   @AddToRuleKey private final Tool ibtool;
@@ -179,6 +181,7 @@ public class AppleBundle extends AbstractBuildRule
       ImmutableSet<BuildRule> extraBinaries,
       AppleBundleDestinations destinations,
       AppleBundleResources resources,
+      ImmutableList<AppleBundlePart> bundleParts,
       Set<SourcePath> frameworks,
       AppleCxxPlatform appleCxxPlatform,
       Set<BuildTarget> tests,
@@ -212,6 +215,7 @@ public class AppleBundle extends AbstractBuildRule
     this.extraBinaries = extraBinaries;
     this.destinations = destinations;
     this.resources = resources;
+    this.bundleParts = bundleParts;
     this.frameworks = frameworks;
     this.ibtool = appleCxxPlatform.getIbtool();
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
@@ -320,7 +324,7 @@ public class AppleBundle extends AbstractBuildRule
 
     if (verifyResources) {
       AppleResourceProcessing.verifyResourceConflicts(
-          resources, context.getSourcePathResolver(), destinations);
+          resources, bundleParts, context.getSourcePathResolver(), destinations);
     }
 
     AppleResourceProcessing.addStepsToCopyResources(
@@ -328,6 +332,7 @@ public class AppleBundle extends AbstractBuildRule
         stepsBuilder,
         codeSignOnCopyPathsBuilder,
         resources,
+        bundleParts,
         bundleRoot,
         destinations,
         getProjectFilesystem(),

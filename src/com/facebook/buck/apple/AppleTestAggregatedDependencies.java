@@ -106,6 +106,7 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
         stepsBuilder,
         codeSignOnCopyPathsBuilder,
         resources,
+        ImmutableList.of(),
         resourcesDir,
         AppleBundleDestinations.platformDestinations(applePlatform),
         getProjectFilesystem(),
