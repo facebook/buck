@@ -240,7 +240,7 @@ public class GraphEngineFactory {
                     params
                         .getGlobalState()
                         .getBuildFileManifestCaches()
-                        .getUnchecked(cell.getRoot().getPath())),
+                        .getUnchecked(cell.getCanonicalName())),
                 new GraphComputationStage<>(buildTargetToUnconfiguredTargetNodeComputation),
                 new GraphComputationStage<>(
                     unconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation),

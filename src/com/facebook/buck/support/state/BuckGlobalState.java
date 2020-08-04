@@ -17,6 +17,7 @@
 package com.facebook.buck.support.state;
 
 import com.facebook.buck.core.cell.Cells;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.files.DirectoryListCache;
 import com.facebook.buck.core.files.FileTreeCache;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -69,7 +70,8 @@ public final class BuckGlobalState implements Closeable {
   private final DaemonicParserState daemonicParserState;
   private final ImmutableList<ProjectFileHashCache> hashCaches;
   private final LoadingCache<Path, DirectoryListCache> directoryListCachePerRoot;
-  private final LoadingCache<Path, BuildFileManifestCache> buildFileManifestCachePerRoot;
+  private final LoadingCache<CanonicalCellName, BuildFileManifestCache>
+      buildFileManifestCachePerRoot;
   private final LoadingCache<Path, FileTreeCache> fileTreeCachePerRoot;
   private final EventBus fileEventBus;
   private final Optional<WebServer> webServer;
@@ -90,7 +92,7 @@ public final class BuckGlobalState implements Closeable {
       ImmutableList<ProjectFileHashCache> hashCaches,
       LoadingCache<Path, DirectoryListCache> directoryListCachePerRoot,
       LoadingCache<Path, FileTreeCache> fileTreeCachePerRoot,
-      LoadingCache<Path, BuildFileManifestCache> buildFileManifestCachePerRoot,
+      LoadingCache<CanonicalCellName, BuildFileManifestCache> buildFileManifestCachePerRoot,
       EventBus fileEventBus,
       Optional<WebServer> webServer,
       ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools,
@@ -156,7 +158,7 @@ public final class BuckGlobalState implements Closeable {
   }
 
   /** Return a map of all build file manifest caches for each cell which is a key */
-  public LoadingCache<Path, BuildFileManifestCache> getBuildFileManifestCaches() {
+  public LoadingCache<CanonicalCellName, BuildFileManifestCache> getBuildFileManifestCaches() {
     return buildFileManifestCachePerRoot;
   }
 

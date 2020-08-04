@@ -23,6 +23,7 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.Cells;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.files.DirectoryListCache;
 import com.facebook.buck.core.files.FileTreeCache;
@@ -104,7 +105,7 @@ public class BuckGlobalStateFactory {
         createDirectoryListCachePerCellMap(fileEventBus);
     LoadingCache<Path, FileTreeCache> fileTreeCachePerRoot =
         createFileTreeCachePerCellMap(fileEventBus);
-    LoadingCache<Path, BuildFileManifestCache> buildFileManifestCachePerRoot =
+    LoadingCache<CanonicalCellName, BuildFileManifestCache> buildFileManifestCachePerRoot =
         createBuildFileManifestCachePerCellMap(
             fileEventBus, cells.getCellProvider(), cells.getSuperRootPath());
     ActionGraphCache actionGraphCache =
@@ -208,20 +209,21 @@ public class BuckGlobalStateFactory {
   }
 
   /** Create a number of instances of {@link BuildFileManifestCache}, one per each cell */
-  private static LoadingCache<Path, BuildFileManifestCache> createBuildFileManifestCachePerCellMap(
-      EventBus fileEventBus, CellProvider cellProvider, AbsPath superRootPath) {
+  private static LoadingCache<CanonicalCellName, BuildFileManifestCache>
+      createBuildFileManifestCachePerCellMap(
+          EventBus fileEventBus, CellProvider cellProvider, AbsPath superRootPath) {
     return CacheBuilder.newBuilder()
         .build(
-            new CacheLoader<Path, BuildFileManifestCache>() {
+            new CacheLoader<CanonicalCellName, BuildFileManifestCache>() {
               @Override
-              public BuildFileManifestCache load(Path path) {
-                Cell cell = cellProvider.getCellByPath(AbsPath.of(path));
+              public BuildFileManifestCache load(CanonicalCellName cellName) {
+                Cell cell = cellProvider.getCellByCanonicalCellName(cellName);
                 String buildFileName =
                     cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
                 BuildFileManifestCache cache =
                     BuildFileManifestCache.of(
                         superRootPath.getPath(),
-                        path,
+                        cell.getRoot().getPath(),
                         cell.getFilesystem().getPath(buildFileName),
                         cell.getFilesystemViewForSourceFiles());
                 fileEventBus.register(cache.getInvalidator());
