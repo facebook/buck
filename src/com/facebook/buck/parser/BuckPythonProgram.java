@@ -101,7 +101,9 @@ class BuckPythonProgram implements AutoCloseable {
           JarURLConnection connection = (JarURLConnection) url.openConnection();
           Preconditions.checkState(
               connection.getEntryName().equals("buck_parser"),
-              "buck_parser directory should be at the root of the jar file.");
+              "buck_parser directory should be at the root of the jar file: %s; entry name: %s",
+              url,
+              connection.getEntryName());
           URI jarFileURI = connection.getJarFileURL().toURI();
           pythonPath = Paths.get(jarFileURI);
         } else if ("file".equals(url.getProtocol())) {
