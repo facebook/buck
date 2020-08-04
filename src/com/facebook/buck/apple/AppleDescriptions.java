@@ -1052,6 +1052,17 @@ public class AppleDescriptions {
                         Optional.empty(),
                         ignoreMissingSource));
               });
+      {
+        final boolean codeSignOnCopy = false;
+        final boolean ignoreMissingSource = dryRunCodeSigning;
+        bundlePartsReadyToCopy.add(
+            FileAppleBundlePart.of(
+                codeSignPrepRule.getSourcePathToEntitlementsOutput(),
+                AppleBundleDestination.BUNDLEROOT,
+                codeSignOnCopy,
+                Optional.of("BUCK_code_sign_entitlements.plist"),
+                ignoreMissingSource));
+      }
     } else {
       codeSignIdentitiesSupplier = Suppliers.ofInstance(ImmutableList.of());
       infoPlistReadyToCopy = infoPlist.getSourcePathToOutput();

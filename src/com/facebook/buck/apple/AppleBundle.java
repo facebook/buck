@@ -50,7 +50,6 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.step.ConditionalStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -80,8 +79,6 @@ public class AppleBundle extends AbstractBuildRule
   private static final Logger LOG = Logger.get(AppleBundle.class);
   public static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
   private static final String CODE_SIGN_DRY_RUN_ARGS_FILE = "BUCK_code_sign_args.plist";
-  private static final String CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE =
-      "BUCK_code_sign_entitlements.plist";
 
   @AddToRuleKey private final String extension;
 
@@ -352,8 +349,6 @@ public class AppleBundle extends AbstractBuildRule
         getProjectFilesystem(),
         codeSignOnCopyPathsBuilder);
 
-    addCopyCodeSignDryRunResultsStepsIfNeeded(context, stepsBuilder);
-
     if (codeSignType != AppleCodeSignType.SKIP) {
       Supplier<CodeSignIdentity> codeSignIdentitySupplier =
           appendStepsToSelectCodeSignIdentity(context, stepsBuilder);
@@ -524,33 +519,6 @@ public class AppleBundle extends AbstractBuildRule
             codesignFlags,
             codesignTimeout,
             withDownwardApi));
-  }
-
-  private void addCopyCodeSignDryRunResultsStepsIfNeeded(
-      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
-
-    if (codeSignType != AppleCodeSignType.DISTRIBUTION || !dryRunCodeSigning) {
-      return;
-    }
-
-    {
-      Path entitlementsPath =
-          context
-              .getSourcePathResolver()
-              .getCellUnsafeRelPath(
-                  maybeEntitlementsFile.orElseThrow(
-                      () ->
-                          new IllegalStateException(
-                              "Entitlements should be provided when non-adhoc codesign is needed")))
-              .getPath();
-      Path entitlementsBundlePath = bundleRoot.resolve(CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE);
-      // Entitlements file could be missing when something went wrong, but code sign is run in dry
-      // mode
-      stepsBuilder.add(
-          new ConditionalStep(
-              () -> getProjectFilesystem().exists(entitlementsPath),
-              CopyStep.forFile(getProjectFilesystem(), entitlementsPath, entitlementsBundlePath)));
-    }
   }
 
   // TODO (williamtwilson) Remove this. This is currently required because BuiltinApplePackage calls
