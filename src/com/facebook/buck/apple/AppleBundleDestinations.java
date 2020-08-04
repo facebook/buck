@@ -56,6 +56,9 @@ abstract class AppleBundleDestinations implements AddsToRuleKey {
   @AddToRuleKey(stringify = true)
   public abstract Path getQuickLookPath();
 
+  @AddToRuleKey(stringify = true)
+  public abstract Path getWatchKitStubPath();
+
   private static final Path OSX_CONTENTS_PATH = Paths.get("Contents");
   public static final AppleBundleDestinations OSX_DESTINATIONS =
       ImmutableAppleBundleDestinations.ofImpl(
@@ -68,7 +71,8 @@ abstract class AppleBundleDestinations implements AddsToRuleKey {
           OSX_CONTENTS_PATH,
           OSX_CONTENTS_PATH,
           OSX_CONTENTS_PATH.resolve("XPCServices"),
-          OSX_CONTENTS_PATH.resolve("Library/QuickLook"));
+          OSX_CONTENTS_PATH.resolve("Library/QuickLook"),
+          OSX_CONTENTS_PATH);
 
   private static final Path OSX_FRAMEWORK_CONTENTS_PATH = Paths.get("");
   public static final AppleBundleDestinations OSX_FRAMEWORK_DESTINATIONS =
@@ -82,6 +86,7 @@ abstract class AppleBundleDestinations implements AddsToRuleKey {
           OSX_FRAMEWORK_CONTENTS_PATH.resolve("Headers"),
           OSX_FRAMEWORK_CONTENTS_PATH.resolve("Modules"),
           OSX_FRAMEWORK_CONTENTS_PATH.resolve("XPCServices"),
+          OSX_FRAMEWORK_CONTENTS_PATH,
           OSX_FRAMEWORK_CONTENTS_PATH);
 
   private static final Path IOS_CONTENTS_PATH = Paths.get("");
@@ -96,7 +101,8 @@ abstract class AppleBundleDestinations implements AddsToRuleKey {
           IOS_CONTENTS_PATH,
           IOS_CONTENTS_PATH,
           IOS_CONTENTS_PATH.resolve("XPCServices"),
-          IOS_CONTENTS_PATH.resolve("Library/QuickLook"));
+          IOS_CONTENTS_PATH.resolve("Library/QuickLook"),
+          IOS_CONTENTS_PATH.resolve("_WatchKitStub"));
 
   private static final Path IOS_FRAMEWORK_CONTENTS_PATH = Paths.get("");
   public static final AppleBundleDestinations IOS_FRAMEWORK_DESTINATIONS =
@@ -110,6 +116,7 @@ abstract class AppleBundleDestinations implements AddsToRuleKey {
           IOS_FRAMEWORK_CONTENTS_PATH.resolve("Headers"),
           IOS_FRAMEWORK_CONTENTS_PATH.resolve("Modules"),
           IOS_FRAMEWORK_CONTENTS_PATH.resolve("XPCServices"),
+          IOS_FRAMEWORK_CONTENTS_PATH,
           IOS_FRAMEWORK_CONTENTS_PATH);
 
   public static AppleBundleDestinations platformDestinations(ApplePlatform platform) {

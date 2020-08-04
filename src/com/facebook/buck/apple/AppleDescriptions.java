@@ -1066,6 +1066,16 @@ public class AppleDescriptions {
               AppleBundleDestination.EXECUTABLES,
               false,
               Optional.of(binaryName)));
+
+      if (AppleBundleSupport.isWatchKitStubNeeded(
+          unwrappedExtension, unwrappedBinary, appleCxxPlatform.getAppleSdk().getApplePlatform())) {
+        bundlePartsReadyToCopy.add(
+            FileAppleBundlePart.of(
+                unwrappedBinary.getSourcePathToOutput(),
+                AppleBundleDestination.WATCHKITSTUB,
+                false,
+                Optional.of("WK")));
+      }
     }
 
     AppleBundleResources collectedResources =

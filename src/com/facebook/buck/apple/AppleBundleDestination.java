@@ -34,6 +34,7 @@ public enum AppleBundleDestination {
   HEADERS,
   MODULES,
   QUICKLOOK,
+  WATCHKITSTUB,
   ;
 
   /**
@@ -62,6 +63,8 @@ public enum AppleBundleDestination {
         return destinations.getModulesPath();
       case QUICKLOOK:
         return destinations.getQuickLookPath();
+      case WATCHKITSTUB:
+        return destinations.getWatchKitStubPath();
     }
     throw new IllegalStateException("Unhandled AppleBundleDestination " + this);
   }

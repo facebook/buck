@@ -46,7 +46,6 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.NativeTestable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -66,7 +65,6 @@ import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -309,7 +307,6 @@ public class AppleBundle extends AbstractBuildRule
                 context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot)));
 
     if (hasBinary()) {
-      appendCopyWatchKitStubStep(stepsBuilder, context);
       appendCopyDsymStep(stepsBuilder, buildableContext, context);
     }
 
@@ -608,19 +605,6 @@ public class AppleBundle extends AbstractBuildRule
     }
   }
 
-  private void appendCopyWatchKitStubStep(
-      ImmutableList.Builder<Step> stepsBuilder, BuildContext context) {
-    Preconditions.checkArgument(hasBinary());
-
-    Path binaryPath =
-        context
-            .getSourcePathResolver()
-            .getAbsolutePath(Objects.requireNonNull(binary.getSourcePathToOutput()))
-            .getPath();
-
-    copyAnotherCopyOfWatchKitStub(stepsBuilder, context, binaryPath);
-  }
-
   // TODO (williamtwilson) Remove this. This is currently required because BuiltinApplePackage calls
   // it.
   // AppleResourceProcessing.addSwiftStdlibStepIfNeeded should be called instead.
@@ -650,19 +634,6 @@ public class AppleBundle extends AbstractBuildRule
         sliceAppPackageSwiftRuntime,
         sliceAppBundleSwiftRuntime,
         withDownwardApi);
-  }
-
-  private void copyAnotherCopyOfWatchKitStub(
-      ImmutableList.Builder<Step> stepsBuilder, BuildContext context, Path binaryOutputPath) {
-    if ((isLegacyWatchApp || platform.getName().contains("watch")) && binary instanceof WriteFile) {
-      Path watchKitStubDir = bundleRoot.resolve("_WatchKitStub");
-      stepsBuilder.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), getProjectFilesystem(), watchKitStubDir)),
-          CopyStep.forFile(
-              getProjectFilesystem(), binaryOutputPath, watchKitStubDir.resolve("WK")));
-    }
   }
 
   private void appendCopyDsymStep(
