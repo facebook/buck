@@ -79,7 +79,6 @@ public class AppleBundle extends AbstractBuildRule
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
   public static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
-  private static final String PP_DRY_RUN_RESULT_FILE = "BUCK_pp_dry_run.plist";
   private static final String CODE_SIGN_DRY_RUN_ARGS_FILE = "BUCK_code_sign_args.plist";
   private static final String CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE =
       "BUCK_code_sign_entitlements.plist";
@@ -152,8 +151,6 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final boolean dryRunCodeSigning;
 
-  @AddToRuleKey private final Optional<SourcePath> maybeDryCodeSignResultFile;
-
   @AddToRuleKey private final Optional<SourcePath> maybeCodeSignIdentityFingerprintFile;
 
   private final Path infoPlistBundlePath;
@@ -189,7 +186,6 @@ public class AppleBundle extends AbstractBuildRule
       boolean withDownwardApi,
       Optional<SourcePath> maybeEntitlementsFile,
       boolean dryRunCodeSigning,
-      Optional<SourcePath> maybeDryCodeSignResultFile,
       Optional<SourcePath> maybeCodeSignIdentityFingerprintFile) {
     super(buildTarget, projectFilesystem);
     this.buildRuleParams = params;
@@ -220,7 +216,6 @@ public class AppleBundle extends AbstractBuildRule
     this.ibtoolModuleFlag = ibtoolModuleFlag.orElse(false);
     this.ibtoolFlags = ibtoolFlags;
     this.dryRunCodeSigning = dryRunCodeSigning;
-    this.maybeDryCodeSignResultFile = maybeDryCodeSignResultFile;
     this.maybeCodeSignIdentityFingerprintFile = maybeCodeSignIdentityFingerprintFile;
 
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
@@ -534,19 +529,8 @@ public class AppleBundle extends AbstractBuildRule
   private void addCopyCodeSignDryRunResultsStepsIfNeeded(
       BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
 
-    if (codeSignType != AppleCodeSignType.DISTRIBUTION || !maybeDryCodeSignResultFile.isPresent()) {
+    if (codeSignType != AppleCodeSignType.DISTRIBUTION || !dryRunCodeSigning) {
       return;
-    }
-
-    {
-      Path dryRunResultPath =
-          context
-              .getSourcePathResolver()
-              .getCellUnsafeRelPath(maybeDryCodeSignResultFile.get())
-              .getPath();
-      Path dryRunResultBundlePath = bundleRoot.resolve(PP_DRY_RUN_RESULT_FILE);
-      stepsBuilder.add(
-          CopyStep.forFile(getProjectFilesystem(), dryRunResultPath, dryRunResultBundlePath));
     }
 
     {

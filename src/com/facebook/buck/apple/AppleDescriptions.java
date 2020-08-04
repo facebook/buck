@@ -1011,7 +1011,6 @@ public class AppleDescriptions {
     SourcePath infoPlistReadyToCopy;
     Optional<SourcePath> provisioningProfileReadyToCopy;
     Optional<SourcePath> entitlementsReadyForCodeSign;
-    Optional<SourcePath> dryCodeSignResultsReadyToCopy;
     Optional<SourcePath> codeSignIdentityFingerprint;
     if (codeSignType == DISTRIBUTION) {
       codeSignIdentitiesSupplier = codeSignIdentityStore.getIdentitiesSupplier();
@@ -1037,9 +1036,22 @@ public class AppleDescriptions {
           Optional.of(codeSignPrepRule.getSourcePathToProvisioningProfile());
       entitlementsReadyForCodeSign =
           Optional.of(codeSignPrepRule.getSourcePathToEntitlementsOutput());
-      dryCodeSignResultsReadyToCopy = codeSignPrepRule.getSourcePathToDryRunOutput();
       codeSignIdentityFingerprint =
           Optional.of(Objects.requireNonNull(codeSignPrepRule.getSourcePathToOutput()));
+      codeSignPrepRule
+          .getSourcePathToDryRunOutput()
+          .ifPresent(
+              sourcePath -> {
+                final boolean codeSignOnCopy = false;
+                final boolean ignoreMissingSource = false;
+                bundlePartsReadyToCopy.add(
+                    FileAppleBundlePart.of(
+                        sourcePath,
+                        AppleBundleDestination.BUNDLEROOT,
+                        codeSignOnCopy,
+                        Optional.empty(),
+                        ignoreMissingSource));
+              });
     } else {
       codeSignIdentitiesSupplier = Suppliers.ofInstance(ImmutableList.of());
       infoPlistReadyToCopy = infoPlist.getSourcePathToOutput();
@@ -1049,7 +1061,6 @@ public class AppleDescriptions {
       } else {
         entitlementsReadyForCodeSign = Optional.empty();
       }
-      dryCodeSignResultsReadyToCopy = Optional.empty();
       codeSignIdentityFingerprint = Optional.empty();
     }
 
@@ -1165,7 +1176,6 @@ public class AppleDescriptions {
         withDownwardApi,
         entitlementsReadyForCodeSign,
         dryRunCodeSigning,
-        dryCodeSignResultsReadyToCopy,
         codeSignIdentityFingerprint);
   }
 

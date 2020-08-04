@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Abstraction of a place in a resulting bundle where file or directory will be copied. Actual value
@@ -35,6 +36,7 @@ public enum AppleBundleDestination {
   MODULES,
   QUICKLOOK,
   WATCHKITSTUB,
+  BUNDLEROOT,
   ;
 
   /**
@@ -65,6 +67,8 @@ public enum AppleBundleDestination {
         return destinations.getQuickLookPath();
       case WATCHKITSTUB:
         return destinations.getWatchKitStubPath();
+      case BUNDLEROOT:
+        return Paths.get("");
     }
     throw new IllegalStateException("Unhandled AppleBundleDestination " + this);
   }
