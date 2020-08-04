@@ -348,7 +348,7 @@ public class AppleResourceProcessing {
     addStepsToCreateDirectoriesWhereBundlePartsAreCopied(
         context, stepsBuilder, resources, bundleParts, dirRoot, destinations, projectFilesystem);
     addStepsToCopyDirectories(
-        context,
+        context.getSourcePathResolver(),
         stepsBuilder,
         codeSignOnCopyPathsBuilder,
         resources,
@@ -357,9 +357,15 @@ public class AppleResourceProcessing {
         destinations,
         projectFilesystem);
     addStepsToCopyContentOfDirectories(
-        context, stepsBuilder, resources, bundleParts, dirRoot, destinations, projectFilesystem);
+        context.getSourcePathResolver(),
+        stepsBuilder,
+        resources,
+        bundleParts,
+        dirRoot,
+        destinations,
+        projectFilesystem);
     addStepsToProcessAndCopyFiles(
-        context,
+        context.getSourcePathResolver(),
         stepsBuilder,
         codeSignOnCopyPathsBuilder,
         resources,
@@ -376,7 +382,7 @@ public class AppleResourceProcessing {
         binaryName,
         withDownwardApi);
     addStepsToCopyFilesNotNeedingProcessing(
-        context,
+        context.getSourcePathResolver(),
         stepsBuilder,
         codeSignOnCopyPathsBuilder,
         bundleParts,
@@ -408,7 +414,7 @@ public class AppleResourceProcessing {
   }
 
   private static void addStepsToCopyDirectories(
-      BuildContext context,
+      SourcePathResolverAdapter sourcePathResolver,
       ImmutableList.Builder<Step> stepsBuilder,
       ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
       AppleBundleResources resources,
@@ -434,10 +440,7 @@ public class AppleResourceProcessing {
             .collect(Collectors.toList());
     for (SourcePathWithAppleBundleDestination dirWithDestination : directoriesToCopy) {
       Path resolvedDirPath =
-          context
-              .getSourcePathResolver()
-              .getAbsolutePath(dirWithDestination.getSourcePath())
-              .getPath();
+          sourcePathResolver.getAbsolutePath(dirWithDestination.getSourcePath()).getPath();
       Path bundleDestinationPath =
           dirRoot.resolve(dirWithDestination.getDestination().getPath(destinations));
       stepsBuilder.add(
@@ -454,7 +457,7 @@ public class AppleResourceProcessing {
   }
 
   private static void addStepsToCopyContentOfDirectories(
-      BuildContext context,
+      SourcePathResolverAdapter sourcePathResolver,
       ImmutableList.Builder<Step> stepsBuilder,
       AppleBundleResources resources,
       ImmutableList<AppleBundlePart> bundleParts,
@@ -483,17 +486,14 @@ public class AppleResourceProcessing {
       stepsBuilder.add(
           CopyStep.forDirectory(
               projectFilesystem,
-              context
-                  .getSourcePathResolver()
-                  .getAbsolutePath(dirWithDestination.getSourcePath())
-                  .getPath(),
+              sourcePathResolver.getAbsolutePath(dirWithDestination.getSourcePath()).getPath(),
               bundleDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
   }
 
   public static void addStepsToProcessAndCopyFiles(
-      BuildContext context,
+      SourcePathResolverAdapter sourcePathResolver,
       ImmutableList.Builder<Step> stepsBuilder,
       ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
       AppleBundleResources resources,
@@ -511,12 +511,12 @@ public class AppleResourceProcessing {
       boolean withDownwardApi) {
     for (SourcePathWithAppleBundleDestination fileWithDestination : resources.getResourceFiles()) {
       AbsPath resolvedFilePath =
-          context.getSourcePathResolver().getAbsolutePath(fileWithDestination.getSourcePath());
+          sourcePathResolver.getAbsolutePath(fileWithDestination.getSourcePath());
       Path bundleDestinationPath =
           dirRoot.resolve(fileWithDestination.getDestination().getPath(destinations));
       Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());
       AppleResourceProcessing.addResourceProcessingSteps(
-          context.getSourcePathResolver(),
+          sourcePathResolver,
           resolvedFilePath.getPath(),
           destinationPath,
           stepsBuilder,
@@ -537,7 +537,7 @@ public class AppleResourceProcessing {
   }
 
   private static void addStepsToCopyFilesNotNeedingProcessing(
-      BuildContext context,
+      SourcePathResolverAdapter sourcePathResolver,
       ImmutableList.Builder<Step> stepsBuilder,
       ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
       ImmutableList<AppleBundlePart> bundleParts,
@@ -556,7 +556,7 @@ public class AppleResourceProcessing {
     List<CopySpec> copySpecs = new LinkedList<>();
 
     for (FileAppleBundlePart bundlePart : filesToCopyWithoutProcessing) {
-      CopySpec copySpec = new CopySpec(bundlePart, context.getSourcePathResolver(), destinations);
+      CopySpec copySpec = new CopySpec(bundlePart, sourcePathResolver, destinations);
       copySpecs.add(copySpec);
 
       if (bundlePart.getIgnoreIfMissing()) {
