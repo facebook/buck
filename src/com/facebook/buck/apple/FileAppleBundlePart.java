@@ -16,9 +16,12 @@
 
 package com.facebook.buck.apple;
 
+import static com.facebook.buck.core.util.Optionals.compare;
+
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import java.util.Optional;
 
 /** File that are copied to specific subdirectory in bundle. */
 @BuckStyleValue
@@ -36,17 +39,27 @@ public abstract class FileAppleBundlePart extends AppleBundlePart
   @AddToRuleKey
   public abstract boolean getCodesignOnCopy();
 
+  @AddToRuleKey
+  public abstract Optional<String> getNewName();
+
   public static FileAppleBundlePart of(SourcePath sourcePath, AppleBundleDestination destination) {
-    return of(sourcePath, destination, false);
+    return of(sourcePath, destination, false, Optional.empty());
   }
 
   public static FileAppleBundlePart of(
-      SourcePath sourcePath, AppleBundleDestination destination, boolean codesignOnCopy) {
-    return ImmutableFileAppleBundlePart.ofImpl(sourcePath, destination, codesignOnCopy);
+      SourcePath sourcePath,
+      AppleBundleDestination destination,
+      boolean codesignOnCopy,
+      Optional<String> maybeNewName) {
+    return ImmutableFileAppleBundlePart.ofImpl(
+        sourcePath, destination, codesignOnCopy, maybeNewName);
   }
 
   @Override
   public int compareTo(FileAppleBundlePart o) {
+    if (getNewName() != o.getNewName()) {
+      return compare(getNewName(), o.getNewName());
+    }
     if (getCodesignOnCopy() != o.getCodesignOnCopy()) {
       return Boolean.compare(getCodesignOnCopy(), o.getCodesignOnCopy());
     }

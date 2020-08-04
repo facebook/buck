@@ -898,6 +898,21 @@ public class AppleDescriptions {
 
     ImmutableList.Builder<AppleBundlePart> bundlePartsReadyToCopy = ImmutableList.builder();
 
+    bundlePartsReadyToCopy.addAll(
+        extraBinaries.stream()
+            .map(
+                buildRule -> {
+                  BuildTarget unflavoredTarget = buildRule.getBuildTarget().withFlavors();
+                  String binaryName = AppleBundle.getBinaryName(unflavoredTarget, Optional.empty());
+                  Optional<String> newNameAfterCopy = Optional.of(binaryName);
+                  return FileAppleBundlePart.of(
+                      buildRule.getSourcePathToOutput(),
+                      AppleBundleDestination.EXECUTABLES,
+                      true,
+                      newNameAfterCopy);
+                })
+            .collect(ImmutableSet.toImmutableSet()));
+
     String unwrappedExtension =
         extension.isLeft() ? extension.getLeft().fileExtension : extension.getRight();
 
@@ -1064,7 +1079,7 @@ public class AppleDescriptions {
                     BuildRules.toBuildRulesFor(
                         buildTarget,
                         graphBuilder,
-                        RichStream.from(collectedResources.getAll())
+                        RichStream.from(collectedResources.getAllSourcePaths())
                             .concat(frameworks.stream())
                             .filter(BuildTargetSourcePath.class)
                             .map(BuildTargetSourcePath::getTarget)
@@ -1083,7 +1098,6 @@ public class AppleDescriptions {
         infoPlistFileBundlePath,
         unwrappedBinary,
         appleDsym,
-        extraBinaries,
         destinations,
         collectedResources,
         bundlePartsReadyToCopy.build(),

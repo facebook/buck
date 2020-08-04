@@ -576,7 +576,8 @@ public class AppleResourceProcessing {
           context.getSourcePathResolver().getAbsolutePath(fileWithDestination.getSourcePath());
       Path destinationDirectoryPath =
           dirRoot.resolve(fileWithDestination.getDestination().getPath(destinations));
-      String destinationFileName = resolvedFilePath.getFileName().toString();
+      String destinationFileName =
+          fileWithDestination.getNewName().orElse(resolvedFilePath.getFileName().toString());
       Path destinationPath = destinationDirectoryPath.resolve(destinationFileName);
       stepsBuilder.add(
           CopyStep.forFile(projectFilesystem, resolvedFilePath.getPath(), destinationPath));
@@ -640,7 +641,8 @@ public class AppleResourceProcessing {
               sourcePathResolver,
               destinations,
               pathWithDestination.getSourcePath(),
-              pathWithDestination.getDestination());
+              pathWithDestination.getDestination(),
+              Optional.empty());
     }
 
     public CopySpec(
@@ -653,7 +655,8 @@ public class AppleResourceProcessing {
               sourcePathResolver,
               destinations,
               bundlePart.getSourcePath(),
-              bundlePart.getDestination());
+              bundlePart.getDestination(),
+              bundlePart.getNewName());
     }
 
     public CopySpec(
@@ -666,7 +669,8 @@ public class AppleResourceProcessing {
               sourcePathResolver,
               destinations,
               bundlePart.getSourcePath(),
-              bundlePart.getDestination());
+              bundlePart.getDestination(),
+              Optional.empty());
     }
 
     public AbsPath getSourcePath() {
@@ -681,10 +685,11 @@ public class AppleResourceProcessing {
         SourcePathResolverAdapter sourcePathResolver,
         AppleBundleDestinations destinations,
         SourcePath sourcePath,
-        AppleBundleDestination destination) {
+        AppleBundleDestination destination,
+        Optional<String> maybeNewName) {
       RelPath destinationDirectoryPath = RelPath.of(destination.getPath(destinations));
       AbsPath resolvedSourcePath = sourcePathResolver.getAbsolutePath(sourcePath);
-      String destinationFileName = resolvedSourcePath.getFileName().toString();
+      String destinationFileName = maybeNewName.orElse(resolvedSourcePath.getFileName().toString());
       return destinationDirectoryPath.resolveRel(destinationFileName);
     }
   }

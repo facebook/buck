@@ -22,7 +22,6 @@ import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
@@ -62,8 +61,6 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
@@ -103,8 +100,6 @@ public class AppleBundle extends AbstractBuildRule
   @AddToRuleKey private final Boolean isLegacyWatchApp;
 
   @AddToRuleKey private final Optional<AppleDsym> appleDsym;
-
-  @AddToRuleKey private final ImmutableSet<BuildRule> extraBinaries;
 
   @AddToRuleKey private final AppleBundleDestinations destinations;
 
@@ -178,7 +173,6 @@ public class AppleBundle extends AbstractBuildRule
       RelPath infoPlistPathRelativeToBundle,
       BuildRule binary,
       Optional<AppleDsym> appleDsym,
-      ImmutableSet<BuildRule> extraBinaries,
       AppleBundleDestinations destinations,
       AppleBundleResources resources,
       ImmutableList<AppleBundlePart> bundleParts,
@@ -212,7 +206,6 @@ public class AppleBundle extends AbstractBuildRule
     this.maybeEntitlementsFile = maybeEntitlementsFile;
     this.isLegacyWatchApp = AppleBundleSupport.isLegacyWatchApp(extension, binary);
     this.appleDsym = appleDsym;
-    this.extraBinaries = extraBinaries;
     this.destinations = destinations;
     this.resources = resources;
     this.bundleParts = bundleParts;
@@ -400,11 +393,6 @@ public class AppleBundle extends AbstractBuildRule
           sliceAppPackageSwiftRuntime,
           sliceAppBundleSwiftRuntime,
           withDownwardApi);
-
-      for (BuildRule extraBinary : extraBinaries) {
-        Path outputPath = getBundleBinaryPathForBuildRule(extraBinary);
-        codeSignOnCopyPathsBuilder.add(outputPath);
-      }
 
       ImmutableList<Path> codeSignOnCopyPaths = codeSignOnCopyPathsBuilder.build();
 
@@ -624,52 +612,20 @@ public class AppleBundle extends AbstractBuildRule
       ImmutableList.Builder<Step> stepsBuilder, BuildContext context) {
     Preconditions.checkArgument(hasBinary());
 
-    AbsPath binaryOutputPath =
+    Path binaryPath =
         context
             .getSourcePathResolver()
-            .getAbsolutePath(Objects.requireNonNull(binary.getSourcePathToOutput()));
+            .getAbsolutePath(Objects.requireNonNull(binary.getSourcePathToOutput()))
+            .getPath();
 
-    ImmutableMap.Builder<Path, Path> binariesBuilder = ImmutableMap.builder();
-    binariesBuilder.put(bundleBinaryPath, binaryOutputPath.getPath());
-
-    for (BuildRule extraBinary : extraBinaries) {
-      RelPath outputPath =
-          context.getSourcePathResolver().getCellUnsafeRelPath(extraBinary.getSourcePathToOutput());
-      Path bundlePath = getBundleBinaryPathForBuildRule(extraBinary);
-      binariesBuilder.put(bundlePath, outputPath.getPath());
-    }
-
-    copyBinariesIntoBundle(stepsBuilder, context, binariesBuilder.build());
-    copyAnotherCopyOfWatchKitStub(stepsBuilder, context, binaryOutputPath.getPath());
-  }
-
-  private Path getBundleBinaryPathForBuildRule(BuildRule buildRule) {
-    BuildTarget unflavoredTarget = buildRule.getBuildTarget().withFlavors();
-    String binaryName = getBinaryName(unflavoredTarget, Optional.empty());
-    Path pathRelativeToBundleRoot = destinations.getExecutablesPath().resolve(binaryName);
-    return bundleRoot.resolve(pathRelativeToBundleRoot);
-  }
-
-  /**
-   * @param binariesMap A map from destination to source. Destination is deliberately used as a key
-   *     prevent multiple sources overwriting the same destination.
-   */
-  private void copyBinariesIntoBundle(
-      ImmutableList.Builder<Step> stepsBuilder,
-      BuildContext context,
-      ImmutableMap<Path, Path> binariesMap) {
     stepsBuilder.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
                 getProjectFilesystem(),
                 bundleRoot.resolve(this.destinations.getExecutablesPath()))));
-
-    binariesMap.forEach(
-        (binaryBundlePath, binaryOutputPath) -> {
-          stepsBuilder.add(
-              CopyStep.forFile(getProjectFilesystem(), binaryOutputPath, binaryBundlePath));
-        });
+    stepsBuilder.add(CopyStep.forFile(getProjectFilesystem(), binaryPath, bundleBinaryPath));
+    copyAnotherCopyOfWatchKitStub(stepsBuilder, context, binaryPath);
   }
 
   // TODO (williamtwilson) Remove this. This is currently required because BuiltinApplePackage calls

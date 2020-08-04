@@ -28,6 +28,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -111,5 +112,54 @@ public class AppleResourceProcessingTest {
     } catch (HumanReadableException exception) {
       fail("Verification is not expected to throw an exception");
     }
+  }
+
+  @Test
+  public void
+      test_givenResourcesWithSameNameCopiedToSameDirectory_givenOneIsRenamed_thenVerificationIsSuccessful() {
+    SourcePath path1 = PathSourcePath.of(filesystem, Paths.get("test1"));
+    resourcesBuilder.addResourceFiles(
+        SourcePathWithAppleBundleDestination.of(path1, AppleBundleDestination.RESOURCES));
+
+    SourcePath path2 = PathSourcePath.of(filesystem, Paths.get("test1"));
+    ImmutableList<AppleBundlePart> bundleParts =
+        ImmutableList.of(
+            FileAppleBundlePart.of(
+                path2, AppleBundleDestination.RESOURCES, false, Optional.of("test2")));
+
+    try {
+      AppleResourceProcessing.verifyResourceConflicts(
+          resourcesBuilder.build(),
+          bundleParts,
+          resolver,
+          AppleBundleDestinations.OSX_FRAMEWORK_DESTINATIONS);
+    } catch (HumanReadableException exception) {
+      fail("Verification is not expected to throw an exception");
+    }
+  }
+
+  @Test
+  public void
+      test_givenResourcesWithDifferentNamesCopiedToSameDirectory_givenOneIsRenamedSoFinalNamesAreSame_thenVerificationFails() {
+    SourcePath path1 = PathSourcePath.of(filesystem, Paths.get("test1"));
+    resourcesBuilder.addResourceFiles(
+        SourcePathWithAppleBundleDestination.of(path1, AppleBundleDestination.RESOURCES));
+
+    SourcePath path2 = PathSourcePath.of(filesystem, Paths.get("test2"));
+    ImmutableList<AppleBundlePart> bundleParts =
+        ImmutableList.of(
+            FileAppleBundlePart.of(
+                path2, AppleBundleDestination.RESOURCES, false, Optional.of("test1")));
+
+    try {
+      AppleResourceProcessing.verifyResourceConflicts(
+          resourcesBuilder.build(),
+          bundleParts,
+          resolver,
+          AppleBundleDestinations.OSX_FRAMEWORK_DESTINATIONS);
+    } catch (HumanReadableException exception) {
+      return;
+    }
+    fail("Verification expected to throw an exception");
   }
 }
