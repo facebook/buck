@@ -30,6 +30,9 @@ class SelectorValue:
     def no_match_message(self):
         return self.__no_match_message
 
+    def __str__(self):
+        return "select(" + str(self.__conditions()) + ")"
+
 
 class SelectorList:
     """
@@ -56,3 +59,6 @@ class SelectorList:
             return SelectorList(self.__items + obj.items())
         else:
             return SelectorList(self.__items + [obj])
+
+    def __str__(self):
+        return " + ".join(str(i) for i in self.__items)
