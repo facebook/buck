@@ -51,6 +51,6 @@ public class KotlinTestModuleRule extends BaseIjModuleRule<KotlinTestDescription
 
   @Override
   public IjModuleType detectModuleType(TargetNode<KotlinTestDescriptionArg> targetNode) {
-    return IjModuleType.UNKNOWN_MODULE;
+    return IjModuleType.JAVA_MODULE;
   }
 }

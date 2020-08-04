@@ -54,6 +54,6 @@ public class KotlinLibraryModuleRule extends BaseIjModuleRule<KotlinLibraryDescr
 
   @Override
   public IjModuleType detectModuleType(TargetNode<KotlinLibraryDescriptionArg> targetNode) {
-    return IjModuleType.UNKNOWN_MODULE;
+    return IjModuleType.JAVA_MODULE;
   }
 }
