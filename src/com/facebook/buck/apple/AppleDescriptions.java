@@ -1058,6 +1058,16 @@ public class AppleDescriptions {
           RelPath.of(destination.getPath(destinations)).resolveRel("Info.plist");
     }
 
+    if (unwrappedBinary.getSourcePathToOutput() != null) {
+      String binaryName = AppleBundle.getBinaryName(buildTarget, productName);
+      bundlePartsReadyToCopy.add(
+          FileAppleBundlePart.of(
+              unwrappedBinary.getSourcePathToOutput(),
+              AppleBundleDestination.EXECUTABLES,
+              false,
+              Optional.of(binaryName)));
+    }
+
     AppleBundleResources collectedResources =
         AppleResources.collectResourceDirsAndFiles(
             xcodeDescriptions,

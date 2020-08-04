@@ -309,7 +309,7 @@ public class AppleBundle extends AbstractBuildRule
                 context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot)));
 
     if (hasBinary()) {
-      appendCopyBinarySteps(stepsBuilder, context);
+      appendCopyWatchKitStubStep(stepsBuilder, context);
       appendCopyDsymStep(stepsBuilder, buildableContext, context);
     }
 
@@ -608,7 +608,7 @@ public class AppleBundle extends AbstractBuildRule
     }
   }
 
-  private void appendCopyBinarySteps(
+  private void appendCopyWatchKitStubStep(
       ImmutableList.Builder<Step> stepsBuilder, BuildContext context) {
     Preconditions.checkArgument(hasBinary());
 
@@ -618,13 +618,6 @@ public class AppleBundle extends AbstractBuildRule
             .getAbsolutePath(Objects.requireNonNull(binary.getSourcePathToOutput()))
             .getPath();
 
-    stepsBuilder.add(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                bundleRoot.resolve(this.destinations.getExecutablesPath()))));
-    stepsBuilder.add(CopyStep.forFile(getProjectFilesystem(), binaryPath, bundleBinaryPath));
     copyAnotherCopyOfWatchKitStub(stepsBuilder, context, binaryPath);
   }
 
