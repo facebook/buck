@@ -1120,6 +1120,17 @@ public class AppleDescriptions {
       }
     }
 
+    {
+      final boolean codeSignOnCopy = true;
+      bundlePartsReadyToCopy.addAll(
+          frameworks.stream()
+              .map(
+                  sourcePath ->
+                      DirectoryAppleBundlePart.of(
+                          sourcePath, AppleBundleDestination.FRAMEWORKS, codeSignOnCopy))
+              .collect(ImmutableSet.toImmutableSet()));
+    }
+
     AppleBundleResources collectedResources =
         AppleResources.collectResourceDirsAndFiles(
             xcodeDescriptions,
@@ -1163,7 +1174,6 @@ public class AppleDescriptions {
         destinations,
         collectedResources,
         bundlePartsReadyToCopy.build(),
-        frameworks,
         appleCxxPlatform,
         tests,
         codeSignIdentitiesSupplier,

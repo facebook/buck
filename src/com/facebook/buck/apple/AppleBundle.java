@@ -98,8 +98,6 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final ImmutableList<AppleBundlePart> bundleParts;
 
-  @AddToRuleKey private final Set<SourcePath> frameworks;
-
   @AddToRuleKey private final Tool ibtool;
 
   @AddToRuleKey private final ImmutableSortedSet<BuildTarget> tests;
@@ -165,7 +163,6 @@ public class AppleBundle extends AbstractBuildRule
       AppleBundleDestinations destinations,
       AppleBundleResources resources,
       ImmutableList<AppleBundlePart> bundleParts,
-      Set<SourcePath> frameworks,
       AppleCxxPlatform appleCxxPlatform,
       Set<BuildTarget> tests,
       Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier,
@@ -196,7 +193,6 @@ public class AppleBundle extends AbstractBuildRule
     this.destinations = destinations;
     this.resources = resources;
     this.bundleParts = bundleParts;
-    this.frameworks = frameworks;
     this.ibtool = appleCxxPlatform.getIbtool();
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
     this.bundleRoot =
@@ -339,15 +335,6 @@ public class AppleBundle extends AbstractBuildRule
         getBuildTarget(),
         Optional.of(binaryName),
         withDownwardApi);
-
-    AppleResourceProcessing.addFrameworksProcessingSteps(
-        frameworks,
-        bundleRoot,
-        destinations,
-        stepsBuilder,
-        context,
-        getProjectFilesystem(),
-        codeSignOnCopyPathsBuilder);
 
     if (codeSignType != AppleCodeSignType.SKIP) {
       Supplier<CodeSignIdentity> codeSignIdentitySupplier =

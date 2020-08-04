@@ -197,34 +197,6 @@ public class AppleResourceProcessing {
     }
   }
 
-  /** Adds framework processing steps to a build rule */
-  public static void addFrameworksProcessingSteps(
-      Set<SourcePath> frameworks,
-      Path dirRoot,
-      AppleBundleDestinations destinations,
-      ImmutableList.Builder<Step> stepsBuilder,
-      BuildContext context,
-      ProjectFilesystem projectFilesystem,
-      ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder) {
-    if (!frameworks.isEmpty()) {
-      Path frameworksDestinationPath = dirRoot.resolve(destinations.getFrameworksPath());
-      stepsBuilder.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), projectFilesystem, frameworksDestinationPath)));
-      for (SourcePath framework : frameworks) {
-        AbsPath srcPath = context.getSourcePathResolver().getAbsolutePath(framework);
-        stepsBuilder.add(
-            CopyStep.forDirectory(
-                projectFilesystem,
-                srcPath.getPath(),
-                frameworksDestinationPath,
-                CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
-        codeSignOnCopyPathsBuilder.add(frameworksDestinationPath.resolve(srcPath.getFileName()));
-      }
-    }
-  }
-
   /** Adds the swift stdlib to the bundle if needed */
   public static void addSwiftStdlibStepIfNeeded(
       SourcePathResolverAdapter resolver,
