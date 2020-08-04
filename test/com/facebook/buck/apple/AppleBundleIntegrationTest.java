@@ -438,7 +438,8 @@ public class AppleBundleIntegrationTest {
         RelPath.get("DemoApp.xcent.expected"),
         BuildTargetPaths.getGenPath(
                 filesystem,
-                target.withoutFlavors().withAppendedFlavors(AppleCodeSignPreparation.FLAVOR),
+                AppleDescriptions.stripBundleSpecificFlavors(target)
+                    .withAppendedFlavors(AppleCodeSignPreparation.FLAVOR),
                 "%s")
             .resolveRel("Entitlements.plist"));
 
@@ -474,7 +475,8 @@ public class AppleBundleIntegrationTest {
         RelPath.get("DemoAppViaSubstitutions.xcent.expected"),
         BuildTargetPaths.getGenPath(
                 filesystem,
-                target.withoutFlavors().withAppendedFlavors(AppleCodeSignPreparation.FLAVOR),
+                AppleDescriptions.stripBundleSpecificFlavors(target)
+                    .withAppendedFlavors(AppleCodeSignPreparation.FLAVOR),
                 "%s")
             .resolveRel("Entitlements.plist"));
 
@@ -1098,7 +1100,8 @@ public class AppleBundleIntegrationTest {
         RelPath.get("DemoApp.xcent.expected"),
         BuildTargetPaths.getGenPath(
                 filesystem,
-                target.withoutFlavors().withAppendedFlavors(AppleCodeSignPreparation.FLAVOR),
+                AppleDescriptions.stripBundleSpecificFlavors(target)
+                    .withAppendedFlavors(AppleCodeSignPreparation.FLAVOR),
                 "%s")
             .resolveRel("Entitlements.plist"));
 

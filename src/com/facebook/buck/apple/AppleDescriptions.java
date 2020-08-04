@@ -921,7 +921,7 @@ public class AppleDescriptions {
 
     if (ApplePkgInfo.isPkgInfoNeeded(unwrappedExtension)) {
       BuildTarget pkgInfoBuildTarget =
-          buildTarget.withoutFlavors().withAppendedFlavors(ApplePkgInfo.FLAVOR);
+          stripBundleSpecificFlavors(buildTarget).withAppendedFlavors(ApplePkgInfo.FLAVOR);
       ApplePkgInfo pkgInfo =
           (ApplePkgInfo)
               graphBuilder.computeIfAbsent(
@@ -946,7 +946,7 @@ public class AppleDescriptions {
     BuildRule unwrappedBinary = getBinaryFromBuildRuleWithBinary(flavoredBinaryRule);
 
     BuildTarget infoPlistBuildTarget =
-        buildTarget.withoutFlavors().withAppendedFlavors(AppleInfoPlist.FLAVOR);
+        stripBundleSpecificFlavors(buildTarget).withAppendedFlavors(AppleInfoPlist.FLAVOR);
     AppleInfoPlist infoPlist =
         (AppleInfoPlist)
             graphBuilder.computeIfAbsent(
@@ -980,8 +980,7 @@ public class AppleDescriptions {
               infoPlistSubstitutions);
       if (maybeEntitlementsPathInSubstitutions.isPresent()) {
         BuildTarget entitlementFromSubstitutionBuildTarget =
-            buildTarget
-                .withoutFlavors()
+            stripBundleSpecificFlavors(buildTarget)
                 .withAppendedFlavors(AppleEntitlementsFromSubstitutions.FLAVOR);
         AppleEntitlementsFromSubstitutions entitlementsFromSubstitutions =
             (AppleEntitlementsFromSubstitutions)
@@ -1014,7 +1013,8 @@ public class AppleDescriptions {
     if (codeSignType == DISTRIBUTION) {
       codeSignIdentitiesSupplier = codeSignIdentityStore.getIdentitiesSupplier();
       BuildTarget provisioningProfileTarget =
-          buildTarget.withoutFlavors().withAppendedFlavors(AppleCodeSignPreparation.FLAVOR);
+          stripBundleSpecificFlavors(buildTarget)
+              .withAppendedFlavors(AppleCodeSignPreparation.FLAVOR);
       AppleCodeSignPreparation codeSignPrepRule =
           (AppleCodeSignPreparation)
               graphBuilder.computeIfAbsent(
@@ -1453,7 +1453,7 @@ public class AppleDescriptions {
    * Strip flavors that only apply to a bundle from build targets that are passed to constituent
    * rules of the bundle, such as its associated binary, asset catalog, etc.
    */
-  private static BuildTarget stripBundleSpecificFlavors(BuildTarget buildTarget) {
+  public static BuildTarget stripBundleSpecificFlavors(BuildTarget buildTarget) {
     return buildTarget.withoutFlavors(BUNDLE_SPECIFIC_FLAVORS);
   }
 
