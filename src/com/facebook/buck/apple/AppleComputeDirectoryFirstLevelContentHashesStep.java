@@ -21,7 +21,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.collect.ImmutableList;
@@ -58,14 +57,10 @@ public class AppleComputeDirectoryFirstLevelContentHashesStep extends AbstractEx
     for (RelPath path : collectFirstLevelItems()) {
       AbsPath absPath = dirPath.resolve(path);
       StringBuilder hashBuilder = new StringBuilder();
-      Step substep;
-      if (projectFilesystem.isDirectory(absPath)) {
-        substep = new AppleComputeDirectoryContentHashStep(hashBuilder, absPath, projectFilesystem);
-      } else {
-        substep =
-            new AppleComputeFileHashStep(hashBuilder, absPath, false, projectFilesystem, true);
-      }
-      StepExecutionResult subresult = substep.execute(context);
+      StepExecutionResult subresult =
+          (new AppleComputeFileOrDirectoryHashStep(
+                  hashBuilder, absPath, projectFilesystem, true, true))
+              .execute(context);
       if (!subresult.isSuccess()) {
         return subresult;
       }

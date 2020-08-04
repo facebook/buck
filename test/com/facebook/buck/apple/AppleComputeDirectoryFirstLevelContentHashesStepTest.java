@@ -65,12 +65,13 @@ public class AppleComputeDirectoryFirstLevelContentHashesStepTest {
     assertEquals(
         "da39a3ee5e6b4b0d3255bfef95601890afd80709", pathToHash.get(RelPath.get("empty_dir")));
     assertEquals(
-        "f86128ae9dd03e7359efcf298ebdbfe29b997f60", pathToHash.get(RelPath.get("dir_with_file")));
-    assertEquals("4e1243bd22c66e76c2ba9eddc1f91394e57f9f83", pathToHash.get(RelPath.get("foo")));
+        "11d6a78d31734cef3615ce272ad2aacaf1f65a1c", pathToHash.get(RelPath.get("dir_with_file")));
+    assertEquals(
+        "sha1:4e1243bd22c66e76c2ba9eddc1f91394e57f9f83", pathToHash.get(RelPath.get("foo")));
     assertEquals(
         "0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33", pathToHash.get(RelPath.get("symlink")));
     assertEquals(
-        "9a4343c72454d6b65b3ec0b409d8196aa87df593",
+        "7818bc1016ecc2fa6ab4042cd77cd5c0ca80cab1",
         pathToHash.get(RelPath.get("nested_dirs_with_file")));
   }
 }

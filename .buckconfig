@@ -79,6 +79,8 @@
     glob_handler = watchman
     embedded_cell_buck_out_enabled = true
     buck_out_include_target_config_hash = true
+    read_only_paths = \
+      test/com/facebook/buck/apple/testdata/compute_file_or_directory_hash
 [test]
     ; Maximum timeout of 90 seconds per test.
     timeout = 90000
