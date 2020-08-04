@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
-import com.google.devtools.build.lib.vfs.Path;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,8 +46,8 @@ import org.hamcrest.Matchers;
 public class SkylarkProjectBuildFileParserTestUtils {
   // A simple wrapper around skylark parser that records interesting events.
   static class RecordingParser extends SkylarkProjectBuildFileParser {
-    final Map<Path, Integer> readCounts;
-    final Map<Path, Integer> buildCounts;
+    final Map<AbsPath, Integer> readCounts;
+    final Map<AbsPath, Integer> buildCounts;
 
     public RecordingParser(SkylarkProjectBuildFileParser delegate) {
       super(delegate);
@@ -57,7 +56,7 @@ public class SkylarkProjectBuildFileParserTestUtils {
     }
 
     @Override
-    public StarlarkFile readSkylarkAST(Path path) throws IOException {
+    public StarlarkFile readSkylarkAST(AbsPath path) throws IOException {
       readCounts.compute(path, (k, v) -> v == null ? 1 : v + 1);
       return super.readSkylarkAST(path);
     }
@@ -69,11 +68,11 @@ public class SkylarkProjectBuildFileParserTestUtils {
       return result;
     }
 
-    public ImmutableMap<Path, Integer> expectedCounts(Object... args) {
+    public ImmutableMap<AbsPath, Integer> expectedCounts(Object... args) {
       assert args.length % 2 == 0;
-      ImmutableMap.Builder<Path, Integer> builder = ImmutableMap.builder();
+      ImmutableMap.Builder<AbsPath, Integer> builder = ImmutableMap.builder();
       for (int i = 0; i < args.length; i += 2) {
-        builder.put((Path) args[i], (Integer) args[i + 1]);
+        builder.put((AbsPath) args[i], (Integer) args[i + 1]);
       }
       return builder.build();
     }

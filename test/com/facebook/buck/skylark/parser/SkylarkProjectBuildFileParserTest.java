@@ -532,9 +532,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     assertThat(
         recordingParser.readCounts,
-        equalTo(
-            recordingParser.expectedCounts(
-                vfs_path(buildFile), 1, vfs_path(ext1), 1, vfs_path(ext2), 1)));
+        equalTo(recordingParser.expectedCounts(buildFile, 1, ext1, 1, ext2, 1)));
   }
 
   @Test
@@ -556,8 +554,7 @@ public class SkylarkProjectBuildFileParserTest {
     recordingParser.getManifest(buildFile);
 
     assertThat(
-        recordingParser.buildCounts,
-        equalTo(recordingParser.expectedCounts(vfs_path(ext1), 1, vfs_path(ext2), 1)));
+        recordingParser.buildCounts, equalTo(recordingParser.expectedCounts(ext1, 1, ext2, 1)));
   }
 
   @Test
@@ -569,9 +566,7 @@ public class SkylarkProjectBuildFileParserTest {
     RecordingParser recordingParser = new RecordingParser(parser);
     recordingParser.getManifest(buildFile);
     recordingParser.getIncludedFiles(buildFile);
-    assertThat(
-        recordingParser.readCounts,
-        equalTo(recordingParser.expectedCounts(vfs_path(buildFile), 1)));
+    assertThat(recordingParser.readCounts, equalTo(recordingParser.expectedCounts(buildFile, 1)));
   }
 
   @Test

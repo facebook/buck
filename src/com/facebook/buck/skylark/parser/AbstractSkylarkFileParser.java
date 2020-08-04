@@ -68,11 +68,10 @@ import com.google.devtools.build.lib.syntax.Resolver;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.vfs.FileSystem;
-import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.PathFragment;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -94,8 +93,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   protected final EventHandler eventHandler;
   protected final BuckGlobals buckGlobals;
 
-  private final Cache<com.google.devtools.build.lib.vfs.Path, StarlarkFile> astCache;
-  private final Cache<com.google.devtools.build.lib.vfs.Path, ExtensionData> extensionDataCache;
+  private final Cache<AbsPath, StarlarkFile> astCache;
+  private final Cache<AbsPath, ExtensionData> extensionDataCache;
   private final ConcurrentHashMap<Label, IncludesData> includesDataCache;
   private final PackageImplicitIncludesFinder packageImplicitIncludeFinder;
 
@@ -164,14 +163,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     return ImmutableImplicitlyLoadedExtension.ofImpl(data, loaded.build());
   }
 
-  protected com.google.devtools.build.lib.vfs.Path absPathToStarlarkPath(AbsPath path) {
-    return fileSystem.getPath(path.toString());
-  }
-
   /** @return The parsed result defined in {@code parseFile}. */
   protected ParseResult parse(AbsPath parseFile)
       throws IOException, BuildFileParseException, InterruptedException {
-    com.google.devtools.build.lib.vfs.Path buildFilePath = absPathToStarlarkPath(parseFile);
 
     ForwardRelativePath basePath = getBasePath(parseFile);
     Label containingLabel = createContainingLabel(basePath);
@@ -181,7 +175,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     StarlarkFile buildFileAst =
         parseSkylarkFile(
-            buildFilePath,
+            parseFile,
             LoadStack.top(Location.fromFile(parseFile.toString())),
             getBuckOrPackage().fileKind,
             containingLabel);
@@ -193,7 +187,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     try (Mutability mutability = Mutability.create("parsing " + parseFile)) {
       EnvironmentData envData =
           createBuildFileEvaluationEnvironment(
-              buildFilePath,
+              parseFile,
               containingLabel,
               buildFileAst,
               mutability,
@@ -207,7 +201,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
       ImmutableList.Builder<String> loadedPaths =
           ImmutableList.builderWithExpectedSize(envData.getLoadedPaths().size() + 1);
-      loadedPaths.add(buildFilePath.toString());
+      loadedPaths.add(parseFile.toString());
       loadedPaths.addAll(envData.getLoadedPaths());
 
       return getParseResult(
@@ -239,7 +233,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *     functions like {@code glob} and native rules like {@code java_library}.
    */
   private EnvironmentData createBuildFileEvaluationEnvironment(
-      com.google.devtools.build.lib.vfs.Path buildFilePath,
+      AbsPath buildFilePath,
       Label containingLabel,
       StarlarkFile buildFileAst,
       Mutability mutability,
@@ -291,7 +285,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *     including {@code containingPath} itself as the first element.
    */
   private ImmutableList<String> toLoadedPaths(
-      com.google.devtools.build.lib.vfs.Path containingPath,
+      AbsPath containingPath,
       ImmutableCollection<ExtensionData> dependencies,
       @Nullable ExtensionData implicitLoadExtensionData) {
     // expected size is used to reduce the number of unnecessary resize invocations
@@ -322,11 +316,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    * @return abstract syntax tree; does not handle any errors.
    */
   @VisibleForTesting
-  protected StarlarkFile readSkylarkAST(com.google.devtools.build.lib.vfs.Path path)
-      throws IOException {
-    ParserInput input =
-        ParserInput.create(
-            FileSystemUtils.readContent(path, StandardCharsets.UTF_8), path.toString());
+  protected StarlarkFile readSkylarkAST(AbsPath path) throws IOException {
+    ParserInput input = ParserInput.fromUTF8(Files.readAllBytes(path.getPath()), path.toString());
     StarlarkFile file = StarlarkFile.parse(input);
     Event.replayEventsOn(eventHandler, file.errors());
     return file;
@@ -342,16 +333,13 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   }
 
   private StarlarkFile parseSkylarkFile(
-      com.google.devtools.build.lib.vfs.Path path,
-      LoadStack loadStack,
-      FileKind fileKind,
-      Label label)
+      AbsPath path, LoadStack loadStack, FileKind fileKind, Label label)
       throws BuildFileParseException, IOException {
     StarlarkFile result = astCache.getIfPresent(path);
     if (result == null) {
       try {
         result = readSkylarkAST(path);
-      } catch (FileNotFoundException e) {
+      } catch (NoSuchFileException e) {
         throw BuildFileParseException.createForUnknownParseError(
             loadStack.toDependencyStack(), "%s cannot be loaded because it does not exist", path);
       }
@@ -409,7 +397,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   private IncludesData loadIncludeImpl(LoadImport loadImport, LoadStack loadStack)
       throws IOException, BuildFileParseException, InterruptedException {
     Label label = loadImport.getLabel();
-    com.google.devtools.build.lib.vfs.Path filePath = getImportPath(label, loadImport.getImport());
+    AbsPath filePath = getImportPath(label, loadImport.getImport());
 
     StarlarkFile fileAst = parseSkylarkFile(filePath, loadStack, FileKind.BZL, label);
     ImmutableList<IncludesData> dependencies =
@@ -536,7 +524,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     // Extension key being loaded.
     private final LoadImport load;
     // Path for the extension.
-    private final com.google.devtools.build.lib.vfs.Path path;
+    private final AbsPath path;
     // Load path
     private final LoadStack loadStack;
     // List of dependencies this extension uses.
@@ -544,10 +532,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     // This extension AST.
     private @Nullable StarlarkFile ast;
 
-    private ExtensionLoadState(
-        LoadImport load,
-        com.google.devtools.build.lib.vfs.Path extensionPath,
-        LoadStack loadStack) {
+    private ExtensionLoadState(LoadImport load, AbsPath extensionPath, LoadStack loadStack) {
       this.load = load;
       this.path = extensionPath;
       this.loadStack = loadStack;
@@ -555,7 +540,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       this.ast = null;
     }
 
-    public com.google.devtools.build.lib.vfs.Path getPath() {
+    public AbsPath getPath() {
       return path;
     }
 
@@ -637,8 +622,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    * @return {@link ExtensionData} suitable for the requested extension and importString, or null if
    *     no such extension found.
    */
-  private @Nullable ExtensionData lookupExtensionForImport(
-      com.google.devtools.build.lib.vfs.Path path) {
+  private @Nullable ExtensionData lookupExtensionForImport(AbsPath path) {
     return extensionDataCache.getIfPresent(path);
   }
 
@@ -677,8 +661,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
       // Record dependency for this load.
       load.addDependency(dependency);
-      com.google.devtools.build.lib.vfs.Path extensionPath =
-          getImportPath(dependency.getLabel(), dependency.getImport());
+      AbsPath extensionPath = getImportPath(dependency.getLabel(), dependency.getImport());
       if (extensionDataCache.getIfPresent(extensionPath) == null) {
         // Schedule dependency to be loaded if needed.
         haveUnsatisfiedDeps = true;
@@ -800,8 +783,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     ExtensionData extension = null;
     ArrayDeque<ExtensionLoadState> work = new ArrayDeque<>();
-    com.google.devtools.build.lib.vfs.Path extensionPath =
-        getImportPath(loadImport.getLabel(), loadImport.getImport());
+    AbsPath extensionPath = getImportPath(loadImport.getLabel(), loadImport.getImport());
     work.push(new ExtensionLoadState(loadImport, extensionPath, loadStack));
 
     while (!work.isEmpty()) {
@@ -841,8 +823,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *     load("@repo//pkg:foo.bzl", "foo")} it would return {@code /repo/pkg/foo.bzl} assuming that
    *     {@code repo} is located at {@code /repo}.
    */
-  private com.google.devtools.build.lib.vfs.Path getImportPath(
-      Label containingLabel, String skylarkImport) throws BuildFileParseException {
+  private AbsPath getImportPath(Label containingLabel, String skylarkImport)
+      throws BuildFileParseException {
     if (isRelativeLoad(skylarkImport) && skylarkImport.contains("/")) {
       throw BuildFileParseException.createForUnknownParseError(
           "Relative loads work only for files in the same directory but "
@@ -853,8 +835,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     PathFragment relativeExtensionPath = containingLabel.toPathFragment();
     RepositoryName repository = containingLabel.getPackageIdentifier().getRepository();
     if (repository.isMain()) {
-      return absPathToStarlarkPath(
-          options.getProjectRoot().resolve(relativeExtensionPath.toString()));
+      return options.getProjectRoot().resolve(relativeExtensionPath.toString());
     }
     // Skylark repositories have an "@" prefix, but Buck roots do not, so ignore it
     String repositoryName = repository.getName().substring(1);
@@ -863,7 +844,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       throw BuildFileParseException.createForUnknownParseError(
           skylarkImport + " references an unknown repository " + repositoryName);
     }
-    return absPathToStarlarkPath(repositoryPath.resolve(relativeExtensionPath.toString()));
+    return repositoryPath.resolve(relativeExtensionPath.toString());
   }
 
   private boolean isRelativeLoad(String skylarkImport) {
@@ -884,15 +865,13 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   @Override
   public ImmutableSortedSet<String> getIncludedFiles(AbsPath parseFile)
       throws BuildFileParseException, InterruptedException, IOException {
-    com.google.devtools.build.lib.vfs.Path buildFilePath = absPathToStarlarkPath(parseFile);
 
     ForwardRelativePath basePath = getBasePath(parseFile);
     Label containingLabel = createContainingLabel(basePath);
     ImplicitlyLoadedExtension implicitLoad =
         loadImplicitExtension(basePath, containingLabel, LoadStack.EMPTY);
     StarlarkFile buildFileAst =
-        parseSkylarkFile(
-            buildFilePath, LoadStack.EMPTY, getBuckOrPackage().fileKind, containingLabel);
+        parseSkylarkFile(parseFile, LoadStack.EMPTY, getBuckOrPackage().fileKind, containingLabel);
     ImmutableList<IncludesData> dependencies =
         loadIncludes(containingLabel, getImports(buildFileAst, containingLabel), LoadStack.EMPTY);
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.parser;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.syntax.Module;
@@ -31,7 +32,7 @@ abstract class ExtensionData {
   public abstract Module getExtension();
 
   /** @return a path from which the extension was loaded from */
-  public abstract com.google.devtools.build.lib.vfs.Path getPath();
+  public abstract AbsPath getPath();
 
   /** @return a set of dependencies that were required to evaluate this extension */
   public abstract ImmutableSet<ExtensionData> getDependencies();
