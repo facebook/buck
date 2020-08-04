@@ -4,4 +4,8 @@ java_library(
     visibility = [
         "PUBLIC",
     ],
+    deps = [
+        "//src-gen:downward-model",
+        "//src/com/facebook/buck/core/util/log:log",
+    ],
 )
