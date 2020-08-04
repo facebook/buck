@@ -54,7 +54,6 @@ import com.facebook.buck.step.ConditionalStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.types.Pair;
@@ -90,8 +89,6 @@ public class AppleBundle extends AbstractBuildRule
   @AddToRuleKey private final Optional<String> productName;
 
   @AddToRuleKey private final Optional<SourcePath> maybeEntitlementsFile;
-
-  @AddToRuleKey private final Optional<SourcePath> maybeProvisioningProfileFile;
 
   @AddToRuleKey private final BuildRule binary;
 
@@ -191,7 +188,6 @@ public class AppleBundle extends AbstractBuildRule
       boolean sliceAppBundleSwiftRuntime,
       boolean withDownwardApi,
       Optional<SourcePath> maybeEntitlementsFile,
-      Optional<SourcePath> maybeProvisioningProfileFile,
       boolean dryRunCodeSigning,
       Optional<SourcePath> maybeDryCodeSignResultFile,
       Optional<SourcePath> maybeCodeSignIdentityFingerprintFile) {
@@ -223,7 +219,6 @@ public class AppleBundle extends AbstractBuildRule
     this.codesignIdentitySubjectName = codesignIdentity;
     this.ibtoolModuleFlag = ibtoolModuleFlag.orElse(false);
     this.ibtoolFlags = ibtoolFlags;
-    this.maybeProvisioningProfileFile = maybeProvisioningProfileFile;
     this.dryRunCodeSigning = dryRunCodeSigning;
     this.maybeDryCodeSignResultFile = maybeDryCodeSignResultFile;
     this.maybeCodeSignIdentityFingerprintFile = maybeCodeSignIdentityFingerprintFile;
@@ -361,9 +356,6 @@ public class AppleBundle extends AbstractBuildRule
         context,
         getProjectFilesystem(),
         codeSignOnCopyPathsBuilder);
-
-    maybeProvisioningProfileFile.ifPresent(
-        sourcePath -> addCopyProvisioningProfileStep(context, stepsBuilder, sourcePath));
 
     addCopyCodeSignDryRunResultsStepsIfNeeded(context, stepsBuilder);
 
@@ -537,34 +529,6 @@ public class AppleBundle extends AbstractBuildRule
             codesignFlags,
             codesignTimeout,
             withDownwardApi));
-  }
-
-  private void addCopyProvisioningProfileStep(
-      BuildContext context,
-      ImmutableList.Builder<Step> stepsBuilder,
-      SourcePath provisioningProfileFile) {
-    Path resourcesDestinationPath = bundleRoot.resolve(destinations.getResourcesPath());
-    stepsBuilder.add(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), resourcesDestinationPath)));
-
-    Path provisioningProfilePath =
-        context.getSourcePathResolver().getCellUnsafeRelPath(provisioningProfileFile).getPath();
-    Path provisioningProfileBundlePath =
-        resourcesDestinationPath.resolve("embedded.mobileprovision");
-    stepsBuilder.add(
-        new ConditionalStep(
-            () -> {
-              boolean provisioningProfileFileExist =
-                  getProjectFilesystem().exists(provisioningProfilePath);
-              Preconditions.checkState(
-                  provisioningProfileFileExist || dryRunCodeSigning,
-                  ".mobileprovision file could be missing only when code sign is dry");
-              return getProjectFilesystem().exists(provisioningProfilePath);
-            },
-            CopyStep.forFile(
-                getProjectFilesystem(), provisioningProfilePath, provisioningProfileBundlePath)));
   }
 
   private void addCopyCodeSignDryRunResultsStepsIfNeeded(

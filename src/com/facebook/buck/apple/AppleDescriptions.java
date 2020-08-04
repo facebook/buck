@@ -904,12 +904,15 @@ public class AppleDescriptions {
                 buildRule -> {
                   BuildTarget unflavoredTarget = buildRule.getBuildTarget().withFlavors();
                   String binaryName = AppleBundle.getBinaryName(unflavoredTarget, Optional.empty());
+                  final boolean codeSignOnCopy = true;
+                  final boolean ignoreIfMissing = false;
                   Optional<String> newNameAfterCopy = Optional.of(binaryName);
                   return FileAppleBundlePart.of(
                       buildRule.getSourcePathToOutput(),
                       AppleBundleDestination.EXECUTABLES,
-                      true,
-                      newNameAfterCopy);
+                      codeSignOnCopy,
+                      newNameAfterCopy,
+                      ignoreIfMissing);
                 })
             .collect(ImmutableSet.toImmutableSet()));
 
@@ -1059,23 +1062,46 @@ public class AppleDescriptions {
     }
 
     if (unwrappedBinary.getSourcePathToOutput() != null) {
-      String binaryName = AppleBundle.getBinaryName(buildTarget, productName);
-      bundlePartsReadyToCopy.add(
-          FileAppleBundlePart.of(
-              unwrappedBinary.getSourcePathToOutput(),
-              AppleBundleDestination.EXECUTABLES,
-              false,
-              Optional.of(binaryName)));
+      {
+        final boolean codeSignOnCopy = false;
+        final boolean ignoreIfMissing = false;
+        String binaryName = AppleBundle.getBinaryName(buildTarget, productName);
+        bundlePartsReadyToCopy.add(
+            FileAppleBundlePart.of(
+                unwrappedBinary.getSourcePathToOutput(),
+                AppleBundleDestination.EXECUTABLES,
+                codeSignOnCopy,
+                Optional.of(binaryName),
+                ignoreIfMissing));
+      }
 
       if (AppleBundleSupport.isWatchKitStubNeeded(
           unwrappedExtension, unwrappedBinary, appleCxxPlatform.getAppleSdk().getApplePlatform())) {
+        final boolean codeSignOnCopy = false;
+        final boolean ignoreIfMissing = false;
         bundlePartsReadyToCopy.add(
             FileAppleBundlePart.of(
                 unwrappedBinary.getSourcePathToOutput(),
                 AppleBundleDestination.WATCHKITSTUB,
-                false,
-                Optional.of("WK")));
+                codeSignOnCopy,
+                Optional.of("WK"),
+                ignoreIfMissing));
       }
+    }
+
+    {
+      final boolean codeSignOnCopy = false;
+      final boolean ignoreIfMissing = dryRunCodeSigning;
+      Optional<String> newNameAfterCopy = Optional.empty();
+      provisioningProfileReadyToCopy.ifPresent(
+          sourcePath ->
+              bundlePartsReadyToCopy.add(
+                  FileAppleBundlePart.of(
+                      sourcePath,
+                      AppleBundleDestination.RESOURCES,
+                      codeSignOnCopy,
+                      newNameAfterCopy,
+                      ignoreIfMissing)));
     }
 
     AppleBundleResources collectedResources =
@@ -1138,7 +1164,6 @@ public class AppleDescriptions {
         sliceAppBundleSwiftRuntime,
         withDownwardApi,
         entitlementsReadyForCodeSign,
-        provisioningProfileReadyToCopy,
         dryRunCodeSigning,
         dryCodeSignResultsReadyToCopy,
         codeSignIdentityFingerprint);

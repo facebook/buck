@@ -125,7 +125,7 @@ public class AppleResourceProcessingTest {
     ImmutableList<AppleBundlePart> bundleParts =
         ImmutableList.of(
             FileAppleBundlePart.of(
-                path2, AppleBundleDestination.RESOURCES, false, Optional.of("test2")));
+                path2, AppleBundleDestination.RESOURCES, false, Optional.of("test2"), false));
 
     try {
       AppleResourceProcessing.verifyResourceConflicts(
@@ -149,7 +149,7 @@ public class AppleResourceProcessingTest {
     ImmutableList<AppleBundlePart> bundleParts =
         ImmutableList.of(
             FileAppleBundlePart.of(
-                path2, AppleBundleDestination.RESOURCES, false, Optional.of("test1")));
+                path2, AppleBundleDestination.RESOURCES, false, Optional.of("test1"), false));
 
     try {
       AppleResourceProcessing.verifyResourceConflicts(

@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -29,8 +30,12 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -38,8 +43,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -571,20 +579,42 @@ public class AppleResourceProcessing {
             .map(p -> (FileAppleBundlePart) p)
             .collect(Collectors.toList());
 
-    for (FileAppleBundlePart fileWithDestination : filesToCopyWithoutProcessing) {
-      AbsPath resolvedFilePath =
-          context.getSourcePathResolver().getAbsolutePath(fileWithDestination.getSourcePath());
-      Path destinationDirectoryPath =
-          dirRoot.resolve(fileWithDestination.getDestination().getPath(destinations));
-      String destinationFileName =
-          fileWithDestination.getNewName().orElse(resolvedFilePath.getFileName().toString());
-      Path destinationPath = destinationDirectoryPath.resolve(destinationFileName);
-      stepsBuilder.add(
-          CopyStep.forFile(projectFilesystem, resolvedFilePath.getPath(), destinationPath));
-      if (fileWithDestination.getCodesignOnCopy()) {
-        codeSignOnCopyPathsBuilder.add(destinationPath);
+    Set<AbsPath> ignoreIfMissingPaths = new HashSet<>();
+
+    List<CopySpec> copySpecs = new LinkedList<>();
+
+    for (FileAppleBundlePart bundlePart : filesToCopyWithoutProcessing) {
+      CopySpec copySpec = new CopySpec(bundlePart, context.getSourcePathResolver(), destinations);
+      copySpecs.add(copySpec);
+
+      if (bundlePart.getIgnoreIfMissing()) {
+        ignoreIfMissingPaths.add(copySpec.sourcePath);
+      }
+
+      if (bundlePart.getCodesignOnCopy()) {
+        Path toPath = dirRoot.resolve(copySpec.getDestinationPathRelativeToBundleRoot().getPath());
+        codeSignOnCopyPathsBuilder.add(toPath);
       }
     }
+
+    stepsBuilder.add(
+        new AbstractExecutionStep("copy-files-from-bundle-parts") {
+          @Override
+          public StepExecutionResult execute(StepExecutionContext stepContext) throws IOException {
+            for (CopySpec copySpec : copySpecs) {
+              AbsPath fromPath = copySpec.getSourcePath();
+              if (ignoreIfMissingPaths.contains(fromPath)
+                  && !projectFilesystem.exists(fromPath.getPath())) {
+                continue;
+              }
+              projectFilesystem.copy(
+                  fromPath.getPath(),
+                  dirRoot.resolve(copySpec.getDestinationPathRelativeToBundleRoot().getPath()),
+                  CopySourceMode.FILE);
+            }
+            return StepExecutionResults.SUCCESS;
+          }
+        });
   }
 
   /** Checks and throws an exception if parts of bundle have conflicting paths */

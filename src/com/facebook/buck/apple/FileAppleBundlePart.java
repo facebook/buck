@@ -42,17 +42,21 @@ public abstract class FileAppleBundlePart extends AppleBundlePart
   @AddToRuleKey
   public abstract Optional<String> getNewName();
 
+  @AddToRuleKey
+  public abstract boolean getIgnoreIfMissing();
+
   public static FileAppleBundlePart of(SourcePath sourcePath, AppleBundleDestination destination) {
-    return of(sourcePath, destination, false, Optional.empty());
+    return of(sourcePath, destination, false, Optional.empty(), false);
   }
 
   public static FileAppleBundlePart of(
       SourcePath sourcePath,
       AppleBundleDestination destination,
       boolean codesignOnCopy,
-      Optional<String> maybeNewName) {
+      Optional<String> maybeNewName,
+      boolean ignoreIfMissing) {
     return ImmutableFileAppleBundlePart.ofImpl(
-        sourcePath, destination, codesignOnCopy, maybeNewName);
+        sourcePath, destination, codesignOnCopy, maybeNewName, ignoreIfMissing);
   }
 
   @Override
@@ -62,6 +66,9 @@ public abstract class FileAppleBundlePart extends AppleBundlePart
     }
     if (getCodesignOnCopy() != o.getCodesignOnCopy()) {
       return Boolean.compare(getCodesignOnCopy(), o.getCodesignOnCopy());
+    }
+    if (getIgnoreIfMissing() != o.getIgnoreIfMissing()) {
+      return Boolean.compare(getIgnoreIfMissing(), o.getIgnoreIfMissing());
     }
     return super.compareTo(o);
   }
