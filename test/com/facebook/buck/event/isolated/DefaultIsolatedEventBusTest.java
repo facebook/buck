@@ -24,10 +24,12 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downward.model.LogLevel;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
+import com.facebook.buck.downwardapi.testutil.StepEventMatcher;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -39,6 +41,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -84,7 +87,7 @@ public class DefaultIsolatedEventBusTest {
   }
 
   @Test
-  public void postWritesToOutputStream() throws Exception {
+  public void consoleEventCanBeWrittenToOutputStream() throws Exception {
     ConsoleEvent consoleEvent = ConsoleEvent.create(Level.SEVERE, "test_message");
     com.facebook.buck.downward.model.ConsoleEvent expectedConsoleEvent =
         com.facebook.buck.downward.model.ConsoleEvent.newBuilder()
@@ -100,6 +103,26 @@ public class DefaultIsolatedEventBusTest {
 
     assertThat(actualEventType, equalTo(EventTypeMessage.EventType.CONSOLE_EVENT));
     assertThat(actualConsoleEvent, equalTo(expectedConsoleEvent));
+  }
+
+  @Test
+  public void stepEventCanBeWrittenToOutputStream() throws Exception {
+    StepEvent stepEvent = StepEvent.started("short_name", "my_description", UUID.randomUUID());
+    com.facebook.buck.downward.model.StepEvent expectedStepEvent =
+        com.facebook.buck.downward.model.StepEvent.newBuilder()
+            .setDescription("my_description")
+            .setStepType("short_name")
+            .setStepStatus(com.facebook.buck.downward.model.StepEvent.StepStatus.STARTED)
+            .build();
+
+    testEventBus.post(stepEvent);
+    EventTypeMessage.EventType actualEventType =
+        DownwardProtocolType.BINARY.getDownwardProtocol().readEventType(inputStream);
+    com.facebook.buck.downward.model.StepEvent actualStepEvent =
+        DownwardProtocolType.BINARY.getDownwardProtocol().readEvent(inputStream, actualEventType);
+
+    assertThat(actualEventType, equalTo(EventTypeMessage.EventType.STEP_EVENT));
+    assertThat(actualStepEvent, StepEventMatcher.equalsStepEvent(expectedStepEvent));
   }
 
   @Test

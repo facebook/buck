@@ -51,7 +51,7 @@ public abstract class StepEvent extends AbstractBuckEvent
     return description;
   }
 
-  protected UUID getUuid() {
+  public UUID getUuid() {
     return uuid;
   }
 

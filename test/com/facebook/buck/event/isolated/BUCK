@@ -8,6 +8,8 @@ standard_java_test(
         "//src/com/facebook/buck/downwardapi/utils:utils",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event/isolated:isolated",
+        "//src/com/facebook/buck/step:step",
+        "//test/com/facebook/buck/downwardapi/testutil:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",

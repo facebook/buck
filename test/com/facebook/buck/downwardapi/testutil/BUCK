@@ -1,0 +1,9 @@
+java_library(
+    name = "testutil",
+    srcs = glob(["*.java"]),
+    visibility = ["//test/..."],
+    deps = [
+        "//src-gen:downward-model",
+        "//third-party/java/junit:junit",
+    ],
+)

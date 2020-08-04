@@ -149,6 +149,8 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
       // TODO(irenewchen): Support other downward api events
       if (event instanceof ConsoleEvent) {
         writeConsoleEvent((ConsoleEvent) event);
+      } else if (event instanceof StepEvent) {
+        writeStepEvent((StepEvent) event);
       }
     } catch (IOException e) {
       LOG.error(e, "Failed to write buck event %s", event.getEventName());
@@ -166,6 +168,29 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
             .setMessage(event.getMessage())
             .build();
     writeToNamedPipe(eventTypeMessage, consoleEvent);
+  }
+
+  private void writeStepEvent(StepEvent event) throws IOException {
+    EventTypeMessage eventTypeMessage =
+        EventTypeMessage.newBuilder().setEventType(EventTypeMessage.EventType.STEP_EVENT).build();
+    com.facebook.buck.downward.model.StepEvent stepEvent =
+        com.facebook.buck.downward.model.StepEvent.newBuilder()
+            .setEventId(event.getUuid().hashCode())
+            .setStepStatus(getStepStatus(event))
+            .setStepType(event.getShortStepName())
+            .setDescription(event.getDescription())
+            .build();
+    writeToNamedPipe(eventTypeMessage, stepEvent);
+  }
+
+  private com.facebook.buck.downward.model.StepEvent.StepStatus getStepStatus(StepEvent event) {
+    if (event instanceof StepEvent.Started) {
+      return com.facebook.buck.downward.model.StepEvent.StepStatus.STARTED;
+    }
+    if (event instanceof StepEvent.Finished) {
+      return com.facebook.buck.downward.model.StepEvent.StepStatus.FINISHED;
+    }
+    return com.facebook.buck.downward.model.StepEvent.StepStatus.UNKNOWN;
   }
 
   private void writeToNamedPipe(EventTypeMessage eventType, AbstractMessage payload)
