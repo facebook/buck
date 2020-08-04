@@ -18,12 +18,11 @@ package com.facebook.buck.external.log;
 
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downward.model.LogEvent;
-import com.facebook.buck.downward.model.LogLevel;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
+import com.facebook.buck.downwardapi.utils.DownwardApiUtils;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.logging.Handler;
-import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
 /**
@@ -52,7 +51,7 @@ public class ExternalLogHandler extends Handler {
     }
     LogEvent event =
         LogEvent.newBuilder()
-            .setLogLevel(getLogLevel(record.getLevel()))
+            .setLogLevel(DownwardApiUtils.convertLogLevel(record.getLevel()))
             .setMessage(record.getMessage())
             .setLoggerName(record.getLoggerName())
             .build();
@@ -88,30 +87,5 @@ public class ExternalLogHandler extends Handler {
 
   private static EventTypeMessage createLogEventTypeMessage() {
     return EventTypeMessage.newBuilder().setEventType(EventTypeMessage.EventType.LOG_EVENT).build();
-  }
-
-  /**
-   * Returns the {@link LogLevel} associated with the given {@link Level}. Based on values from
-   * //xplat/build_infra/buck_client/config/logging.properties.st
-   */
-  private static LogLevel getLogLevel(Level level) {
-    if (level.equals(Level.SEVERE)) {
-      return LogLevel.ERROR;
-    }
-    if (level.equals(Level.WARNING)) {
-      return LogLevel.WARN;
-    }
-    if (level.equals(Level.INFO)) {
-      return LogLevel.INFO;
-    }
-    if (level.equals(Level.FINE)) {
-      return LogLevel.DEBUG;
-    }
-    if (level.equals(Level.FINER)) {
-      return LogLevel.TRACE;
-    }
-    // LEVEL.CONFIG, LEVEL.FINEST, LEVEL.DEBUG, LEVEL.ALL, LEVEL.OFF would all map to
-    // LogLevel.UNKNOWN
-    return LogLevel.UNKNOWN;
   }
 }

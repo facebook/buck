@@ -28,7 +28,7 @@ public class DownwardApiUtils {
    * Returns the {@link LogLevel} associated with the given {@link Level}. Based on values from
    * //xplat/build_infra/buck_client/config/logging.properties.st
    */
-  public static LogLevel getLogLevel(Level level) {
+  public static LogLevel convertLogLevel(Level level) {
     if (level.equals(Level.SEVERE)) {
       return LogLevel.ERROR;
     }

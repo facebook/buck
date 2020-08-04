@@ -164,7 +164,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
             .build();
     com.facebook.buck.downward.model.ConsoleEvent consoleEvent =
         com.facebook.buck.downward.model.ConsoleEvent.newBuilder()
-            .setLogLevel(DownwardApiUtils.getLogLevel(event.getLevel()))
+            .setLogLevel(DownwardApiUtils.convertLogLevel(event.getLevel()))
             .setMessage(event.getMessage())
             .build();
     writeToNamedPipe(eventTypeMessage, consoleEvent);
