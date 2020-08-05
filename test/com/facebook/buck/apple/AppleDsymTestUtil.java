@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.codehaus.plexus.util.StringUtils;
 import org.hamcrest.Matchers;
 
 public class AppleDsymTestUtil {
@@ -71,15 +70,27 @@ public class AppleDsymTestUtil {
       }
     }
 
+    assertThat(countMatches(dwarfdumpMainStdout, "AT_name"), Matchers.equalTo(expectedMatchCount));
     assertThat(
-        StringUtils.countMatches(dwarfdumpMainStdout, "AT_name"),
-        Matchers.equalTo(expectedMatchCount));
+        countMatches(dwarfdumpMainStdout, "AT_decl_file"), Matchers.equalTo(expectedMatchCount));
     assertThat(
-        StringUtils.countMatches(dwarfdumpMainStdout, "AT_decl_file"),
-        Matchers.equalTo(expectedMatchCount));
-    assertThat(
-        StringUtils.countMatches(dwarfdumpMainStdout, "AT_decl_line"),
-        Matchers.equalTo(expectedMatchCount));
+        countMatches(dwarfdumpMainStdout, "AT_decl_line"), Matchers.equalTo(expectedMatchCount));
+  }
+
+  private static int countMatches(String str, String sub) {
+    if (sub.equals("")) {
+      return 0;
+    }
+    if (str == null) {
+      return 0;
+    }
+    int count = 0;
+    int idx = 0;
+    while ((idx = str.indexOf(sub, idx)) != -1) {
+      count++;
+      idx += sub.length();
+    }
+    return count;
   }
 
   public static void checkDsymFileHasSection(
@@ -92,6 +103,6 @@ public class AppleDsymTestUtil {
             .orElse("");
 
     String contentsStr = "Contents of (" + segname + "," + sectname + ") section";
-    assertThat(StringUtils.contains(otoolStdout, contentsStr), is(true));
+    assertThat(otoolStdout.contains(contentsStr), is(true));
   }
 }

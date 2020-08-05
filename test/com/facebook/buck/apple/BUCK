@@ -136,7 +136,6 @@ java_library(
         "//third-party/java/nuprocess:nuprocess",
         "//third-party/java/okhttp:okhttp",
         "//third-party/java/okio:okio",
-        "//third-party/java/plexus:plexus-utils",
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/thrift:libthrift",
     ],
