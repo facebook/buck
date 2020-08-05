@@ -1183,14 +1183,14 @@ class BuckTool(object):
                 stripped_args = []
                 for arg in java_args:
                     if arg in unsupported_args:
-                        logging.warning(
-                            "Warning: Removing JVM arg `%s`, which is not supported in Java %d.",
+                        logging.debug(
+                            "Debug: Removing JVM arg `%s`, which is not supported in Java %d.",
                             arg,
                             self.get_buck_compiled_java_version(),
                         )
                     elif arg.startswith("-Xloggc"):
-                        logging.warning(
-                            "Warning: JVM arg `-Xloggc` is deprecated in Java %d. Replacing with `-Xlog:gc`.",
+                        logging.debug(
+                            "Debug: JVM arg `-Xloggc` is deprecated in Java %d. Replacing with `-Xlog:gc`.",
                             self.get_buck_compiled_java_version(),
                         )
                         # Though the JVM will make this replacement itself, it stupidly logs the
@@ -1209,16 +1209,16 @@ class BuckTool(object):
                 illegal_prev_arg = None
                 for arg in java_args:
                     if illegal_prev_arg != None:
-                        logging.warning(
-                            "Warning: Removing JVM arg `%s %s`, which is not supported in Java %d.",
+                        logging.debug(
+                            "Debug: Removing JVM arg `%s %s`, which is not supported in Java %d.",
                             illegal_prev_arg,
                             arg,
                             self.get_buck_compiled_java_version(),
                         )
                         illegal_prev_arg = None
                     elif arg.startswith("--illegal-access"):
-                        logging.warning(
-                            "Warning: Removing JVM arg `%s`, which is not supported in Java %d.",
+                        logging.debug(
+                            "Debug: Removing JVM arg `%s`, which is not supported in Java %d.",
                             arg,
                             self.get_buck_compiled_java_version(),
                         )
