@@ -164,7 +164,7 @@ public class ConfiguredQueryEnvironmentTest {
     buckQueryEnvironment =
         ConfiguredQueryEnvironment.from(
             targetUniverse,
-            cells.getRootCell(),
+            cells,
             ownersReportBuilder,
             targetConfigurationFactory,
             targetPatternEvaluator,

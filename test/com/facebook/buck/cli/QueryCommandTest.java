@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.cli.OwnersReport.Builder;
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -138,7 +137,7 @@ public class QueryCommandTest {
     env =
         new FakeConfiguredQueryEnvironment(
             targetUniverse,
-            cell.getRootCell(),
+            cell,
             OwnersReport.builderForConfigured(
                 params.getCells().getRootCell(), params.getClientWorkingDir(), targetUniverse),
             targetConfigurationFactory,
@@ -154,7 +153,7 @@ public class QueryCommandTest {
   private class FakeConfiguredQueryEnvironment extends ConfiguredQueryEnvironment {
     protected FakeConfiguredQueryEnvironment(
         LegacyQueryUniverse targetUniverse,
-        Cell rootCell,
+        Cells cells,
         Builder ownersReportBuilder,
         TargetConfigurationFactory targetConfigurationFactory,
         TargetPatternEvaluator targetPatternEvaluator,
@@ -162,7 +161,7 @@ public class QueryCommandTest {
         TypeCoercerFactory typeCoercerFactory) {
       super(
           targetUniverse,
-          rootCell,
+          cells,
           ownersReportBuilder,
           targetConfigurationFactory,
           targetPatternEvaluator,

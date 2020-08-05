@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.cli.OwnersReport.Builder;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -89,7 +90,7 @@ public class ConfiguredQueryEnvironment
     implements EvaluatingQueryEnvironment<ConfiguredQueryTarget> {
 
   private final TargetUniverse targetUniverse;
-  private final Cell rootCell;
+  private final Cells cells;
   private final OwnersReport.Builder<TargetNode<?>> ownersReportBuilder;
   private final TargetConfigurationFactory targetConfigurationFactory;
   private final TargetPatternEvaluator targetPatternEvaluator;
@@ -104,7 +105,7 @@ public class ConfiguredQueryEnvironment
   @VisibleForTesting
   protected ConfiguredQueryEnvironment(
       TargetUniverse targetUniverse,
-      Cell rootCell,
+      Cells cells,
       Builder<TargetNode<?>> ownersReportBuilder,
       TargetConfigurationFactory targetConfigurationFactory,
       TargetPatternEvaluator targetPatternEvaluator,
@@ -113,10 +114,10 @@ public class ConfiguredQueryEnvironment
     this.targetUniverse = targetUniverse;
     this.eventBus = eventBus;
     this.targetConfigurationFactory = targetConfigurationFactory;
-    this.rootCell = rootCell;
+    this.cells = cells;
     this.ownersReportBuilder = ownersReportBuilder;
     this.buildFileTrees =
-        rootCell.getAllCells().stream()
+        cells.getAllCells().stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     Function.identity(),
@@ -131,7 +132,7 @@ public class ConfiguredQueryEnvironment
 
   public static ConfiguredQueryEnvironment from(
       TargetUniverse targetUniverse,
-      Cell rootCell,
+      Cells cells,
       OwnersReport.Builder<TargetNode<?>> ownersReportBuilder,
       TargetConfigurationFactory targetConfigurationFactory,
       TargetPatternEvaluator targetPatternEvaluator,
@@ -139,7 +140,7 @@ public class ConfiguredQueryEnvironment
       TypeCoercerFactory typeCoercerFactory) {
     return new ConfiguredQueryEnvironment(
         targetUniverse,
-        rootCell,
+        cells,
         ownersReportBuilder,
         targetConfigurationFactory,
         targetPatternEvaluator,
@@ -151,7 +152,7 @@ public class ConfiguredQueryEnvironment
       CommandRunnerParams params, TargetUniverse targetUniverse) {
     return from(
         targetUniverse,
-        params.getCells().getRootCell(),
+        params.getCells(),
         OwnersReport.builderForConfigured(
             params.getCells().getRootCell(), params.getClientWorkingDir(), targetUniverse),
         params.getTargetConfigurationFactory(),
@@ -253,14 +254,14 @@ public class ConfiguredQueryEnvironment
 
     TargetNode<?> node = maybeNode.get();
     BuildTarget buildTarget = queryBuildTarget.getBuildTarget();
-    Cell cell = rootCell.getCell(buildTarget.getCell());
+    Cell cell = cells.getCell(buildTarget.getCell());
     return node.getInputs().stream()
         .map(
             path ->
                 PathSourcePath.of(
                     cell.getFilesystem(),
                     MorePaths.relativize(
-                        rootCell.getFilesystem().getRootPath(),
+                        cells.getRootCell().getFilesystem().getRootPath(),
                         cell.getFilesystem().resolve(path))))
         .map(QueryFileTarget::of)
         .collect(ImmutableSet.toImmutableSet());
@@ -322,14 +323,14 @@ public class ConfiguredQueryEnvironment
 
   @Override
   public ImmutableSet<ConfiguredQueryTarget> getBuildFiles(Set<ConfiguredQueryTarget> targets) {
-    ProjectFilesystem cellFilesystem = rootCell.getFilesystem();
+    ProjectFilesystem cellFilesystem = cells.getRootCell().getFilesystem();
     AbsPath rootPath = cellFilesystem.getRootPath();
 
     ImmutableSet.Builder<ConfiguredQueryTarget> builder =
         ImmutableSet.builderWithExpectedSize(targets.size());
     for (ConfiguredQueryBuildTarget target : allBuildTargets(targets)) {
       BuildTarget buildTarget = target.getBuildTarget();
-      Cell cell = rootCell.getCell(buildTarget.getCell());
+      Cell cell = cells.getCell(buildTarget.getCell());
       BuildFileTree buildFileTree = Objects.requireNonNull(buildFileTrees.get(cell));
       Optional<ForwardRelativePath> path =
           buildFileTree.getBasePathOfAncestorTarget(
@@ -432,7 +433,7 @@ public class ConfiguredQueryEnvironment
             .getNode(buildTarget)
             .orElseThrow(() -> new QueryException("Unable to find node for " + buildTarget));
     return QueryTargetAccessor.getTargetsInAttribute(
-        typeCoercerFactory, node, attribute, rootCell.getCellNameResolver());
+        typeCoercerFactory, node, attribute, cells.getRootCell().getCellNameResolver());
   }
 
   @Override
@@ -445,7 +446,7 @@ public class ConfiguredQueryEnvironment
             .getNode(buildTarget)
             .orElseThrow(() -> new QueryException("Unable to find node for " + buildTarget));
     return QueryTargetAccessor.filterAttributeContents(
-        typeCoercerFactory, node, attribute, predicate, rootCell.getCellNameResolver());
+        typeCoercerFactory, node, attribute, predicate, cells.getRootCell().getCellNameResolver());
   }
 
   /** The (genericized) set of functions available to this query environment */

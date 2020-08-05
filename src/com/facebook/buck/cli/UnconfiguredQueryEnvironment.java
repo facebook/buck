@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
@@ -78,7 +79,7 @@ import java.util.stream.Stream;
 public class UnconfiguredQueryEnvironment
     implements EvaluatingQueryEnvironment<UnconfiguredQueryTarget> {
 
-  private final Cell rootCell;
+  private final Cells cells;
   private final BuckEventBus eventBus;
   private final UnconfiguredQueryTargetEvaluator targetEvaluator;
   private final UnconfiguredTargetGraph targetGraph;
@@ -91,19 +92,19 @@ public class UnconfiguredQueryEnvironment
       new HashMap<>();
 
   public UnconfiguredQueryEnvironment(
-      Cell rootCell,
+      Cells cells,
       BuckEventBus eventBus,
       UnconfiguredQueryTargetEvaluator targetEvaluator,
       UnconfiguredTargetGraph targetGraph,
       OwnersReport.Builder<UnconfiguredTargetNode> ownersReportBuilder) {
-    this.rootCell = rootCell;
+    this.cells = cells;
     this.eventBus = eventBus;
     this.targetEvaluator = targetEvaluator;
     this.targetGraph = targetGraph;
     this.ownersReportBuilder = ownersReportBuilder;
 
     this.buildFileTrees =
-        rootCell.getAllCells().stream()
+        cells.getAllCells().stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     Function.identity(),
@@ -116,7 +117,7 @@ public class UnconfiguredQueryEnvironment
   /** Convenience constructor */
   public static UnconfiguredQueryEnvironment from(
       CommandRunnerParams params, PerBuildState perBuildState) {
-    Cell rootCell = params.getCells().getRootCell();
+    Cells cells = params.getCells();
     Parser parser = params.getParser();
     UnconfiguredQueryTargetEvaluator targetEvaluator =
         UnconfiguredQueryTargetEvaluator.from(
@@ -129,7 +130,7 @@ public class UnconfiguredQueryEnvironment
         UnconfiguredTargetGraph.from(
             parser,
             perBuildState,
-            rootCell,
+            cells,
             params.getKnownRuleTypesProvider(),
             params.getTypeCoercerFactory());
     OwnersReport.Builder<UnconfiguredTargetNode> ownersReportBuilder =
@@ -137,7 +138,7 @@ public class UnconfiguredQueryEnvironment
             params.getCells().getRootCell(), params.getClientWorkingDir(), targetGraph);
 
     return new UnconfiguredQueryEnvironment(
-        rootCell, params.getBuckEventBus(), targetEvaluator, targetGraph, ownersReportBuilder);
+        cells, params.getBuckEventBus(), targetEvaluator, targetGraph, ownersReportBuilder);
   }
 
   @Override
@@ -248,7 +249,7 @@ public class UnconfiguredQueryEnvironment
     UnconfiguredQueryBuildTarget queryBuildTarget = (UnconfiguredQueryBuildTarget) target;
     UnconfiguredTargetNode node = getNode(queryBuildTarget);
 
-    Cell cell = rootCell.getCell(queryBuildTarget.getBuildTarget().getCell());
+    Cell cell = cells.getCell(queryBuildTarget.getBuildTarget().getCell());
     ProjectFilesystem filesystem = cell.getFilesystem();
 
     return targetGraph.getInputPathsForNode(node).stream()
@@ -355,11 +356,11 @@ public class UnconfiguredQueryEnvironment
   }
 
   private QueryFileTarget buildfileForTarget(UnconfiguredQueryBuildTarget queryBuildTarget) {
-    ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
+    ProjectFilesystem rootCellFilesystem = cells.getRootCell().getFilesystem();
     AbsPath rootPath = rootCellFilesystem.getRootPath();
 
     UnconfiguredBuildTarget buildTarget = queryBuildTarget.getBuildTarget();
-    Cell cell = rootCell.getCell(buildTarget.getCell());
+    Cell cell = cells.getCell(buildTarget.getCell());
     BuildFileTree buildFileTree = Objects.requireNonNull(buildFileTrees.get(cell));
     Optional<ForwardRelativePath> path =
         buildFileTree.getBasePathOfAncestorTarget(buildTarget.getCellRelativeBasePath().getPath());

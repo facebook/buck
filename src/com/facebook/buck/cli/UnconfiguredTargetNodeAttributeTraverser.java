@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.RuleType;
@@ -47,15 +48,15 @@ import java.util.function.Predicate;
 /** A class which is capable of traversing through attributes on {code UnconfiguredTargetNode}s */
 public class UnconfiguredTargetNodeAttributeTraverser {
 
-  private final Cell rootCell;
+  private final Cells cells;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final TypeCoercerFactory typeCoercerFactory;
 
   public UnconfiguredTargetNodeAttributeTraverser(
-      Cell rootCell,
+      Cells cells,
       KnownRuleTypesProvider knownRuleTypesProvider,
       TypeCoercerFactory typeCoercerFactory) {
-    this.rootCell = rootCell;
+    this.cells = cells;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.typeCoercerFactory = typeCoercerFactory;
   }
@@ -143,7 +144,7 @@ public class UnconfiguredTargetNodeAttributeTraverser {
         value,
         v ->
             coercer.traverseUnconfigured(
-                rootCell.getCellNameResolver(),
+                cells.getRootCell().getCellNameResolver(),
                 v,
                 object -> {
                   if (predicate.test(object)) {
@@ -160,7 +161,7 @@ public class UnconfiguredTargetNodeAttributeTraverser {
       TypeCoercer<Object, ?> coercer,
       Object value) {
     coercer.traverseUnconfigured(
-        rootCell.getCellNameResolver(),
+        cells.getRootCell().getCellNameResolver(),
         value,
         object -> {
           if (object instanceof UnconfiguredBuildTarget) {
@@ -196,7 +197,7 @@ public class UnconfiguredTargetNodeAttributeTraverser {
   }
 
   private ParamsInfo lookupParamsInfoForRule(UnflavoredBuildTarget buildTarget, RuleType ruleType) {
-    Cell cell = rootCell.getCell(buildTarget.getCell());
+    Cell cell = cells.getCell(buildTarget.getCell());
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleDescriptor<?> descriptor = knownRuleTypes.getDescriptorByName(ruleType.getName());
     return typeCoercerFactory
