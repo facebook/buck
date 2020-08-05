@@ -15,3 +15,4 @@ Local modifications:
  - Fixed Python 3 issue with writing bytes to a text file (`with open(path, 'wb') as fp:` on line 68 in `compiler.py`)
  - Make pexes work when being invoked from a version of python without site.USER_SITE
  - Fix concurrency when two instances of zip-safe pex invoked D21508334
+ - Handle EACCES and EPERM in safe_copy
