@@ -25,7 +25,8 @@ public class TestPerBuildStateFactory {
     return parser
         .getPerBuildStateFactory()
         .create(
-            ParsingContext.builder(new Cells(cell), MoreExecutors.newDirectExecutorService())
+            ParsingContext.builder(
+                    new Cells(cell.getCellProvider()), MoreExecutors.newDirectExecutorService())
                 .setSpeculativeParsing(SpeculativeParsing.ENABLED)
                 .build(),
             parser.getPermState());

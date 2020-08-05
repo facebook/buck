@@ -569,7 +569,7 @@ public class ParsePipelineTest {
       this.projectBuildFileParsers = new HashSet<>();
       this.workspace.setUp();
 
-      this.cells = new Cells(this.workspace.asCell());
+      this.cells = new Cells(this.workspace.asCellProvider());
 
       TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
       ConstructorArgMarshaller constructorArgMarshaller = new DefaultConstructorArgMarshaller();

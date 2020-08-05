@@ -31,6 +31,7 @@ import com.facebook.buck.cli.MainForTests;
 import com.facebook.buck.cli.MainRunner;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
+import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
@@ -667,6 +668,11 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public Cell asCell() throws IOException {
+    CellProvider cellProvider = asCellProvider();
+    return cellProvider.getCellByCanonicalCellName(CanonicalCellName.rootCell());
+  }
+
+  public CellProvider asCellProvider() throws IOException {
     ProjectFilesystemAndConfig filesystemAndConfig = getProjectFilesystemAndConfig();
     ProjectFilesystem filesystem = filesystemAndConfig.projectFilesystem;
     Config config = filesystemAndConfig.config;
@@ -688,15 +694,14 @@ public class ProjectWorkspace extends AbstractWorkspace {
         new DefaultToolchainProviderFactory(pluginManager, env, processExecutor, executableFinder);
 
     return LocalCellProviderFactory.create(
-            filesystem,
-            buckConfig,
-            CellConfig.EMPTY_INSTANCE,
-            rootCellCellPathResolver,
-            TestBuckModuleManagerFactory.create(pluginManager),
-            toolchainProviderFactory,
-            new DefaultProjectFilesystemFactory(),
-            new ParsingUnconfiguredBuildTargetViewFactory())
-        .getCellByCanonicalCellName(CanonicalCellName.rootCell());
+        filesystem,
+        buckConfig,
+        CellConfig.EMPTY_INSTANCE,
+        rootCellCellPathResolver,
+        TestBuckModuleManagerFactory.create(pluginManager),
+        toolchainProviderFactory,
+        new DefaultProjectFilesystemFactory(),
+        new ParsingUnconfiguredBuildTargetViewFactory());
   }
 
   public BuildTarget newBuildTarget(String fullyQualifiedName) throws IOException {

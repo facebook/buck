@@ -828,15 +828,14 @@ public final class MainRunner {
       Cells cells =
           new Cells(
               LocalCellProviderFactory.create(
-                      filesystem,
-                      buckConfig,
-                      command.getConfigOverrides(rootCellMapping),
-                      rootCellCellPathResolver,
-                      moduleManager,
-                      toolchainProviderFactory,
-                      projectFilesystemFactory,
-                      buildTargetFactory)
-                  .getCellByCanonicalCellName(CanonicalCellName.rootCell()));
+                  filesystem,
+                  buckConfig,
+                  command.getConfigOverrides(rootCellMapping),
+                  rootCellCellPathResolver,
+                  moduleManager,
+                  toolchainProviderFactory,
+                  projectFilesystemFactory,
+                  buildTargetFactory));
 
       TargetConfigurationSerializer targetConfigurationSerializer =
           new JsonTargetConfigurationSerializer(

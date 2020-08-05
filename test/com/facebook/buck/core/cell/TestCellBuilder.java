@@ -110,15 +110,14 @@ public class TestCellBuilder {
 
     return new Cells(
         LocalCellProviderFactory.create(
-                filesystem,
-                config,
-                cellConfig,
-                rootCellCellPathResolver,
-                TestBuckModuleManagerFactory.create(pluginManager),
-                toolchainProviderFactory,
-                new DefaultProjectFilesystemFactory(),
-                new ParsingUnconfiguredBuildTargetViewFactory())
-            .getCellByCanonicalCellName(CanonicalCellName.rootCell()));
+            filesystem,
+            config,
+            cellConfig,
+            rootCellCellPathResolver,
+            TestBuckModuleManagerFactory.create(pluginManager),
+            toolchainProviderFactory,
+            new DefaultProjectFilesystemFactory(),
+            new ParsingUnconfiguredBuildTargetViewFactory()));
   }
 
   public static CellPathResolver createCellRoots(@Nullable ProjectFilesystem filesystem) {

@@ -165,7 +165,7 @@ public class CommandRunnerParamsForTesting {
     return ImmutableCommandRunnerParams.ofImpl(
         console,
         new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
-        new Cells(cells.getRootCell()),
+        cells,
         WatchmanFactory.NULL_WATCHMAN,
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),

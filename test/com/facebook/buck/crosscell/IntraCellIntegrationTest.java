@@ -72,7 +72,7 @@ public class IntraCellIntegrationTest {
     workspace.setUp();
 
     // We don't need to do a build. It's enough to just parse these things.
-    Cells cells = new Cells(workspace.asCell());
+    Cells cells = new Cells(workspace.asCellProvider());
 
     Parser parser = TestParserFactory.create(executor.get(), cells.getRootCell());
 

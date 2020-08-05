@@ -102,7 +102,7 @@ public class TargetGraphHashingTest {
 
     eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
     ruleKeyConfiguration = TestRuleKeyConfigurationFactory.create();
-    Cells cells = new Cells(workspace.asCell());
+    Cells cells = new Cells(workspace.asCellProvider());
     projectFilesystem = cells.getRootCell().getFilesystem();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());

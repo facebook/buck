@@ -258,7 +258,7 @@ final class CellProviderImpl implements CellProvider {
 
   @Override
   public Cells getRootCell() {
-    return new Cells(getCellByCanonicalCellName(CanonicalCellName.rootCell()));
+    return new Cells(this);
   }
 
   @Override

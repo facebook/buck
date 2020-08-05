@@ -19,7 +19,6 @@ package com.facebook.buck.core.cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -29,10 +28,11 @@ import java.util.stream.Collectors;
 /** Access all cells. */
 public class Cells {
   private final Cell rootCell;
+  private final CellProvider cellProvider;
 
-  public Cells(Cell rootCell) {
-    Preconditions.checkArgument(rootCell.getCanonicalName() == CanonicalCellName.rootCell());
-    this.rootCell = rootCell;
+  public Cells(CellProvider cellProvider) {
+    this.rootCell = cellProvider.getCellByCanonicalCellName(CanonicalCellName.rootCell());
+    this.cellProvider = cellProvider;
   }
 
   public Cell getRootCell() {
@@ -53,7 +53,7 @@ public class Cells {
   }
 
   public CellProvider getCellProvider() {
-    return rootCell.getCellProvider();
+    return cellProvider;
   }
 
   /** @return Path of the topmost cell's path that roots all other cells */

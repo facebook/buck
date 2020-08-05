@@ -19,7 +19,6 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.DefaultCellNameResolverProvider;
-import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildFileTree;
@@ -128,7 +127,7 @@ public class PerBuildStateFactory {
       DaemonicParserState daemonicParserState,
       Optional<AtomicLong> parseProcessedBytes) {
 
-    Cells cells = new Cells(parsingContext.getCells().getCell(CanonicalCellName.rootCell()));
+    Cells cells = parsingContext.getCells();
     ListeningExecutorService executorService = parsingContext.getExecutor();
     SymlinkCache symlinkCache = new SymlinkCache(eventBus, daemonicParserState);
     CellManager cellManager = new CellManager(cells.getRootCell(), symlinkCache);
