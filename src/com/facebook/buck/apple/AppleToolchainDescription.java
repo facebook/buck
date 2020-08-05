@@ -209,9 +209,9 @@ public class AppleToolchainDescription
 
     ImmutableMap.Builder<String, String> macrosBuilder = ImmutableMap.builder();
     ImmutableMap.Builder<String, Arg> macrosArgsBuilder = ImmutableMap.builder();
-    macrosBuilder.put("SDKROOT", sdkRootPath.toString());
+    macrosBuilder.put("SDKROOT", pathResolver.getCellUnsafeRelPath(sdkRoot).toString());
     macrosArgsBuilder.put("SDKROOT", SourcePathArg.of(sdkRoot));
-    macrosBuilder.put("PLATFORM_DIR", platformRootPath.toString());
+    macrosBuilder.put("PLATFORM_DIR", pathResolver.getCellUnsafeRelPath(platformRoot).toString());
     macrosArgsBuilder.put("PLATFORM_DIR", SourcePathArg.of(platformRoot));
     macrosBuilder.put(
         "CURRENT_ARCH",
@@ -220,7 +220,9 @@ public class AppleToolchainDescription
         "CURRENT_ARCH",
         StringArg.of(
             ApplePlatform.findArchitecture(flavor).orElseThrow(IllegalStateException::new)));
-    developerRootPath.ifPresent(path -> macrosBuilder.put("DEVELOPER_DIR", path.toString()));
+    developerRoot.ifPresent(
+        path ->
+            macrosBuilder.put("DEVELOPER_DIR", pathResolver.getCellUnsafeRelPath(path).toString()));
     developerRoot.ifPresent(path -> macrosArgsBuilder.put("DEVELOPER_DIR", SourcePathArg.of(path)));
     cxxPlatformBuilder.setFlagMacros(macrosBuilder.build());
 

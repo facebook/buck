@@ -19,7 +19,6 @@ package com.facebook.buck.apple;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -52,15 +51,11 @@ public class AppleToolchainIntegrationTest {
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64");
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
-    AbsPath sdkPath =
-        workspace
-            .getProjectFileSystem()
-            .getRootPath()
-            .resolve(
-                BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
-                    BuildTargetFactory.newInstance("//apple_toolchain/tools:gen-sdk"),
-                    "%s"));
+    RelPath sdkPath =
+        BuildTargetPaths.getGenPath(
+            workspace.getProjectFileSystem(),
+            BuildTargetFactory.newInstance("//apple_toolchain/tools:gen-sdk"),
+            "%s");
     assertEquals(
         String.format(
             "strip:%n"
@@ -93,13 +88,11 @@ public class AppleToolchainIntegrationTest {
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64,iphoneos-armv7");
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
-    AbsPath rootPath = workspace.getProjectFileSystem().getRootPath();
-    AbsPath sdkPath =
-        rootPath.resolve(
-            BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(),
-                BuildTargetFactory.newInstance("//apple_toolchain/tools:gen-sdk"),
-                "%s"));
+    RelPath sdkPath =
+        BuildTargetPaths.getGenPath(
+            workspace.getProjectFileSystem(),
+            BuildTargetFactory.newInstance("//apple_toolchain/tools:gen-sdk"),
+            "%s");
     assertEquals(
         String.format(
             "universal file:%n"
@@ -130,14 +123,12 @@ public class AppleToolchainIntegrationTest {
                 + "object: compile output: source code 1%n"
                 + "object: compile output: source code 2%n"
                 + "ranlib applied.%n"
-                + "linker: fpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
+                + "linker: fpath: apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
                 + "linker: frameworks: Foundation,UIKit%n"
-                + "linker: lpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
+                + "linker: lpath: apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
                 + "linker: libs: objc%n",
             sdkPath,
-            sdkPath,
-            rootPath,
-            rootPath),
+            sdkPath),
         workspace.getFileContents(output.resolve("TestApp")));
   }
 
@@ -151,7 +142,6 @@ public class AppleToolchainIntegrationTest {
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64");
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
-    AbsPath rootPath = workspace.getProjectFileSystem().getRootPath();
     assertEquals(
         String.format(
             "strip:%n"
@@ -165,12 +155,10 @@ public class AppleToolchainIntegrationTest {
                 + "object: compile output: source code 1%n"
                 + "object: compile output: source code 2%n"
                 + "ranlib applied.%n"
-                + "linker: fpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
+                + "linker: fpath: apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
                 + "linker: frameworks: Foundation,UIKit%n"
-                + "linker: lpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
-                + "linker: libs: objc%n",
-            rootPath,
-            rootPath),
+                + "linker: lpath: apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
+                + "linker: libs: objc%n"),
         workspace.getFileContents(output.resolve("TestApp")));
   }
 
@@ -183,7 +171,6 @@ public class AppleToolchainIntegrationTest {
         "apple", "toolchain_set_target", "//apple_toolchain:toolchain_swift");
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:TestSwiftBinary#iphoneos-arm64");
-    AbsPath rootPath = workspace.getProjectFileSystem().getRootPath();
     RelPath swiftLibraryPath =
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(),
@@ -214,13 +201,12 @@ public class AppleToolchainIntegrationTest {
                 + anotherSwiftLibraryPath
                 + "/AnotherSwiftLibrary.o%n"
                 + "swift compile: extra swift code%n"
-                + "linker: fpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
+                + "linker: fpath: apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
                 + "linker: frameworks: Foundation%n"
                 + "linker: lpath: /test/linking,@executable_path/linking,@loader_path/linking%n"
                 + "linker: libs: %n"
                 + "linker: ast_paths: %s/SwiftLibrary.swiftmodule,%s/SwiftCompanionLibrary.swiftmodule,%s/AnotherSwiftLibrary.swiftmodule%n"
                 + "linker: rpath: /test/runtime_run,@executable_path/runtime_run,@loader_path/runtime_run%n",
-            rootPath,
             swiftLibraryPath,
             companionLibraryPath,
             anotherSwiftLibraryPath),
@@ -238,15 +224,11 @@ public class AppleToolchainIntegrationTest {
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64");
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
-    AbsPath sdkPath =
-        workspace
-            .getProjectFileSystem()
-            .getRootPath()
-            .resolve(
-                BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
-                    BuildTargetFactory.newInstance("//apple_toolchain/tools:gen-sdk"),
-                    "%s"));
+    RelPath sdkPath =
+        BuildTargetPaths.getGenPath(
+            workspace.getProjectFileSystem(),
+            BuildTargetFactory.newInstance("//apple_toolchain/tools:gen-sdk"),
+            "%s");
     assertEquals(
         String.format(
             "strip:%n"
