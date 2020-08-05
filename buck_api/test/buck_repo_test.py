@@ -176,7 +176,7 @@ async def test_test_failed():
 
 def _create_file(dirpath: Path, filepath: Path, exitcode: int) -> None:
     """ Writes out a message to a file given the path"""
-    with open(os.path.join(dirpath, filepath), "w") as f1:
+    with open(dirpath / filepath, "w") as f1:
         target_name = str(filepath)
         status = "FAIL" if "failure" in target_name else "PASS"
         result_type = (

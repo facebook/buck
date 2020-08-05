@@ -1,14 +1,26 @@
 load("//tools/build_rules:python_rules.bzl", "pytest_test")
 
 python_library(
-    name = "repo_test_lib",
-    srcs = ["repo_test.py"],
+    name = "test_repo_lib",
+    srcs = ["test_repo.py"],
     base_module = "",
     visibility = [
         "PUBLIC",
     ],
     deps = [
         "//buck_api/srcs:buck_repo_lib",
+    ],
+)
+
+python_library(
+    name = "asserts_lib",
+    srcs = ["asserts.py"],
+    base_module = "",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//buck_api/srcs:buck_result_lib",
     ],
 )
 
@@ -20,7 +32,8 @@ pytest_test(
         "PUBLIC",
     ],
     deps = [
-        ":repo_test_lib",
+        ":asserts_lib",
+        ":test_repo_lib",
         "//third-party/py/pytest-asyncio:pytest-asyncio",
     ],
 )

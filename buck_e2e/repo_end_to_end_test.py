@@ -14,21 +14,46 @@
 # limitations under the License.
 
 import os
+from pathlib import Path
 
+import asserts
 import pkg_resources
 import pytest
-from repo_test import repo  # noqa: F401
+from test_repo import repo  # noqa: F401
 
 
-@pytest.mark.usefixtures("repo")
-class TestBuckRepo:
-    test_script = pkg_resources.resource_filename(
-        "buck_e2e.repo_end_to_end_test", "test_script.py"
-    )
-    os.environ["TEST_BUCK_BINARY"] = test_script
+test_script = pkg_resources.resource_filename(
+    "buck_e2e.repo_end_to_end_test", "test_script.py"
+)
+os.environ["TEST_BUCK_BINARY"] = test_script
 
-    @staticmethod
-    @pytest.mark.asyncio
-    async def test_repo_build(repo):
-        result = await (await repo.build("//:target_file_success")).wait()
-        assert "target_file_success" in result.get_stdout()
+
+@pytest.mark.asyncio
+async def test_repo_build(repo):
+    _create_file(Path(repo.cwd), Path("target_file_success"), 0)
+    result = await (await repo.build("//:target_file_success")).wait()
+    assert "target_file_success" in result.get_stdout(), result.get_stderr()
+    asserts.assert_build_success(result)
+
+
+@pytest.mark.asyncio
+@pytest.mark.xfail(raises=AssertionError)
+async def test_repo_build_failure(repo):
+    _create_file(Path(repo.cwd), Path("target_file_failure"), 1)
+    result = await (await repo.build("//:target_file_failure")).wait()
+    assert "target_file_failure" in result.get_stdout()
+    asserts.assert_build_success(result)
+
+
+def _create_file(dirpath: Path, filepath: Path, exitcode: int) -> None:
+    """ Writes out a message to a file given the path"""
+    with open(dirpath / filepath, "w") as f1:
+        target_name = str(filepath)
+        status = "FAIL" if "failure" in target_name else "PASS"
+        result_type = (
+            "FAILURE"
+            if "fail" in target_name
+            else ("SUCCESS" if "success" in target_name else "EXCLUDED")
+        )
+        message = f"{target_name}\n{status}\n{result_type}\n{exitcode}"
+        f1.write(message)
