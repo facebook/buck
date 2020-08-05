@@ -70,7 +70,7 @@ public class SkylarkPackageFileParserTest {
   @Before
   public void setUp() {
     projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    skylarkFilesystem = SkylarkFilesystem.using(projectFilesystem);
+    skylarkFilesystem = SkylarkFilesystem.using(projectFilesystem.getFileSystem());
     cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
@@ -95,7 +95,6 @@ public class SkylarkPackageFileParserTest {
         SkylarkPackageFileParser.using(
             options,
             BuckEventBusForTests.newInstance(),
-            skylarkFilesystem,
             BuckGlobals.of(
                 SkylarkPackageModule.PACKAGE_MODULE,
                 options.getDescriptions(),

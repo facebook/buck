@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -34,7 +35,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -95,7 +95,7 @@ public class ConcurrentProjectBuildFileParserTest {
     @Override
     @SuppressWarnings("unused")
     public boolean globResultsMatchCurrentState(
-        Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
+        AbsPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
       processCall("globResultsMatchCurrentState");
       return false;
     }
@@ -150,7 +150,7 @@ public class ConcurrentProjectBuildFileParserTest {
     @Override
     @SuppressWarnings("unused")
     public boolean globResultsMatchCurrentState(
-        Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
+        AbsPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
       waitLatch();
       return false;
     }
@@ -188,7 +188,7 @@ public class ConcurrentProjectBuildFileParserTest {
             executorService.submit(
                 () ->
                     buildFileParser.globResultsMatchCurrentState(
-                        Paths.get(""), ImmutableList.of())));
+                        RelPath.get(".").toAbsolutePath(), ImmutableList.of())));
       }
 
       Futures.allAsList(futures).get();

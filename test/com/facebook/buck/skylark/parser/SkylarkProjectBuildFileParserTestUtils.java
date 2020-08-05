@@ -102,7 +102,6 @@ public class SkylarkProjectBuildFileParserTestUtils {
     return SkylarkProjectBuildFileParser.using(
         options,
         BuckEventBusForTests.newInstance(),
-        skylarkFilesystem,
         BuckGlobals.of(
             SkylarkBuildModule.BUILD_MODULE,
             options.getDescriptions(),

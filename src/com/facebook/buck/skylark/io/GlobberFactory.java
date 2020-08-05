@@ -16,11 +16,11 @@
 
 package com.facebook.buck.skylark.io;
 
-import com.google.devtools.build.lib.vfs.Path;
+import com.facebook.buck.core.filesystems.AbsPath;
 
 /** Creates {@link Globber} instances to save clients from implementation details. */
 @FunctionalInterface
 public interface GlobberFactory {
 
-  Globber create(Path basePath);
+  Globber create(AbsPath basePath);
 }

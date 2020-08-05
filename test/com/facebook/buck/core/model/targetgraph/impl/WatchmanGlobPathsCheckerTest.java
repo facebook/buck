@@ -57,7 +57,7 @@ public class WatchmanGlobPathsCheckerTest {
   public void setUp() throws Exception {
     projectFilesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
     WatchmanFactory watchmanFactory = new WatchmanFactory();
-    SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem);
+    SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem.getFileSystem());
     root = fileSystem.getPath(tmp.getRoot().toString());
     watchman =
         watchmanFactory.build(

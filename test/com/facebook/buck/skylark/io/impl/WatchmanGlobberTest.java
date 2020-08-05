@@ -68,7 +68,7 @@ public class WatchmanGlobberTest {
   public void setUp() throws Exception {
     ProjectFilesystem projectFilesystem =
         new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
-    SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem);
+    SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem.getFileSystem());
     root = fileSystem.getPath(tmp.getRoot().toString());
     WatchmanFactory watchmanFactory = new WatchmanFactory();
     Watchman watchman =

@@ -16,10 +16,10 @@
 
 package com.facebook.buck.skylark.io.impl;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.skylark.io.Globber;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.devtools.build.lib.vfs.Path;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
@@ -34,9 +34,9 @@ import java.util.Set;
 public class NativeGlobber implements Globber {
 
   /** Path used as a root when resolving patterns. */
-  private final Path basePath;
+  private final AbsPath basePath;
 
-  private NativeGlobber(Path basePath) {
+  private NativeGlobber(AbsPath basePath) {
     this.basePath = basePath;
   }
 
@@ -67,10 +67,11 @@ public class NativeGlobber implements Globber {
    * @return The set of paths corresponding to requested patterns.
    */
   private static ImmutableSet<String> resolvePathsMatchingGlobPatterns(
-      Collection<String> patterns, Path basePath, boolean excludeDirectories) throws IOException {
+      Collection<String> patterns, AbsPath basePath, boolean excludeDirectories)
+      throws IOException {
     return UnixGlob.forPath(basePath).addPatterns(patterns)
         .setExcludeDirectories(excludeDirectories).glob().stream()
-        .map(includePath -> includePath.relativeTo(basePath).getPathString())
+        .map(includePath -> basePath.relativize(includePath).toString())
         .collect(ImmutableSet.toImmutableSet());
   }
 
@@ -79,7 +80,7 @@ public class NativeGlobber implements Globber {
    *
    * @param basePath The base path relative to which paths matching glob patterns will be resolved.
    */
-  public static NativeGlobber create(Path basePath) {
+  public static NativeGlobber create(AbsPath basePath) {
     return new NativeGlobber(basePath);
   }
 }
