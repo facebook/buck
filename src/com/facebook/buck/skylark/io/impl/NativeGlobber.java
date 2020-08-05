@@ -20,7 +20,6 @@ import com.facebook.buck.skylark.io.Globber;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.devtools.build.lib.vfs.Path;
-import com.google.devtools.build.lib.vfs.UnixGlob;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;

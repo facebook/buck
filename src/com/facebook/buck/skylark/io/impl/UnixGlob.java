@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Copyright 2014 The Bazel Authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +28,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.devtools.build.lib.vfs;
+package com.facebook.buck.skylark.io.impl;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -33,6 +49,10 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.devtools.build.lib.profiler.Profiler;
 import com.google.devtools.build.lib.profiler.ProfilerTask;
 import com.google.devtools.build.lib.profiler.SilentCloseable;
+import com.google.devtools.build.lib.vfs.Dirent;
+import com.google.devtools.build.lib.vfs.FileStatus;
+import com.google.devtools.build.lib.vfs.Path;
+import com.google.devtools.build.lib.vfs.Symlinks;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -59,7 +79,7 @@ import java.util.regex.Pattern;
  *
  * <p>Importantly, note that the glob matches are in an unspecified order.
  */
-public final class UnixGlob {
+final class UnixGlob {
   private UnixGlob() {}
 
   private static List<Path> globInternal(
@@ -112,8 +132,8 @@ public final class UnixGlob {
   }
 
   /**
-   * Checks that each pattern is valid, splits it into segments and checks
-   * that each segment contains only valid wildcards.
+   * Checks that each pattern is valid, splits it into segments and checks that each segment
+   * contains only valid wildcards.
    *
    * @return list of segment arrays
    */
@@ -130,9 +150,7 @@ public final class UnixGlob {
     return list;
   }
 
-  /**
-   * @return whether or not {@code pattern} contains illegal characters
-   */
+  /** @return whether or not {@code pattern} contains illegal characters */
   public static String checkPatternForError(String pattern) {
     if (pattern.isEmpty()) {
       return "pattern cannot be empty";
@@ -209,8 +227,8 @@ public final class UnixGlob {
   }
 
   /**
-   * Returns a regular expression implementing a matcher for "pattern", in which
-   * "*" and "?" are wildcards.
+   * Returns a regular expression implementing a matcher for "pattern", in which "*" and "?" are
+   * wildcards.
    *
    * <p>e.g. "foo*bar?.java" -> "foo.*bar.\\.java"
    */
@@ -218,7 +236,7 @@ public final class UnixGlob {
     StringBuilder regexp = new StringBuilder();
     for (int i = 0, len = pattern.length(); i < len; i++) {
       char c = pattern.charAt(i);
-      switch(c) {
+      switch (c) {
         case '*':
           int toIncrement = 0;
           if (len > i + 1 && pattern.charAt(i + 1) == '*') {
@@ -239,10 +257,17 @@ public final class UnixGlob {
         case '?':
           regexp.append('.');
           break;
-        //escape the regexp special characters that are allowed in wildcards
-        case '^': case '$': case '|': case '+':
-        case '{': case '}': case '[': case ']':
-        case '\\': case '.':
+          // escape the regexp special characters that are allowed in wildcards
+        case '^':
+        case '$':
+        case '|':
+        case '+':
+        case '{':
+        case '}':
+        case '[':
+        case ']':
+        case '\\':
+        case '.':
           regexp.append('\\');
           regexp.append(c);
           break;
@@ -254,9 +279,7 @@ public final class UnixGlob {
     return Pattern.compile(regexp.toString());
   }
 
-  /**
-   * Filesystem calls required for glob().
-   */
+  /** Filesystem calls required for glob(). */
   public interface FilesystemCalls {
     /** Get directory entries and their types. Does not follow symlinks. */
     Collection<Dirent> readdir(Path path) throws IOException;
@@ -309,11 +332,7 @@ public final class UnixGlob {
     return new Builder(path);
   }
 
-  /**
-   * Builder class for UnixGlob.
-   *
-   *
-   */
+  /** Builder class for UnixGlob. */
   public static class Builder {
     private Path base;
     private List<String> patterns;
@@ -323,9 +342,7 @@ public final class UnixGlob {
     private AtomicReference<? extends FilesystemCalls> syscalls =
         new AtomicReference<>(DEFAULT_SYSCALLS);
 
-    /**
-     * Creates a glob builder with the given base path.
-     */
+    /** Creates a glob builder with the given base path. */
     public Builder(Path base) {
       this.base = base;
       this.patterns = Lists.newArrayList();
@@ -363,19 +380,14 @@ public final class UnixGlob {
       return this;
     }
 
-    /**
-     * Sets the FilesystemCalls interface to use on this glob().
-     */
+    /** Sets the FilesystemCalls interface to use on this glob(). */
     public Builder setFilesystemCalls(AtomicReference<? extends FilesystemCalls> syscalls) {
-      this.syscalls = (syscalls == null)
-          ? new AtomicReference<FilesystemCalls>(DEFAULT_SYSCALLS)
-          : syscalls;
+      this.syscalls =
+          (syscalls == null) ? new AtomicReference<FilesystemCalls>(DEFAULT_SYSCALLS) : syscalls;
       return this;
     }
 
-    /**
-     * If set to true, directories are not returned in the glob result.
-     */
+    /** If set to true, directories are not returned in the glob result. */
     public Builder setExcludeDirectories(boolean excludeDirectories) {
       this.excludeDirectories = excludeDirectories;
       return this;
@@ -390,20 +402,17 @@ public final class UnixGlob {
       return this;
     }
 
-
     /**
-     * If set, the given predicate is called for every directory
-     * encountered. If it returns false, the corresponding item is not
-     * returned in the output and directories are not traversed either.
+     * If set, the given predicate is called for every directory encountered. If it returns false,
+     * the corresponding item is not returned in the output and directories are not traversed
+     * either.
      */
     public Builder setDirectoryFilter(Predicate<Path> pathFilter) {
       this.pathFilter = pathFilter;
       return this;
     }
 
-    /**
-     * Executes the glob.
-     */
+    /** Executes the glob. */
     public List<Path> glob() throws IOException {
       return globInternalUninterruptible(
           base, patterns, excludeDirectories, pathFilter, syscalls.get(), executor);
@@ -435,9 +444,7 @@ public final class UnixGlob {
     }
   }
 
-  /**
-   * Adapts the result of the glob visitation as a Future.
-   */
+  /** Adapts the result of the glob visitation as a Future. */
   private static class GlobFuture extends ForwardingListenableFuture<List<Path>> {
     private final GlobVisitor visitor;
     private final SettableFuture<List<Path>> delegate = SettableFuture.create();
@@ -472,8 +479,8 @@ public final class UnixGlob {
   }
 
   /**
-   * GlobVisitor executes a glob using parallelism, which is useful when
-   * the glob() requires many readdir() calls on high latency filesystems.
+   * GlobVisitor executes a glob using parallelism, which is useful when the glob() requires many
+   * readdir() calls on high latency filesystems.
    */
   private static final class GlobVisitor {
     // These collections are used across workers and must therefore be thread-safe.
@@ -509,8 +516,12 @@ public final class UnixGlob {
      *     #checkPatternForError(String) contains errors} or if any include pattern segment contains
      *     <code>**</code> but not equal to it.
      */
-    List<Path> glob(Path base, Collection<String> patterns, boolean excludeDirectories,
-        Predicate<Path> dirPred, FilesystemCalls syscalls)
+    List<Path> glob(
+        Path base,
+        Collection<String> patterns,
+        boolean excludeDirectories,
+        Predicate<Path> dirPred,
+        FilesystemCalls syscalls)
         throws IOException, InterruptedException {
       try {
         return globAsync(base, patterns, excludeDirectories, dirPred, syscalls).get();
@@ -521,8 +532,12 @@ public final class UnixGlob {
       }
     }
 
-    List<Path> globUninterruptible(Path base, Collection<String> patterns,
-        boolean excludeDirectories, Predicate<Path> dirPred, FilesystemCalls syscalls)
+    List<Path> globUninterruptible(
+        Path base,
+        Collection<String> patterns,
+        boolean excludeDirectories,
+        Predicate<Path> dirPred,
+        FilesystemCalls syscalls)
         throws IOException {
       try {
         return Uninterruptibles.getUninterruptibly(
@@ -574,9 +589,11 @@ public final class UnixGlob {
               ++numRecursivePatterns;
             }
           }
-          GlobTaskContext context = numRecursivePatterns > 1
-              ? new RecursiveGlobTaskContext(splitPattern, excludeDirectories, dirPred, syscalls)
-              : new GlobTaskContext(splitPattern, excludeDirectories, dirPred, syscalls);
+          GlobTaskContext context =
+              numRecursivePatterns > 1
+                  ? new RecursiveGlobTaskContext(
+                      splitPattern, excludeDirectories, dirPred, syscalls)
+                  : new GlobTaskContext(splitPattern, excludeDirectories, dirPred, syscalls);
           context.queueGlob(base, baseStat.isDirectory(), 0);
         }
       } finally {
@@ -600,8 +617,8 @@ public final class UnixGlob {
     }
 
     /** Should only be called by link {@GlobTaskContext}. */
-    private void queueGlob(final Path base, final boolean baseIsDir, final int idx,
-        final GlobTaskContext context) {
+    private void queueGlob(
+        final Path base, final boolean baseIsDir, final int idx, final GlobTaskContext context) {
       enqueue(
           new Runnable() {
             @Override
