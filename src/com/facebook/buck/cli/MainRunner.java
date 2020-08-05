@@ -836,7 +836,7 @@ public final class MainRunner {
                       toolchainProviderFactory,
                       projectFilesystemFactory,
                       buildTargetFactory)
-                  .getCellByPath(filesystem.getRootPath()));
+                  .getCellByCanonicalCellName(CanonicalCellName.rootCell()));
 
       TargetConfigurationSerializer targetConfigurationSerializer =
           new JsonTargetConfigurationSerializer(
