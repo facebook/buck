@@ -896,6 +896,13 @@ class BuckTool(object):
                 )
                 close_fds = False
 
+            logging.debug(
+                "Spawning a process:\n  exe=%s\n  command=%s\n  env=%s\n  cwd=%s",
+                java_path,
+                command,
+                self._environ_for_buck(),
+                self._buck_project.root,
+            )
             process = subprocess.Popen(
                 command,
                 executable=java_path,

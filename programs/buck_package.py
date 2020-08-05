@@ -16,6 +16,7 @@ from __future__ import print_function
 
 import errno
 import json
+import logging
 import os
 import shutil
 import stat
@@ -139,7 +140,12 @@ class BuckPackage(BuckTool):
                 shutil.rmtree(resource_path, ignore_errors=True)
 
         if not os.path.exists(resource_path):
+            logging.debug("Unpacking %s into %s", resource.name, resource_path)
             self._unpack_resource(resource_path, resource.name, resource.executable)
+        else:
+            logging.debug(
+                "Resource %s already exists in %s", resource.name, resource_path
+            )
         return resource_path
 
     def _unpack_resource(self, resource_path, resource_name, resource_executable):
