@@ -33,6 +33,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
@@ -695,7 +696,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
             toolchainProviderFactory,
             new DefaultProjectFilesystemFactory(),
             new ParsingUnconfiguredBuildTargetViewFactory())
-        .getCellByPath(filesystem.getRootPath());
+        .getCellByCanonicalCellName(CanonicalCellName.rootCell());
   }
 
   public BuildTarget newBuildTarget(String fullyQualifiedName) throws IOException {

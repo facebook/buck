@@ -118,7 +118,7 @@ public class TestCellBuilder {
                 toolchainProviderFactory,
                 new DefaultProjectFilesystemFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory())
-            .getCellByPath(filesystem.getRootPath()));
+            .getCellByCanonicalCellName(CanonicalCellName.rootCell()));
   }
 
   public static CellPathResolver createCellRoots(@Nullable ProjectFilesystem filesystem) {
