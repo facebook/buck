@@ -298,10 +298,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
               for (CanonicalCellName cellName : cellNames) {
                 RelPath configPath = getPrefixRelativeCellPath(cellName).resolveRel(".buckconfig");
                 BuckConfig buckConfig =
-                    rootCell
-                        .getCellProvider()
-                        .getCellByPath(cellResolver.getNewCellPathResolver().getCellPath(cellName))
-                        .getBuckConfig();
+                    rootCell.getCellProvider().getCellByCanonicalCellName(cellName).getBuckConfig();
                 byte[] bytes = serializeConfig(buckConfig);
                 Digest digest = protocol.computeDigest(bytes);
                 filesBuilder.add(

@@ -79,7 +79,7 @@ class ReconstructingStrategy extends AbstractModernBuildRuleStrategy {
               CanonicalCellName canonicalCellName = cellNameResolver.getName(name);
               return rootCell
                   .getCellProvider()
-                  .getCellByPath(cellResolver.getCellPathOrThrow(canonicalCellName))
+                  .getCellByCanonicalCellName(canonicalCellName)
                   .getFilesystem();
             },
             Class::forName,

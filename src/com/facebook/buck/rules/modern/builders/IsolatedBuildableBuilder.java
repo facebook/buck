@@ -198,9 +198,7 @@ public abstract class IsolatedBuildableBuilder {
               cellName.isPresent()
                   ? cellNameResolver.getName(cellName)
                   : CanonicalCellName.rootCell();
-          return cellProvider
-              .getCellByPath(cellPathResolver.getCellPath(canonicalCellName).get())
-              .getFilesystem();
+          return cellProvider.getCellByCanonicalCellName(canonicalCellName).getFilesystem();
         };
 
     JavaPackageFinder javaPackageFinder =
@@ -256,9 +254,7 @@ public abstract class IsolatedBuildableBuilder {
               cellName.isPresent()
                   ? cellNameResolver.getName(cellName)
                   : CanonicalCellName.rootCell();
-          return cellProvider
-              .getCellByPath(cellPathResolver.getCellPath(canonicalCellName).get())
-              .getToolchainProvider();
+          return cellProvider.getCellByCanonicalCellName(canonicalCellName).getToolchainProvider();
         };
 
     RichStream.from(cellPathResolver.getCellPathsByRootCellExternalName().keySet())
