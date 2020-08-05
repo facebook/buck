@@ -60,7 +60,7 @@ from .glob_watchman import SyncCookieState, glob_watchman
 from .json_encoder import BuckJSONEncoder
 from .module_whitelist import ImportWhitelistManager
 from .profiler import Profiler, Tracer, emit_trace, scoped_trace, traced
-from .select_support import SelectorList, SelectorValue
+from .select_support import SelectorList, SelectorValue, select_equal
 from .struct import create_struct_class, struct
 from .util import (
     Diagnostic,
@@ -755,6 +755,11 @@ def select(conditions, no_match_message=None, build_env=None):
     """Allows to provide a configurable value for an attribute"""
 
     return SelectorList([SelectorValue(conditions, no_match_message)])
+
+
+@provide_for_build
+def select_equal_internal(this, that, build_env=None):
+    return select_equal(this, that)
 
 
 @provide_as_native_rule

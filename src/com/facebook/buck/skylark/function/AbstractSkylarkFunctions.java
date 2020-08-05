@@ -31,6 +31,8 @@ import com.google.devtools.build.lib.syntax.StarlarkCallable;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.Tuple;
 import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.StarlarkMethod;
@@ -186,5 +188,52 @@ public abstract class AbstractSkylarkFunctions {
     }
     // TODO(nga): use our version of selectors
     return SelectorList.of(new SelectorValue(dict, noMatchError));
+  }
+
+  /** {@code selectEqualInternal} */
+  @StarlarkMethod(
+      name = "select_equal_internal",
+      doc = "Test Only. Check equality between two select expressions",
+      parameters = {
+        @Param(name = "first", type = SelectorList.class),
+        @Param(name = "other", type = SelectorList.class),
+      },
+      documented = false)
+  public boolean selectEqualInternal(SelectorList first, SelectorList other) {
+    if (!(Objects.equals(first.getType(), other.getType()))) {
+      return false;
+    }
+
+    Iterator<Object> it1 = first.getElements().iterator();
+    Iterator<Object> it2 = other.getElements().iterator();
+
+    while (it1.hasNext() && it2.hasNext()) {
+      Object o1 = it1.next();
+      Object o2 = it2.next();
+
+      if (o1 == o2) {
+        continue;
+      }
+
+      if (!o1.getClass().equals(o2.getClass())) {
+        return false;
+      }
+
+      if (o1 instanceof SelectorValue && o2 instanceof SelectorValue) {
+        SelectorValue s1 = (SelectorValue) o1;
+        SelectorValue s2 = (SelectorValue) o2;
+
+        if (!Objects.equals(s1.getDictionary(), s2.getDictionary())) {
+          return false;
+        }
+
+      } else {
+        if (!Objects.equals(o1, o2)) {
+          return false;
+        }
+      }
+    }
+
+    return !(it1.hasNext() || it2.hasNext());
   }
 }

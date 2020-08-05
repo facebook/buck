@@ -33,6 +33,14 @@ class SelectorValue:
     def __str__(self):
         return "select(" + str(self.__conditions()) + ")"
 
+    def __eq__(self, o):
+        if not isinstance(o, SelectorValue):
+            return False
+        return self.conditions() == o.conditions()
+
+    def __ne__(self, o):
+        return not self.__eq__(o)
+
 
 class SelectorList:
     """
@@ -62,3 +70,11 @@ class SelectorList:
 
     def __str__(self):
         return " + ".join(str(i) for i in self.__items)
+
+
+def select_equal(this, that):
+    # type: (SelectorList, SelectorList) -> bool
+    if not (isinstance(this, SelectorList) and isinstance(that, SelectorList)):
+        return False
+
+    return this.items() == that.items()

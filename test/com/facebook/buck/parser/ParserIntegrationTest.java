@@ -835,4 +835,15 @@ public class ParserIntegrationTest {
         throw new AssertionError("unreachable");
     }
   }
+
+  @Test
+  @Parameters(method = "syntaxes")
+  public void selectEqual(Syntax syntax) throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "select_equal", temporaryFolder);
+    workspace.setUp();
+    workspace
+        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax=" + syntax)
+        .assertSuccess();
+  }
 }
