@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
-import java.util.Collections;
+import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import java.util.Optional;
 
 public class ApplePlatforms {
@@ -39,15 +39,7 @@ public class ApplePlatforms {
       CxxPlatformsProvider cxxPlatformsProvider,
       BuildTarget target,
       Optional<Flavor> defaultPlatform) {
-    return cxxPlatformsProvider
-        .getUnresolvedCxxPlatforms()
-        .getValue(target)
-        .orElse(
-            cxxPlatformsProvider
-                .getUnresolvedCxxPlatforms()
-                .getValue(
-                    defaultPlatform.map(Collections::singleton).orElse(Collections.emptySet()))
-                .orElse(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform()));
+    return CxxPlatforms.getCxxPlatform(cxxPlatformsProvider, target, defaultPlatform);
   }
 
   public static AppleCxxPlatform getAppleCxxPlatformForBuildTarget(
