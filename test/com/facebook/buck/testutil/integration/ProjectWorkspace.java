@@ -919,7 +919,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
     observedFileContent =
         BuckOutConfigHashPlaceholder.replaceHashByPlaceholder(observedFileContent);
 
-    observedFileContent = normalizeObservedContent.apply(expectedFileContent);
+    observedFileContent = normalizeObservedContent.apply(observedFileContent);
 
     // TODO(gabrielrc): Remove this after we land the new config hash changes
     observedFileContent = BuckOutConfigHashPlaceholder.removePlaceholder(observedFileContent);

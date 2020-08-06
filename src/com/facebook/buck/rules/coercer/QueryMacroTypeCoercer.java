@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -30,12 +29,12 @@ import java.util.function.Function;
 /** A type coercer for macros accepting a single {@link Query} arg. */
 class QueryMacroTypeCoercer<M extends QueryMacro> implements MacroTypeCoercer<M> {
 
-  private final TypeCoercer<Query> queryCoercer;
+  private final TypeCoercer<Object, Query> queryCoercer;
   private final Class<M> mClass;
   private final Function<Query, M> factory;
 
   public QueryMacroTypeCoercer(
-      TypeCoercer<Query> queryCoercer, Class<M> mClass, Function<Query, M> factory) {
+      TypeCoercer<Object, Query> queryCoercer, Class<M> mClass, Function<Query, M> factory) {
     this.queryCoercer = queryCoercer;
     this.mClass = mClass;
     this.factory = factory;
@@ -58,7 +57,7 @@ class QueryMacroTypeCoercer<M extends QueryMacro> implements MacroTypeCoercer<M>
 
   @Override
   public M coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -71,7 +70,7 @@ class QueryMacroTypeCoercer<M extends QueryMacro> implements MacroTypeCoercer<M>
     }
     return factory.apply(
         queryCoercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             pathRelativeToProjectRoot,
             targetConfiguration,

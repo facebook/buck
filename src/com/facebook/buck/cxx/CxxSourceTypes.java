@@ -21,6 +21,8 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
+import com.facebook.buck.rules.args.Arg;
+import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 
 /** Utilities for working with C-like source types. */
@@ -112,10 +114,10 @@ public class CxxSourceTypes {
   }
 
   /** @return the platform-specific preprocessor flags for the given {@link CxxPlatform}. */
-  public static ImmutableList<String> getPlatformPreprocessFlags(
+  public static ImmutableList<Arg> getPlatformPreprocessFlags(
       CxxPlatform cxxPlatform, CxxSource.Type type) {
 
-    ImmutableList.Builder<String> flags = ImmutableList.builder();
+    ImmutableList.Builder<Arg> flags = ImmutableList.builder();
 
     switch (type) {
       case ASSEMBLER_WITH_CPP:
@@ -245,10 +247,10 @@ public class CxxSourceTypes {
   }
 
   /** @return the platform-specific compiler flags for the given {@link CxxPlatform}. */
-  public static ImmutableList<String> getPlatformCompilerFlags(
+  public static ImmutableList<Arg> getPlatformCompilerFlags(
       CxxPlatform cxxPlatform, CxxSource.Type type) {
 
-    ImmutableList.Builder<String> flags = ImmutableList.builder();
+    ImmutableList.Builder<Arg> flags = ImmutableList.builder();
 
     switch (type) {
       case ASSEMBLER:
@@ -283,5 +285,12 @@ public class CxxSourceTypes {
     }
 
     return flags.build();
+  }
+
+  /** Normalize the input type to a language name */
+  public static String toName(CxxSource.Type type) {
+    return CaseFormat.UPPER_UNDERSCORE.to(
+        CaseFormat.LOWER_UNDERSCORE,
+        type.toString().replace("_CPP_OUTPUT", "").replace("_WITH_CPP", ""));
   }
 }

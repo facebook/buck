@@ -20,8 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -53,7 +53,8 @@ import org.junit.rules.ExpectedException;
 public class DepListAttributeTest {
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
+  private final CellNameResolver cellNameResolver =
+      TestCellPathResolver.get(filesystem).getCellNameResolver();
   private final TestActionExecutionRunner runner =
       new TestActionExecutionRunner(
           new FakeProjectFilesystemFactory(),
@@ -72,7 +73,7 @@ public class DepListAttributeTest {
 
     ImmutableList<BuildTarget> coerced =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -87,7 +88,7 @@ public class DepListAttributeTest {
     thrown.expect(CoerceFailedException.class);
 
     attr.getValue(
-        cellRoots,
+        cellNameResolver,
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -100,7 +101,7 @@ public class DepListAttributeTest {
     thrown.expect(CoerceFailedException.class);
 
     attr.getValue(
-        cellRoots,
+        cellNameResolver,
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -117,7 +118,7 @@ public class DepListAttributeTest {
     thrown.expectMessage("may not be empty");
 
     attr.getValue(
-        cellRoots,
+        cellNameResolver,
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -130,7 +131,7 @@ public class DepListAttributeTest {
 
     ImmutableList<BuildTarget> value =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -163,7 +164,7 @@ public class DepListAttributeTest {
 
     ImmutableList<BuildTarget> coerced =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -187,7 +188,7 @@ public class DepListAttributeTest {
 
     ImmutableList<BuildTarget> coerced =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -233,7 +234,7 @@ public class DepListAttributeTest {
 
     ImmutableList<BuildTarget> coerced =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,

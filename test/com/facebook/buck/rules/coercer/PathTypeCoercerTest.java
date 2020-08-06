@@ -17,12 +17,14 @@
 package com.facebook.buck.rules.coercer;
 
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
+import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -48,12 +50,10 @@ public class PathTypeCoercerTest {
     expectedException.expectMessage("invalid path");
 
     String invalidPath = "";
-    pathTypeCoercer.coerce(
-        createCellRoots(filesystem),
+    pathTypeCoercer.coerceToUnconfigured(
+        createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
         pathRelativeToProjectRoot,
-        UnconfiguredTargetConfiguration.INSTANCE,
-        UnconfiguredTargetConfiguration.INSTANCE,
         invalidPath);
   }
 
@@ -65,12 +65,38 @@ public class PathTypeCoercerTest {
     expectedException.expectMessage(String.format("Could not convert '%s' to a Path", invalidPath));
     expectedException.expectCause(Matchers.instanceOf(InvalidPathException.class));
 
-    pathTypeCoercer.coerce(
-        createCellRoots(filesystem),
+    pathTypeCoercer.coerceToUnconfigured(
+        createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
         pathRelativeToProjectRoot,
-        UnconfiguredTargetConfiguration.INSTANCE,
-        UnconfiguredTargetConfiguration.INSTANCE,
+        invalidPath);
+  }
+
+  @Test
+  public void absolutePath() throws CoerceFailedException {
+    String invalidPath = Platform.detect() == Platform.WINDOWS ? "c:/foo/bar" : "/foo/bar";
+
+    expectedException.expect(CoerceFailedException.class);
+    expectedException.expectMessage("Path cannot contain an absolute path");
+
+    pathTypeCoercer.coerceToUnconfigured(
+        createCellRoots(filesystem).getCellNameResolver(),
+        filesystem,
+        pathRelativeToProjectRoot,
+        invalidPath);
+  }
+
+  @Test
+  public void aboveRepoRoot() throws CoerceFailedException {
+    String invalidPath = "../..";
+
+    expectedException.expect(CoerceFailedException.class);
+    expectedException.expectMessage("Path cannot point to above repository root");
+
+    pathTypeCoercer.coerceToUnconfigured(
+        createCellRoots(filesystem).getCellNameResolver(),
+        filesystem,
+        ForwardRelativePath.of("foo"),
         invalidPath);
   }
 
@@ -78,12 +104,22 @@ public class PathTypeCoercerTest {
   public void coercingMissingFileDoesNotThrow() throws Exception {
     String missingPath = "hello";
     new PathTypeCoercer()
-        .coerce(
-            createCellRoots(filesystem),
+        .coerceToUnconfigured(
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             pathRelativeToProjectRoot,
-            UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
             missingPath);
+  }
+
+  @Test
+  public void normalizesPath() throws Exception {
+    Path coerced =
+        new PathTypeCoercer()
+            .coerceToUnconfigured(
+                createCellRoots(filesystem).getCellNameResolver(),
+                filesystem,
+                ForwardRelativePath.of("foo"),
+                "./bar/././fish.txt");
+    assertEquals("foo/bar/fish.txt", coerced.toString().replace('\\', '/'));
   }
 }

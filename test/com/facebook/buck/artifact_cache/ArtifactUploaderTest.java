@@ -23,9 +23,12 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
@@ -129,8 +132,7 @@ public class ArtifactUploaderTest {
         BuckEventBusForTests.newInstance(),
         ImmutableMap.of("metadata", "metadata", "build-metadata", "build-metadata"),
         ImmutableSortedSet.of(dir, file, dirFile, metadataFile),
-        BUILD_TARGET,
-        filesystem,
+        new FakeBuildRule(BUILD_TARGET, filesystem, TestBuildRuleParams.create()),
         1000);
 
     assertTrue(stored.get());
@@ -141,18 +143,20 @@ public class ArtifactUploaderTest {
   public void compressSavesExecutableBit() throws Exception {
     ProjectFilesystem fs = FakeProjectFilesystem.createJavaOnlyFilesystem("/");
 
-    Path out = fs.getRootPath().resolve("out");
-    Path file = fs.getRootPath().resolve("file");
-    fs.writeContentsToPath("foo", file);
+    AbsPath out = fs.getRootPath().resolve("out");
+    AbsPath file = fs.getRootPath().resolve("file");
+    fs.writeContentsToPath("foo", file.getPath());
     Files.setPosixFilePermissions(
-        fs.getPathForRelativePath(file), ImmutableSet.of(PosixFilePermission.OWNER_EXECUTE));
+        fs.getPathForRelativePath(file.getPath()),
+        ImmutableSet.of(PosixFilePermission.OWNER_EXECUTE));
 
     // Compress
-    ArtifactUploader.compress(fs, ImmutableList.of(file), out);
+    ArtifactUploader.compress(fs, ImmutableList.of(file.getPath()), out.getPath());
 
     // Decompress+unarchive, and check that the only file is an executable.
     try (TarArchiveInputStream fin =
-        new TarArchiveInputStream(new ZstdCompressorInputStream(Files.newInputStream(out)))) {
+        new TarArchiveInputStream(
+            new ZstdCompressorInputStream(Files.newInputStream(out.getPath())))) {
       ArrayList<TarArchiveEntry> entries = new ArrayList<>();
 
       TarArchiveEntry entry;

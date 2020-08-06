@@ -81,7 +81,10 @@ java_library(
 
 filegroup(
     name = "plugin-xml",
-    srcs = ["resources/META-INF/plugin.xml"],
+    srcs = [
+        "resources/META-INF/plugin.xml",
+        "resources/META-INF/plugin-core.xml",
+    ],
     visibility = ["PUBLIC"],
 )
 

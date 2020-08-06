@@ -16,27 +16,26 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class UriTypeCoercer extends LeafTypeCoercer<URI> {
+/** Coerce to {@link java.net.URI}. */
+class UriTypeCoercer extends LeafUnconfiguredOnlyCoercer<URI> {
 
   @Override
-  public Class<URI> getOutputClass() {
-    return URI.class;
+  public TypeToken<URI> getUnconfiguredType() {
+    return TypeToken.of(URI.class);
   }
 
   @Override
-  public URI coerce(
-      CellPathResolver cellRoots,
+  public URI coerceToUnconfigured(
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
 
@@ -49,10 +48,10 @@ public class UriTypeCoercer extends LeafTypeCoercer<URI> {
         return new URI((String) object);
       } catch (URISyntaxException e) {
         throw CoerceFailedException.simple(
-            object, getOutputClass(), "Cannot covert to a URI: " + object);
+            object, getOutputType(), "Cannot covert to a URI: " + object);
       }
     }
 
-    throw CoerceFailedException.simple(object, getOutputClass());
+    throw CoerceFailedException.simple(object, getOutputType());
   }
 }

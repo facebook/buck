@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
@@ -312,7 +313,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       queryResultMap.putAll(input, queryResult);
     }
 
-    LOG.debug("Printing out the following targets: %s", queryResultMap);
+    LOG.debug("Printing out %d targets", queryResultMap.size());
 
     if (attributesFilter.size() > 0) {
       collectAndPrintAttributesAsJson(
@@ -334,7 +335,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   private void runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env, String query)
       throws IOException, InterruptedException, QueryException {
     Set<QueryTarget> queryResult = env.evaluateQuery(query);
-    LOG.debug("Printing out the following targets: %s", queryResult);
+    LOG.debug("Printing out %d targets", queryResult.size());
 
     try (CloseableWrapper<PrintStream> printStreamWrapper = getPrintStreamWrapper(params)) {
       PrintStream printStream = printStreamWrapper.get();
@@ -557,16 +558,17 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   private Map<String, Object> getAllUnconfiguredAttributesForTarget(
       CommandRunnerParams params, BuckQueryEnvironment env, QueryTarget target)
       throws QueryException {
-    Cell cell = params.getCell();
+    Cells cell = params.getCells();
     BuildTarget buildTarget = env.getNode((QueryBuildTarget) target).getBuildTarget();
     Cell owningCell = cell.getCell(buildTarget.getCell());
     BuildFileManifest buildFileManifest =
         env.getParserState()
             .getBuildFileManifest(
                 owningCell,
-                cell.getBuckConfigView(ParserConfig.class)
+                cell.getRootCell()
+                    .getBuckConfigView(ParserConfig.class)
                     .getAbsolutePathToBuildFile(
-                        cell, buildTarget.getUnconfiguredBuildTargetView()));
+                        cell.getRootCell(), buildTarget.getUnconfiguredBuildTarget()));
 
     String shortName = buildTarget.getShortName();
     if (!buildFileManifest.getTargets().containsKey(shortName)) {
@@ -839,7 +841,10 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
         params
             .getParser()
             .getTargetNodeRawAttributes(
-                env.getParserState(), params.getCell(), node.getAnyNode(), dependencyStack);
+                env.getParserState(),
+                params.getCells().getRootCell(),
+                node.getAnyNode(),
+                dependencyStack);
     if (targetNodeAttributes == null) {
       params
           .getConsole()

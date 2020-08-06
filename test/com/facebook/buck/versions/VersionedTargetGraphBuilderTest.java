@@ -18,6 +18,7 @@ package com.facebook.buck.versions;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.model.BuildTarget;
@@ -64,7 +65,8 @@ public class VersionedTargetGraphBuilderTest {
                 unversionedTargetGraphAndBuildTargets,
                 typeCoercerFactory,
                 unconfiguredBuildTargetFactory,
-                20);
+                20,
+                new TestCellBuilder().build());
   }
 
   @After

@@ -118,8 +118,7 @@ public class BuildCacheArtifactUploader {
         eventBus,
         onDiskBuildInfo.getMetadataForArtifact(),
         onDiskBuildInfo.getPathsForArtifact(),
-        rule.getBuildTarget(),
-        rule.getProjectFilesystem(),
+        rule,
         buildTimeMs);
   }
 

@@ -25,6 +25,7 @@ private static final long serialVersionUID = 0L;
     deploymentStage_ = "";
     instanceId_ = "";
     groupId_ = "";
+    clientSideTenant_ = "";
   }
 
   @java.lang.Override
@@ -67,6 +68,12 @@ private static final long serialVersionUID = 0L;
             java.lang.String s = input.readStringRequireUtf8();
 
             groupId_ = s;
+            break;
+          }
+          case 34: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            clientSideTenant_ = s;
             break;
           }
           default: {
@@ -227,6 +234,48 @@ private static final long serialVersionUID = 0L;
     }
   }
 
+  public static final int CLIENT_SIDE_TENANT_FIELD_NUMBER = 4;
+  private volatile java.lang.Object clientSideTenant_;
+  /**
+   * <pre>
+   * Job tenant.
+   * </pre>
+   *
+   * <code>string client_side_tenant = 4;</code>
+   */
+  public java.lang.String getClientSideTenant() {
+    java.lang.Object ref = clientSideTenant_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      clientSideTenant_ = s;
+      return s;
+    }
+  }
+  /**
+   * <pre>
+   * Job tenant.
+   * </pre>
+   *
+   * <code>string client_side_tenant = 4;</code>
+   */
+  public com.google.protobuf.ByteString
+      getClientSideTenantBytes() {
+    java.lang.Object ref = clientSideTenant_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      clientSideTenant_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -250,6 +299,9 @@ private static final long serialVersionUID = 0L;
     if (!getGroupIdBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 3, groupId_);
     }
+    if (!getClientSideTenantBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 4, clientSideTenant_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -267,6 +319,9 @@ private static final long serialVersionUID = 0L;
     }
     if (!getGroupIdBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, groupId_);
+    }
+    if (!getClientSideTenantBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, clientSideTenant_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -289,6 +344,8 @@ private static final long serialVersionUID = 0L;
         .equals(other.getInstanceId())) return false;
     if (!getGroupId()
         .equals(other.getGroupId())) return false;
+    if (!getClientSideTenant()
+        .equals(other.getClientSideTenant())) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -306,6 +363,8 @@ private static final long serialVersionUID = 0L;
     hash = (53 * hash) + getInstanceId().hashCode();
     hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
     hash = (53 * hash) + getGroupId().hashCode();
+    hash = (37 * hash) + CLIENT_SIDE_TENANT_FIELD_NUMBER;
+    hash = (53 * hash) + getClientSideTenant().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -449,6 +508,8 @@ private static final long serialVersionUID = 0L;
 
       groupId_ = "";
 
+      clientSideTenant_ = "";
+
       return this;
     }
 
@@ -478,6 +539,7 @@ private static final long serialVersionUID = 0L;
       result.deploymentStage_ = deploymentStage_;
       result.instanceId_ = instanceId_;
       result.groupId_ = groupId_;
+      result.clientSideTenant_ = clientSideTenant_;
       onBuilt();
       return result;
     }
@@ -536,6 +598,10 @@ private static final long serialVersionUID = 0L;
       }
       if (!other.getGroupId().isEmpty()) {
         groupId_ = other.groupId_;
+        onChanged();
+      }
+      if (!other.getClientSideTenant().isEmpty()) {
+        clientSideTenant_ = other.clientSideTenant_;
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -830,6 +896,95 @@ private static final long serialVersionUID = 0L;
   checkByteStringIsUtf8(value);
       
       groupId_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object clientSideTenant_ = "";
+    /**
+     * <pre>
+     * Job tenant.
+     * </pre>
+     *
+     * <code>string client_side_tenant = 4;</code>
+     */
+    public java.lang.String getClientSideTenant() {
+      java.lang.Object ref = clientSideTenant_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        clientSideTenant_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <pre>
+     * Job tenant.
+     * </pre>
+     *
+     * <code>string client_side_tenant = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getClientSideTenantBytes() {
+      java.lang.Object ref = clientSideTenant_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        clientSideTenant_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <pre>
+     * Job tenant.
+     * </pre>
+     *
+     * <code>string client_side_tenant = 4;</code>
+     */
+    public Builder setClientSideTenant(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
+      clientSideTenant_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Job tenant.
+     * </pre>
+     *
+     * <code>string client_side_tenant = 4;</code>
+     */
+    public Builder clearClientSideTenant() {
+      
+      clientSideTenant_ = getDefaultInstance().getClientSideTenant();
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Job tenant.
+     * </pre>
+     *
+     * <code>string client_side_tenant = 4;</code>
+     */
+    public Builder setClientSideTenantBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      clientSideTenant_ = value;
       onChanged();
       return this;
     }

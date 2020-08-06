@@ -19,6 +19,7 @@ package com.facebook.buck.io.filesystem.impl;
 import static com.facebook.buck.util.string.MoreStrings.withoutSuffix;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.FakeFileAttributes;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MostFiles;
@@ -92,7 +93,8 @@ import javax.annotation.Nullable;
 public class FakeProjectFilesystem extends DefaultProjectFilesystem {
 
   private static final Random RANDOM = new Random();
-  private static final Path DEFAULT_ROOT = Paths.get(".").toAbsolutePath().normalize();
+  private static final AbsPath DEFAULT_ROOT =
+      AbsPath.of(Paths.get(".").toAbsolutePath()).normalize();
 
   private static final BasicFileAttributes DEFAULT_FILE_ATTRIBUTES =
       new BasicFileAttributes() {
@@ -209,9 +211,9 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
    * @return A project filesystem in a temp directory that will be deleted recursively on jvm exit.
    */
   public static ProjectFilesystem createRealTempFilesystem() {
-    Path tempDir;
+    AbsPath tempDir;
     try {
-      tempDir = Files.createTempDirectory("pfs");
+      tempDir = AbsPath.of(Files.createTempDirectory("pfs"));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -220,7 +222,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
             new Thread(
                 () -> {
                   try {
-                    MostFiles.deleteRecursively(tempDir);
+                    MostFiles.deleteRecursively(tempDir.getPath());
                   } catch (IOException e) { // NOPMD
                     // Swallow. At least we tried, right?
                   }
@@ -241,9 +243,9 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     FileSystem vfs =
         Jimfs.newFileSystem(configuration.toBuilder().setAttributeViews("basic", "posix").build());
 
-    Path root = vfs.getPath(rootPath);
+    AbsPath root = AbsPath.of(vfs.getPath(rootPath));
     try {
-      Files.createDirectories(root);
+      Files.createDirectories(root.getPath());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -251,7 +253,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     return new DefaultProjectFilesystem(
         CanonicalCellName.rootCell(),
         root,
-        new DefaultProjectFilesystemDelegate(root),
+        new DefaultProjectFilesystemDelegate(root.getPath()),
         DefaultProjectFilesystemFactory.getWindowsFSInstance(),
         TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST) {
       @Override
@@ -264,13 +266,13 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
 
   public static ProjectFilesystem createFilesystemWithTargetConfigHashInBuckPaths(
       boolean buckOutIncludeTargetConfigHash) {
-    Path root = DEFAULT_ROOT;
+    AbsPath root = DEFAULT_ROOT;
     return new DefaultProjectFilesystem(
         root,
         ImmutableSet.of(),
         BuckPaths.createDefaultBuckPaths(
-            CanonicalCellName.rootCell(), root, buckOutIncludeTargetConfigHash),
-        new DefaultProjectFilesystemDelegate(root),
+            CanonicalCellName.rootCell(), root.getPath(), buckOutIncludeTargetConfigHash),
+        new DefaultProjectFilesystemDelegate(root.getPath()),
         DefaultProjectFilesystemFactory.getWindowsFSInstance());
   }
 
@@ -282,8 +284,12 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     this(cellName, DEFAULT_ROOT);
   }
 
-  public FakeProjectFilesystem(CanonicalCellName cellName, Path root) {
+  public FakeProjectFilesystem(CanonicalCellName cellName, AbsPath root) {
     this(FakeClock.doNotCare(), cellName, root, ImmutableSet.of());
+  }
+
+  public FakeProjectFilesystem(CanonicalCellName cellName, Path root) {
+    this(cellName, AbsPath.of(root));
   }
 
   public FakeProjectFilesystem(Clock clock) {
@@ -299,13 +305,13 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
   }
 
   public FakeProjectFilesystem(
-      Clock clock, CanonicalCellName cellName, Path root, Set<Path> files) {
+      Clock clock, CanonicalCellName cellName, AbsPath root, Set<Path> files) {
     // For testing, we always use a DefaultProjectFilesystemDelegate so that the logic being
     // exercised is always the same, even if a test using FakeProjectFilesystem is used on EdenFS.
     super(
         cellName,
         root,
-        new DefaultProjectFilesystemDelegate(root),
+        new DefaultProjectFilesystemDelegate(root.getPath()),
         DefaultProjectFilesystemFactory.getWindowsFSInstance(),
         TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
     // We use LinkedHashMap to preserve insertion order, so the
@@ -452,7 +458,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     try (DirectoryStream<Path> directoryStream =
         getDirectoryContentsStream(resolve(pathRelativeToProjectRoot))) {
       return FluentIterable.from(directoryStream)
-          .transform(absolutePath -> relativize(absolutePath))
+          .transform(absolutePath -> relativize(absolutePath).getPath())
           .toSortedList(Comparator.naturalOrder());
     }
   }
@@ -472,7 +478,8 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
                         || (input.isAbsolute() && input.getParent() == null)) {
                       return false;
                     }
-                    return MorePaths.getParentOrEmpty(input).equals(relativize(absolutePath));
+                    return MorePaths.getParentOrEmpty(input)
+                        .equals(relativize(absolutePath).getPath());
                   })
               .transform(FakeProjectFilesystem.this::resolve);
 

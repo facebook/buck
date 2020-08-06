@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -225,7 +226,7 @@ public class GenruleBuildable implements Buildable {
       Optional<Arg> cmdExe,
       Optional<String> type,
       Optional<String> out,
-      Optional<ImmutableMap<String, ImmutableSet<String>>> outs,
+      Optional<ImmutableMap<OutputLabel, ImmutableSet<String>>> outs,
       boolean enableSandboxingInGenrule,
       boolean isCacheable,
       String environmentExpansionSeparator,
@@ -240,17 +241,6 @@ public class GenruleBuildable implements Buildable {
     this.cmdExe = cmdExe;
     this.type = type;
     this.out = out;
-    this.outs =
-        outs.map(
-            outputs -> {
-              ImmutableMap.Builder<OutputLabel, ImmutableSet<String>> builder =
-                  ImmutableMap.builderWithExpectedSize(outputs.size() + 1);
-              outputs
-                  .entrySet()
-                  .forEach(e -> builder.put(OutputLabel.of(e.getKey()), e.getValue()));
-              builder.put(OutputLabel.defaultLabel(), DEFAULT_OUTS);
-              return builder.build();
-            });
     this.outputLabelsSupplier = MoreSuppliers.memoize(this::getOutputLabelsSupplier);
     this.enableSandboxingInGenrule = enableSandboxingInGenrule;
     this.isCacheable = isCacheable;
@@ -263,12 +253,16 @@ public class GenruleBuildable implements Buildable {
     Preconditions.checkArgument(
         out.isPresent() ^ outs.isPresent(), "Genrule unexpectedly has both 'out' and 'outs'.");
     if (outs.isPresent()) {
-      ImmutableMap<String, ImmutableSet<String>> outputs = outs.get();
-      ImmutableMap.Builder<OutputLabel, ImmutableSet<OutputPath>> mapBuilder =
-          ImmutableMap.builderWithExpectedSize(outputs.size());
-      for (Map.Entry<String, ImmutableSet<String>> outputLabelToOutputs : outputs.entrySet()) {
-        mapBuilder.put(
-            OutputLabel.of(outputLabelToOutputs.getKey()),
+      ImmutableMap<OutputLabel, ImmutableSet<String>> outputs = outs.get();
+      ImmutableMap.Builder<OutputLabel, ImmutableSet<String>> outsBuilder =
+          ImmutableMap.builderWithExpectedSize(outputs.size() + 1);
+      ImmutableMap.Builder<OutputLabel, ImmutableSet<OutputPath>> outputPathsBuilder =
+          ImmutableMap.builderWithExpectedSize(outputs.size() + 1);
+      for (Map.Entry<OutputLabel, ImmutableSet<String>> outputLabelToOutputs : outputs.entrySet()) {
+        OutputLabel outputLabel = outputLabelToOutputs.getKey();
+        outsBuilder.put(outputLabel, outputLabelToOutputs.getValue());
+        outputPathsBuilder.put(
+            outputLabel,
             outputLabelToOutputs.getValue().stream()
                 .map(
                     p -> {
@@ -277,9 +271,15 @@ public class GenruleBuildable implements Buildable {
                     })
                 .collect(ImmutableSet.toImmutableSet()));
       }
-      this.outputPaths = Optional.of(mapBuilder.build());
+      if (!outputs.containsKey(OutputLabel.defaultLabel())) {
+        outsBuilder.put(OutputLabel.defaultLabel(), DEFAULT_OUTS);
+        outputPathsBuilder.put(OutputLabel.defaultLabel(), DEFAULT_OUTPUTS);
+      }
+      this.outs = Optional.of(outsBuilder.build());
+      this.outputPaths = Optional.of(outputPathsBuilder.build());
       this.outputPath = Optional.empty();
     } else {
+      this.outs = Optional.empty();
       // Sanity check for the output paths.
       this.outputPath = Optional.of(new PublicOutputPath(getLegacyPath(filesystem, out.get())));
       this.outputPaths = Optional.empty();
@@ -304,9 +304,6 @@ public class GenruleBuildable implements Buildable {
     return outputPaths
         .map(
             paths -> {
-              if (outputLabel.isDefault()) {
-                return DEFAULT_OUTPUTS;
-              }
               ImmutableSet<OutputPath> pathsForLabel = paths.get(outputLabel);
               if (pathsForLabel == null) {
                 throw new HumanReadableException(
@@ -332,14 +329,9 @@ public class GenruleBuildable implements Buildable {
   }
 
   private ImmutableSet<OutputLabel> getOutputLabelsSupplier() {
-    if (!outputPaths.isPresent()) {
-      return ImmutableSet.of(OutputLabel.defaultLabel());
-    }
-    ImmutableSet<OutputLabel> outputLabels = outputPaths.get().keySet();
-    return ImmutableSet.<OutputLabel>builderWithExpectedSize(outputLabels.size() + 1)
-        .addAll(outputLabels)
-        .add(OutputLabel.defaultLabel())
-        .build();
+    return outputPaths
+        .map(paths -> paths.keySet())
+        .orElse(ImmutableSet.of(OutputLabel.defaultLabel()));
   }
 
   /** Returns a String representation of the output path relative to the root output directory. */
@@ -489,8 +481,8 @@ public class GenruleBuildable implements Buildable {
     srcs.forEach(
         (name, src) -> {
           Path absolutePath = pathResolver.getAbsolutePath(src);
-          Path target = filesystem.relativize(absolutePath);
-          links.put(filesystem.getPath(name), target);
+          RelPath target = filesystem.relativize(absolutePath);
+          links.put(filesystem.getPath(name), target.getPath());
         });
   }
 
@@ -529,10 +521,10 @@ public class GenruleBuildable implements Buildable {
                 localPath = relativePath;
               }
 
-              Path target = filesystem.relativize(absolutePath);
-              if (!seenTargets.contains(target)) {
-                seenTargets.add(target);
-                links.put(localPath, target);
+              RelPath target = filesystem.relativize(absolutePath);
+              if (!seenTargets.contains(target.getPath())) {
+                seenTargets.add(target.getPath());
+                links.put(localPath, target.getPath());
               }
             });
   }
@@ -660,7 +652,8 @@ public class GenruleBuildable implements Buildable {
    *   <li><code>GEN_DIR</code>, Buck's gendir
    *   <li><code>SRCDIR</code>, the symlink-populated source directory readable to the command
    *   <li><code>TMP</code>, the temp directory usable by the command
-   *   <li><code>ANDROID_HOME</code>, the path to the Android SDK (if present)
+   *   <li><code>ANDROID_HOME</code>, deprecated, the path to the Android SDK (if present)
+   *   <li><code>ANDROID_SDK_ROOT</code>, the path to the Android SDK (if present)
    *   <li><code>DX</code>, the path to the Android DX executable (if present)
    *   <li><code>ZIPALIGN</code>, the path to the Android Zipalign executable (if present)
    *   <li><code>AAPT</code>, the path to the Android AAPT executable (if present)
@@ -712,6 +705,7 @@ public class GenruleBuildable implements Buildable {
     androidTools.ifPresent(
         tools -> {
           environmentVariablesBuilder.put("ANDROID_HOME", tools.getAndroidSdkLocation().toString());
+          environmentVariablesBuilder.put("ANDROID_SDK_ROOT", tools.getAndroidSdkLocation().toString());
           environmentVariablesBuilder.put("DX", tools.getAndroidPathToDx().toString());
           environmentVariablesBuilder.put("ZIPALIGN", tools.getAndroidPathToZipalign().toString());
           environmentVariablesBuilder.put(

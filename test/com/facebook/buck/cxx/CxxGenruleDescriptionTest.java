@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -42,6 +43,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
 import com.facebook.buck.rules.macros.CcMacro;
@@ -154,8 +156,8 @@ public class CxxGenruleDescriptionTest {
   public void cppflagsNoArgs() {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.DEFAULT_PLATFORM
-            .withCppflags(ImmutableList.of("-cppflag"))
-            .withCxxppflags(ImmutableList.of("-cxxppflag"));
+            .withCppflags(ImmutableList.of(StringArg.of("-cppflag")))
+            .withCxxppflags(ImmutableList.of(StringArg.of("-cxxppflag")));
     CxxGenruleBuilder builder =
         new CxxGenruleBuilder(
                 BuildTargetFactory.newInstance("//:rule#" + cxxPlatform.getFlavor()),
@@ -185,9 +187,9 @@ public class CxxGenruleDescriptionTest {
   public void cflagsNoArgs() {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.DEFAULT_PLATFORM
-            .withAsflags(ImmutableList.of("-asflag"))
-            .withCflags(ImmutableList.of("-cflag"))
-            .withCxxflags(ImmutableList.of("-cxxflag"));
+            .withAsflags(ImmutableList.of(StringArg.of("-asflag")))
+            .withCflags(ImmutableList.of(StringArg.of("-cflag")))
+            .withCxxflags(ImmutableList.of(StringArg.of("-cxxflag")));
     CxxGenruleBuilder builder =
         new CxxGenruleBuilder(
                 BuildTargetFactory.newInstance("//:rule#" + cxxPlatform.getFlavor()),
@@ -233,7 +235,8 @@ public class CxxGenruleDescriptionTest {
             executor.get(),
             new DefaultTypeCoercerFactory(),
             new ParsingUnconfiguredBuildTargetViewFactory(),
-            20);
+            20,
+            new TestCellBuilder().build());
     CxxGenruleDescriptionArg arg =
         extractArg(
             transformed.getTargetGraph().get(genruleBuilder.getTarget()),
@@ -270,7 +273,8 @@ public class CxxGenruleDescriptionTest {
             executor.get(),
             new DefaultTypeCoercerFactory(),
             new ParsingUnconfiguredBuildTargetViewFactory(),
-            20);
+            20,
+            new TestCellBuilder().build());
     CxxGenruleDescriptionArg arg =
         extractArg(
             transformed.getTargetGraph().get(genruleBuilder.getTarget()),

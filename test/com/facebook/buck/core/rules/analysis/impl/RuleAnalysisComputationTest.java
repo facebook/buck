@@ -21,6 +21,7 @@ import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
@@ -52,7 +53,8 @@ public class RuleAnalysisComputationTest {
   private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
   private final CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
   private final TargetNodeFactory targetNodeFactory =
-      new TargetNodeFactory(new DefaultTypeCoercerFactory());
+      new TargetNodeFactory(
+          new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE);
   private final BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
   @Test
@@ -82,8 +84,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver);
+            ImmutableSet.of());
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
@@ -124,8 +125,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(buildTarget2, buildTarget3),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver);
+            ImmutableSet.of());
     TargetNode<?> targetNode2 =
         targetNodeFactory.createFromObject(
             ruleDescription,
@@ -136,8 +136,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver);
+            ImmutableSet.of());
     TargetNode<?> targetNode3 =
         targetNodeFactory.createFromObject(
             ruleDescription,
@@ -148,8 +147,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver);
+            ImmutableSet.of());
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode1);
     graph.addNode(targetNode2);
@@ -200,8 +198,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver);
+            ImmutableSet.of());
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
@@ -270,8 +267,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver);
+            ImmutableSet.of());
     TargetNode<?> targetNode2 =
         targetNodeFactory.createFromObject(
             ruleDescription2,
@@ -282,8 +278,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver);
+            ImmutableSet.of());
 
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);

@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps {
@@ -95,6 +96,10 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
         ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(components.getDeps(ruleFinder))
             .addAll(BuildableSupport.getDepsCollection(builder, ruleFinder))
+            .addAll(
+                buildArgs.stream()
+                    .flatMap(a -> BuildableSupport.deriveDeps(a, ruleFinder))
+                    .collect(Collectors.toList()))
             .build();
   }
 

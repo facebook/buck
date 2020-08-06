@@ -1,11 +1,4 @@
 cxx_library(
-    name = "incompatible_with_constraints",
-    target_compatible_with = [
-        "//compatible/config:apple",
-    ],
-)
-
-cxx_library(
     name = "incompatible_with_config",
     compatible_with = [
         "//compatible/config:apple-config",

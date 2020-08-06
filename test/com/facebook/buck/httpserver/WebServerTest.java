@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +33,7 @@ public class WebServerTest {
   @Test
   public void testCreateHandlersCoversExpectedContextPaths() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    WebServer webServer = new WebServer(/* port */ 9999, projectFilesystem);
+    WebServer webServer = new WebServer(/* port */ 9999, projectFilesystem, FakeClock.doNotCare());
     ImmutableList<ContextHandler> handlers = webServer.createHandlers();
     Map<String, ContextHandler> contextPathToHandler = new HashMap<>();
     for (ContextHandler handler : handlers) {

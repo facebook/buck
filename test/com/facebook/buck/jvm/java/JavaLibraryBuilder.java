@@ -94,6 +94,11 @@ public class JavaLibraryBuilder
     return this;
   }
 
+  public JavaLibraryBuilder addAnnotationProcessors(String... annotationProcessors) {
+    getArgForPopulating().addAnnotationProcessors(annotationProcessors);
+    return this;
+  }
+
   public JavaLibraryBuilder addAnnotationProcessorDep(BuildTarget rule) {
     getArgForPopulating().addAnnotationProcessorDeps(rule);
     return this;

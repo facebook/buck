@@ -4,4 +4,7 @@ java_library(
     visibility = [
         "PUBLIC",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/filesystems:filesystems",
+    ],
 )

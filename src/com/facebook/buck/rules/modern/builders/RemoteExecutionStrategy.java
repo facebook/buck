@@ -328,7 +328,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     strategyContext
         .getBuildableContext()
         .recordArtifact(
-            rule.getProjectFilesystem().relativize(mbrHelper.getCellPathPrefix().resolve(output)));
+            rule.getProjectFilesystem()
+                .relativize(mbrHelper.getCellPathPrefix().resolve(output))
+                .getPath());
   }
 
   private ListenableFuture<RemoteExecutionActionInfo> computeActionAndUpload(
@@ -555,7 +557,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           },
           strategyContext.getExecutionContext(),
           StepExecutionResult.builder().setExitCode(exitCode).setStderr(stderr).build(),
-          result.getActionMetadata());
+          result.getRemoteExecutionMetadata());
     }
 
     stdout.ifPresent(x -> eventBus.post(ConsoleEvent.info(x)));

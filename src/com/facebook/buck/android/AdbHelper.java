@@ -52,7 +52,9 @@ import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
@@ -64,8 +66,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -266,8 +270,14 @@ public class AdbHelper implements AndroidDevicesHelper {
       getBuckEventBus().post(started);
     }
     AtomicBoolean success = new AtomicBoolean();
+    Set<String> deviceLocales = new HashSet<>();
     try (Scope ignored =
         () -> {
+          ImmutableMap.Builder<String, String> deviceInfo = ImmutableMap.builder();
+          if (!deviceLocales.isEmpty()) {
+            deviceInfo.put(
+                InstallEvent.Finished.DEVICE_INFO_LOCALES, Joiner.on(',').join(deviceLocales));
+          }
           if (!quiet) {
             getBuckEventBus()
                 .post(
@@ -277,9 +287,55 @@ public class AdbHelper implements AndroidDevicesHelper {
                         Optional.empty(),
                         Optional.of(
                             AdbHelper.tryToExtractPackageNameFromManifest(
-                                pathResolver, hasInstallableApk.getApkInfo()))));
+                                pathResolver, hasInstallableApk.getApkInfo())),
+                        deviceInfo.build()));
           }
         }) {
+
+      adbCall(
+          "Get device locale",
+          (device) -> {
+            try {
+              // It's a bit tortuous to get the locale; there are 6 separate properties
+              // we need to check to accurately record this.
+
+              // First try "persist.sys" properties, which are the user's chosen language.
+              String locale = device.getProperty("persist.sys.locale");
+              // Try persist.sys.language + persist.sys.country
+              if (Strings.isNullOrEmpty(locale)) {
+                String language = device.getProperty("persist.sys.language");
+                if (!Strings.isNullOrEmpty(language)) {
+                  String country = device.getProperty("persist.sys.country");
+                  if (!Strings.isNullOrEmpty(country)) {
+                    locale = language + "-" + country;
+                  }
+                }
+              }
+              // Next try ro.product.locale properties which are the default system locale
+              if (Strings.isNullOrEmpty(locale)) {
+                locale = device.getProperty("ro.product.locale");
+              }
+              if (Strings.isNullOrEmpty(locale)) {
+                String language = device.getProperty("ro.product.locale.language");
+                String country = device.getProperty("ro.product.locale.region");
+
+                // Default to en-US if all else fails
+                if (Strings.isNullOrEmpty(language)) {
+                  language = "en";
+                }
+                if (Strings.isNullOrEmpty(country)) {
+                  country = "US-presumed";
+                }
+                locale = language = "-" + country;
+              }
+              deviceLocales.add(locale);
+            } catch (Exception e) {
+              // Don't log.
+            }
+            return true;
+          },
+          true);
+
       Optional<ExopackageInfo> exopackageInfo = hasInstallableApk.getApkInfo().getExopackageInfo();
       if (exopackageInfo.isPresent()) {
         // TODO(dreiss): Support SD installation.

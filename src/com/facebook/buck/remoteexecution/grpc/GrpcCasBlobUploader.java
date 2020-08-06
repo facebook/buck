@@ -74,6 +74,7 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
   public ImmutableSet<String> getMissingHashes(Set<Digest> requiredDigests) throws IOException {
     try {
       FindMissingBlobsRequest.Builder requestBuilder = FindMissingBlobsRequest.newBuilder();
+      requestBuilder.setInstanceName(instanceName);
       requiredDigests.forEach(digest -> requestBuilder.addBlobDigests((GrpcProtocol.get(digest))));
       return storageStub.findMissingBlobs(requestBuilder.build()).get().getMissingBlobDigestsList()
           .stream()
@@ -94,6 +95,7 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
     try (Scope ignored =
         CasBlobUploadEvent.sendEvent(buckEventBus, blobs.size(), totalBlobSizeBytes)) {
       BatchUpdateBlobsRequest.Builder requestBuilder = BatchUpdateBlobsRequest.newBuilder();
+      requestBuilder.setInstanceName(instanceName);
       for (UploadDataSupplier blob : blobs) {
         try (InputStream dataStream = blob.get()) {
           requestBuilder.addRequests(

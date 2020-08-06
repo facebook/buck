@@ -22,8 +22,8 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactDeclarationException;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -43,7 +43,8 @@ import org.junit.rules.ExpectedException;
 public class OutputAttributeTest {
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
+  private final CellNameResolver cellNameResolver =
+      TestCellPathResolver.get(filesystem).getCellNameResolver();
 
   private final OutputAttribute attr = ImmutableOutputAttribute.of(Runtime.NONE, "", true);
 
@@ -53,7 +54,7 @@ public class OutputAttributeTest {
   public void coercesProperly() throws CoerceFailedException {
     String coercedPath =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -68,7 +69,7 @@ public class OutputAttributeTest {
     thrown.expect(CoerceFailedException.class);
 
     attr.getValue(
-        cellRoots,
+        cellNameResolver,
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -81,7 +82,7 @@ public class OutputAttributeTest {
     thrown.expect(CoerceFailedException.class);
 
     attr.getValue(
-        cellRoots,
+        cellNameResolver,
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -103,7 +104,7 @@ public class OutputAttributeTest {
 
     String value =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -119,7 +120,7 @@ public class OutputAttributeTest {
 
     String value =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -135,7 +136,7 @@ public class OutputAttributeTest {
 
     String value =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -151,7 +152,7 @@ public class OutputAttributeTest {
 
     String outputPath =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,

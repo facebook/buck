@@ -24,7 +24,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.RuleDescriptionWithInstanceName;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
@@ -146,7 +148,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
               ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
               TargetNode<T> node,
-              ProviderInfoCollection providerInfoCollection) {
+              ProviderInfoCollection providerInfoCollection,
+              CellPathResolver cellPathResolver) {
             assertSame(targetNode, node);
             return rule;
           }
@@ -163,14 +166,17 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             targetGraph,
             ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
             actionGraphBuilder,
-            targetNode));
+            targetNode,
+            TestCellPathResolver.get(fakeFilesystem)));
   }
 
   @Test
   public void transformDelegatesWhenNewDescription() throws ActionCreationException {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
 
-    TargetNodeFactory nodeCopier = new TargetNodeFactory(new DefaultTypeCoercerFactory());
+    TargetNodeFactory nodeCopier =
+        new TargetNodeFactory(
+            new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     RuleDescription<?> description =
@@ -198,8 +204,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
-            TestCellPathResolver.create(Paths.get("")));
+            ImmutableSortedSet.of());
 
     ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
     ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder();
@@ -247,7 +252,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
               ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
               TargetNode<T> node,
-              ProviderInfoCollection providerInfoCollection) {
+              ProviderInfoCollection providerInfoCollection,
+              CellPathResolver cellPathResolver) {
             fail();
             return null;
           }
@@ -262,7 +268,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             targetGraph,
             ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
             actionGraphBuilder,
-            targetNode);
+            targetNode,
+            TestCellPathResolver.get(projectFilesystem));
 
     assertTrue(ruleAnalysisCalled.get());
     assertSame(target, rule.getBuildTarget());
@@ -279,7 +286,9 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
   public void transformCreatesNoopRuleWhenNewRuleHasNoActions() throws ActionCreationException {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
 
-    TargetNodeFactory nodeCopier = new TargetNodeFactory(new DefaultTypeCoercerFactory());
+    TargetNodeFactory nodeCopier =
+        new TargetNodeFactory(
+            new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     RuleDescription<?> description =
@@ -307,8 +316,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
-            TestCellPathResolver.create(Paths.get("")));
+            ImmutableSortedSet.of());
 
     ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
     ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder();
@@ -333,7 +341,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
               ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
               TargetNode<T> node,
-              ProviderInfoCollection providerInfoCollection) {
+              ProviderInfoCollection providerInfoCollection,
+              CellPathResolver cellPathResolver) {
             fail();
             return null;
           }
@@ -348,7 +357,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             targetGraph,
             ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
             actionGraphBuilder,
-            targetNode);
+            targetNode,
+            TestCellPathResolver.get(projectFilesystem));
 
     assertEquals("fake_rule", rule.getType());
     assertTrue(ruleAnalysisCalled.get());
@@ -362,7 +372,9 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     BuildTarget fakeRuleTarget = BuildTargetFactory.newInstance("//my:foo");
     BuildTarget fakeUdrRuleTarget = BuildTargetFactory.newInstance("//my:bar");
 
-    TargetNodeFactory nodeCopier = new TargetNodeFactory(new DefaultTypeCoercerFactory());
+    TargetNodeFactory nodeCopier =
+        new TargetNodeFactory(
+            new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     RuleDescription<FakeTargetNodeArg> delegate =
@@ -393,8 +405,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
-            TestCellPathResolver.create(Paths.get("")));
+            ImmutableSortedSet.of());
     TargetNode<? extends BuildRuleArg> fakeUdrTargetNode =
         nodeCopier.createFromObject(
             fakeUdrDescription,
@@ -405,8 +416,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
-            TestCellPathResolver.create(Paths.get("")));
+            ImmutableSortedSet.of());
 
     ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
     ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder();
@@ -429,7 +439,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
               ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
               TargetNode<T> node,
-              ProviderInfoCollection providerInfoCollection) {
+              ProviderInfoCollection providerInfoCollection,
+              CellPathResolver cellPathResolver) {
             fail();
             return null;
           }
@@ -444,14 +455,16 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             targetGraph,
             ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
             actionGraphBuilder,
-            fakeRuleTargetNode);
+            fakeRuleTargetNode,
+            TestCellPathResolver.get(projectFilesystem));
     BuildRule fakeUdrRule =
         transformer.transform(
             toolchainProvider,
             targetGraph,
             ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
             actionGraphBuilder,
-            fakeUdrTargetNode);
+            fakeUdrTargetNode,
+            TestCellPathResolver.get(projectFilesystem));
 
     assertEquals("fake_rule", fakeRule.getType());
     assertEquals("fake_udr_rule_bar", fakeUdrRule.getType());

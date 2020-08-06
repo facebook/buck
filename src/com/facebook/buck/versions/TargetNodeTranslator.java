@@ -16,6 +16,7 @@
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BaseName;
@@ -48,11 +49,16 @@ public abstract class TargetNodeTranslator {
   private final TypeCoercerFactory typeCoercerFactory;
   // Translators registered for various types.
   private final ImmutableList<TargetTranslator<?>> translators;
+  private final Cells cells;
 
   public TargetNodeTranslator(
-      TypeCoercerFactory typeCoercerFactory, ImmutableList<TargetTranslator<?>> translators) {
+      TypeCoercerFactory typeCoercerFactory,
+      ImmutableList<TargetTranslator<?>> translators,
+      Cells cells) {
+
     this.typeCoercerFactory = typeCoercerFactory;
     this.translators = translators;
+    this.cells = cells;
   }
 
   public abstract Optional<BuildTarget> translateBuildTarget(BuildTarget target);
@@ -248,7 +254,7 @@ public abstract class TargetNodeTranslator {
       Object newConstructorArgOrBuilder) {
     boolean modified = false;
 
-    for (ParamInfo param :
+    for (ParamInfo<?> param :
         typeCoercerFactory
             .getConstructorArgDescriptor(constructorArg.getClass())
             .getParamInfos()
@@ -262,7 +268,10 @@ public abstract class TargetNodeTranslator {
   }
 
   private <A extends ConstructorArg> Optional<A> translateConstructorArg(
-      CellNameResolver cellNameResolver, BaseName targetBaseName, TargetNode<A> node) {
+      BaseName targetBaseName, TargetNode<A> node) {
+    CellNameResolver cellNameResolver =
+        cells.getCell(node.getBuildTarget().getCell()).getCellNameResolver();
+
     A constructorArg = node.getConstructorArg();
     DataTransferObjectDescriptor<A> newArgAndBuild =
         typeCoercerFactory.getConstructorArgDescriptor(
@@ -281,17 +290,19 @@ public abstract class TargetNodeTranslator {
    *     or {@link Optional#empty()} if the node requires no translation.
    */
   public <A extends ConstructorArg> Optional<TargetNode<A>> translateNode(TargetNode<A> node) {
-    CellNameResolver cellPathResolver = node.getCellNames().getCellNameResolver();
+    CellNameResolver cellNameResolver =
+        cells.getCell(node.getBuildTarget().getCell()).getCellNameResolver();
+
     BaseName targetBaseName = node.getBuildTarget().getBaseName();
 
     Optional<BuildTarget> target = translateBuildTarget(node.getBuildTarget());
-    Optional<A> constructorArg = translateConstructorArg(cellPathResolver, targetBaseName, node);
+    Optional<A> constructorArg = translateConstructorArg(targetBaseName, node);
     Optional<ImmutableSet<BuildTarget>> declaredDeps =
-        translateSet(cellPathResolver, targetBaseName, node.getDeclaredDeps());
+        translateSet(cellNameResolver, targetBaseName, node.getDeclaredDeps());
     Optional<ImmutableSortedSet<BuildTarget>> extraDeps =
-        translateSortedSet(cellPathResolver, targetBaseName, node.getExtraDeps());
+        translateSortedSet(cellNameResolver, targetBaseName, node.getExtraDeps());
     Optional<ImmutableSortedSet<BuildTarget>> targetGraphOnlyDeps =
-        translateSortedSet(cellPathResolver, targetBaseName, node.getTargetGraphOnlyDeps());
+        translateSortedSet(cellNameResolver, targetBaseName, node.getTargetGraphOnlyDeps());
 
     Optional<ImmutableMap<BuildTarget, Version>> newSelectedVersions =
         getSelectedVersions(node.getBuildTarget());

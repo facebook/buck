@@ -16,6 +16,7 @@
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -47,18 +48,22 @@ public abstract class AbstractVersionedTargetGraphBuilder implements VersionedTa
   protected final TargetGraphCreationResult unversionedTargetGraphCreationResult;
   protected final long timeout;
   protected final TimeUnit timeUnit;
+  private final Cells cells;
 
   protected AbstractVersionedTargetGraphBuilder(
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetGraphCreationResult unversionedTargetGraphCreationResult,
       long timeout,
-      TimeUnit timeUnit) {
+      TimeUnit timeUnit,
+      Cells cells) {
+
     this.typeCoercerFactory = typeCoercerFactory;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
     this.unversionedTargetGraphCreationResult = unversionedTargetGraphCreationResult;
     this.timeout = timeout;
     this.timeUnit = timeUnit;
+    this.cells = cells;
   }
 
   /** @return a flavor to which summarizes the given version selections. */
@@ -132,7 +137,7 @@ public abstract class AbstractVersionedTargetGraphBuilder implements VersionedTa
     // Build a target translator object to translate build targets.
     ImmutableList<TargetTranslator<?>> translators =
         ImmutableList.of(new QueryTargetTranslator(unconfiguredBuildTargetFactory));
-    return new TargetNodeTranslator(typeCoercerFactory, translators) {
+    return new TargetNodeTranslator(typeCoercerFactory, translators, cells) {
 
       private final LoadingCache<BuildTarget, Optional<BuildTarget>> cache =
           CacheBuilder.newBuilder()

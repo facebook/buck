@@ -131,8 +131,7 @@ public final class FileBasedWorkerRequirementsProvider implements WorkerRequirem
                     MutableActionTags mutableTags =
                         MAPPER.readValue(reqsEntry.getKey(), MUTABLE_ACTION_TAGS_TYPE);
                     requirements.put(
-                        ImmutableActionTags.of(
-                            mutableTags.ruleName, mutableTags.auxiliaryBuildTag),
+                        ImmutableActionTags.of(mutableTags.ruleName, mutableTags.auxiliaryBuildTag),
                         mapRequirements(reqsEntry.getValue()));
                   }
                   return requirements;

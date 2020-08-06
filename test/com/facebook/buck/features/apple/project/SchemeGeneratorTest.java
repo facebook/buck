@@ -128,6 +128,7 @@ public class SchemeGeneratorTest {
             targetToProjectPathMapBuilder.build(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
             Optional.empty() /* notificationPayloadFile */);
@@ -212,6 +213,7 @@ public class SchemeGeneratorTest {
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
             targetToProjectPathMapBuilder.build(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
@@ -309,6 +311,7 @@ public class SchemeGeneratorTest {
             targetToProjectPathMapBuilder.build(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
             Optional.empty() /* notificationPayloadFile */);
@@ -390,6 +393,7 @@ public class SchemeGeneratorTest {
             targetToProjectPathMapBuilder.build(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
             Optional.empty() /* notificationPayloadFile */);
@@ -451,6 +455,7 @@ public class SchemeGeneratorTest {
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
             targetToProjectPathMapBuilder.build(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
@@ -540,6 +545,7 @@ public class SchemeGeneratorTest {
               targetToProjectPathMapBuilder.build(),
               Optional.empty(),
               Optional.empty(),
+              Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO,
               Optional.empty(), /* watchAdapter */
               Optional.empty() /* notificationPayloadFile */);
@@ -576,6 +582,7 @@ public class SchemeGeneratorTest {
               Optional.empty() /* remoteRunnablePath */,
               SchemeActionType.DEFAULT_CONFIG_NAMES,
               ImmutableMap.of(rootTarget, pbxprojectPath),
+              Optional.empty(),
               Optional.empty(),
               Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO,
@@ -619,6 +626,7 @@ public class SchemeGeneratorTest {
               ImmutableMap.of(rootTarget, pbxprojectPath),
               Optional.empty(),
               Optional.empty(),
+              Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO,
               Optional.empty(), /* watchAdapter */
               Optional.empty() /* notificationPayloadFile */);
@@ -655,6 +663,7 @@ public class SchemeGeneratorTest {
               Optional.empty() /* remoteRunnablePath */,
               SchemeActionType.DEFAULT_CONFIG_NAMES,
               ImmutableMap.of(rootTarget, pbxprojectPath),
+              Optional.empty(),
               Optional.empty(),
               Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO,
@@ -717,6 +726,7 @@ public class SchemeGeneratorTest {
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
             targetToProjectPathMapBuilder.build(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
@@ -828,6 +838,7 @@ public class SchemeGeneratorTest {
             targetToProjectPathMapBuilder.build(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
             Optional.empty() /* notificationPayloadFile */);
@@ -879,6 +890,7 @@ public class SchemeGeneratorTest {
             Optional.of("/RemoteApp") /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
             targetToProjectPathMapBuilder.build(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
@@ -962,6 +974,7 @@ public class SchemeGeneratorTest {
             SchemeActionType.DEFAULT_CONFIG_NAMES,
             targetToProjectPathMapBuilder.build(),
             Optional.empty(),
+            Optional.empty(),
             Optional.of(schemeActions),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
@@ -1039,6 +1052,7 @@ public class SchemeGeneratorTest {
             targetToProjectPathMapBuilder.build(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
             Optional.empty() /* notifcationPayloadFile */);
@@ -1102,6 +1116,7 @@ public class SchemeGeneratorTest {
             targetToProjectPathMapBuilder.build(),
             Optional.of(environmentVariables),
             Optional.empty(),
+            Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
             Optional.empty() /* notificationPayloadFile */);
@@ -1159,6 +1174,7 @@ public class SchemeGeneratorTest {
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
             targetToProjectPathMapBuilder.build(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
@@ -1222,6 +1238,7 @@ public class SchemeGeneratorTest {
               Optional.empty() /* remoteRunnablePath */,
               SchemeActionType.DEFAULT_CONFIG_NAMES,
               targetToProjectPathMapBuilder.build(),
+              Optional.empty(),
               Optional.empty(),
               Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO,

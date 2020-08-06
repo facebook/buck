@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.FileManifest;
@@ -27,7 +28,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -74,16 +74,17 @@ abstract class FileParserPool<T extends FileManifest> implements AutoCloseable {
       BuckEventBus buckEventBus,
       Cell cell,
       Watchman watchman,
-      Path parseFile,
+      AbsPath parseFile,
       ListeningExecutorService executorService) {
     Preconditions.checkState(!closing.get());
 
     if (shouldUsePoolForCell(cell)) {
       return getResourcePoolForCell(buckEventBus, cell, watchman)
-          .scheduleOperationWithResource(parser -> parser.getManifest(parseFile), executorService);
+          .scheduleOperationWithResource(
+              parser -> parser.getManifest(parseFile.getPath()), executorService);
     }
     FileParser<T> parser = getParserForCell(buckEventBus, cell, watchman);
-    return executorService.submit(() -> parser.getManifest(parseFile));
+    return executorService.submit(() -> parser.getManifest(parseFile.getPath()));
   }
 
   private synchronized ResourcePool<FileParser<T>> getResourcePoolForCell(

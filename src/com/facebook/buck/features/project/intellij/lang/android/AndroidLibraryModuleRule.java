@@ -21,6 +21,7 @@ import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.features.project.intellij.IjKotlinHelper;
 import com.facebook.buck.features.project.intellij.JavaLanguageLevelHelper;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
@@ -89,6 +90,8 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
     target.getConstructorArg().getResourceUnionPackage().ifPresent(builder::setPackageName);
 
     context.setCompilerOutputPath(moduleFactoryResolver.getCompilerOutputPath(target));
+
+    IjKotlinHelper.addKotlinJavaRuntimeLibraryDependencyIfNecessary(target, context);
   }
 
   @Override

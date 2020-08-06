@@ -16,13 +16,14 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -33,25 +34,31 @@ import java.util.regex.Pattern;
  * <p>This {@link TypeCoercer} is used to convert a single link group mapping (e.g., <code>
  * ("//Some:Target", "tree")</code>) to a {@link CxxLinkGroupMappingTarget}.
  */
-public class CxxLinkGroupMappingTargetCoercer implements TypeCoercer<CxxLinkGroupMappingTarget> {
-  private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
-  private final TypeCoercer<CxxLinkGroupMappingTarget.Traversal> traversalCoercer;
-  private final TypeCoercer<Pattern> patternTypeCoercer;
+public class CxxLinkGroupMappingTargetCoercer
+    implements TypeCoercer<Object, CxxLinkGroupMappingTarget> {
+  private final TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer;
+  private final TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalCoercer;
+  private final TypeCoercer<Pattern, Pattern> patternTypeCoercer;
 
   private static final String LABEL_REGEX_PREFIX = "label:";
 
   public CxxLinkGroupMappingTargetCoercer(
-      TypeCoercer<BuildTarget> buildTargetTypeCoercer,
-      TypeCoercer<CxxLinkGroupMappingTarget.Traversal> traversalCoercer,
-      TypeCoercer<Pattern> patternTypeCoercer) {
+      TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer,
+      TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalCoercer,
+      TypeCoercer<Pattern, Pattern> patternTypeCoercer) {
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
     this.traversalCoercer = traversalCoercer;
     this.patternTypeCoercer = patternTypeCoercer;
   }
 
   @Override
-  public Class<CxxLinkGroupMappingTarget> getOutputClass() {
-    return CxxLinkGroupMappingTarget.class;
+  public TypeToken<CxxLinkGroupMappingTarget> getOutputType() {
+    return TypeToken.of(CxxLinkGroupMappingTarget.class);
+  }
+
+  @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
   }
 
   @Override
@@ -67,8 +74,18 @@ public class CxxLinkGroupMappingTargetCoercer implements TypeCoercer<CxxLinkGrou
   }
 
   @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
+  }
+
+  @Override
   public CxxLinkGroupMappingTarget coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -85,7 +102,7 @@ public class CxxLinkGroupMappingTargetCoercer implements TypeCoercer<CxxLinkGrou
       if (2 <= collection.size() && collection.size() <= 3) {
         Object[] objects = collection.toArray();
         BuildTarget buildTarget =
-            buildTargetTypeCoercer.coerce(
+            buildTargetTypeCoercer.coerceBoth(
                 cellRoots,
                 filesystem,
                 pathRelativeToProjectRoot,
@@ -105,7 +122,7 @@ public class CxxLinkGroupMappingTargetCoercer implements TypeCoercer<CxxLinkGrou
           String regexString = extractLabelRegexString(objects[2]);
           labelPattern =
               Optional.of(
-                  patternTypeCoercer.coerce(
+                  patternTypeCoercer.coerceBoth(
                       cellRoots,
                       filesystem,
                       pathRelativeToProjectRoot,
@@ -120,20 +137,20 @@ public class CxxLinkGroupMappingTargetCoercer implements TypeCoercer<CxxLinkGrou
 
     throw CoerceFailedException.simple(
         object,
-        getOutputClass(),
+        getOutputType(),
         "input should be pair of a build target and traversal, optionally with a label filter");
   }
 
   private String extractLabelRegexString(Object object) throws CoerceFailedException {
     if (!(object instanceof String)) {
       throw CoerceFailedException.simple(
-          object, getOutputClass(), "Third element should be a label regex filter");
+          object, getOutputType(), "Third element should be a label regex filter");
     }
 
     String prefixWithRegex = (String) object;
     if (!prefixWithRegex.startsWith(LABEL_REGEX_PREFIX)) {
       throw CoerceFailedException.simple(
-          object, getOutputClass(), "Label regex filter should start with " + LABEL_REGEX_PREFIX);
+          object, getOutputType(), "Label regex filter should start with " + LABEL_REGEX_PREFIX);
     }
 
     return prefixWithRegex.substring(LABEL_REGEX_PREFIX.length());

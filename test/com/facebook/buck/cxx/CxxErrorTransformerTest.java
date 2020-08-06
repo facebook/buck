@@ -61,7 +61,7 @@ public class CxxErrorTransformerTest {
           {
             "relative paths",
             new CxxErrorTransformer(filesystem, false, normalizer),
-            filesystem.relativize(replacement),
+            filesystem.relativize(replacement).getPath(),
             original
           },
           {

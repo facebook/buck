@@ -56,9 +56,16 @@ import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -74,9 +81,12 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.text.ParseException;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
@@ -131,7 +141,7 @@ public class AppleCxxPlatforms {
     return appleCxxPlatformsBuilder.build();
   }
 
-  private static Tool getXcodeTool(
+  private static VersionedTool getXcodeTool(
       ProjectFilesystem filesystem,
       ImmutableList<Path> toolSearchPaths,
       XcodeToolFinder xcodeToolFinder,
@@ -181,15 +191,6 @@ public class AppleCxxPlatforms {
     }
 
     AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
-
-    ImmutableList.Builder<String> ldflagsBuilder = ImmutableList.builder();
-    ldflagsBuilder.addAll(Linkers.iXlinker("-sdk_version", targetSdk.getVersion()));
-    if (appleConfig.linkAllObjC()) {
-      ldflagsBuilder.addAll(Linkers.iXlinker("-ObjC"));
-    }
-    if (targetSdk.getApplePlatform().equals(ApplePlatform.WATCHOS)) {
-      ldflagsBuilder.addAll(Linkers.iXlinker("-bitcode_verify"));
-    }
 
     // Populate Xcode version keys from Xcode's own Info.plist if available.
     Optional<String> xcodeBuildVersion = Optional.empty();
@@ -320,7 +321,7 @@ public class AppleCxxPlatforms {
     // https://github.com/facebook/buck/pull/1168: add the root cell's absolute path to the quote
     // include path, and also force it to be sanitized by all user rule keys.
     if (appleConfig.addCellPathToIquotePath()) {
-      sanitizerPaths.put(filesystem.getRootPath(), ".");
+      sanitizerPaths.put(filesystem.getRootPath().getPath(), ".");
       cflagsBuilder.add("-iquote", filesystem.getRootPath().toString());
     }
 
@@ -420,6 +421,11 @@ public class AppleCxxPlatforms {
         config.getHeaderVerificationOrIgnore().withPlatformWhitelist(whitelistBuilder.build());
     LOG.debug(
         "Headers verification platform whitelist: %s", headerVerification.getPlatformWhitelist());
+    ImmutableList<String> ldFlags =
+        getLdFlags(targetSdk, filesystem, xcodeToolFinder, toolSearchPaths, appleConfig, version);
+    ImmutableList<String> combinedLdFlags =
+        ImmutableList.<String>builder().addAll(cflags).addAll(ldFlags).build();
+    ImmutableList<Arg> cflagsArgs = ImmutableList.copyOf(StringArg.from(cflags));
 
     CxxPlatform cxxPlatform =
         CxxPlatforms.build(
@@ -435,19 +441,20 @@ public class AppleCxxPlatforms {
             new DefaultLinkerProvider(
                 LinkerProvider.Type.DARWIN,
                 new ConstantToolProvider(clangXxPath),
-                config.shouldCacheLinks()),
-            ImmutableList.<String>builder().addAll(cflags).addAll(ldflagsBuilder.build()).build(),
+                config.shouldCacheLinks(),
+                appleConfig.shouldLinkScrubConcurrently()),
+            StringArg.from(combinedLdFlags),
             ImmutableMultimap.of(),
             strip,
             ArchiverProvider.from(new BsdArchiver(ar)),
             ArchiveContents.NORMAL,
             Optional.of(new ConstantToolProvider(ranlib)),
             new PosixNmSymbolNameTool(new ConstantToolProvider(nm)),
-            cflagsBuilder.build(),
+            cflagsArgs,
             ImmutableList.of(),
-            cflags,
+            cflagsArgs,
             ImmutableList.of(),
-            cflags,
+            cflagsArgs,
             ImmutableList.of(),
             "dylib",
             "%s.dylib",
@@ -505,6 +512,30 @@ public class AppleCxxPlatforms {
         .setCodesignProvider(appleConfig.getCodesignProvider());
 
     return platformBuilder.build();
+  }
+
+  private static ImmutableList<String> getLdFlags(
+      AppleSdk targetSdk,
+      ProjectFilesystem filesystem,
+      XcodeToolFinder xcodeToolFinder,
+      ImmutableList<Path> toolSearchPaths,
+      AppleConfig appleConfig,
+      String version) {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    if (shouldSetSDKVersion(filesystem, xcodeToolFinder, toolSearchPaths, appleConfig, version)
+        .get()) {
+      builder.addAll(Linkers.iXlinker("-sdk_version", targetSdk.getVersion()));
+    }
+
+    if (appleConfig.linkAllObjC()) {
+      builder.addAll(Linkers.iXlinker("-ObjC"));
+    }
+    if (targetSdk.getApplePlatform().equals(ApplePlatform.WATCHOS)) {
+      builder.addAll(Linkers.iXlinker("-bitcode_verify"));
+    }
+
+    return builder.build();
   }
 
   private static Optional<SwiftPlatform> getSwiftPlatform(
@@ -597,6 +628,77 @@ public class AppleCxxPlatforms {
       throw new HumanReadableException("Cannot find tool %s in paths %s", tool, toolSearchPaths);
     }
     return result.get();
+  }
+
+  private static Supplier<Boolean> shouldSetSDKVersion(
+      ProjectFilesystem filesystem,
+      XcodeToolFinder xcodeToolFinder,
+      ImmutableList<Path> toolSearchPaths,
+      AppleConfig appleConfig,
+      String version) {
+    return MoreSuppliers.memoize(
+        () -> {
+          // If the Clang driver detects ld version at 520 or above, it will pass -platform_version,
+          // otherwise it will pass -<platform>_version_min. As -platform_version is incompatible
+          // with -sdk_version (which Buck passes), we should only be passing -sdk_version if we
+          // believe the driver will not pass it.
+          // https://reviews.llvm.org/rG25ce33a6e4f3b13732c0f851e68390dc2acb9123
+          Optional<Double> ldVersion =
+              getLdVersion(filesystem, xcodeToolFinder, toolSearchPaths, appleConfig, version);
+          if (ldVersion.isPresent()) {
+            return ldVersion.get() < 520;
+          }
+          return true;
+        });
+  }
+
+  private static Optional<Double> getLdVersion(
+      ProjectFilesystem filesystem,
+      XcodeToolFinder xcodeToolFinder,
+      ImmutableList<Path> toolSearchPaths,
+      AppleConfig appleConfig,
+      String version) {
+
+    VersionedTool ld =
+        getXcodeTool(filesystem, toolSearchPaths, xcodeToolFinder, appleConfig, "ld", version);
+
+    ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder()
+            .setCommand(ImmutableList.of(ld.getPath().toString(), "-v"))
+            .build();
+    Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
+    ProcessExecutor.Result result;
+    try {
+      result =
+          executor.launchAndExecute(
+              processExecutorParams,
+              options,
+              /* stdin */ Optional.empty(),
+              /* timeOutMs */ Optional.empty(),
+              /* timeOutHandler */ Optional.empty());
+    } catch (InterruptedException | IOException e) {
+      LOG.debug("Could not execute ld -v, continuing with setting the sdk_version.");
+      return Optional.empty();
+    }
+
+    if (result.getExitCode() != 0) {
+      throw new RuntimeException(
+          result.getMessageForUnexpectedResult(ld.getPath().toString() + " -v"));
+    }
+
+    Double parsedVersion = 0.0;
+    try {
+      // We expect the version string to be of the form "@(#)PROGRAM:ld  PROJECT:ld64-556.6"
+      String versionStr = result.getStderr().get().split("\n")[0];
+      parsedVersion = Double.parseDouble(versionStr.split("ld64-")[1]);
+    } catch (Exception e) {
+      LOG.debug(
+          "Unable to parse the ld version from %s, continuing with setting the sdk_version.",
+          result.getStderr().get());
+    }
+
+    return Optional.of(parsedVersion);
   }
 
   @VisibleForTesting

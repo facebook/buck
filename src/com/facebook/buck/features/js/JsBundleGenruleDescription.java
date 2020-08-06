@@ -24,6 +24,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -43,7 +44,6 @@ import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDirectoryAction;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -76,8 +76,8 @@ public class JsBundleGenruleDescription
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
-    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
-    BuildTarget bundleTarget = args.getJsBundle().withAppendedFlavors(flavors);
+    FlavorSet flavors = buildTarget.getFlavors();
+    BuildTarget bundleTarget = args.getJsBundle().withAppendedFlavors(flavors.getSet());
     BuildRule jsBundle = graphBuilder.requireRule(bundleTarget);
 
     if (flavors.contains(JsFlavors.SOURCE_MAP)
@@ -149,7 +149,7 @@ public class JsBundleGenruleDescription
             : Optional.empty(),
         bundleOutputs,
         jsDepsFileRule,
-        args.computeBundleName(buildTarget.getFlavors(), bundleOutputs::getBundleName));
+        args.computeBundleName(buildTarget.getFlavors().getSet(), bundleOutputs::getBundleName));
   }
 
   @Override

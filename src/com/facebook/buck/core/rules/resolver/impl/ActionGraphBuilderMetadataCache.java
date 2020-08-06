@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.resolver.impl;
 
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
@@ -36,14 +37,17 @@ final class ActionGraphBuilderMetadataCache {
   private final ActionGraphBuilder graphBuilder;
   private final TargetGraph targetGraph;
   private final LoadingCache<Pair<BuildTarget, Class<?>>, Optional<?>> metadataCache;
+  private final Cells cells;
 
   ActionGraphBuilderMetadataCache(
-      ActionGraphBuilder graphBuilder, TargetGraph targetGraph, int initialCapacity) {
+      ActionGraphBuilder graphBuilder, TargetGraph targetGraph, int initialCapacity, Cells cells) {
+
     // Precondition (not checked): graphBuilder has the same targetGraph as the one passed in
     this.graphBuilder = graphBuilder;
     this.targetGraph = targetGraph;
     this.metadataCache =
         CacheBuilder.newBuilder().initialCapacity(initialCapacity).build(new MetadataCacheLoader());
+    this.cells = cells;
   }
 
   @SuppressWarnings("unchecked")
@@ -85,7 +89,7 @@ final class ActionGraphBuilderMetadataCache {
       return metadataProvidingDescription.createMetadata(
           node.getBuildTarget(),
           graphBuilder,
-          node.getCellNames(),
+          cells.getCell(node.getBuildTarget().getCell()).getCellPathResolver(),
           arg,
           node.getSelectedVersions(),
           metadataClass);

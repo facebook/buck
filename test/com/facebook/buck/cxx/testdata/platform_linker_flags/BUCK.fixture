@@ -3,7 +3,7 @@ TARGETS = {
     "macos": ["-Wl,-flat_namespace,-undefined,suppress"],
 }
 
-for target, flags in TARGETS.iteritems():
+for target, flags in TARGETS.items():
     cxx_binary(
         name = "binary_matches_default_exactly_" + target,
         srcs = [

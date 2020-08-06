@@ -43,25 +43,26 @@ public class QueryCommand extends AbstractQueryCommand {
         PerBuildState parserState =
             new PerBuildStateFactory(
                     params.getTypeCoercerFactory(),
-                    new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                    new DefaultConstructorArgMarshaller(),
                     params.getKnownRuleTypesProvider(),
                     new ParserPythonInterpreterProvider(
-                        params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                        params.getCells().getRootCell().getBuckConfig(),
+                        params.getExecutableFinder()),
                     params.getWatchman(),
                     params.getBuckEventBus(),
-                    params.getManifestServiceSupplier(),
-                    params.getFileHashCache(),
                     params.getUnconfiguredBuildTargetFactory(),
                     params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
                 .create(
-                    createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                    createParsingContext(
+                            params.getCells().getRootCell(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState())) {
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(
               params,
               parserState,
-              createParsingContext(params.getCell(), pool.getListeningExecutorService()));
+              createParsingContext(
+                  params.getCells().getRootCell(), pool.getListeningExecutorService()));
       formatAndRunQuery(params, env);
     } catch (QueryException e) {
       throw new HumanReadableException(e);

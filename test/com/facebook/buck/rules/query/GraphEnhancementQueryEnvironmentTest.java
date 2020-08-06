@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.QueryTarget;
@@ -41,7 +42,6 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -53,11 +53,11 @@ public class GraphEnhancementQueryEnvironmentTest {
 
   private CellPathResolver cellRoots;
   private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
-  private static final Path ROOT = Paths.get("/fake/cell/root");
+  private final AbsPath root = AbsPath.of(Paths.get("/fake/cell/root").toAbsolutePath());
 
   @Before
   public void setUp() {
-    cellRoots = TestCellPathResolver.create(ROOT);
+    cellRoots = TestCellPathResolver.create(root);
   }
 
   @Test

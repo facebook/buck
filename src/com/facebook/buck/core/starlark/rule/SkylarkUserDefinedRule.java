@@ -63,7 +63,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   private final Set<String> hiddenImplicitAttributes;
   private final boolean shouldInferRunInfo;
   private final boolean shouldBeTestRule;
-  private final ImmutableMap<String, ParamInfo> params;
+  private final ImmutableMap<String, ParamInfo<?>> params;
 
   private SkylarkUserDefinedRule(
       FunctionSignature.WithValues<Object, SkylarkType> signature,
@@ -87,7 +87,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
         getAttrs().entrySet().stream()
             .collect(
                 ImmutableMap.toImmutableMap(
-                    Map.Entry::getKey, e -> new SkylarkParamInfo(e.getKey(), e.getValue())));
+                    Map.Entry::getKey, e -> new SkylarkParamInfo<>(e.getKey(), e.getValue())));
   }
 
   @Override
@@ -341,7 +341,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   }
 
   /** Get ParamInfo objects for all of the {@link Attribute}s provided to this instance */
-  public ImmutableMap<String, ParamInfo> getAllParamInfo() {
+  public ImmutableMap<String, ParamInfo<?>> getAllParamInfo() {
     return params;
   }
 

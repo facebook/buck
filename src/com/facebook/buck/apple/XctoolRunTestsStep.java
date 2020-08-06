@@ -252,7 +252,7 @@ class XctoolRunTestsStep implements Step {
     ProcessExecutorParams.Builder processExecutorParamsBuilder =
         ProcessExecutorParams.builder()
             .addAllCommand(command)
-            .setDirectory(filesystem.getRootPath().toAbsolutePath())
+            .setDirectory(filesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .setEnvironment(env);
 

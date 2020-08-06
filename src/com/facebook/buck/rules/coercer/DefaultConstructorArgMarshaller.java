@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
@@ -40,21 +39,9 @@ import javax.annotation.Nullable;
 
 public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller {
 
-  private final TypeCoercerFactory typeCoercerFactory;
-
-  /**
-   * Constructor. {@code pathFromProjectRootToBuildFile} is the path relative to the project root to
-   * the build file that has called the build rule's function in buck.py. This is used for resolving
-   * additional paths to ones relative to the project root, and to allow {@link BuildTarget}
-   * instances to be fully qualified.
-   */
-  public DefaultConstructorArgMarshaller(TypeCoercerFactory typeCoercerFactory) {
-    this.typeCoercerFactory = typeCoercerFactory;
-  }
-
   private void collectDeclaredDeps(
       CellNameResolver cellNameResolver,
-      @Nullable ParamInfo deps,
+      @Nullable ParamInfo<?> deps,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       Object dto) {
     if (deps != null && deps.isDep()) {
@@ -71,8 +58,9 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public <T extends ConstructorArg> T populate(
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
       TargetConfigurationTransformer targetConfigurationTransformer,
@@ -86,25 +74,35 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       Map<String, ?> attributes)
       throws CoerceFailedException {
 
-    ImmutableMap<String, ParamInfo> allParamInfo = constructorArgDescriptor.getParamInfos();
+    ImmutableMap<String, ParamInfo<?>> allParamInfo = constructorArgDescriptor.getParamInfos();
 
     boolean isConfigurationRule =
         ConfigurationRuleArg.class.isAssignableFrom(constructorArgDescriptor.objectClass());
 
     Object builder = constructorArgDescriptor.getBuilderFactory().get();
-    for (ParamInfo info : allParamInfo.values()) {
+    for (ParamInfo<?> info : allParamInfo.values()) {
       Object attribute = attributes.get(info.getName());
       if (attribute == null) {
         /**
-         * Rather than doing this logic in the parser, we do it here. This is to save on the amount
-         * of raw JSON that would otherwise be used constantly duplicating common values between
-         * different instances of a given rule. See {@link
-         * com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule#call(Object[],
-         * FuncallExpression, Environment)} where we create a dictionary of attributes. If this
-         * shortcut in the coercion becomes an issue, we can move the logic to the parser, but it
-         * may result in slower parse times.
+         * For any implicit attributes that were missing, grab their default values from the
+         * parameter map. The two places that this can happen are:
+         *
+         * <p>- The parser omitted the value because it was 'None'.
+         *
+         * <p>- The value is '_' prefixed. As that value is defined at rule definition time and not
+         * unique for each target, we do not serialize it in the RawTargetNode, and instead use the
+         * single in-memory value.
          */
-        attribute = info.getImplicitPreCoercionValue();
+        Object implicitPreCoercionValue = info.getImplicitPreCoercionValue();
+        if (implicitPreCoercionValue != null) {
+          attribute =
+              info.getTypeCoercer()
+                  .coerceToUnconfigured(
+                      cellNameResolver,
+                      filesystem,
+                      buildTarget.getCellRelativeBasePath().getPath(),
+                      implicitPreCoercionValue);
+        }
         if (attribute == null) {
           continue;
         }
@@ -122,7 +120,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
             "coercer must support concatenation to do split configuration: " + info.getName());
         attributeValue =
             createAttributeWithConfigurationTransformation(
-                cellPathResolver,
+                cellNameResolver,
                 filesystem,
                 selectorListResolver,
                 targetConfigurationTransformer,
@@ -132,13 +130,14 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                 dependencyStack,
                 paramTargetConfiguration,
                 configurationDeps,
-                info,
+                (ParamInfo<Object>) info,
+                (TypeCoercer<Object, Object>) info.getTypeCoercer(),
                 isConfigurationRule,
                 attribute);
       } else {
         attributeValue =
             createAttribute(
-                cellPathResolver,
+                cellNameResolver,
                 filesystem,
                 selectorListResolver,
                 configurationContext,
@@ -147,7 +146,8 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                 paramTargetConfiguration,
                 hostConfiguration,
                 configurationDeps,
-                info,
+                (ParamInfo<Object>) info,
+                (TypeCoercer<Object, Object>) info.getTypeCoercer(),
                 isConfigurationRule,
                 attribute);
       }
@@ -156,15 +156,13 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       }
     }
     T dto = constructorArgDescriptor.build(builder, buildTarget);
-    collectDeclaredDeps(
-        cellPathResolver.getCellNameResolver(), allParamInfo.get("deps"), declaredDeps, dto);
+    collectDeclaredDeps(cellNameResolver, allParamInfo.get("deps"), declaredDeps, dto);
     return dto;
   }
 
-  @SuppressWarnings("unchecked")
   @Nullable
-  private Object createAttributeWithConfigurationTransformation(
-      CellPathResolver cellPathResolver,
+  private <U, T> T createAttributeWithConfigurationTransformation(
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
       TargetConfigurationTransformer targetConfigurationTransformer,
@@ -174,38 +172,40 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       DependencyStack dependencyStack,
       TargetConfiguration targetConfiguration,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
-      ParamInfo info,
+      ParamInfo<T> info,
+      TypeCoercer<U, T> coercer,
       boolean isConfigurationRule,
       Object attribute)
       throws CoerceFailedException {
-    ImmutableList.Builder<Object> valuesForConcatenation = ImmutableList.builder();
+    ImmutableList.Builder<T> valuesForConcatenation = ImmutableList.builder();
     for (TargetConfiguration nestedTargetConfiguration :
         targetConfigurationTransformer.transform(targetConfiguration, dependencyStack)) {
-      Object configuredAttributeValue =
+      T configuredAttributeValue =
           createAttribute(
-              cellPathResolver,
+              cellNameResolver,
               filesystem,
               selectorListResolver,
               configurationContext.withTargetConfiguration(nestedTargetConfiguration),
-              buildTarget.getUnconfiguredBuildTargetView().configure(nestedTargetConfiguration),
+              buildTarget.getUnconfiguredBuildTarget().configure(nestedTargetConfiguration),
               dependencyStack,
               nestedTargetConfiguration,
               hostConfiguration,
               configurationDeps,
               info,
+              coercer,
               isConfigurationRule,
               attribute);
       if (configuredAttributeValue != null) {
         valuesForConcatenation.add(configuredAttributeValue);
       }
     }
-    TypeCoercer<Object> coercer = (TypeCoercer<Object>) info.getTypeCoercer();
     return coercer.concat(valuesForConcatenation.build());
   }
 
   @Nullable
-  private Object createAttribute(
-      CellPathResolver cellPathResolver,
+  @SuppressWarnings("unchecked")
+  private <U, T> T createAttribute(
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
       SelectableConfigurationContext configurationContext,
@@ -214,75 +214,91 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
-      ParamInfo info,
+      ParamInfo<T> info,
+      TypeCoercer<U, T> coercer,
       boolean isConfigurationRule,
       Object attribute)
       throws CoerceFailedException {
-    Object attributeWithSelectableValue =
-        createCoercedAttributeWithSelectableValue(
-            cellPathResolver,
-            filesystem,
-            buildTarget,
-            targetConfiguration,
-            hostConfiguration,
-            info,
-            isConfigurationRule,
-            attribute);
-    return configureAttributeValue(
-        configurationContext,
-        selectorListResolver,
-        buildTarget,
-        dependencyStack,
-        configurationDeps,
-        info.getName(),
-        attributeWithSelectableValue);
-  }
-
-  private Object createCoercedAttributeWithSelectableValue(
-      CellPathResolver cellRoots,
-      ProjectFilesystem filesystem,
-      BuildTarget buildTarget,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
-      ParamInfo argumentInfo,
-      boolean isConfigurationRule,
-      Object rawValue)
-      throws CoerceFailedException {
     if (isConfigurationRule) {
-      if (argumentInfo.isConfigurable()) {
+      if (info.isConfigurable()) {
         throw new IllegalStateException("configurable param in configuration rule");
       }
     }
 
-    TypeCoercer<?> coercer;
     // When an attribute value contains an instance of {@link ListWithSelects} it's coerced by a
     // coercer for {@link SelectorList}.
     // The reason why we cannot use coercer from {@code argumentInfo} because {@link
     // ListWithSelects} is not generic class, but an instance contains all necessary information
     // to coerce the value into an instance of {@link SelectorList} which is a generic class.
-    if (rawValue instanceof SelectorList<?>) {
-      if (!argumentInfo.isConfigurable()) {
+    if (attribute instanceof SelectorList<?>) {
+      if (!info.isConfigurable()) {
         throw new HumanReadableException(
-            "%s: attribute '%s' cannot be configured using select",
-            buildTarget, argumentInfo.getName());
+            "%s: attribute '%s' cannot be configured using select", buildTarget, info.getName());
       }
 
-      coercer =
-          typeCoercerFactory.typeCoercerForParameterizedType(
-              "SelectorList", SelectorList.class, argumentInfo.getGenericParameterTypes());
+      SelectorList<T> attributeWithSelectableValue =
+          ((SelectorList<U>) attribute)
+              .mapValuesThrowing(
+                  v ->
+                      coerce(
+                          cellNameResolver,
+                          filesystem,
+                          buildTarget,
+                          targetConfiguration,
+                          hostConfiguration,
+                          info,
+                          coercer,
+                          v));
+      return configureAttributeValue(
+          configurationContext,
+          selectorListResolver,
+          buildTarget,
+          dependencyStack,
+          configurationDeps,
+          info,
+          attributeWithSelectableValue);
     } else {
-      coercer = argumentInfo.getTypeCoercer();
+      return coerce(
+          cellNameResolver,
+          filesystem,
+          buildTarget,
+          targetConfiguration,
+          hostConfiguration,
+          info,
+          coercer,
+          (U) attribute);
     }
-    return coercer.coerce(
-        cellRoots,
-        filesystem,
-        buildTarget.getCellRelativeBasePath().getPath(),
-        targetConfiguration,
-        hostConfiguration,
-        rawValue);
   }
 
-  @SuppressWarnings("unchecked")
+  private <U, T> T coerce(
+      CellNameResolver cellNameResolver,
+      ProjectFilesystem filesystem,
+      BuildTarget buildTarget,
+      TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
+      ParamInfo<T> paramInfo,
+      TypeCoercer<U, T> coercer,
+      U attribute)
+      throws CoerceFailedException {
+    try {
+      return coercer.coerce(
+          cellNameResolver,
+          filesystem,
+          buildTarget.getCellRelativeBasePath().getPath(),
+          targetConfiguration,
+          hostConfiguration,
+          attribute);
+    } catch (ClassCastException e) {
+      // diagnostics for tests, this should not happen in production
+      throw new RuntimeException(
+          String.format(
+              "invorrect value in configured graph, "
+                  + "param: %s, value type: %s, expected unconfigured type: %s",
+              paramInfo.getName(), attribute.getClass().getName(), coercer.getUnconfiguredType()),
+          e);
+    }
+  }
+
   @Nullable
   private <T> T configureAttributeValue(
       SelectableConfigurationContext configurationContext,
@@ -290,18 +306,17 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
-      String attributeName,
-      Object rawAttributeValue) {
-    T value;
-    if (rawAttributeValue instanceof SelectorList) {
-      SelectorList<T> selectorList = (SelectorList<T>) rawAttributeValue;
-      value =
-          selectorListResolver.resolveList(
-              configurationContext, buildTarget, attributeName, selectorList, dependencyStack);
-      addSelectorListConfigurationDepsToBuilder(configurationDeps, selectorList);
-    } else {
-      value = (T) rawAttributeValue;
-    }
+      ParamInfo<T> paramInfo,
+      SelectorList<T> selectorList) {
+    T value =
+        selectorListResolver.resolveList(
+            configurationContext,
+            buildTarget,
+            paramInfo.getName(),
+            selectorList,
+            paramInfo.getTypeCoercer(),
+            dependencyStack);
+    addSelectorListConfigurationDepsToBuilder(configurationDeps, selectorList);
     return value;
   }
 

@@ -22,11 +22,15 @@ import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.proto.BuckInfo;
 import com.facebook.buck.remoteexecution.proto.CasClientInfo;
 import com.facebook.buck.remoteexecution.proto.ClientActionInfo;
+import com.facebook.buck.remoteexecution.proto.ClientJobInfo;
 import com.facebook.buck.remoteexecution.proto.CreatorInfo;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.remoteexecution.proto.TraceInfo;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
+import com.facebook.buck.rules.keys.config.impl.BuckVersion;
+import com.facebook.buck.util.environment.ExecutionEnvironment;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -73,7 +77,8 @@ public class MetadataProviderFactory {
       String reSessionLabel,
       String tenantId,
       String auxiliaryBuildTag,
-      String projectPrefix) {
+      String projectPrefix,
+      ExecutionEnvironment executionEnvironment) {
     return new MetadataProvider() {
       final RemoteExecutionMetadata metadata;
 
@@ -87,6 +92,7 @@ public class MetadataProviderFactory {
                 .setBuildId(buildId.toString())
                 .setAuxiliaryBuildTag(auxiliaryBuildTag)
                 .setProjectPrefix(projectPrefix)
+                .setVersion(BuckVersion.getVersion())
                 .build();
         CreatorInfo creatorInfo =
             CreatorInfo.newBuilder()
@@ -108,6 +114,7 @@ public class MetadataProviderFactory {
                 .setCreatorInfo(creatorInfo)
                 .setCasClientInfo(casClientInfo)
                 .setClientActionInfo(clientActionInfo)
+                .setClientJobInfo(buildClientJobInfo(executionEnvironment))
                 .build();
       }
 
@@ -133,6 +140,20 @@ public class MetadataProviderFactory {
         return getBuilderForAction(actionDigest, ruleName).build();
       }
     };
+  }
+
+  private static ClientJobInfo buildClientJobInfo(ExecutionEnvironment executionEnvironment) {
+    Optional<String> jobInstanceId = executionEnvironment.getenv("BUCK_JOB_INSTANCE_ID");
+    Optional<String> jobGroupId = executionEnvironment.getenv("BUCK_JOB_GROUP_ID");
+    Optional<String> jobDeploymentStage = executionEnvironment.getenv("BUCK_JOB_DEPLOYMENT_STAGE");
+    Optional<String> jobTenant = executionEnvironment.getenv("BUCK_JOB_TENANT");
+
+    return ClientJobInfo.newBuilder()
+        .setInstanceId(jobInstanceId.orElse(""))
+        .setGroupId(jobGroupId.orElse(""))
+        .setDeploymentStage(jobDeploymentStage.orElse(""))
+        .setClientSideTenant(jobTenant.orElse(""))
+        .build();
   }
 
   /** Wraps the argument MetadataProvider return value with info about tracing. */

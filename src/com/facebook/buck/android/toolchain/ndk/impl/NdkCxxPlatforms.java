@@ -60,6 +60,7 @@ import com.facebook.buck.cxx.toolchain.linker.impl.GnuLinker;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.environment.PlatformType;
@@ -183,8 +184,10 @@ public class NdkCxxPlatforms {
       return "7.0.2";
     } else if (ndkMajorVersion < 20) {
       return "8.0.2";
-    } else {
+    } else if (ndkMajorVersion < 21) {
       return "8.0.7";
+    } else {
+      return "9.0.8";
     }
   }
 
@@ -550,17 +553,24 @@ public class NdkCxxPlatforms {
     cxxPlatformBuilder
         .setFlavor(flavor)
         .setAs(cc)
-        .addAllAsflags(getAsflags(targetConfiguration, toolchainPaths))
+        .addAllAsflags(StringArg.from(getAsflags(targetConfiguration, toolchainPaths)))
         .setAspp(cpp)
         .setCc(cc)
-        .addAllCflags(getCCompilationFlags(targetConfiguration, toolchainPaths, androidConfig))
+        .addAllCflags(
+            StringArg.from(
+                getCCompilationFlags(targetConfiguration, toolchainPaths, androidConfig)))
         .setCpp(cpp)
-        .addAllCppflags(getCPreprocessorFlags(targetConfiguration, toolchainPaths, androidConfig))
+        .addAllCppflags(
+            StringArg.from(
+                getCPreprocessorFlags(targetConfiguration, toolchainPaths, androidConfig)))
         .setCxx(cxx)
-        .addAllCxxflags(getCxxCompilationFlags(targetConfiguration, toolchainPaths, androidConfig))
+        .addAllCxxflags(
+            StringArg.from(
+                getCxxCompilationFlags(targetConfiguration, toolchainPaths, androidConfig)))
         .setCxxpp(cxxpp)
         .addAllCxxppflags(
-            getCxxPreprocessorFlags(targetConfiguration, toolchainPaths, androidConfig))
+            StringArg.from(
+                getCxxPreprocessorFlags(targetConfiguration, toolchainPaths, androidConfig)))
         .setLd(
             new DefaultLinkerProvider(
                 LinkerProvider.Type.GNU,
@@ -573,7 +583,7 @@ public class NdkCxxPlatforms {
                         cxxRuntime,
                         executableFinder)),
                 config.shouldCacheLinks()))
-        .addAllLdflags(getLdFlags(targetConfiguration, androidConfig))
+        .addAllLdflags(StringArg.from(getLdFlags(targetConfiguration, androidConfig)))
         .setStrip(getGccTool(toolchainPaths, "strip", version, executableFinder))
         .setSymbolNameTool(
             new PosixNmSymbolNameTool(
@@ -618,17 +628,19 @@ public class NdkCxxPlatforms {
 
     if (cxxRuntime != NdkCxxRuntime.SYSTEM) {
       cxxPlatformBuilder.putRuntimeLdflags(
-          Linker.LinkableDepType.SHARED, "-l" + cxxRuntime.sharedName);
+          Linker.LinkableDepType.SHARED, StringArg.of("-l" + cxxRuntime.sharedName));
       cxxPlatformBuilder.putRuntimeLdflags(
-          Linker.LinkableDepType.STATIC, "-l" + cxxRuntime.staticName);
+          Linker.LinkableDepType.STATIC, StringArg.of("-l" + cxxRuntime.staticName));
 
       if (getNdkMajorVersion(ndkVersion) >= 12 && cxxRuntime == NdkCxxRuntime.LIBCXX) {
         if (getNdkMajorVersion(ndkVersion) < 17
             || targetConfiguration.getTargetArchAbi() == NdkTargetArchAbi.ARMEABI_V7A
             || targetConfiguration.getTargetArchAbi() == NdkTargetArchAbi.X86) {
-          cxxPlatformBuilder.putRuntimeLdflags(Linker.LinkableDepType.STATIC, "-landroid_support");
+          cxxPlatformBuilder.putRuntimeLdflags(
+              Linker.LinkableDepType.STATIC, StringArg.of("-landroid_support"));
         }
-        cxxPlatformBuilder.putRuntimeLdflags(Linker.LinkableDepType.STATIC, "-lc++abi");
+        cxxPlatformBuilder.putRuntimeLdflags(
+            Linker.LinkableDepType.STATIC, StringArg.of("-lc++abi"));
 
         if (targetConfiguration.getTargetArchAbi() == NdkTargetArchAbi.ARMEABI_V7A) {
           // libc++abi on 32-bit ARM depends on the LLVM unwinder; if not explicitly
@@ -636,16 +648,18 @@ public class NdkCxxPlatforms {
           // and related symbols with implementations provided by libgcc.a, which is
           // not ABI-compatible with libc++ (and would most likely result in crashes
           // when throwing exceptions).
-          cxxPlatformBuilder.putRuntimeLdflags(Linker.LinkableDepType.STATIC, "-lunwind");
+          cxxPlatformBuilder.putRuntimeLdflags(
+              Linker.LinkableDepType.STATIC, StringArg.of("-lunwind"));
           // Don't export symbols from libunwind and libgcc in the linked binary.
           cxxPlatformBuilder.putRuntimeLdflags(
-              Linker.LinkableDepType.STATIC, "-Wl,--exclude-libs,libunwind.a");
+              Linker.LinkableDepType.STATIC, StringArg.of("-Wl,--exclude-libs,libunwind.a"));
           cxxPlatformBuilder.putRuntimeLdflags(
-              Linker.LinkableDepType.STATIC, "-Wl,--exclude-libs,libgcc.a");
+              Linker.LinkableDepType.STATIC, StringArg.of("-Wl,--exclude-libs,libgcc.a"));
         }
 
         if (targetConfiguration.getTargetArchAbi() == NdkTargetArchAbi.ARMEABI) {
-          cxxPlatformBuilder.putRuntimeLdflags(Linker.LinkableDepType.STATIC, "-latomic");
+          cxxPlatformBuilder.putRuntimeLdflags(
+              Linker.LinkableDepType.STATIC, StringArg.of("-latomic"));
         }
       }
     }

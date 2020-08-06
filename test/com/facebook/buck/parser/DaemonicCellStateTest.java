@@ -23,13 +23,15 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
@@ -46,7 +48,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,15 +55,15 @@ import org.junit.Test;
 public class DaemonicCellStateTest {
 
   private ProjectFilesystem filesystem;
-  private Cell rootCell;
+  private Cells cells;
   private Cell childCell;
   private DaemonicCellState state;
   private DaemonicCellState childState;
 
   private void populateDummyRawNode(DaemonicCellState state, BuildTarget target) {
     Cell targetCell;
-    if (target.getCell().equals(rootCell.getCanonicalName())) {
-      targetCell = rootCell;
+    if (target.getCell().equals(cells.getRootCell().getCanonicalName())) {
+      targetCell = cells.getRootCell();
     } else if (target.getCell().equals(childCell.getCanonicalName())) {
       targetCell = childCell;
     } else {
@@ -97,9 +98,9 @@ public class DaemonicCellStateTest {
             .setFilesystem(filesystem)
             .setSections(ImmutableMap.of("repositories", ImmutableMap.of("xplat", "../xplat")))
             .build();
-    rootCell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
-    childCell = rootCell.getCell(filesystem.resolve("../xplat").toAbsolutePath());
-    state = new DaemonicCellState(rootCell, 1);
+    cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+    childCell = cells.getRootCell().getCell(filesystem.resolve("../xplat").toAbsolutePath());
+    state = new DaemonicCellState(cells.getRootCell(), 1);
     childState = new DaemonicCellState(childCell, 1);
   }
 
@@ -109,16 +110,18 @@ public class DaemonicCellStateTest {
         RuleType.of("j_l", RuleType.Kind.BUILD),
         ImmutableMap.of(),
         ImmutableSet.of(),
-        ImmutableSet.of());
+        ImmutableSet.of(),
+        Optional.empty(),
+        ImmutableList.of());
   }
 
-  private Path dummyPackageFile() {
-    return filesystem.resolve("path/to/PACKAGE");
+  private AbsPath dummyPackageFile() {
+    return AbsPath.of(filesystem.resolve("path/to/PACKAGE"));
   }
 
   @Test
   public void testPutComputedNodeIfNotPresent() throws BuildTargetException {
-    Cache<UnconfiguredBuildTargetView, UnconfiguredTargetNode> cache =
+    Cache<UnconfiguredBuildTarget, UnconfiguredTargetNode> cache =
         state.getCache(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
     BuildTarget target = BuildTargetFactory.newInstance("//path/to:target");
 
@@ -128,26 +131,25 @@ public class DaemonicCellStateTest {
     UnconfiguredTargetNode n1 = rawTargetNode("n1");
     UnconfiguredTargetNode n2 = rawTargetNode("n2");
 
-    cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTargetView(), n1);
+    cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTarget(), n1);
     assertEquals(
         "Cached node was not found",
         Optional.of(n1),
-        cache.lookupComputedNode(target.getUnconfiguredBuildTargetView()));
+        cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
 
-    assertEquals(
-        n1, cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTargetView(), n2));
+    assertEquals(n1, cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTarget(), n2));
     assertEquals(
         "Previously cached node should not be updated",
         Optional.of(n1),
-        cache.lookupComputedNode(target.getUnconfiguredBuildTargetView()));
+        cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
   }
 
   @Test
   public void testCellNameDoesNotAffectInvalidation() throws BuildTargetException {
-    Cache<UnconfiguredBuildTargetView, UnconfiguredTargetNode> cache =
+    Cache<UnconfiguredBuildTarget, UnconfiguredTargetNode> cache =
         childState.getCache(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
 
-    Path targetPath = childCell.getRoot().resolve("path/to/BUCK");
+    AbsPath targetPath = childCell.getRoot().resolve("path/to/BUCK");
     BuildTarget target = BuildTargetFactory.newInstance("xplat//path/to:target");
 
     // Make sure the cache has a raw node for this target.
@@ -155,9 +157,8 @@ public class DaemonicCellStateTest {
 
     UnconfiguredTargetNode n1 = rawTargetNode("n1");
 
-    cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTargetView(), n1);
-    assertEquals(
-        Optional.of(n1), cache.lookupComputedNode(target.getUnconfiguredBuildTargetView()));
+    cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTarget(), n1);
+    assertEquals(Optional.of(n1), cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
 
     childState.putBuildFileManifestIfNotPresent(
         targetPath,
@@ -174,12 +175,12 @@ public class DaemonicCellStateTest {
     assertEquals(
         "Cell-named target should still be invalidated",
         Optional.empty(),
-        cache.lookupComputedNode(target.getUnconfiguredBuildTargetView()));
+        cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
   }
 
   @Test
   public void putPackageIfNotPresent() {
-    Path packageFile = dummyPackageFile();
+    AbsPath packageFile = dummyPackageFile();
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
 
     PackageFileManifest cachedManifest =
@@ -205,7 +206,7 @@ public class DaemonicCellStateTest {
 
   @Test
   public void lookupPackage() {
-    Path packageFile = dummyPackageFile();
+    AbsPath packageFile = dummyPackageFile();
 
     Optional<PackageFileManifest> lookupManifest = state.lookupPackageFileManifest(packageFile);
 
@@ -220,7 +221,7 @@ public class DaemonicCellStateTest {
 
   @Test
   public void invalidatePackageFilePath() {
-    Path packageFile = dummyPackageFile();
+    AbsPath packageFile = dummyPackageFile();
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
 
     state.putPackageFileManifestIfNotPresent(
@@ -229,7 +230,7 @@ public class DaemonicCellStateTest {
     Optional<PackageFileManifest> lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertTrue(lookupManifest.isPresent());
 
-    state.invalidatePath(filesystem.resolve("path/to/random.bzl"));
+    state.invalidatePath(AbsPath.of(filesystem.resolve("path/to/random.bzl")));
 
     lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertTrue(lookupManifest.isPresent());
@@ -242,10 +243,10 @@ public class DaemonicCellStateTest {
 
   @Test
   public void dependentInvalidatesPackageFileManifest() {
-    Path packageFile = dummyPackageFile();
+    AbsPath packageFile = dummyPackageFile();
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
 
-    Path dependentFile = filesystem.resolve("path/to/pkg_dependent.bzl");
+    AbsPath dependentFile = AbsPath.of(filesystem.resolve("path/to/pkg_dependent.bzl"));
 
     state.putPackageFileManifestIfNotPresent(
         packageFile,

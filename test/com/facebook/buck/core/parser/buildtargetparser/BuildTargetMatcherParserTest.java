@@ -30,10 +30,9 @@ import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
-import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -78,8 +77,7 @@ public class BuildTargetMatcherParserTest {
     assertEquals(
         ImmutableSingletonBuildTargetMatcher.of(
             BuildTargetFactory.newInstance("//test/com/facebook/buck/parser:parser")
-                .getUnconfiguredBuildTargetView()
-                .getData()),
+                .getUnconfiguredBuildTarget()),
         buildTargetPatternParser.parse(
             "//test/com/facebook/buck/parser:parser",
             createCellRoots(filesystem).getCellNameResolver()));
@@ -106,7 +104,7 @@ public class BuildTargetMatcherParserTest {
 
     assertEquals(
         ImmutableSingletonBuildTargetMatcher.of(
-            BuildTargetFactory.newInstance("//:parser").getUnconfiguredBuildTargetView().getData()),
+            BuildTargetFactory.newInstance("//:parser").getUnconfiguredBuildTarget()),
         buildTargetPatternParser.parse(
             "//:parser", createCellRoots(filesystem).getCellNameResolver()));
 
@@ -128,9 +126,7 @@ public class BuildTargetMatcherParserTest {
 
     assertEquals(
         ImmutableSingletonBuildTargetMatcher.of(
-            BuildTargetFactory.newInstance("other//:something")
-                .getUnconfiguredBuildTargetView()
-                .getData()),
+            BuildTargetFactory.newInstance("other//:something").getUnconfiguredBuildTarget()),
         buildTargetPatternParser.parse("other//:something", cellNames.getCellNameResolver()));
     assertEquals(
         ImmutableSubdirectoryBuildTargetMatcher.of(
@@ -170,15 +166,13 @@ public class BuildTargetMatcherParserTest {
               assertTrue(
                   "from root matching something in non-root: " + pattern,
                   pattern.matches(
-                      unconfiguredBuildTargetFactory
-                          .create("//lib:lib", otherCellPathResolver.getCellNameResolver())
-                          .configure(UnconfiguredTargetConfiguration.INSTANCE)));
+                      unconfiguredBuildTargetFactory.create(
+                          "//lib:lib", otherCellPathResolver.getCellNameResolver())));
               assertFalse(
                   "from root failing to match something in root: " + pattern,
                   pattern.matches(
-                      unconfiguredBuildTargetFactory
-                          .create("//lib:lib", rootCellPathResolver.getCellNameResolver())
-                          .configure(UnconfiguredTargetConfiguration.INSTANCE)));
+                      unconfiguredBuildTargetFactory.create(
+                          "//lib:lib", rootCellPathResolver.getCellNameResolver())));
             });
 
     // Non-root cell visibility from root cell.
@@ -191,15 +185,13 @@ public class BuildTargetMatcherParserTest {
               assertTrue(
                   "from non-root matching something in root: " + pattern,
                   pattern.matches(
-                      unconfiguredBuildTargetFactory
-                          .create("//lib:lib", rootCellPathResolver.getCellNameResolver())
-                          .configure(UnconfiguredTargetConfiguration.INSTANCE)));
+                      unconfiguredBuildTargetFactory.create(
+                          "//lib:lib", rootCellPathResolver.getCellNameResolver())));
               assertFalse(
                   "from non-root matching something in non-root: " + pattern,
                   pattern.matches(
-                      unconfiguredBuildTargetFactory
-                          .create("//lib:lib", otherCellPathResolver.getCellNameResolver())
-                          .configure(UnconfiguredTargetConfiguration.INSTANCE)));
+                      unconfiguredBuildTargetFactory.create(
+                          "//lib:lib", otherCellPathResolver.getCellNameResolver())));
             });
   }
 
@@ -224,8 +216,8 @@ public class BuildTargetMatcherParserTest {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     CellPathResolver rootCellPathResolver =
         TestCellPathResolver.create(
-            filesystem.getPath("root").normalize(),
-            ImmutableMap.of("localreponame", filesystem.getPath("localrepo").normalize()));
+            filesystem.resolve("root").normalize(),
+            ImmutableMap.of("localreponame", filesystem.resolve("localrepo").normalize()));
 
     exception.expect(BuildTargetParseException.class);
     // It contains the pattern
@@ -242,7 +234,7 @@ public class BuildTargetMatcherParserTest {
   public void parsesOutputLabel() {
     BuildTargetMatcherParser<TargetNodeSpec> buildTargetPatternParser =
         new BuildTargetMatcherTargetNodeParser();
-    UnconfiguredBuildTargetView unconfiguredBuildTargetView =
+    UnconfiguredBuildTarget unconfiguredBuildTargetView =
         UnconfiguredBuildTargetFactoryForTests.newInstance(
             filesystem, "//test/com/facebook/buck/parser:parser");
 

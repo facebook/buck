@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
@@ -108,7 +109,7 @@ public final class ExternallyBuiltApplePackage
         Optional<Arg> cmdExe,
         Optional<String> type,
         Optional<String> out,
-        Optional<ImmutableMap<String, ImmutableSet<String>>> outs,
+        Optional<ImmutableMap<OutputLabel, ImmutableSet<String>>> outs,
         boolean enableSandboxingInGenrule,
         boolean isCacheable,
         String environmentExpansionSeparator,

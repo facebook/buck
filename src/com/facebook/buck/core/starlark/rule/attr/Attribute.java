@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.starlark.rule.attr;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -28,6 +28,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -45,15 +46,9 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
     return this;
   }
 
-  /**
-   * Get the generic type parameters of {@code CoercedType}, if any.
-   *
-   * @returns A list of the generic types of {@code CoercedType}. For example, {@link
-   *     Attribute<com.google.common.collect.ImmutableList<String>>} would return {@link Type}
-   *     objects for {@link String}. {@link Attribute<Integer>} would return an empty array.
-   */
+  /** Get the generic type of {@code CoercedType}. */
   @Value.Lazy
-  public Type[] getGenericTypes() {
+  public Type getGenericType() {
     Class<?> clazz = this.getClass();
 
     /**
@@ -64,12 +59,13 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
       if (Attribute.class.equals(clazz.getSuperclass())) {
         // Get {@code CoercedType}; if it's something parameterized, return its types,
         // otherwise return an empty list of types
-        Type coercedType =
-            ((ParameterizedType) clazz.getGenericSuperclass()).getActualTypeArguments()[0];
-        if (coercedType instanceof ParameterizedType) {
-          return ((ParameterizedType) coercedType).getActualTypeArguments();
-        }
-        return new Type[0];
+        ParameterizedType genericSuperclass = (ParameterizedType) clazz.getGenericSuperclass();
+
+        Type[] attributeTypeArguments = genericSuperclass.getActualTypeArguments();
+        Preconditions.checkState(
+            attributeTypeArguments.length == 1, "for type %s", this.getClass().getName());
+
+        return attributeTypeArguments[0];
 
       } else {
         clazz = clazz.getSuperclass();
@@ -100,7 +96,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
    * The type coercer to use to convert raw values from the parser into something usable internally.
    * This coercer also performs validation
    */
-  public abstract TypeCoercer<CoercedType> getTypeCoercer();
+  public abstract TypeCoercer<?, CoercedType> getTypeCoercer();
 
   /**
    * Validates values post-coercion to ensure other properties besides 'type' are valid
@@ -109,6 +105,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
    * @throws CoerceFailedException if the value is invalid (e.g. not in a list of pre-approved
    *     values)
    */
+  // TODO(nga): used only in tests
   protected void validateCoercedValue(CoercedType value) throws CoerceFailedException {}
 
   /**
@@ -122,7 +119,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
   /**
    * Get the coerced value for this attribute.
    *
-   * @param cellRoots The cell roots
+   * @param cellNameResolver The cell roots
    * @param projectFilesystem The project file system
    * @param pathRelativeToProjectRoot The path relative to the project root
    * @param targetConfiguration The configuration for this target
@@ -130,8 +127,9 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
    * @param value The object that is to be coerced. This generally comes directly from the parser.
    * @throws CoerceFailedException if the value could not be coerced
    */
+  // TODO(nga): used only in tests
   public CoercedType getValue(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem projectFilesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -140,8 +138,8 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
       throws CoerceFailedException {
     CoercedType coercedValue =
         getTypeCoercer()
-            .coerce(
-                cellRoots,
+            .coerceBoth(
+                cellNameResolver,
                 projectFilesystem,
                 pathRelativeToProjectRoot,
                 targetConfiguration,

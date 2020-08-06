@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
@@ -54,7 +54,7 @@ public class CommandLineTargetNodeSpecParserTest {
   @Rule public ExpectedException exception = ExpectedException.none();
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private ProjectFilesystem filesystem;
-  private Cell rootCell;
+  private Cells cells;
 
   CommandLineTargetNodeSpecParser setupParser(
       Path relativeWorkingDir, ImmutableMap<String, ImmutableMap<String, String>> rawConfig) {
@@ -67,10 +67,10 @@ public class CommandLineTargetNodeSpecParserTest {
             ImmutableMap.of("foo", "//some:thing", "bar", "//some:thing //some/other:thing")));
     BuckConfig config = FakeBuckConfig.builder().setSections(configBuilder.build()).build();
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot(), config.getConfig());
-    rootCell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+    cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     return new CommandLineTargetNodeSpecParser(
-        rootCell,
-        filesystem.getRootPath().resolve(relativeWorkingDir).normalize(),
+        cells.getRootCell(),
+        filesystem.getRootPath().resolve(relativeWorkingDir).normalize().getPath(),
         config,
         new BuildTargetMatcherTargetNodeParser());
   }
@@ -112,27 +112,27 @@ public class CommandLineTargetNodeSpecParserTest {
   @Test
   public void aliasExpansion() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
+    Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
     filesystem.mkdirs(Paths.get("some/other"));
     assertEquals(
         ImmutableSet.of(
             BuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance("//some:thing"))),
-        parser.parse(cell, "foo"));
+        parser.parse(cell.getRootCell(), "foo"));
     assertEquals(
         ImmutableSet.of(
             BuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance("//some:thing")),
             BuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance("//some/other:thing"))),
-        parser.parse(cell, "bar"));
+        parser.parse(cell.getRootCell(), "bar"));
     assertEquals(
         ImmutableSet.of(
             BuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance("//some:thing#fl")),
             BuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance("//some/other:thing#fl"))),
-        parser.parse(cell, "bar#fl"));
+        parser.parse(cell.getRootCell(), "bar#fl"));
   }
 
   @Test
@@ -145,8 +145,8 @@ public class CommandLineTargetNodeSpecParserTest {
         parseOne(createCell(filesystem), "//hello:").getBuildFileSpec());
   }
 
-  private TargetNodeSpec parseOne(Cell cell, String arg) {
-    return Iterables.getOnlyElement(parser.parse(cell, arg));
+  private TargetNodeSpec parseOne(Cells cell, String arg) {
+    return Iterables.getOnlyElement(parser.parse(cell.getRootCell(), arg));
   }
 
   @Test
@@ -166,28 +166,28 @@ public class CommandLineTargetNodeSpecParserTest {
 
   @Test
   public void cannotReferenceNonExistentDirectoryInARecursivelyWildcard() {
-    Cell cell = createCell(null);
+    Cells cell = createCell(null);
     exception.expectMessage("does_not_exist/... references non-existent directory does_not_exist");
     exception.expect(HumanReadableException.class);
-    parser.parse(cell, "does_not_exist/...");
+    parser.parse(cell.getRootCell(), "does_not_exist/...");
   }
 
   @Test
   public void cannotReferenceNonExistentDirectoryWithPackageTargetNames() {
-    Cell cell = createCell(null);
+    Cells cell = createCell(null);
     exception.expectMessage("does_not_exist: references non-existent directory does_not_exist");
     exception.expect(HumanReadableException.class);
-    parser.parse(cell, "does_not_exist:");
+    parser.parse(cell.getRootCell(), "does_not_exist:");
   }
 
   @Test
   public void cannotReferenceNonExistentDirectoryWithImplicitTargetName() {
     exception.expectMessage("does_not_exist references non-existent directory does_not_exist");
     exception.expect(HumanReadableException.class);
-    parser.parse(createCell(null), "does_not_exist");
+    parser.parse(createCell(null).getRootCell(), "does_not_exist");
   }
 
-  private Cell createCell(@Nullable ProjectFilesystem filesystem) {
+  private Cells createCell(@Nullable ProjectFilesystem filesystem) {
     TestCellBuilder builder = new TestCellBuilder();
     if (filesystem != null) {
       builder.setFilesystem(filesystem);
@@ -229,112 +229,116 @@ public class CommandLineTargetNodeSpecParserTest {
     assertEquals(
         BuildFileSpec.fromRecursivePath(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of(""))),
-        parseOne(rootCell, "//...").getBuildFileSpec());
+        parseOne(cells, "//...").getBuildFileSpec());
 
     assertEquals(
         BuildFileSpec.fromRecursivePath(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("foo"))),
-        parseOne(rootCell, "//foo/...").getBuildFileSpec());
+        parseOne(cells, "//foo/...").getBuildFileSpec());
 
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                rootCell.getRoot(), "//foo/bar:baz")),
-        parseOne(rootCell, "//foo/bar:baz"));
+                cells.getRootCell().getRoot(), "//foo/bar:baz")),
+        parseOne(cells, "//foo/bar:baz"));
 
     assertEquals(
         BuildFileSpec.fromPath(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("foo/bar"))),
-        parseOne(rootCell, "//foo/bar:").getBuildFileSpec());
+        parseOne(cells, "//foo/bar:").getBuildFileSpec());
 
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                rootCell.getRoot(), "//foo/bar:bar")),
-        parseOne(rootCell, "//foo/bar"));
+                cells.getRootCell().getRoot(), "//foo/bar:bar")),
+        parseOne(cells, "//foo/bar"));
 
     assertEquals(
         BuildTargetSpec.from(
-            UnconfiguredBuildTargetFactoryForTests.newInstance(rootCell.getRoot(), "//foo:bar")),
-        parseOne(rootCell, "//foo:bar"));
+            UnconfiguredBuildTargetFactoryForTests.newInstance(
+                cells.getRootCell().getRoot(), "//foo:bar")),
+        parseOne(cells, "//foo:bar"));
 
     assertEquals(
         BuildFileSpec.fromPath(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("foo"))),
-        parseOne(rootCell, "//foo:").getBuildFileSpec());
+        parseOne(cells, "//foo:").getBuildFileSpec());
 
     assertEquals(
         BuildTargetSpec.from(
-            UnconfiguredBuildTargetFactoryForTests.newInstance(rootCell.getRoot(), "//foo:foo")),
-        parseOne(rootCell, "//foo:foo"));
+            UnconfiguredBuildTargetFactoryForTests.newInstance(
+                cells.getRootCell().getRoot(), "//foo:foo")),
+        parseOne(cells, "//foo:foo"));
 
     assertEquals(
         BuildTargetSpec.from(
-            UnconfiguredBuildTargetFactoryForTests.newInstance(rootCell.getRoot(), "//:baz")),
-        parseOne(rootCell, "//:baz"));
+            UnconfiguredBuildTargetFactoryForTests.newInstance(
+                cells.getRootCell().getRoot(), "//:baz")),
+        parseOne(cells, "//:baz"));
 
     assertEquals(
         BuildFileSpec.fromPath(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of(""))),
-        parseOne(rootCell, "//:").getBuildFileSpec());
+        parseOne(cells, "//:").getBuildFileSpec());
 
     // Relative targets
     assertEquals(
         BuildFileSpec.fromRecursivePath(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("subdir"))),
-        parseOne(rootCell, "...").getBuildFileSpec());
+        parseOne(cells, "...").getBuildFileSpec());
 
     assertEquals(
         BuildFileSpec.fromRecursivePath(
             CellRelativePath.of(
                 CanonicalCellName.rootCell(), ForwardRelativePath.of("subdir/foo"))),
-        parseOne(rootCell, "foo/...").getBuildFileSpec());
+        parseOne(cells, "foo/...").getBuildFileSpec());
 
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                rootCell.getRoot(), "//subdir/foo/bar:baz")),
-        parseOne(rootCell, "foo/bar:baz"));
+                cells.getRootCell().getRoot(), "//subdir/foo/bar:baz")),
+        parseOne(cells, "foo/bar:baz"));
 
     assertEquals(
         BuildFileSpec.fromPath(
             CellRelativePath.of(
                 CanonicalCellName.rootCell(), ForwardRelativePath.of("subdir/foo/bar"))),
-        parseOne(rootCell, "foo/bar:").getBuildFileSpec());
+        parseOne(cells, "foo/bar:").getBuildFileSpec());
 
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                rootCell.getRoot(), "//subdir/foo/bar:bar")),
-        parseOne(rootCell, "foo/bar"));
+                cells.getRootCell().getRoot(), "//subdir/foo/bar:bar")),
+        parseOne(cells, "foo/bar"));
 
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                rootCell.getRoot(), "//subdir/foo:bar")),
-        parseOne(rootCell, "foo:bar"));
+                cells.getRootCell().getRoot(), "//subdir/foo:bar")),
+        parseOne(cells, "foo:bar"));
 
     assertEquals(
         BuildFileSpec.fromPath(
             CellRelativePath.of(
                 CanonicalCellName.rootCell(), ForwardRelativePath.of("subdir/foo"))),
-        parseOne(rootCell, "foo:").getBuildFileSpec());
+        parseOne(cells, "foo:").getBuildFileSpec());
 
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                rootCell.getRoot(), "//subdir/foo:foo")),
-        parseOne(rootCell, "foo:foo"));
+                cells.getRootCell().getRoot(), "//subdir/foo:foo")),
+        parseOne(cells, "foo:foo"));
 
     assertEquals(
         BuildTargetSpec.from(
-            UnconfiguredBuildTargetFactoryForTests.newInstance(rootCell.getRoot(), "//subdir:baz")),
-        parseOne(rootCell, ":baz"));
+            UnconfiguredBuildTargetFactoryForTests.newInstance(
+                cells.getRootCell().getRoot(), "//subdir:baz")),
+        parseOne(cells, ":baz"));
 
     assertEquals(
         BuildFileSpec.fromPath(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("subdir"))),
-        parseOne(rootCell, ":").getBuildFileSpec());
+        parseOne(cells, ":").getBuildFileSpec());
   }
 
   @Test

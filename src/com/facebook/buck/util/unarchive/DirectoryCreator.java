@@ -40,7 +40,7 @@ public class DirectoryCreator {
    */
   public DirectoryCreator(ProjectFilesystem filesystem) {
     this.filesystem = filesystem;
-    existing.add(filesystem.getRootPath());
+    existing.add(filesystem.getRootPath().getPath());
   }
 
   /**

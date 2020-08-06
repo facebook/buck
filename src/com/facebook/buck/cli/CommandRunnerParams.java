@@ -19,8 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
-import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -39,7 +38,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.log.InvocationInfo;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -50,7 +48,6 @@ import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
@@ -61,7 +58,6 @@ import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -76,7 +72,7 @@ public abstract class CommandRunnerParams {
 
   public abstract InputStream getStdIn();
 
-  public abstract Cell getCell();
+  public abstract Cells getCells();
 
   public abstract Watchman getWatchman();
 
@@ -151,9 +147,6 @@ public abstract class CommandRunnerParams {
 
   public abstract MetadataProvider getMetadataProvider();
 
-  public abstract ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
-      getManifestServiceSupplier();
-
   /**
    * @return {@link BuckGlobalState} object which is a set of objects bearing the data reflecting
    *     filesystem state and thus shared between commands
@@ -174,22 +167,17 @@ public abstract class CommandRunnerParams {
    * @return New instance of {@link BuildExecutorArgs}.
    */
   public BuildExecutorArgs createBuilderArgs() {
-    Optional<ManifestService> manifestService =
-        getBuckConfig()
-            .getView(CachingBuildEngineBuckConfig.class)
-            .getManifestServiceIfEnabled(getManifestServiceSupplier());
     return BuildExecutorArgs.of(
         getConsole(),
         getBuckEventBus(),
         getPlatform(),
         getClock(),
-        getCell(),
+        getCells(),
         getExecutors(),
         getProjectFilesystemFactory(),
         getBuildInfoStoreManager(),
         getArtifactCacheFactory(),
-        getRuleKeyConfiguration(),
-        manifestService);
+        getRuleKeyConfiguration());
   }
 
   public CommandRunnerParams withArtifactCacheFactory(ArtifactCacheFactory artifactCacheFactory) {
@@ -199,7 +187,7 @@ public abstract class CommandRunnerParams {
     return ImmutableCommandRunnerParams.of(
         getConsole(),
         getStdIn(),
-        getCell(),
+        getCells(),
         getWatchman(),
         getVersionedTargetGraphCache(),
         artifactCacheFactory,
@@ -236,7 +224,6 @@ public abstract class CommandRunnerParams {
         getBuckModuleManager(),
         getDepsAwareExecutorSupplier(),
         getMetadataProvider(),
-        getManifestServiceSupplier(),
         getGlobalState(),
         getClientWorkingDir());
   }
@@ -248,7 +235,7 @@ public abstract class CommandRunnerParams {
     return ImmutableCommandRunnerParams.of(
         getConsole(),
         getStdIn(),
-        getCell(),
+        getCells(),
         getWatchman(),
         getVersionedTargetGraphCache(),
         getArtifactCacheFactory(),
@@ -285,7 +272,6 @@ public abstract class CommandRunnerParams {
         getBuckModuleManager(),
         getDepsAwareExecutorSupplier(),
         getMetadataProvider(),
-        getManifestServiceSupplier(),
         getGlobalState(),
         getClientWorkingDir());
   }

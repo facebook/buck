@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -191,7 +192,7 @@ public class SwiftLibraryDescription
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, UnresolvedCxxPlatform>> platform =
         getCxxPlatforms(buildTarget.getTargetConfiguration()).getFlavorAndValue(buildTarget);
-    ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
+    FlavorSet buildFlavors = buildTarget.getFlavors();
     ImmutableSortedSet<BuildRule> filteredExtraDeps =
         params.getExtraDeps().get().stream()
             .filter(
@@ -223,7 +224,7 @@ public class SwiftLibraryDescription
       // extract them from the flavors attached to the build target.
       Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
       if (!buildFlavors.contains(SWIFT_COMPILE_FLAVOR) && type.isPresent()) {
-        Set<Flavor> flavors = Sets.newHashSet(buildTarget.getFlavors());
+        Set<Flavor> flavors = Sets.newHashSet(buildTarget.getFlavors().getSet());
         flavors.remove(type.get().getKey());
         BuildTarget target = buildTarget.withFlavors(flavors);
         if (flavoredLinkerMapMode.isPresent()) {
@@ -287,7 +288,6 @@ public class SwiftLibraryDescription
 
       BuildTarget buildTargetCopy = buildTarget;
       return new SwiftCompile(
-          cxxPlatform,
           swiftBuckConfig,
           buildTarget,
           args.getTargetSdkVersion()
@@ -297,6 +297,8 @@ public class SwiftLibraryDescription
           graphBuilder,
           swiftPlatform.get().getSwiftc(),
           args.getFrameworks(),
+          CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, graphBuilder.getSourcePathResolver()),
+          cxxPlatform.getFlavor(),
           args.getModuleName().orElse(buildTarget.getShortName()),
           BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s"),
           args.getSrcs(),
@@ -459,7 +461,6 @@ public class SwiftLibraryDescription
     args.getSrcs().forEach(src -> srcsDepsBuilder.add(src));
 
     return new SwiftCompile(
-        cxxPlatform,
         swiftBuckConfig,
         buildTarget,
         swiftTarget.orElse(swiftPlatform.getSwiftTarget()),
@@ -467,6 +468,8 @@ public class SwiftLibraryDescription
         graphBuilder,
         swiftPlatform.getSwiftc(),
         args.getFrameworks(),
+        CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, graphBuilder.getSourcePathResolver()),
+        cxxPlatform.getFlavor(),
         args.getModuleName().orElse(buildTarget.getShortName()),
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s"),
         args.getSrcs(),
@@ -497,6 +500,16 @@ public class SwiftLibraryDescription
             toolchainTargetConfiguration,
             CxxPlatformsProvider.class)
         .getUnresolvedCxxPlatforms();
+  }
+
+  public ImmutableSet<Flavor> getSupportedFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    ImmutableSet<Flavor> currentSupportedFlavors =
+        ImmutableSet.copyOf(Sets.filter(flavors, SUPPORTED_FLAVORS::contains));
+    ImmutableSet<Flavor> supportedCxxPlatformsFlavors =
+        ImmutableSet.copyOf(Sets.filter(flavors, getCxxPlatforms(toolchainTargetConfiguration)::contains));
+
+    return ImmutableSet.copyOf(Sets.union(currentSupportedFlavors, supportedCxxPlatformsFlavors));
   }
 
   @RuleArg

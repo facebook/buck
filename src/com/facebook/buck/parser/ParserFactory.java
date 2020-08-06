@@ -21,12 +21,8 @@ import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetVi
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
-import com.facebook.buck.util.hashing.FileHashLoader;
-import java.io.IOException;
 
 /** Responsible for creating an instance of {@link Parser}. */
 public class ParserFactory {
@@ -41,10 +37,9 @@ public class ParserFactory {
       TargetSpecResolver targetSpecResolver,
       Watchman watchman,
       BuckEventBus eventBus,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
-      FileHashLoader fileHashLoader,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      TargetConfiguration hostConfiguration) {
+      TargetConfiguration hostConfiguration,
+      boolean buckOutIncludeTargetConfigHash) {
     return new ParserWithConfigurableAttributes(
         daemonicParserState,
         new PerBuildStateFactory(
@@ -54,11 +49,10 @@ public class ParserFactory {
             parserPythonInterpreterProvider,
             watchman,
             eventBus,
-            manifestServiceSupplier,
-            fileHashLoader,
             unconfiguredBuildTargetFactory,
             hostConfiguration),
         targetSpecResolver,
-        eventBus);
+        eventBus,
+        buckOutIncludeTargetConfigHash);
   }
 }

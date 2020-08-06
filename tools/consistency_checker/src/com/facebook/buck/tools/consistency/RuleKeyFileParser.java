@@ -91,8 +91,7 @@ public class RuleKeyFileParser {
     // If //foo/bar/... is passed in, we want to find all targets that start with
     // //foo/bar, and that are of the right type, and add them as root nodes
     ImmutableList<String> recursiveTargetPrefixes =
-        targetNames
-            .stream()
+        targetNames.stream()
             .filter(name -> name.endsWith("/...") || name.endsWith(":"))
             .map(
                 name -> {
@@ -125,8 +124,7 @@ public class RuleKeyFileParser {
               // If either a specific rule is present, or if the target starts with one of the
               // prefixes
               if (targetNames.contains(ruleKey.name)
-                  || recursiveTargetPrefixes
-                      .stream()
+                  || recursiveTargetPrefixes.stream()
                       .filter(prefix -> ruleKey.name.startsWith(prefix))
                       .findFirst()
                       .isPresent()) {

@@ -17,19 +17,21 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptions;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
-import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -46,7 +48,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,13 +70,14 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
   private final boolean requireTargetPlatform;
   private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
   private final BuckEventBus eventBus;
-  private final PipelineNodeCache<BuildTarget, TargetNode<?>> cache;
+  private final PipelineNodeCache<BuildTarget, TargetNodeMaybeIncompatible> cache;
   private final ConcurrentHashMap<
-          Pair<Path, Optional<TargetConfiguration>>, ListenableFuture<ImmutableList<TargetNode<?>>>>
+          Pair<AbsPath, Optional<TargetConfiguration>>,
+          ListenableFuture<ImmutableList<TargetNodeMaybeIncompatible>>>
       allNodeCache = new ConcurrentHashMap<>();
   private final Scope perfEventScope;
   private final SimplePerfEvent.PerfEventId perfEventId;
-  private final TargetConfigurationFactory targetConfigurationFactory;
+
   /**
    * minimum duration time for performance events to be logged (for use with {@link
    * SimplePerfEvent}s). This is on the base class to make it simpler to enable verbose tracing for
@@ -85,7 +87,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
 
   /** Create new pipeline for parsing Buck files. */
   public UnconfiguredTargetNodeToTargetNodeParsePipeline(
-      Cache<BuildTarget, TargetNode<?>> cache,
+      Cache<BuildTarget, TargetNodeMaybeIncompatible> cache,
       ListeningExecutorService executorService,
       UnconfiguredTargetNodePipeline unconfiguredTargetNodePipeline,
       TargetConfigurationDetector targetConfigurationDetector,
@@ -93,51 +95,56 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       String pipelineName,
       boolean speculativeDepsTraversal,
       ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory,
-      boolean requireTargetPlatform,
-      TargetConfigurationFactory targetConfigurationFactory) {
+      boolean requireTargetPlatform) {
     this.executorService = executorService;
     this.unconfiguredTargetNodePipeline = unconfiguredTargetNodePipeline;
     this.targetConfigurationDetector = targetConfigurationDetector;
     this.speculativeDepsTraversal = speculativeDepsTraversal;
     this.rawTargetNodeToTargetNodeFactory = rawTargetNodeToTargetNodeFactory;
     this.requireTargetPlatform = requireTargetPlatform;
-    this.targetConfigurationFactory = targetConfigurationFactory;
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 10;
     this.perfEventScope =
         SimplePerfEvent.scope(eventBus, SimplePerfEvent.PerfEventId.of(pipelineName));
     this.perfEventId = SimplePerfEvent.PerfEventId.of("GetTargetNode");
     this.eventBus = eventBus;
     this.cache =
-        new PipelineNodeCache<>(
+        new PipelineNodeCache<BuildTarget, TargetNodeMaybeIncompatible>(
             cache, UnconfiguredTargetNodeToTargetNodeParsePipeline::targetNodeIsConfiguration);
   }
 
-  private static boolean targetNodeIsConfiguration(TargetNode<?> targetNode) {
-    return targetNode.getRuleType().getKind() == RuleType.Kind.CONFIGURATION;
+  private static boolean targetNodeIsConfiguration(
+      TargetNodeMaybeIncompatible targetNodeMaybeIncompatible) {
+    Optional<TargetNode<?>> targetNode = targetNodeMaybeIncompatible.getTargetNodeOptional();
+    return targetNode.isPresent()
+        && targetNode.get().getRuleType().getKind() == RuleType.Kind.CONFIGURATION;
   }
 
   @SuppressWarnings("CheckReturnValue") // submit result is not used
-  private TargetNode<?> computeNodeInScope(
+  private TargetNodeMaybeIncompatible computeNodeInScope(
       Cell cell,
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       UnconfiguredTargetNode rawNode,
       Function<SimplePerfEvent.PerfEventId, Scope> perfEventScopeFunction)
       throws BuildTargetException {
-    TargetNode<?> targetNode =
+    TargetNodeMaybeIncompatible targetNodeMaybeIncompatible =
         rawTargetNodeToTargetNodeFactory.createTargetNode(
             cell,
             cell.getBuckConfigView(ParserConfig.class)
-                .getAbsolutePathToBuildFile(cell, buildTarget.getUnconfiguredBuildTargetView()),
+                .getAbsolutePathToBuildFile(cell, buildTarget.getUnconfiguredBuildTarget()),
             buildTarget,
             dependencyStack,
             rawNode,
             perfEventScopeFunction);
+    Optional<TargetNode<?>> targetNode = targetNodeMaybeIncompatible.getTargetNodeOptional();
+    if (!targetNode.isPresent()) {
+      return targetNodeMaybeIncompatible;
+    }
 
     if (speculativeDepsTraversal) {
       executorService.submit(
           () -> {
-            for (BuildTarget depTarget : targetNode.getParseDeps()) {
+            for (BuildTarget depTarget : targetNode.get().getParseDeps()) {
               Cell depCell = cell.getCell(depTarget.getCell());
               try {
                 if (depTarget.isFlavored()) {
@@ -155,10 +162,10 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
             }
           });
     }
-    return targetNode;
+    return targetNodeMaybeIncompatible;
   }
 
-  private ListenableFuture<TargetNode<?>> dispatchComputeNode(
+  private ListenableFuture<TargetNodeMaybeIncompatible> dispatchComputeNode(
       Cell cell,
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
@@ -170,7 +177,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     return Futures.immediateFuture(computeNode(cell, buildTarget, dependencyStack, from));
   }
 
-  private TargetNode<?> computeNode(
+  private TargetNodeMaybeIncompatible computeNode(
       Cell cell,
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
@@ -197,9 +204,9 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
    * Get or load a target node from a build file configuring it with global platform configuration
    * or {@code default_target_platform} rule arg
    */
-  ListenableFuture<TargetNode<?>> getRequestedTargetNodeJob(
+  ListenableFuture<TargetNodeMaybeIncompatible> getRequestedTargetNodeJob(
       Cell cell,
-      UnconfiguredBuildTargetView unconfiguredTarget,
+      UnconfiguredBuildTarget unconfiguredTarget,
       Optional<TargetConfiguration> globalTargetConfiguration) {
     ListenableFuture<UnconfiguredTargetNode> rawTargetNodeFuture =
         unconfiguredTargetNodePipeline.getNodeJob(
@@ -216,12 +223,12 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
    * Get or load all target nodes from a build file configuring it with global platform
    * configuration or {@code default_target_platform} rule arg
    */
-  ListenableFuture<ImmutableList<TargetNode<?>>> getAllRequestedTargetNodesJob(
-      Cell cell, Path buildFile, Optional<TargetConfiguration> globalTargetConfiguration) {
-    SettableFuture<ImmutableList<TargetNode<?>>> future = SettableFuture.create();
-    Pair<Path, Optional<TargetConfiguration>> pathCacheKey =
+  ListenableFuture<ImmutableList<TargetNodeMaybeIncompatible>> getAllRequestedTargetNodesJob(
+      Cell cell, AbsPath buildFile, Optional<TargetConfiguration> globalTargetConfiguration) {
+    SettableFuture<ImmutableList<TargetNodeMaybeIncompatible>> future = SettableFuture.create();
+    Pair<AbsPath, Optional<TargetConfiguration>> pathCacheKey =
         new Pair<>(buildFile, globalTargetConfiguration);
-    ListenableFuture<ImmutableList<TargetNode<?>>> cachedFuture =
+    ListenableFuture<ImmutableList<TargetNodeMaybeIncompatible>> cachedFuture =
         allNodeCache.putIfAbsent(pathCacheKey, future);
 
     if (cachedFuture != null) {
@@ -229,7 +236,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     }
 
     try {
-      ListenableFuture<List<TargetNode<?>>> allNodesListJob =
+      ListenableFuture<List<TargetNodeMaybeIncompatible>> allNodesListJob =
           Futures.transformAsync(
               unconfiguredTargetNodePipeline.getAllNodesJob(cell, buildFile),
               allToConvert -> {
@@ -237,15 +244,13 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
                   return Futures.immediateCancelledFuture();
                 }
 
-                ImmutableList.Builder<ListenableFuture<TargetNode<?>>> allNodeJobs =
+                ImmutableList.Builder<ListenableFuture<TargetNodeMaybeIncompatible>> allNodeJobs =
                     ImmutableList.builderWithExpectedSize(allToConvert.size());
 
                 for (UnconfiguredTargetNode from : allToConvert) {
-                  UnconfiguredBuildTargetView unconfiguredTarget =
-                      UnconfiguredBuildTargetView.of(from.getBuildTarget());
-                  ListenableFuture<TargetNode<?>> targetNode =
+                  ListenableFuture<TargetNodeMaybeIncompatible> targetNode =
                       configureRequestedTarget(
-                          cell, unconfiguredTarget, globalTargetConfiguration, from);
+                          cell, from.getBuildTarget(), globalTargetConfiguration, from);
                   allNodeJobs.add(targetNode);
                 }
 
@@ -268,8 +273,8 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
    * @return all targets from the file
    * @throws BuildFileParseException for syntax errors.
    */
-  ImmutableList<TargetNode<?>> getAllRequestedTargetNodes(
-      Cell cell, Path buildFile, Optional<TargetConfiguration> globalTargetConfiguration) {
+  ImmutableList<TargetNodeMaybeIncompatible> getAllRequestedTargetNodes(
+      Cell cell, AbsPath buildFile, Optional<TargetConfiguration> globalTargetConfiguration) {
     Preconditions.checkState(!shuttingDown.get());
 
     try {
@@ -284,9 +289,9 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
    * only for targets explicitly requested by user, but not to dependencies of them hence the method
    * name.
    */
-  private ListenableFuture<TargetNode<?>> configureRequestedTarget(
+  private ListenableFuture<TargetNodeMaybeIncompatible> configureRequestedTarget(
       Cell cell,
-      UnconfiguredBuildTargetView unconfiguredTarget,
+      UnconfiguredBuildTarget unconfiguredTarget,
       Optional<TargetConfiguration> globalTargetConfiguration,
       UnconfiguredTargetNode unconfiguredTargetNode) {
     TargetConfiguration targetConfiguration;
@@ -306,7 +311,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
   }
 
   private TargetConfiguration targetConfigurationForBuildTarget(
-      UnconfiguredBuildTargetView unconfiguredTarget,
+      UnconfiguredBuildTarget unconfiguredTarget,
       Optional<TargetConfiguration> globalTargetConfiguration,
       UnconfiguredTargetNode unconfiguredTargetNode) {
     if (globalTargetConfiguration.isPresent()) {
@@ -314,14 +319,11 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     }
 
     // We use `default_target_platform` only when global platform is not specified
-    String defaultTargetPlatform =
-        (String)
-            unconfiguredTargetNode
-                .getAttributes()
-                .get(BuildRuleArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
-    if (defaultTargetPlatform != null && !defaultTargetPlatform.isEmpty()) {
-      return targetConfigurationFactory.createForBaseName(
-          unconfiguredTarget.getBaseName(), defaultTargetPlatform);
+    Optional<UnconfiguredBuildTarget> defaultTargetPlatform =
+        unconfiguredTargetNode.getDefaultTargetPlatform();
+    if (defaultTargetPlatform.isPresent()) {
+      return RuleBasedTargetConfiguration.of(
+          ConfigurationBuildTargets.convert(defaultTargetPlatform.get()));
     }
 
     // Use detector when neither global configuration is specified
@@ -345,13 +347,13 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
   }
 
   /** Get build target by name, load if necessary */
-  public ListenableFuture<TargetNode<?>> getNodeJob(
+  public ListenableFuture<TargetNodeMaybeIncompatible> getNodeJob(
       Cell cell, BuildTarget buildTarget, DependencyStack dependencyStack)
       throws BuildTargetException {
     return getNodeJobWithRawNode(cell, buildTarget, dependencyStack, Optional.empty());
   }
 
-  private ListenableFuture<TargetNode<?>> getNodeJobWithRawNode(
+  private ListenableFuture<TargetNodeMaybeIncompatible> getNodeJobWithRawNode(
       Cell cell,
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
@@ -368,7 +370,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
           } else {
             return Futures.transformAsync(
                 unconfiguredTargetNodePipeline.getNodeJob(
-                    cell, buildTarget.getUnconfiguredBuildTargetView(), dependencyStack),
+                    cell, buildTarget.getUnconfiguredBuildTarget(), dependencyStack),
                 from -> dispatchComputeNode(cell, buildTarget, dependencyStack, from),
                 executorService);
           }
@@ -385,7 +387,8 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
    * @throws BuildFileParseException for syntax errors in the build file.
    * @throws BuildTargetException if the buildTarget is malformed
    */
-  public TargetNode<?> getNode(Cell cell, BuildTarget buildTarget, DependencyStack dependencyStack)
+  public TargetNodeMaybeIncompatible getNode(
+      Cell cell, BuildTarget buildTarget, DependencyStack dependencyStack)
       throws BuildFileParseException, BuildTargetException {
     Preconditions.checkState(!shuttingDown.get());
 

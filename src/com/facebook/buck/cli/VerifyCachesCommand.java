@@ -124,7 +124,7 @@ public class VerifyCachesCommand extends AbstractCommand {
             .map(
                 recycler ->
                     verifyRuleKeyCache(
-                        params.getCell().getCellProvider(),
+                        params.getCells().getRootCell().getCellProvider(),
                         params.getConsole().getStdOut(),
                         params.getRuleKeyConfiguration(),
                         params.getFileHashCache(),

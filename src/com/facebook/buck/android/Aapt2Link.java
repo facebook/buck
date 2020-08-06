@@ -69,6 +69,7 @@ public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final ImmutableList<String> additionalAaptParams;
   @AddToRuleKey private final boolean filterLocales;
   @AddToRuleKey private final ImmutableSet<String> locales;
+  @AddToRuleKey private final ImmutableSet<String> extraFilteredResources;
   private final Path androidJar;
   private final BuildableSupport.DepsSupplier depsSupplier;
 
@@ -93,7 +94,8 @@ public class Aapt2Link extends AbstractBuildRule {
       ImmutableList<String> additionalAaptParams,
       Path androidJar,
       boolean filterLocales,
-      ImmutableSet<String> locales) {
+      ImmutableSet<String> locales,
+      ImmutableSet<String> extraFilteredResources) {
     super(buildTarget, projectFilesystem);
     this.compileRules = compileRules;
     this.manifest = manifest;
@@ -112,6 +114,7 @@ public class Aapt2Link extends AbstractBuildRule {
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
     this.filterLocales = filterLocales;
     this.locales = locales;
+    this.extraFilteredResources = extraFilteredResources;
   }
 
   @Override
@@ -160,6 +163,10 @@ public class Aapt2Link extends AbstractBuildRule {
             getArgsPath(),
             compiledApkPaths));
     steps.add(ZipScrubberStep.of(getProjectFilesystem().resolve(getResourceApkPath())));
+
+    if (!extraFilteredResources.isEmpty()) {
+      steps.add(new ExtraFilterResourcesStep(getProjectFilesystem()));
+    }
 
     buildableContext.recordArtifact(getFinalManifestPath());
     buildableContext.recordArtifact(getResourceApkPath());
@@ -212,6 +219,36 @@ public class Aapt2Link extends AbstractBuildRule {
         ExplicitBuildTargetSourcePath.of(getBuildTarget(), getResourceApkPath()),
         ExplicitBuildTargetSourcePath.of(getBuildTarget(), getFinalManifestPath()),
         ExplicitBuildTargetSourcePath.of(getBuildTarget(), getProguardConfigPath()));
+  }
+
+  /**
+   * The normal resource filtering apparatus is super slow, because it extracts the whole apk,
+   * strips files out of it, then repackages it.
+   *
+   * <p>This is a faster filtering step that just uses zip -d to remove entries from the archive.
+   * It's also superbly dangerous.
+   */
+  class ExtraFilterResourcesStep extends ShellStep {
+    ExtraFilterResourcesStep(ProjectFilesystem filesystem) {
+      super(filesystem.getRootPath());
+    }
+
+    @Override
+    public String getShortName() {
+      return "aapt2_extra_filter_resources";
+    }
+
+    @Override
+    protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+      ImmutableList.Builder<String> builder = ImmutableList.builder();
+      builder.add("zip");
+      builder.add("-d");
+      builder.add(getResourceApkPath().toString());
+      for (String extra : extraFilteredResources) {
+        builder.add(extra);
+      }
+      return builder.build();
+    }
   }
 
   class Aapt2LinkStep extends ShellStep {

@@ -38,6 +38,7 @@ import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -583,7 +584,7 @@ public class CxxBinaryIntegrationTest {
         BuildTargetFactory.newInstance(
             "//foo:chain_dep_two#default,infer-capture-" + sanitizedChainDepTwo);
 
-    Path basePath = filesystem.getRootPath().toRealPath();
+    AbsPath basePath = filesystem.getRootPath().toRealPath();
     Set<String> expectedOutput =
         ImmutableSet.of(
             analyzeTopChainTarget.getFullyQualifiedName()
@@ -758,52 +759,70 @@ public class CxxBinaryIntegrationTest {
         BuildTargetFactory.newInstance(
             "//foo:binary_with_diamond_deps#default,infer-capture-" + sanitizedSrcWithDeps);
 
-    Path basePath = filesystem.getRootPath().toRealPath();
+    AbsPath basePath = filesystem.getRootPath().toRealPath();
     Set<String> expectedOutput =
         ImmutableSet.of(
             InferLogLine.fromBuildTarget(
                     analyzeMainTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(
-                            filesystem, analyzeMainTarget, "infer-analysis-%s")))
+                    basePath
+                        .resolve(
+                            BuildTargetPaths.getGenPath(
+                                filesystem, analyzeMainTarget, "infer-analysis-%s"))
+                        .getPath())
                 .toString(),
             InferLogLine.fromBuildTarget(
                     srcWithDepsTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(filesystem, srcWithDepsTarget, "infer-out-%s")))
+                    basePath
+                        .resolve(
+                            BuildTargetPaths.getGenPath(
+                                filesystem, srcWithDepsTarget, "infer-out-%s"))
+                        .getPath())
                 .toString(),
             InferLogLine.fromBuildTarget(
                     analyzeDepOneTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(
-                            filesystem, analyzeDepOneTarget, "infer-analysis-%s")))
+                    basePath
+                        .resolve(
+                            BuildTargetPaths.getGenPath(
+                                filesystem, analyzeDepOneTarget, "infer-analysis-%s"))
+                        .getPath())
                 .toString(),
             InferLogLine.fromBuildTarget(
                     depOneTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(filesystem, depOneTarget, "infer-out-%s")))
+                    basePath
+                        .resolve(
+                            BuildTargetPaths.getGenPath(filesystem, depOneTarget, "infer-out-%s"))
+                        .getPath())
                 .toString(),
             InferLogLine.fromBuildTarget(
                     analyzeDepTwoTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(
-                            filesystem, analyzeDepTwoTarget, "infer-analysis-%s")))
+                    basePath
+                        .resolve(
+                            BuildTargetPaths.getGenPath(
+                                filesystem, analyzeDepTwoTarget, "infer-analysis-%s"))
+                        .getPath())
                 .toString(),
             InferLogLine.fromBuildTarget(
                     depTwoTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(filesystem, depTwoTarget, "infer-out-%s")))
+                    basePath
+                        .resolve(
+                            BuildTargetPaths.getGenPath(filesystem, depTwoTarget, "infer-out-%s"))
+                        .getPath())
                 .toString(),
             InferLogLine.fromBuildTarget(
                     analyzeSimpleLibTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(
-                            filesystem, analyzeSimpleLibTarget, "infer-analysis-%s")))
+                    basePath
+                        .resolve(
+                            BuildTargetPaths.getGenPath(
+                                filesystem, analyzeSimpleLibTarget, "infer-analysis-%s"))
+                        .getPath())
                 .toString(),
             InferLogLine.fromBuildTarget(
                     simpleCppTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(filesystem, simpleCppTarget, "infer-out-%s")))
+                    basePath
+                        .resolve(
+                            BuildTargetPaths.getGenPath(
+                                filesystem, simpleCppTarget, "infer-out-%s"))
+                        .getPath())
                 .toString());
 
     assertEquals(expectedOutput, loggedDeps);
@@ -866,28 +885,38 @@ public class CxxBinaryIntegrationTest {
         BuildTargetFactory.newInstance(
             "//foo:binary_with_diamond_deps#default,infer-capture-" + sanitizedSrcWithDeps);
 
-    Path basePath = filesystem.getRootPath().toRealPath();
+    AbsPath basePath = filesystem.getRootPath().toRealPath();
     Set<String> expectedOutput =
         ImmutableSet.of(
             InferLogLine.fromBuildTarget(
                     srcWithDepsTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(filesystem, srcWithDepsTarget, "infer-out-%s")))
+                    basePath
+                        .resolve(
+                            BuildTargetPaths.getGenPath(
+                                filesystem, srcWithDepsTarget, "infer-out-%s"))
+                        .getPath())
                 .toString(),
             InferLogLine.fromBuildTarget(
                     depOneTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(filesystem, depOneTarget, "infer-out-%s")))
+                    basePath
+                        .resolve(
+                            BuildTargetPaths.getGenPath(filesystem, depOneTarget, "infer-out-%s"))
+                        .getPath())
                 .toString(),
             InferLogLine.fromBuildTarget(
                     depTwoTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(filesystem, depTwoTarget, "infer-out-%s")))
+                    basePath
+                        .resolve(
+                            BuildTargetPaths.getGenPath(filesystem, depTwoTarget, "infer-out-%s"))
+                        .getPath())
                 .toString(),
             InferLogLine.fromBuildTarget(
                     simpleCppTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(filesystem, simpleCppTarget, "infer-out-%s")))
+                    basePath
+                        .resolve(
+                            BuildTargetPaths.getGenPath(
+                                filesystem, simpleCppTarget, "infer-out-%s"))
+                        .getPath())
                 .toString());
 
     assertEquals(expectedOutput, loggedDeps);
@@ -1064,7 +1093,7 @@ public class CxxBinaryIntegrationTest {
         BuildTargetFactory.newInstance(
             "//foo:binary_with_diamond_deps#default,infer-capture-" + sanitizedSrcWithDeps);
 
-    Path basePath = filesystem.getRootPath().toRealPath();
+    AbsPath basePath = filesystem.getRootPath().toRealPath();
     Set<String> expectedOutput =
         ImmutableSet.of(
             srcWithDepsTarget.getFullyQualifiedName()

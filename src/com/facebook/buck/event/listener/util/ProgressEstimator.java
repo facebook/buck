@@ -74,7 +74,6 @@ public class ProgressEstimator implements AutoCloseable {
   private final AtomicInteger expectedNumberOfGeneratedProjectFiles = new AtomicInteger(0);
 
   private final AtomicInteger numberOfRules = new AtomicInteger(0);
-  private final AtomicInteger numberOfStartedRules = new AtomicInteger(0);
   private final AtomicInteger numberOfFinishedRules = new AtomicInteger(0);
 
   private final AtomicDouble parsingFilesProgress = new AtomicDouble(-1.0);
@@ -178,33 +177,18 @@ public class ProgressEstimator implements AutoCloseable {
     calculateBuildProgress();
   }
 
-  public void didStartRule() {
-    numberOfStartedRules.incrementAndGet();
-    calculateBuildProgress();
-  }
-
-  public void didResumeRule() {
-    calculateBuildProgress();
-  }
-
-  public void didSuspendRule() {
-    calculateBuildProgress();
-  }
-
   public void didFinishRule() {
     numberOfFinishedRules.incrementAndGet();
     calculateBuildProgress();
   }
 
   public void didStartBuild() {
-    numberOfStartedRules.set(0);
     numberOfFinishedRules.set(0);
   }
 
   public void didFinishBuild() {
     int rulesCount = numberOfRules.intValue();
     if (rulesCount > 0) {
-      numberOfStartedRules.set(rulesCount);
       numberOfFinishedRules.set(rulesCount);
       calculateBuildProgress();
     }

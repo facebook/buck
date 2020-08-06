@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ExactPathMatcher;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -57,7 +58,7 @@ public class DefaultProjectFilesystemViewTest {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     filesystemView =
         new DefaultProjectFilesystemView(
-            filesystem, Paths.get(""), filesystem.getRootPath(), ImmutableMap.of());
+            filesystem, Paths.get(""), filesystem.getRootPath().getPath(), ImmutableMap.of());
   }
 
   @Test
@@ -107,7 +108,7 @@ public class DefaultProjectFilesystemViewTest {
     filesystem.mkdirs(Paths.get("foo"));
     filesystemView =
         new DefaultProjectFilesystemView(
-            filesystem, Paths.get(""), filesystem.getRootPath(), ImmutableMap.of());
+            filesystem, Paths.get(""), filesystem.getRootPath().getPath(), ImmutableMap.of());
 
     assertTrue(filesystemView.isDirectory(Paths.get("foo")));
     assertFalse(filesystemView.isDirectory(Paths.get("bar")));
@@ -115,7 +116,8 @@ public class DefaultProjectFilesystemViewTest {
 
   @Test
   public void relativizeReturnsPathsRelativeToViewRoot() {
-    assertEquals(filesystem.relativize(tmp.getRoot()), filesystemView.relativize(tmp.getRoot()));
+    assertEquals(
+        filesystem.relativize(tmp.getRoot()).getPath(), filesystemView.relativize(tmp.getRoot()));
     filesystemView = filesystemView.withView(Paths.get("foo"), ImmutableSet.of());
     assertEquals(
         Paths.get("bar"),
@@ -130,7 +132,7 @@ public class DefaultProjectFilesystemViewTest {
     assertFalse(filesystemView.isIgnored(Paths.get("foo")));
     filesystemView =
         filesystemView.withView(
-            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(Paths.get("foo"))));
+            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(RelPath.get("foo"))));
 
     // matcher was declared in view relative to ".", so should only match "foo", but not any
     // "bar/foo" etc
@@ -144,7 +146,7 @@ public class DefaultProjectFilesystemViewTest {
 
     filesystemView =
         filesystemView.withView(
-            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(Paths.get("a", "path"))));
+            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(RelPath.get("a", "path"))));
     filesystemView = filesystemView.withView(Paths.get("a"), ImmutableSet.of());
     assertTrue(filesystemView.isIgnored(Paths.get("path")));
     assertFalse(filesystemView.isIgnored(Paths.get("a", "path")));
@@ -202,7 +204,7 @@ public class DefaultProjectFilesystemViewTest {
 
     filesystemView =
         filesystemView.withView(
-            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(Paths.get("dir", "dir2"))));
+            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(RelPath.get("dir", "dir2"))));
     filesystemView.walkRelativeFileTree(
         Paths.get("dir"),
         EnumSet.noneOf(FileVisitOption.class),
@@ -233,7 +235,7 @@ public class DefaultProjectFilesystemViewTest {
     ImmutableList.Builder<Path> fileNames3 = ImmutableList.builder();
     filesystemView =
         filesystemView.withView(
-            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(Paths.get("dir"))));
+            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(RelPath.get("dir"))));
     filesystemView.walkRelativeFileTree(
         Paths.get(""),
         EnumSet.noneOf(FileVisitOption.class),
@@ -250,7 +252,7 @@ public class DefaultProjectFilesystemViewTest {
     ImmutableList.Builder<Path> fileNames4 = ImmutableList.builder();
     filesystemView =
         filesystemView.withView(
-            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(Paths.get("file.txt"))));
+            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(RelPath.get("file.txt"))));
     filesystemView.walkRelativeFileTree(
         Paths.get(""),
         EnumSet.noneOf(FileVisitOption.class),

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.log.Logger;
@@ -81,11 +82,11 @@ public class RuleKeyCacheRecycler<V> {
     // them with a specific filesystem.  So, we assume the event can refer to any of the watched
     // filesystems and forward invalidations to all of them.
     for (ProjectFilesystem filesystem : watchedFilesystems) {
-      Path path = event.getPath().normalize();
+      RelPath path = event.getPath().normalize();
       LOG.verbose(
           "invalidating path \"%s\" from filesystem at \"%s\" due to event (%s)",
           path, filesystem.getRootPath(), event);
-      invalidatePath(filesystem, path);
+      invalidatePath(filesystem, path.getPath());
     }
   }
 

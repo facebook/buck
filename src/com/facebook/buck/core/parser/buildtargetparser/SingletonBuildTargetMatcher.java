@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.parser.buildtargetparser;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
@@ -31,10 +30,10 @@ abstract class SingletonBuildTargetMatcher implements BuildTargetMatcher {
    *     false.
    */
   @Override
-  public boolean matches(BuildTarget target) {
+  public boolean matches(UnconfiguredBuildTarget target) {
     return this.getTarget().getCell().equals(target.getCell())
         && this.getTarget().getBaseName().equals(target.getBaseName())
-        && this.getTarget().getName().equals(target.getShortName());
+        && this.getTarget().getName().equals(target.getName());
   }
 
   @Override

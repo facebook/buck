@@ -25,6 +25,7 @@ java_library(
         "//test/...",
     ],
     deps = [
+        "//src/com/facebook/buck/core/parser/buildtargetpattern:buildtargetpattern",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//third-party/java/guava:guava",
     ],

@@ -46,6 +46,8 @@ public abstract class IjProjectConfig {
 
   public abstract Optional<String> getAndroidModuleSdkName();
 
+  public abstract Optional<String> getAndroidGenDir();
+
   public abstract Optional<String> getAndroidModuleSdkType();
 
   public abstract Optional<String> getIntellijModuleSdkName();
@@ -114,6 +116,8 @@ public abstract class IjProjectConfig {
   public abstract boolean isMultiCellModuleSupportEnabled();
 
   public abstract boolean isGeneratingDummyRDotJavaEnabled();
+
+  public abstract Optional<Path> getKotlinJavaRuntimeLibraryTemplatePath();
 
   public static Builder builder() {
     return new Builder();

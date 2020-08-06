@@ -16,34 +16,34 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 import java.util.logging.Level;
 
-public class LogLevelTypeCoercer extends LeafTypeCoercer<Level> {
+/** Coercer for {@link java.util.logging.Level}. */
+public class LogLevelTypeCoercer extends LeafUnconfiguredOnlyCoercer<Level> {
+
   @Override
-  public Class<Level> getOutputClass() {
-    return Level.class;
+  public TypeToken<Level> getUnconfiguredType() {
+    return TypeToken.of(Level.class);
   }
 
   @Override
-  public Level coerce(
-      CellPathResolver cellRoots,
+  public Level coerceToUnconfigured(
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof String) {
       try {
         return Level.parse((String) object);
       } catch (IllegalArgumentException ex) {
-        throw CoerceFailedException.simple(object, getOutputClass(), ex.getMessage());
+        throw CoerceFailedException.simple(object, getOutputType(), ex.getMessage());
       }
     }
-    throw CoerceFailedException.simple(object, getOutputClass());
+    throw CoerceFailedException.simple(object, getOutputType());
   }
 }

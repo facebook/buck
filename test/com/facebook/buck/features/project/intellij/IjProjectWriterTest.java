@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Map;
 import org.junit.Test;
 
@@ -103,11 +104,11 @@ public class IjProjectWriterTest {
   public void testTargetInfoMap() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     getWriterForModuleGraph1(filesystem, filesystem).write();
-    Map<String, Map<String, String>> targetInfoMap =
+    Map<String, Map<String, Object>> targetInfoMap =
         readJson(
             filesystem,
             TARGET_INFO_MAP_JSON,
-            new TypeReference<Map<String, Map<String, String>>>() {});
+            new TypeReference<Map<String, Map<String, Object>>>() {});
     boolean isWindows = Platform.detect() == Platform.WINDOWS;
     assertEquals(
         ImmutableMap.of(
@@ -122,7 +123,10 @@ public class IjProjectWriterTest {
                     IjProjectWriter.INTELLIJ_NAME,
                     "java_com_example_base",
                     IjProjectWriter.INTELLIJ_TYPE,
-                    IjProjectWriter.MODULE_TYPE),
+                    IjProjectWriter.MODULE_TYPE,
+                    IjProjectWriter.GENERATED_SOURCES,
+                    Arrays.asList(
+                        isWindows ? "buck-out\\annotation\\base" : "buck-out/annotation/base")),
             "//third_party/guava:guava",
                 ImmutableMap.of(
                     IjProjectWriter.BUCK_TYPE,
@@ -142,7 +146,7 @@ public class IjProjectWriterTest {
         readJson(
             filesystem,
             TARGET_INFO_MAP_JSON,
-            new TypeReference<Map<String, Map<String, String>>>() {});
+            new TypeReference<Map<String, Map<String, Object>>>() {});
     assertEquals(
         ImmutableMap.of(
             "//java/com/example/base2:base2",
@@ -176,11 +180,11 @@ public class IjProjectWriterTest {
   public void testTargetInfoMapUpdate() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     getWriterForModuleGraph1(filesystem, filesystem).write();
-    Map<String, Map<String, String>> targetInfoMap =
+    Map<String, Map<String, Object>> targetInfoMap =
         readJson(
             filesystem,
             TARGET_INFO_MAP_JSON,
-            new TypeReference<Map<String, Map<String, String>>>() {});
+            new TypeReference<Map<String, Map<String, Object>>>() {});
     boolean isWindows = Platform.detect() == Platform.WINDOWS;
     assertEquals(
         ImmutableMap.of(
@@ -195,7 +199,10 @@ public class IjProjectWriterTest {
                 IjProjectWriter.INTELLIJ_NAME,
                 "java_com_example_base",
                 IjProjectWriter.INTELLIJ_TYPE,
-                IjProjectWriter.MODULE_TYPE),
+                IjProjectWriter.MODULE_TYPE,
+                IjProjectWriter.GENERATED_SOURCES,
+                Arrays.asList(
+                    isWindows ? "buck-out\\annotation\\base" : "buck-out/annotation/base")),
             "//third_party/guava:guava",
             ImmutableMap.of(
                 IjProjectWriter.BUCK_TYPE,
@@ -215,7 +222,7 @@ public class IjProjectWriterTest {
         readJson(
             filesystem,
             TARGET_INFO_MAP_JSON,
-            new TypeReference<Map<String, Map<String, String>>>() {});
+            new TypeReference<Map<String, Map<String, Object>>>() {});
     assertEquals(
         ImmutableMap.of(
             "//java/com/example/base2:base2",
@@ -263,11 +270,11 @@ public class IjProjectWriterTest {
     getWriterForModuleGraphWithGivenJvmLanguage(
             filesystem, filesystem, AndroidLibraryDescription.JvmLanguage.KOTLIN)
         .write();
-    Map<String, Map<String, String>> targetInfoMap =
+    Map<String, Map<String, Object>> targetInfoMap =
         readJson(
             filesystem,
             TARGET_INFO_MAP_JSON,
-            new TypeReference<Map<String, Map<String, String>>>() {});
+            new TypeReference<Map<String, Map<String, Object>>>() {});
     boolean isWindows = Platform.detect() == Platform.WINDOWS;
 
     assertEquals(
@@ -314,6 +321,7 @@ public class IjProjectWriterTest {
                 BuildTargetFactory.newInstance("//java/com/example/base:base"))
             .addDep(guavaTargetNode.getBuildTarget())
             .addSrc(Paths.get("java/com/example/base/Base.java"))
+            .addAnnotationProcessors("//annotation:processor")
             .build();
 
     ImmutableSet<TargetNode<?>> targetNodes = ImmutableSet.of(guavaTargetNode, baseTargetNode);

@@ -57,7 +57,7 @@ def main(output_dir):
             ):
                 #  Copy the static resource to output_dir.
                 relative_path = os.path.join(root, file_name)
-                with open(relative_path) as resource_file:
+                with open(relative_path, "rb") as resource_file:
                     resource = resource_file.read()
                     copy_to_output_dir(relative_path, output_dir, resource)
 
@@ -74,7 +74,7 @@ def ensure_dir(path, output_dir):
 
 def copy_to_output_dir(path, output_dir, content):
     output_file = ensure_dir(path, output_dir)
-    with open(output_file, "w") as f:
+    with open(output_file, "wb") as f:
         f.write(content)
 
 
@@ -87,7 +87,6 @@ def pollForServerReady():
             return
         time.sleep(1)
     print("Server failed to start after %s seconds." % SERVER_START_POLL)
-
 
 if __name__ == "__main__":
     output_dir = sys.argv[1]

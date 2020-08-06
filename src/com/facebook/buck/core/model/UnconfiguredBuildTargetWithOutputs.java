@@ -36,8 +36,8 @@ import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 public abstract class UnconfiguredBuildTargetWithOutputs
     implements Comparable<UnconfiguredBuildTargetWithOutputs> {
 
-  /** Returns the associated {@link UnconfiguredBuildTargetView}. */
-  public abstract UnconfiguredBuildTargetView getBuildTarget();
+  /** Returns the associated {@link UnconfiguredBuildTarget}. */
+  public abstract UnconfiguredBuildTarget getBuildTarget();
 
   /** Returns the output label associated with the build target, if any. */
   public abstract OutputLabel getOutputLabel();
@@ -69,7 +69,13 @@ public abstract class UnconfiguredBuildTargetWithOutputs
   }
 
   public static UnconfiguredBuildTargetWithOutputs of(
-      UnconfiguredBuildTargetView buildTarget, OutputLabel outputLabel) {
+      UnconfiguredBuildTarget buildTarget, OutputLabel outputLabel) {
     return ImmutableUnconfiguredBuildTargetWithOutputs.of(buildTarget, outputLabel);
+  }
+
+  /** Apply the configuration. */
+  public BuildTargetWithOutputs configure(TargetConfiguration targetConfiguration) {
+    return BuildTargetWithOutputs.of(
+        getBuildTarget().configure(targetConfiguration), getOutputLabel());
   }
 }

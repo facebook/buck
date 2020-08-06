@@ -17,20 +17,18 @@
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.starlark.rule.data.SkylarkDependency;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.OptionalTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.util.List;
 import java.util.Optional;
@@ -38,11 +36,11 @@ import java.util.Optional;
 /** Represents a list of targets. Currently used only for {@code default_target_platform}. */
 @BuckStyleValue
 public abstract class UnconfiguredOptionalDepAttribute
-    extends Attribute<Optional<UnconfiguredBuildTargetView>> {
+    extends Attribute<Optional<UnconfiguredBuildTarget>> {
 
-  private static final TypeCoercer<Optional<UnconfiguredBuildTargetView>> coercer =
-      new OptionalTypeCoercer<>(
-          new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory()));
+  private static final TypeCoercer<?, Optional<UnconfiguredBuildTarget>> coercer =
+      TypeCoercerFactoryForStarlark.typeCoercerForType(
+          new TypeToken<Optional<UnconfiguredBuildTarget>>() {});
 
   @Override
   public abstract Optional<String> getPreCoercionDefaultValue();
@@ -62,12 +60,12 @@ public abstract class UnconfiguredOptionalDepAttribute
   }
 
   @Override
-  public TypeCoercer<Optional<UnconfiguredBuildTargetView>> getTypeCoercer() {
+  public TypeCoercer<?, Optional<UnconfiguredBuildTarget>> getTypeCoercer() {
     return coercer;
   }
 
   @Override
-  public void validateCoercedValue(Optional<UnconfiguredBuildTargetView> paths)
+  public void validateCoercedValue(Optional<UnconfiguredBuildTarget> paths)
       throws CoerceFailedException {
     if (!getAllowEmpty() && !paths.isPresent()) {
       throw new CoerceFailedException("List of dep paths may not be empty");

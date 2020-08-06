@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
@@ -27,8 +28,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * Represents a single checkout of a code base. Two cells model the same code base if their
@@ -38,7 +37,7 @@ import java.util.stream.Collectors;
  */
 public interface Cell {
 
-  ImmutableSortedSet<Path> getKnownRootsOfAllCells();
+  ImmutableSortedSet<AbsPath> getKnownRootsOfAllCells();
 
   CanonicalCellName getCanonicalName();
 
@@ -60,7 +59,7 @@ public interface Cell {
 
   ToolchainProvider getToolchainProvider();
 
-  Path getRoot();
+  AbsPath getRoot();
 
   Cell getCellIgnoringVisibilityCheck(Path cellPath);
 
@@ -76,7 +75,7 @@ public interface Cell {
   ImmutableList<Cell> getAllCells();
 
   /** @return all loaded {@link Cell}s that are children of this {@link Cell}. */
-  ImmutableMap<Path, Cell> getLoadedCells();
+  ImmutableMap<AbsPath, Cell> getLoadedCells();
 
   CellPathResolver getCellPathResolver();
 
@@ -91,31 +90,4 @@ public interface Cell {
    * cell aliases to their canonical names.
    */
   CellNameResolver getCellNameResolver();
-
-  /** @return Path of the topmost cell's path that roots all other cells */
-  default Path getSuperRootPath() {
-    Path cellRoot = getRoot();
-    ImmutableSortedSet<Path> allRoots = getKnownRootsOfAllCells();
-    Path path = cellRoot.getRoot();
-
-    // check if supercell is a root folder, like '/' or 'C:\'
-    if (allRoots.contains(path)) {
-      return path;
-    }
-
-    // There is an assumption that there is exactly one cell with a path that prefixes all other
-    // cell paths. So just try to find the cell with the shortest common path.
-    for (Path next : cellRoot) {
-      path = path.resolve(next);
-      if (allRoots.contains(path)) {
-        return path;
-      }
-    }
-    throw new IllegalStateException(
-        "Unreachable: at least one path should be in getKnownRoots(), including root cell '"
-            + cellRoot.toString()
-            + "'; known roots = ["
-            + allRoots.stream().map(Objects::toString).collect(Collectors.joining(", "))
-            + "]");
-  }
 }

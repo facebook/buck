@@ -21,7 +21,7 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -43,7 +43,6 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
@@ -58,7 +57,6 @@ import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.ExecutorPool;
@@ -77,7 +75,6 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -93,15 +90,10 @@ public class CommandRunnerParamsForTesting {
   /** Utility class: do not instantiate. */
   private CommandRunnerParamsForTesting() {}
 
-  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
-      getManifestSupplier() {
-    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
-  }
-
   public static CommandRunnerParams createCommandRunnerParamsForTesting(
       DepsAwareExecutor<? super ComputeResult, ?> executor,
       Console console,
-      Cell cell,
+      Cells cells,
       ArtifactCache artifactCache,
       BuckEventBus eventBus,
       BuckConfig config,
@@ -112,11 +104,11 @@ public class CommandRunnerParamsForTesting {
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(pluginManager);
-    Parser parser = TestParserFactory.create(executor, cell, knownRuleTypesProvider);
+    Parser parser = TestParserFactory.create(executor, cells.getRootCell(), knownRuleTypesProvider);
     return createCommandRunnerParamsForTesting(
         executor,
         console,
-        cell,
+        cells,
         artifactCache,
         eventBus,
         config,
@@ -132,7 +124,7 @@ public class CommandRunnerParamsForTesting {
   public static CommandRunnerParams createCommandRunnerParamsForTesting(
       DepsAwareExecutor<? super ComputeResult, ?> executor,
       Console console,
-      Cell cell,
+      Cells cells,
       ArtifactCache artifactCache,
       BuckEventBus eventBus,
       BuckConfig config,
@@ -143,6 +135,7 @@ public class CommandRunnerParamsForTesting {
       PluginManager pluginManager,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Parser parser) {
+
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
 
@@ -157,18 +150,18 @@ public class CommandRunnerParamsForTesting {
 
     BuckGlobalState buckGlobalState =
         BuckGlobalStateFactory.create(
-            cell,
+            cells,
             knownRuleTypesProvider,
             WatchmanFactory.NULL_WATCHMAN,
             Optional.empty(),
             new ParsingUnconfiguredBuildTargetViewFactory(),
-            new TargetConfigurationSerializerForTests(cell.getCellPathResolver()),
+            new TargetConfigurationSerializerForTests(cells.getRootCell().getCellPathResolver()),
             FakeClock.doNotCare());
 
     return ImmutableCommandRunnerParams.of(
         console,
         new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
-        cell,
+        new Cells(cells.getRootCell()),
         WatchmanFactory.NULL_WATCHMAN,
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
@@ -177,7 +170,7 @@ public class CommandRunnerParamsForTesting {
         new ParsingUnconfiguredBuildTargetViewFactory(),
         Optional.empty(),
         Optional.empty(),
-        TargetConfigurationSerializerForTests.create(cell.getCellPathResolver()),
+        TargetConfigurationSerializerForTests.create(cells.getRootCell().getCellPathResolver()),
         parser,
         eventBus,
         platform,
@@ -210,9 +203,8 @@ public class CommandRunnerParamsForTesting {
         TestBuckModuleManagerFactory.create(pluginManager),
         depsAwareExecutorSupplier,
         MetadataProviderFactory.emptyMetadataProvider(),
-        getManifestSupplier(),
         buckGlobalState,
-        cell.getRoot());
+        cells.getRootCell().getRoot().getPath());
   }
 
   public static Builder builder() {
@@ -237,11 +229,12 @@ public class CommandRunnerParamsForTesting {
       if (toolchainProvider != null) {
         cellBuilder.setToolchainProvider(toolchainProvider);
       }
-      Cell cell = cellBuilder.build();
+      Cells cell = cellBuilder.build();
       PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
       KnownRuleTypesProvider knownRuleTypesProvider =
           TestKnownRuleTypesProvider.create(pluginManager);
-      Parser parser = TestParserFactory.create(executor, cell, knownRuleTypesProvider);
+      Parser parser =
+          TestParserFactory.create(executor, cell.getRootCell(), knownRuleTypesProvider);
 
       return createCommandRunnerParamsForTesting(
           executor,

@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -62,11 +63,12 @@ public class BuildTargetMacroTypeCoercerTest {
   private TargetConfiguration targetConfiguration =
       RuleBasedTargetConfiguration.of(ConfigurationBuildTargetFactoryForTests.newInstance("//:t"));
 
-  TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =
-      new BuildTargetWithOutputsTypeCoercer(
-          new BuildTargetTypeCoercer(
-              new UnconfiguredBuildTargetTypeCoercer(
-                  new ParsingUnconfiguredBuildTargetViewFactory())));
+  TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
+      buildTargetWithOutputsTypeCoercer =
+          new BuildTargetWithOutputsTypeCoercer(
+              new UnconfiguredBuildTargetWithOutputsTypeCoercer(
+                  new UnconfiguredBuildTargetTypeCoercer(
+                      new ParsingUnconfiguredBuildTargetViewFactory())));
 
   @Test
   public void useHost() throws Exception {
@@ -78,7 +80,7 @@ public class BuildTargetMacroTypeCoercerTest {
             MyBuildTargetMacro::new);
     MyBuildTargetMacro macro =
         coercer.coerce(
-            TestCellPathResolver.get(new FakeProjectFilesystem()),
+            TestCellPathResolver.get(new FakeProjectFilesystem()).getCellNameResolver(),
             new FakeProjectFilesystem(),
             ForwardRelativePath.of(""),
             targetConfiguration,
@@ -106,7 +108,7 @@ public class BuildTargetMacroTypeCoercerTest {
             MyBuildTargetMacro::new);
     MyBuildTargetMacro macro =
         coercer.coerce(
-            TestCellPathResolver.get(new FakeProjectFilesystem()),
+            TestCellPathResolver.get(new FakeProjectFilesystem()).getCellNameResolver(),
             new FakeProjectFilesystem(),
             ForwardRelativePath.of(""),
             targetConfiguration,
@@ -126,7 +128,7 @@ public class BuildTargetMacroTypeCoercerTest {
             MyBuildTargetMacro::new);
     MyBuildTargetMacro macro =
         coercer.coerce(
-            TestCellPathResolver.get(new FakeProjectFilesystem()),
+            TestCellPathResolver.get(new FakeProjectFilesystem()).getCellNameResolver(),
             new FakeProjectFilesystem(),
             ForwardRelativePath.of(""),
             targetConfiguration,

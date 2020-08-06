@@ -83,7 +83,7 @@ public abstract class CompilerParameters {
         SourcePathResolverAdapter resolver) {
       ImmutableSortedSet<Path> javaSrcs =
           srcs.stream()
-              .map(src -> projectFilesystem.relativize(resolver.getAbsolutePath(src)))
+              .map(src -> projectFilesystem.relativize(resolver.getAbsolutePath(src)).getPath())
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
       return this.setSourceFilePaths(javaSrcs);
     }

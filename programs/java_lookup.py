@@ -22,64 +22,69 @@ from programs.buck_tool import BuckToolException
 from programs.subprocutils import which
 
 
-JDK_8_AND_UNDER_PATH_VERSION_REGEX_STRING = r"jdk(1\.(\d+)(\.\d+(_\d+)?)?)(\.jdk)?"
-JDK_9_AND_OVER_PATH_VERSION_REGEX_STRING = r"jdk-((\d+)(\.\d+(\.\d+(_\d+)?)?)?)(\.jdk)?"
+JDK_8_AND_UNDER_PATH_VERSION_REGEX_STRINGS = [
+    r"jdk(?P<full>1\.(?P<major>\d+)(\.\d+(_\d+)?)?)(\.jdk)?",
+    r"adoptopenjdk-(?P<full>(?P<major>[6-8])(\.\d+(_\d+)?)?)(\.jdk|\.jre)?",
+]
+JDK_9_AND_OVER_PATH_VERSION_REGEX_STRINGS = [
+    r"jdk-(?P<full>(?P<major>\d+)(\.\d+(\.\d+(_\d+)?)?)?)(\.jdk)?",
+    r"adoptopenjdk-(?P<full>(?P<major>9|\d{2,})(\.\d+(\.\d+(_\d+)?)?)?)(\.jdk|\.jre)?",
+]
 
-JDK_8_AND_UNDER_PATH_VERSION_REGEX = re.compile(
-    "^" + JDK_8_AND_UNDER_PATH_VERSION_REGEX_STRING + "$"
-)
-JDK_9_AND_OVER_PATH_VERSION_REGEX = re.compile(
-    "^" + JDK_9_AND_OVER_PATH_VERSION_REGEX_STRING + "$"
-)
+JDK_8_AND_UNDER_PATH_VERSION_REGEXES = [
+    re.compile("^" + r + "$") for r in JDK_8_AND_UNDER_PATH_VERSION_REGEX_STRINGS
+]
+JDK_9_AND_OVER_PATH_VERSION_REGEXES = [
+    re.compile("^" + r + "$") for r in JDK_9_AND_OVER_PATH_VERSION_REGEX_STRINGS
+]
 
 # Note: Group 1 of these regexes contains the entire version string, group 2 contains major version.
-JDK_PATH_REGEXES = [
-    re.compile(
-        r"^/Library/Java/JavaVirtualMachines/"
-        + JDK_8_AND_UNDER_PATH_VERSION_REGEX_STRING
-        + "/Contents/Home/*$"
-    ),
-    re.compile(
-        r"^/Library/Java/JavaVirtualMachines/"
-        + JDK_9_AND_OVER_PATH_VERSION_REGEX_STRING
-        + "/Contents/Home/*$"
-    ),
-    re.compile(
-        "^C:\\\\Program Files\\\\Java\\\\"
-        + JDK_8_AND_UNDER_PATH_VERSION_REGEX_STRING
-        + "(\\\\)*$"
-    ),
-    re.compile(
-        "^C:\\\\Program Files\\\\Java\\\\"
-        + JDK_9_AND_OVER_PATH_VERSION_REGEX_STRING
-        + "(\\\\)*$"
-    ),
-]
+JDK_PATH_REGEXES = (
+    [
+        re.compile(r"^/Library/Java/JavaVirtualMachines/" + r + "/Contents/Home/*$")
+        for r in JDK_8_AND_UNDER_PATH_VERSION_REGEX_STRINGS
+    ]
+    + [
+        re.compile(r"^/Library/Java/JavaVirtualMachines/" + r + "/Contents/Home/*$")
+        for r in JDK_9_AND_OVER_PATH_VERSION_REGEX_STRINGS
+    ]
+    + [
+        re.compile("^C:\\\\Program Files\\\\Java\\\\" + r + "(\\\\)*$")
+        for r in JDK_8_AND_UNDER_PATH_VERSION_REGEX_STRINGS
+    ]
+    + [
+        re.compile("^C:\\\\Program Files\\\\Java\\\\" + r + "(\\\\)*$")
+        for r in JDK_9_AND_OVER_PATH_VERSION_REGEX_STRINGS
+    ]
+)
 
 
 def _get_suspected_java_version_from_java_path(java_path):
     for regex in JDK_PATH_REGEXES:
         match = regex.match(java_path)
         if match:
-            return int(match.group(2))
+            return int(match.group("major"))
     return None
 
 
 def _get_java_path_for_highest_minor_version(base_path, desired_major_version):
+    if not os.path.isdir(base_path):
+        return None
+
     max_version = None
     max_dir = None
-    for _, dirs, _ in os.walk(base_path):
-        for dir in dirs:
-            regex = (
-                JDK_8_AND_UNDER_PATH_VERSION_REGEX
-                if desired_major_version <= 8
-                else JDK_9_AND_OVER_PATH_VERSION_REGEX
-            )
+    regexes = (
+        JDK_8_AND_UNDER_PATH_VERSION_REGEXES
+        if desired_major_version <= 8
+        else JDK_9_AND_OVER_PATH_VERSION_REGEXES
+    )
+    for dir in sorted(os.listdir(base_path)):
+        for regex in regexes:
             match = regex.match(dir)
             if match:
-                major_version = int(match.group(2))
+                major_version = int(match.group("major"))
                 if major_version == desired_major_version:
-                    version_string = match.group(1)
+                    version_string = match.group("full")
                     version = tuple(
                         map(int, version_string.replace("_", ".").split("."))
                     )

@@ -28,6 +28,14 @@ from programs import file_locks
 from programs.tracing import Tracing
 
 
+try:
+    USER_NAME = os.getlogin()
+except (AttributeError, OSError):
+    import getpass
+
+    USER_NAME = getpass.getuser()
+
+
 def get_file_contents_if_exists(path, default=None):
     with Tracing("BuckProject.get_file_contents_if_it_exists", args={"path": path}):
         if not os.path.exists(path):
@@ -212,6 +220,14 @@ class BuckProject:
 
     def get_buck_out_relative_dir(self):
         return self._buck_out_dirname
+
+    def get_section_lock_path(self, section):
+        prefix_user_hash = hashlib.sha256(
+            (self.prefix + "\n" + USER_NAME).encode("utf8")
+        ).hexdigest()
+        return os.path.join(
+            tempfile.gettempdir(), ".buck_lock_%s_%s" % (section, prefix_user_hash)
+        )
 
     def clean_up_buckd(self):
         with Tracing("BuckProject.clean_up_buckd"):

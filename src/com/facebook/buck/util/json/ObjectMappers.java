@@ -17,6 +17,8 @@
 package com.facebook.buck.util.json;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
@@ -52,6 +54,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class ObjectMappers {
 
@@ -199,9 +202,12 @@ public class ObjectMappers {
      * Custom Path serializer that serializes using {@link Object#toString()} method and also
      * translates all {@link Path} implementations to use generic base type
      */
-    class PathSerializer extends ToStringSerializer {
-      public PathSerializer() {
-        super(Path.class);
+    class PathSerializer<P> extends ToStringSerializer {
+      private final Class<P> clazz;
+
+      public PathSerializer(Class<P> clazz) {
+        super(clazz);
+        this.clazz = clazz;
       }
 
       @Override
@@ -209,27 +215,46 @@ public class ObjectMappers {
           Object value, JsonGenerator g, SerializerProvider provider, TypeSerializer typeSer)
           throws IOException {
         WritableTypeId typeIdDef =
-            typeSer.writeTypePrefix(g, typeSer.typeId(value, Path.class, JsonToken.VALUE_STRING));
+            typeSer.writeTypePrefix(g, typeSer.typeId(value, clazz, JsonToken.VALUE_STRING));
         serialize(value, g, provider);
         typeSer.writeTypeSuffix(g, typeIdDef);
       }
     }
 
-    pathModule.addSerializer(Path.class, new PathSerializer());
-    pathModule.addDeserializer(
-        Path.class,
-        new FromStringDeserializer<Path>(Path.class) {
-          @Override
-          protected Path _deserialize(String value, DeserializationContext ctxt) {
-            return Paths.get(value);
-          }
+    pathModule.addSerializer(Path.class, new PathSerializer<>(Path.class));
+    pathModule.addSerializer(AbsPath.class, new PathSerializer<>(AbsPath.class));
+    pathModule.addSerializer(RelPath.class, new PathSerializer<>(RelPath.class));
 
-          @Override
-          protected Path _deserializeFromEmptyString() {
-            // by default it returns null but we want empty Path
-            return Paths.get("");
-          }
-        });
+    /** Deserialized for Path-like objects. */
+    class PathDeserializer<P> extends FromStringDeserializer<P> {
+
+      private final Function<String, P> get;
+      private final Supplier<P> empty;
+
+      public PathDeserializer(Class<P> clazz, Function<String, P> get, Supplier<P> empty) {
+        super(clazz);
+        this.get = get;
+        this.empty = empty;
+      }
+
+      @Override
+      protected P _deserialize(String value, DeserializationContext ctxt) {
+        return get.apply(value);
+      }
+
+      @Override
+      protected P _deserializeFromEmptyString() {
+        // by default it returns null but we want empty Path
+        return empty.get();
+      }
+    }
+
+    pathModule.addDeserializer(
+        Path.class, new PathDeserializer<>(Path.class, Paths::get, () -> Paths.get("")));
+    pathModule.addDeserializer(
+        AbsPath.class, new PathDeserializer<>(AbsPath.class, AbsPath::get, () -> AbsPath.get("")));
+    pathModule.addDeserializer(
+        RelPath.class, new PathDeserializer<>(RelPath.class, RelPath::get, () -> RelPath.get("")));
     mapper.registerModule(pathModule);
 
     return mapper;

@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -65,7 +65,7 @@ public class SkylarkPackageFileParserTest {
   private EventCollector eventCollector;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
-  private Cell cell;
+  private Cells cell;
 
   @Before
   public void setUp() {
@@ -79,7 +79,7 @@ public class SkylarkPackageFileParserTest {
 
     ProjectBuildFileParserOptions options =
         ProjectBuildFileParserOptions.builder()
-            .setProjectRoot(cell.getRoot())
+            .setProjectRoot(cell.getRootCell().getRoot())
             .setAllowEmptyGlobs(false)
             .setIgnorePaths(ImmutableSet.of())
             .setBuildFileName("PACKAGE")
@@ -103,7 +103,7 @@ public class SkylarkPackageFileParserTest {
                 options.getImplicitNativeRulesState(),
                 new RuleFunctionFactory(new DefaultTypeCoercerFactory()),
                 LabelCache.newLabelCache(),
-                knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
+                knownRuleTypesProvider.getUserDefinedRuleTypes(cell.getRootCell()),
                 options.getPerFeatureProviders()),
             eventCollector);
   }

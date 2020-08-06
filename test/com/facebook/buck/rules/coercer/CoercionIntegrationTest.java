@@ -39,7 +39,7 @@ public class CoercionIntegrationTest {
     assertThat(
         processResult.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
-            "cannot coerce '1' to class com.google.common.collect.ImmutableList\n"
+            "cannot coerce '1' to com.google.common.collect.ImmutableList<com.facebook.buck.core.sourcepath.SourcePath>\n"
                 + "    At //:a\n"
                 + "    At //:b"));
   }

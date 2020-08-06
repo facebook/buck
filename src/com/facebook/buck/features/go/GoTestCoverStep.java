@@ -17,6 +17,7 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.shell.ShellStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -48,7 +49,7 @@ public class GoTestCoverStep extends ShellStep {
   private final Path targetFile;
 
   public GoTestCoverStep(
-      Path workingDirectory,
+      AbsPath workingDirectory,
       Path sourceFile,
       Path targetFile,
       ImmutableMap<String, String> environment,

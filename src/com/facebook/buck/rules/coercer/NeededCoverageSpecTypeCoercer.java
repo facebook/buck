@@ -16,35 +16,35 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
-import javax.annotation.Nonnull;
 
 /** A type coercer to handle needed coverage specification for python_test. */
-public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverageSpec> {
-  private final TypeCoercer<Integer> intTypeCoercer;
-  private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
-  private final TypeCoercer<String> pathNameTypeCoercer;
+public class NeededCoverageSpecTypeCoercer implements TypeCoercer<Object, NeededCoverageSpec> {
+  private final TypeCoercer<Integer, Integer> intTypeCoercer;
+  private final TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer;
+  private final TypeCoercer<String, String> pathNameTypeCoercer;
 
   NeededCoverageSpecTypeCoercer(
-      TypeCoercer<Integer> intTypeCoercer,
-      TypeCoercer<BuildTarget> buildTargetTypeCoercer,
-      TypeCoercer<String> pathNameTypeCoercer) {
+      TypeCoercer<Integer, Integer> intTypeCoercer,
+      TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer,
+      TypeCoercer<String, String> pathNameTypeCoercer) {
     this.intTypeCoercer = intTypeCoercer;
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
     this.pathNameTypeCoercer = pathNameTypeCoercer;
   }
 
   @Override
-  public Class<NeededCoverageSpec> getOutputClass() {
-    return NeededCoverageSpec.class;
+  public TypeToken<NeededCoverageSpec> getOutputType() {
+    return TypeToken.of(NeededCoverageSpec.class);
   }
 
   @Override
@@ -65,8 +65,23 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
   }
 
   @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
+  }
+
+  @Override
   public NeededCoverageSpec coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -83,7 +98,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
         Iterator<?> iter = collection.iterator();
         int neededRatioPercentage =
             coerceNeededRatio(
-                cellRoots,
+                cellNameResolver,
                 filesystem,
                 pathRelativeToProjectRoot,
                 targetConfiguration,
@@ -91,8 +106,8 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
                 object,
                 iter.next());
         BuildTarget buildTarget =
-            buildTargetTypeCoercer.coerce(
-                cellRoots,
+            buildTargetTypeCoercer.coerceBoth(
+                cellNameResolver,
                 filesystem,
                 pathRelativeToProjectRoot,
                 targetConfiguration,
@@ -102,8 +117,8 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
         if (iter.hasNext()) {
           pathName =
               Optional.of(
-                  pathNameTypeCoercer.coerce(
-                      cellRoots,
+                  pathNameTypeCoercer.coerceBoth(
+                      cellNameResolver,
                       filesystem,
                       pathRelativeToProjectRoot,
                       targetConfiguration,
@@ -116,13 +131,12 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
 
     throw CoerceFailedException.simple(
         object,
-        getOutputClass(),
+        getOutputType(),
         "input should be a tuple of needed coverage ratio, a build target, and optionally a path");
   }
 
-  @Nonnull
   private int coerceNeededRatio(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -137,13 +151,13 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
     if (!(object instanceof Integer || object instanceof Long || object instanceof Short)) {
       throw CoerceFailedException.simple(
           originalObject,
-          getOutputClass(),
+          getOutputType(),
           "the needed coverage ratio should be an integral number");
     }
 
     int intValue =
-        intTypeCoercer.coerce(
-            cellRoots,
+        intTypeCoercer.coerceBoth(
+            cellNameResolver,
             filesystem,
             pathRelativeToProjectRoot,
             targetConfiguration,
@@ -152,9 +166,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
 
     if (intValue < 0 || intValue > 100) {
       throw CoerceFailedException.simple(
-          originalObject,
-          getOutputClass(),
-          "the needed coverage ratio should be in range [0, 100]");
+          originalObject, getOutputType(), "the needed coverage ratio should be in range [0, 100]");
     }
 
     return intValue;

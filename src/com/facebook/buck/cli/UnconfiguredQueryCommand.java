@@ -66,18 +66,18 @@ public class UnconfiguredQueryCommand extends AbstractQueryCommand {
         PerBuildState parserState =
             new PerBuildStateFactory(
                     params.getTypeCoercerFactory(),
-                    new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                    new DefaultConstructorArgMarshaller(),
                     params.getKnownRuleTypesProvider(),
                     new ParserPythonInterpreterProvider(
-                        params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                        params.getCells().getRootCell().getBuckConfig(),
+                        params.getExecutableFinder()),
                     params.getWatchman(),
                     params.getBuckEventBus(),
-                    params.getManifestServiceSupplier(),
-                    params.getFileHashCache(),
                     params.getUnconfiguredBuildTargetFactory(),
                     params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
                 .create(
-                    createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                    createParsingContext(
+                            params.getCells().getRootCell(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                         .withUseUnconfiguredSelectorResolver(true),
                     params.getParser().getPermState())) {
@@ -85,7 +85,8 @@ public class UnconfiguredQueryCommand extends AbstractQueryCommand {
           BuckQueryEnvironment.from(
               params,
               parserState,
-              createParsingContext(params.getCell(), pool.getListeningExecutorService())
+              createParsingContext(
+                      params.getCells().getRootCell(), pool.getListeningExecutorService())
                   .withUseUnconfiguredSelectorResolver(true));
       formatAndRunQuery(params, env);
     } catch (QueryException e) {

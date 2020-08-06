@@ -342,7 +342,7 @@ public abstract class AbstractBuildPackageComputationTest {
   @Parameters(method = "getAnyPathParams")
   public void allowsInexactPathCase(Kind kind, String targetName)
       throws ExecutionException, InterruptedException, IOException {
-    AssumePath.assumeNamesAreCaseInsensitive(filesystem.getRootPath());
+    AssumePath.assumeNamesAreCaseInsensitive(filesystem.getRootPath().getPath());
 
     filesystem.mkdirs(Paths.get("dir"));
     filesystem.createNewFile(Paths.get("dir/BUCK"));
@@ -357,7 +357,7 @@ public abstract class AbstractBuildPackageComputationTest {
   @Parameters(method = "getAnyPathParams")
   public void requiresExactPathCase(Kind kind, String targetName)
       throws ExecutionException, InterruptedException, IOException {
-    AssumePath.assumeNamesAreCaseSensitive(filesystem.getRootPath());
+    AssumePath.assumeNamesAreCaseSensitive(filesystem.getRootPath().getPath());
 
     filesystem.mkdirs(Paths.get("dir"));
     filesystem.createNewFile(Paths.get("dir/BUCK"));
@@ -370,7 +370,7 @@ public abstract class AbstractBuildPackageComputationTest {
   @Test
   public void findsBuildFilesWithSpecialStarGlobCharacter()
       throws ExecutionException, IOException, InterruptedException {
-    AssumePath.assumeStarIsAllowedInNames(filesystem.getRootPath());
+    AssumePath.assumeStarIsAllowedInNames(filesystem.getRootPath().getPath());
 
     filesystem.mkdirs(Paths.get("dir-star"));
     filesystem.createNewFile(Paths.get("dir-star/*UCK"));
@@ -398,7 +398,7 @@ public abstract class AbstractBuildPackageComputationTest {
   @Test
   public void findsBuildFilesWithSpecialQuestionGlobCharacter()
       throws ExecutionException, IOException, InterruptedException {
-    AssumePath.assumeQuestionIsAllowedInNames(filesystem.getRootPath());
+    AssumePath.assumeQuestionIsAllowedInNames(filesystem.getRootPath().getPath());
 
     filesystem.mkdirs(Paths.get("dir-question"));
     filesystem.createNewFile(Paths.get("dir-question/?UCK"));
@@ -453,7 +453,7 @@ public abstract class AbstractBuildPackageComputationTest {
   @Parameters(method = "getAnyPathParams")
   public void findsInNamedDirectoryWithSpecialStarGlobCharacters(Kind kind, String targetName)
       throws ExecutionException, IOException, InterruptedException {
-    AssumePath.assumeStarIsAllowedInNames(filesystem.getRootPath());
+    AssumePath.assumeStarIsAllowedInNames(filesystem.getRootPath().getPath());
 
     filesystem.mkdirs(Paths.get("star-d*r"));
     filesystem.createNewFile(Paths.get("star-d*r/BUCK"));
@@ -468,7 +468,7 @@ public abstract class AbstractBuildPackageComputationTest {
   @Parameters(method = "getAnyPathParams")
   public void findsInNamedDirectoryWithSpecialQuestionGlobCharacters(Kind kind, String targetName)
       throws ExecutionException, IOException, InterruptedException {
-    AssumePath.assumeQuestionIsAllowedInNames(filesystem.getRootPath());
+    AssumePath.assumeQuestionIsAllowedInNames(filesystem.getRootPath().getPath());
 
     filesystem.mkdirs(Paths.get("question-d?r"));
     filesystem.createNewFile(Paths.get("question-d?r/BUCK"));

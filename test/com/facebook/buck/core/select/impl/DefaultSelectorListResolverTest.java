@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -69,6 +70,7 @@ public class DefaultSelectorListResolverTest {
             buildTarget,
             "some_attribute",
             selectorList,
+            flavorListTypeCoercer(),
             DependencyStack.root());
 
     assertTrue(flavors.isEmpty());
@@ -92,6 +94,7 @@ public class DefaultSelectorListResolverTest {
             keyTarget,
             "some_attribute",
             selectorList,
+            new FlavorTypeCoercer(),
             DependencyStack.root());
 
     assertEquals("flavor2", flavor.getName());
@@ -117,6 +120,7 @@ public class DefaultSelectorListResolverTest {
             keyTarget,
             "some_attribute",
             selectorList,
+            new FlavorTypeCoercer(),
             DependencyStack.root());
 
     assertNull(flavor);
@@ -150,6 +154,7 @@ public class DefaultSelectorListResolverTest {
             keyTarget,
             "some_attribute",
             selectorList,
+            flavorListTypeCoercer(),
             DependencyStack.root());
 
     assertEquals(
@@ -185,6 +190,7 @@ public class DefaultSelectorListResolverTest {
             keyTarget,
             "some_attribute",
             selectorList,
+            flavorListTypeCoercer(),
             DependencyStack.root());
 
     assertEquals(
@@ -219,6 +225,7 @@ public class DefaultSelectorListResolverTest {
             keyTarget,
             "some_attribute",
             selectorList,
+            flavorListTypeCoercer(),
             DependencyStack.root());
 
     assertEquals(
@@ -248,7 +255,12 @@ public class DefaultSelectorListResolverTest {
 
     try {
       resolver.resolveList(
-          configurationContext, keyTarget, "some_attribute", selectorList, DependencyStack.root());
+          configurationContext,
+          keyTarget,
+          "some_attribute",
+          selectorList,
+          flavorListTypeCoercer(),
+          DependencyStack.root());
     } catch (HumanReadableException e) {
       assertEquals(
           "Multiple matches found when resolving configurable attribute \"some_attribute\" in //a:b:\n"
@@ -273,7 +285,12 @@ public class DefaultSelectorListResolverTest {
 
     try {
       resolver.resolveList(
-          configurationContext, keyTarget, "some_attribute", selectorList, DependencyStack.root());
+          configurationContext,
+          keyTarget,
+          "some_attribute",
+          selectorList,
+          flavorListTypeCoercer(),
+          DependencyStack.root());
     } catch (HumanReadableException e) {
       assertEquals(
           "None of the conditions in attribute \"some_attribute\" of //a:b match the configuration.\nChecked conditions:\n"
@@ -286,7 +303,7 @@ public class DefaultSelectorListResolverTest {
   public void testResolvingListWithNoMatchesThrowsExceptionWithCustomMessage() {
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
-    ListTypeCoercer<Flavor> flavorListTypeCoercer = new ListTypeCoercer<>(new FlavorTypeCoercer());
+    ListTypeCoercer<Flavor, Flavor> flavorListTypeCoercer = flavorListTypeCoercer();
     Selector<ImmutableList<Flavor>> selector =
         new Selector<>(
             ImmutableMap.of(
@@ -299,11 +316,16 @@ public class DefaultSelectorListResolverTest {
             new TestSelectableResolver(
                 ImmutableList.of(new TestSelectable(selectableTarget, false))));
     SelectorList<ImmutableList<Flavor>> selectorList =
-        new SelectorList<>(flavorListTypeCoercer, ImmutableList.of(selector));
+        new SelectorList<>(ImmutableList.of(selector));
 
     try {
       resolver.resolveList(
-          configurationContext, keyTarget, "some_attribute", selectorList, DependencyStack.root());
+          configurationContext,
+          keyTarget,
+          "some_attribute",
+          selectorList,
+          flavorListTypeCoercer,
+          DependencyStack.root());
     } catch (HumanReadableException e) {
       assertEquals(
           "None of the conditions in attribute \"some_attribute\" of //a:b match the configuration: Custom message",
@@ -318,7 +340,11 @@ public class DefaultSelectorListResolverTest {
 
   private SelectorList<ImmutableList<Flavor>> createSelectorListForListsOfFlavors(
       Map<String, ?>... selectors) throws CoerceFailedException {
-    return TestSelectorListFactory.createSelectorListForCoercer(
-        new ListTypeCoercer<>(new FlavorTypeCoercer()), selectors);
+    return TestSelectorListFactory.createSelectorListForCoercer(flavorListTypeCoercer(), selectors);
+  }
+
+  @Nonnull
+  private static ListTypeCoercer<Flavor, Flavor> flavorListTypeCoercer() {
+    return new ListTypeCoercer<>(new FlavorTypeCoercer());
   }
 }

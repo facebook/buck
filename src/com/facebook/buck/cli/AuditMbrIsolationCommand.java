@@ -85,7 +85,8 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
             params
                 .getParser()
                 .buildTargetGraph(
-                    createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                    createParsingContext(
+                            params.getCells().getRootCell(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                         .withExcludeUnsupportedTargets(false),
                     targets);
@@ -105,7 +106,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
                           params.getBuckEventBus(),
                           ActionGraphFactory.create(
                               params.getBuckEventBus(),
-                              params.getCell().getCellProvider(),
+                              params.getCells().getRootCell().getCellProvider(),
                               params.getExecutors(),
                               params.getDepsAwareExecutorSupplier(),
                               params.getBuckConfig()),
@@ -125,7 +126,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
       IsolationChecker isolationChecker =
           new IsolationChecker(
               graphBuilder,
-              params.getCell().getCellPathResolver(),
+              params.getCells().getRootCell().getCellPathResolver(),
               reportGenerator.getFailureReporter());
       AbstractBreadthFirstTraversal.<BuildRule>traverse(
           targets.stream().map(graphBuilder::getRule).collect(Collectors.toList()),

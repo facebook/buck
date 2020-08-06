@@ -34,6 +34,7 @@ from collections import namedtuple
 from subprocess import CalledProcessError, check_output
 
 from ng import NailgunConnection, NailgunException
+from programs.file_locks import exclusive_lock
 from programs.subprocutils import which
 from programs.timing import monotonic_time_nanos
 from programs.tracing import Tracing
@@ -741,37 +742,45 @@ class BuckTool(object):
                         )
 
                 if use_buckd:
-                    need_start = True
-                    running_version = self._buck_project.get_running_buckd_version()
-                    running_jvm_args = self._buck_project.get_running_buckd_jvm_args()
-                    jvm_args = self._get_java_args(buck_version_uid)
-                    if running_version is None:
-                        logging.info("Starting new Buck daemon...")
-                    elif running_version != buck_version_uid:
-                        logging.info(
-                            "Restarting Buck daemon because Buck version has changed..."
+                    with exclusive_lock(
+                        self._buck_project.get_section_lock_path("buckd_start_stop"),
+                        wait=True,
+                    ):
+                        need_start = True
+                        running_version = self._buck_project.get_running_buckd_version()
+                        running_jvm_args = (
+                            self._buck_project.get_running_buckd_jvm_args()
                         )
-                    elif not self._is_buckd_running():
-                        logging.info(
-                            "Unable to connect to Buck daemon, restarting it..."
-                        )
-                    elif jvm_args != running_jvm_args:
-                        logging.info(
-                            "Restarting Buck daemon because JVM args have changed..."
-                        )
-                    else:
-                        need_start = False
-
-                    if need_start:
-                        self.kill_buckd()
-                        if not self.launch_buckd(
-                            java_path, jvm_args, buck_version_uid=buck_version_uid
-                        ):
-                            use_buckd = False
-                            self._reporter.no_buckd_reason = "daemon_failure"
-                            logging.warning(
-                                "Not using buckd because daemon failed to start."
+                        jvm_args = self._get_java_args(buck_version_uid)
+                        if running_version is None:
+                            logging.info("Starting new Buck daemon...")
+                        elif running_version != buck_version_uid:
+                            logging.info(
+                                "Restarting Buck daemon because Buck version has "
+                                "changed..."
                             )
+                        elif not self._is_buckd_running():
+                            logging.info(
+                                "Unable to connect to Buck daemon, restarting it..."
+                            )
+                        elif jvm_args != running_jvm_args:
+                            logging.info(
+                                "Restarting Buck daemon because JVM args have "
+                                "changed..."
+                            )
+                        else:
+                            need_start = False
+
+                        if need_start:
+                            self.kill_buckd()
+                            if not self.launch_buckd(
+                                java_path, jvm_args, buck_version_uid=buck_version_uid
+                            ):
+                                use_buckd = False
+                                self._reporter.no_buckd_reason = "daemon_failure"
+                                logging.warning(
+                                    "Not using buckd because daemon failed to start."
+                                )
 
                 env = self._environ_for_buck()
                 env["BUCK_BUILD_ID"] = build_id
@@ -897,7 +906,7 @@ class BuckTool(object):
 
             wait_seconds = 0.01
             repetitions = int(BUCKD_STARTUP_TIMEOUT_MILLIS / 1000.0 / wait_seconds)
-            for i in range(repetitions):
+            for _idx in range(repetitions):
                 if transport_exists(buckd_transport_file_path):
                     break
                 time.sleep(wait_seconds)
@@ -914,6 +923,8 @@ class BuckTool(object):
             # Save pid of running daemon
             self._buck_project.save_buckd_pid(process.pid)
 
+            logging.info("Buck daemon started.")
+
             return True
 
     def _get_repository(self):
@@ -925,7 +936,9 @@ class BuckTool(object):
 
 
     def kill_buckd(self):
-        with Tracing("BuckTool.kill_buckd"):
+        with Tracing("BuckTool.kill_buckd"), exclusive_lock(
+            self._buck_project.get_section_lock_path("buckd_kill"), wait=True
+        ):
             buckd_transport_file_path = (
                 self._buck_project.get_buckd_transport_file_path()
             )
@@ -979,7 +992,7 @@ class BuckTool(object):
             elif os.name == "nt":
                 # for Windows, we rely on transport to be closed to determine the process is done
                 # TODO(buck_team) implement wait for process and hard kill for Windows
-                for i in range(0, 300):
+                for _idx in range(0, 300):
                     if not transport_exists(buckd_transport_file_path):
                         break
                     time.sleep(0.01)
@@ -1090,10 +1103,13 @@ class BuckTool(object):
                 and os.environ.get("BUCK_DEBUG_MODE") != "0"
             ):
                 suspend = "n" if os.environ.get("BUCK_DEBUG_MODE") == "2" else "y"
+                port = "8888"
                 java_args.append(
                     "-agentlib:jdwp=transport=dt_socket,"
-                    "server=y,suspend=" + suspend + ",quiet=y,address=8888"
+                    "server=y,suspend=" + suspend + ",quiet=y,address=" + port
                 )
+                if suspend == "y":
+                    logging.info("Waiting for debugger on port {}...".format(port))
 
             if (
                 "BUCK_HTTP_PORT" in os.environ
@@ -1259,7 +1275,7 @@ def wait_for_process_posix(pid, timeout):
     )
 
     # poll 10 times a second
-    for i in range(0, int(timeout / 100)):
+    for _idx in range(0, int(timeout / 100)):
         if not pid_exists_posix(pid):
             return True
         time.sleep(0.1)

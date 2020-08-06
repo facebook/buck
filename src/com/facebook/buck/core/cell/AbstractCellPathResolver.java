@@ -18,7 +18,9 @@ package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.exception.UnknownCellException;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.CellRelativePath;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -28,10 +30,12 @@ public abstract class AbstractCellPathResolver implements CellPathResolver {
 
   /** @return sorted set of known roots in reverse natural order */
   @Override
-  public ImmutableSortedSet<Path> getKnownRoots() {
-    return ImmutableSortedSet.<Path>reverseOrder()
-        .addAll(getCellPathsByRootCellExternalName().values())
-        .add(getCellPathOrThrow(Optional.empty()))
+  public ImmutableSortedSet<AbsPath> getKnownRoots() {
+    return ImmutableSortedSet.orderedBy(AbsPath.comparator().reversed())
+        .addAll(
+            getCellPathsByRootCellExternalName().values().stream()
+                .collect(ImmutableList.toImmutableList()))
+        .add(AbsPath.of(getCellPathOrThrow(Optional.empty())))
         .build();
   }
 

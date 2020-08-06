@@ -127,4 +127,28 @@ public class CxxSourceTypesTest {
         CxxSourceTypes.getCompiler(cxxPlatform, CxxSource.Type.ASM),
         Matchers.is(cxxPlatform.getAsm().get()));
   }
+
+  @Test
+  public void toName() {
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.C), Matchers.equalTo("c"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.C_CPP_OUTPUT), Matchers.equalTo("c"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.CXX), Matchers.equalTo("cxx"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.CXX_CPP_OUTPUT), Matchers.equalTo("cxx"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.OBJC), Matchers.equalTo("objc"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.OBJC_CPP_OUTPUT), Matchers.equalTo("objc"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.OBJCXX), Matchers.equalTo("objcxx"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.OBJCXX_CPP_OUTPUT), Matchers.equalTo("objcxx"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.CUDA), Matchers.equalTo("cuda"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.CUDA_CPP_OUTPUT), Matchers.equalTo("cuda"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.HIP), Matchers.equalTo("hip"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.HIP_CPP_OUTPUT), Matchers.equalTo("hip"));
+    assertThat(
+        CxxSourceTypes.toName(CxxSource.Type.CXX_THINLINK), Matchers.equalTo("cxx_thinlink"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.PCM), Matchers.equalTo("pcm"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.ASSEMBLER), Matchers.equalTo("assembler"));
+    assertThat(
+        CxxSourceTypes.toName(CxxSource.Type.ASSEMBLER_WITH_CPP), Matchers.equalTo("assembler"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.ASM), Matchers.equalTo("asm"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.ASM_WITH_CPP), Matchers.equalTo("asm"));
+  }
 }

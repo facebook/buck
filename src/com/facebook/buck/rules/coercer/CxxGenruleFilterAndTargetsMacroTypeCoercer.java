@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.CxxGenruleFilterAndTargetsMacro;
@@ -34,14 +34,16 @@ import java.util.regex.Pattern;
 public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilterAndTargetsMacro>
     implements MacroTypeCoercer<M> {
 
-  private final Optional<TypeCoercer<Pattern>> patternTypeCoercer;
-  private final TypeCoercer<ImmutableList<BuildTarget>> buildTargetsTypeCoercer;
+  private final Optional<TypeCoercer<Pattern, Pattern>> patternTypeCoercer;
+  private final TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ImmutableList<BuildTarget>>
+      buildTargetsTypeCoercer;
   private final Class<M> clazz;
   private final BiFunction<Optional<Pattern>, ImmutableList<BuildTarget>, M> factory;
 
   public CxxGenruleFilterAndTargetsMacroTypeCoercer(
-      Optional<TypeCoercer<Pattern>> patternTypeCoercer,
-      TypeCoercer<ImmutableList<BuildTarget>> buildTargetsTypeCoercer,
+      Optional<TypeCoercer<Pattern, Pattern>> patternTypeCoercer,
+      TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ImmutableList<BuildTarget>>
+          buildTargetsTypeCoercer,
       Class<M> clazz,
       BiFunction<Optional<Pattern>, ImmutableList<BuildTarget>, M> factory) {
     this.patternTypeCoercer = patternTypeCoercer;
@@ -70,7 +72,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
 
   @Override
   public M coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -92,8 +94,8 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
           Optional.of(
               patternTypeCoercer
                   .get()
-                  .coerce(
-                      cellRoots,
+                  .coerceBoth(
+                      cellNameResolver,
                       filesystem,
                       pathRelativeToProjectRoot,
                       targetConfiguration,
@@ -103,8 +105,8 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
 
     // Parse build target args.
     ImmutableList<BuildTarget> targets =
-        buildTargetsTypeCoercer.coerce(
-            cellRoots,
+        buildTargetsTypeCoercer.coerceBoth(
+            cellNameResolver,
             filesystem,
             pathRelativeToProjectRoot,
             targetConfiguration,

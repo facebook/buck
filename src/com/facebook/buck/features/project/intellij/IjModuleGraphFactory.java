@@ -93,14 +93,16 @@ public final class IjModuleGraphFactory {
             .collect(
                 ImmutableListMultimap.toImmutableListMultimap(
                     targetNode ->
-                        projectFilesystem.relativize(
-                            targetNode
-                                .getFilesystem()
-                                .resolve(
-                                    targetNode
-                                        .getBuildTarget()
-                                        .getCellRelativeBasePath()
-                                        .getPath())),
+                        projectFilesystem
+                            .relativize(
+                                targetNode
+                                    .getFilesystem()
+                                    .resolve(
+                                        targetNode
+                                            .getBuildTarget()
+                                            .getCellRelativeBasePath()
+                                            .getPath()))
+                            .getPath(),
                     targetNode -> targetNode));
 
     AggregationTree aggregationTree =
@@ -242,8 +244,7 @@ public final class IjModuleGraphFactory {
     Optional<Path> extraCompileOutputRootPath = projectConfig.getExtraCompilerOutputModulesPath();
 
     Set<IjModule> seenModules = new HashSet<>();
-    for (Map.Entry<BuildTarget, IjModule> ruleAndModule : rulesToModules.entrySet()) {
-      IjModule module = ruleAndModule.getValue();
+    for (IjModule module : rulesToModules.values()) {
       if (!seenModules.add(module)) {
         continue;
       }

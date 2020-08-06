@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -24,27 +23,35 @@ import com.facebook.buck.core.test.rule.TestRunnerSpec;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeToken;
 import java.util.Map;
 
 /**
  * Coerces a freeform JSON as a {@link TestRunnerSpec}, which is basically a JSON containing {@link
  * StringWithMacros}
  */
-public class TestRunnerSpecCoercer implements TypeCoercer<TestRunnerSpec> {
+public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec> {
 
-  private final TypeCoercer<StringWithMacros> macrosTypeCoercer;
-  private final TypeCoercer<ImmutableMap<StringWithMacros, TestRunnerSpec>> mapTypeCoercer;
-  private final ListTypeCoercer<TestRunnerSpec> listTypeCoercer;
+  private final TypeCoercer<Object, StringWithMacros> macrosTypeCoercer;
+  private final TypeCoercer<
+          ImmutableMap<Object, Object>, ImmutableMap<StringWithMacros, TestRunnerSpec>>
+      mapTypeCoercer;
+  private final ListTypeCoercer<Object, TestRunnerSpec> listTypeCoercer;
 
-  public TestRunnerSpecCoercer(TypeCoercer<StringWithMacros> macrosTypeCoercer) {
+  public TestRunnerSpecCoercer(TypeCoercer<Object, StringWithMacros> macrosTypeCoercer) {
     this.macrosTypeCoercer = macrosTypeCoercer;
     this.mapTypeCoercer = new MapTypeCoercer<>(macrosTypeCoercer, this);
     this.listTypeCoercer = new ListTypeCoercer<>(this);
   }
 
   @Override
-  public Class<TestRunnerSpec> getOutputClass() {
-    return TestRunnerSpec.class;
+  public TypeToken<TestRunnerSpec> getOutputType() {
+    return TypeToken.of(TestRunnerSpec.class);
+  }
+
+  @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
   }
 
   @Override
@@ -56,8 +63,18 @@ public class TestRunnerSpecCoercer implements TypeCoercer<TestRunnerSpec> {
   public void traverse(CellNameResolver cellRoots, TestRunnerSpec object, Traversal traversal) {}
 
   @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
+  }
+
+  @Override
   public TestRunnerSpec coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -76,7 +93,7 @@ public class TestRunnerSpecCoercer implements TypeCoercer<TestRunnerSpec> {
   }
 
   private Object coerceRecursively(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -84,8 +101,8 @@ public class TestRunnerSpecCoercer implements TypeCoercer<TestRunnerSpec> {
       Object object)
       throws CoerceFailedException {
     if (object instanceof Map) {
-      return mapTypeCoercer.coerce(
-          cellRoots,
+      return mapTypeCoercer.coerceBoth(
+          cellNameResolver,
           filesystem,
           pathRelativeToProjectRoot,
           targetConfiguration,
@@ -93,8 +110,8 @@ public class TestRunnerSpecCoercer implements TypeCoercer<TestRunnerSpec> {
           object);
     }
     if (object instanceof Iterable) {
-      return listTypeCoercer.coerce(
-          cellRoots,
+      return listTypeCoercer.coerceBoth(
+          cellNameResolver,
           filesystem,
           pathRelativeToProjectRoot,
           targetConfiguration,
@@ -105,7 +122,7 @@ public class TestRunnerSpecCoercer implements TypeCoercer<TestRunnerSpec> {
       return object;
     }
     return macrosTypeCoercer.coerce(
-        cellRoots,
+        cellNameResolver,
         filesystem,
         pathRelativeToProjectRoot,
         targetConfiguration,

@@ -77,6 +77,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -390,7 +391,7 @@ public class WorkspaceAndProjectGenerator {
     requiredBuildTargetsBuilder.addAll(result.getRequiredBuildTargets());
     ImmutableSortedSet<Path> relativeXcconfigPaths =
         result.getXcconfigPaths().stream()
-            .map((Path p) -> rootCell.getFilesystem().relativize(p))
+            .map((Path p) -> rootCell.getFilesystem().relativize(p).getPath())
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     xcconfigPathsBuilder.addAll(relativeXcconfigPaths);
     filesToCopyInXcodeBuilder.addAll(result.getFilesToCopyInXcode());
@@ -602,7 +603,7 @@ public class WorkspaceAndProjectGenerator {
           TargetNode<?> targetNode = projectGraph.get(buildTarget);
 
           schemeConfigsBuilder.put(
-              extensionSchemeName, createImplicitExtensionWorkspaceArgs(buildTarget));
+              extensionSchemeName, createImplicitExtensionWorkspaceArgs(sourceBuildTarget));
 
           schemeNameToSrcTargetNodeBuilder.put(extensionSchemeName, Optional.of(sourceTargetNode));
           schemeNameToSrcTargetNodeBuilder.put(extensionSchemeName, Optional.of(targetNode));
@@ -697,7 +698,6 @@ public class WorkspaceAndProjectGenerator {
       boolean includeDependenciesTests,
       ImmutableSet<TargetNode<?>> orderedTargetNodes,
       ImmutableSet<TargetNode<AppleTestDescriptionArg>> extraTestBundleTargets) {
-    LOG.debug("Getting ordered test target nodes for %s", orderedTargetNodes);
     ImmutableSet.Builder<TargetNode<AppleTestDescriptionArg>> testsBuilder = ImmutableSet.builder();
     if (includeProjectTests) {
       Optional<TargetNode<?>> mainTargetNode = Optional.empty();
@@ -900,6 +900,14 @@ public class WorkspaceAndProjectGenerator {
 
       Path schemeOutputDirectory = outputDirectory.resolve(workspaceName + ".xcworkspace");
 
+      Optional<ImmutableMap<SchemeActionType, PBXTarget>> expandVariablesBasedOn = Optional.empty();
+      if (schemeConfigArg.getExpandVariablesBasedOn().isPresent()) {
+        Map<SchemeActionType, PBXTarget> mapTargets =
+          schemeConfigArg.getExpandVariablesBasedOn().get().entrySet()
+          .stream().collect(Collectors.toMap(Map.Entry::getKey, e -> buildTargetToPBXTarget.get(e.getValue()) ));
+        expandVariablesBasedOn = Optional.of(ImmutableMap.copyOf(mapTargets));
+      }
+
       SchemeGenerator schemeGenerator =
           buildSchemeGenerator(
               targetToProjectPathMap,
@@ -911,7 +919,8 @@ public class WorkspaceAndProjectGenerator {
               orderedBuildTestTargets,
               orderedRunTestTargets,
               runnablePath,
-              remoteRunnablePath);
+              remoteRunnablePath,
+              expandVariablesBasedOn);
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);
     }
@@ -927,7 +936,8 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSet<PBXTarget> orderedBuildTestTargets,
       ImmutableSet<PBXTarget> orderedRunTestTargets,
       Optional<String> runnablePath,
-      Optional<String> remoteRunnablePath) {
+      Optional<String> remoteRunnablePath,
+      Optional<ImmutableMap<SchemeActionType, PBXTarget>> expandVariablesBasedOn) {
     Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>> environmentVariables =
         Optional.empty();
     Optional<
@@ -960,9 +970,10 @@ public class WorkspaceAndProjectGenerator {
         wasCreatedForAppExtension,
         runnablePath,
         remoteRunnablePath,
-        XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(workspaceArguments),
+        XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(schemeConfigArg),
         targetToProjectPathMap,
         environmentVariables,
+        expandVariablesBasedOn,
         additionalSchemeActions,
         launchStyle,
         watchInterface,

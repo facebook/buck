@@ -41,6 +41,7 @@ import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.ArgFactory;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -70,6 +71,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 import org.immutables.value.Value;
@@ -297,8 +299,8 @@ public abstract class CxxSourceRuleFactory {
     return getCxxPlatform().getCompilerDebugPathSanitizer().sanitizer(Optional.empty());
   }
 
-  private ImmutableList<Arg> sanitizedArgs(Iterable<String> flags) {
-    return SanitizedArg.from(getSanitizeFunction(), flags);
+  private ImmutableList<Arg> sanitizedArgs(Iterable<Arg> flags) {
+    return SanitizedArg.fromArgs(getSanitizeFunction(), flags);
   }
 
   private ImmutableList<Arg> getPlatformPreprocessorFlags(CxxSource.Type type) {
@@ -357,7 +359,7 @@ public abstract class CxxSourceRuleFactory {
             // Add custom compiler flags.
             .addAllRuleFlags(getRuleCompileFlags(source.getType()))
             // Add custom per-file flags.
-            .addAllRuleFlags(sanitizedArgs(source.getFlags()))
+            .addAllRuleFlags(sanitizedArgs(StringArg.from(source.getFlags())))
             .addRuleFlags(new CxxThinLTOIndexArg(thinIndicesRoot, source.getPath()))
             .build();
 
@@ -404,7 +406,7 @@ public abstract class CxxSourceRuleFactory {
             // Add custom compiler flags.
             .addAllRuleFlags(getRuleCompileFlags(source.getType()))
             // Add custom per-file flags.
-            .addAllRuleFlags(sanitizedArgs(source.getFlags()))
+            .addAllRuleFlags(sanitizedArgs(StringArg.from(source.getFlags())))
             .build();
 
     CompilerDelegate compilerDelegate =
@@ -452,7 +454,7 @@ public abstract class CxxSourceRuleFactory {
         .addAllPlatformFlags(getPlatformPreprocessorFlags(type))
         .addAllRuleFlags(rulePreprocessorFlags.apply(type))
         // Add custom per-file flags.
-        .addAllRuleFlags(sanitizedArgs(sourceFlags))
+        .addAllRuleFlags(sanitizedArgs(StringArg.from(sourceFlags)))
         .build();
   }
 
@@ -472,7 +474,7 @@ public abstract class CxxSourceRuleFactory {
         // Add in the platform specific compiler flags.
         .addAllPlatformFlags(getPlatformCompileFlags(outputType))
         .addAllRuleFlags(getRuleCompileFlags(outputType))
-        .addAllRuleFlags(sanitizedArgs(sourceFlags))
+        .addAllRuleFlags(sanitizedArgs(StringArg.from(sourceFlags)))
         .build();
   }
 
@@ -497,9 +499,23 @@ public abstract class CxxSourceRuleFactory {
                           PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
                   depsBuilder.add(preprocessorDelegateValue.getPreprocessorDelegate());
 
+                  Stream<Arg> commandPrefixFlags =
+                      CxxSourceTypes.getCompiler(
+                              getCxxPlatform(),
+                              CxxSourceTypes.getPreprocessorOutputType(source.getType()))
+                          .resolve(
+                              getActionGraphBuilder(),
+                              getBaseBuildTarget().getTargetConfiguration())
+                          .getCommandPrefix(getPathResolver()).stream()
+                          .skip(1) // drop the binary
+                          .map(a -> ArgFactory.from(a));
+
                   CxxToolFlags ppFlags =
                       CxxToolFlags.copyOf(
-                          getPlatformPreprocessorFlags(source.getType()),
+                          Stream.concat(
+                                  commandPrefixFlags,
+                                  getPlatformPreprocessorFlags(source.getType()).stream())
+                              .collect(ImmutableList.toImmutableList()),
                           rulePreprocessorFlags.apply(source.getType()));
 
                   CxxToolFlags cFlags = computeCompilerFlags(source.getType(), source.getFlags());

@@ -93,6 +93,23 @@ public class ConfigSettingIntegrationTest {
   }
 
   @Test
+  public void testCanConcatStrWithSelect() throws IOException {
+    ProjectWorkspace workspace = setupWorkspace();
+
+    {
+      Path output = workspace.buildAndReturnOutput("-c", "str.value=a", "//:select_concat_str");
+      List<String> result = Files.readAllLines(output);
+      assertEquals(ImmutableList.of("aa"), result);
+    }
+
+    {
+      Path output = workspace.buildAndReturnOutput("-c", "str.value=b", "//:select_concat_str");
+      List<String> result = Files.readAllLines(output);
+      assertEquals(ImmutableList.of("bb"), result);
+    }
+  }
+
+  @Test
   public void testUnresolvedConfigurationFailsTheBuild() throws IOException {
     ProjectWorkspace workspace = setupWorkspace();
 

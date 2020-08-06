@@ -22,9 +22,11 @@ import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -58,6 +60,7 @@ import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Splitter;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -81,6 +84,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import javax.annotation.Nullable;
@@ -358,28 +362,33 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
    * if a given build target cannot find a matching spec.
    */
   protected ImmutableSet<BuildTargetWithOutputs> matchBuildTargetsWithLabelsFromSpecs(
-      ImmutableList<TargetNodeSpec> specs, ImmutableSet<BuildTarget> buildTargets) {
+      ImmutableList<TargetNodeSpec> specs, Set<BuildTarget> buildTargets) {
+    HashMultimap<UnconfiguredBuildTarget, OutputLabel> buildTargetViewToOutputLabel =
+        HashMultimap.create(specs.size(), 1);
+
+    specs.stream()
+        .filter(BuildTargetSpec.class::isInstance)
+        .map(BuildTargetSpec.class::cast)
+        .forEach(
+            buildTargetSpec -> {
+              buildTargetViewToOutputLabel.put(
+                  buildTargetSpec.getUnconfiguredBuildTarget(),
+                  buildTargetSpec.getUnconfiguredBuildTargetViewWithOutputs().getOutputLabel());
+            });
+
     ImmutableSet.Builder<BuildTargetWithOutputs> builder =
         ImmutableSet.builderWithExpectedSize(buildTargets.size());
     for (BuildTarget target : buildTargets) {
       boolean mappedTarget = false;
 
-      // Need to look through all the specs even after finding a match because there may be multiple
-      // matches
-      for (TargetNodeSpec spec : specs) {
-        if (!(spec instanceof BuildTargetSpec)) {
-          continue;
-        }
-        BuildTargetSpec buildTargetSpec = (BuildTargetSpec) spec;
-        if (buildTargetSpec
-            .getUnconfiguredBuildTargetView()
-            .equals(target.getUnconfiguredBuildTargetView())) {
-          builder.add(
-              BuildTargetWithOutputs.of(
-                  target,
-                  buildTargetSpec.getUnconfiguredBuildTargetViewWithOutputs().getOutputLabel()));
-          mappedTarget = true;
-        }
+      UnconfiguredBuildTarget targetView = target.getUnconfiguredBuildTarget();
+      // HashMultimap creates an empty collection on 'get()' if key is missing, rather than
+      // returning null
+      if (buildTargetViewToOutputLabel.containsKey(targetView)) {
+        buildTargetViewToOutputLabel
+            .get(targetView)
+            .forEach(outputLabel -> builder.add(BuildTargetWithOutputs.of(target, outputLabel)));
+        mappedTarget = true;
       }
 
       // A target may not map to an output label if the build command wasn't invoked with a build
@@ -412,8 +421,9 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .setEnvironment(params.getEnvironment())
             .setJavaPackageFinder(params.getJavaPackageFinder())
             .setExecutors(params.getExecutors())
-            .setCellPathResolver(params.getCell().getCellPathResolver())
-            .setBuildCellRootPath(params.getCell().getRoot())
+            .setCellPathResolver(params.getCells().getRootCell().getCellPathResolver())
+            .setBuildCellRootPath(params.getCells().getRootCell().getRoot().getPath())
+            .setCells(params.getCells())
             .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
             .setDefaultTestTimeoutMillis(testBuckConfig.getDefaultTestTimeoutMillis())
             .setInclNoLocationClassesEnabled(testBuckConfig.isInclNoLocationClassesEnabled())
@@ -447,7 +457,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             params.getUnconfiguredBuildTargetFactory(),
             targetGraphCreationResult,
             params.getTargetConfiguration(),
-            params.getBuckEventBus());
+            params.getBuckEventBus(),
+            params.getCells());
   }
 
   @Override
@@ -507,12 +518,12 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
         params.getUnconfiguredBuildTargetFactory();
     return getCommandLineBuildTargetNormalizer(
-            params.getCell(), params.getClientWorkingDir(), params.getBuckConfig())
+            params.getCells().getRootCell(), params.getClientWorkingDir(), params.getBuckConfig())
         .normalizeAll(arguments).stream()
         .map(
             input ->
                 unconfiguredBuildTargetFactory.create(
-                    input, params.getCell().getCellNameResolver()))
+                    input, params.getCells().getRootCell().getCellNameResolver()))
         .map(
             unconfiguredBuildTarget ->
                 // TODO(nga): ignores default_target_platform and configuration detectors
@@ -563,7 +574,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   }
 
   private void parseConfigFileOption(
-      ImmutableMap<CellName, Path> cellMapping, CellConfig.Builder builder, String filename) {
+      ImmutableMap<CellName, AbsPath> cellMapping, CellConfig.Builder builder, String filename) {
     // See if the filename argument specifies the cell.
     String[] matches = filename.split("=", 2);
 
@@ -588,17 +599,17 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     // Filename may also contain the cell name, so resolve the path to the file.
     BuckCellArg filenameArg = BuckCellArg.of(filename);
     filename = BuckCellArg.of(filename).getArg();
-    Path projectRoot =
+    AbsPath projectRoot =
         cellMapping.get(
             filenameArg.getCellName().isPresent()
                 ? CellName.of(filenameArg.getCellName().get())
                 : CellName.ROOT_CELL_NAME);
 
-    Path path = projectRoot.resolve(filename);
+    AbsPath path = projectRoot.resolve(filename);
     ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries;
 
     try {
-      sectionsToEntries = Configs.parseConfigFile(path);
+      sectionsToEntries = Configs.parseConfigFile(path.getPath());
     } catch (IOException e) {
       throw new HumanReadableException(e, "File could not be read: %s", filename);
     }
@@ -639,7 +650,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
 
   @Override
   @SuppressWarnings("unchecked")
-  public CellConfig getConfigOverrides(ImmutableMap<CellName, Path> cellMapping) {
+  public CellConfig getConfigOverrides(ImmutableMap<CellName, AbsPath> cellMapping) {
     CellConfig.Builder builder = CellConfig.builder();
 
     for (Object option : configOverrides) {

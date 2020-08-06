@@ -498,14 +498,18 @@ public class SkylarkUserDefinedRuleTest {
             false,
             false);
 
-    ImmutableMap<String, ParamInfo> paramInfos = rule.getAllParamInfo();
+    ImmutableMap<String, ParamInfo<?>> paramInfos = rule.getAllParamInfo();
 
+    assertEquals(ImmutableSet.of("name", "arg1"), paramInfos.keySet());
+
+    SkylarkParamInfo name = (SkylarkParamInfo) paramInfos.get("name");
+    SkylarkParamInfo arg1 = (SkylarkParamInfo) paramInfos.get("arg1");
+
+    assertEquals("name", name.getName());
     assertEquals(
-        ImmutableMap.of(
-            "name",
-            new SkylarkParamInfo("name", StringAttribute.of("", "", true, ImmutableList.of())),
-            "arg1",
-            new SkylarkParamInfo("arg1", params.get("arg1").getAttribute())),
-        paramInfos);
+        StringAttribute.of("", "The name of the target", true, ImmutableList.of()), name.getAttr());
+
+    assertEquals("arg1", arg1.getName());
+    assertEquals(params.get("arg1").getAttribute(), arg1.getAttr());
   }
 }

@@ -19,6 +19,7 @@ package com.facebook.buck.step.impl;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.AbstractAction;
@@ -105,7 +106,8 @@ public class TestActionExecutionRunner {
                 .setJavaPackageFinder(new FakeJavaPackageFinder())
                 .setExecutors(ImmutableMap.of())
                 .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
-                .setBuildCellRootPath(projectFilesystem.getRootPath())
+                .setCells(new TestCellBuilder().setFilesystem(projectFilesystem).build())
+                .setBuildCellRootPath(projectFilesystem.getRootPath().getPath())
                 .setProcessExecutor(processExecutor)
                 .setProjectFilesystemFactory(projectFilesystemFactory)
                 .build());

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.model.targetgraph;
 
-import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -24,6 +23,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
@@ -253,7 +253,8 @@ public class TargetNodeVisibilityTest {
     FakeRuleDescription description = new FakeRuleDescription();
     FakeRuleDescriptionArg arg =
         FakeRuleDescriptionArg.builder().setName(buildTarget.getShortName()).build();
-    return new TargetNodeFactory(new DefaultTypeCoercerFactory())
+    return new TargetNodeFactory(
+            new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE)
         .createFromObject(
             description,
             arg,
@@ -267,7 +268,6 @@ public class TargetNodeVisibilityTest {
                 .collect(ImmutableSet.toImmutableSet()),
             withinView.stream()
                 .map(s -> VisibilityPatternParser.parse(cellNames, buildFile, s))
-                .collect(ImmutableSet.toImmutableSet()),
-            createCellRoots(filesystem));
+                .collect(ImmutableSet.toImmutableSet()));
   }
 }

@@ -18,10 +18,12 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.Parser;
@@ -51,7 +53,7 @@ class TargetPatternEvaluator {
 
   private final Parser parser;
   private final ParsingContext parsingContext;
-  private final Path projectRoot;
+  private final AbsPath projectRoot;
   private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
   private final BuckConfig buckConfig;
   private final Cell rootCell;
@@ -101,10 +103,10 @@ class TargetPatternEvaluator {
       }
 
       // Check if this is an alias.
-      ImmutableSet<UnconfiguredBuildTargetView> aliasTargets =
+      ImmutableSet<UnconfiguredBuildTarget> aliasTargets =
           AliasConfig.from(buckConfig).getBuildTargetsForAlias(pattern);
       if (!aliasTargets.isEmpty()) {
-        for (UnconfiguredBuildTargetView alias : aliasTargets) {
+        for (UnconfiguredBuildTarget alias : aliasTargets) {
           unresolved.put(alias.getFullyQualifiedName(), pattern);
         }
       } else {
@@ -140,7 +142,7 @@ class TargetPatternEvaluator {
   }
 
   private ImmutableSet<QueryTarget> resolveFilePattern(String pattern) throws IOException {
-    ImmutableSet<Path> filePaths =
+    ImmutableSet<RelPath> filePaths =
         PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, ImmutableList.of(pattern))
             .relativePathsUnderProjectRoot;
 

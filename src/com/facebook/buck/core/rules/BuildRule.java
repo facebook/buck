@@ -23,12 +23,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AllowsNonAnnotatedFields;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.step.Step;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableList;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
@@ -38,22 +35,17 @@ import javax.annotation.Nullable;
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE)
 public interface BuildRule
-    extends Comparable<BuildRule>, AllowsNonAnnotatedFields, BuildEngineAction {
+    extends Comparable<BuildRule>, AllowsNonAnnotatedFields, BuildEngineAction, HasNameAndType {
   // We allow non-@AddToRuleKey annotated fields in BuildRule because they are so extensively used
   // for non-action-y things (like Provider-type things).
 
   @Override
   BuildTarget getBuildTarget();
 
-  @JsonProperty("name")
-  @JsonView(JsonViews.MachineReadableLog.class)
+  @Override
   default String getFullyQualifiedName() {
     return getBuildTarget().getFullyQualifiedName();
   }
-
-  @JsonProperty("type")
-  @JsonView(JsonViews.MachineReadableLog.class)
-  String getType();
 
   /**
    * @return the set of rules that must be built before this rule. Normally, this matches the value

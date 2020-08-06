@@ -35,7 +35,7 @@ public class Flavors {
   public static Predicate<BuildTarget> containsFlavors(FlavorDomain<?> domain) {
     return input -> {
       ImmutableSet<Flavor> flavorSet =
-          Sets.intersection(domain.getFlavors(), input.getFlavors()).immutableCopy();
+          Sets.intersection(domain.getFlavors(), input.getFlavors().getSet()).immutableCopy();
       return !flavorSet.isEmpty();
     };
   }
@@ -59,7 +59,7 @@ public class Flavors {
 
       // Now extract all relevant domain flavors from our parent target.
       ImmutableSet<Flavor> flavorSet =
-          Sets.intersection(domain.getFlavors(), target.getFlavors()).immutableCopy();
+          Sets.intersection(domain.getFlavors(), target.getFlavors().getSet()).immutableCopy();
 
       if (flavorSet.isEmpty()) {
         throw new HumanReadableException("%s: no flavor for \"%s\"", target, domain.getName());

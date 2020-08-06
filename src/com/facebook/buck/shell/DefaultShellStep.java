@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
@@ -29,6 +30,11 @@ public class DefaultShellStep extends ShellStep {
   private ImmutableList<String> args;
 
   public DefaultShellStep(
+      AbsPath workingDirectory, List<String> args, Map<String, String> environment) {
+    this(workingDirectory.getPath(), args, environment);
+  }
+
+  public DefaultShellStep(
       Path workingDirectory, List<String> args, Map<String, String> environment) {
     super(workingDirectory);
     this.args = ImmutableList.copyOf(args);
@@ -37,6 +43,10 @@ public class DefaultShellStep extends ShellStep {
 
   public DefaultShellStep(Path workingDirectory, List<String> args) {
     this(workingDirectory, args, ImmutableMap.of());
+  }
+
+  public DefaultShellStep(AbsPath workingDirectory, List<String> args) {
+    this(workingDirectory.getPath(), args);
   }
 
   @Override

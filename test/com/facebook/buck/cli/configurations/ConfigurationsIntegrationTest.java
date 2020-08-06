@@ -18,6 +18,7 @@ package com.facebook.buck.cli.configurations;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.core.model.BuildTarget;
@@ -28,6 +29,7 @@ import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.MoreStringsForTests;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -45,29 +47,6 @@ import org.junit.Test;
 
 public class ConfigurationsIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
-
-  @Test
-  public void targetsInFileFilteredByConstraints() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_target_filtering", tmp);
-    workspace.setUp();
-
-    workspace
-        .runBuckCommand(
-            "build", "--target-platforms", "//config:osx_x86_64", "//target_compatible_with:")
-        .assertSuccess();
-
-    workspace.getBuildLog().assertTargetBuiltLocally("//target_compatible_with:cat_on_osx");
-    workspace.getBuildLog().assertTargetIsAbsent("//target_compatible_with:cat_on_linux");
-
-    workspace
-        .runBuckCommand(
-            "build", "--target-platforms", "//config:linux_x86_64", "//target_compatible_with:")
-        .assertSuccess();
-
-    workspace.getBuildLog().assertTargetBuiltLocally("//target_compatible_with:cat_on_linux");
-    workspace.getBuildLog().assertTargetIsAbsent("//target_compatible_with:cat_on_osx");
-  }
 
   @Test
   public void targetsInFileFilteredByConfigs() throws IOException {
@@ -124,24 +103,6 @@ public class ConfigurationsIntegrationTest {
   }
 
   @Test
-  public void buildFailsWhenDepDoesNotMatchTargetPlatform() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace.runBuckCommand("build", "--target-platforms", "//config:osx_x86-64", "//:lib");
-    result.assertFailure();
-    MatcherAssert.assertThat(
-        result.getStderr(),
-        MoreStringsForTests.containsIgnoringPlatformNewlines(
-            "Build target //:dep is restricted to constraints "
-                + "in \"target_compatible_with\" and \"compatible_with\" "
-                + "that do not match the target platform //config:osx_x86-64.\n"
-                + "Target constraints:\nbuck//config/constraints:linux"));
-  }
-
-  @Test
   public void buildFailsWhenDepCompatiblePlatformDoesNotMatchTargetPlatform() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
@@ -155,9 +116,25 @@ public class ConfigurationsIntegrationTest {
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "Build target //:dep_with_compatible_with is restricted to constraints "
-                + "in \"target_compatible_with\" and \"compatible_with\" "
+                + "in \"compatible_with\" "
                 + "that do not match the target platform //config:osx_x86-64.\n"
                 + "Target compatible with configurations:\n//config:linux_config"));
+  }
+
+  @Test
+  public void testIncompleteSelectGetsFilteredIfIncompatible() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_target_filtering", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "build",
+            "--target-platforms",
+            "//config:linux_x86_64",
+            "//compatible_with:constrained_select");
+    result.assertSuccess();
+    MatcherAssert.assertThat(result.getStderr(), Matchers.containsString("1 target skipped"));
   }
 
   @Test
@@ -301,6 +278,7 @@ public class ConfigurationsIntegrationTest {
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "Cannot use select() expression when target platform is not specified\n"
+                + "    At //config:linux_config\n"
                 + "    At //default_platform_only_leaf:dep\n"
                 + "    At //default_platform_only_leaf:intermediate\n"
                 + "    At //default_platform_only_leaf:leaf"));
@@ -507,7 +485,9 @@ public class ConfigurationsIntegrationTest {
             this, "non_unique_conf_and_flavor_deny", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("query", "deps(//...)");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query", "-c", "project.buck_out_include_target_config_hash=false", "deps(//...)");
     result.assertFailure();
     MatcherAssert.assertThat(
         result.getStderr(),
@@ -523,13 +503,41 @@ public class ConfigurationsIntegrationTest {
             this, "non_unique_conf_and_flavor_deny", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("build", "//...");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "build", "-c", "project.buck_out_include_target_config_hash=false", "//...");
     result.assertFailure();
     MatcherAssert.assertThat(
         result.getStderr(),
         Matchers.matchesPattern(
             "(?s).*Target //:j has more than one configurations \\(//:p-. and //:p-.\\)"
                 + " with the same set of flavors \\[\\].*"));
+  }
+
+  @Test
+  public void allowNonUniqueConfAndFlavorInQuery() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "non_unique_conf_and_flavor_deny", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("query", "deps(//...)");
+    result.assertSuccess();
+    assertTrue(MoreStrings.lines(result.getStdout()).contains("//:j"));
+    assertTrue(MoreStrings.lines(result.getStdout()).contains("//:k"));
+  }
+
+  @Test
+  public void allowNonUniqueConfAndFlavorInBuild() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "non_unique_conf_and_flavor_deny", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("build", "//...");
+    result.assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:j");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:k");
   }
 
   @Test

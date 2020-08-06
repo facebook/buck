@@ -130,7 +130,7 @@ public class IjProjectWriter {
     Path targetInfoMapPath = getTargetInfoMapPath();
     return outFilesystem.exists(targetInfoMapPath)
         ? ObjectMappers.createParser(outFilesystem.newFileInputStream(targetInfoMapPath))
-            .readValueAs(new TypeReference<TreeMap<String, TreeMap<String, String>>>() {})
+            .readValueAs(new TypeReference<TreeMap<String, TreeMap<String, Object>>>() {})
         : Maps.newTreeMap();
   }
 
@@ -277,7 +277,18 @@ public class IjProjectWriter {
   }
 
   private void writeLibrary(IjLibrary library) throws IOException {
-    ST contents = StringTemplateFile.LIBRARY_TEMPLATE.getST();
+    ST contents = null;
+    if (library.getType() == IjLibrary.Type.DEFAULT) {
+      contents = StringTemplateFile.LIBRARY_TEMPLATE.getST();
+    } else if (library.getType() == IjLibrary.Type.KOTLIN_JAVA_RUNTIME) {
+      Optional<Path> templatePath = projectConfig.getKotlinJavaRuntimeLibraryTemplatePath();
+      if (templatePath.isPresent()) {
+        contents = StringTemplateFile.getST(templatePath.get());
+      }
+    }
+    if (contents == null) {
+      return;
+    }
     contents.add("name", library.getName());
     contents.add(
         "binaryJars",
@@ -339,13 +350,30 @@ public class IjProjectWriter {
    */
   public void update() throws IOException {
     outFilesystem.mkdirs(getIdeaConfigDir());
-    for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
-      ImmutableList<ContentRoot> contentRoots = projectDataPreparer.getContentRoots(module);
-      writeModule(module, contentRoots);
-    }
-    for (IjLibrary library : projectDataPreparer.getLibrariesToBeWritten()) {
-      writeLibrary(library);
-    }
+    projectDataPreparer
+        .getModulesToBeWritten()
+        .parallelStream()
+        .forEach(
+            module -> {
+              try {
+                ImmutableList<ContentRoot> contentRoots =
+                    projectDataPreparer.getContentRoots(module);
+                writeModule(module, contentRoots);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
+    projectDataPreparer
+        .getLibrariesToBeWritten()
+        .parallelStream()
+        .forEach(
+            library -> {
+              try {
+                writeLibrary(library);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
     updateModulesIndex(projectDataPreparer.getModulesToBeWritten());
 
     if (projectConfig.isGeneratingTargetInfoMapEnabled()) {

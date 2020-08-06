@@ -144,8 +144,7 @@ public class DLibraryDescription
         graphBuilder,
         cxxPlatform,
         staticLibraryName,
-        compiledSources,
-        /* cacheable */ true);
+        compiledSources);
   }
 
   @Override

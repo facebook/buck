@@ -23,6 +23,7 @@ import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleTestDescriptionArg;
+import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
@@ -32,6 +33,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
@@ -468,7 +470,7 @@ public class WorkspaceAndProjectGenerator {
       }
       ImmutableMultimap<Path, BuildTarget> projectDirectoryToBuildTargets =
           projectDirectoryToBuildTargetsBuilder.build();
-      Path relativeTargetCell = rootCell.getRoot().relativize(projectCell.getRoot());
+      RelPath relativeTargetCell = rootCell.getRoot().relativize(projectCell.getRoot());
       for (Path projectDirectory : projectDirectoryToBuildTargets.keySet()) {
         ImmutableSet<BuildTarget> rules =
             filterRulesForProjectDirectory(
@@ -495,7 +497,7 @@ public class WorkspaceAndProjectGenerator {
                   // convert the projectPath to relative to the target cell here
                   result =
                       GenerationResult.of(
-                          relativeTargetCell.resolve(result.getProjectPath()),
+                          relativeTargetCell.getPath().resolve(result.getProjectPath()),
                           result.isProjectGenerated(),
                           result.getRequiredBuildTargets(),
                           result.getXcconfigPaths(),
@@ -536,7 +538,7 @@ public class WorkspaceAndProjectGenerator {
     requiredBuildTargetsBuilder.addAll(result.getRequiredBuildTargets());
     ImmutableSortedSet<Path> relativeXcconfigPaths =
         result.getXcconfigPaths().stream()
-            .map((Path p) -> rootCell.getFilesystem().relativize(p))
+            .map((Path p) -> rootCell.getFilesystem().relativize(p).getPath())
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     xcconfigPathsBuilder.addAll(relativeXcconfigPaths);
     filesToCopyInXcodeBuilder.addAll(result.getFilesToCopyInXcode());
@@ -562,7 +564,8 @@ public class WorkspaceAndProjectGenerator {
       if (generator != null) {
         LOG.debug("Already generated project for target %s, skipping", projectDirectory);
       } else {
-        LOG.debug("Generating project for directory %s with targets %s", projectDirectory, rules);
+        LOG.debug(
+            "Generating projects for directory %s with %d targets", projectDirectory, rules.size());
         String projectName;
         Path projectDirectoryName = projectDirectory.getFileName();
         if (projectDirectoryName == null || projectDirectoryName.toString().equals("")) {
@@ -852,9 +855,9 @@ public class WorkspaceAndProjectGenerator {
       return false;
     }
 
-    // Only create schemes for APP_EXTENSION.
+    // Only create schemes for APP_EXTENSION or its subtypes. (e.g. iMesage apps)
     ProductType productType = ProductType.of(bundleArg.getXcodeProductType().get());
-    return productType.equals(ProductTypes.APP_EXTENSION);
+    return productType.toString().startsWith(ProductTypes.APP_EXTENSION.toString());
   }
 
   /**
@@ -907,16 +910,16 @@ public class WorkspaceAndProjectGenerator {
 
   private static ImmutableSet<BuildTarget> filterRulesForProjectDirectory(
       TargetGraph projectGraph, ImmutableSet<BuildTarget> projectBuildTargets) {
-    // ProjectGenerator implicitly generates targets for all apple_binary rules which
-    // are referred to by apple_bundle rules' 'binary' field.
-    //
-    // We used to support an explicit xcode_project_config() which
-    // listed all dependencies explicitly, but now that we synthesize
-    // one, we need to ensure we continue to only pass apple_binary
-    // targets which do not belong to apple_bundle rules.
-    ImmutableSet.Builder<BuildTarget> binaryTargetsInsideBundlesBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<BuildTarget> excludedTargetsBuilder = ImmutableSet.builder();
     for (TargetNode<?> projectTargetNode : projectGraph.getAll(projectBuildTargets)) {
       if (projectTargetNode.getDescription() instanceof AppleBundleDescription) {
+        // ProjectGenerator implicitly generates targets for all apple_binary rules which
+        // are referred to by apple_bundle rules' 'binary' field.
+        //
+        // We used to support an explicit xcode_project_config() which
+        // listed all dependencies explicitly, but now that we synthesize
+        // one, we need to ensure we continue to only pass apple_binary
+        // targets which do not belong to apple_bundle rules.
         AppleBundleDescriptionArg appleBundleDescriptionArg =
             (AppleBundleDescriptionArg) projectTargetNode.getConstructorArg();
         // We don't support apple_bundle rules referring to apple_binary rules
@@ -936,15 +939,15 @@ public class WorkspaceAndProjectGenerator {
             projectTargetNode.getBuildTarget(),
             appleBundleDescriptionArg.getBinary(),
             projectTargetNode.getBuildTarget().getCellRelativeBasePath());
-        binaryTargetsInsideBundlesBuilder.add(binaryTarget);
+        excludedTargetsBuilder.add(binaryTarget);
+      } else if (projectTargetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
+        // prebuilt frameworks are unbuildable, they just propagate linker flags and dependencies
+        excludedTargetsBuilder.add(projectTargetNode.getBuildTarget());
       }
     }
-    ImmutableSet<BuildTarget> binaryTargetsInsideBundles =
-        binaryTargetsInsideBundlesBuilder.build();
 
-    // Remove all apple_binary targets which are inside bundles from
-    // the rest of the build targets in the project.
-    return ImmutableSet.copyOf(Sets.difference(projectBuildTargets, binaryTargetsInsideBundles));
+    ImmutableSet<BuildTarget> excludedBuildTargets = excludedTargetsBuilder.build();
+    return ImmutableSet.copyOf(Sets.difference(projectBuildTargets, excludedBuildTargets));
   }
 
   /**
@@ -963,7 +966,6 @@ public class WorkspaceAndProjectGenerator {
       boolean includeDependenciesTests,
       ImmutableSet<TargetNode<?>> orderedTargetNodes,
       ImmutableSet<TargetNode<AppleTestDescriptionArg>> extraTestBundleTargets) {
-    LOG.debug("Getting ordered test target nodes for %s", orderedTargetNodes);
     ImmutableSet.Builder<TargetNode<AppleTestDescriptionArg>> testsBuilder = ImmutableSet.builder();
     if (includeProjectTests) {
       Optional<TargetNode<?>> mainTargetNode = Optional.empty();
@@ -1170,6 +1172,7 @@ public class WorkspaceAndProjectGenerator {
               orderedBuildTestTargets,
               orderedRunTestTargets,
               Optional.empty(),
+              Optional.empty(),
               Optional.empty());
 
       schemeGenerator.writeScheme();
@@ -1221,6 +1224,14 @@ public class WorkspaceAndProjectGenerator {
               ? outputDirectory
               : outputDirectory.resolve(workspaceName + ".xcworkspace");
 
+      Optional<ImmutableMap<SchemeActionType, PBXTarget>> expandVariablesBasedOn = Optional.empty();
+      if (schemeConfigArg.getExpandVariablesBasedOn().isPresent()) {
+        Map<SchemeActionType, PBXTarget> mapTargets =
+          schemeConfigArg.getExpandVariablesBasedOn().get().entrySet()
+            .stream().collect(Collectors.toMap(Map.Entry::getKey, e -> buildTargetToPBXTarget.get(e.getValue()) ));
+        expandVariablesBasedOn = Optional.of(ImmutableMap.copyOf(mapTargets));
+      }
+
       SchemeGenerator schemeGenerator =
           buildSchemeGenerator(
               targetToProjectPathMap,
@@ -1232,7 +1243,8 @@ public class WorkspaceAndProjectGenerator {
               orderedBuildTestTargets,
               orderedRunTestTargets,
               runnablePath,
-              remoteRunnablePath);
+              remoteRunnablePath,
+              expandVariablesBasedOn);
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);
     }
@@ -1248,7 +1260,8 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSet<PBXTarget> orderedBuildTestTargets,
       ImmutableSet<PBXTarget> orderedRunTestTargets,
       Optional<String> runnablePath,
-      Optional<String> remoteRunnablePath) {
+      Optional<String> remoteRunnablePath,
+      Optional<ImmutableMap<SchemeActionType, PBXTarget>> expandVariablesBasedOn) {
     Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>> environmentVariables =
         Optional.empty();
     Optional<
@@ -1281,9 +1294,10 @@ public class WorkspaceAndProjectGenerator {
         wasCreatedForAppExtension,
         runnablePath,
         remoteRunnablePath,
-        XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(workspaceArguments),
+        XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(schemeConfigArg),
         targetToProjectPathMap,
         environmentVariables,
+        expandVariablesBasedOn,
         additionalSchemeActions,
         launchStyle,
         watchInterface,

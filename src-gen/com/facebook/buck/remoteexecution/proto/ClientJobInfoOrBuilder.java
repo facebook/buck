@@ -62,4 +62,22 @@ public interface ClientJobInfoOrBuilder extends
    */
   com.google.protobuf.ByteString
       getGroupIdBytes();
+
+  /**
+   * <pre>
+   * Job tenant.
+   * </pre>
+   *
+   * <code>string client_side_tenant = 4;</code>
+   */
+  java.lang.String getClientSideTenant();
+  /**
+   * <pre>
+   * Job tenant.
+   * </pre>
+   *
+   * <code>string client_side_tenant = 4;</code>
+   */
+  com.google.protobuf.ByteString
+      getClientSideTenantBytes();
 }

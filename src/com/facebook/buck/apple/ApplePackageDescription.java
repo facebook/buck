@@ -112,7 +112,7 @@ public class ApplePackageDescription
   }
 
   private BuildTarget propagateFlavorsToTarget(BuildTarget fromTarget, BuildTarget toTarget) {
-    return toTarget.withAppendedFlavors(fromTarget.getFlavors());
+    return toTarget.withAppendedFlavors(fromTarget.getFlavors().getSet());
   }
 
   /** Propagate the packages's flavors to its dependents. */
@@ -210,7 +210,7 @@ public class ApplePackageDescription
       FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain) {
 
     Sets.SetView<Flavor> intersection =
-        Sets.intersection(appleCxxPlatformFlavorDomain.getFlavors(), target.getFlavors());
+        Sets.intersection(appleCxxPlatformFlavorDomain.getFlavors(), target.getFlavors().getSet());
     if (intersection.isEmpty()) {
       if (defaultPlatform.isPresent()) {
         return ImmutableSet.of(defaultPlatform.get());

@@ -175,7 +175,7 @@ public class DirArtifactCache implements ArtifactCache {
         filesystem.mkdirs(getParentDirForRuleKey(ruleKey));
 
         if (!output.canBorrow()) {
-          storeArtifactOutput(output.getPath(), artifactPath);
+          filesystem.copyFile(output.getPath(), artifactPath);
         } else {
           // This branch means that we are apparently the only users of the `output`, so instead
           // of making a safe transfer of the output to the dir cache (copy+move), we can just
@@ -184,7 +184,7 @@ public class DirArtifactCache implements ArtifactCache {
             borrowedAndStoredArtifactPath = Optional.of(artifactPath);
             filesystem.move(output.getPath(), artifactPath, StandardCopyOption.REPLACE_EXISTING);
           } else {
-            storeArtifactOutput(borrowedAndStoredArtifactPath.get(), artifactPath);
+            filesystem.copyFile(borrowedAndStoredArtifactPath.get(), artifactPath);
           }
         }
         bytesSinceLastDeleteOldFiles += filesystem.getFileSize(artifactPath);
@@ -300,20 +300,6 @@ public class DirArtifactCache implements ArtifactCache {
       result = result.resolve(f);
     }
     return result;
-  }
-
-  private void storeArtifactOutput(Path output, Path artifactPath) throws IOException {
-    // Write to a temporary file and move the file to its final location atomically to protect
-    // against partial artifacts (whether due to buck interruption or filesystem failure) posing
-    // as valid artifacts during subsequent buck runs.
-    Path tmp = filesystem.createTempFile(getPreparedTempFolder(), "artifact", TMP_EXTENSION);
-    try {
-      filesystem.copyFile(output, tmp);
-      filesystem.move(tmp, artifactPath);
-      bytesSinceLastDeleteOldFiles += filesystem.getFileSize(artifactPath);
-    } finally {
-      filesystem.deleteFileAtPathIfExists(tmp);
-    }
   }
 
   @Override

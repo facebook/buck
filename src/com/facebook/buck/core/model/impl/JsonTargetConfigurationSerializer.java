@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -46,10 +46,10 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
 
   private final ObjectWriter objectWriter;
   private final ObjectReader objectReader;
-  private final Function<String, UnconfiguredBuildTargetView> buildTargetProvider;
+  private final Function<String, UnconfiguredBuildTarget> buildTargetProvider;
 
   public JsonTargetConfigurationSerializer(
-      Function<String, UnconfiguredBuildTargetView> buildTargetProvider) {
+      Function<String, UnconfiguredBuildTarget> buildTargetProvider) {
     this.buildTargetProvider = buildTargetProvider;
     ObjectMapper objectMapper = ObjectMappers.createWithEmptyBeansPermitted();
     SimpleModule targetConfigurationModule = new SimpleModule();

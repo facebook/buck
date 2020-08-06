@@ -24,6 +24,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
@@ -62,9 +63,9 @@ interface OcamlPlatform extends Toolchain, FlavorConvertible {
   CompilerProvider getCxxCompiler();
 
   /** @return all C/C++ platform flags used to preprocess, compiler, and assemble C sources. */
-  ImmutableList<String> getCFlags();
+  ImmutableList<Arg> getCFlags();
 
-  ImmutableList<String> getLdFlags();
+  ImmutableList<Arg> getLdFlags();
 
   /** @return the {@link CxxPlatform} to use for C/C++ dependencies. */
   CxxPlatform getCxxPlatform();

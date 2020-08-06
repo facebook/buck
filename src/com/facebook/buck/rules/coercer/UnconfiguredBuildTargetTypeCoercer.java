@@ -16,17 +16,17 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
-import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 
-/** {@link TypeCoercer} for {@link UnconfiguredBuildTargetView} */
+/** {@link TypeCoercer} for {@link UnconfiguredBuildTarget} */
 public class UnconfiguredBuildTargetTypeCoercer
-    extends LeafTypeCoercer<UnconfiguredBuildTargetView> {
+    extends LeafUnconfiguredOnlyCoercer<UnconfiguredBuildTarget> {
 
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
 
@@ -36,27 +36,25 @@ public class UnconfiguredBuildTargetTypeCoercer
   }
 
   @Override
-  public Class<UnconfiguredBuildTargetView> getOutputClass() {
-    return UnconfiguredBuildTargetView.class;
+  public TypeToken<UnconfiguredBuildTarget> getUnconfiguredType() {
+    return new TypeToken<UnconfiguredBuildTarget>() {};
   }
 
   @Override
-  public UnconfiguredBuildTargetView coerce(
-      CellPathResolver cellRoots,
-      ProjectFilesystem alsoUnused,
+  public UnconfiguredBuildTarget coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType());
     }
     String param = (String) object;
 
     try {
       return unconfiguredBuildTargetFactory.createForPathRelativeToProjectRoot(
-          pathRelativeToProjectRoot, param, cellRoots.getCellNameResolver());
+          pathRelativeToProjectRoot, param, cellRoots);
     } catch (BuildTargetParseException e) {
       throw new CoerceFailedException(
           String.format(

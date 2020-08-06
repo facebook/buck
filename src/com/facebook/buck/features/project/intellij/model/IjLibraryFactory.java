@@ -21,6 +21,16 @@ import java.util.Optional;
 
 /** Interface for building {@link IjLibrary} objects from {@link TargetNode}s. */
 public abstract class IjLibraryFactory {
+  // This is the name hardcoded in the Kotlin plugin
+  private static final String KOTLIN_JAVA_RUNTIME_LIBRARY_NAME = "KotlinJavaRuntime";
+
+  private static class KotlinJavaRuntimeLibraryHolder {
+    private static final IjLibrary INSTANCE =
+        IjLibrary.builder()
+            .setName(KOTLIN_JAVA_RUNTIME_LIBRARY_NAME)
+            .setType(IjLibrary.Type.KOTLIN_JAVA_RUNTIME)
+            .build();
+  }
 
   /**
    * Creates an IjLibrary.
@@ -30,4 +40,8 @@ public abstract class IjLibraryFactory {
    *     the target's output is a .jar an instance is returned.
    */
   public abstract Optional<IjLibrary> getLibrary(TargetNode<?> target);
+
+  public static IjLibrary getKotlinJavaRuntimeLibrary() {
+    return KotlinJavaRuntimeLibraryHolder.INSTANCE;
+  }
 }

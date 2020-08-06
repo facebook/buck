@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -74,7 +75,7 @@ public class DexProducedFromJavaLibraryTest {
 
     BuildContext context =
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-            .withBuildCellRootPath(filesystem.getRootPath());
+            .withBuildCellRootPath(filesystem.getRootPath().getPath());
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     Path dexOutput =
@@ -110,11 +111,11 @@ public class DexProducedFromJavaLibraryTest {
   }
 
   private void createFiles(ProjectFilesystem filesystem, String... paths) throws IOException {
-    Path root = filesystem.getRootPath();
+    AbsPath root = filesystem.getRootPath();
     for (String path : paths) {
-      Path resolved = root.resolve(path);
-      Files.createDirectories(resolved.getParent());
-      Files.write(resolved, "".getBytes(UTF_8));
+      AbsPath resolved = root.resolve(path);
+      Files.createDirectories(resolved.getParent().getPath());
+      Files.write(resolved.getPath(), "".getBytes(UTF_8));
     }
   }
 }

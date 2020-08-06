@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser.manifest;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.GraphEngineCache;
 import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.io.file.MorePaths;
@@ -158,13 +159,10 @@ public class BuildFileManifestCache
       // If dependency file is modified or deleted, invalidate packages that depend on it
       // Dependent files may come from different cells
       if (event.getKind() == Kind.MODIFY || event.getKind() == Kind.DELETE) {
-        Path eventPath = event.getPath();
+        RelPath eventPath = event.getPath();
 
         // Convert any path to be relative to super root, because that's how we store dependencies
-        Path relativeToSuperRootPath =
-            eventPath.isAbsolute()
-                ? superRootPath.relativize(eventPath)
-                : rootToSuperRootRelativePath.resolve(eventPath);
+        Path relativeToSuperRootPath = rootToSuperRootRelativePath.resolve(eventPath.getPath());
         invalidateDependencies(relativeToSuperRootPath);
 
         // We do not stop here and can also potentially invalidate the package that has, but does
@@ -173,25 +171,25 @@ public class BuildFileManifestCache
       }
 
       // other changes are only applicable to current cell
-      if (!rootPath.equals(event.getCellPath())) {
+      if (!rootPath.equals(event.getCellPath().getPath())) {
         return;
       }
 
       // Build file was altered
       if (event.getPath().endsWith(buildFileName)) {
-        Path packagePath = MorePaths.getParentOrEmpty(event.getPath());
+        RelPath packagePath = MorePaths.getParentOrEmpty(event.getPath());
         switch (event.getKind()) {
           case MODIFY:
             // If build file is modified, just invalidate containing package
-            invalidatePackage(packagePath);
+            invalidatePackage(packagePath.getPath());
             break;
           case CREATE:
           case DELETE:
             // If build file is created or deleted, invalidate current and parent packages
             // Potentially there may be the case when we do not need to invalidate parent
             // package (if new build file is created in new directory), but we ignore it for now
-            invalidatePackage(packagePath);
-            invalidateContainingPackage(MorePaths.getParentOrEmpty(packagePath));
+            invalidatePackage(packagePath.getPath());
+            invalidateContainingPackage(MorePaths.getParentOrEmpty(packagePath).getPath());
             break;
           default:
             throw new UnsupportedOperationException(event.getKind().getClass().getName());
@@ -206,10 +204,10 @@ public class BuildFileManifestCache
           break;
         case CREATE:
         case DELETE:
-          Path packagePath = MorePaths.getParentOrEmpty(event.getPath());
+          RelPath packagePath = MorePaths.getParentOrEmpty(event.getPath());
           // if regular file is created or deleted, invalidate containing package
           // TODO: consider package boundary violations
-          invalidateContainingPackage(packagePath);
+          invalidateContainingPackage(packagePath.getPath());
           break;
         default:
           throw new UnsupportedOperationException(event.getKind().getClass().getName());

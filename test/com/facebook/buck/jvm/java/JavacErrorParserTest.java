@@ -63,7 +63,7 @@ public class JavacErrorParserTest {
   @Test
   public void shouldFindSymbolFromCannotFindSymbolInCurrentPackageError() {
     String error =
-        projectFilesystem.getRootPath().toAbsolutePath().normalize()
+        projectFilesystem.getRootPath().normalize()
             + MoreStrings.linesToText(
                 "/src/com/facebook/buck/jvm/java/DefaultJavaLibrary.java:277: error: cannot find symbol",
                 "      final JavacStep javacStep;",
@@ -86,7 +86,7 @@ public class JavacErrorParserTest {
   @Test
   public void shouldFindSymbolFromPackageDoesNotExistInCurrentPackageError() {
     String error =
-        projectFilesystem.getRootPath().toAbsolutePath().normalize()
+        projectFilesystem.getRootPath().normalize()
             + MoreStrings.linesToText(
                 "/src/com/facebook/Foo.java:60: error: package BarBaz does not exist",
                 "      BarBaz.doStuff(),",

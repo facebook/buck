@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -39,17 +39,18 @@ public class CxxLinkGroupMappingTargetCoercerTest {
   private CxxLinkGroupMappingTargetCoercer coercer;
 
   public static CxxLinkGroupMappingTargetCoercer buildTypeCoercer(
-      TypeCoercer<CxxLinkGroupMappingTarget.Traversal> traversalTypeCoercer) {
-    TypeCoercer<UnconfiguredBuildTargetView> unconfigured =
+      TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalTypeCoercer) {
+    UnconfiguredBuildTargetTypeCoercer unconfigured =
         new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory());
-    TypeCoercer<BuildTarget> buildTargetTypeCoercer = new BuildTargetTypeCoercer(unconfigured);
+    TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer =
+        new BuildTargetTypeCoercer(unconfigured);
     return new CxxLinkGroupMappingTargetCoercer(
         buildTargetTypeCoercer, traversalTypeCoercer, new PatternTypeCoercer());
   }
 
   @Before
   public void setUp() {
-    TypeCoercer<CxxLinkGroupMappingTarget.Traversal> traversalCoercer =
+    TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalCoercer =
         CxxLinkGroupMappingTargetTraversalCoercerTest.buildTypeCoercer();
     coercer = buildTypeCoercer(traversalCoercer);
   }
@@ -60,7 +61,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
     ImmutableList<Object> input = ImmutableList.of(targetString, "tree");
     CxxLinkGroupMappingTarget target =
         coercer.coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -76,7 +77,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
     ImmutableList<Object> input = ImmutableList.of(targetString, "node");
     CxxLinkGroupMappingTarget target =
         coercer.coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -94,7 +95,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
     ImmutableList<Object> input = ImmutableList.of(targetString, "tree", labelMatch);
     CxxLinkGroupMappingTarget target =
         coercer.coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,

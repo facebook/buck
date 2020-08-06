@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -200,17 +200,12 @@ public class CxxConstructorArgTest {
     }
 
     @Override
-    public ImmutableList<UnconfiguredBuildTargetView> getTargetCompatibleWith() {
+    public ImmutableList<UnconfiguredBuildTarget> getCompatibleWith() {
       return ImmutableList.of();
     }
 
     @Override
-    public ImmutableList<UnconfiguredBuildTargetView> getCompatibleWith() {
-      return ImmutableList.of();
-    }
-
-    @Override
-    public Optional<UnconfiguredBuildTargetView> getDefaultTargetPlatform() {
+    public Optional<UnconfiguredBuildTarget> getDefaultTargetPlatform() {
       return Optional.empty();
     }
 

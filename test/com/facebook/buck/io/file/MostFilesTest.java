@@ -162,6 +162,35 @@ public class MostFilesTest {
   }
 
   @Test
+  public void deleteRecursivelyIfExistsDoesNotFollowSymlinks() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path linkTarget = vfs.getPath("/link-target");
+    Path linkSource = vfs.getPath("/link-source");
+    Files.createDirectory(linkTarget);
+    Files.createSymbolicLink(linkSource, linkTarget);
+    MostFiles.deleteRecursivelyIfExists(linkSource);
+    // link is deleted, but target should still exist
+    assertTrue(Files.exists(linkTarget));
+    assertFalse(Files.exists(linkSource));
+  }
+
+  @Test
+  public void deleteRecursivelyIfExistsDeletesBrokenSymlink() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path linkTarget = vfs.getPath("/link-target");
+    Path linkSource = vfs.getPath("/link-source");
+    Files.createSymbolicLink(linkSource, linkTarget);
+
+    // sanity check
+    assertTrue(Files.isSymbolicLink(linkSource));
+    assertFalse(Files.exists(linkSource));
+
+    // this should not fail even if target does not exist
+    MostFiles.deleteRecursivelyIfExists(linkSource);
+    assertFalse(Files.exists(linkSource));
+  }
+
+  @Test
   public void deleteRecursivelyContentsOnlyLeavesParentDirectory() throws IOException {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
     Path fakeTmpDir = vfs.getPath("/tmp/fake-tmp-dir");

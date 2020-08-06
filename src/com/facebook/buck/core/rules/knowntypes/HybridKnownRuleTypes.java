@@ -16,12 +16,7 @@
 
 package com.facebook.buck.core.rules.knowntypes;
 
-import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.description.arg.ConstructorArg;
-import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
-import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 
 /** Provides access to rule types and descriptions for both native and user defined rules. */
 public class HybridKnownRuleTypes implements KnownRuleTypes {
@@ -33,46 +28,12 @@ public class HybridKnownRuleTypes implements KnownRuleTypes {
     this.userDefinedRuleTypes = userDefinedRuleTypes;
   }
 
-  /**
-   * Get a {@link RuleType} for either a native or user defined rule, depending on the identifier.
-   *
-   * @param name The identifier from the "buck.type" implicit attribute of a rule instance. For
-   *     native rules, this will be a python identifier. For user defined rules, this may or may not
-   *     be the case.
-   * @return The {@link RuleType} for either a native or a user defined rule.
-   */
   @Override
-  public RuleType getRuleType(String name) {
+  public RuleDescriptor<?> getDescriptorByName(String name) {
     if (UserDefinedRuleNames.isUserDefinedRuleIdentifier(name)) {
-      return userDefinedRuleTypes.getRuleType(name);
+      return userDefinedRuleTypes.getDescriptorByName(name);
     } else {
-      return nativeRuleTypes.getRuleType(name);
-    }
-  }
-
-  /**
-   * Get the Description class for a given {@link RuleType}
-   *
-   * @param ruleType
-   * @return The {@link BaseDescription} to use for the given {@link RuleType}
-   */
-  @Override
-  public BaseDescription<?> getDescription(RuleType ruleType) {
-    if (UserDefinedRuleNames.isUserDefinedRuleIdentifier(ruleType.getName())) {
-      return userDefinedRuleTypes.getDescription(ruleType);
-    } else {
-      return nativeRuleTypes.getDescription(ruleType);
-    }
-  }
-
-  @Override
-  public <T extends ConstructorArg> DataTransferObjectDescriptor<T> getConstructorArgDescriptor(
-      TypeCoercerFactory typeCoercerFactory, RuleType ruleType, Class<T> dtoClass) {
-    if (UserDefinedRuleNames.isUserDefinedRuleIdentifier(ruleType.getName())) {
-      return userDefinedRuleTypes.getConstructorArgDescriptor(
-          typeCoercerFactory, ruleType, dtoClass);
-    } else {
-      return nativeRuleTypes.getConstructorArgDescriptor(typeCoercerFactory, ruleType, dtoClass);
+      return nativeRuleTypes.getDescriptorByName(name);
     }
   }
 }

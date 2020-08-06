@@ -17,6 +17,7 @@
 package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.google.common.collect.ImmutableList;
@@ -47,7 +48,7 @@ public class OcamlNativePluginStep extends ShellStep {
   private final ImmutableList<String> ocamlInput;
 
   public OcamlNativePluginStep(
-      Path workingDirectory,
+      AbsPath workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> cxxCompiler,
       ImmutableList<String> ocamlCompilerCommandPrefix,

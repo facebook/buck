@@ -39,7 +39,7 @@ public class MergedTargetNodeTest {
     TargetNode<FakeTargetNodeArg> bar3 =
         FakeTargetNodeBuilder.newBuilder(
                 BuildTargetFactory.newInstance("//foo:bar")
-                    .getUnconfiguredBuildTargetView()
+                    .getUnconfiguredBuildTarget()
                     .configure(ConfigurationBuildTargetFactoryForTests.newConfiguration("//:p")))
             .build();
     ImmutableMap<UnflavoredBuildTarget, MergedTargetNode> groups =

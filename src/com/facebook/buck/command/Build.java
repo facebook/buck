@@ -104,7 +104,7 @@ public class Build implements Closeable {
     return BuildEngineBuildContext.of(
         BuildContext.of(
             graphBuilder.getSourcePathResolver(),
-            rootCell.getRoot(),
+            rootCell.getRoot().getPath(),
             javaPackageFinder,
             executionContext.getBuckEventBus(),
             rootCell.getBuckConfig().getView(BuildBuckConfig.class).getShouldDeleteTemporaries()),

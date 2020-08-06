@@ -32,6 +32,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -176,25 +177,30 @@ public class AppleBinaryDescription
 
   @Override
   public boolean hasFlavors(
-      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
-    if (FluentIterable.from(flavors).allMatch(SUPPORTED_FLAVORS::contains)) {
+        ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    Set<Flavor> unmatchedFlavors = Sets.difference(flavors, SUPPORTED_FLAVORS);
+    if (unmatchedFlavors.isEmpty()) {
       return true;
     }
     ImmutableSet<Flavor> delegateFlavors =
         ImmutableSet.copyOf(Sets.difference(flavors, NON_DELEGATE_FLAVORS));
-    if (swiftDelegate
-        .map(swift -> swift.hasFlavors(delegateFlavors, toolchainTargetConfiguration))
-        .orElse(false)) {
+    ImmutableSet<Flavor> supportedDelegateFlavors = swiftDelegate
+        .map(swift -> swift.getSupportedFlavors(delegateFlavors, toolchainTargetConfiguration))
+        .orElse(ImmutableSet.<Flavor>of());
+    unmatchedFlavors = Sets.difference(unmatchedFlavors, supportedDelegateFlavors);
+    if (unmatchedFlavors.isEmpty()) {
       return true;
     }
+    ImmutableSet<Flavor> immutableUnmatchedFlavors = ImmutableSet.<Flavor>copyOf(unmatchedFlavors);
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
-        generateThinDelegateFlavors(delegateFlavors);
+        generateThinDelegateFlavors(immutableUnmatchedFlavors);
     if (thinFlavorSets.size() > 0) {
       return Iterables.all(
           thinFlavorSets,
           inputFlavors -> cxxBinaryFlavored.hasFlavors(inputFlavors, toolchainTargetConfiguration));
     } else {
-      return cxxBinaryFlavored.hasFlavors(delegateFlavors, toolchainTargetConfiguration);
+      return cxxBinaryFlavored.hasFlavors(immutableUnmatchedFlavors,
+          toolchainTargetConfiguration);
     }
   }
 
@@ -418,6 +424,7 @@ public class AppleBinaryDescription
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks(),
         swiftBuckConfig.getUseLipoThin(),
@@ -594,7 +601,7 @@ public class AppleBinaryDescription
     if (!args.getSrcs().isEmpty()) {
       return false;
     }
-    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+    FlavorSet flavors = buildTarget.getFlavors();
     return (flavors.contains(AppleBundleDescription.WATCH_OS_FLAVOR)
         || flavors.contains(AppleBundleDescription.WATCH_OS_64_32_FLAVOR)
         || flavors.contains(AppleBundleDescription.WATCH_SIMULATOR_FLAVOR)
@@ -674,7 +681,7 @@ public class AppleBinaryDescription
     Preconditions.checkState(
         cxxPlatformFlavor.isPresent(),
         "Could not find cxx platform in:\n%s",
-        Joiner.on(", ").join(buildTarget.getFlavors()));
+        Joiner.on(", ").join(buildTarget.getFlavors().getSet()));
     ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
     for (BuildTarget dep : args.getDeps()) {
       Optional<FrameworkDependencies> frameworks =
@@ -710,7 +717,7 @@ public class AppleBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
-        generateThinDelegateFlavors(buildTarget.getFlavors());
+        generateThinDelegateFlavors(buildTarget.getFlavors().getSet());
     CxxPlatformsProvider cxxPlatformsProvider =
         getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
     if (thinFlavorSets.size() > 0) {

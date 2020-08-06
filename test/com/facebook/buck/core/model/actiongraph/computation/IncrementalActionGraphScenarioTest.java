@@ -25,6 +25,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.build.engine.RuleDepsCache;
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -388,7 +389,8 @@ public class IncrementalActionGraphScenarioTest {
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20)
+                20,
+                new TestCellBuilder().build())
             .getTargetGraph();
     ActionGraphAndBuilder result = createActionGraph(versionedTargetGraph);
     queryTransitiveDeps(result);
@@ -563,7 +565,8 @@ public class IncrementalActionGraphScenarioTest {
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20)
+                20,
+                new TestCellBuilder().setFilesystem(filesystem).build())
             .getTargetGraph();
 
     ActionGraphAndBuilder result = createActionGraph(versionedTargetGraph);
@@ -589,7 +592,8 @@ public class IncrementalActionGraphScenarioTest {
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20)
+                20,
+                new TestCellBuilder().setFilesystem(filesystem).build())
             .getTargetGraph();
 
     ActionGraphAndBuilder newResult = createActionGraph(newVersionedTargetGraph);

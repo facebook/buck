@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -32,12 +33,14 @@ import com.facebook.buck.json.BuildFilePythonResult;
 import com.facebook.buck.json.BuildFileSyntaxError;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.api.UserDefinedRuleLoader;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.PackageImplicitIncludesFinder;
 import com.facebook.buck.parser.options.ImplicitNativeRulesState;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
+import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -116,6 +119,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private final ProcessExecutor processExecutor;
   private final AssertScopeExclusiveAccess assertSingleThreadedParsing;
   private final Optional<AtomicLong> processedBytes;
+  private final Optional<UserDefinedRuleLoader> userDefinedRulesParser;
 
   private boolean isInitialized;
   private boolean isClosed;
@@ -131,8 +135,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
       ProcessExecutor processExecutor,
-      Optional<AtomicLong> processedBytes) {
+      Optional<AtomicLong> processedBytes,
+      Optional<UserDefinedRuleLoader> userDefinedRulesParser) {
     this.processedBytes = processedBytes;
+    this.userDefinedRulesParser = userDefinedRulesParser;
     this.buckPythonProgram = null;
     this.options = options;
     this.typeCoercerFactory = typeCoercerFactory;
@@ -333,9 +339,9 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       argBuilder.add(module);
     }
 
-    argBuilder.add("--project_root", options.getProjectRoot().toAbsolutePath().toString());
+    argBuilder.add("--project_root", options.getProjectRoot().toString());
 
-    for (ImmutableMap.Entry<String, Path> entry : options.getCellRoots().entrySet()) {
+    for (Map.Entry<String, AbsPath> entry : options.getCellRoots().entrySet()) {
       argBuilder.add("--cell_root", entry.getKey() + "=" + entry.getValue());
     }
 
@@ -367,6 +373,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       argBuilder.add("--warn_about_deprecated_syntax");
     }
 
+    if (options.getUserDefinedRulesState() == UserDefinedRulesState.ENABLED) {
+      argBuilder.add("--enable_user_defined_rules");
+    }
+
     return argBuilder.build();
   }
 
@@ -381,7 +391,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       throws BuildFileParseException, InterruptedException {
     LOG.verbose("Started parsing build file %s", buildFile);
     try {
-      return getAllRulesInternal(buildFile);
+      BuildFileManifest manifest = getAllRulesInternal(buildFile);
+      userDefinedRulesParser.ifPresent(
+          parser -> parser.loadExtensionsForUserDefinedRules(currentBuildFile.get(), manifest));
+      return manifest;
     } catch (IOException e) {
       MoreThrowables.propagateIfInterrupt(e);
       throw BuildFileParseException.createForBuildFileParseError(buildFile, e);
@@ -431,7 +444,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     ImmutableList<Map<String, Object>> values = ImmutableList.of();
     Optional<String> profile = Optional.empty();
     try (AssertScopeExclusiveAccess.Scope scope = assertSingleThreadedParsing.scope()) {
-      Path cellPath = options.getProjectRoot().toAbsolutePath();
+      AbsPath cellPath = options.getProjectRoot();
       String watchRoot = cellPath.toString();
       String projectPrefix = "";
       if (options.getWatchman().getProjectWatches().containsKey(cellPath)) {
@@ -442,18 +455,24 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         }
       }
       currentBuildFile.set(buildFile);
-      BuildFilePythonResult resultObject =
-          performJsonRequest(
-              ImmutableMap.of(
-                  "buildFile",
-                  buildFile.toString(),
-                  "watchRoot",
-                  watchRoot,
-                  "projectPrefix",
-                  projectPrefix,
-                  "packageImplicitLoad",
-                  packageImplicitIncludeFinder.findIncludeForBuildFile(getBasePath(buildFile))));
       Path buckPyPath = getPathToBuckPy(options.getDescriptions());
+      BuildFilePythonResult resultObject;
+      try {
+        resultObject =
+          performJsonRequest(
+            ImmutableMap.of(
+              "buildFile",
+              buildFile.toString(),
+              "watchRoot",
+              watchRoot,
+              "projectPrefix",
+              projectPrefix,
+              "packageImplicitLoad",
+              packageImplicitIncludeFinder.findIncludeForBuildFile(getBasePath(buildFile))));
+      } catch (IllegalArgumentException iae) {
+        throw BuildFileParseException.createForBuildFileParseError(
+          buildFile, createParseException(buildFile, buckPyPath.getParent(), iae.getMessage(), null));
+      }
       handleDiagnostics(
           buildFile, buckPyPath.getParent(), resultObject.getDiagnostics(), buckEventBus);
       values = resultObject.getValues();
@@ -490,7 +509,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
    *     would return {@code src/bar}.
    */
   private Path getBasePath(Path buildFile) {
-    return MorePaths.getParentOrEmpty(MorePaths.relativize(options.getProjectRoot(), buildFile));
+    return MorePaths.getParentOrEmpty(
+        MorePaths.relativize(options.getProjectRoot().getPath(), buildFile));
   }
 
   @SuppressWarnings("unchecked")

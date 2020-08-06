@@ -78,7 +78,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.ThrowableConsoleEvent;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
@@ -184,7 +183,6 @@ class CachingBuildRuleBuilder {
 
   // These fields contain data that may be computed during a build.
 
-  private volatile ListenableFuture<Unit> uploadCompleteFuture = Futures.immediateFuture(Unit.UNIT);
   private volatile boolean depsAreAvailable;
   private final Optional<BuildRuleStrategy> customBuildRuleStrategy;
 
@@ -215,8 +213,7 @@ class CachingBuildRuleBuilder {
       BuildInfoRecorder buildInfoRecorder,
       BuildableContext buildableContext,
       BuildRulePipelinesRunner pipelinesRunner,
-      Optional<BuildRuleStrategy> customBuildRuleStrategy,
-      Optional<ManifestService> manifestService) {
+      Optional<BuildRuleStrategy> customBuildRuleStrategy) {
     this.buildRuleBuilderDelegate = buildRuleBuilderDelegate;
     this.buildMode = buildMode;
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
@@ -285,13 +282,8 @@ class CachingBuildRuleBuilder {
             inputBasedKey);
 
     ManifestRuleKeyService manifestRuleKeyService;
-    if (manifestService.isPresent()) {
-      manifestRuleKeyService =
-          ManifestRuleKeyServiceFactory.fromManifestService(manifestService.get());
-    } else {
-      manifestRuleKeyService =
-          ManifestRuleKeyServiceFactory.fromArtifactCache(buildCacheArtifactFetcher, artifactCache);
-    }
+    manifestRuleKeyService =
+        ManifestRuleKeyServiceFactory.fromArtifactCache(buildCacheArtifactFetcher, artifactCache);
     manifestRuleKeyManager =
         new ManifestRuleKeyManager(
             depFiles,
@@ -332,7 +324,6 @@ class CachingBuildRuleBuilder {
         .setStatus(BuildRuleStatus.SUCCESS)
         .setSuccessOptional(successType)
         .setCacheResult(cacheResult)
-        .setUploadCompleteFuture(uploadCompleteFuture)
         .setStrategyResult(strategyResult)
         .build();
   }
@@ -720,7 +711,8 @@ class CachingBuildRuleBuilder {
                       buildTimeMs);
               this.buildRuleScopeManager.setManifestStoreResult(manifestStoreResult);
               if (manifestStoreResult.getStoreFuture().isPresent()) {
-                uploadCompleteFuture = manifestStoreResult.getStoreFuture().get();
+                buildRuleBuilderDelegate.addAsyncCallback(
+                    manifestStoreResult.getStoreFuture().get());
               }
             }
           }
@@ -772,7 +764,7 @@ class CachingBuildRuleBuilder {
           buildTimestampsMillis == null
               ? -1
               : buildTimestampsMillis.getSecond() - buildTimestampsMillis.getFirst();
-      uploadCompleteFuture = buildCacheArtifactUploader.uploadToCache(success, buildTimeMs);
+      buildCacheArtifactUploader.uploadToCache(success, buildTimeMs).get();
     } catch (Throwable t) {
       eventBus.post(ThrowableConsoleEvent.create(t, "Error uploading to cache for %s.", rule));
     }
@@ -863,7 +855,7 @@ class CachingBuildRuleBuilder {
               return pipelinesRunner.runPipelineStartingAt(
                   buildRuleBuildContext, (SupportsPipelining<?>) rule, service);
             } else {
-              buildRuleSteps.runWithDefaultExecutor();
+              service.submit(buildRuleSteps::runWithDefaultExecutor);
               return buildRuleSteps.future;
             }
           }
@@ -911,7 +903,7 @@ class CachingBuildRuleBuilder {
       this.strategyResult = customBuildRuleStrategy.get().build(rule, strategyContext);
       future = strategyResult.getBuildResult();
     } else {
-      future = Futures.submitAsync(strategyContext::runWithDefaultBehavior, service);
+      future = strategyContext.runWithDefaultBehavior();
     }
 
     return Futures.transform(

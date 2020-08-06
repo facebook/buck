@@ -27,7 +27,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
@@ -184,7 +184,7 @@ public class GenruleTest {
         manifestPath);
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(pathResolver)
-            .withBuildCellRootPath(filesystem.getRootPath());
+            .withBuildCellRootPath(filesystem.getRootPath().getPath());
     assertThat(
         pathResolver.filterInputsToCompareToOutput(genrule.getBuildable().srcs.getPaths()),
         Matchers.containsInAnyOrder(
@@ -965,13 +965,13 @@ public class GenruleTest {
             return Optional.empty();
           }
         };
-    Cell root = new TestCellBuilder().setFilesystem(new FakeProjectFilesystem()).build();
+    Cells root = new TestCellBuilder().setFilesystem(new FakeProjectFilesystem()).build();
     ModernBuildRuleRemoteExecutionHelper mbrHelper =
         new ModernBuildRuleRemoteExecutionHelper(
             eventBus,
             new GrpcProtocol(),
             ruleFinder,
-            root,
+            root.getRootCell(),
             new FileHashCache() {
               @Override
               public HashCode get(Path path) {

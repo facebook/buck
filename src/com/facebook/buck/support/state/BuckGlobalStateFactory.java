@@ -22,9 +22,11 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.files.DirectoryListCache;
 import com.facebook.buck.core.files.FileTreeCache;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -70,7 +72,7 @@ public class BuckGlobalStateFactory {
 
   /** @return a new instance of {@link BuckGlobalState} for execution of buck */
   public static BuckGlobalState create(
-      Cell rootCell,
+      Cells rootCell,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Watchman watchman,
       Optional<WebServer> webServerToReuse,
@@ -80,7 +82,8 @@ public class BuckGlobalStateFactory {
     EventBus fileEventBus = new EventBus("file-change-events");
 
     ImmutableList<Cell> allCells = rootCell.getAllCells();
-    BuildBuckConfig buildBuckConfig = rootCell.getBuckConfig().getView(BuildBuckConfig.class);
+    BuildBuckConfig buildBuckConfig =
+        rootCell.getRootCell().getBuckConfig().getView(BuildBuckConfig.class);
 
     // Setup the stacked file hash cache from all cells.
     ImmutableList.Builder<ProjectFileHashCache> hashCachesBuilder =
@@ -93,7 +96,7 @@ public class BuckGlobalStateFactory {
     }
     hashCachesBuilder.add(
         DefaultFileHashCache.createBuckOutFileHashCache(
-            rootCell.getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
+            rootCell.getRootCell().getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
     ImmutableList<ProjectFileHashCache> hashCaches = hashCachesBuilder.build();
 
     // Setup file list cache and file tree cache from all cells
@@ -109,7 +112,7 @@ public class BuckGlobalStateFactory {
     VersionedTargetGraphCache versionedTargetGraphCache = new VersionedTargetGraphCache();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
+    ParserConfig parserConfig = rootCell.getRootCell().getBuckConfig().getView(ParserConfig.class);
     DaemonicParserState daemonicParserState =
         new DaemonicParserState(parserConfig.getNumParsingThreads());
     fileEventBus.register(daemonicParserState);
@@ -125,22 +128,27 @@ public class BuckGlobalStateFactory {
     if (webServerToReuse.isPresent()) {
       webServer = webServerToReuse;
     } else {
-      webServer = createWebServer(rootCell.getBuckConfig(), rootCell.getFilesystem());
+      webServer =
+          createWebServer(
+              rootCell.getRootCell().getBuckConfig(),
+              rootCell.getRootCell().getFilesystem(),
+              clock);
     }
     if (webServer.isPresent()) {
       Optional<ArtifactCache> servedCache =
           ArtifactCaches.newServedCache(
-              new ArtifactCacheBuckConfig(rootCell.getBuckConfig()),
+              new ArtifactCacheBuckConfig(rootCell.getRootCell().getBuckConfig()),
               target ->
-                  unconfiguredBuildTargetFactory.create(target, rootCell.getCellNameResolver()),
+                  unconfiguredBuildTargetFactory.create(
+                      target, rootCell.getRootCell().getCellNameResolver()),
               targetConfigurationSerializer,
-              rootCell.getFilesystem());
+              rootCell.getRootCell().getFilesystem());
       if (!initWebServer(webServer, servedCache)) {
         LOG.warn("Can't start web server");
       }
     }
-    ImmutableMap<Path, WatchmanCursor> cursor;
-    if (rootCell.getBuckConfig().getView(ParserConfig.class).getWatchmanCursor()
+    ImmutableMap<AbsPath, WatchmanCursor> cursor;
+    if (rootCell.getRootCell().getBuckConfig().getView(ParserConfig.class).getWatchmanCursor()
             == WatchmanWatcher.CursorType.CLOCK_ID
         && !watchman.getClockIds().isEmpty()) {
       cursor = watchman.buildClockWatchmanCursorMap();
@@ -152,7 +160,7 @@ public class BuckGlobalStateFactory {
     ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools = new ConcurrentHashMap<>();
 
     return new BuckGlobalState(
-        rootCell,
+        rootCell.getRootCell(),
         typeCoercerFactory,
         daemonicParserState,
         hashCaches,
@@ -203,7 +211,7 @@ public class BuckGlobalStateFactory {
 
   /** Create a number of instances of {@link BuildFileManifestCache}, one per each cell */
   private static LoadingCache<Path, BuildFileManifestCache> createBuildFileManifestCachePerCellMap(
-      EventBus fileEventBus, CellProvider cellProvider, Path superRootPath) {
+      EventBus fileEventBus, CellProvider cellProvider, AbsPath superRootPath) {
     return CacheBuilder.newBuilder()
         .build(
             new CacheLoader<Path, BuildFileManifestCache>() {
@@ -214,7 +222,7 @@ public class BuckGlobalStateFactory {
                     cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
                 BuildFileManifestCache cache =
                     BuildFileManifestCache.of(
-                        superRootPath,
+                        superRootPath.getPath(),
                         path,
                         cell.getFilesystem().getPath(buildFileName),
                         cell.getFilesystemViewForSourceFiles());
@@ -225,12 +233,12 @@ public class BuckGlobalStateFactory {
   }
 
   private static Optional<WebServer> createWebServer(
-      BuckConfig config, ProjectFilesystem filesystem) {
+      BuckConfig config, ProjectFilesystem filesystem, Clock clock) {
     OptionalInt port = getValidWebServerPort(config);
     if (!port.isPresent()) {
       return Optional.empty();
     }
-    return Optional.of(new WebServer(port.getAsInt(), filesystem));
+    return Optional.of(new WebServer(port.getAsInt(), filesystem, clock));
   }
 
   /**

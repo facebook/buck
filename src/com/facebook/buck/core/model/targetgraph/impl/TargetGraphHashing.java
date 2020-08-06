@@ -20,6 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -42,7 +43,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -124,7 +124,7 @@ public class TargetGraphHashing {
 
       // Hash the contents of all input files and directories.
       ProjectFilesystem cellFilesystem = node.getFilesystem();
-      for (Path input : ImmutableSortedSet.copyOf(node.getInputs())) {
+      for (ForwardRelativePath input : ImmutableSortedSet.copyOf(node.getInputs())) {
         try {
           hasher.putBytes(fileHashLoader.get(cellFilesystem.resolve(input)).asBytes());
         } catch (IOException e) {

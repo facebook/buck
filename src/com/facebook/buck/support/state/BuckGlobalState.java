@@ -19,6 +19,7 @@ package com.facebook.buck.support.state;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.files.DirectoryListCache;
 import com.facebook.buck.core.files.FileTreeCache;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -76,7 +77,7 @@ public final class BuckGlobalState implements Closeable {
   private final VersionedTargetGraphCache versionedTargetGraphCache;
   private final ActionGraphCache actionGraphCache;
   private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
-  private final ImmutableMap<Path, WatchmanCursor> cursor;
+  private final ImmutableMap<AbsPath, WatchmanCursor> cursor;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final Clock clock;
   private final long startTime;
@@ -96,7 +97,7 @@ public final class BuckGlobalState implements Closeable {
       VersionedTargetGraphCache versionedTargetGraphCache,
       ActionGraphCache actionGraphCache,
       RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler,
-      ImmutableMap<Path, WatchmanCursor> cursor,
+      ImmutableMap<AbsPath, WatchmanCursor> cursor,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Clock clock,
       boolean usesWatchman) {
@@ -234,7 +235,7 @@ public final class BuckGlobalState implements Closeable {
     return fileEventBus;
   }
 
-  public ImmutableMap<Path, WatchmanCursor> getWatchmanCursor() {
+  public ImmutableMap<AbsPath, WatchmanCursor> getWatchmanCursor() {
     return cursor;
   }
 

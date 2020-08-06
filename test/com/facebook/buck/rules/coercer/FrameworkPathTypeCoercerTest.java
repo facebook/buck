@@ -19,12 +19,13 @@ package com.facebook.buck.rules.coercer;
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.nio.file.Path;
 import org.junit.Before;
@@ -32,15 +33,16 @@ import org.junit.Test;
 
 public class FrameworkPathTypeCoercerTest {
 
-  private final TypeCoercer<BuildTarget> buildTargetTypeCoercer =
-      new BuildTargetTypeCoercer(
-          new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory()));
-  private final TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =
-      new BuildTargetWithOutputsTypeCoercer(buildTargetTypeCoercer);
-  private final TypeCoercer<Path> pathTypeCoercer = new PathTypeCoercer();
-  private final TypeCoercer<SourcePath> sourcePathTypeCoercer =
+  private final TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
+      buildTargetWithOutputsTypeCoercer =
+          new BuildTargetWithOutputsTypeCoercer(
+              new UnconfiguredBuildTargetWithOutputsTypeCoercer(
+                  new UnconfiguredBuildTargetTypeCoercer(
+                      new ParsingUnconfiguredBuildTargetViewFactory())));
+  private final TypeCoercer<Path, Path> pathTypeCoercer = new PathTypeCoercer();
+  private final TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer =
       new SourcePathTypeCoercer(buildTargetWithOutputsTypeCoercer, pathTypeCoercer);
-  private final TypeCoercer<FrameworkPath> frameworkPathTypeCoercer =
+  private final TypeCoercer<Object, FrameworkPath> frameworkPathTypeCoercer =
       new FrameworkPathTypeCoercer(sourcePathTypeCoercer);
 
   private FakeProjectFilesystem projectFilesystem;
@@ -54,7 +56,7 @@ public class FrameworkPathTypeCoercerTest {
   @Test(expected = HumanReadableException.class)
   public void shouldRejectUnknownBuildSettingsInFrameworkEntries() throws CoerceFailedException {
     frameworkPathTypeCoercer.coerce(
-        createCellRoots(projectFilesystem),
+        createCellRoots(projectFilesystem).getCellNameResolver(),
         projectFilesystem,
         pathRelativeToProjectRoot,
         UnconfiguredTargetConfiguration.INSTANCE,

@@ -19,6 +19,7 @@ package com.facebook.buck.core.select;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.rules.coercer.concat.Concatable;
 import com.google.common.base.Joiner;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -45,6 +46,7 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
       BuildTarget buildTarget,
       String attributeName,
       SelectorList<T> selectorList,
+      Concatable<T> concatable,
       DependencyStack dependencyStack) {
     List<T> resolvedList = new ArrayList<>();
     for (Selector<T> selector : selectorList.getSelectors()) {
@@ -56,9 +58,7 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
       }
     }
 
-    return resolvedList.size() == 1
-        ? resolvedList.get(0)
-        : selectorList.getConcatable().concat(resolvedList);
+    return resolvedList.size() == 1 ? resolvedList.get(0) : concatable.concat(resolvedList);
   }
 
   @Nullable

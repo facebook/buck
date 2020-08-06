@@ -21,8 +21,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.SourceArtifact;
 import com.facebook.buck.core.artifact.SourceArtifactImpl;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -52,7 +52,8 @@ import org.junit.rules.ExpectedException;
 public class SourceAttributeTest {
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
+  private final CellNameResolver cellNameResolver =
+      TestCellPathResolver.get(filesystem).getCellNameResolver();
   private final TestActionExecutionRunner runner =
       new TestActionExecutionRunner(
           new FakeProjectFilesystemFactory(),
@@ -72,7 +73,7 @@ public class SourceAttributeTest {
 
     SourcePath coercedSource =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -80,7 +81,7 @@ public class SourceAttributeTest {
             "foo/bar.cpp");
     SourcePath coercedTarget =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -96,7 +97,7 @@ public class SourceAttributeTest {
     thrown.expect(CoerceFailedException.class);
 
     attr.getValue(
-        cellRoots,
+        cellNameResolver,
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -109,7 +110,7 @@ public class SourceAttributeTest {
     thrown.expect(CoerceFailedException.class);
 
     attr.getValue(
-        cellRoots,
+        cellNameResolver,
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -125,7 +126,7 @@ public class SourceAttributeTest {
     String absolutePathString = filesystem.resolve("foo").toAbsolutePath().toString();
 
     attr.getValue(
-        cellRoots,
+        cellNameResolver,
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -156,7 +157,7 @@ public class SourceAttributeTest {
 
     SourcePath coerced =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -172,7 +173,7 @@ public class SourceAttributeTest {
   public void failsTransformIfMissingDefaultInfo() throws CoerceFailedException {
     SourcePath coerced =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -200,7 +201,7 @@ public class SourceAttributeTest {
 
     SourcePath coercedTarget =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -227,7 +228,7 @@ public class SourceAttributeTest {
 
     SourcePath coercedTarget =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -255,7 +256,7 @@ public class SourceAttributeTest {
 
     SourcePath coercedSource =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -264,7 +265,7 @@ public class SourceAttributeTest {
 
     SourcePath coercedTarget =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,

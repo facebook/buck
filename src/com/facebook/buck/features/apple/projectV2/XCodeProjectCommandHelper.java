@@ -28,10 +28,12 @@ import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
@@ -408,21 +410,21 @@ public class XCodeProjectCommandHelper {
 
     LOG.debug("Xcode project generation: Generates workspaces for targets");
 
-    ImmutableSet<BuildTarget> requiredBuildTargets =
+    ImmutableList<Result> results =
         generateWorkspacesForTargets(
-                buckEventBus,
-                pluginManager,
-                cell,
-                buckConfig,
-                ruleKeyConfiguration,
-                executorService,
-                targetGraphCreationResult,
-                options,
-                appleCxxFlavors,
-                focusedTargetMatcher,
-                outputPresenter,
-                sharedLibraryToBundle)
-            .stream()
+            buckEventBus,
+            pluginManager,
+            cell,
+            buckConfig,
+            ruleKeyConfiguration,
+            executorService,
+            targetGraphCreationResult,
+            options,
+            appleCxxFlavors,
+            focusedTargetMatcher,
+            sharedLibraryToBundle);
+    ImmutableSet<BuildTarget> requiredBuildTargets =
+        results.stream()
             .flatMap(b -> b.getBuildTargets().stream())
             .collect(ImmutableSet.toImmutableSet());
     if (!requiredBuildTargets.isEmpty()) {
@@ -445,17 +447,46 @@ public class XCodeProjectCommandHelper {
               .toImmutableList();
       exitCode = buildRunner.apply(arguments);
     }
+
+    // Write all output paths to stdout if requested.
+    // IMPORTANT: this shuts down RenderingConsole since it writes to stdout.
+    // (See DirtyPrintStreamDecorator and note how RenderingConsole uses it.)
+    // Thus this must be the *last* thing we do, or we disable progress UI.
+    //
+    // This is still not the "right" way to do this; we should probably use
+    // RenderingConsole#printToStdOut since it ensures we do one last render.
+    for (Result result : results) {
+      outputPresenter.present(
+          result.inputTarget.getFullyQualifiedName(), result.outputRelativePath);
+    }
+
     return exitCode;
   }
 
   /** A result with metadata about the subcommand helper's output. */
   public static class Result {
+    private final BuildTarget inputTarget;
+    private final Path outputRelativePath;
     private final PBXProject project;
     private final ImmutableSet<BuildTarget> buildTargets;
 
-    public Result(PBXProject project, ImmutableSet<BuildTarget> buildTargets) {
+    public Result(
+        BuildTarget inputTarget,
+        Path outputRelativePath,
+        PBXProject project,
+        ImmutableSet<BuildTarget> buildTargets) {
+      this.inputTarget = inputTarget;
+      this.outputRelativePath = outputRelativePath;
       this.project = project;
       this.buildTargets = buildTargets;
+    }
+
+    public BuildTarget getInputTarget() {
+      return inputTarget;
+    }
+
+    public Path getOutputRelativePath() {
+      return outputRelativePath;
     }
 
     public PBXProject getProject() {
@@ -479,7 +510,6 @@ public class XCodeProjectCommandHelper {
       ProjectGeneratorOptions options,
       ImmutableSet<Flavor> appleCxxFlavors,
       FocusedTargetMatcher focusedTargetMatcher, // @audited(chatatap)]
-      PathOutputPresenter presenter,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle)
       throws IOException, InterruptedException {
 
@@ -550,15 +580,19 @@ public class XCodeProjectCommandHelper {
 
       ImmutableSet<BuildTarget> requiredBuildTargetsForWorkspace =
           generator.getRequiredBuildTargets();
-      LOG.debug(
+      LOG.verbose(
           "Required build targets for workspace %s: %s",
           inputTarget, requiredBuildTargetsForWorkspace);
 
       Path absolutePath = workspaceCell.getFilesystem().resolve(result.workspacePath);
-      Path relativePath = cell.getFilesystem().relativize(absolutePath);
-      presenter.present(inputTarget.getFullyQualifiedName(), relativePath);
+      RelPath relativePath = cell.getFilesystem().relativize(absolutePath);
 
-      generationResultsBuilder.add(new Result(result.project, requiredBuildTargetsForWorkspace));
+      generationResultsBuilder.add(
+          new Result(
+              inputTarget,
+              relativePath.getPath(),
+              result.project,
+              requiredBuildTargetsForWorkspace));
     }
 
     return generationResultsBuilder.build();
@@ -619,8 +653,7 @@ public class XCodeProjectCommandHelper {
                         + "If you would like to always kill Xcode, use '%s'.\n",
                     cell.getFilesystem()
                         .getRootPath()
-                        .resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME)
-                        .toAbsolutePath(),
+                        .resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME),
                     getIDEForceKillSectionName(),
                     getIDEForceKillFieldName(),
                     IDEForceKill.NEVER.toString().toLowerCase(),
@@ -714,7 +747,8 @@ public class XCodeProjectCommandHelper {
               unconfiguredBuildTargetFactory,
               targetGraphCreationResult,
               targetConfiguration,
-              buckEventBus);
+              buckEventBus,
+              new Cells(cell));
     }
     return targetGraphCreationResult.withBuildTargets(originalBuildTargets);
   }

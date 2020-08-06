@@ -42,6 +42,9 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.ProvidesCxxPlatform;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.swift.SwiftToolchainBuildRule;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
@@ -153,10 +156,11 @@ public class AppleToolchainDescription
             .setCxxPlatform(
                 getCxxPlatform(
                     (ProvidesCxxPlatform) cxxToolchainRule,
+                    pathResolver,
                     targetFlavor,
-                    sdkPath,
-                    platformPath,
-                    developerPath))
+                    args.getSdkPath(),
+                    args.getPlatformPath(),
+                    args.getDeveloperPath()))
             .setSwiftPlatform(swiftPlatform)
             .setXcodeVersion(args.getXcodeVersion())
             .setXcodeBuildVersion(args.getXcodeBuildVersion())
@@ -176,17 +180,22 @@ public class AppleToolchainDescription
 
   private CxxPlatform getCxxPlatform(
       ProvidesCxxPlatform cxxToolchainRule,
+      SourcePathResolverAdapter pathResolver,
       Flavor flavor,
-      Path sdkPath,
-      Path platformPath,
-      Optional<Path> developerPath) {
+      SourcePath sdkRoot,
+      SourcePath platformRoot,
+      Optional<SourcePath> developerRoot) {
     CxxPlatform currentCxxPlatform = cxxToolchainRule.getPlatformWithFlavor(flavor);
     CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder().from(currentCxxPlatform);
 
+    Path sdkRootPath = pathResolver.getAbsolutePath(sdkRoot);
+    Path platformRootPath = pathResolver.getAbsolutePath(platformRoot);
+    Optional<Path> developerRootPath = developerRoot.map(pathResolver::getAbsolutePath);
+
     ImmutableBiMap.Builder<Path, String> sanitizerPathsBuilder = ImmutableBiMap.builder();
-    sanitizerPathsBuilder.put(sdkPath, "APPLE_SDKROOT");
-    sanitizerPathsBuilder.put(platformPath, "APPLE_PLATFORM_DIR");
-    developerPath.ifPresent(path -> sanitizerPathsBuilder.put(path, "APPLE_DEVELOPER_DIR"));
+    sanitizerPathsBuilder.put(sdkRootPath, "APPLE_SDKROOT");
+    sanitizerPathsBuilder.put(platformRootPath, "APPLE_PLATFORM_DIR");
+    developerRootPath.ifPresent(path -> sanitizerPathsBuilder.put(path, "APPLE_DEVELOPER_DIR"));
     DebugPathSanitizer compilerDebugPathSanitizer =
         new PrefixMapDebugPathSanitizer(
             DebugPathSanitizer.getPaddedDir(".", 250, File.separatorChar),
@@ -194,17 +203,25 @@ public class AppleToolchainDescription
     cxxPlatformBuilder.setCompilerDebugPathSanitizer(compilerDebugPathSanitizer);
 
     ImmutableMap.Builder<String, String> macrosBuilder = ImmutableMap.builder();
-    macrosBuilder.put("SDKROOT", sdkPath.toString());
-    macrosBuilder.put("PLATFORM_DIR", platformPath.toString());
+    ImmutableMap.Builder<String, Arg> macrosArgsBuilder = ImmutableMap.builder();
+    macrosBuilder.put("SDKROOT", sdkRootPath.toString());
+    macrosArgsBuilder.put("SDKROOT", SourcePathArg.of(sdkRoot));
+    macrosBuilder.put("PLATFORM_DIR", platformRootPath.toString());
+    macrosArgsBuilder.put("PLATFORM_DIR", SourcePathArg.of(platformRoot));
     macrosBuilder.put(
         "CURRENT_ARCH",
         ApplePlatform.findArchitecture(flavor).orElseThrow(IllegalStateException::new));
-    developerPath.ifPresent(path -> macrosBuilder.put("DEVELOPER_DIR", path.toString()));
-    ImmutableMap<String, String> flagMacros = macrosBuilder.build();
-    cxxPlatformBuilder.setFlagMacros(flagMacros);
+    macrosArgsBuilder.put(
+        "CURRENT_ARCH",
+        StringArg.of(
+            ApplePlatform.findArchitecture(flavor).orElseThrow(IllegalStateException::new)));
+    developerRootPath.ifPresent(path -> macrosBuilder.put("DEVELOPER_DIR", path.toString()));
+    developerRoot.ifPresent(path -> macrosArgsBuilder.put("DEVELOPER_DIR", SourcePathArg.of(path)));
+    cxxPlatformBuilder.setFlagMacros(macrosBuilder.build());
 
     // Expand macros in cxx platform flags.
-    CxxFlags.translateCxxPlatformFlags(cxxPlatformBuilder, currentCxxPlatform, flagMacros);
+    CxxFlags.translateCxxPlatformFlags(
+        cxxPlatformBuilder, currentCxxPlatform, macrosArgsBuilder.build());
 
     return cxxPlatformBuilder.build();
   }

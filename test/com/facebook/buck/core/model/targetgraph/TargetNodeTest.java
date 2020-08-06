@@ -23,6 +23,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.nameresolver.CellNameResolverProvider;
+import com.facebook.buck.core.cell.nameresolver.SimpleCellNameResolverProvider;
+import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.Hint;
@@ -33,6 +36,8 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -43,6 +48,7 @@ import com.facebook.buck.core.select.impl.ThrowingSelectableConfigurationContext
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePathFactoryForTests;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -74,7 +80,8 @@ public class TargetNodeTest {
   public void testIgnoreNonBuildTargetOrPathOrSourcePathArgument()
       throws NoSuchBuildTargetException {
 
-    TargetNode<ExampleDescriptionArg> targetNode = createTargetNode(TARGET_THREE);
+    TargetNode<ExampleDescriptionArg> targetNode =
+        createTargetNode(TARGET_THREE, SingleRootCellNameResolverProvider.INSTANCE);
 
     assertTrue(targetNode.getExtraDeps().isEmpty());
     assertTrue(targetNode.getDeclaredDeps().isEmpty());
@@ -93,16 +100,23 @@ public class TargetNodeTest {
             "name",
             TARGET_THREE.getShortName(),
             "deps",
-            depsStrings,
+            depsTargets.stream()
+                .map(BuildTarget::getUnconfiguredBuildTarget)
+                .collect(ImmutableList.toImmutableList()),
             "sourcePaths",
-            ImmutableList.of("//example/path:two", "//example/path:four", "MyClass.java"),
+            ImmutableList.of(
+                UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("//example/path:two"),
+                UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("//example/path:four"),
+                UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
+                    "example/path/MyClass.java")),
             "appleSource",
-            "//example/path:five",
+            Optional.of("//example/path:five"),
             "source",
-            "AnotherClass.java");
+            Optional.of(Paths.get("example/path/AnotherClass.java")));
 
     TargetNode<ExampleDescriptionArg> targetNode =
         createTargetNode(
+            SingleRootCellNameResolverProvider.INSTANCE,
             TARGET_THREE,
             depsTargets,
             rawNode,
@@ -113,7 +127,8 @@ public class TargetNodeTest {
     assertThat(
         targetNode.getInputs(),
         containsInAnyOrder(
-            Paths.get("example/path/MyClass.java"), Paths.get("example/path/AnotherClass.java")));
+            ForwardRelativePath.of("example/path/MyClass.java"),
+            ForwardRelativePath.of("example/path/AnotherClass.java")));
 
     assertThat(
         targetNode.getExtraDeps(),
@@ -131,12 +146,13 @@ public class TargetNodeTest {
 
   @Test
   public void targetsWithTheSameRelativePathButNotTheSameCellMightNotBeAbleToSeeEachOther() {
+    SimpleCellNameResolverProvider cellNames = new SimpleCellNameResolverProvider("aaa", "bbb");
 
     BuildTarget buildTargetOne = BuildTargetFactory.newInstance("aaa//foo:bar");
-    TargetNode<ExampleDescriptionArg> targetNodeOne = createTargetNode(buildTargetOne);
+    TargetNode<ExampleDescriptionArg> targetNodeOne = createTargetNode(buildTargetOne, cellNames);
 
     BuildTarget buildTargetTwo = BuildTargetFactory.newInstance("bbb//foo:bar");
-    TargetNode<ExampleDescriptionArg> targetNodeTwo = createTargetNode(buildTargetTwo);
+    TargetNode<ExampleDescriptionArg> targetNodeTwo = createTargetNode(buildTargetTwo, cellNames);
 
     boolean isVisible = targetNodeOne.isVisibleTo(targetNodeTwo);
 
@@ -146,10 +162,16 @@ public class TargetNodeTest {
   @Test
   public void invalidArgumentsThrowAnException() {
     ImmutableMap<String, Object> rawNode =
-        ImmutableMap.of("name", TARGET_THREE.getShortName(), "cmd", "$(query_outputs '123')");
+        ImmutableMap.of(
+            "name", TARGET_THREE.getShortName(), "cmd", Optional.of("$(query_outputs '123')"));
 
     try {
-      createTargetNode(TARGET_THREE, ImmutableSet.of(), rawNode, Sets.newHashSet());
+      createTargetNode(
+          SingleRootCellNameResolverProvider.INSTANCE,
+          TARGET_THREE,
+          ImmutableSet.of(),
+          rawNode,
+          Sets.newHashSet());
     } catch (HumanReadableException e) {
       assertEquals(
           "Cannot traverse attribute cmd of //example/path:three: Error parsing query: 123",
@@ -164,7 +186,8 @@ public class TargetNodeTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     BuildTarget configurationBuildTarget = BuildTargetFactory.newInstance("//config:bar");
     TargetNode<?> targetNode =
-        new TargetNodeFactory(new DefaultTypeCoercerFactory())
+        new TargetNodeFactory(
+                new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE)
             .createFromObject(
                 description,
                 createPopulatedConstructorArg(buildTarget, ImmutableMap.of("name", "bar")),
@@ -174,8 +197,7 @@ public class TargetNodeTest {
                 ImmutableSet.of(),
                 ImmutableSortedSet.of(configurationBuildTarget),
                 ImmutableSet.of(),
-                ImmutableSet.of(),
-                createCellRoots(filesystem));
+                ImmutableSet.of());
 
     assertEquals(ImmutableSet.of(configurationBuildTarget), targetNode.getConfigurationDeps());
   }
@@ -215,7 +237,8 @@ public class TargetNodeTest {
     }
   }
 
-  private static TargetNode<ExampleDescriptionArg> createTargetNode(BuildTarget buildTarget)
+  private static TargetNode<ExampleDescriptionArg> createTargetNode(
+      BuildTarget buildTarget, CellNameResolverProvider cellNames)
       throws NoSuchBuildTargetException {
     ImmutableMap<String, Object> rawNode =
         ImmutableMap.of(
@@ -224,16 +247,17 @@ public class TargetNodeTest {
             "deps",
             ImmutableList.of(),
             "string",
-            "//example/path:one",
+            Optional.of("//example/path:one"),
             "target",
-            "//example/path:two",
+            Optional.of(UnconfiguredBuildTargetParser.parse("//example/path:two")),
             "sourcePaths",
-            ImmutableSortedSet.of());
+            ImmutableList.of());
 
-    return createTargetNode(buildTarget, ImmutableSet.of(), rawNode, Sets.newHashSet());
+    return createTargetNode(cellNames, buildTarget, ImmutableSet.of(), rawNode, Sets.newHashSet());
   }
 
   private static TargetNode<ExampleDescriptionArg> createTargetNode(
+      CellNameResolverProvider cellNames,
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableMap<String, Object> rawNode,
@@ -243,7 +267,7 @@ public class TargetNodeTest {
 
     ExampleDescription description = new ExampleDescription();
 
-    return new TargetNodeFactory(new DefaultTypeCoercerFactory())
+    return new TargetNodeFactory(new DefaultTypeCoercerFactory(), cellNames)
         .createFromObject(
             description,
             createPopulatedConstructorArg(buildTarget, rawNode),
@@ -253,24 +277,24 @@ public class TargetNodeTest {
             declaredDeps,
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            createCellRoots(filesystem));
+            ImmutableSet.of());
   }
 
   private static ExampleDescriptionArg createPopulatedConstructorArg(
       BuildTarget buildTarget, Map<String, Object> instance) throws NoSuchBuildTargetException {
     DefaultTypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
-    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(coercerFactory);
+    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller();
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     KnownNativeRuleTypes knownRuleTypes =
         KnownNativeRuleTypes.of(
             ImmutableList.of(new ExampleDescription()), ImmutableList.of(), ImmutableList.of());
     DataTransferObjectDescriptor<ExampleDescriptionArg> builder =
-        knownRuleTypes.getConstructorArgDescriptor(
-            coercerFactory, knownRuleTypes.getRuleType("example"), ExampleDescriptionArg.class);
+        knownRuleTypes
+            .getDescriptorByNameChecked("example", ExampleDescriptionArg.class)
+            .dataTransferObjectDescriptor(coercerFactory);
     try {
       return marshaller.populate(
-          createCellRoots(projectFilesystem),
+          createCellRoots(projectFilesystem).getCellNameResolver(),
           projectFilesystem,
           new ThrowingSelectorListResolver(),
           new ThrowingTargetConfigurationTransformer(),

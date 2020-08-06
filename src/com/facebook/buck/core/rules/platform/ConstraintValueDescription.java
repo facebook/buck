@@ -20,7 +20,7 @@ import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
@@ -76,6 +76,6 @@ public class ConstraintValueDescription
   @RuleArg
   interface AbstractConstraintValueArg extends ConfigurationRuleArg {
     @Hint(isConfigurable = false)
-    UnconfiguredBuildTargetView getConstraintSetting();
+    UnconfiguredBuildTarget getConstraintSetting();
   }
 }

@@ -72,11 +72,12 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
@@ -166,14 +167,14 @@ public class ProjectGeneratorTest {
   private static final Path PUBLIC_HEADER_MAP_PATH = Paths.get("buck-out/gen/_p/pub-hmap");
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
-  private Cell projectCell;
+  private Cells projectCell;
   private HalideBuckConfig halideBuckConfig;
   private CxxBuckConfig cxxBuckConfig;
   private AppleConfig appleConfig;
   private SwiftBuckConfig swiftBuckConfig;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
-  private Path rootPath;
+  private AbsPath rootPath;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -3329,9 +3330,7 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings =
         getBuildSettings(buildTarget, generatedProject.getTargets().get(0), "Debug");
     assertThat(settings, hasKey("REPO_ROOT"));
-    assertEquals(
-        projectFilesystem.getRootPath().toAbsolutePath().normalize().toString(),
-        settings.get("REPO_ROOT"));
+    assertEquals(projectFilesystem.getRootPath().normalize().toString(), settings.get("REPO_ROOT"));
   }
 
   /**
@@ -4401,7 +4400,7 @@ public class ProjectGeneratorTest {
             cache,
             projStateCache,
             ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
-            projectCell,
+            projectCell.getRootCell(),
             "BUCK",
             ProjectGeneratorOptions.builder().build(),
             TestRuleKeyConfigurationFactory.create(),
@@ -4529,7 +4528,7 @@ public class ProjectGeneratorTest {
             cache,
             projStateCache,
             ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
-            projectCell,
+            projectCell.getRootCell(),
             "BUCK",
             ProjectGeneratorOptions.builder().build(),
             TestRuleKeyConfigurationFactory.create(),
@@ -4692,7 +4691,7 @@ public class ProjectGeneratorTest {
         cache,
         projStateCache,
         initialBuildTargets,
-        projectCell,
+        projectCell.getRootCell(),
         "BUCK",
         projectGeneratorOptions,
         TestRuleKeyConfigurationFactory.create(),
@@ -4821,7 +4820,7 @@ public class ProjectGeneratorTest {
     ImmutableSet.Builder<String> absoluteSourcesBuilder = ImmutableSet.builder();
     for (String name : sources) {
       absoluteSourcesBuilder.add(
-          projectFilesystem.getRootPath().resolve(name).toAbsolutePath().normalize().toString());
+          projectFilesystem.getRootPath().resolve(name).normalize().toString());
     }
 
     Iterable<PBXBuildPhase> buildPhases =

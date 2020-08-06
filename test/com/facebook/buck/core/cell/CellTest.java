@@ -49,17 +49,17 @@ public class CellTest {
 
   @Test
   public void shouldReturnItselfIfRequestedToGetACellWithAnAbsentOptionalName() {
-    Cell cell = new TestCellBuilder().build();
+    Cells cell = new TestCellBuilder().build();
 
     BuildTarget target = BuildTargetFactory.newInstance("//does/not:matter");
     Cell owner = cell.getCell(target.getCell());
 
-    assertSame(cell, owner);
+    assertSame(cell.getRootCell(), owner);
   }
 
   @Test
   public void shouldThrowAnExceptionIfTheNamedCellIsNotPresent() {
-    Cell cell = new TestCellBuilder().build();
+    Cells cell = new TestCellBuilder().build();
 
     BuildTarget target = BuildTargetFactory.newInstance("unknown//does/not:matter");
 
@@ -88,11 +88,11 @@ public class CellTest {
             .setSections("[repositories]", "example = " + filesystem2.getRootPath())
             .build();
 
-    Cell cell1 = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem1).build();
+    Cells cell1 = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem1).build();
     BuildTarget target = BuildTargetFactory.newInstance("example//does/not:matter");
     Cell other = cell1.getCell(target.getCell());
 
-    assertEquals(cell2Root, other.getFilesystem().getRootPath());
+    assertEquals(cell2Root, other.getFilesystem().getRootPath().getPath());
   }
 
   @Test
@@ -115,8 +115,9 @@ public class CellTest {
             .setSections("[repositories]", "example = " + filesystem2.getRootPath())
             .build();
 
-    Cell cell1 = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem1).build();
-    Path path = cell1.getCellPathResolver().getCellPathOrThrow(Optional.of("example"));
+    Cells cell1 = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem1).build();
+    Path path =
+        cell1.getRootCell().getCellPathResolver().getCellPathOrThrow(Optional.of("example"));
 
     assertEquals(path, cell2Root);
   }
@@ -146,7 +147,7 @@ public class CellTest {
         ImmutableList.of("[repositories]", "third = " + cell3Root),
         StandardCharsets.UTF_8);
 
-    Cell cell1 =
+    Cells cell1 =
         new TestCellBuilder()
             .setBuckConfig(config)
             .setFilesystem(filesystem1)
@@ -182,8 +183,8 @@ public class CellTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(cellRoot.toAbsolutePath());
 
-    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
-    ProjectFilesystemView view = cell.getFilesystemViewForSourceFiles();
+    Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
+    ProjectFilesystemView view = cell.getRootCell().getFilesystemViewForSourceFiles();
     ImmutableCollection<Path> list = view.getDirectoryContents(cellRoot);
 
     assertTrue(list.contains(cellRoot.relativize(someFile)));
@@ -205,11 +206,11 @@ public class CellTest {
 
     Files.createDirectories(buckOut);
 
-    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
+    Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
 
     assertTrue(filesystem.isDirectory(buckOutRelative));
 
-    ProjectFilesystemView view = cell.getFilesystemViewForSourceFiles();
+    ProjectFilesystemView view = cell.getRootCell().getFilesystemViewForSourceFiles();
     ImmutableCollection<Path> list = view.getDirectoryContents(cellRoot);
 
     assertTrue(list.isEmpty());

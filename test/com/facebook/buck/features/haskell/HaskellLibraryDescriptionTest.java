@@ -197,6 +197,7 @@ public class HaskellLibraryDescriptionTest {
     HaskellPlatform haskellPlatform =
         HaskellPlatform.builder()
             .from(HaskellTestUtils.DEFAULT_PLATFORM)
+            .setArchiveContents(ArchiveContents.THIN)
             .setCxxPlatform(cxxPlatform)
             .build();
     FlavorDomain<HaskellPlatform> haskellPlatforms =

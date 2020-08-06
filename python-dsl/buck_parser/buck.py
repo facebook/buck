@@ -132,6 +132,15 @@ class AbstractContext(object):
         # type: () -> List[Diagnostic]
         raise NotImplementedError()
 
+    @abc.abstractproperty
+    def user_rules(self):
+        # type: () -> List[UserDefinedRule]
+        """
+        The UserDefinedRule objects that were loaded into this context
+        directly or transitively
+        """
+        raise NotImplementedError()
+
     def merge(self, other):
         # type: (AbstractContext) -> None
         """Merge the context of an included file into the current context.
@@ -143,6 +152,7 @@ class AbstractContext(object):
         self.diagnostics.extend(other.diagnostics)
         self.used_configs.update(other.used_configs)
         self.used_env_vars.update(other.used_env_vars)
+        self.user_rules.update(other.user_rules)
 
 
 class BuildFileContext(AbstractContext):
@@ -170,6 +180,7 @@ class BuildFileContext(AbstractContext):
         self._used_configs = collections.defaultdict(dict)
         self._used_env_vars = {}
         self._diagnostics = []
+        self._user_rules = set()
         self.rules = {}
 
         self.project_root = project_root
@@ -203,11 +214,15 @@ class BuildFileContext(AbstractContext):
     def diagnostics(self):
         return self._diagnostics
 
+    @property
+    def user_rules(self):
+        return self._user_rules
+
 
 class IncludeContext(AbstractContext):
     """The build context used when processing an include."""
 
-    def __init__(self, cell_name, path):
+    def __init__(self, cell_name, path, label):
         # type: (str, str) -> None
         """
         :param cell_name: a cell name of the current context. Note that this cell name can be
@@ -216,11 +231,13 @@ class IncludeContext(AbstractContext):
         """
         self.cell_name = cell_name
         self.path = path
+        self.label = label
         self.globals = {}
         self._includes = set()
         self._used_configs = collections.defaultdict(dict)
         self._used_env_vars = {}
         self._diagnostics = []
+        self._user_rules = set()
 
     @property
     def includes(self):
@@ -238,13 +255,17 @@ class IncludeContext(AbstractContext):
     def diagnostics(self):
         return self._diagnostics
 
+    @property
+    def user_rules(self):
+        return self._user_rules
+
 
 # Generic context type that should be used in places where return and parameter
 # types are the same but could be either of the concrete contexts.
 _GCT = TypeVar("_GCT", IncludeContext, BuildFileContext)
 LoadStatement = Dict[str, Union[str, Dict[str, str]]]
 
-BuildInclude = collections.namedtuple("BuildInclude", ["cell_name", "path"])
+BuildInclude = collections.namedtuple("BuildInclude", ["cell_name", "label", "path"])
 
 
 class LazyBuildEnvPartial(object):
@@ -282,7 +303,7 @@ class LazyBuildEnvPartial(object):
                     # Optimistically hope that name is the first arg. It generally is...
                     name = args[0]
                 raise IncorrectArgumentsException(
-                    self.func.func_name, name, missing_args, extra_args
+                    self.func.__name__, name, missing_args, extra_args
                 )
             raise
 
@@ -746,6 +767,129 @@ def rule_exists(name, build_env=None):
     return name in build_env.rules
 
 
+class UserDefinedRule(object):
+    """
+    Represents a rule that is defined by a user, rather than a native rule
+
+    User defined rules for python are implemented by creating just enough logic
+    in the build files to do things like create callables from `rule()` (this object),
+    and to tell the Skylark parser on the java side that it needs to parse the .bzl
+    file. The logic on the skylark side is what is taken as the true implementation of
+    the rule.
+
+    This means that there are some places where we just take the users values and let
+    skylark spit out the error later in the process. e.g. one could say 'this attribute
+    is an integer', and a string could be passed from the python parser. The skylark
+    parser would then be the thing that makes the target node coercer validates the
+    types correctly.
+    """
+
+    VALID_IDENTIFIER_NAMES = re.compile("^[a-zA-Z_][a-zA-Z0-9_]*$")
+
+    def _validate_attributes(self, attrs):
+        """ Ensure we've got reasonable looking parameters for this rule """
+        modified_attrs = {}
+        for name, attr in attrs.items():
+            if name in self.required_attrs or name in self.optional_attrs:
+                raise ValueError(
+                    (
+                        "{} shadows a builtin attribute of the same name. "
+                        "Please remove it"
+                    ).format(name)
+                )
+            if not self.VALID_IDENTIFIER_NAMES.match(name):
+                raise ValueError(
+                    "{} is not a valid python identifier. Please rename it".format(name)
+                )
+            if not isinstance(attr, Attr.Attribute):
+                raise ValueError(
+                    "{} for attribute {} is not an Attribute object".format(attr, name)
+                )
+            # Make sure that '_' prefixed attrs cannot be passed to the callable
+            if not name.startswith("_"):
+                modified_attrs[name] = attr
+        return modified_attrs
+
+    def __init__(self, label, attrs, test):
+        self.label = label
+        self.buck_type = None
+        self.build_env = None
+        if test:
+            self.required_attrs = generated_rules.IMPLICIT_REQUIRED_TEST_ATTRS
+            self.optional_attrs = generated_rules.IMPLICIT_OPTIONAL_TEST_ATTRS
+        else:
+            self.required_attrs = generated_rules.IMPLICIT_REQUIRED_ATTRS
+            self.optional_attrs = generated_rules.IMPLICIT_OPTIONAL_ATTRS
+        self.attrs = self._validate_attributes(attrs)
+        self.all_attrs = (
+            self.required_attrs | self.optional_attrs | set(self.attrs.keys())
+        )
+
+    def set_name(self, name):
+        """
+        Set the name for this rule.
+
+        This is done after a load() completes, and must be run before
+        __call__ can be called
+        """
+        assert self.VALID_IDENTIFIER_NAMES.match(name), "invalid name for UDR"
+        self.buck_type = self.label + ":" + name
+        self.name = name
+
+    def __call__(self, **kwargs):
+        assert self.buck_type, "set_name() was never called for rule in {}".format(
+            self.label
+        )
+        if not isinstance(self.build_env, BuildFileContext):
+            raise ValueError(
+                "{} may not be called from the top level of extension files".format(
+                    self.name
+                )
+            )
+
+        rule = {"buck.type": self.buck_type}
+
+        unexpected_kwargs = set(kwargs.keys()) - self.all_attrs
+        if unexpected_kwargs:
+            raise ValueError(
+                "Unexpected extra parameter(s) '{}' provided for {}".format(
+                    ", ".join(unexpected_kwargs), self.buck_type
+                )
+            )
+
+        for param in self.required_attrs:
+            value = kwargs.get(param)
+            if value is None:
+                raise ValueError(
+                    "Mandatory parameter '{}' for {} was missing".format(
+                        param, self.buck_type
+                    )
+                )
+            else:
+                rule[param] = value
+
+        for param in self.optional_attrs:
+            value = kwargs.get(param)
+            if value is not None:
+                rule[param] = value
+
+        for k, v in self.attrs.items():
+            value = kwargs.get(k)
+            if value is None:
+                if v.mandatory:
+                    raise ValueError(
+                        "Mandatory parameter '{}' for {} was missing".format(
+                            k, self.buck_type
+                        )
+                    )
+                else:
+                    rule[k] = v.default
+            else:
+                rule[k] = value
+
+        add_rule(rule, self.build_env)
+
+
 def flatten_list_of_dicts(list_of_dicts):
     """Flatten the given list of dictionaries by merging l[1:] onto
     l[0], one at a time. Key/Value pairs which appear in later list entries
@@ -780,6 +924,86 @@ def depset(elements, build_env=None):
     :rtype: DeterministicSet
     """
     return DeterministicSet(elements)
+
+
+def rule(attrs=None, test=False, build_env=None, **kwargs):
+    """
+    Declares a 'user defined rule'
+
+    :param attrs: A dictionary of parameter names for the rule -> 'Attribute' objects
+                  that describe default values, and whether the parameter is mandatory
+    :param test: Whether this rule is a test rule. This determines the built in kwargs
+                 that are available (e.g. 'contacts')
+    :param build_env: The environment where `rule` was called. Must be an extension
+                      file
+    :param **kwargs: The rest of the kwargs are ignored, and are only used when this
+                     file is re-parsed by skylark
+    """
+    assert isinstance(
+        build_env, IncludeContext
+    ), "`rule()` is only allowed in extension files."
+    attrs = attrs or {}
+    return UserDefinedRule(attrs=attrs, label=build_env.label, test=test)
+
+
+class Attr(object):
+    """
+    The 'attr' module.
+
+    This defines things like default values and other constraints for parameters to
+    user defined rules. Most kwargs are thrown away, but are used by Skylark when this
+    file is re-parsed.
+
+    `default` and `mandatory` are used so we provide proper values to the parse pipeline
+
+    See `AttrModuleApi` in java
+    """
+
+    Attribute = collections.namedtuple("Attribute", ["default", "mandatory"])
+
+    def __generic_attribute(self, default, mandatory=False, **kwargs):
+        return self.Attribute(default=default, mandatory=mandatory)
+
+    def int(self, default=0, **kwargs):
+        return self.__generic_attribute(default=default, **kwargs)
+
+    def int_list(self, default=None, **kwargs):
+        default = default or []
+        return self.__generic_attribute(default=default, **kwargs)
+
+    def string(self, default="", **kwargs):
+        return self.__generic_attribute(default=default, **kwargs)
+
+    def string_list(self, default=None, **kwargs):
+        default = default or []
+        return self.__generic_attribute(default=default, **kwargs)
+
+    def bool(self, default=False, **kwargs):
+        return self.__generic_attribute(default=default, **kwargs)
+
+    def source_list(self, default=None, **kwargs):
+        default = default or []
+        return self.__generic_attribute(default=default, **kwargs)
+
+    def source(self, default=None, **kwargs):
+        return self.__generic_attribute(default=default, **kwargs)
+
+    def dep(self, default=None, **kwargs):
+        return self.__generic_attribute(default=default, **kwargs)
+
+    def dep_list(self, default=None, **kwargs):
+        default = default or []
+        return self.__generic_attribute(default=default, **kwargs)
+
+    def output(self, default=None, **kwargs):
+        return self.__generic_attribute(default=default, **kwargs)
+
+    def output_list(self, default=None, **kwargs):
+        default = default or []
+        return self.__generic_attribute(default=default, **kwargs)
+
+
+Attr.INSTANCE = Attr()
 
 
 GENDEPS_SIGNATURE = re.compile(
@@ -830,6 +1054,7 @@ class BuildFileProcessor(object):
         ignore_paths=None,
         disable_implicit_native_rules=False,
         warn_about_deprecated_syntax=True,
+        enable_user_defined_rules=False,
     ):
         if project_import_whitelist is None:
             project_import_whitelist = []
@@ -861,6 +1086,7 @@ class BuildFileProcessor(object):
         self._ignore_paths = ignore_paths
         self._disable_implicit_native_rules = disable_implicit_native_rules
         self._warn_about_deprecated_syntax = warn_about_deprecated_syntax
+        self._enable_user_defined_rules = enable_user_defined_rules
 
         lazy_global_functions = {}
         lazy_native_functions = {}
@@ -870,6 +1096,8 @@ class BuildFileProcessor(object):
         for func in NATIVE_FUNCTIONS:
             func_with_env = LazyBuildEnvPartial(func)
             lazy_native_functions[func.__name__] = func_with_env
+        if self._enable_user_defined_rules:
+            lazy_native_functions["rule"] = LazyBuildEnvPartial(rule)
 
         self._global_functions = lazy_global_functions
         self._native_functions = lazy_native_functions
@@ -894,7 +1122,7 @@ class BuildFileProcessor(object):
 
     def _create_default_globals(self, is_build_file, is_implicit_include):
         # type: (bool) -> Dict[str, Callable]
-        return {
+        default_globals = {
             "include_defs": functools.partial(self._include_defs, is_implicit_include),
             "add_build_file_dep": self._add_build_file_dep,
             "read_config": self._read_config,
@@ -908,6 +1136,9 @@ class BuildFileProcessor(object):
             "host_info": self._host_info,
             "native": self._create_native_module(is_build_file=is_build_file),
         }
+        if self._enable_user_defined_rules and not is_build_file:
+            default_globals["attr"] = Attr.INSTANCE
+        return default_globals
 
     def _create_native_module(self, is_build_file):
         """
@@ -1053,6 +1284,11 @@ class BuildFileProcessor(object):
             function.build_env = build_env
         for function in itervalues(self._native_functions):
             function.build_env = build_env
+        if build_env:
+            # Make sure that any UDRs in the current execution context have the right
+            # build_env set. `build_env.user_rules` is managed by load()
+            for function in build_env.user_rules:
+                function.build_env = build_env
 
     def _install_builtins(self, namespace, force_native_rules=False):
         """
@@ -1099,11 +1335,13 @@ class BuildFileProcessor(object):
                 )
             return BuildInclude(
                 cell_name=cell_name,
+                label="@" + name,
                 path=os.path.normpath(os.path.join(cell_root, relative_path)),
             )
         else:
             return BuildInclude(
                 cell_name=cell_name,
+                label=name,
                 path=os.path.normpath(os.path.join(self._project_root, relative_path)),
             )
 
@@ -1140,13 +1378,24 @@ class BuildFileProcessor(object):
                     "Relative loads work only for files in the same directory. "
                     + "Please use absolute label instead ([cell]//pkg[/pkg]:target)."
                 )
+            cell_root = self._get_cell_root(cell_name)
+            if cell_root is None:
+                raise KeyError(
+                    "load label {} references an unknown cell named {} "
+                    "known cells: {!r}".format(label, cell_name, self._cell_roots)
+                )
+
             callee_dir = os.path.dirname(self._current_build_env.path)
+            label = self._get_label_for_include(
+                cell_name, os.path.relpath(callee_dir, cell_root), file_name
+            )
             return BuildInclude(
                 cell_name=cell_name,
+                label=label,
                 path=os.path.normpath(os.path.join(callee_dir, file_name)),
             )
-        elif cell_name:
-            cell_root = self._cell_roots.get(cell_name)
+        else:
+            cell_root = self._get_cell_root(cell_name)
             if cell_root is None:
                 raise KeyError(
                     "load label {} references an unknown cell named {} "
@@ -1154,17 +1403,23 @@ class BuildFileProcessor(object):
                 )
             return BuildInclude(
                 cell_name=cell_name,
+                label=self._get_label_for_include(cell_name, relative_path, file_name),
                 path=os.path.normpath(
                     os.path.join(cell_root, relative_path, file_name)
                 ),
             )
+
+    def _get_cell_root(self, cell_name):
+        if cell_name:
+            return self._cell_roots.get(cell_name)
         else:
-            return BuildInclude(
-                cell_name=cell_name,
-                path=os.path.normpath(
-                    os.path.join(self._project_root, relative_path, file_name)
-                ),
-            )
+            return self._project_root
+
+    def _get_label_for_include(self, cell_name, package_path, file_name):
+        if cell_name:
+            return "@{}//{}:{}".format(cell_name, package_path, file_name)
+        else:
+            return "//{}:{}".format(package_path, file_name)
 
     def _read_config(self, section, field, default=None):
         # type: (str, str, Any) -> Any
@@ -1324,6 +1579,12 @@ class BuildFileProcessor(object):
         build_env.includes.add(build_include.path)
         build_env.merge(inner_env)
 
+        # Ensure that after a load in a build file, that rule is accessible immediately
+        # Native rules handle this by being in a shared global object
+        # (see _update_functions)
+        for rule in build_env.user_rules:
+            rule.build_env = build_env
+
     def _load_package_implicit(self, build_env, package_implicit_load):
         """
         Updates `build_env` to contain all symbols from `package_implicit_load`
@@ -1394,8 +1655,8 @@ class BuildFileProcessor(object):
         # Grab the current build context from the top of the stack.
         build_env = self._current_build_env
 
-        cell_name, path = self._resolve_include(name)
-        build_env.includes.add(path)
+        build_include = self._resolve_include(name)
+        build_env.includes.add(build_include.path)
 
     @staticmethod
     def _host_info():
@@ -1605,7 +1866,9 @@ class BuildFileProcessor(object):
             return cached
 
         build_env = IncludeContext(
-            cell_name=build_include.cell_name, path=build_include.path
+            cell_name=build_include.cell_name,
+            path=build_include.path,
+            label=build_include.label,
         )
         build_env, mod = self._process(
             build_env,
@@ -1613,6 +1876,15 @@ class BuildFileProcessor(object):
             is_implicit_include=is_implicit_include,
             package_implicit_load=None,
         )
+
+        if self._enable_user_defined_rules:
+            # Look at top level assignments (foo = rule(**)) and grab the name for
+            # that rule.
+            for k, v in mod.__dict__.items():
+                # Make sure to skip transitively included rules
+                if isinstance(v, UserDefinedRule) and v.label == build_env.label:
+                    v.set_name(k)
+                    build_env.user_rules.add(v)
 
         self._include_cache[build_include.path] = build_env, mod
         return build_env, mod
@@ -1951,6 +2223,11 @@ def main():
         action="store_true",
         help="Warn about deprecated syntax usage.",
     )
+    parser.add_option(
+        "--enable_user_defined_rules",
+        action="store_true",
+        help="Allow user defined rules' primitives in build files.",
+    )
     (options, args) = parser.parse_args()
 
     # Even though project_root is absolute path, it may not be concise. For
@@ -2010,6 +2287,7 @@ def main():
         ignore_paths=ignore_paths,
         disable_implicit_native_rules=options.disable_implicit_native_rules,
         warn_about_deprecated_syntax=options.warn_about_deprecated_syntax,
+        enable_user_defined_rules=options.enable_user_defined_rules,
     )
 
     # While processing, we'll write exceptions as diagnostic messages

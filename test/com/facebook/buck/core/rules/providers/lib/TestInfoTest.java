@@ -91,20 +91,22 @@ public class TestInfoTest {
 
   @Test
   public void usesDefaultSkylarkValues() throws InterruptedException, EvalException {
-    Mutability mutability = Mutability.create("providertest");
-    Environment env =
-        Environment.builder(mutability)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setGlobals(
-                Environment.GlobalFrame.createForBuiltins(
-                    ImmutableMap.of(TestInfo.PROVIDER.getName(), TestInfo.PROVIDER)))
-            .build();
+    Object raw;
+    try (Mutability mutability = Mutability.create("providertest")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .setGlobals(
+                  Environment.GlobalFrame.createForBuiltins(
+                      ImmutableMap.of(TestInfo.PROVIDER.getName(), TestInfo.PROVIDER)))
+              .build();
 
-    Object raw =
-        BuildFileAST.eval(
-            env,
-            String.format(
-                "TestInfo(test_name=\"%s\", test_case_name=\"%s\")", TEST_NAME, TEST_CASE_NAME));
+      raw =
+          BuildFileAST.eval(
+              env,
+              String.format(
+                  "TestInfo(test_name=\"%s\", test_case_name=\"%s\")", TEST_NAME, TEST_CASE_NAME));
+    }
     assertTrue(raw instanceof TestInfo);
     TestInfo testInfo = (TestInfo) raw;
 
@@ -119,35 +121,37 @@ public class TestInfoTest {
 
   @Test
   public void instantiatesFromSkylarkProperly() throws EvalException, InterruptedException {
-    Mutability mutability = Mutability.create("providertest");
-    Environment env =
-        Environment.builder(mutability)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setGlobals(
-                Environment.GlobalFrame.createForBuiltins(
-                    ImmutableMap.of(
-                        TestInfo.PROVIDER.getName(),
-                        TestInfo.PROVIDER,
-                        "None",
-                        Runtime.NONE,
-                        "True",
-                        true)))
-            .build();
+    Object raw;
+    try (Mutability mutability = Mutability.create("providertest")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .setGlobals(
+                  Environment.GlobalFrame.createForBuiltins(
+                      ImmutableMap.of(
+                          TestInfo.PROVIDER.getName(),
+                          TestInfo.PROVIDER,
+                          "None",
+                          Runtime.NONE,
+                          "True",
+                          true)))
+              .build();
 
-    String buildFile =
-        String.format(
-            "TestInfo("
-                + "\ntest_name=\"%s\","
-                + "\ntest_case_name=\"%s\","
-                + "\nlabels = [\"label1\", \"label2\", \"label1\"],"
-                + "\ncontacts = [\"foo@example.com\", \"bar@example.com\", \"foo@example.com\"],"
-                + "\nrun_tests_separately=True,"
-                + "\ntimeout_ms=5,"
-                + "\ntype=\"%s\""
-                + "\n)",
-            TEST_NAME, TEST_CASE_NAME, TYPE);
+      String buildFile =
+          String.format(
+              "TestInfo("
+                  + "\ntest_name=\"%s\","
+                  + "\ntest_case_name=\"%s\","
+                  + "\nlabels = [\"label1\", \"label2\", \"label1\"],"
+                  + "\ncontacts = [\"foo@example.com\", \"bar@example.com\", \"foo@example.com\"],"
+                  + "\nrun_tests_separately=True,"
+                  + "\ntimeout_ms=5,"
+                  + "\ntype=\"%s\""
+                  + "\n)",
+              TEST_NAME, TEST_CASE_NAME, TYPE);
 
-    Object raw = BuildFileAST.eval(env, buildFile);
+      raw = BuildFileAST.eval(env, buildFile);
+    }
     assertTrue(raw instanceof TestInfo);
     TestInfo testInfo = (TestInfo) raw;
 
@@ -162,36 +166,38 @@ public class TestInfoTest {
 
   @Test
   public void coercesTimeout() throws InterruptedException, EvalException {
-    Mutability mutability = Mutability.create("providertest");
-    Environment env =
-        Environment.builder(mutability)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setGlobals(
-                Environment.GlobalFrame.createForBuiltins(
-                    ImmutableMap.of(TestInfo.PROVIDER.getName(), TestInfo.PROVIDER)))
-            .build();
+    Object raw1;
+    Object raw2;
+    try (Mutability mutability = Mutability.create("providertest")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .setGlobals(
+                  Environment.GlobalFrame.createForBuiltins(
+                      ImmutableMap.of(TestInfo.PROVIDER.getName(), TestInfo.PROVIDER)))
+              .build();
 
-    Object raw1 =
-        BuildFileAST.eval(
-            env,
-            String.format(
-                "TestInfo("
-                    + "\ntest_name=\"%s\","
-                    + "\ntest_case_name=\"%s\","
-                    + "\ntimeout_ms=TestInfo(test_name=\"%s\", test_case_name=\"%s\").timeout_ms"
-                    + "\n)",
-                TEST_NAME, TEST_CASE_NAME, TEST_NAME, TEST_CASE_NAME));
-    Object raw2 =
-        BuildFileAST.eval(
-            env,
-            String.format(
-                "TestInfo("
-                    + "\ntest_name=\"%s\","
-                    + "\ntest_case_name=\"%s\","
-                    + "\ntimeout_ms=TestInfo(test_name=\"%s\", test_case_name=\"%s\", timeout_ms=5).timeout_ms"
-                    + "\n)",
-                TEST_NAME, TEST_CASE_NAME, TEST_NAME, TEST_CASE_NAME));
-
+      raw1 =
+          BuildFileAST.eval(
+              env,
+              String.format(
+                  "TestInfo("
+                      + "\ntest_name=\"%s\","
+                      + "\ntest_case_name=\"%s\","
+                      + "\ntimeout_ms=TestInfo(test_name=\"%s\", test_case_name=\"%s\").timeout_ms"
+                      + "\n)",
+                  TEST_NAME, TEST_CASE_NAME, TEST_NAME, TEST_CASE_NAME));
+      raw2 =
+          BuildFileAST.eval(
+              env,
+              String.format(
+                  "TestInfo("
+                      + "\ntest_name=\"%s\","
+                      + "\ntest_case_name=\"%s\","
+                      + "\ntimeout_ms=TestInfo(test_name=\"%s\", test_case_name=\"%s\", timeout_ms=5).timeout_ms"
+                      + "\n)",
+                  TEST_NAME, TEST_CASE_NAME, TEST_NAME, TEST_CASE_NAME));
+    }
     assertThat(raw1, Matchers.instanceOf(TestInfo.class));
     TestInfo val1 = (TestInfo) raw1;
     assertEquals(Runtime.NONE, val1.timeoutMs());

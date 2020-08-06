@@ -18,6 +18,7 @@ package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -33,7 +34,7 @@ import javax.annotation.Nullable;
 public final class CellProvider {
 
   private final NewCellPathResolver newCellPathResolver;
-  private final LoadingCache<Path, Cell> cells;
+  private final LoadingCache<AbsPath, Cell> cells;
 
   /**
    * Create a cell provider with a specific cell loader, and optionally a special factory function
@@ -44,7 +45,7 @@ public final class CellProvider {
    */
   public CellProvider(
       NewCellPathResolver newCellPathResolver,
-      Function<CellProvider, CacheLoader<Path, Cell>> cellCacheLoader,
+      Function<CellProvider, CacheLoader<AbsPath, Cell>> cellCacheLoader,
       @Nullable Function<CellProvider, Cell> rootCellLoader) {
     this.newCellPathResolver = newCellPathResolver;
     this.cells = CacheBuilder.newBuilder().build(cellCacheLoader.apply(this));
@@ -57,7 +58,7 @@ public final class CellProvider {
   // TODO(cjhopman): Shouldn't this be based on CanonicalCellName instead?
   public Cell getCellByPath(Path path) {
     try {
-      return cells.get(path);
+      return cells.get(AbsPath.of(path));
     } catch (ExecutionException e) {
       if (e.getCause() instanceof IOException) {
         throw new HumanReadableException(e.getCause(), "Failed to load Cell at: %s", path);
@@ -73,13 +74,21 @@ public final class CellProvider {
     }
   }
 
+  public Cell getCellByPath(AbsPath path) {
+    return getCellByPath(path.getPath());
+  }
+
   /** Get cell object by canonicall cell name */
   public Cell getCellByCanonicalCellName(CanonicalCellName canonicalCellName) {
     // TODO(nga): skip resolving to cell path
     return getCellByPath(newCellPathResolver.getCellPath(canonicalCellName));
   }
 
-  public ImmutableMap<Path, Cell> getLoadedCells() {
+  public Cells getRootCell() {
+    return new Cells(getCellByCanonicalCellName(CanonicalCellName.rootCell()));
+  }
+
+  public ImmutableMap<AbsPath, Cell> getLoadedCells() {
     return ImmutableMap.copyOf(cells.asMap());
   }
 }

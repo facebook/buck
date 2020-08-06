@@ -19,6 +19,7 @@ package com.facebook.buck.event;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.external.events.InstallFinishedEventExternalInterface;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
 public abstract class InstallEvent extends AbstractBuckEvent
@@ -49,8 +50,17 @@ public abstract class InstallEvent extends AbstractBuckEvent
   }
 
   public static Finished finished(
+      Started started,
+      boolean success,
+      Optional<Long> pid,
+      Optional<String> packageName,
+      ImmutableMap<String, String> installDeviceInfo) {
+    return new Finished(started, success, pid, packageName, installDeviceInfo);
+  }
+
+  public static Finished finished(
       Started started, boolean success, Optional<Long> pid, Optional<String> packageName) {
-    return new Finished(started, success, pid, packageName);
+    return finished(started, success, pid, packageName, ImmutableMap.of());
   }
 
   public static class Started extends InstallEvent {
@@ -67,18 +77,26 @@ public abstract class InstallEvent extends AbstractBuckEvent
   public static class Finished extends InstallEvent
       implements InstallFinishedEventExternalInterface {
 
+    public static final String DEVICE_INFO_LOCALES = "locales";
+
     private static long invalidPid = -1;
 
     private final boolean success;
     private final long pid;
     private final String packageName;
+    private final ImmutableMap<String, String> installDeviceInfo;
 
     protected Finished(
-        Started started, boolean success, Optional<Long> pid, Optional<String> packageName) {
+        Started started,
+        boolean success,
+        Optional<Long> pid,
+        Optional<String> packageName,
+        ImmutableMap<String, String> installDeviceInfo) {
       super(started.getEventKey(), started.getBuildTarget());
       this.success = success;
       this.pid = pid.orElse(invalidPid);
       this.packageName = packageName.orElse("");
+      this.installDeviceInfo = installDeviceInfo;
     }
 
     @Override
@@ -88,6 +106,10 @@ public abstract class InstallEvent extends AbstractBuckEvent
 
     public long getPid() {
       return pid;
+    }
+
+    public ImmutableMap<String, String> getInstallDeviceInfo() {
+      return installDeviceInfo;
     }
 
     @Override

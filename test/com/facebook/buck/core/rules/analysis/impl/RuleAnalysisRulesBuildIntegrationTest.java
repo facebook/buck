@@ -442,7 +442,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
             ? "//:runnable_bat_failure"
             : "//:runnable_sh_failure";
 
-    String rootString = workspace.getProjectFileSystem().getRootPath().toAbsolutePath().toString();
+    String rootString = workspace.getProjectFileSystem().getRootPath().toString();
     String expected =
         Joiner.on(System.lineSeparator())
             .join(
@@ -574,7 +574,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
     assertEquals(expectedSuccess ? ResultType.SUCCESS : ResultType.FAILURE, result.getType());
     assertEquals(testName, result.getTestName());
 
-    String rootString = workspace.getProjectFileSystem().getRootPath().toAbsolutePath().toString();
+    String rootString = workspace.getProjectFileSystem().getRootPath().toString();
     ImmutableList<String> expected =
         ImmutableList.of(
             "PWD: " + rootString,

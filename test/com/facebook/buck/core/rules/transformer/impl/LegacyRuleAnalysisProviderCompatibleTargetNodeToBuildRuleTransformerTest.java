@@ -23,7 +23,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
@@ -117,7 +119,8 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
               ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
               TargetNode<T> node,
-              ProviderInfoCollection providerInfoCollection) {
+              ProviderInfoCollection providerInfoCollection,
+              CellPathResolver cellPathResolver) {
             assertSame(expectedProviderInfoCollection, providerInfoCollection);
             assertSame(targetNode, node);
             return rule;
@@ -135,7 +138,8 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
             targetGraph,
             ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
             actionGraphBuilder,
-            targetNode));
+            targetNode,
+            TestCellPathResolver.get(fakeFilesystem)));
   }
 
   private static class FakeTargetNodeRuleDescription implements RuleDescription<FakeTargetNodeArg> {
@@ -155,7 +159,9 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
   public void transformDelegatesWhenNewDescription() throws ActionCreationException {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
 
-    TargetNodeFactory nodeCopier = new TargetNodeFactory(new DefaultTypeCoercerFactory());
+    TargetNodeFactory nodeCopier =
+        new TargetNodeFactory(
+            new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     FakeTargetNodeRuleDescription description = new FakeTargetNodeRuleDescription();
@@ -170,8 +176,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            TestCellPathResolver.create(Paths.get("")));
+            ImmutableSet.of());
 
     ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
     ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder();
@@ -219,7 +224,8 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
               ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
               TargetNode<T> node,
-              ProviderInfoCollection providerInfoCollection) {
+              ProviderInfoCollection providerInfoCollection,
+              CellPathResolver cellPathResolver) {
             fail();
             return null;
           }
@@ -234,7 +240,8 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
             targetGraph,
             ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
             actionGraphBuilder,
-            targetNode);
+            targetNode,
+            TestCellPathResolver.get(projectFilesystem));
 
     assertTrue(ruleAnalysisCalled.get());
     assertSame(target, rule.getBuildTarget());

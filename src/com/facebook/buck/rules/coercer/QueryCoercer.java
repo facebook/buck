@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
@@ -31,11 +30,12 @@ import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.facebook.buck.rules.query.Query;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.reflect.TypeToken;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 /** Coercer for {@link Query}s. */
-public class QueryCoercer implements TypeCoercer<Query> {
+public class QueryCoercer implements TypeCoercer<Object, Query> {
 
   private final TypeCoercerFactory typeCoercerFactory;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
@@ -88,13 +88,28 @@ public class QueryCoercer implements TypeCoercer<Query> {
   }
 
   @Override
-  public Class<Query> getOutputClass() {
-    return Query.class;
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
+  }
+
+  @Override
+  public TypeToken<Query> getOutputType() {
+    return TypeToken.of(Query.class);
+  }
+
+  @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
   }
 
   @Override
   public Query coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -105,6 +120,6 @@ public class QueryCoercer implements TypeCoercer<Query> {
       return Query.of(
           (String) object, targetConfiguration, BaseName.ofPath(pathRelativeToProjectRoot));
     }
-    throw CoerceFailedException.simple(object, getOutputClass());
+    throw CoerceFailedException.simple(object, getOutputType());
   }
 }

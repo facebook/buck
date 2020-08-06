@@ -187,7 +187,7 @@ public class RustCompileUtils {
               .resolve("rust-incremental")
               .resolve(incremental.get());
 
-      for (Flavor f : target.getFlavors()) {
+      for (Flavor f : target.getFlavors().getSet()) {
         path = path.resolve(f.getName());
       }
       args.add(StringArg.of(String.format("-Cincremental=%s", path)));
@@ -314,7 +314,7 @@ public class RustCompileUtils {
         mappedSources,
         rootModule,
         rustConfig.getRemapSrcPaths(),
-        rustPlatform.getXcrunSdkPath());
+        rustPlatform.getXcrunSdkPath().map(path -> path.toString()));
   }
 
   private static void addDependencyArgs(

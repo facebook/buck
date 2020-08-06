@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.filesystem.impl;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import java.io.IOException;
@@ -48,7 +49,7 @@ public class DefaultProjectFilesystemGetDirectoryContentsBenchmark {
   private TemporaryPaths temporaryPaths = new TemporaryPaths();
   private DefaultProjectFilesystem fileSystem;
   private DefaultProjectFilesystemView fileSystemView;
-  private Path pathToEnumerate;
+  private AbsPath pathToEnumerate;
 
   @Setup(Level.Trial)
   public void setUpFileSystem() throws Exception {
@@ -66,20 +67,20 @@ public class DefaultProjectFilesystemGetDirectoryContentsBenchmark {
   @Benchmark
   @BenchmarkMode(Mode.AverageTime)
   public Collection<Path> getDirectoryContents() throws IOException {
-    return fileSystem.getDirectoryContents(pathToEnumerate);
+    return fileSystem.getDirectoryContents(pathToEnumerate.getPath());
   }
 
   @Benchmark
   @BenchmarkMode(Mode.AverageTime)
   public Collection<Path> getDirectoryContentsFromView() throws IOException {
-    return fileSystemView.getDirectoryContents(pathToEnumerate);
+    return fileSystemView.getDirectoryContents(pathToEnumerate.getPath());
   }
 
   @Benchmark
   @BenchmarkMode(Mode.AverageTime)
   public Collection<Path> nioArrayList() throws IOException {
     ArrayList<Path> paths = new ArrayList<>();
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(pathToEnumerate)) {
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(pathToEnumerate.getPath())) {
       for (Path ent : stream) {
         paths.add(ent);
       }
@@ -90,7 +91,7 @@ public class DefaultProjectFilesystemGetDirectoryContentsBenchmark {
   @Benchmark
   @BenchmarkMode(Mode.AverageTime)
   public void nioWithoutCollection(Blackhole blackhole) throws IOException {
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(pathToEnumerate)) {
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(pathToEnumerate.getPath())) {
       for (Path ent : stream) {
         blackhole.consume(ent);
       }

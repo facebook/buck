@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.transformer;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -27,6 +28,7 @@ import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.google.common.base.Preconditions;
 
 public interface TargetNodeToBuildRuleTransformer {
 
@@ -36,14 +38,19 @@ public interface TargetNodeToBuildRuleTransformer {
       TargetGraph targetGraph,
       ConfigurationRuleRegistry configurationRuleRegistry,
       ActionGraphBuilder graphBuilder,
-      TargetNode<T> targetNode) {
+      TargetNode<T> targetNode,
+      CellPathResolver cellPathResolver) {
+    Preconditions.checkArgument(
+        targetNode.getBuildTarget().getCell() == cellPathResolver.getCurrentCellName());
+
     return transform(
         toolchainProvider,
         targetGraph,
         configurationRuleRegistry,
         graphBuilder,
         targetNode,
-        LegacyProviderInfoCollectionImpl.of());
+        LegacyProviderInfoCollectionImpl.of(),
+        cellPathResolver);
   }
 
   /**
@@ -59,5 +66,6 @@ public interface TargetNodeToBuildRuleTransformer {
       ConfigurationRuleRegistry configurationRuleRegistry,
       ActionGraphBuilder graphBuilder,
       TargetNode<T> targetNode,
-      ProviderInfoCollection providerInfoCollection);
+      ProviderInfoCollection providerInfoCollection,
+      CellPathResolver cellPathResolver);
 }

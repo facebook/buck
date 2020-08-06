@@ -16,74 +16,87 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.reflect.TypeParameter;
+import com.google.common.reflect.TypeToken;
 import java.util.Collection;
-import java.util.SortedSet;
 
-public class SortedSetTypeCoercer<T extends Comparable<? super T>>
-    extends CollectionTypeCoercer<ImmutableSortedSet<T>, T> {
+/** Coerce to {@link com.google.common.collect.ImmutableSortedSet}. */
+public class SortedSetTypeCoercer<U, T extends Comparable<? super T>>
+    extends CollectionTypeCoercer<ImmutableList<U>, ImmutableSortedSet<T>, U, T> {
 
-  private final TypeCoercer<T> elementTypeCoercer;
   private final SortedSetConcatable<T> concatable = new SortedSetConcatable<>();
+  private final TypeToken<ImmutableSortedSet<T>> typeToken;
+  private final TypeToken<ImmutableList<U>> typeTokenUnconfigured;
 
-  public SortedSetTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
+  public SortedSetTypeCoercer(TypeCoercer<U, T> elementTypeCoercer) {
     super(elementTypeCoercer);
-    this.elementTypeCoercer = elementTypeCoercer;
+    this.typeToken =
+        new TypeToken<ImmutableSortedSet<T>>() {}.where(
+            new TypeParameter<T>() {}, elementTypeCoercer.getOutputType());
+    this.typeTokenUnconfigured =
+        new TypeToken<ImmutableList<U>>() {}.where(
+            new TypeParameter<U>() {}, elementTypeCoercer.getUnconfiguredType());
+  }
+
+  @Override
+  public TypeToken<ImmutableSortedSet<T>> getOutputType() {
+    return typeToken;
+  }
+
+  @Override
+  public TypeToken<ImmutableList<U>> getUnconfiguredType() {
+    return typeTokenUnconfigured;
   }
 
   @SuppressWarnings("unchecked")
   @Override
-  public Class<ImmutableSortedSet<T>> getOutputClass() {
-    return (Class<ImmutableSortedSet<T>>) (Class<?>) ImmutableSortedSet.class;
-  }
-
-  protected void fillSortedSet(
-      CellPathResolver cellRoots,
+  public ImmutableList<U> coerceToUnconfigured(
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
-      SortedSet<T> builder,
       Object object)
       throws CoerceFailedException {
-
     if (object instanceof Collection) {
-      for (Object element : (Iterable<?>) object) {
+      boolean identity = true;
+
+      ImmutableList.Builder<U> builder = ImmutableList.builder();
+      for (Object element : (Collection<?>) object) {
         // if any element failed, the entire collection fails
-        T coercedElement =
-            elementTypeCoercer.coerce(
-                cellRoots,
-                filesystem,
-                pathRelativeToProjectRoot,
-                targetConfiguration,
-                hostConfiguration,
-                element);
-        boolean alreadyExists = !builder.add(coercedElement);
-        if (alreadyExists) {
-          throw new CoerceFailedException(
-              String.format("duplicate element \"%s\"", coercedElement));
-        }
+        U coercedElement =
+            elementTypeCoercer.coerceToUnconfigured(
+                cellRoots, filesystem, pathRelativeToProjectRoot, element);
+        builder.add(coercedElement);
+
+        identity &= element == coercedElement;
       }
+
+      if (identity && object instanceof ImmutableList<?>) {
+        return (ImmutableList<U>) object;
+      }
+
+      return builder.build();
     } else {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType().getType());
     }
   }
 
   @Override
   public ImmutableSortedSet<T> coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      ImmutableList<U> object)
       throws CoerceFailedException {
     ImmutableSortedSet.Builder<T> builder = ImmutableSortedSet.naturalOrder();
-    fill(
+    fillConfigured(
         cellRoots,
         filesystem,
         pathRelativeToProjectRoot,

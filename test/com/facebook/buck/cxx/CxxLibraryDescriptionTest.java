@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertEquals;
@@ -189,7 +190,7 @@ public class CxxLibraryDescriptionTest {
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     CxxSourceRuleFactory cxxSourceRuleFactory =
-        CxxSourceRuleFactoryHelper.of(filesystem.getRootPath(), target, cxxPlatform);
+        CxxSourceRuleFactoryHelper.of(filesystem.getRootPath().getPath(), target, cxxPlatform);
 
     String headerName = "test/bar.h";
     String privateHeaderName = "test/bar_private.h";
@@ -206,9 +207,9 @@ public class CxxLibraryDescriptionTest {
                     SourceWithFlags.of(DefaultBuildTargetSourcePath.of(genSourceTarget))))
             .setFrameworks(
                 ImmutableSortedSet.of(
-                    FrameworkPath.ofSourcePath(FakeSourcePath.of("/some/framework/path/s.dylib")),
+                    FrameworkPath.ofSourcePath(FakeSourcePath.of("some/framework/path/s.dylib")),
                     FrameworkPath.ofSourcePath(
-                        FakeSourcePath.of("/another/framework/path/a.dylib"))))
+                        FakeSourcePath.of("another/framework/path/a.dylib"))))
             .setDeps(ImmutableSortedSet.of(depTarget, sharedDepTarget));
 
     // Build the target graph.
@@ -235,9 +236,9 @@ public class CxxLibraryDescriptionTest {
         publicInput.getFrameworks(),
         containsInAnyOrder(
             FrameworkPath.ofSourcePath(
-                FakeSourcePath.of(filesystem, "/some/framework/path/s.dylib")),
+                FakeSourcePath.of(filesystem, "some/framework/path/s.dylib")),
             FrameworkPath.ofSourcePath(
-                FakeSourcePath.of(filesystem, "/another/framework/path/a.dylib"))));
+                FakeSourcePath.of(filesystem, "another/framework/path/a.dylib"))));
     CxxSymlinkTreeHeaders publicHeaders = (CxxSymlinkTreeHeaders) publicInput.getIncludes().get(0);
     assertThat(publicHeaders.getIncludeType(), equalTo(CxxPreprocessables.IncludeType.LOCAL));
     assertThat(
@@ -260,9 +261,9 @@ public class CxxLibraryDescriptionTest {
         privateInput.getFrameworks(),
         containsInAnyOrder(
             FrameworkPath.ofSourcePath(
-                FakeSourcePath.of(filesystem, "/some/framework/path/s.dylib")),
+                FakeSourcePath.of(filesystem, "some/framework/path/s.dylib")),
             FrameworkPath.ofSourcePath(
-                FakeSourcePath.of(filesystem, "/another/framework/path/a.dylib"))));
+                FakeSourcePath.of(filesystem, "another/framework/path/a.dylib"))));
     CxxSymlinkTreeHeaders privateHeaders =
         (CxxSymlinkTreeHeaders) privateInput.getIncludes().get(0);
     assertThat(privateHeaders.getIncludeType(), equalTo(CxxPreprocessables.IncludeType.LOCAL));
@@ -492,7 +493,8 @@ public class CxxLibraryDescriptionTest {
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     CxxSourceRuleFactory cxxSourceRuleFactoryPDC =
-        CxxSourceRuleFactoryHelper.of(filesystem.getRootPath(), target, cxxPlatform, PicType.PDC);
+        CxxSourceRuleFactoryHelper.of(
+            filesystem.getRootPath().getPath(), target, cxxPlatform, PicType.PDC);
 
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(target)
@@ -505,9 +507,9 @@ public class CxxLibraryDescriptionTest {
                     SourceWithFlags.of(DefaultBuildTargetSourcePath.of(genSourceTarget))))
             .setFrameworks(
                 ImmutableSortedSet.of(
-                    FrameworkPath.ofSourcePath(FakeSourcePath.of("/some/framework/path/s.dylib")),
+                    FrameworkPath.ofSourcePath(FakeSourcePath.of("some/framework/path/s.dylib")),
                     FrameworkPath.ofSourcePath(
-                        FakeSourcePath.of("/another/framework/path/a.dylib"))))
+                        FakeSourcePath.of("another/framework/path/a.dylib"))))
             .setDeps(ImmutableSortedSet.of(depTarget));
 
     // Build target graph.
@@ -532,9 +534,9 @@ public class CxxLibraryDescriptionTest {
         publicInput.getFrameworks(),
         containsInAnyOrder(
             FrameworkPath.ofSourcePath(
-                FakeSourcePath.of(filesystem, "/some/framework/path/s.dylib")),
+                FakeSourcePath.of(filesystem, "some/framework/path/s.dylib")),
             FrameworkPath.ofSourcePath(
-                FakeSourcePath.of(filesystem, "/another/framework/path/a.dylib"))));
+                FakeSourcePath.of(filesystem, "another/framework/path/a.dylib"))));
     CxxSymlinkTreeHeaders publicHeaders = (CxxSymlinkTreeHeaders) publicInput.getIncludes().get(0);
     assertThat(publicHeaders.getIncludeType(), equalTo(CxxPreprocessables.IncludeType.LOCAL));
     assertThat(
@@ -603,7 +605,8 @@ public class CxxLibraryDescriptionTest {
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
     CxxSourceRuleFactory cxxSourceRuleFactoryPIC =
-        CxxSourceRuleFactoryHelper.of(filesystem.getRootPath(), target, cxxPlatform, PicType.PIC);
+        CxxSourceRuleFactoryHelper.of(
+            filesystem.getRootPath().getPath(), target, cxxPlatform, PicType.PIC);
     rule.getNativeLinkableInput(
         cxxPlatform,
         Linker.LinkableDepType.SHARED,
@@ -728,7 +731,8 @@ public class CxxLibraryDescriptionTest {
     assertThat(deps.size(), is(1));
     BuildRule buildRule = deps.asList().get(0);
     assertThat(
-        buildRule.getBuildTarget().getFlavors(), hasItem(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR));
+        buildRule.getBuildTarget().getFlavors().getSet(),
+        hasItem(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR));
   }
 
   @Test
@@ -1185,14 +1189,19 @@ public class CxxLibraryDescriptionTest {
                         PBXReference.SourceTree.SDKROOT,
                         Paths.get("/usr/lib/libz.dylib"),
                         Optional.empty())),
-                FrameworkPath.ofSourcePath(FakeSourcePath.of("/another/path/liba.dylib"))))
+                FrameworkPath.ofSourcePath(FakeSourcePath.of("another/path/liba.dylib"))))
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     CxxLink library = (CxxLink) libraryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         Arg.stringify(library.getArgs(), graphBuilder.getSourcePathResolver()),
-        hasItems("-L", "/another/path", "$SDKROOT/usr/lib", "-la", "-lz"));
+        hasItems("$SDKROOT/usr/lib", "-la", "-lz"));
+    assertThat(
+        Arg.stringify(library.getArgs(), graphBuilder.getSourcePathResolver()), hasItems("-L"));
+    assertThat(
+        Arg.stringify(library.getArgs(), graphBuilder.getSourcePathResolver()),
+        hasItems(matchesPattern(".*another[/\\\\]path$")));
   }
 
   @Test
@@ -1202,8 +1211,8 @@ public class CxxLibraryDescriptionTest {
 
     ImmutableSortedSet<FrameworkPath> libraries =
         ImmutableSortedSet.of(
-            FrameworkPath.ofSourcePath(FakeSourcePath.of("/some/path/libs.dylib")),
-            FrameworkPath.ofSourcePath(FakeSourcePath.of("/another/path/liba.dylib")));
+            FrameworkPath.ofSourcePath(FakeSourcePath.of("some/path/libs.dylib")),
+            FrameworkPath.ofSourcePath(FakeSourcePath.of("another/path/liba.dylib")));
 
     CxxLibraryBuilder libraryBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:foo"));

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.pathformat;
 
+import com.facebook.buck.core.filesystems.PathWrapper;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -30,6 +31,10 @@ public class PathFormatter {
 
   public static String pathWithUnixSeparators(Path path) {
     return path.toString().replace('\\', '/');
+  }
+
+  public static String pathWithUnixSeparators(PathWrapper path) {
+    return pathWithUnixSeparators(path.getPath());
   }
 
   public static String pathWithWindowsSeparators(Path path) {

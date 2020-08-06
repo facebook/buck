@@ -26,6 +26,7 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Test;
@@ -45,9 +46,9 @@ public class ImmutableTypeCoercerTest {
             .build();
 
     ImmutableList.Builder<BuildTarget> collectedTargets = ImmutableList.builder();
-    TypeCoercer<DtoWithImmutableAttribute> typeCoercer =
-        (TypeCoercer<DtoWithImmutableAttribute>)
-            new DefaultTypeCoercerFactory().typeCoercerForType(dto.getClass());
+    TypeCoercer<?, DtoWithImmutableAttribute> typeCoercer =
+        new DefaultTypeCoercerFactory()
+            .typeCoercerForType(TypeToken.of(DtoWithImmutableAttribute.class));
     typeCoercer.traverse(
         TestCellPathResolver.get(new FakeProjectFilesystem()).getCellNameResolver(),
         dto,

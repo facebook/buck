@@ -78,6 +78,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -131,11 +132,12 @@ public class AppleCxxPlatformsTest {
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"),
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"),
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
+        root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/ld"),
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/libtool"),
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"),
+        root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"),
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib"),
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"),
-        root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/nm"),
         root.resolve("usr/bin/actool"),
         root.resolve("usr/bin/ibtool"),
         root.resolve("usr/bin/momc"),
@@ -250,14 +252,20 @@ public class AppleCxxPlatformsTest {
                     .getCc()
                     .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
                     .getCommandPrefix(resolver))
-            .addAll(cxxPlatform.getCflags())
+            .addAll(Arg.stringify(cxxPlatform.getCflags(), resolver))
             .build(),
         hasConsecutiveItems(
             "-isysroot", "/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"));
-    assertThat(cxxPlatform.getCflags(), hasConsecutiveItems("-arch", "armv7"));
-    assertThat(cxxPlatform.getAsflags(), hasConsecutiveItems("-arch", "armv7"));
-    assertThat(cxxPlatform.getCflags(), hasConsecutiveItems("-mios-version-min=7.0"));
-    assertThat(cxxPlatform.getLdflags(), hasConsecutiveItems("-Wl,-sdk_version", "-Wl,8.0"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getCflags(), resolver), hasConsecutiveItems("-arch", "armv7"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getAsflags(), resolver), hasConsecutiveItems("-arch", "armv7"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getCflags(), resolver),
+        hasConsecutiveItems("-mios-version-min=7.0"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getLdflags(), resolver),
+        hasConsecutiveItems("-Wl,-sdk_version", "-Wl,8.0"));
     assertEquals(
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
         cxxPlatform
@@ -357,13 +365,18 @@ public class AppleCxxPlatformsTest {
                     .getCc()
                     .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
                     .getCommandPrefix(resolver))
-            .addAll(cxxPlatform.getCflags())
+            .addAll(Arg.stringify(cxxPlatform.getCflags(), resolver))
             .build(),
         hasConsecutiveItems(
             "-isysroot", "/Developer/Platforms/WatchOS.platform/Developer/SDKs/WatchOS2.0.sdk"));
-    assertThat(cxxPlatform.getCflags(), hasConsecutiveItems("-arch", "armv7k"));
-    assertThat(cxxPlatform.getCflags(), hasConsecutiveItems("-mwatchos-version-min=2.0"));
-    assertThat(cxxPlatform.getLdflags(), hasConsecutiveItems("-Wl,-sdk_version", "-Wl,2.0"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getCflags(), resolver), hasConsecutiveItems("-arch", "armv7k"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getCflags(), resolver),
+        hasConsecutiveItems("-mwatchos-version-min=2.0"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getLdflags(), resolver),
+        hasConsecutiveItems("-Wl,-sdk_version", "-Wl,2.0"));
     assertEquals(
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
         cxxPlatform
@@ -464,14 +477,19 @@ public class AppleCxxPlatformsTest {
                     .getCc()
                     .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
                     .getCommandPrefix(resolver))
-            .addAll(cxxPlatform.getCflags())
+            .addAll(Arg.stringify(cxxPlatform.getCflags(), resolver))
             .build(),
         hasConsecutiveItems(
             "-isysroot",
             "/Developer/Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.1.sdk"));
-    assertThat(cxxPlatform.getCflags(), hasConsecutiveItems("-arch", "arm64"));
-    assertThat(cxxPlatform.getCflags(), hasConsecutiveItems("-mtvos-version-min=9.1"));
-    assertThat(cxxPlatform.getLdflags(), hasConsecutiveItems("-Wl,-sdk_version", "-Wl,9.1"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getCflags(), resolver), hasConsecutiveItems("-arch", "arm64"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getCflags(), resolver),
+        hasConsecutiveItems("-mtvos-version-min=9.1"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getLdflags(), resolver),
+        hasConsecutiveItems("-Wl,-sdk_version", "-Wl,9.1"));
     assertEquals(
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
         cxxPlatform
@@ -612,11 +630,13 @@ public class AppleCxxPlatformsTest {
             new AppleCxxPlatforms.XcodeBuildVersionCache());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
 
-    assertThat(cxxPlatform.getCflags(), hasItem("-std=gnu11"));
-    assertThat(cxxPlatform.getCppflags(), hasItems("-DCTHING"));
-    assertThat(cxxPlatform.getCxxflags(), hasItem("-std=c++11"));
-    assertThat(cxxPlatform.getCxxppflags(), hasItems("-DCXXTHING"));
+    assertThat(Arg.stringify(cxxPlatform.getCflags(), resolver), hasItem("-std=gnu11"));
+    assertThat(Arg.stringify(cxxPlatform.getCppflags(), resolver), hasItems("-DCTHING"));
+    assertThat(Arg.stringify(cxxPlatform.getCxxflags(), resolver), hasItem("-std=c++11"));
+    assertThat(Arg.stringify(cxxPlatform.getCxxppflags(), resolver), hasItems("-DCXXTHING"));
   }
 
   @Test
@@ -708,9 +728,15 @@ public class AppleCxxPlatformsTest {
             new AppleCxxPlatforms.XcodeBuildVersionCache());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
 
-    assertThat(cxxPlatform.getCflags(), hasItem("-mios-simulator-version-min=7.0"));
-    assertThat(cxxPlatform.getLdflags(), hasItem("-mios-simulator-version-min=7.0"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getCflags(), resolver),
+        hasItem("-mios-simulator-version-min=7.0"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getLdflags(), resolver),
+        hasItem("-mios-simulator-version-min=7.0"));
   }
 
   @Test
@@ -762,9 +788,15 @@ public class AppleCxxPlatformsTest {
             new AppleCxxPlatforms.XcodeBuildVersionCache());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
 
-    assertThat(cxxPlatform.getCflags(), hasItem("-mwatchos-simulator-version-min=2.0"));
-    assertThat(cxxPlatform.getLdflags(), hasItem("-mwatchos-simulator-version-min=2.0"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getCflags(), resolver),
+        hasItem("-mwatchos-simulator-version-min=2.0"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getLdflags(), resolver),
+        hasItem("-mwatchos-simulator-version-min=2.0"));
   }
 
   @Test
@@ -817,9 +849,15 @@ public class AppleCxxPlatformsTest {
             new AppleCxxPlatforms.XcodeBuildVersionCache());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
 
-    assertThat(cxxPlatform.getCflags(), hasItem("-mtvos-simulator-version-min=9.1"));
-    assertThat(cxxPlatform.getLdflags(), hasItem("-mtvos-simulator-version-min=9.1"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getCflags(), resolver),
+        hasItem("-mtvos-simulator-version-min=9.1"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getLdflags(), resolver),
+        hasItem("-mtvos-simulator-version-min=9.1"));
   }
 
   enum Operation {
@@ -1241,7 +1279,10 @@ public class AppleCxxPlatformsTest {
                         "cxx#iphonesimulator8.0-armv7", ImmutableMap.of("cxxflags", "-flag"),
                         "apple", ImmutableMap.of("use_flavored_cxx_sections", "true")))
                 .build());
-    assertThat(appleCxxPlatform.getCxxPlatform().getCxxflags(), hasItem("-flag"));
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
+    assertThat(
+        Arg.stringify(appleCxxPlatform.getCxxPlatform().getCxxflags(), resolver), hasItem("-flag"));
   }
 
   private AppleCxxPlatform buildAppleCxxPlatformWithSwiftToolchain() {

@@ -578,33 +578,14 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void
-      testBuckProjectWithSwiftDependencyOnModularObjectiveCLibraryAndUmbrellaDirectoryModuleMap()
-          throws IOException, InterruptedException {
+  public void testBuckProjectWithSwiftDependencyOnModularHeadersObjectiveCLibrary()
+      throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            this, "umbrella_directory_modulemap", temporaryFolder);
-    workspace.setUp();
-
-    ProcessResult result = workspace.runBuckCommand("project", "//:Test");
-    result.assertSuccess();
-
-    runXcodebuild(workspace, "Test.xcworkspace", "Test");
-  }
-
-  @Test
-  public void
-      testBuckProjectWithSwiftDependencyOnModularObjectiveCLibraryAndPerLibraryUmbrellaDirectoryModuleMap()
-          throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
-
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "umbrella_directory_modulemap_per_library", temporaryFolder);
+            this, "headers_modulemap", temporaryFolder);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("project", "//:Test");
@@ -638,6 +619,19 @@ public class ProjectIntegrationTest {
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "project_halide", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project", "//Apps:workspace");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
+
+  @Test
+  public void testBuckProjectGeneratedSchemeWithEnvVariablesAndExpandSetting() throws IOException {
+    ProjectWorkspace workspace =
+      TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_generated_scheme_with_env_variables_and_expand_setting", temporaryFolder);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("project", "//Apps:workspace");

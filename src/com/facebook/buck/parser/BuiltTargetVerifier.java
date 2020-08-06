@@ -19,11 +19,12 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.util.log.Logger;
@@ -42,7 +43,7 @@ public class BuiltTargetVerifier {
       Cell cell,
       RuleType buildRuleType,
       Path buildFile,
-      UnconfiguredBuildTargetView target,
+      UnconfiguredBuildTarget target,
       BaseDescription<?> description,
       Map<String, Object> rawNode) {
     UnflavoredBuildTarget unflavoredBuildTargetView = target.getUnflavoredBuildTarget();
@@ -51,7 +52,7 @@ public class BuiltTargetVerifier {
         // TODO(nga): use proper target configuration
         if (!((Flavored) description)
             .hasFlavors(
-                ImmutableSet.copyOf(target.getFlavors()),
+                ImmutableSet.copyOf(target.getFlavors().getSet()),
                 UnconfiguredTargetConfiguration.INSTANCE)) {
           throw UnexpectedFlavorException.createWithSuggestions((Flavored) description, target);
         }
@@ -61,7 +62,7 @@ public class BuiltTargetVerifier {
                 + "before we can check if it supports flavors: %s",
             unflavoredBuildTargetView, buildRuleType, target.getFlavors());
         ImmutableSet<String> invalidFlavorsStr =
-            target.getFlavors().stream()
+            target.getFlavors().getSet().stream()
                 .map(Flavor::toString)
                 .collect(ImmutableSet.toImmutableSet());
         String invalidFlavorsDisplayStr = String.join(", ", invalidFlavorsStr);
@@ -75,7 +76,7 @@ public class BuiltTargetVerifier {
 
     UnflavoredBuildTarget unflavoredBuildTargetViewFromRawData =
         UnflavoredBuildTargetFactory.createFromRawNode(
-            cell.getRoot(), cell.getCanonicalName(), rawNode, buildFile);
+            cell.getRoot().getPath(), cell.getCanonicalName(), rawNode, buildFile);
     if (!unflavoredBuildTargetView.equals(unflavoredBuildTargetViewFromRawData)) {
       throw new IllegalStateException(
           String.format(
@@ -84,5 +85,15 @@ public class BuiltTargetVerifier {
               unflavoredBuildTargetView,
               Joiner.on(',').withKeyValueSeparator("->").join(rawNode)));
     }
+  }
+
+  void verifyBuildTarget(
+      Cell cell,
+      RuleType buildRuleType,
+      AbsPath buildFile,
+      UnconfiguredBuildTarget target,
+      BaseDescription<?> description,
+      Map<String, Object> rawNode) {
+    verifyBuildTarget(cell, buildRuleType, buildFile.getPath(), target, description, rawNode);
   }
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableList;
@@ -29,14 +30,17 @@ public class FixedTargetNodeTranslator extends TargetNodeTranslator {
   public FixedTargetNodeTranslator(
       TypeCoercerFactory typeCoercerFactory,
       ImmutableList<TargetTranslator<?>> translators,
-      ImmutableMap<BuildTarget, BuildTarget> translations) {
-    super(typeCoercerFactory, translators);
+      ImmutableMap<BuildTarget, BuildTarget> translations,
+      Cells cells) {
+    super(typeCoercerFactory, translators, cells);
     this.translations = translations;
   }
 
   public FixedTargetNodeTranslator(
-      TypeCoercerFactory typeCoercerFactory, ImmutableMap<BuildTarget, BuildTarget> translations) {
-    this(typeCoercerFactory, ImmutableList.of(), translations);
+      TypeCoercerFactory typeCoercerFactory,
+      ImmutableMap<BuildTarget, BuildTarget> translations,
+      Cells cells) {
+    this(typeCoercerFactory, ImmutableList.of(), translations, cells);
   }
 
   @Override

@@ -21,8 +21,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeFalse;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -40,6 +40,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -117,13 +118,11 @@ public class MavenCoordinatesMacroExpanderTest {
         JavaLibraryBuilder.createBuilder(target).setMavenCoords(mavenCoords).build(graphBuilder);
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CellPathResolver cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
+    CellNameResolver cellPathResolver =
+        TestCellBuilder.createCellRoots(filesystem).getCellNameResolver();
     StringWithMacrosConverter converter =
         StringWithMacrosConverter.of(
-            target,
-            cellPathResolver.getCellNameResolver(),
-            graphBuilder,
-            ImmutableList.of(expander));
+            target, cellPathResolver, graphBuilder, ImmutableList.of(expander));
 
     String input = "$(maven_coords //:java)";
 
@@ -138,38 +137,35 @@ public class MavenCoordinatesMacroExpanderTest {
     BuildRule rule = JavaLibraryBuilder.createBuilder(target).build(graphBuilder);
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CellPathResolver cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
+    CellNameResolver cellNameResolver =
+        TestCellBuilder.createCellRoots(filesystem).getCellNameResolver();
     StringWithMacrosConverter converter =
         StringWithMacrosConverter.of(
-            target,
-            cellPathResolver.getCellNameResolver(),
-            graphBuilder,
-            ImmutableList.of(expander));
+            target, cellNameResolver, graphBuilder, ImmutableList.of(expander));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("no rule //:foo");
 
-    coerceAndStringify(filesystem, cellPathResolver, converter, "$(maven_coords //:foo)", rule);
+    coerceAndStringify(filesystem, cellNameResolver, converter, "$(maven_coords //:foo)", rule);
   }
 
   private String coerceAndStringify(
       ProjectFilesystem filesystem,
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       StringWithMacrosConverter converter,
       String input,
       BuildRule rule)
       throws CoerceFailedException {
     StringWithMacros stringWithMacros =
-        (StringWithMacros)
-            new DefaultTypeCoercerFactory()
-                .typeCoercerForType(StringWithMacros.class)
-                .coerce(
-                    cellPathResolver,
-                    filesystem,
-                    rule.getBuildTarget().getCellRelativeBasePath().getPath(),
-                    UnconfiguredTargetConfiguration.INSTANCE,
-                    UnconfiguredTargetConfiguration.INSTANCE,
-                    input);
+        new DefaultTypeCoercerFactory()
+            .typeCoercerForType(TypeToken.of(StringWithMacros.class))
+            .coerceBoth(
+                cellNameResolver,
+                filesystem,
+                rule.getBuildTarget().getCellRelativeBasePath().getPath(),
+                UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
+                input);
     Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }

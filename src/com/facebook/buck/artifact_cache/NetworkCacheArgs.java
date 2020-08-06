@@ -19,7 +19,7 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -30,7 +30,7 @@ import java.util.function.Function;
 
 @BuckStyleValueWithBuilder
 interface NetworkCacheArgs {
-  Function<String, UnconfiguredBuildTargetView> getUnconfiguredBuildTargetFactory();
+  Function<String, UnconfiguredBuildTarget> getUnconfiguredBuildTargetFactory();
 
   TargetConfigurationSerializer getTargetConfigurationSerializer();
 

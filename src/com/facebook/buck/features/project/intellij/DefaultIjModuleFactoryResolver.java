@@ -18,7 +18,6 @@ package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.android.AndroidBinaryDescriptionArg;
 import com.facebook.buck.android.AndroidLibraryDescription;
-import com.facebook.buck.android.AndroidLibraryDescriptionArg;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidPrebuiltAarDescriptionArg;
 import com.facebook.buck.android.AndroidResourceDescription;
@@ -28,7 +27,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -40,9 +39,6 @@ import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
-import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
-import com.facebook.buck.jvm.kotlin.KotlinLibraryDescriptionArg;
-import com.facebook.buck.jvm.kotlin.KotlinTestDescriptionArg;
 import com.facebook.buck.jvm.kotlin.KotlincToJarStepFactory;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
@@ -114,7 +110,9 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   public Optional<Path> getLibraryAndroidManifestPath(
       TargetNode<AndroidLibraryDescription.CoreArg> targetNode) {
     Optional<SourcePath> manifestPath = targetNode.getConstructorArg().getManifest();
-    return manifestPath.map(sourcePathResolver::getAbsolutePath).map(projectFilesystem::relativize);
+    return manifestPath
+        .map(sourcePathResolver::getAbsolutePath)
+        .map(path -> projectFilesystem.relativize(path).getPath());
   }
 
   @Override
@@ -191,33 +189,13 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   @Override
   public Optional<Path> getKaptAnnotationOutputPath(
       TargetNode<? extends JvmLibraryArg> targetNode) {
-    if (isKotlinModule(targetNode.getConstructorArg())
-        && requiresKapt(targetNode.getConstructorArg())) {
+    if (IjKotlinHelper.isKotlinModule(targetNode.getConstructorArg())
+        && IjKotlinHelper.requiresKapt(targetNode.getConstructorArg())) {
       return Optional.of(
           KotlincToJarStepFactory.getKaptAnnotationGenPath(
               projectFilesystem, targetNode.getBuildTarget()));
     }
     return Optional.empty();
-  }
-
-  private boolean isKotlinModule(JvmLibraryArg constructorArg) {
-    return constructorArg instanceof KotlinLibraryDescriptionArg
-        || constructorArg instanceof KotlinTestDescriptionArg
-        || constructorArg instanceof AndroidLibraryDescriptionArg
-            && ((AndroidLibraryDescriptionArg) constructorArg)
-                .getLanguage()
-                .map(AndroidLibraryDescription.JvmLanguage.KOTLIN::equals)
-                .orElse(false);
-  }
-
-  private boolean requiresKapt(JvmLibraryArg constructorArg) {
-    return (!constructorArg.getPlugins().isEmpty()
-            || !constructorArg.getAnnotationProcessors().isEmpty())
-        && constructorArg instanceof KotlinLibraryDescription.CoreArg
-        && ((KotlinLibraryDescription.CoreArg) constructorArg)
-            .getAnnotationProcessingTool()
-            .map(KotlinLibraryDescription.AnnotationProcessingTool.KAPT::equals)
-            .orElse(true);
   }
 
   @Override
@@ -236,7 +214,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
   private static BuildTarget buildTargetPatchCell(
       BuildTarget buildTarget, CanonicalCellName cellName) {
-    return UnconfiguredBuildTargetView.of(
+    return UnconfiguredBuildTarget.of(
             UnflavoredBuildTarget.of(
                 CellRelativePath.of(cellName, buildTarget.getCellRelativeBasePath().getPath()),
                 buildTarget.getShortName()),

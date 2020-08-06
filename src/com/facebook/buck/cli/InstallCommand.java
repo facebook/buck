@@ -39,6 +39,7 @@ import com.facebook.buck.cli.UninstallCommand.UninstallOptions;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
@@ -104,7 +105,7 @@ public class InstallCommand extends BuildCommand {
   private static final long APPLE_SIMULATOR_WAIT_MILLIS = 20000;
   private static final ImmutableList<String> APPLE_SIMULATOR_APPS =
       ImmutableList.of("Simulator.app", "iOS Simulator.app");
-  private static final String DEFAULT_APPLE_SIMULATOR_NAME = "iPhone 6s";
+  private static final String DEFAULT_APPLE_SIMULATOR_NAME = "iPhone 8";
   private static final String DEFAULT_APPLE_TV_SIMULATOR_NAME = "Apple TV";
   private static final InstallResult FAILURE =
       ImmutableInstallResult.of(ExitCode.RUN_ERROR, Optional.empty());
@@ -331,7 +332,7 @@ public class InstallCommand extends BuildCommand {
     return super.getExecutionContextBuilder(params)
         .setAndroidDevicesHelper(
             AndroidDevicesHelperFactory.get(
-                params.getCell().getToolchainProvider(),
+                params.getCells().getRootCell().getToolchainProvider(),
                 this::getExecutionContext,
                 params.getBuckConfig(),
                 adbOptions(params.getBuckConfig()),
@@ -344,7 +345,7 @@ public class InstallCommand extends BuildCommand {
 
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ParsingContext parsingContext =
-        createParsingContext(params.getCell(), executor)
+        createParsingContext(params.getCells().getRootCell(), executor)
             .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
             .withExcludeUnsupportedTargets(false);
     ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();
@@ -356,7 +357,7 @@ public class InstallCommand extends BuildCommand {
       // TODO(markwang): Cache argument parsing
       TargetNodeSpec spec =
           parseArgumentsAsTargetNodeSpecs(
-                  params.getCell(),
+                  params.getCells().getRootCell(),
                   params.getClientWorkingDir(),
                   getArguments(),
                   params.getBuckConfig())
@@ -373,12 +374,14 @@ public class InstallCommand extends BuildCommand {
               .get();
 
       TargetNode<?> node =
-          params.getParser().getTargetNode(parsingContext, target, DependencyStack.top(target));
+          params
+              .getParser()
+              .getTargetNodeAssertCompatible(parsingContext, target, DependencyStack.top(target));
 
       if (node != null
           && node.getRuleType()
               .equals(DescriptionCache.getRuleType(AppleBundleDescription.class))) {
-        for (Flavor flavor : node.getBuildTarget().getFlavors()) {
+        for (Flavor flavor : node.getBuildTarget().getFlavors().getSet()) {
           if (ApplePlatform.needsInstallHelper(flavor.getName())) {
             AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
 
@@ -1375,15 +1378,15 @@ public class InstallCommand extends BuildCommand {
   }
 
   private static class TriggerCloseable implements Closeable {
-    private final Cell root;
+    private final Cells root;
     private final CommandRunnerParams params;
     private final Closer closer;
 
     TriggerCloseable(CommandRunnerParams params) throws IOException {
       this.params = params;
-      this.root = params.getCell();
+      this.root = params.getCells();
       this.closer = Closer.create();
-      for (Cell cell : root.getAllCells()) {
+      for (Cell cell : root.getRootCell().getAllCells()) {
         invalidateTrigger(cell);
         closer.register(
             () -> {

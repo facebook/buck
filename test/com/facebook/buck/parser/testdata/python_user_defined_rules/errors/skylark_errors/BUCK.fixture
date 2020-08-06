@@ -1,0 +1,3 @@
+load("//errors/skylark_errors:broken_impl.bzl", "broken_impl")
+
+broken_impl(name = "broken_impl", content = "something")

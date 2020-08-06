@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -58,7 +58,7 @@ public class ParserBenchmark {
 
   private Parser parser;
   private ProjectFilesystem filesystem;
-  private Cell cell;
+  private Cells cell;
   private ListeningExecutorService executorService;
   private DepsAwareExecutor<? super ComputeResult, ?> executor;
 
@@ -112,7 +112,7 @@ public class ParserBenchmark {
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));
-    parser = TestParserFactory.create(executor, cell);
+    parser = TestParserFactory.create(executor, cell.getRootCell());
   }
 
   @After
@@ -131,13 +131,14 @@ public class ParserBenchmark {
   @Benchmark
   public void parseMultipleTargets() throws Exception {
     parser.buildTargetGraphWithTopLevelConfigurationTargets(
-        ParsingContext.builder(cell, executorService)
+        ParsingContext.builder(cell.getRootCell(), executorService)
             .setSpeculativeParsing(SpeculativeParsing.ENABLED)
             .build(),
         ImmutableList.of(
             TargetNodePredicateSpec.of(
                 BuildFileSpec.fromRecursivePath(
-                    CellRelativePath.of(cell.getCanonicalName(), ForwardRelativePath.of(""))))),
+                    CellRelativePath.of(
+                        cell.getRootCell().getCanonicalName(), ForwardRelativePath.of(""))))),
         Optional.empty());
   }
 }

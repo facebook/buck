@@ -17,6 +17,7 @@
 package com.facebook.buck.android.aapt;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.xml.DocumentLocation;
 import java.io.IOException;
@@ -75,10 +76,10 @@ class AndroidResourceIndexCollector implements ResourceCollector {
   public void addResource(
       RDotTxtEntry.RType rType, String name, DocumentLocation documentLocation, Path path) {
     // attempt to convert from symlink to real path
-    Path root = projectFilesystem.getRootPath();
-    path = root.resolve(path);
+    AbsPath root = projectFilesystem.getRootPath();
+    path = root.resolve(path).getPath();
     try {
-      path = path.toFile().exists() ? root.relativize(path.toRealPath()) : path;
+      path = path.toFile().exists() ? root.relativize(path.toRealPath()).getPath() : path;
     } catch (IOException e) {
       throw new RuntimeException("failed in conversion from symlink to real path: " + path);
     }

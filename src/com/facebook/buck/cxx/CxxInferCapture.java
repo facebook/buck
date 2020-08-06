@@ -31,6 +31,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
+import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -189,7 +190,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
               getProjectFilesystem(),
               context.getSourcePathResolver(),
               preprocessorDelegate.getHeaderPathNormalizer(context),
-              preprocessorDelegate.getHeaderVerification(),
+              HeaderVerification.of(HeaderVerification.Mode.IGNORE),
               getDepFilePath(),
               context.getSourcePathResolver().getRelativePath(input),
               output,

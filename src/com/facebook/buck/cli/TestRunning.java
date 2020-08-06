@@ -435,9 +435,9 @@ public class TestRunning {
                     params
                         .getTargetConfiguration()
                         .orElse(UnconfiguredTargetConfiguration.INSTANCE)),
-                params.getCell().getFilesystem(),
+                params.getCells().getRootCell().getFilesystem(),
                 ruleFinder,
-                JacocoConstants.getJacocoOutputDir(params.getCell().getFilesystem()),
+                JacocoConstants.getJacocoOutputDir(params.getCells().getRootCell().getFilesystem()),
                 options.getCoverageReportFormats(),
                 options.getCoverageReportTitle(),
                 javaBuckConfig

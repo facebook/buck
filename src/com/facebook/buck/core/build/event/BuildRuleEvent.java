@@ -430,8 +430,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
   /** Marks the continuation of processing a rule. */
   public static class Resumed extends BeginningBuildRuleEvent {
-
     private final String ruleKey;
+
+    /** The reason why Buck suspended this rule. */
+    @JsonView(JsonViews.MachineReadableLog.class)
+    private final BuildRuleResumeReason reason;
 
     private Resumed(
         EventKey eventKey,
@@ -440,6 +443,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         RuleKeyFactory<RuleKey> ruleKeyFactory) {
       super(eventKey, rule, tracker);
       this.ruleKey = ruleKeyFactory.build(rule).toString();
+      this.reason = BuildRuleResumeReason.UNKNOWN;
     }
 
     @JsonIgnore

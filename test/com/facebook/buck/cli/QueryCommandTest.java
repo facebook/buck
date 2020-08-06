@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.cli.OwnersReport.Builder;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -35,7 +36,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
@@ -47,18 +47,15 @@ import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.CloseableResource;
-import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.concurrent.FakeListeningExecutorService;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
@@ -86,11 +83,6 @@ public class QueryCommandTest {
   public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
       CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
-  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
-      getManifestSupplier() {
-    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
-  }
-
   @Before
   public void setUp() throws IOException {
     TestConsole console = new TestConsole();
@@ -101,7 +93,7 @@ public class QueryCommandTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(
             workspace.getDestPath().toRealPath().normalize());
-    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
+    Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
@@ -125,25 +117,24 @@ public class QueryCommandTest {
     PerBuildState perBuildState =
         new PerBuildStateFactory(
                 typeCoercerFactory,
-                new DefaultConstructorArgMarshaller(typeCoercerFactory),
+                new DefaultConstructorArgMarshaller(),
                 params.getKnownRuleTypesProvider(),
-                new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
+                new ParserPythonInterpreterProvider(
+                    cell.getRootCell().getBuckConfig(), new ExecutableFinder()),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
-                getManifestSupplier(),
-                new FakeFileHashCache(ImmutableMap.of()),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
             .create(
-                ParsingContext.builder(cell, executorService)
+                ParsingContext.builder(cell.getRootCell(), executorService)
                     .setSpeculativeParsing(SpeculativeParsing.ENABLED)
                     .build(),
                 params.getParser().getPermState());
     env =
         new FakeBuckQueryEnvironment(
-            cell,
+            cell.getRootCell(),
             OwnersReport.builder(
-                params.getCell(),
+                params.getCells().getRootCell(),
                 params.getClientWorkingDir(),
                 params.getParser(),
                 perBuildState,
@@ -151,11 +142,11 @@ public class QueryCommandTest {
             params.getParser(),
             perBuildState,
             new TargetPatternEvaluator(
-                params.getCell(),
+                params.getCells().getRootCell(),
                 params.getClientWorkingDir(),
                 params.getBuckConfig(),
                 params.getParser(),
-                ParsingContext.builder(params.getCell(), executorService).build(),
+                ParsingContext.builder(params.getCells().getRootCell(), executorService).build(),
                 Optional.empty()),
             eventBus,
             typeCoercerFactory);

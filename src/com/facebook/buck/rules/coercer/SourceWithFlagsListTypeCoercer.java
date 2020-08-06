@@ -16,31 +16,41 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.reflect.TypeToken;
 import java.util.List;
 
-public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFlagsList> {
-  private final TypeCoercer<ImmutableSortedSet<SourceWithFlags>> unnamedSourcesTypeCoercer;
-  private final TypeCoercer<ImmutableSortedMap<String, SourceWithFlags>> namedSourcesTypeCoercer;
+/** Coerce to {@link com.facebook.buck.rules.coercer.SourceWithFlagsList}. */
+public class SourceWithFlagsListTypeCoercer implements TypeCoercer<Object, SourceWithFlagsList> {
+  private final TypeCoercer<ImmutableList<Object>, ImmutableSortedSet<SourceWithFlags>>
+      unnamedSourcesTypeCoercer;
+  private final TypeCoercer<
+          ImmutableSortedMap<String, Object>, ImmutableSortedMap<String, SourceWithFlags>>
+      namedSourcesTypeCoercer;
 
   SourceWithFlagsListTypeCoercer(
-      TypeCoercer<String> stringTypeCoercer,
-      TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer) {
+      TypeCoercer<String, String> stringTypeCoercer,
+      TypeCoercer<Object, SourceWithFlags> sourceWithFlagsTypeCoercer) {
     this.unnamedSourcesTypeCoercer = new SortedSetTypeCoercer<>(sourceWithFlagsTypeCoercer);
     this.namedSourcesTypeCoercer =
         new SortedMapTypeCoercer<>(stringTypeCoercer, sourceWithFlagsTypeCoercer);
   }
 
   @Override
-  public Class<SourceWithFlagsList> getOutputClass() {
-    return SourceWithFlagsList.class;
+  public TypeToken<SourceWithFlagsList> getOutputType() {
+    return TypeToken.of(SourceWithFlagsList.class);
+  }
+
+  @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
   }
 
   @Override
@@ -65,8 +75,18 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFla
   }
 
   @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
+  }
+
+  @Override
   public SourceWithFlagsList coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -75,7 +95,7 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFla
       throws CoerceFailedException {
     if (object instanceof List) {
       return SourceWithFlagsList.ofUnnamedSources(
-          unnamedSourcesTypeCoercer.coerce(
+          unnamedSourcesTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
@@ -84,7 +104,7 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFla
               object));
     } else {
       return SourceWithFlagsList.ofNamedSources(
-          namedSourcesTypeCoercer.coerce(
+          namedSourcesTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,

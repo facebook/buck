@@ -16,47 +16,56 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetOutputLabelParser;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 
-/**
- * Coercer for {@link UnconfiguredBuildTargetView} instances that can optionally have output labels.
- */
+/** Coercer for {@link UnconfiguredBuildTarget} instances that can optionally have output labels. */
 public class UnconfiguredBuildTargetWithOutputsTypeCoercer
-    extends TargetWithOutputsTypeCoercer<
-        UnconfiguredBuildTargetView, UnconfiguredBuildTargetWithOutputs> {
+    extends LeafUnconfiguredOnlyCoercer<UnconfiguredBuildTargetWithOutputs> {
+
+  private final TypeCoercer<UnconfiguredBuildTarget, UnconfiguredBuildTarget>
+      buildTargetTypeCoercer;
 
   public UnconfiguredBuildTargetWithOutputsTypeCoercer(
-      TypeCoercer<UnconfiguredBuildTargetView> buildtargetTypeCoercer) {
-    super(buildtargetTypeCoercer);
+      TypeCoercer<UnconfiguredBuildTarget, UnconfiguredBuildTarget> buildTargetTypeCoercer) {
+    this.buildTargetTypeCoercer = buildTargetTypeCoercer;
   }
 
   @Override
-  public Class<UnconfiguredBuildTargetWithOutputs> getOutputClass() {
-    return UnconfiguredBuildTargetWithOutputs.class;
+  public TypeToken<UnconfiguredBuildTargetWithOutputs> getUnconfiguredType() {
+    return TypeToken.of(UnconfiguredBuildTargetWithOutputs.class);
   }
 
   @Override
-  public UnconfiguredBuildTargetWithOutputs coerce(
-      CellPathResolver cellRoots,
+  public UnconfiguredBuildTargetWithOutputs coerceToUnconfigured(
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
-    return getTargetWithOutputLabel(
-        UnconfiguredBuildTargetWithOutputs::of,
-        object,
-        ImmutableCoerceParameters.of(
+    if (!(object instanceof String)) {
+      throw CoerceFailedException.simple(object, getOutputType());
+    }
+
+    BuildTargetOutputLabelParser.TargetWithOutputLabel targetWithOutputLabel;
+    try {
+      targetWithOutputLabel =
+          BuildTargetOutputLabelParser.getBuildTargetNameWithOutputLabel((String) object);
+    } catch (Exception e) {
+      throw new CoerceFailedException(e.getMessage(), e);
+    }
+
+    UnconfiguredBuildTarget coerced =
+        buildTargetTypeCoercer.coerceToUnconfigured(
             cellRoots,
             filesystem,
             pathRelativeToProjectRoot,
-            targetConfiguration,
-            hostConfiguration));
+            targetWithOutputLabel.getTargetName());
+    return UnconfiguredBuildTargetWithOutputs.of(coerced, targetWithOutputLabel.getOutputLabel());
   }
 }

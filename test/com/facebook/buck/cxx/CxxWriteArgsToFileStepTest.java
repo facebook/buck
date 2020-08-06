@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -44,13 +45,13 @@ public class CxxWriteArgsToFileStepTest {
   public void cxxWriteArgsToFilePassesLinkerOptionsViaArgFile()
       throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    Path fileListPath =
+    AbsPath fileListPath =
         projectFilesystem
             .getRootPath()
             .resolve("/tmp/cxxWriteArgsToFilePassesLinkerOptionsViaArgFile.txt");
 
     runTestForArgFilePathAndOutputPath(
-        fileListPath,
+        fileListPath.getPath(),
         Optional.empty(),
         ImmutableList.of(StringArg.of("-dummy"), StringArg.of("\"")),
         ImmutableList.of("-dummy", "\""),
@@ -61,19 +62,19 @@ public class CxxWriteArgsToFileStepTest {
   public void cxxWriteArgsToFileCreatesDirectoriesIfNeeded()
       throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    Path fileListPath =
+    AbsPath fileListPath =
         projectFilesystem.getRootPath().resolve("unexisting_parent_folder/filelist.txt");
 
     runTestForArgFilePathAndOutputPath(
-        fileListPath,
+        fileListPath.getPath(),
         Optional.of(input -> "foo".equals(input) ? "bar" : input),
         ImmutableList.of(StringArg.of("-dummy"), StringArg.of("foo")),
         ImmutableList.of("-dummy", "bar"),
         CanonicalCellName.rootCell());
 
     // cleanup after test
-    Files.deleteIfExists(fileListPath);
-    Files.deleteIfExists(fileListPath.getParent());
+    Files.deleteIfExists(fileListPath.getPath());
+    Files.deleteIfExists(fileListPath.getParent().getPath());
   }
 
   private void runTestForArgFilePathAndOutputPath(

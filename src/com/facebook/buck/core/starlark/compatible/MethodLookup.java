@@ -68,6 +68,7 @@ public class MethodLookup {
   private static boolean isStarlarkCallableStructField(Method method) {
     // we could add more here in terms of requiring annotations, but we don't do that for now.
     return Modifier.isPublic(method.getModifiers())
+        && Modifier.isAbstract(method.getModifiers())
         && method.getParameterCount() == 0
         && !method.getReturnType().equals(void.class);
   }

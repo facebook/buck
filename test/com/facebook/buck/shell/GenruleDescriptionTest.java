@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
@@ -60,6 +61,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -80,10 +82,9 @@ public class GenruleDescriptionTest {
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     DataTransferObjectDescriptor<GenruleDescriptionArg> builder =
-        knownRuleTypes.getConstructorArgDescriptor(
-            typeCoercerFactory,
-            knownRuleTypes.getRuleType("genrule"),
-            genruleDescription.getConstructorArgType());
+        knownRuleTypes
+            .getDescriptorByNameChecked("genrule", GenruleDescriptionArg.class)
+            .dataTransferObjectDescriptor(typeCoercerFactory);
 
     Map<String, Object> instance =
         ImmutableMap.of(
@@ -92,17 +93,17 @@ public class GenruleDescriptionTest {
             "srcs",
             ImmutableList.of(":baz", "//biz:baz"),
             "out",
-            "AndroidManifest.xml",
+            Optional.of("AndroidManifest.xml"),
             "cmd",
-            "$(exe //bin:executable) $(location :arg)");
+            Optional.of("$(exe //bin:executable) $(location :arg)"));
     ProjectFilesystem projectFilesystem = new AllExistingProjectFilesystem();
-    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(typeCoercerFactory);
+    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller();
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> visibilityPatterns = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> withinViewPatterns = ImmutableSet.builder();
     GenruleDescriptionArg constructorArg =
         marshaller.populate(
-            createCellRoots(projectFilesystem),
+            createCellRoots(projectFilesystem).getCellNameResolver(),
             projectFilesystem,
             new ThrowingSelectorListResolver(),
             new ThrowingTargetConfigurationTransformer(),
@@ -115,7 +116,8 @@ public class GenruleDescriptionTest {
             ImmutableSet.builder(),
             instance);
     TargetNode<GenruleDescriptionArg> targetNode =
-        new TargetNodeFactory(new DefaultTypeCoercerFactory())
+        new TargetNodeFactory(
+                new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE)
             .createFromObject(
                 genruleDescription,
                 constructorArg,
@@ -125,8 +127,7 @@ public class GenruleDescriptionTest {
                 declaredDeps.build(),
                 ImmutableSortedSet.of(),
                 visibilityPatterns.build(),
-                withinViewPatterns.build(),
-                createCellRoots(projectFilesystem));
+                withinViewPatterns.build());
     assertEquals(
         "SourcePaths and targets from cmd string should be extracted as extra deps.",
         ImmutableSet.of("//foo:baz", "//biz:baz", "//bin:executable", "//foo:arg"),

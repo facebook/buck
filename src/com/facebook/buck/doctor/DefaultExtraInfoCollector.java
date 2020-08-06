@@ -86,7 +86,7 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
           processExecutor.launchAndExecute(
               ProcessExecutorParams.builder()
                   .addAllCommand(command)
-                  .setDirectory(projectFilesystem.getRootPath())
+                  .setDirectory(projectFilesystem.getRootPath().getPath())
                   .build(),
               ImmutableSet.of(
                   ProcessExecutor.Option.EXPECTING_STD_OUT, ProcessExecutor.Option.PRINT_STD_ERR),

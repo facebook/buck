@@ -63,6 +63,19 @@ private static final long serialVersionUID = 0L;
             cpuStatSystemUsec_ = input.readInt64();
             break;
           }
+          case 34: {
+            com.google.protobuf.BoolValue.Builder subBuilder = null;
+            if (isFallbackEnabledForCompletedAction_ != null) {
+              subBuilder = isFallbackEnabledForCompletedAction_.toBuilder();
+            }
+            isFallbackEnabledForCompletedAction_ = input.readMessage(com.google.protobuf.BoolValue.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(isFallbackEnabledForCompletedAction_);
+              isFallbackEnabledForCompletedAction_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
           default: {
             if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -122,6 +135,42 @@ private static final long serialVersionUID = 0L;
     return cpuStatSystemUsec_;
   }
 
+  public static final int IS_FALLBACK_ENABLED_FOR_COMPLETED_ACTION_FIELD_NUMBER = 4;
+  private com.google.protobuf.BoolValue isFallbackEnabledForCompletedAction_;
+  /**
+   * <pre>
+   * Whether we should fallback to local retry if this action fails with exit code 1.
+   * Fallback means we don't trust if this action failed and it may be flaky.
+   * </pre>
+   *
+   * <code>.google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;</code>
+   */
+  public boolean hasIsFallbackEnabledForCompletedAction() {
+    return isFallbackEnabledForCompletedAction_ != null;
+  }
+  /**
+   * <pre>
+   * Whether we should fallback to local retry if this action fails with exit code 1.
+   * Fallback means we don't trust if this action failed and it may be flaky.
+   * </pre>
+   *
+   * <code>.google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;</code>
+   */
+  public com.google.protobuf.BoolValue getIsFallbackEnabledForCompletedAction() {
+    return isFallbackEnabledForCompletedAction_ == null ? com.google.protobuf.BoolValue.getDefaultInstance() : isFallbackEnabledForCompletedAction_;
+  }
+  /**
+   * <pre>
+   * Whether we should fallback to local retry if this action fails with exit code 1.
+   * Fallback means we don't trust if this action failed and it may be flaky.
+   * </pre>
+   *
+   * <code>.google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;</code>
+   */
+  public com.google.protobuf.BoolValueOrBuilder getIsFallbackEnabledForCompletedActionOrBuilder() {
+    return getIsFallbackEnabledForCompletedAction();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -145,6 +194,9 @@ private static final long serialVersionUID = 0L;
     if (cpuStatSystemUsec_ != 0L) {
       output.writeInt64(3, cpuStatSystemUsec_);
     }
+    if (isFallbackEnabledForCompletedAction_ != null) {
+      output.writeMessage(4, getIsFallbackEnabledForCompletedAction());
+    }
     unknownFields.writeTo(output);
   }
 
@@ -165,6 +217,10 @@ private static final long serialVersionUID = 0L;
     if (cpuStatSystemUsec_ != 0L) {
       size += com.google.protobuf.CodedOutputStream
         .computeInt64Size(3, cpuStatSystemUsec_);
+    }
+    if (isFallbackEnabledForCompletedAction_ != null) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(4, getIsFallbackEnabledForCompletedAction());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -187,6 +243,11 @@ private static final long serialVersionUID = 0L;
         != other.getCpuStatUserUsec()) return false;
     if (getCpuStatSystemUsec()
         != other.getCpuStatSystemUsec()) return false;
+    if (hasIsFallbackEnabledForCompletedAction() != other.hasIsFallbackEnabledForCompletedAction()) return false;
+    if (hasIsFallbackEnabledForCompletedAction()) {
+      if (!getIsFallbackEnabledForCompletedAction()
+          .equals(other.getIsFallbackEnabledForCompletedAction())) return false;
+    }
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -207,6 +268,10 @@ private static final long serialVersionUID = 0L;
     hash = (37 * hash) + CPU_STAT_SYSTEM_USEC_FIELD_NUMBER;
     hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
         getCpuStatSystemUsec());
+    if (hasIsFallbackEnabledForCompletedAction()) {
+      hash = (37 * hash) + IS_FALLBACK_ENABLED_FOR_COMPLETED_ACTION_FIELD_NUMBER;
+      hash = (53 * hash) + getIsFallbackEnabledForCompletedAction().hashCode();
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -350,6 +415,12 @@ private static final long serialVersionUID = 0L;
 
       cpuStatSystemUsec_ = 0L;
 
+      if (isFallbackEnabledForCompletedActionBuilder_ == null) {
+        isFallbackEnabledForCompletedAction_ = null;
+      } else {
+        isFallbackEnabledForCompletedAction_ = null;
+        isFallbackEnabledForCompletedActionBuilder_ = null;
+      }
       return this;
     }
 
@@ -379,6 +450,11 @@ private static final long serialVersionUID = 0L;
       result.cpuStatUsageUsec_ = cpuStatUsageUsec_;
       result.cpuStatUserUsec_ = cpuStatUserUsec_;
       result.cpuStatSystemUsec_ = cpuStatSystemUsec_;
+      if (isFallbackEnabledForCompletedActionBuilder_ == null) {
+        result.isFallbackEnabledForCompletedAction_ = isFallbackEnabledForCompletedAction_;
+      } else {
+        result.isFallbackEnabledForCompletedAction_ = isFallbackEnabledForCompletedActionBuilder_.build();
+      }
       onBuilt();
       return result;
     }
@@ -435,6 +511,9 @@ private static final long serialVersionUID = 0L;
       }
       if (other.getCpuStatSystemUsec() != 0L) {
         setCpuStatSystemUsec(other.getCpuStatSystemUsec());
+      }
+      if (other.hasIsFallbackEnabledForCompletedAction()) {
+        mergeIsFallbackEnabledForCompletedAction(other.getIsFallbackEnabledForCompletedAction());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -541,6 +620,168 @@ private static final long serialVersionUID = 0L;
       cpuStatSystemUsec_ = 0L;
       onChanged();
       return this;
+    }
+
+    private com.google.protobuf.BoolValue isFallbackEnabledForCompletedAction_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.google.protobuf.BoolValue, com.google.protobuf.BoolValue.Builder, com.google.protobuf.BoolValueOrBuilder> isFallbackEnabledForCompletedActionBuilder_;
+    /**
+     * <pre>
+     * Whether we should fallback to local retry if this action fails with exit code 1.
+     * Fallback means we don't trust if this action failed and it may be flaky.
+     * </pre>
+     *
+     * <code>.google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;</code>
+     */
+    public boolean hasIsFallbackEnabledForCompletedAction() {
+      return isFallbackEnabledForCompletedActionBuilder_ != null || isFallbackEnabledForCompletedAction_ != null;
+    }
+    /**
+     * <pre>
+     * Whether we should fallback to local retry if this action fails with exit code 1.
+     * Fallback means we don't trust if this action failed and it may be flaky.
+     * </pre>
+     *
+     * <code>.google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;</code>
+     */
+    public com.google.protobuf.BoolValue getIsFallbackEnabledForCompletedAction() {
+      if (isFallbackEnabledForCompletedActionBuilder_ == null) {
+        return isFallbackEnabledForCompletedAction_ == null ? com.google.protobuf.BoolValue.getDefaultInstance() : isFallbackEnabledForCompletedAction_;
+      } else {
+        return isFallbackEnabledForCompletedActionBuilder_.getMessage();
+      }
+    }
+    /**
+     * <pre>
+     * Whether we should fallback to local retry if this action fails with exit code 1.
+     * Fallback means we don't trust if this action failed and it may be flaky.
+     * </pre>
+     *
+     * <code>.google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;</code>
+     */
+    public Builder setIsFallbackEnabledForCompletedAction(com.google.protobuf.BoolValue value) {
+      if (isFallbackEnabledForCompletedActionBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        isFallbackEnabledForCompletedAction_ = value;
+        onChanged();
+      } else {
+        isFallbackEnabledForCompletedActionBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * Whether we should fallback to local retry if this action fails with exit code 1.
+     * Fallback means we don't trust if this action failed and it may be flaky.
+     * </pre>
+     *
+     * <code>.google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;</code>
+     */
+    public Builder setIsFallbackEnabledForCompletedAction(
+        com.google.protobuf.BoolValue.Builder builderForValue) {
+      if (isFallbackEnabledForCompletedActionBuilder_ == null) {
+        isFallbackEnabledForCompletedAction_ = builderForValue.build();
+        onChanged();
+      } else {
+        isFallbackEnabledForCompletedActionBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * Whether we should fallback to local retry if this action fails with exit code 1.
+     * Fallback means we don't trust if this action failed and it may be flaky.
+     * </pre>
+     *
+     * <code>.google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;</code>
+     */
+    public Builder mergeIsFallbackEnabledForCompletedAction(com.google.protobuf.BoolValue value) {
+      if (isFallbackEnabledForCompletedActionBuilder_ == null) {
+        if (isFallbackEnabledForCompletedAction_ != null) {
+          isFallbackEnabledForCompletedAction_ =
+            com.google.protobuf.BoolValue.newBuilder(isFallbackEnabledForCompletedAction_).mergeFrom(value).buildPartial();
+        } else {
+          isFallbackEnabledForCompletedAction_ = value;
+        }
+        onChanged();
+      } else {
+        isFallbackEnabledForCompletedActionBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * Whether we should fallback to local retry if this action fails with exit code 1.
+     * Fallback means we don't trust if this action failed and it may be flaky.
+     * </pre>
+     *
+     * <code>.google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;</code>
+     */
+    public Builder clearIsFallbackEnabledForCompletedAction() {
+      if (isFallbackEnabledForCompletedActionBuilder_ == null) {
+        isFallbackEnabledForCompletedAction_ = null;
+        onChanged();
+      } else {
+        isFallbackEnabledForCompletedAction_ = null;
+        isFallbackEnabledForCompletedActionBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * Whether we should fallback to local retry if this action fails with exit code 1.
+     * Fallback means we don't trust if this action failed and it may be flaky.
+     * </pre>
+     *
+     * <code>.google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;</code>
+     */
+    public com.google.protobuf.BoolValue.Builder getIsFallbackEnabledForCompletedActionBuilder() {
+      
+      onChanged();
+      return getIsFallbackEnabledForCompletedActionFieldBuilder().getBuilder();
+    }
+    /**
+     * <pre>
+     * Whether we should fallback to local retry if this action fails with exit code 1.
+     * Fallback means we don't trust if this action failed and it may be flaky.
+     * </pre>
+     *
+     * <code>.google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;</code>
+     */
+    public com.google.protobuf.BoolValueOrBuilder getIsFallbackEnabledForCompletedActionOrBuilder() {
+      if (isFallbackEnabledForCompletedActionBuilder_ != null) {
+        return isFallbackEnabledForCompletedActionBuilder_.getMessageOrBuilder();
+      } else {
+        return isFallbackEnabledForCompletedAction_ == null ?
+            com.google.protobuf.BoolValue.getDefaultInstance() : isFallbackEnabledForCompletedAction_;
+      }
+    }
+    /**
+     * <pre>
+     * Whether we should fallback to local retry if this action fails with exit code 1.
+     * Fallback means we don't trust if this action failed and it may be flaky.
+     * </pre>
+     *
+     * <code>.google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.google.protobuf.BoolValue, com.google.protobuf.BoolValue.Builder, com.google.protobuf.BoolValueOrBuilder> 
+        getIsFallbackEnabledForCompletedActionFieldBuilder() {
+      if (isFallbackEnabledForCompletedActionBuilder_ == null) {
+        isFallbackEnabledForCompletedActionBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.google.protobuf.BoolValue, com.google.protobuf.BoolValue.Builder, com.google.protobuf.BoolValueOrBuilder>(
+                getIsFallbackEnabledForCompletedAction(),
+                getParentForChildren(),
+                isClean());
+        isFallbackEnabledForCompletedAction_ = null;
+      }
+      return isFallbackEnabledForCompletedActionBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(

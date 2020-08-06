@@ -268,7 +268,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ExternalTestRunnerTestSpec.Builder externalSpec =
         ExternalTestRunnerTestSpec.builder()
-            .setCwd(getProjectFilesystem().getRootPath())
+            .setCwd(getProjectFilesystem().getRootPath().getPath())
             .setTarget(getBuildTarget())
             .setLabels(getLabels())
             .setContacts(getContacts());

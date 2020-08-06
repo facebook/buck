@@ -31,7 +31,7 @@ public class PythonInterpreterFromConfig implements PythonInterpreter {
 
   // Prefer "python2" where available (Linux), but fall back to "python" (Mac).
   private static final ImmutableList<String> PYTHON_INTERPRETER_NAMES =
-      ImmutableList.of("python2", "python");
+      ImmutableList.of("python2", "python", "python3");
 
   private final PythonBuckConfig pythonBuckConfig;
   private final ExecutableFinder executableFinder;

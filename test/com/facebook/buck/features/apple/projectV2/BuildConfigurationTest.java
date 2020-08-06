@@ -22,12 +22,17 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleLibraryBuilder;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.features.halide.HalideLibraryBuilder;
@@ -50,7 +55,7 @@ import org.junit.Test;
 public class BuildConfigurationTest {
 
   private ProjectFilesystem projectFilesystem;
-  private Cell cell;
+  private Cells cell;
   private BuildTarget fooBuildTarget;
 
   @Before
@@ -66,6 +71,9 @@ public class BuildConfigurationTest {
   @Test
   public void testWriteBuildConfigurationsForTarget() throws IOException {
     TargetNode fooTargetNode = AppleLibraryBuilder.createBuilder(fooBuildTarget).build();
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(fooTargetNode);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
     ImmutableXCodeNativeTargetAttributes.Builder nativeTargetAttributes =
         ImmutableXCodeNativeTargetAttributes.builder()
@@ -84,6 +92,7 @@ public class BuildConfigurationTest {
         fooTargetNode,
         fooBuildTarget,
         CxxPlatformUtils.DEFAULT_PLATFORM,
+        pathResolver,
         nativeTargetAttributes,
         overrideBuildSettings,
         buckXcodeBuildSettings,

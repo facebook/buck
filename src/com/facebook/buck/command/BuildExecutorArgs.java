@@ -18,12 +18,11 @@ package com.facebook.buck.command;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.concurrent.ExecutorPool;
@@ -32,7 +31,6 @@ import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Map;
-import java.util.Optional;
 
 /** Common arguments for running a build. */
 @BuckStyleValue
@@ -45,7 +43,7 @@ public abstract class BuildExecutorArgs {
 
   public abstract Clock getClock();
 
-  public abstract Cell getRootCell();
+  public abstract Cells getCells();
 
   public abstract ImmutableMap<ExecutorPool, ListeningExecutorService> getExecutors();
 
@@ -57,10 +55,8 @@ public abstract class BuildExecutorArgs {
 
   public abstract RuleKeyConfiguration getRuleKeyConfiguration();
 
-  public abstract Optional<ManifestService> getManifestService();
-
   public BuckConfig getBuckConfig() {
-    return getRootCell().getBuckConfig();
+    return getCells().getRootCell().getBuckConfig();
   }
 
   public static BuildExecutorArgs of(
@@ -68,24 +64,22 @@ public abstract class BuildExecutorArgs {
       BuckEventBus buckEventBus,
       Platform platform,
       Clock clock,
-      Cell rootCell,
+      Cells cells,
       Map<ExecutorPool, ? extends ListeningExecutorService> executors,
       ProjectFilesystemFactory projectFilesystemFactory,
       BuildInfoStoreManager buildInfoStoreManager,
       ArtifactCacheFactory artifactCacheFactory,
-      RuleKeyConfiguration ruleKeyConfiguration,
-      Optional<? extends ManifestService> manifestService) {
+      RuleKeyConfiguration ruleKeyConfiguration) {
     return ImmutableBuildExecutorArgs.of(
         console,
         buckEventBus,
         platform,
         clock,
-        rootCell,
+        cells,
         executors,
         projectFilesystemFactory,
         buildInfoStoreManager,
         artifactCacheFactory,
-        ruleKeyConfiguration,
-        manifestService);
+        ruleKeyConfiguration);
   }
 }

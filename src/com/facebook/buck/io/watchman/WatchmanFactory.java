@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.watchman;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.unixsocket.UnixDomainSocket;
@@ -98,7 +99,7 @@ public class WatchmanFactory {
 
   /** @return new instance of {@link Watchman} using the specified params. */
   public Watchman build(
-      ImmutableSet<Path> projectWatchList,
+      ImmutableSet<AbsPath> projectWatchList,
       ImmutableMap<String, String> env,
       Console console,
       Clock clock,
@@ -118,7 +119,7 @@ public class WatchmanFactory {
   @SuppressWarnings("PMD.PrematureDeclaration") // endTimeNanos
   Watchman build(
       ListeningProcessExecutor executor,
-      ImmutableSet<Path> projectWatchList,
+      ImmutableSet<AbsPath> projectWatchList,
       ImmutableMap<String, String> env,
       ExecutableFinder exeFinder,
       Console console,
@@ -199,7 +200,7 @@ public class WatchmanFactory {
   public static Watchman getWatchman(
       WatchmanClient client,
       Path transportPath,
-      ImmutableSet<Path> projectWatchList,
+      ImmutableSet<AbsPath> projectWatchList,
       Console console,
       Clock clock,
       long endTimeNanos)
@@ -235,16 +236,16 @@ public class WatchmanFactory {
     ImmutableSet<Capability> capabilities = capabilitiesBuilder.build();
     LOG.debug("Got Watchman capabilities: %s", capabilities);
 
-    ImmutableMap.Builder<Path, ProjectWatch> projectWatchesBuilder = ImmutableMap.builder();
-    for (Path projectRoot : projectWatchList) {
+    ImmutableMap.Builder<AbsPath, ProjectWatch> projectWatchesBuilder = ImmutableMap.builder();
+    for (AbsPath projectRoot : projectWatchList) {
       Optional<ProjectWatch> projectWatch =
-          queryWatchProject(client, projectRoot, clock, endTimeNanos - clock.nanoTime());
+          queryWatchProject(client, projectRoot.getPath(), clock, endTimeNanos - clock.nanoTime());
       if (!projectWatch.isPresent()) {
         return NULL_WATCHMAN;
       }
       projectWatchesBuilder.put(projectRoot, projectWatch.get());
     }
-    ImmutableMap<Path, ProjectWatch> projectWatches = projectWatchesBuilder.build();
+    ImmutableMap<AbsPath, ProjectWatch> projectWatches = projectWatchesBuilder.build();
     Iterable<String> watchRoots =
         RichStream.from(projectWatches.values())
             .map(ProjectWatch::getWatchRoot)

@@ -36,7 +36,7 @@ public class AuditRuleTypesCommand extends AbstractCommand {
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     collectAndDumpBuildRuleTypesInformation(
         params.getConsole(),
-        params.getKnownRuleTypesProvider().getNativeRuleTypes(params.getCell()),
+        params.getKnownRuleTypesProvider().getNativeRuleTypes(params.getCells().getRootCell()),
         generateJsonOutput);
     return ExitCode.SUCCESS;
   }

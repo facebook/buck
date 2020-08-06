@@ -19,8 +19,10 @@ package com.facebook.buck.features.apple.projectV2;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.LinkedHashMap;
@@ -30,12 +32,14 @@ import org.junit.Test;
 public class CxxPlatformBuildConfigurationTest {
 
   private static final CxxPlatform DEFAULT_PLATFORM = CxxPlatformUtils.DEFAULT_PLATFORM;
+  private static final SourcePathResolverAdapter DEFAULT_PATH_RESOLVER =
+      CxxPlatformUtils.DEFAULT_PATH_RESOLVER;
 
   @Test
   public void testResultHasCommonBuildConfigurations() {
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(
-            DEFAULT_PLATFORM, new LinkedHashMap<String, String>());
+            DEFAULT_PLATFORM, new LinkedHashMap<>(), DEFAULT_PATH_RESOLVER);
     assertThat(
         buildConfigs.keySet(), Matchers.hasItem(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME));
     assertThat(
@@ -52,7 +56,7 @@ public class CxxPlatformBuildConfigurationTest {
     appendSettings.put(CxxPlatformBuildConfiguration.SDKROOT, "somesdkroot");
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(
-            DEFAULT_PLATFORM, appendSettings);
+            DEFAULT_PLATFORM, appendSettings, DEFAULT_PATH_RESOLVER);
     ImmutableMap<String, String> settings =
         buildConfigs.get(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     assertThat(
@@ -69,7 +73,7 @@ public class CxxPlatformBuildConfigurationTest {
             .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(
-            platform, new LinkedHashMap<String, String>());
+            platform, new LinkedHashMap<>(), DEFAULT_PATH_RESOLVER);
     ImmutableMap<String, String> settings =
         buildConfigs.get(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     assertThat(settings.get(CxxPlatformBuildConfiguration.SDKROOT), Matchers.equalTo("iphoneos"));
@@ -84,7 +88,7 @@ public class CxxPlatformBuildConfigurationTest {
             .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(
-            platform, new LinkedHashMap<String, String>());
+            platform, new LinkedHashMap<>(), DEFAULT_PATH_RESOLVER);
     ImmutableMap<String, String> settings =
         buildConfigs.get(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     assertThat(settings.get(CxxPlatformBuildConfiguration.SDKROOT), Matchers.equalTo("iphoneos"));
@@ -99,7 +103,7 @@ public class CxxPlatformBuildConfigurationTest {
             .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(
-            platform, new LinkedHashMap<String, String>());
+            platform, new LinkedHashMap<>(), DEFAULT_PATH_RESOLVER);
     ImmutableMap<String, String> settings =
         buildConfigs.get(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     assertThat(settings.get(CxxPlatformBuildConfiguration.SDKROOT), Matchers.equalTo("macosx"));
@@ -111,11 +115,11 @@ public class CxxPlatformBuildConfigurationTest {
         CxxPlatform.builder()
             .from(DEFAULT_PLATFORM)
             .setFlavor(InternalFlavor.of("macosx-12.0"))
-            .setCxxflags(ImmutableList.of("-mmacosx-version-min=10.8"))
+            .setCxxflags(StringArg.from(ImmutableList.of("-mmacosx-version-min=10.8")))
             .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(
-            platform, new LinkedHashMap<String, String>());
+            platform, new LinkedHashMap<>(), DEFAULT_PATH_RESOLVER);
     ImmutableMap<String, String> settings =
         buildConfigs.get(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     assertThat(settings.get("MACOSX_DEPLOYMENT_TARGET"), Matchers.equalTo("10.8"));
@@ -126,11 +130,11 @@ public class CxxPlatformBuildConfigurationTest {
     CxxPlatform platform =
         CxxPlatform.builder()
             .from(DEFAULT_PLATFORM)
-            .setCxxflags(ImmutableList.of("-arch", "x86-64"))
+            .setCxxflags(StringArg.from(ImmutableList.of("-arch", "x86-64")))
             .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(
-            platform, new LinkedHashMap<String, String>());
+            platform, new LinkedHashMap<>(), DEFAULT_PATH_RESOLVER);
     ImmutableMap<String, String> settings =
         buildConfigs.get(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     assertThat(settings.get(CxxPlatformBuildConfiguration.ARCHS), Matchers.nullValue());
@@ -141,11 +145,11 @@ public class CxxPlatformBuildConfigurationTest {
     CxxPlatform platform =
         CxxPlatform.builder()
             .from(DEFAULT_PLATFORM)
-            .setCxxflags(ImmutableList.of("-std=somevalue"))
+            .setCxxflags(StringArg.from(ImmutableList.of("-std=somevalue")))
             .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(
-            platform, new LinkedHashMap<String, String>());
+            platform, new LinkedHashMap<>(), DEFAULT_PATH_RESOLVER);
     ImmutableMap<String, String> settings =
         buildConfigs.get(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     assertThat(
@@ -161,10 +165,11 @@ public class CxxPlatformBuildConfigurationTest {
     CxxPlatform platform =
         CxxPlatform.builder()
             .from(DEFAULT_PLATFORM)
-            .setCxxflags(ImmutableList.of("-std=cxxflagsvalue"))
+            .setCxxflags(StringArg.from(ImmutableList.of("-std=cxxflagsvalue")))
             .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
-        CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(platform, appendSettings);
+        CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(
+            platform, appendSettings, DEFAULT_PATH_RESOLVER);
     ImmutableMap<String, String> settings =
         buildConfigs.get(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     assertThat(
@@ -178,11 +183,11 @@ public class CxxPlatformBuildConfigurationTest {
     CxxPlatform platform =
         CxxPlatform.builder()
             .from(DEFAULT_PLATFORM)
-            .setCxxflags(ImmutableList.of("-stdlib=somevalue"))
+            .setCxxflags(StringArg.from(ImmutableList.of("-stdlib=somevalue")))
             .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(
-            platform, new LinkedHashMap<String, String>());
+            platform, new LinkedHashMap<>(), DEFAULT_PATH_RESOLVER);
     ImmutableMap<String, String> settings =
         buildConfigs.get(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     assertThat(
@@ -198,10 +203,11 @@ public class CxxPlatformBuildConfigurationTest {
     CxxPlatform platform =
         CxxPlatform.builder()
             .from(DEFAULT_PLATFORM)
-            .setCxxflags(ImmutableList.of("-stdlib=cxxflagsvalue"))
+            .setCxxflags(StringArg.from(ImmutableList.of("-stdlib=cxxflagsvalue")))
             .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
-        CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(platform, appendSettings);
+        CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(
+            platform, appendSettings, DEFAULT_PATH_RESOLVER);
     ImmutableMap<String, String> settings =
         buildConfigs.get(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     assertThat(
@@ -214,11 +220,11 @@ public class CxxPlatformBuildConfigurationTest {
     CxxPlatform platform =
         CxxPlatform.builder()
             .from(DEFAULT_PLATFORM)
-            .setCxxflags(ImmutableList.of("-Wno-warning", "-someflag", "-g"))
+            .setCxxflags(StringArg.from(ImmutableList.of("-Wno-warning", "-someflag", "-g")))
             .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(
-            platform, new LinkedHashMap<String, String>());
+            platform, new LinkedHashMap<>(), DEFAULT_PATH_RESOLVER);
     ImmutableMap<String, String> settings = buildConfigs.get("Debug");
     assertThat(
         settings.get(CxxPlatformBuildConfiguration.OTHER_CPLUSPLUSFLAGS),
@@ -232,10 +238,11 @@ public class CxxPlatformBuildConfigurationTest {
     CxxPlatform platform =
         CxxPlatform.builder()
             .from(DEFAULT_PLATFORM)
-            .setCxxflags(ImmutableList.of("-Wno-warning", "-someflag", "-g"))
+            .setCxxflags(StringArg.from(ImmutableList.of("-Wno-warning", "-someflag", "-g")))
             .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
-        CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(platform, appendSettings);
+        CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(
+            platform, appendSettings, DEFAULT_PATH_RESOLVER);
     ImmutableMap<String, String> settings =
         buildConfigs.get(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     assertThat(
@@ -253,10 +260,11 @@ public class CxxPlatformBuildConfigurationTest {
     CxxPlatform platform =
         CxxPlatform.builder()
             .from(DEFAULT_PLATFORM)
-            .setCxxflags(ImmutableList.of("-Wno-warning", "-someflag", "-g"))
+            .setCxxflags(StringArg.from(ImmutableList.of("-Wno-warning", "-someflag", "-g")))
             .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
-        CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(platform, appendSettings);
+        CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(
+            platform, appendSettings, DEFAULT_PATH_RESOLVER);
     ImmutableMap<String, String> settings =
         buildConfigs.get(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     assertThat(
@@ -276,10 +284,13 @@ public class CxxPlatformBuildConfigurationTest {
         CxxPlatform.builder()
             .from(DEFAULT_PLATFORM)
             .setFlavor(InternalFlavor.of("macosx-12.0"))
-            .setCxxflags(ImmutableList.of("-Wno-warning", "-someflag", "-mmacosx-version-min=10.8"))
+            .setCxxflags(
+                StringArg.from(
+                    ImmutableList.of("-Wno-warning", "-someflag", "-mmacosx-version-min=10.8")))
             .build();
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
-        CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(platform, appendSettings);
+        CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(
+            platform, appendSettings, DEFAULT_PATH_RESOLVER);
     ImmutableMap<String, String> debugConfig =
         buildConfigs.get(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     ImmutableMap<String, String> releaseConfig =

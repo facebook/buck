@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -113,7 +114,8 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
                   ConfigurationRuleRegistry configurationRuleRegistry,
                   ActionGraphBuilder graphBuilder,
                   TargetNode<T> targetNode,
-                  ProviderInfoCollection providerInfoCollection) {
+                  ProviderInfoCollection providerInfoCollection,
+                  CellPathResolver cellPathResolver) {
                 assertSame(depNode, targetNode);
                 return fakeDepRule;
               }
@@ -345,15 +347,17 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
       ImmutableMap<String, ImmutableSet<Artifact>> namedOutputs,
       ImmutableSet<Artifact> defaultOutputs)
       throws EvalException {
-    Mutability mutability = Mutability.create("test");
-    Environment env =
-        Environment.builder(mutability)
-            .setGlobals(BazelLibrary.GLOBALS)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .build();
-    SkylarkDict<String, Set<Artifact>> dict = SkylarkDict.of(env);
-    for (Map.Entry<String, ImmutableSet<Artifact>> entry : namedOutputs.entrySet()) {
-      dict.put(entry.getKey(), entry.getValue(), Location.BUILTIN, mutability);
+    SkylarkDict<String, Set<Artifact>> dict;
+    try (Mutability mutability = Mutability.create("test")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setGlobals(BazelLibrary.GLOBALS)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .build();
+      dict = SkylarkDict.of(env);
+      for (Map.Entry<String, ImmutableSet<Artifact>> entry : namedOutputs.entrySet()) {
+        dict.put(entry.getKey(), entry.getValue(), Location.BUILTIN, mutability);
+      }
     }
     return TestProviderInfoCollectionImpl.builder()
         .put(new FakeInfo(new FakeBuiltInProvider("foo")))

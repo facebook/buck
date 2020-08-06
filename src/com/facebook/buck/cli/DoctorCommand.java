@@ -44,7 +44,7 @@ public class DoctorCommand extends AbstractCommand {
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
-    ProjectFilesystem filesystem = params.getCell().getFilesystem();
+    ProjectFilesystem filesystem = params.getCells().getRootCell().getFilesystem();
     BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
 
     UserInput userInput =
@@ -53,7 +53,7 @@ public class DoctorCommand extends AbstractCommand {
             new BufferedReader(new InputStreamReader(params.getStdIn())));
     DoctorReportHelper helper =
         new DoctorReportHelper(
-            params.getCell().getFilesystem(),
+            params.getCells().getRootCell().getFilesystem(),
             userInput,
             params.getConsole(),
             params.getBuckConfig().getView(DoctorConfig.class));
@@ -93,7 +93,7 @@ public class DoctorCommand extends AbstractCommand {
     Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector =
         WatchmanDiagReportCollector.newInstanceIfWatchmanUsed(
             params.getWatchman(),
-            params.getCell().getFilesystem(),
+            params.getCells().getRootCell().getFilesystem(),
             new DefaultProcessExecutor(params.getConsole()),
             new ExecutableFinder(),
             params.getEnvironment());
@@ -101,11 +101,11 @@ public class DoctorCommand extends AbstractCommand {
     DoctorInteractiveReport report =
         new DoctorInteractiveReport(
             new DefaultDefectReporter(
-                params.getCell().getFilesystem(),
+                params.getCells().getRootCell().getFilesystem(),
                 doctorConfig,
                 params.getBuckEventBus(),
                 params.getClock()),
-            params.getCell().getFilesystem(),
+            params.getCells().getRootCell().getFilesystem(),
             params.getConsole(),
             userInput,
             issueDescription,
@@ -114,7 +114,7 @@ public class DoctorCommand extends AbstractCommand {
             doctorConfig,
             new DefaultExtraInfoCollector(
                 doctorConfig,
-                params.getCell().getFilesystem(),
+                params.getCells().getRootCell().getFilesystem(),
                 new DefaultProcessExecutor(params.getConsole())),
             ImmutableSet.of(entry),
             watchmanDiagReportCollector);

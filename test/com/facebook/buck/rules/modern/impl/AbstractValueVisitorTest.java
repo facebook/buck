@@ -269,7 +269,7 @@ public abstract class AbstractValueVisitorTest {
     @AddToRuleKey
     final BuildTarget target =
         someBuildTarget
-            .getUnconfiguredBuildTargetView()
+            .getUnconfiguredBuildTarget()
             .configure(UnconfiguredTargetConfiguration.INSTANCE);
   }
 
@@ -278,7 +278,7 @@ public abstract class AbstractValueVisitorTest {
     @AddToRuleKey
     final BuildTarget target =
         someBuildTarget
-            .getUnconfiguredBuildTargetView()
+            .getUnconfiguredBuildTarget()
             .configure(ConfigurationForConfigurationTargets.INSTANCE);
   }
 

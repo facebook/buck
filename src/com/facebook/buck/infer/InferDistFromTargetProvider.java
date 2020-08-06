@@ -19,7 +19,7 @@ package com.facebook.buck.infer;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -33,12 +33,11 @@ import java.util.Optional;
  */
 public class InferDistFromTargetProvider implements ToolProvider {
 
-  private final UnconfiguredBuildTargetView target;
+  private final UnconfiguredBuildTarget target;
   private final String binary;
   private final String source;
 
-  public InferDistFromTargetProvider(
-      UnconfiguredBuildTargetView target, String binary, String source) {
+  public InferDistFromTargetProvider(UnconfiguredBuildTarget target, String binary, String source) {
     this.target = target;
     this.binary = binary;
     this.source = source;

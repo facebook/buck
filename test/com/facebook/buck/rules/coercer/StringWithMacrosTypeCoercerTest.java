@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -36,7 +35,6 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
 import java.util.Collections;
 import org.hamcrest.Matchers;
@@ -48,19 +46,19 @@ public class StringWithMacrosTypeCoercerTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
-  private static final CellPathResolver CELL_PATH_RESOLVER = TestCellPathResolver.get(FILESYSTEM);
-  private static final ForwardRelativePath BASE_PATH = ForwardRelativePath.of("");
+  private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private final CellNameResolver cellNameResolver =
+      TestCellPathResolver.get(filesystem).getCellNameResolver();
+  private final ForwardRelativePath basePath = ForwardRelativePath.of("");
 
   @Test
   public void plainString() throws CoerceFailedException {
-    StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(ImmutableMap.of(), ImmutableList.of());
+    StringWithMacrosTypeCoercer coercer = StringWithMacrosTypeCoercer.builder().build();
     assertThat(
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "test string"),
@@ -70,13 +68,14 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void embeddedMacro() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestMacroTypeCoercer())
+            .build();
     assertThat(
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string with $(test arg) macro"),
@@ -85,9 +84,9 @@ public class StringWithMacrosTypeCoercerTest {
                 "string with %s macro", new TestMacro(ImmutableList.of("arg")))));
     assertThat(
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string with $(test arg)"),
@@ -96,9 +95,9 @@ public class StringWithMacrosTypeCoercerTest {
                 "string with %s", new TestMacro(ImmutableList.of("arg")))));
     assertThat(
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "$(test arg) macro"),
@@ -106,9 +105,9 @@ public class StringWithMacrosTypeCoercerTest {
             StringWithMacrosUtils.format("%s macro", new TestMacro(ImmutableList.of("arg")))));
     assertThat(
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "$(test arg)"),
@@ -119,15 +118,16 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void failedMacroNotFound() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestMacroTypeCoercer())
+            .build();
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage(
         containsString("Macro 'testnotfound' not found when expanding '$(testnotfound arg)'"));
     coercer.coerce(
-        CELL_PATH_RESOLVER,
-        FILESYSTEM,
-        BASE_PATH,
+        cellNameResolver,
+        filesystem,
+        basePath,
         UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         "string with $(testnotfound arg) macro");
@@ -136,15 +136,15 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void failedMacroArgument() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class),
-            ImmutableList.of(new TestFailMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestFailMacroTypeCoercer())
+            .build();
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage(containsString("The macro '$(test arg)' could not be expanded:\nfailed"));
     coercer.coerce(
-        CELL_PATH_RESOLVER,
-        FILESYSTEM,
-        BASE_PATH,
+        cellNameResolver,
+        filesystem,
+        basePath,
         UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         "string with $(test arg) macro");
@@ -153,35 +153,36 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void multipleMacros() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of(
-                "test1", TestMacro.class,
-                "test2", TestMacro.class),
-            ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test1", TestMacro.class, new TestMacroTypeCoercer())
+            .put("test2", Test2Macro.class, new Test2MacroTypeCoercer())
+            .build();
     assertThat(
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "first $(test1 arg1) second $(test2 arg2)"),
         Matchers.equalTo(
             StringWithMacrosUtils.format(
                 "first %s second %s",
-                new TestMacro(ImmutableList.of("arg1")), new TestMacro(ImmutableList.of("arg2")))));
+                new TestMacro(ImmutableList.of("arg1")),
+                new Test2Macro(ImmutableList.of("arg2")))));
   }
 
   @Test
   public void outputToFile() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestMacroTypeCoercer())
+            .build();
     assertThat(
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string with $(@test arg) macro"),
@@ -194,13 +195,14 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void escaping() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestMacroTypeCoercer())
+            .build();
     assertThat(
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string with \\$(test arg) macro"),
@@ -215,78 +217,79 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void testConcatCombinesStrings() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestMacroTypeCoercer())
+            .build();
 
     StringWithMacros string1 =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string with $(test arg) macro");
     StringWithMacros string2 =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             " + another string with $(test arg) macro");
     StringWithMacros string3 =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             " + string");
     StringWithMacros string4 =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             " + string + $(test arg)");
     StringWithMacros string5 =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "$(test arg)");
     StringWithMacros string6 =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "+ string");
     StringWithMacros string7 =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "$(test arg)");
     StringWithMacros string8 =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "+ another string");
     StringWithMacros result =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string with $(test arg) macro + another string with $(test arg) macro"
@@ -301,30 +304,31 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void testConcatCombinesTwoStrings() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestMacroTypeCoercer())
+            .build();
 
     StringWithMacros string1 =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string1");
     StringWithMacros string2 =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string2");
     StringWithMacros result =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string1string2");
@@ -335,22 +339,23 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void testConcatOfOneStringReturnsTheSameString() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestMacroTypeCoercer())
+            .build();
 
     StringWithMacros string1 =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string1");
     StringWithMacros result =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string1");
@@ -360,8 +365,7 @@ public class StringWithMacrosTypeCoercerTest {
 
   @Test
   public void testConcatOfEmptyStringReturnsEmptyString() {
-    StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(ImmutableMap.of(), ImmutableList.of());
+    StringWithMacrosTypeCoercer coercer = StringWithMacrosTypeCoercer.builder().build();
 
     assertTrue(
         coercer
@@ -373,38 +377,39 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void testConcatCombinesStringInTheMiddle() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestMacroTypeCoercer())
+            .build();
 
     StringWithMacros string1 =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "$(test arg) string1");
     StringWithMacros string2 =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "string2");
     StringWithMacros string3 =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "$(test arg)");
     StringWithMacros result =
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             "$(test arg) string1string2$(test arg)");
@@ -445,6 +450,38 @@ public class StringWithMacrosTypeCoercerTest {
     }
   }
 
+  static class Test2Macro implements Macro {
+    private final ImmutableList<String> args;
+
+    Test2Macro(ImmutableList<String> args) {
+      this.args = args;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+
+      Test2Macro testMacro = (Test2Macro) o;
+
+      return args.equals(testMacro.args);
+    }
+
+    @Override
+    public Class<? extends Macro> getMacroClass() {
+      return TestMacro.class;
+    }
+
+    @Override
+    public int hashCode() {
+      return args.hashCode();
+    }
+  }
+
   static class TestMacroTypeCoercer implements MacroTypeCoercer<TestMacro> {
 
     @Override
@@ -462,13 +499,40 @@ public class StringWithMacrosTypeCoercerTest {
 
     @Override
     public TestMacro coerce(
-        CellPathResolver cellRoots,
+        CellNameResolver cellNameResolver,
         ProjectFilesystem filesystem,
         ForwardRelativePath pathRelativeToProjectRoot,
         TargetConfiguration targetConfiguration,
         TargetConfiguration hostConfiguration,
         ImmutableList<String> args) {
       return new TestMacro(args);
+    }
+  }
+
+  static class Test2MacroTypeCoercer implements MacroTypeCoercer<Test2Macro> {
+
+    @Override
+    public boolean hasElementClass(Class<?>[] types) {
+      return false;
+    }
+
+    @Override
+    public Class<Test2Macro> getOutputClass() {
+      return Test2Macro.class;
+    }
+
+    @Override
+    public void traverse(CellNameResolver cellRoots, Test2Macro macro, Traversal traversal) {}
+
+    @Override
+    public Test2Macro coerce(
+        CellNameResolver cellNameResolver,
+        ProjectFilesystem filesystem,
+        ForwardRelativePath pathRelativeToProjectRoot,
+        TargetConfiguration targetConfiguration,
+        TargetConfiguration hostConfiguration,
+        ImmutableList<String> args) {
+      return new Test2Macro(args);
     }
   }
 
@@ -489,7 +553,7 @@ public class StringWithMacrosTypeCoercerTest {
 
     @Override
     public TestMacro coerce(
-        CellPathResolver cellRoots,
+        CellNameResolver cellNameResolver,
         ProjectFilesystem filesystem,
         ForwardRelativePath pathRelativeToProjectRoot,
         TargetConfiguration targetConfiguration,

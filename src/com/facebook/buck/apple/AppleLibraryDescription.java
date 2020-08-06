@@ -37,6 +37,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -110,7 +111,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.SortedSet;
 
 public class AppleLibraryDescription
     implements DescriptionWithTargetGraph<AppleLibraryDescriptionArg>,
@@ -461,6 +461,7 @@ public class AppleLibraryDescription
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks(),
         swiftBuckConfig.getUseLipoThin(),
@@ -520,7 +521,7 @@ public class AppleLibraryDescription
             .getValue(
                 Iterables.getFirst(
                     Sets.intersection(
-                        cxxPlatforms.getFlavors(), unstrippedBuildTarget.getFlavors()),
+                        cxxPlatforms.getFlavors(), unstrippedBuildTarget.getFlavors().getSet()),
                     defaultCxxFlavor))
             .resolve(graphBuilder, buildTarget.getTargetConfiguration());
 
@@ -772,7 +773,7 @@ public class AppleLibraryDescription
       AppleNativeTargetDescriptionArg args,
       Class<U> metadataClass) {
 
-    if (CxxLibraryDescription.METADATA_TYPE.containsAnyOf(buildTarget.getFlavors())) {
+    if (CxxLibraryDescription.METADATA_TYPE.containsAnyOf(buildTarget.getFlavors().getSet())) {
       // Modules are always platform specific so we need to only have one platform specific
       // headersymlinktree with a modulemap. We cannot forward the metadata to a cxxlibrary
       // description as it makes an optimization of having multiple header symlinktrees (platform
@@ -804,7 +805,7 @@ public class AppleLibraryDescription
       Preconditions.checkState(
           cxxPlatformFlavor.isPresent(),
           "Could not find cxx platform in:\n%s",
-          Joiner.on(", ").join(buildTarget.getFlavors()));
+          Joiner.on(", ").join(buildTarget.getFlavors().getSet()));
       ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
       for (BuildTarget dep : args.getDeps()) {
         Optional<FrameworkDependencies> frameworks =
@@ -887,7 +888,7 @@ public class AppleLibraryDescription
     BuildTarget swiftCompileTarget = baseTarget.withAppendedFlavors(Type.SWIFT_COMPILE.getFlavor());
     SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftCompileTarget);
 
-    return CxxHeadersDir.of(CxxPreprocessables.IncludeType.LOCAL, compile.getOutputPath());
+    return CxxHeadersDir.of(CxxPreprocessables.IncludeType.LOCAL, compile.getSwiftModuleOutputPath());
   }
 
   private static CxxHeaders createSwiftObjcHeaders(
@@ -1006,7 +1007,7 @@ public class AppleLibraryDescription
 
   public static boolean isNotStaticallyLinkedLibraryNode(
       TargetNode<CxxLibraryDescription.CommonArg> node) {
-    SortedSet<Flavor> flavors = node.getBuildTarget().getFlavors();
+    FlavorSet flavors = node.getBuildTarget().getFlavors();
     if (LIBRARY_TYPE.getFlavor(flavors).isPresent()) {
       return flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR)
           || flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);

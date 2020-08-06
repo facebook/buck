@@ -32,7 +32,7 @@ public class AndroidSdkDirectoryResolver extends BaseAndroidToolchainResolver {
   @VisibleForTesting
   static final String SDK_NOT_FOUND_MESSAGE =
       "Android SDK could not be found. Make sure to set "
-          + "one of these environment variables: ANDROID_SDK, ANDROID_HOME, "
+          + "one of these environment variables: ANDROID_SDK, ANDROID_HOME, ANDROID_SDK_ROOT, "
           + "or android.sdk_path in your .buckconfig";
 
   private Optional<String> sdkErrorMessage;

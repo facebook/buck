@@ -38,3 +38,14 @@ genrule(
         ":osx-x86_64",
     ],
 )
+
+genrule(
+    name = "constrained_select",
+    out = select({
+        ":osx-x86_64": "a.txt",
+    }),
+    cmd = "echo lol > $OUT",
+    compatible_with = [
+        ":osx-x86_64",
+    ],
+)

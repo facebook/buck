@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -70,6 +71,7 @@ public class UnconfiguredSelectorListResolverTest {
             buildTarget,
             "some_attribute",
             selectorList,
+            flavorListTypeCoercer(),
             DependencyStack.root());
 
     assertTrue(flavors.isEmpty());
@@ -93,6 +95,7 @@ public class UnconfiguredSelectorListResolverTest {
             keyTarget,
             "some_attribute",
             selectorList,
+            new FlavorTypeCoercer(),
             DependencyStack.root());
 
     assertEquals("flavor2", flavor.getName());
@@ -118,6 +121,7 @@ public class UnconfiguredSelectorListResolverTest {
             keyTarget,
             "some_attribute",
             selectorList,
+            new FlavorTypeCoercer(),
             DependencyStack.root());
 
     assertNull(flavor);
@@ -151,6 +155,7 @@ public class UnconfiguredSelectorListResolverTest {
             keyTarget,
             "some_attribute",
             selectorList,
+            flavorListTypeCoercer(),
             DependencyStack.root());
 
     assertEquals(
@@ -194,6 +199,7 @@ public class UnconfiguredSelectorListResolverTest {
             keyTarget,
             "some_attribute",
             selectorList,
+            flavorListTypeCoercer(),
             DependencyStack.root());
 
     assertEquals(
@@ -236,6 +242,7 @@ public class UnconfiguredSelectorListResolverTest {
             keyTarget,
             "some_attribute",
             selectorList,
+            flavorListTypeCoercer(),
             DependencyStack.root());
 
     assertEquals(
@@ -265,7 +272,12 @@ public class UnconfiguredSelectorListResolverTest {
 
     try {
       resolver.resolveList(
-          configurationContext, keyTarget, "some_attribute", selectorList, DependencyStack.root());
+          configurationContext,
+          keyTarget,
+          "some_attribute",
+          selectorList,
+          flavorListTypeCoercer(),
+          DependencyStack.root());
       fail("unreachable");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -291,7 +303,12 @@ public class UnconfiguredSelectorListResolverTest {
 
     try {
       resolver.resolveList(
-          configurationContext, keyTarget, "some_attribute", selectorList, DependencyStack.root());
+          configurationContext,
+          keyTarget,
+          "some_attribute",
+          selectorList,
+          flavorListTypeCoercer(),
+          DependencyStack.root());
       fail("unreachable");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -306,7 +323,7 @@ public class UnconfiguredSelectorListResolverTest {
       throws CoerceFailedException {
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
-    ListTypeCoercer<Flavor> flavorListTypeCoercer = new ListTypeCoercer<>(new FlavorTypeCoercer());
+    ListTypeCoercer<Flavor, Flavor> flavorListTypeCoercer = flavorListTypeCoercer();
     Selector<ImmutableList<Flavor>> selector =
         new Selector<>(
             ImmutableMap.of(
@@ -319,11 +336,16 @@ public class UnconfiguredSelectorListResolverTest {
             new TestSelectableResolver(
                 ImmutableList.of(new TestSelectable(selectableTarget, false))));
     SelectorList<ImmutableList<Flavor>> selectorList =
-        new SelectorList<>(flavorListTypeCoercer, ImmutableList.of(selector));
+        new SelectorList<>(ImmutableList.of(selector));
 
     try {
       resolver.resolveList(
-          configurationContext, keyTarget, "some_attribute", selectorList, DependencyStack.root());
+          configurationContext,
+          keyTarget,
+          "some_attribute",
+          selectorList,
+          flavorListTypeCoercer,
+          DependencyStack.root());
       fail("unreachable");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -339,7 +361,11 @@ public class UnconfiguredSelectorListResolverTest {
 
   private SelectorList<ImmutableList<Flavor>> createSelectorListForListsOfFlavors(
       Map<String, ?>... selectors) throws CoerceFailedException {
-    return TestSelectorListFactory.createSelectorListForCoercer(
-        new ListTypeCoercer<>(new FlavorTypeCoercer()), selectors);
+    return TestSelectorListFactory.createSelectorListForCoercer(flavorListTypeCoercer(), selectors);
+  }
+
+  @Nonnull
+  private static ListTypeCoercer<Flavor, Flavor> flavorListTypeCoercer() {
+    return new ListTypeCoercer<>(new FlavorTypeCoercer());
   }
 }

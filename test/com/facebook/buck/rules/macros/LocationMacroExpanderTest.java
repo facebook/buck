@@ -20,8 +20,8 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -43,6 +43,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
@@ -56,16 +57,16 @@ public class LocationMacroExpanderTest {
 
   private ProjectFilesystem filesystem;
   private ActionGraphBuilder graphBuilder;
-  private CellPathResolver cellPathResolver;
+  private CellNameResolver cellNameResolver;
   private StringWithMacrosConverter converter;
 
   private ActionGraphBuilder setup(ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
-    cellPathResolver = TestCellBuilder.createCellRoots(projectFilesystem);
+    cellNameResolver = TestCellBuilder.createCellRoots(projectFilesystem).getCellNameResolver();
     graphBuilder = new TestActionGraphBuilder();
     converter =
         StringWithMacrosConverter.of(
             buildTarget,
-            cellPathResolver.getCellNameResolver(),
+            cellNameResolver,
             graphBuilder,
             ImmutableList.of(LocationMacroExpander.INSTANCE));
     return graphBuilder;
@@ -187,7 +188,7 @@ public class LocationMacroExpanderTest {
   @Test
   public void missingLocationArgumentThrows() throws Exception {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem("/some_root");
-    cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
+    cellNameResolver = TestCellBuilder.createCellRoots(filesystem).getCellNameResolver();
 
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage(
@@ -196,9 +197,9 @@ public class LocationMacroExpanderTest {
             containsString("expected exactly one argument (found 1)")));
 
     new DefaultTypeCoercerFactory()
-        .typeCoercerForType(StringWithMacros.class)
-        .coerce(
-            cellPathResolver,
+        .typeCoercerForType(TypeToken.of(StringWithMacros.class))
+        .coerceBoth(
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -208,16 +209,15 @@ public class LocationMacroExpanderTest {
 
   private String coerceAndStringify(String input, BuildRule rule) throws CoerceFailedException {
     StringWithMacros stringWithMacros =
-        (StringWithMacros)
-            new DefaultTypeCoercerFactory()
-                .typeCoercerForType(StringWithMacros.class)
-                .coerce(
-                    cellPathResolver,
-                    filesystem,
-                    rule.getBuildTarget().getCellRelativeBasePath().getPath(),
-                    UnconfiguredTargetConfiguration.INSTANCE,
-                    UnconfiguredTargetConfiguration.INSTANCE,
-                    input);
+        new DefaultTypeCoercerFactory()
+            .typeCoercerForType(TypeToken.of(StringWithMacros.class))
+            .coerceBoth(
+                cellNameResolver,
+                filesystem,
+                rule.getBuildTarget().getCellRelativeBasePath().getPath(),
+                UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
+                input);
     Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }

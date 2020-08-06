@@ -83,14 +83,17 @@ public class AuditFlavorsCommand extends AbstractCommand {
                 .getParser()
                 .getPerBuildStateFactory()
                 .create(
-                    createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                    createParsingContext(
+                            params.getCells().getRootCell(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                         .withExcludeUnsupportedTargets(false),
                     params.getParser().getPermState())) {
 
       for (BuildTarget target : targets) {
         TargetNode<?> targetNode =
-            params.getParser().getTargetNode(parserState, target, DependencyStack.top(target));
+            params
+                .getParser()
+                .getTargetNodeAssertCompatible(parserState, target, DependencyStack.top(target));
         builder.add(targetNode);
       }
     } catch (BuildFileParseException e) {

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util.cache.impl;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
@@ -40,12 +42,14 @@ public class CacheBenchmark {
   private List<String> folders = Lists.newArrayList("");
   private List<String> leaves = Lists.newArrayList();
 
+  private FakeProjectFilesystem projectFilesystem;
   private WatchedFileHashCache cache;
 
   @Before
   public void setUpTest() {
     setUpBenchmark();
-    cache = new WatchedFileHashCache(new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT);
+    projectFilesystem = new FakeProjectFilesystem();
+    cache = new WatchedFileHashCache(projectFilesystem, FileHashCacheMode.DEFAULT);
   }
 
   private static String generateRandomString() {
@@ -106,6 +110,9 @@ public class CacheBenchmark {
     leaves.forEach(
         leaf ->
             cache.onFileSystemChange(
-                WatchmanPathEvent.of(Paths.get(leaf), Kind.CREATE, Paths.get(leaf))));
+                WatchmanPathEvent.of(
+                    AbsPath.of(projectFilesystem.resolve(leaf)),
+                    Kind.CREATE,
+                    RelPath.of(Paths.get(leaf)))));
   }
 }

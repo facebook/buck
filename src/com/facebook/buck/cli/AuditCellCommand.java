@@ -60,8 +60,8 @@ public class AuditCellCommand extends AbstractCommand {
     // more sense for it to print either a map of canonicalname -> path or to include the empty
     // alias in the map that it prints (then it's an alias -> path map).
     ImmutableMap<String, Path> cellMap;
-    CellNameResolver rootCellNameResolver = params.getCell().getCellNameResolver();
-    NewCellPathResolver pathResolver = params.getCell().getNewCellPathResolver();
+    CellNameResolver rootCellNameResolver = params.getCells().getRootCell().getCellNameResolver();
+    NewCellPathResolver pathResolver = params.getCells().getRootCell().getNewCellPathResolver();
 
     if (getArguments().isEmpty()) {
       cellMap =

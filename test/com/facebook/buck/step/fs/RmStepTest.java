@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -45,7 +46,9 @@ public class RmStepTest {
   @Before
   public void setUp() {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    context = TestExecutionContext.newInstance().withBuildCellRootPath(filesystem.getRootPath());
+    context =
+        TestExecutionContext.newInstance()
+            .withBuildCellRootPath(filesystem.getRootPath().getPath());
   }
 
   @Test
@@ -99,47 +102,49 @@ public class RmStepTest {
 
   @Test
   public void deletingNonExistentFileSucceeds() throws Exception {
-    Path file = getNonExistentFile();
+    AbsPath file = getNonExistentFile();
 
     RmStep step =
         RmStep.of(
-            BuildCellRelativePath.fromCellRelativePath(filesystem.getRootPath(), filesystem, file));
+            BuildCellRelativePath.fromCellRelativePath(
+                filesystem.getRootPath(), filesystem, file.getPath()));
     assertEquals(0, step.execute(context).getExitCode());
 
-    assertFalse(Files.exists(file));
+    assertFalse(Files.exists(file.getPath()));
   }
 
   @Test
   public void deletingNonExistentFileRecursivelySucceeds() throws Exception {
-    Path file = getNonExistentFile();
+    AbsPath file = getNonExistentFile();
 
     RmStep step =
         RmStep.of(
-            BuildCellRelativePath.fromCellRelativePath(filesystem.getRootPath(), filesystem, file),
+            BuildCellRelativePath.fromCellRelativePath(
+                filesystem.getRootPath(), filesystem, file.getPath()),
             true);
     assertEquals(0, step.execute(context).getExitCode());
 
-    assertFalse(Files.exists(file));
+    assertFalse(Files.exists(file.getPath()));
   }
 
   private Path createFile() throws IOException {
-    Path file = Files.createTempFile(filesystem.getRootPath(), "buck", ".txt");
+    Path file = Files.createTempFile(filesystem.getRootPath().getPath(), "buck", ".txt");
     Files.write(file, "blahblah".getBytes(UTF_8));
     assertTrue(Files.exists(file));
     return file;
   }
 
   private Path createNonEmptyDirectory() throws IOException {
-    Path dir = Files.createTempDirectory(filesystem.getRootPath(), "buck");
+    Path dir = Files.createTempDirectory(filesystem.getRootPath().getPath(), "buck");
     Path file = dir.resolve("file");
     Files.write(file, "blahblah".getBytes(UTF_8));
     assertTrue(Files.exists(dir));
     return dir;
   }
 
-  private Path getNonExistentFile() {
-    Path file = filesystem.getRootPath().resolve("does-not-exist");
-    assertFalse(Files.exists(file));
+  private AbsPath getNonExistentFile() {
+    AbsPath file = filesystem.getRootPath().resolve("does-not-exist");
+    assertFalse(Files.exists(file.getPath()));
     return file;
   }
 }

@@ -153,7 +153,7 @@ public class ActionGraphProviderBuilder {
             : this.ruleKeyConfiguration;
     CellProvider cellProvider =
         this.cellProvider == null
-            ? new TestCellBuilder().build().getCellProvider()
+            ? new TestCellBuilder().build().getRootCell().getCellProvider()
             : this.cellProvider;
     RuleAnalysisComputationMode ruleAnalysisComputationMode =
         this.ruleAnalysisComputationMode == null

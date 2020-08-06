@@ -74,13 +74,13 @@ public class CommandLineTargetNodeSpecParser {
     Verify.verify(
         absolutePathUnderRootCell.isAbsolute(), "%s must be absolute", absolutePathUnderRootCell);
     Verify.verify(
-        absolutePathUnderRootCell.startsWith(rootCell.getRoot()),
+        absolutePathUnderRootCell.startsWith(rootCell.getRoot().getPath()),
         "%s must be under cell root %s",
         absolutePathUnderRootCell,
         rootCell.getRoot());
 
     return Joiner.on("/")
-        .join(rootCell.getRoot().relativize(absolutePathUnderRootCell).normalize());
+        .join(rootCell.getRoot().getPath().relativize(absolutePathUnderRootCell).normalize());
   }
 
   /**

@@ -17,6 +17,7 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
@@ -35,5 +36,10 @@ public class TestArtifactCaches {
         CacheReadMode.READWRITE,
         Optional.empty(),
         MoreExecutors.newDirectExecutorService());
+  }
+
+  public static ArtifactCache createDirCacheForTest(AbsPath filesystemRoot, Path cacheDir)
+      throws IOException {
+    return createDirCacheForTest(filesystemRoot.getPath(), cacheDir);
   }
 }

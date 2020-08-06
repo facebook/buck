@@ -194,7 +194,8 @@ public class HaskellLibraryDescription
         // affect on build efficiency, and since this issue appears to only manifest by a size
         // mismatch with what is embedded in thin archives, just disable caching when using thin
         // archives.
-        /* cacheable */ platform.getCxxPlatform().getArchiveContents() != ArchiveContents.THIN);
+        platform.getArchiveContents(),
+        /* cacheable */ platform.getArchiveContents() != ArchiveContents.THIN);
   }
 
   private Archive requireStaticLibrary(
@@ -210,7 +211,7 @@ public class HaskellLibraryDescription
       boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
-                baseTarget.getFlavors(),
+                baseTarget.getFlavors().getSet(),
                 Sets.union(
                     Type.FLAVOR_VALUES,
                     haskellPlatformsProvider.getHaskellPlatforms().getFlavors()))
@@ -391,7 +392,7 @@ public class HaskellLibraryDescription
       boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
-                baseTarget.getFlavors(),
+                baseTarget.getFlavors().getSet(),
                 Sets.union(
                     Type.FLAVOR_VALUES,
                     haskellPlatformsProvider.getHaskellPlatforms().getFlavors()))
@@ -524,7 +525,7 @@ public class HaskellLibraryDescription
       boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
-                baseTarget.getFlavors(),
+                baseTarget.getFlavors().getSet(),
                 Sets.union(
                     Type.FLAVOR_VALUES,
                     haskellPlatformsProvider.getHaskellPlatforms().getFlavors()))

@@ -18,9 +18,11 @@ package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
+import com.facebook.buck.core.cell.DefaultCellNameResolverProvider;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
@@ -44,13 +46,13 @@ import com.facebook.buck.core.select.TestSelectable;
 import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePathFactoryForTests;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -59,7 +61,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -74,7 +75,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c")
             .configure(targetConfiguration);
     Path basepath = Paths.get("a").resolve("b");
-    Cell cell =
+    Cells cell =
         new TestCellBuilder()
             .setFilesystem(
                 new FakeProjectFilesystem(
@@ -85,39 +86,44 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
             .build();
     SelectorList<?> selectorList =
         new SelectorList<>(
-            JsonTypeConcatenatingCoercerFactory.createForType(List.class),
             ImmutableList.of(
                 new Selector<>(
                     ImmutableMap.of(
                         SelectorKey.DEFAULT,
-                        "1",
+                        Optional.of("1"),
                         new SelectorKey(
                             ConfigurationBuildTargetFactoryForTests.newInstance("//x:y")),
-                        "2"),
+                        Optional.of("2")),
                     ImmutableSet.of(),
                     ""),
                 new Selector<>(
                     ImmutableMap.of(
                         SelectorKey.DEFAULT,
-                        "8",
+                        Optional.of("8"),
                         new SelectorKey(
                             ConfigurationBuildTargetFactoryForTests.newInstance("//x:y")),
-                        "9"),
+                        Optional.of("9")),
                     ImmutableSet.of(),
                     "")));
     ImmutableMap<String, Object> attributes =
         ImmutableMap.<String, Object>builder()
             .put("name", "c")
-            .put("srcs", ImmutableList.of("src1", "src2"))
+            .put(
+                "srcs",
+                ImmutableList.of(
+                    UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("a/b/src1"),
+                    UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("a/b/src2")))
             .put("source", selectorList)
             .build();
     UnconfiguredTargetNode node =
         ImmutableUnconfiguredTargetNode.of(
-            buildTarget.getUnconfiguredBuildTargetView().getData(),
+            buildTarget.getUnconfiguredBuildTarget(),
             RuleType.of("java_library", RuleType.Kind.BUILD),
             attributes,
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            Optional.empty(),
+            ImmutableList.of());
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
     TargetPlatformResolver targetPlatformResolver =
@@ -126,8 +132,8 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
         new UnconfiguredTargetNodeToTargetNodeFactory(
             typeCoercerFactory,
             TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager()),
-            new DefaultConstructorArgMarshaller(typeCoercerFactory),
-            new TargetNodeFactory(typeCoercerFactory),
+            new DefaultConstructorArgMarshaller(),
+            new TargetNodeFactory(typeCoercerFactory, new DefaultCellNameResolverProvider(cell)),
             new NoopPackageBoundaryChecker(),
             (file, targetNode) -> {},
             new DefaultSelectorListResolver(
@@ -135,23 +141,27 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
                     ImmutableList.of(new TestSelectable(selectableTarget, true)))),
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
-            UnconfiguredTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE,
+            cell.getRootCell().getBuckConfig(),
+            Optional.empty());
 
     TargetNode<?> targetNode =
-        factory.createTargetNode(
-            cell,
-            Paths.get("a/b/BUCK"),
-            buildTarget,
-            DependencyStack.root(),
-            node,
-            id -> SimplePerfEvent.scope(Optional.empty(), null, null));
+        factory
+            .createTargetNode(
+                cell.getRootCell(),
+                AbsPath.of(Paths.get("a/b/BUCK").toAbsolutePath()),
+                buildTarget,
+                DependencyStack.root(),
+                node,
+                id -> SimplePerfEvent.scope(Optional.empty(), null, null))
+            .assertGetTargetNode(DependencyStack.root());
 
     assertEquals(JavaLibraryDescription.class, targetNode.getDescription().getClass());
     JavaLibraryDescriptionArg arg = (JavaLibraryDescriptionArg) targetNode.getConstructorArg();
     assertEquals(
         ImmutableSortedSet.of(
-            PathSourcePath.of(cell.getFilesystem(), basepath.resolve("src1")),
-            PathSourcePath.of(cell.getFilesystem(), basepath.resolve("src2"))),
+            PathSourcePath.of(cell.getRootCell().getFilesystem(), basepath.resolve("src1")),
+            PathSourcePath.of(cell.getRootCell().getFilesystem(), basepath.resolve("src2"))),
         arg.getSrcs());
     assertEquals(
         ImmutableSet.of(targetPlatform, selectableTarget), targetNode.getConfigurationDeps());

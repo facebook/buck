@@ -34,6 +34,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
@@ -185,7 +186,7 @@ public class KnownNativeRuleTypesTest {
             .getValue(flavor)
             .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE)
             .getCflags(),
-        Matchers.contains(flag));
+        Matchers.contains(StringArg.of(flag)));
     TestKnownRuleTypesFactory.create(
         buckConfig, toolchainProvider, KnownRuleTypesTestUtil.createExecutor(temporaryFolder));
   }

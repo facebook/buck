@@ -26,8 +26,8 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
@@ -96,7 +96,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     watchmanClient = new FakeWatchmanClient(0, ImmutableMap.of());
     watchman =
         FakeWatchmanFactory.createWatchman(
-            watchmanClient, filesystem.getRootPath(), filesystem.getPath(""), "watch");
+            watchmanClient, filesystem.getRootPath().getPath(), filesystem.getPath(""), "watch");
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     targetConfigurationSerializer =
@@ -342,7 +342,7 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
 
     Object buckGlobalState3 =
         buckGlobalStateLifecycleManager
@@ -428,8 +428,9 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
         .getByName(AndroidSdkLocation.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE);
 
     Object buckGlobalState3 =
@@ -461,12 +462,13 @@ public class BuckGlobalStateLifecycleManagerTest {
         "Android SDK should be the same other location", buckGlobalState3, buckGlobalState4);
   }
 
-  private Cell createCellWithAndroidSdk(Path androidSdkPath) {
+  private Cells createCellWithAndroidSdk(Path androidSdkPath) {
     return new TestCellBuilder()
         .setBuckConfig(buckConfig)
         .setFilesystem(filesystem)
         .addEnvironmentVariable("ANDROID_HOME", androidSdkPath.toString())
         .addEnvironmentVariable("ANDROID_SDK", androidSdkPath.toString())
+        .addEnvironmentVariable("ANDROID_SDK_ROOT", androidSdkPath.toString())
         .build();
   }
 
@@ -477,8 +479,9 @@ public class BuckGlobalStateLifecycleManagerTest {
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
     Files.deleteIfExists(androidSdkPath);
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
         .getByNameIfPresent(
             AndroidSdkLocation.DEFAULT_NAME,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -520,8 +523,9 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
         .getByNameIfPresent(
             AndroidSdkLocation.DEFAULT_NAME,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -563,8 +567,9 @@ public class BuckGlobalStateLifecycleManagerTest {
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
     Files.deleteIfExists(androidSdkPath);
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
         .getByNameIfPresent(
             AndroidSdkLocation.DEFAULT_NAME,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -582,7 +587,8 @@ public class BuckGlobalStateLifecycleManagerTest {
             .getFirst();
 
     cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
+    cell.getRootCell()
+        .getToolchainProvider()
         .getByNameIfPresent(
             AndroidSdkLocation.DEFAULT_NAME,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -610,8 +616,9 @@ public class BuckGlobalStateLifecycleManagerTest {
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
     Files.deleteIfExists(androidSdkPath);
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
         .getByNameIfPresent(
             AndroidSdkLocation.DEFAULT_NAME,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -651,8 +658,9 @@ public class BuckGlobalStateLifecycleManagerTest {
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
     Files.deleteIfExists(androidSdkPath);
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
         .getByNameIfPresent(
             AndroidSdkLocation.DEFAULT_NAME,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -683,7 +691,7 @@ public class BuckGlobalStateLifecycleManagerTest {
 
   @Test
   public void testBuckGlobalStateUptime() {
-    Cell cell = new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build();
+    Cells cell = new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build();
     SettableFakeClock clock = new SettableFakeClock(1000, 0);
     BuckGlobalState buckGlobalState =
         buckGlobalStateLifecycleManager

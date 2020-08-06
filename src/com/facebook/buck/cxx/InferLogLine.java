@@ -37,7 +37,7 @@ class InferLogLine {
 
   public static InferLogLine fromBuildTarget(BuildTarget target, Path output) {
     Preconditions.checkArgument(output.isAbsolute(), "Path must be absolute");
-    return new InferLogLine(target, target.getFlavors(), output);
+    return new InferLogLine(target, target.getFlavors().getSet(), output);
   }
 
   @Override

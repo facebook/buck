@@ -109,7 +109,7 @@ class XctestRunTestsStep implements Step {
     ProcessExecutorParams.Builder builder =
         ProcessExecutorParams.builder()
             .addAllCommand(getCommand())
-            .setDirectory(filesystem.getRootPath().toAbsolutePath())
+            .setDirectory(filesystem.getRootPath().getPath())
             .setRedirectErrorStream(true)
             .setEnvironment(getEnv(context));
 

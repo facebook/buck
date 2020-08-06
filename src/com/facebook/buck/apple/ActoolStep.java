@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.shell.ShellStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -38,10 +39,11 @@ class ActoolStep extends ShellStep {
   private final Path outputPlist;
   private final Optional<String> appIcon;
   private final Optional<String> launchImage;
+  private final Optional<String> productType;
   private final AppleAssetCatalogsCompilationOptions compilationOptions;
 
   public ActoolStep(
-      Path workingDirectory,
+      AbsPath workingDirectory,
       String applePlatformName,
       String targetSDKVersion,
       ImmutableMap<String, String> environment,
@@ -51,6 +53,7 @@ class ActoolStep extends ShellStep {
       Path outputPlist,
       Optional<String> appIcon,
       Optional<String> launchImage,
+      Optional<String> productType,
       AppleAssetCatalogsCompilationOptions compilationOptions) {
     super(workingDirectory);
     this.applePlatformName = applePlatformName;
@@ -62,6 +65,7 @@ class ActoolStep extends ShellStep {
     this.outputPlist = outputPlist;
     this.appIcon = appIcon;
     this.launchImage = launchImage;
+    this.productType = productType;
     this.compilationOptions = compilationOptions;
   }
 
@@ -101,6 +105,10 @@ class ActoolStep extends ShellStep {
 
     if (launchImage.isPresent()) {
       commandBuilder.add("--launch-image", launchImage.get());
+    }
+
+    if (productType.isPresent()) {
+      commandBuilder.add("--product-type", productType.get());
     }
 
     if (compilationOptions.getNotices()) {

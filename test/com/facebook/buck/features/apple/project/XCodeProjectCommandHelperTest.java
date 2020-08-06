@@ -25,7 +25,7 @@ import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
@@ -38,7 +38,6 @@ import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.features.apple.common.NullPathOutputPresenter;
 import com.facebook.buck.features.apple.common.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
@@ -491,14 +490,14 @@ public class XCodeProjectCommandHelperTest {
             originalTargetGraph, passedInTargetsSet, isWithTests, isWithDependenciesTests);
 
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    Cell cell =
+    Cells cell =
         new TestCellBuilder()
             .setFilesystem(new FakeProjectFilesystem(SettableFakeClock.DO_NOT_CARE))
             .build();
     XCodeProjectCommandHelper.generateWorkspacesForTargets(
         BuckEventBusForTests.newInstance(),
         BuckPluginManagerFactory.createPluginManager(),
-        cell,
+        cell.getRootCell(),
         FakeBuckConfig.builder().build(),
         TestRuleKeyConfigurationFactory.create(),
         MoreExecutors.newDirectExecutorService(),
@@ -519,7 +518,6 @@ public class XCodeProjectCommandHelperTest {
         FocusedModuleTargetMatcher.noFocus(),
         projectGenerators,
         false,
-        new NullPathOutputPresenter(),
         Optional.empty());
     return projectGenerators;
   }

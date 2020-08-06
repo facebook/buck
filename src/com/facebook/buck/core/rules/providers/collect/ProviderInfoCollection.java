@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules.providers.collect;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
+import com.facebook.buck.core.starlark.compatible.MutableObjectException;
 import com.google.devtools.build.lib.syntax.SkylarkIndexable;
 import java.util.Optional;
 
@@ -50,6 +51,8 @@ public interface ProviderInfoCollection extends SkylarkIndexable {
     /**
      * Add a new {@link ProviderInfo} to the collection. Multiple {@link ProviderInfo} objects with
      * the same {@link Provider.Key} should not be added.
+     *
+     * @throws MutableObjectException if {@code info} is still mutable.
      */
     Builder put(ProviderInfo<?> info);
 
@@ -59,6 +62,7 @@ public interface ProviderInfoCollection extends SkylarkIndexable {
      *
      * @throws IllegalArgumentException if a two or more {@link ProviderInfo}s have the same {@link
      *     Provider.Key}
+     * @throws MutableObjectException if {@code info} is still mutable.
      */
     ProviderInfoCollection build(DefaultInfo info);
   }

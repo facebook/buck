@@ -18,6 +18,7 @@ package com.facebook.buck.core.path;
 
 import com.facebook.buck.core.filesystems.BuckFileSystem;
 import com.facebook.buck.core.filesystems.BuckUnixPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -146,8 +147,7 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
       return new ForwardRelativePath(segments);
     } else {
       String pathString = path.toString();
-      if (Platform.detect() == Platform.WINDOWS
-          && path.getFileSystem() == FileSystems.getDefault()) {
+      if (Platform.detect() == Platform.WINDOWS) {
         // Suboptimal
         pathString = pathString.replace('\\', '/');
       }
@@ -195,6 +195,10 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
   /** Convert this path to the {@link Path} of {@link FileSystems#getDefault()}. */
   public Path toPathDefaultFileSystem() {
     return toPath(FileSystems.getDefault());
+  }
+
+  public RelPath toRelPath(FileSystem fileSystem) {
+    return RelPath.of(toPath(fileSystem));
   }
 
   @Override

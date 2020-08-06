@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.unarchive;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -307,7 +308,7 @@ public class Untar extends Unarchiver {
   /** Sets the modification time and the execution bit on a file */
   private void setAttributes(ProjectFilesystem filesystem, Path path, TarArchiveEntry entry)
       throws IOException {
-    Path filePath = filesystem.getRootPath().resolve(path);
+    AbsPath filePath = filesystem.getRootPath().resolve(path);
     File file = filePath.toFile();
     file.setLastModified(entry.getModTime().getTime());
     Set<PosixFilePermission> posixPermissions = MorePosixFilePermissions.fromMode(entry.getMode());
@@ -316,7 +317,7 @@ public class Untar extends Unarchiver {
       if (entry.isSymbolicLink()) {
         file.setExecutable(true, true);
       } else {
-        MostFiles.makeExecutable(filePath);
+        MostFiles.makeExecutable(filePath.getPath());
       }
     }
   }

@@ -19,7 +19,10 @@ package com.facebook.buck.core.rules.providers.impl;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
+import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.facebook.buck.core.starlark.compatible.BuckStarlarkStructObject;
+import com.google.devtools.build.lib.syntax.EvalException;
+import java.util.Objects;
 
 /**
  * Represents a {@link ProviderInfo} that is defined in Java. The corresponding {@link Provider} is
@@ -52,6 +55,7 @@ public abstract class BuiltInProviderInfo<T extends BuiltInProviderInfo<T>>
 
   private final Class<T> infoClass;
   private final BuiltInProvider<T> provider;
+  private boolean immutable = false;
 
   @SuppressWarnings("unchecked")
   protected BuiltInProviderInfo() {
@@ -82,5 +86,28 @@ public abstract class BuiltInProviderInfo<T extends BuiltInProviderInfo<T>>
   @Override
   public ProviderInfo<?> getProviderInfo() {
     return this;
+  }
+
+  @Override
+  public boolean isImmutable() {
+    if (immutable) {
+      return true;
+    }
+    for (String field : getFieldNames()) {
+      try {
+        if (!BuckSkylarkTypes.isImmutable(Objects.requireNonNull(getValue(field)))) {
+          return false;
+        }
+      } catch (EvalException e) {
+        // There shouldn't be any way that we claim a field exists, but we can't get its value
+        throw new IllegalStateException(
+            String.format(
+                "Could not get value for field %s on instance of %s",
+                field, getProvider().getName()),
+            e);
+      }
+    }
+    immutable = true;
+    return true;
   }
 }

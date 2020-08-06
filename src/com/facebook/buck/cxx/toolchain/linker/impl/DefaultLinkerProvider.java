@@ -34,6 +34,7 @@ public class DefaultLinkerProvider implements LinkerProvider {
   private final Type type;
   private final ToolProvider toolProvider;
   private final boolean cacheLinks;
+  private final boolean scrubConcurrently;
 
   private final LoadingCache<BuildRuleResolver, BuildRuleResolverCacheByTargetConfiguration<Linker>>
       cache =
@@ -46,20 +47,28 @@ public class DefaultLinkerProvider implements LinkerProvider {
                     public BuildRuleResolverCacheByTargetConfiguration<Linker> load(
                         @Nonnull BuildRuleResolver buildRuleResolver) {
                       return new BuildRuleResolverCacheByTargetConfiguration<>(
-                          buildRuleResolver, toolProvider, tool -> build(type, tool, cacheLinks));
+                          buildRuleResolver,
+                          toolProvider,
+                          tool -> build(type, tool, cacheLinks, scrubConcurrently));
                     }
                   });
 
   public DefaultLinkerProvider(Type type, ToolProvider toolProvider, boolean cacheLinks) {
+    this(type, toolProvider, cacheLinks, false);
+  }
+
+  public DefaultLinkerProvider(
+      Type type, ToolProvider toolProvider, boolean cacheLinks, boolean scrubConcurrently) {
     this.type = type;
     this.toolProvider = toolProvider;
     this.cacheLinks = cacheLinks;
+    this.scrubConcurrently = scrubConcurrently;
   }
 
-  private static Linker build(Type type, Tool tool, boolean cacheLinks) {
+  private static Linker build(Type type, Tool tool, boolean cacheLinks, boolean scrubConcurrently) {
     switch (type) {
       case DARWIN:
-        return new DarwinLinker(tool, cacheLinks);
+        return new DarwinLinker(tool, cacheLinks, scrubConcurrently);
       case GNU:
         return new GnuLinker(tool);
       case WINDOWS:

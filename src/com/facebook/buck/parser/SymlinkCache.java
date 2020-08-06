@@ -19,7 +19,9 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -50,7 +52,7 @@ class SymlinkCache {
    * Build rule input files (e.g., paths in {@code srcs}) whose paths contain an element which
    * exists in {@code symlinkExistenceCache}.
    */
-  private final Set<Path> buildInputPathsUnderSymlink = Sets.newConcurrentHashSet();
+  private final Set<AbsPath> buildInputPathsUnderSymlink = Sets.newConcurrentHashSet();
 
   /**
    * Cache of (symlink path: symlink target) pairs used to avoid repeatedly checking for the
@@ -67,7 +69,7 @@ class SymlinkCache {
   }
 
   public void registerInputsUnderSymlinks(
-      Cell currentCell, Cell targetCell, Path buildFile, TargetNode<?> node) throws IOException {
+      Cell currentCell, Cell targetCell, AbsPath buildFile, TargetNode<?> node) throws IOException {
     Map<Path, Path> newSymlinksEncountered =
         inputFilesUnderSymlink(node.getInputs(), node.getFilesystem());
     Optional<ImmutableList<Path>> readOnlyPaths =
@@ -132,11 +134,13 @@ class SymlinkCache {
   private Map<Path, Path> inputFilesUnderSymlink(
       // We use Collection<Path> instead of Iterable<Path> to prevent
       // accidentally passing in Path, since Path itself is Iterable<Path>.
-      Collection<Path> inputs, ProjectFilesystem projectFilesystem) throws IOException {
+      Collection<ForwardRelativePath> inputs, ProjectFilesystem projectFilesystem)
+      throws IOException {
     Map<Path, Path> newSymlinksEncountered = new HashMap<>();
-    for (Path input : inputs) {
-      for (int i = 1; i < input.getNameCount(); i++) {
-        Path subpath = input.subpath(0, i);
+    for (ForwardRelativePath input : inputs) {
+      Path inputPath = input.toPath(projectFilesystem.getFileSystem());
+      for (int i = 1; i < inputPath.getNameCount(); i++) {
+        Path subpath = inputPath.subpath(0, i);
         Optional<Path> resolvedSymlink = symlinkExistenceCache.get(subpath);
         if (resolvedSymlink != null) {
           if (resolvedSymlink.isPresent()) {
@@ -174,9 +178,9 @@ class SymlinkCache {
           "Cleaning cache of build files with inputs under symlink %s",
           buildInputPathsUnderSymlink);
     }
-    Set<Path> buildInputPathsUnderSymlinkCopy = new HashSet<>(buildInputPathsUnderSymlink);
+    Set<AbsPath> buildInputPathsUnderSymlinkCopy = new HashSet<>(buildInputPathsUnderSymlink);
     buildInputPathsUnderSymlink.clear();
-    for (Path buildFilePath : buildInputPathsUnderSymlinkCopy) {
+    for (AbsPath buildFilePath : buildInputPathsUnderSymlinkCopy) {
       daemonicParserState.invalidatePath(buildFilePath);
     }
   }

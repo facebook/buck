@@ -17,7 +17,7 @@
 package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgBuilder;
@@ -47,8 +47,8 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
   private final SkylarkUserDefinedRule rule;
   private final Map<String, Object> coercedAttrValues;
   @Nullable private String name;
-  @Nullable private ImmutableList<UnconfiguredBuildTargetView> compatibleWith;
-  @Nullable private Optional<UnconfiguredBuildTargetView> defaultTargetPlatform;
+  @Nullable private ImmutableList<UnconfiguredBuildTarget> compatibleWith;
+  @Nullable private Optional<UnconfiguredBuildTarget> defaultTargetPlatform;
 
   /**
    * Create an instance of {@link SkylarkDescriptionArg}
@@ -93,18 +93,11 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
     attrValuesAreMutable = false;
     name = (String) Preconditions.checkNotNull(coercedAttrValues.get("name"));
     compatibleWith =
-        (ImmutableList<UnconfiguredBuildTargetView>)
+        (ImmutableList<UnconfiguredBuildTarget>)
             Preconditions.checkNotNull(
                 coercedAttrValues.getOrDefault("compatible_with", ImmutableList.of()));
-    ImmutableList<?> targetCompatibleWith =
-        (ImmutableList<?>)
-            coercedAttrValues.getOrDefault("target_compatible_with", ImmutableList.of());
-    if (!targetCompatibleWith.isEmpty()) {
-      // and likely won't be implemented, because `target_compatible_with` attribute is deprecated
-      throw new IllegalStateException("target_compatible_with is not implemented for UDR");
-    }
     defaultTargetPlatform =
-        (Optional<UnconfiguredBuildTargetView>)
+        (Optional<UnconfiguredBuildTarget>)
             coercedAttrValues.getOrDefault("default_target_platform", Optional.empty());
   }
 
@@ -138,11 +131,11 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
   }
 
   @Override
-  public Optional<UnconfiguredBuildTargetView> getDefaultTargetPlatform() {
+  public Optional<UnconfiguredBuildTarget> getDefaultTargetPlatform() {
     return Preconditions.checkNotNull(defaultTargetPlatform);
   }
 
-  public ImmutableMap<String, ParamInfo> getAllParamInfo() {
+  public ImmutableMap<String, ParamInfo<?>> getAllParamInfo() {
     return rule.getAllParamInfo();
   }
 
@@ -177,12 +170,7 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
   }
 
   @Override
-  public ImmutableList<UnconfiguredBuildTargetView> getTargetCompatibleWith() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public ImmutableList<UnconfiguredBuildTargetView> getCompatibleWith() {
+  public ImmutableList<UnconfiguredBuildTarget> getCompatibleWith() {
     return Preconditions.checkNotNull(compatibleWith);
   }
 }

@@ -117,7 +117,9 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclare
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                     throws IOException {
                   libPaths.add(
-                      rootFilesystem.relativize(pathFilesystem.getPathForRelativePath(file)));
+                      rootFilesystem
+                          .relativize(pathFilesystem.getPathForRelativePath(file))
+                          .getPath());
                   return super.visitFile(file, attrs);
                 }
               });

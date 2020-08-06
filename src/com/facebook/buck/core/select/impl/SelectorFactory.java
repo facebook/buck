@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.select.impl;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -43,10 +43,10 @@ public class SelectorFactory {
 
   /** Creates a new Selector using the default error message when no conditions match. */
   public Selector<Object> createSelector(
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       ForwardRelativePath pathRelativeToProjectRoot,
       Map<String, ?> rawAttributes) {
-    return createSelector(cellPathResolver, pathRelativeToProjectRoot, rawAttributes, "");
+    return createSelector(cellNameResolver, pathRelativeToProjectRoot, rawAttributes, "");
   }
 
   /**
@@ -56,7 +56,7 @@ public class SelectorFactory {
    *     parsers (i.e. non-coerced.)
    */
   public Selector<Object> createSelector(
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       ForwardRelativePath pathRelativeToProjectRoot,
       Map<String, ?> rawAttributes,
       String noMatchMessage) {
@@ -73,7 +73,7 @@ public class SelectorFactory {
             new SelectorKey(
                 ConfigurationBuildTargets.convert(
                     unconfiguredBuildTargetViewFactory.createForPathRelativeToProjectRoot(
-                        pathRelativeToProjectRoot, key, cellPathResolver.getCellNameResolver())));
+                        pathRelativeToProjectRoot, key, cellNameResolver)));
       }
       if (entry.getValue() == Runtime.NONE) {
         result.remove(selectorKey);

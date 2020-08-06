@@ -24,60 +24,52 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Encapsulates logic to convert {@link UnconfiguredBuildTargetView} that represents a configuration
+ * Encapsulates logic to convert {@link UnconfiguredBuildTarget} that represents a configuration
  * target to an instance of {@link BuildTarget}.
  *
  * <p>We represent configuration targets as {@link BuildTarget} (targets with a configuration) as
- * oppose to {@link UnconfiguredBuildTargetView} to keep target graph model consistent and in one
- * place ({@link com.facebook.buck.core.model.targetgraph.TargetGraph} uses {@link BuildTarget}
- * only). This also allows us to avoid adding special handling for unconfigured targets in many
- * other places (for example, in places with generic graph analysis like in {@code query} command).
+ * oppose to {@link UnconfiguredBuildTarget} to keep target graph model consistent and in one place
+ * ({@link com.facebook.buck.core.model.targetgraph.TargetGraph} uses {@link BuildTarget} only).
+ * This also allows us to avoid adding special handling for unconfigured targets in many other
+ * places (for example, in places with generic graph analysis like in {@code query} command).
  */
 public class ConfigurationBuildTargets {
 
   private ConfigurationBuildTargets() {}
 
-  /**
-   * @return {@link BuildTarget} that corresponds to a given {@link UnconfiguredBuildTargetView}.
-   */
-  public static BuildTarget convert(UnconfiguredBuildTargetView buildTarget) {
+  /** @return {@link BuildTarget} that corresponds to a given {@link UnconfiguredBuildTarget}. */
+  public static BuildTarget convert(UnconfiguredBuildTarget buildTarget) {
     return buildTarget.configure(ConfigurationForConfigurationTargets.INSTANCE);
   }
 
   /**
-   * Performs conversion similar to {@link #convert(UnconfiguredBuildTargetView)} for an optional
-   * value.
+   * Performs conversion similar to {@link #convert(UnconfiguredBuildTarget)} for an optional value.
    */
-  public static Optional<BuildTarget> convert(Optional<UnconfiguredBuildTargetView> buildTarget) {
+  public static Optional<BuildTarget> convert(Optional<UnconfiguredBuildTarget> buildTarget) {
     return buildTarget.map(ConfigurationBuildTargets::convert);
   }
 
   /**
-   * Performs conversion similar to {@link #convert(UnconfiguredBuildTargetView)} for a set of
-   * targets.
+   * Performs conversion similar to {@link #convert(UnconfiguredBuildTarget)} for a set of targets.
    */
   public static ImmutableSet<BuildTarget> convert(
-      ImmutableSet<UnconfiguredBuildTargetView> buildTargets) {
+      ImmutableSet<UnconfiguredBuildTarget> buildTargets) {
     return buildTargets.stream()
         .map(ConfigurationBuildTargets::convert)
         .collect(ImmutableSet.toImmutableSet());
   }
 
-  /**
-   * Applies conversion similar to {@link #convert(UnconfiguredBuildTargetView)} to values in a map.
-   */
+  /** Applies conversion similar to {@link #convert(UnconfiguredBuildTarget)} to values in a map. */
   public static <T> ImmutableMap<T, BuildTarget> convertValues(
-      ImmutableMap<T, UnconfiguredBuildTargetView> map) {
+      ImmutableMap<T, UnconfiguredBuildTarget> map) {
     return map.entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(Map.Entry::getKey, entry -> convert(entry.getValue())));
   }
 
-  /**
-   * Applies conversion similar to {@link #convert(UnconfiguredBuildTargetView)} to values in a map.
-   */
+  /** Applies conversion similar to {@link #convert(UnconfiguredBuildTarget)} to values in a map. */
   public static <T extends Comparable<T>> ImmutableSortedMap<T, BuildTarget> convertValues(
-      ImmutableSortedMap<T, UnconfiguredBuildTargetView> map) {
+      ImmutableSortedMap<T, UnconfiguredBuildTarget> map) {
     return map.entrySet().stream()
         .collect(
             ImmutableSortedMap.toImmutableSortedMap(

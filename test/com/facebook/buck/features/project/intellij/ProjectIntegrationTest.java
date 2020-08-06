@@ -178,6 +178,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testAndroidBuildConfigInDependencies() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("project_with_android_build_config");
+  }
+
+  @Test
   public void testAndroidResourcesInDependencies() throws InterruptedException, IOException {
     runBuckProjectAndVerify("project_with_android_resources");
   }

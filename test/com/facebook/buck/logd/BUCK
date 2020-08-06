@@ -1,0 +1,31 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+TEST_FILES = glob(["**/*Test.java"])
+
+java_test(
+    name = "logd",
+    srcs = TEST_FILES,
+    visibility = ["//src/com/facebook/buck/logd:logd"],
+    deps = [
+        ":testutil",
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//third-party/java/easymock:easymock",
+        "//third-party/java/grpc:grpc-testing",
+        "//third-party/java/junit:junit",
+        "//third-party/java/log4j2:log4j2-api",
+        "//third-party/java/log4j2:log4j2-core",
+    ],
+)
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["**/*.java"],
+        exclude = TEST_FILES,
+    ),
+    exported_deps = [
+        "//src-gen:logd-protobuf",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/logd:logd",
+    ],
+)

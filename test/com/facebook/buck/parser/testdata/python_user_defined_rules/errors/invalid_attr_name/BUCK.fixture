@@ -1,0 +1,3 @@
+load("//errors/invalid_attr_name:bad_attrs.bzl", "bad_attrs")
+
+bad_attrs(name = "invalid_attr_name", **{"1234isntvalid": 1})

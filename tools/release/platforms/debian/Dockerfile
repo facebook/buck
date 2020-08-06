@@ -9,11 +9,15 @@ RUN apt-get install -y --no-install-recommends curl ca-certificates \
       zlib1g-dev libarchive-dev \
       ca-certificates-java \
       ant \
-      python \
+      python3 \
+      python3-distutils \
       groovy \
       ghc \
       equivs && \
       apt-get clean
+
+# docker needs the old name python, create a symlink to python3
+RUN python_path=`which python3`;ln -f -s ${python_path} ${python_path%3}
 
 RUN git clone --branch v${version} --depth 1 https://github.com/${repository}.git src
 

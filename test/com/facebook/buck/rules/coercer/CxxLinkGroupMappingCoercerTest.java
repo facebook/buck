@@ -36,16 +36,16 @@ public class CxxLinkGroupMappingCoercerTest {
   private CxxLinkGroupMappingCoercer coercer;
 
   public static CxxLinkGroupMappingCoercer buildTypeCoercer(
-      TypeCoercer<CxxLinkGroupMappingTarget> targetTypeCoercer) {
+      TypeCoercer<Object, CxxLinkGroupMappingTarget> targetTypeCoercer) {
     return new CxxLinkGroupMappingCoercer(
         new StringTypeCoercer(), new ListTypeCoercer<>(targetTypeCoercer));
   }
 
   @Before
   public void setUp() {
-    TypeCoercer<CxxLinkGroupMappingTarget.Traversal> traversalCoercer =
+    TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalCoercer =
         CxxLinkGroupMappingTargetTraversalCoercerTest.buildTypeCoercer();
-    TypeCoercer<CxxLinkGroupMappingTarget> targetTypeCoercer =
+    TypeCoercer<Object, CxxLinkGroupMappingTarget> targetTypeCoercer =
         CxxLinkGroupMappingTargetCoercerTest.buildTypeCoercer(traversalCoercer);
     coercer = buildTypeCoercer(targetTypeCoercer);
   }
@@ -63,7 +63,7 @@ public class CxxLinkGroupMappingCoercerTest {
 
     CxxLinkGroupMapping mapping =
         coercer.coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,

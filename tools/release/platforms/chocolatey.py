@@ -100,7 +100,6 @@ def build_chocolatey(
             windows_host,
             [
                 "build",
-                "--isolation=" + docker_isolation,
                 "-m",
                 docker_memory,  # Default memory is 1G
                 "-t",

@@ -193,7 +193,7 @@ public class PrecompiledHeaderIntegrationTest {
       return;
     }
     for (BuildTarget target : workspace.getBuildLog().getAllTargets()) {
-      for (Flavor flavor : target.getFlavors()) {
+      for (Flavor flavor : target.getFlavors().getSet()) {
         if (flavor.getName().startsWith("pch-")) {
           consumer.accept(target);
           return;

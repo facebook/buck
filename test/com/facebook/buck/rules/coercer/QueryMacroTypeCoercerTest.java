@@ -46,7 +46,7 @@ public class QueryMacroTypeCoercerTest {
             QueryOutputsMacro::of);
     QueryMacro queryMacro =
         coercer.coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,

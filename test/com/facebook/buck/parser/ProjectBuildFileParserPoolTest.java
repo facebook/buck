@@ -20,7 +20,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -78,7 +80,7 @@ public class ProjectBuildFileParserPoolTest {
       int expectedCreateCount)
       throws Exception {
     AtomicInteger createCount = new AtomicInteger(0);
-    Cell cell = new TestCellBuilder().build();
+    Cells cell = new TestCellBuilder().build();
 
     CountDownLatch createParserLatch = new CountDownLatch(expectedCreateCount);
     try (ProjectBuildFileParserPool parserPool =
@@ -101,7 +103,8 @@ public class ProjectBuildFileParserPoolTest {
                   });
             })) {
 
-      Futures.allAsList(scheduleWork(cell, parserPool, executorService, numRequests)).get();
+      Futures.allAsList(scheduleWork(cell.getRootCell(), parserPool, executorService, numRequests))
+          .get();
       assertThat(createCount.get(), Matchers.equalTo(expectedCreateCount));
     }
   }
@@ -132,7 +135,7 @@ public class ProjectBuildFileParserPoolTest {
   public void closesCreatedParsers() throws Exception {
     int parsersCount = 4;
     AtomicInteger parserCount = new AtomicInteger(0);
-    Cell cell = new TestCellBuilder().build();
+    Cells cell = new TestCellBuilder().build();
     ListeningExecutorService executorService =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(parsersCount));
 
@@ -172,7 +175,9 @@ public class ProjectBuildFileParserPoolTest {
               return parser;
             })) {
 
-      Futures.allAsList(scheduleWork(cell, parserPool, executorService, parsersCount * 2)).get();
+      Futures.allAsList(
+              scheduleWork(cell.getRootCell(), parserPool, executorService, parsersCount * 2))
+          .get();
       assertThat(parserCount.get(), Matchers.is(4));
     } finally {
       executorService.shutdown();
@@ -191,7 +196,7 @@ public class ProjectBuildFileParserPoolTest {
   @Test
   public void fuzzForConcurrentAccess() throws Exception {
     int parsersCount = 3;
-    Cell cell = new TestCellBuilder().build();
+    Cells cell = new TestCellBuilder().build();
     ListeningExecutorService executorService =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(4));
 
@@ -213,7 +218,7 @@ public class ProjectBuildFileParserPoolTest {
                   });
             })) {
 
-      Futures.allAsList(scheduleWork(cell, parserPool, executorService, 142)).get();
+      Futures.allAsList(scheduleWork(cell.getRootCell(), parserPool, executorService, 142)).get();
     } finally {
       executorService.shutdown();
     }
@@ -221,7 +226,7 @@ public class ProjectBuildFileParserPoolTest {
 
   @Test
   public void ignoresCancellation() throws Exception {
-    Cell cell = new TestCellBuilder().build();
+    Cells cell = new TestCellBuilder().build();
     ListeningExecutorService executorService =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
 
@@ -239,7 +244,7 @@ public class ProjectBuildFileParserPoolTest {
                 }))) {
 
       ImmutableSet<ListenableFuture<?>> futures =
-          scheduleWork(cell, parserPool, executorService, numberOfJobs);
+          scheduleWork(cell.getRootCell(), parserPool, executorService, numberOfJobs);
       for (ListenableFuture<?> future : futures) {
         future.cancel(true);
       }
@@ -255,7 +260,7 @@ public class ProjectBuildFileParserPoolTest {
 
   @Test
   public void closeWhenRunningJobs() throws Exception {
-    Cell cell = new TestCellBuilder().build();
+    Cells cell = new TestCellBuilder().build();
     ListeningExecutorService executorService =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
 
@@ -274,7 +279,7 @@ public class ProjectBuildFileParserPoolTest {
                   return EMPTY_BUILD_FILE_MANIFEST;
                 }))) {
 
-      futures = scheduleWork(cell, parserPool, executorService, 5);
+      futures = scheduleWork(cell.getRootCell(), parserPool, executorService, 5);
       for (ListenableFuture<?> future : futures) {
         Futures.addCallback(
             future,
@@ -307,7 +312,7 @@ public class ProjectBuildFileParserPoolTest {
 
   @Test
   public void workThatThrows() throws Exception {
-    Cell cell = new TestCellBuilder().build();
+    Cells cell = new TestCellBuilder().build();
     ListeningExecutorService executorService =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
 
@@ -325,7 +330,7 @@ public class ProjectBuildFileParserPoolTest {
                 }))) {
 
       ImmutableSet<ListenableFuture<?>> failedWork =
-          scheduleWork(cell, parserPool, executorService, 5);
+          scheduleWork(cell.getRootCell(), parserPool, executorService, 5);
       for (ListenableFuture<?> failedFuture : failedWork) {
         try {
           failedFuture.get();
@@ -337,7 +342,7 @@ public class ProjectBuildFileParserPoolTest {
 
       // Make sure it's still possible to do work.
       throwWhileParsing.set(false);
-      Futures.allAsList(scheduleWork(cell, parserPool, executorService, 5)).get();
+      Futures.allAsList(scheduleWork(cell.getRootCell(), parserPool, executorService, 5)).get();
     } finally {
       executorService.shutdown();
     }
@@ -355,7 +360,7 @@ public class ProjectBuildFileParserPoolTest {
               BuckEventBusForTests.newInstance(),
               cell,
               WatchmanFactory.NULL_WATCHMAN,
-              Paths.get("BUCK"),
+              AbsPath.of(Paths.get("BUCK").toAbsolutePath()),
               executorService));
     }
     return futures.build();

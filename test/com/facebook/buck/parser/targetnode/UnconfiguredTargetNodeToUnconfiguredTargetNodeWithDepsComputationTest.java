@@ -18,10 +18,12 @@ package com.facebook.buck.parser.targetnode;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
+import com.facebook.buck.core.cell.DefaultCellNameResolverProvider;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
 import com.facebook.buck.core.model.BaseName;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -32,6 +34,7 @@ import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTarget
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
+import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.select.TestSelectableResolver;
@@ -41,17 +44,18 @@ import com.facebook.buck.parser.UnconfiguredTargetNodeToTargetNodeFactory;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Test;
 
 public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTest {
 
   @Test
   public void canParseDeps() {
-    Cell cell = new TestCellBuilder().build();
+    Cells cell = new TestCellBuilder().build();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     TargetPlatformResolver targetPlatformResolver =
@@ -60,14 +64,16 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
         new UnconfiguredTargetNodeToTargetNodeFactory(
             typeCoercerFactory,
             TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager()),
-            new DefaultConstructorArgMarshaller(typeCoercerFactory),
-            new TargetNodeFactory(typeCoercerFactory),
+            new DefaultConstructorArgMarshaller(),
+            new TargetNodeFactory(typeCoercerFactory, new DefaultCellNameResolverProvider(cell)),
             new NoopPackageBoundaryChecker(),
             (file, targetNode) -> {},
             new DefaultSelectorListResolver(new TestSelectableResolver()),
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
-            UnconfiguredTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE,
+            cell.getRootCell().getBuckConfig(),
+            Optional.empty());
 
     ImmutableMap<String, Object> rawAttributes1 =
         ImmutableMap.of(
@@ -78,24 +84,26 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
             "buck.base_path",
             "",
             "deps",
-            ImmutableSortedSet.of(":target2"));
+            ImmutableList.of(UnconfiguredBuildTargetParser.parse("//:target2")));
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         UnconfiguredBuildTarget.of(
-            cell.getCanonicalName(),
+            cell.getRootCell().getCanonicalName(),
             BaseName.of("//"),
             "target1",
-            UnconfiguredBuildTarget.NO_FLAVORS);
+            FlavorSet.NO_FLAVORS);
     UnconfiguredTargetNode unconfiguredTargetNode1 =
         ImmutableUnconfiguredTargetNode.of(
             unconfiguredBuildTarget1,
             RuleType.of("java_library", RuleType.Kind.BUILD),
             rawAttributes1,
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            Optional.empty(),
+            ImmutableList.of());
 
     UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation computation =
         UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation.of(
-            unconfiguredTargetNodeToTargetNodeFactory, cell);
+            unconfiguredTargetNodeToTargetNodeFactory, cell.getRootCell());
     UnconfiguredTargetNodeWithDeps rawTargetNode =
         computation.transform(
             ImmutableUnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey.of(

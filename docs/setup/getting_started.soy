@@ -362,7 +362,7 @@ brew install --HEAD buck
     <a href="http://git-scm.com/download">Git</a>
   </li>
   <li>
-    <a href="https://facebook.github.io/watchman/docs/install.html">Watchman</a>
+    <a href="https://facebook.github.io/watchman/docs/install">Watchman</a>
   </li>
 </ul>
 
@@ -519,6 +519,9 @@ For some distros, the default packages may be older than what you would like. In
     </li>
     <li>
       <code>ANDROID_HOME</code> environment variable
+    </li>
+    <li>
+      <code>ANDROID_SDK_ROOT</code> environment variable
     </li>
     <li>
       The value of the {call buckconfig.android_sdk_path /} property 
@@ -779,6 +782,7 @@ $ env | grep ANDROID_
 ANDROID_HOME=&lt;path-to-sdk&gt;
 ANDROID_NDK_REPOSITORY=&lt;path-to-ndk&gt;
 ANDROID_SDK=&lt;path-to-sdk&gt;
+ANDROID_SDK_ROOT=&lt;path-to-sdk&gt;
 </pre>
 {/literal}
 

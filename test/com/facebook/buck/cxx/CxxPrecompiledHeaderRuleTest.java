@@ -303,7 +303,7 @@ public class CxxPrecompiledHeaderRuleTest {
   /** Stolen from {@link PrecompiledHeaderIntegrationTest} */
   private BuildTarget findPchTarget() throws IOException {
     for (BuildTarget target : workspace.getBuildLog().getAllTargets()) {
-      for (Flavor flavor : target.getFlavors()) {
+      for (Flavor flavor : target.getFlavors().getSet()) {
         if (flavor.getName().startsWith("pch-")) {
           return target;
         }

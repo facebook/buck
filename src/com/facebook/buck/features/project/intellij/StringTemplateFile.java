@@ -17,46 +17,53 @@
 package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Resources;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.function.Supplier;
 import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
+import org.stringtemplate.v4.STGroupFile;
 
 enum StringTemplateFile {
-  ANDROID_MANIFEST("AndroidManifest.st"),
-  MODULE_TEMPLATE("ij-module.st"),
-  MODULE_INDEX_TEMPLATE("ij-module-index.st"),
-  MISC_TEMPLATE("ij-misc.st"),
-  LIBRARY_TEMPLATE("ij-library.st"),
-  GENERATED_BY_IDEA_CLASS("GeneratedByIdeaClass.st");
+  ANDROID_MANIFEST("android_manifest"),
+  MODULE_TEMPLATE("ij_module"),
+  MODULE_INDEX_TEMPLATE("ij_module_index"),
+  MISC_TEMPLATE("ij_misc"),
+  LIBRARY_TEMPLATE("ij_library"),
+  GENERATED_BY_IDEA_CLASS("generated_by_idea");
 
   private static final char DELIMITER = '%';
 
-  private final String fileName;
+  private final String templateName;
+  private static final Supplier<STGroup> groupSupplier =
+      MoreSuppliers.memoize(
+          () ->
+              new STGroupFile(
+                  Resources.getResource(StringTemplateFile.class, "templates.stg"),
+                  StandardCharsets.UTF_8.name(),
+                  DELIMITER,
+                  DELIMITER));
 
-  StringTemplateFile(String fileName) {
-    this.fileName = fileName;
+  private StringTemplateFile(String templateName) {
+    this.templateName = templateName;
   }
 
-  public String getFileName() {
-    return fileName;
+  public ST getST() throws IOException {
+    STGroup group = groupSupplier.get();
+    synchronized (group) {
+      return group.getInstanceOf(templateName);
+    }
   }
 
-  /**
-   * Not thread safe, see discussion in: https://github.com/antlr/stringtemplate4/issues/61 could be
-   * made faster by sharing STGroup across threads using a supplier, see {@link
-   * com.facebook.buck.parser.function.BuckPyFunction}. May be fixed in ST4.1
-   */
-  public synchronized ST getST() throws IOException {
-    URL templateUrl = Resources.getResource(StringTemplateFile.class, "templates/" + fileName);
-    String template = Resources.toString(templateUrl, StandardCharsets.UTF_8);
-    return new ST(template, DELIMITER, DELIMITER);
+  public static ST getST(Path templatePath) throws IOException {
+    return new ST(new String(Files.readAllBytes(templatePath)), DELIMITER, DELIMITER);
   }
 
   public static boolean writeToFile(
@@ -64,7 +71,6 @@ enum StringTemplateFile {
       throws IOException {
 
     byte[] renderedContentsBytes = contents.render().getBytes();
-    projectFilesystem.createParentDirs(path);
     if (projectFilesystem.exists(path)) {
       Sha1HashCode fileSha1 = projectFilesystem.computeSha1(path);
       Sha1HashCode contentsSha1 =
@@ -78,9 +84,7 @@ enum StringTemplateFile {
           projectFilesystem.createTempFile(ideaConfigDir, path.getFileName().toString(), ".tmp");
       try {
         danglingTempFile = true;
-        try (OutputStream outputStream = projectFilesystem.newFileOutputStream(tempFile)) {
-          outputStream.write(renderedContentsBytes);
-        }
+        projectFilesystem.writeBytesToPath(renderedContentsBytes, tempFile);
         projectFilesystem.move(tempFile, path, StandardCopyOption.REPLACE_EXISTING);
         danglingTempFile = false;
       } finally {
@@ -89,9 +93,8 @@ enum StringTemplateFile {
         }
       }
     } else {
-      try (OutputStream outputStream = projectFilesystem.newFileOutputStream(path)) {
-        outputStream.write(renderedContentsBytes);
-      }
+      projectFilesystem.createParentDirs(path);
+      projectFilesystem.writeBytesToPath(renderedContentsBytes, path);
     }
     return true;
   }

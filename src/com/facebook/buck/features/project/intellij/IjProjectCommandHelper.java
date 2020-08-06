@@ -21,9 +21,11 @@ import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
@@ -73,7 +75,6 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
@@ -149,8 +150,8 @@ public class IjProjectCommandHelper {
       throws IOException, InterruptedException {
     if (updateOnly && projectConfig.getAggregationMode() != AggregationMode.NONE) {
       throw new CommandLineException(
-          "`--regenerate` option is incompatible with IntelliJ"
-              + " module aggregation. In order to use `--regenerate` set `--intellij-aggregation-mode=none`");
+          "`--update` option is incompatible with IntelliJ"
+              + " module aggregation. In order to use `--update` set `--intellij-aggregation-mode=none`");
     }
 
     List<String> targets = arguments;
@@ -224,8 +225,8 @@ public class IjProjectCommandHelper {
 
   private ProjectFilesystem getProjectOutputFilesystem() throws IOException {
     if (outputDir != null) {
-      Path outputPath = Paths.get(outputDir).toAbsolutePath();
-      Files.createDirectories(outputPath);
+      AbsPath outputPath = AbsPath.of(Paths.get(outputDir).toAbsolutePath());
+      Files.createDirectories(outputPath.getPath());
       Cell rootCell = this.cell.getCell(CanonicalCellName.rootCell());
       return new DefaultProjectFilesystemFactory()
           .createProjectFilesystem(
@@ -370,7 +371,8 @@ public class IjProjectCommandHelper {
               unconfiguredBuildTargetFactory,
               targetGraphCreationResult,
               targetConfiguration,
-              buckEventBus);
+              buckEventBus,
+              new Cells(cell));
     }
     return targetGraphCreationResult;
   }
@@ -417,9 +419,13 @@ public class IjProjectCommandHelper {
         .filter(
             test ->
                 (includePatterns.isEmpty()
-                        || includePatterns.stream().anyMatch(pattern -> pattern.matches(test)))
+                        || includePatterns.stream()
+                            .anyMatch(
+                                pattern -> pattern.matches(test.getUnconfiguredBuildTarget())))
                     && (excludePatterns.isEmpty()
-                        || excludePatterns.stream().noneMatch(pattern -> pattern.matches(test))))
+                        || excludePatterns.stream()
+                            .noneMatch(
+                                pattern -> pattern.matches(test.getUnconfiguredBuildTarget()))))
         .toImmutableSet();
   }
 

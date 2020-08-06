@@ -31,6 +31,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
@@ -86,7 +87,7 @@ public class OCamlIntegrationTest {
 
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
-    Config rawConfig = Configs.createDefaultConfig(filesystem.getRootPath());
+    Config rawConfig = Configs.createDefaultConfig(filesystem.getRootPath().getPath());
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
@@ -229,7 +230,12 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", binTarget.toString()).assertSuccess();
 
     Path ocamlNativePluginDir =
-        workspace.getDestPath().resolve("buck-out").resolve("gen").resolve("ocaml_native_plugin");
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                workspace.getProjectFileSystem(),
+                pluginTarget,
+              "%s"
+            )).getParent();
 
     Path pluginCmxsFile = ocamlNativePluginDir.resolve("plugin#default").resolve("libplugin.cmxs");
 
@@ -517,8 +523,8 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertFailure();
     BuckBuildLog buildLog = workspace.getBuildLog();
     assertTrue(buildLog.getAllTargets().containsAll(targets));
-    buildLog.assertTargetCanceled(target);
-    buildLog.assertTargetCanceled(binary);
+    buildLog.assertTargetFailed(target.toString());
+    buildLog.assertTargetFailed(binary.toString());
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents(".buckconfig", "warnings_flags=+a", "");
@@ -552,8 +558,8 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertFailure();
     BuckBuildLog buildLog = workspace.getBuildLog();
     assertThat(buildLog.getAllTargets(), Matchers.hasItems(targets.toArray(new BuildTarget[0])));
-    buildLog.assertTargetCanceled(target);
-    buildLog.assertTargetCanceled(binary);
+    buildLog.assertTargetFailed(target.toString());
+    buildLog.assertTargetFailed(binary.toString());
 
     workspace.resetBuildLogFile();
 

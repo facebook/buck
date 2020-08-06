@@ -26,6 +26,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeToken;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,7 +41,8 @@ public class ManifestEntriesTypeCoercerTest {
   @Before
   public void setUp() {
     DefaultTypeCoercerFactory factory = new DefaultTypeCoercerFactory();
-    TypeCoercer<?> typeCoercer = factory.typeCoercerForType(ManifestEntries.class);
+    TypeCoercer<?, ManifestEntries> typeCoercer =
+        factory.typeCoercerForType(TypeToken.of(ManifestEntries.class));
     assertTrue(typeCoercer instanceof ManifestEntriesTypeCoercer);
     manifestEntriesTypeCoercer = (ManifestEntriesTypeCoercer) typeCoercer;
   }
@@ -58,7 +60,7 @@ public class ManifestEntriesTypeCoercerTest {
 
     ManifestEntries result =
         manifestEntriesTypeCoercer.coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -78,7 +80,7 @@ public class ManifestEntriesTypeCoercerTest {
         ImmutableMap.<String, Object>builder().put("bad_param_name", 3).build();
 
     manifestEntriesTypeCoercer.coerce(
-        createCellRoots(filesystem),
+        createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
         basePath,
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -97,7 +99,7 @@ public class ManifestEntriesTypeCoercerTest {
 
     ManifestEntries result =
         manifestEntriesTypeCoercer.coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,

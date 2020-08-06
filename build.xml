@@ -117,6 +117,27 @@
       <isset property="jdk8_or_higher"/>
     </and>
   </condition>
+  <!-- Overridden by ant command line arguments-->
+  <property name="release.version" value=""/>
+  <property name="release.timestamp" value=""/>
+
+  <condition
+          property="android.sdk.root"
+          value="${env.ANDROID_SDK_ROOT}"
+          else="">
+    <and>
+      <isset property="env.ANDROID_SDK_ROOT"/>
+    </and>
+  </condition>
+  <condition
+          property="android.sdk"
+          value="${env.ANDROID_HOME}"
+          else="${android.sdk.root}">
+    <and>
+      <isset property="env.ANDROID_HOME"/>
+    </and>
+          
+  </condition>
 
   <fileset dir="${third-party.dir}/java" id="buck.jars">
     <include name="args4j/args4j-2.0.30.jar" />
@@ -177,16 +198,18 @@
     <include name="fastutil/fastutil-7.2.0.jar" />
     <include name="guava/guava-20.0.jar" />
     <include name="guava/guava-23.3-jre.jar" />
-    <include name="grpc/grpc-context-1.18.0.jar" />
-    <include name="grpc/grpc-core-1.18.0.jar" />
-    <include name="grpc/grpc-netty-1.18.0.jar" />
-    <include name="grpc/grpc-netty-shaded-1.18.0.jar" />
-    <include name="grpc/grpc-protobuf-1.18.0.jar" />
-    <include name="grpc/grpc-protobuf-lite-1.18.0.jar" />
-    <include name="grpc/grpc-stub-1.18.0.jar" />
+    <include name="grpc/grpc-context-1.24.0.jar" />
+    <include name="grpc/grpc-core-1.24.0.jar" />
+    <include name="grpc/perfmark-api-0.20.1.jar" />
+    <include name="grpc/grpc-api-1.24.0.jar" />
+    <include name="grpc/grpc-netty-1.24.0.jar" />
+    <include name="grpc/grpc-netty-shaded-1.24.0.jar" />
+    <include name="grpc/grpc-protobuf-1.24.0.jar" />
+    <include name="grpc/grpc-protobuf-lite-1.24.0.jar" />
+    <include name="grpc/grpc-stub-1.24.0.jar" />
     <include name="netty/netty-all-4.1.24.Final.jar" />
-    <include name="netty-handler/netty-handler-4.1.32.Final.jar" />
-    <include name="netty-tcnative/netty-tcnative-boringssl-static-2.0.20.Final.jar" />
+    <include name="netty-handler/netty-handler-4.1.38.Final.jar" />
+    <include name="netty-tcnative/netty-tcnative-boringssl-static-2.0.25.Final.jar" />
     <include name="gson/gson-2.8.2.jar" />
     <include name="guice/guice-3.0.jar" />
     <include name="guice/guice-assistedinject-3.0.jar" />
@@ -203,7 +226,6 @@
     <include name="jopt-simple/jopt-simple-4.6.jar" />
     <include name="json-simple/json-simple-1.1.1.jar" />
     <include name="kotlin/kotlin-stdlib.jar" />
-    <include name="kotlinx-coroutines/kotlinx-coroutines-1.2.1.jar" />
     <include name="kotlinx-metadata-jvm/kotlinx-metadata-jvm-0.1.0.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="jsr/jsr305.jar" />
@@ -212,8 +234,8 @@
     <include name="okhttp/okhttp-3.11.0.jar" />
     <include name="okhttp/okhttp-tls-3.11.0.jar" />
     <include name="okio/okio-1.13.0.jar" />
-    <include name="opencensus/opencensus-api-0.18.0.jar" />
-    <include name="opencensus/opencensus-contrib-grpc-metrics-0.18.0.jar" />
+    <include name="opencensus/opencensus-api-0.24.0.jar" />
+    <include name="opencensus/opencensus-contrib-grpc-metrics-0.24.0.jar" />
     <include name="oshi/oshi-core-3.3-SNAPSHOT.jar" />
     <include name="pf4j/pf4j-2.0.0-SNAPSHOT.jar" />
     <include name="protobuf/protobuf-java-3.7.0.jar" />
@@ -224,6 +246,9 @@
     <include name="thrift/libthrift-0.12.0.jar" />
     <include name="xz-java-1.5/xz-1.5.jar" />
     <include name="zstd-jni/zstd-jni-1.4.0-1.jar" />
+    <include name="remote-apis/remote-apis.jar" />
+    <include name="log4j2/log4j-api-2.13.0.jar" />
+    <include name="log4j2/log4j-core-2.13.0.jar" />
 
     <!-- maven interop -->
     <include name="aether/aether-api-1.0.2.v20150114.jar" />
@@ -1046,12 +1071,16 @@
   </target>
 
   <target name="gen-buck-info">
-    <exec executable="python" output="${buck.info.file}" logError="true" failonerror="true">
+    <exec executable="python3" output="${buck.info.file}" logError="true" failonerror="true">
       <env key="PYTHONPATH" value="${basedir}" />
       <env key="PYTHONDONTWRITEBYTECODE" value="1" />
       <arg value="programs/gen_buck_info.py"/>
       <arg value="--java-version"/>
       <arg value="${java.version}"/>
+      <arg value="--release-version"/>
+      <arg value="${release.version}"/>
+      <arg value="--release-timestamp"/>
+      <arg value="${release.timestamp}"/>
     </exec>
   </target>
 
@@ -1237,14 +1266,23 @@
   <path id="javadoc-with-android.classpath">
     <path refid="javadoc.classpath" />
     <!-- Buck's Android support library has references to Android. -->
-    <pathelement location="${env.ANDROID_HOME}/platforms/android-16/android.jar" />
+    <pathelement location="${android.sdk}/platforms/android-16/android.jar" />
   </path>
 
   <macrodef name="javadoc-with-android">
     <attribute name="destdir" />
     <attribute name="access" />
     <sequential>
-      <fail unless="env.ANDROID_HOME" message="ANDROID_HOME not set." />
+      <fail message="Either ANDROID_SDK_ROOT or ANDROID_HOME(deprecated) must be set.">
+        <condition>
+          <or>
+            <not>
+              <isset property="android.sdk"/>
+            </not>
+            <equals arg1="${android.sdk}" arg2=""/>
+          </or>
+        </condition>
+      </fail>
 
       <buck-javadoc destdir="@{destdir}"
                     classpathref="javadoc-with-android.classpath"
@@ -1259,7 +1297,7 @@
             Surprisingly, the generated Javadoc does link to http://d.android.com/
             rather than a local file:/// URI that points to the local $ANDROID_HOME.
           -->
-          <link offline="true" href="http://d.android.com/reference" packagelistLoc="${env.ANDROID_HOME}/docs/reference"/>
+          <link offline="true" href="http://d.android.com/reference" packagelistLoc="${android.sdk}/docs/reference"/>
         </additional-links>
       </buck-javadoc>
     </sequential>
@@ -1287,7 +1325,7 @@
     </exec>
   </target>
 
-  <target name="travis" depends="verify-javadoc, verify-soydoc, lint" />
+  <target name="circleci" depends="verify-javadoc, verify-soydoc, lint" />
 
   <target name="pre-checkin" depends="clean, default, lint"/>
   <target name="all" depends="default, javadoc" />

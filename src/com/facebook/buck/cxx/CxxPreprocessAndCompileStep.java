@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.Compiler;
@@ -39,6 +40,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -132,7 +134,7 @@ class CxxPreprocessAndCompileStep implements Step {
 
     env.putAll(
         sanitizer.getCompilationEnvironment(
-            filesystem.getRootPath().toAbsolutePath(), shouldSanitizeOutputBinary()));
+            filesystem.getRootPath().getPath(), shouldSanitizeOutputBinary()));
 
     // Set `TMPDIR` to `scratchDir` so the compiler/preprocessor uses this dir for it's temp and
     // intermediate files.
@@ -149,7 +151,7 @@ class CxxPreprocessAndCompileStep implements Step {
     }
 
     return ProcessExecutorParams.builder()
-        .setDirectory(filesystem.getRootPath().toAbsolutePath())
+        .setDirectory(filesystem.getRootPath().getPath())
         .setRedirectError(ProcessBuilder.Redirect.PIPE)
         .setEnvironment(ImmutableMap.copyOf(env));
   }
@@ -175,7 +177,7 @@ class CxxPreprocessAndCompileStep implements Step {
         .addAll(command.getArguments())
         .addAll(
             sanitizer.getCompilationFlags(
-                compiler, filesystem.getRootPath(), headerPathNormalizer.getPrefixMap()))
+                compiler, filesystem.getRootPath().getPath(), headerPathNormalizer.getPrefixMap()))
         .addAll(
             compiler.outputArgs(
                 useUnixPathSeparator
@@ -312,6 +314,18 @@ class CxxPreprocessAndCompileStep implements Step {
     } else {
       err = formatErrors(lines, context);
     }
+    // Replace absolute paths with relative path for headers from the repo.
+    // TODO: with RE we probably don't need to verify headers with depfile at all.
+    if (depFile.isPresent()) {
+      Optional<String> depFileContent = filesystem.readFileIfItExists(depFile.get());
+      if (depFileContent.isPresent()) {
+        filesystem.writeContentsToPath(
+            depFileContent
+                .get()
+                .replace(filesystem.getRootPath().toString() + File.separatorChar, ""),
+            depFile.get());
+      }
+    }
     return err;
   }
 
@@ -378,10 +392,10 @@ class CxxPreprocessAndCompileStep implements Step {
     int exitCode = result.getExitCode();
 
     if (exitCode == 0) {
-      Path path = filesystem.getRootPath().toAbsolutePath().resolve(output);
+      AbsPath path = filesystem.getRootPath().resolve(output);
 
       // Guarantee that the output file exists
-      if (!Files.exists(path)) {
+      if (!Files.exists(path.getPath())) {
         LOG.warn("Execution has exitCode 0 but output file does not exist: %s", path);
       }
 
@@ -390,8 +404,8 @@ class CxxPreprocessAndCompileStep implements Step {
       // above.  This locates the relevant debug section and swaps out the expanded actual
       // compilation directory with the one we really want.
       if (shouldSanitizeOutputBinary()) {
-        sanitizer.restoreCompilationDirectory(path, filesystem.getRootPath().toAbsolutePath());
-        FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(path);
+        sanitizer.restoreCompilationDirectory(path.getPath(), filesystem.getRootPath().getPath());
+        FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(path.getPath());
       }
     }
 

@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -103,9 +104,11 @@ public class PreDexSplitDexMerge extends PreDexMerge {
   private ImmutableMap<Path, Sha1HashCode> resolvePrimaryDexInputHashPaths() {
     ImmutableMap.Builder<Path, Sha1HashCode> dexInputHashesBuilder = ImmutableMap.builder();
     for (PreDexSplitDexGroup rule : preDexDeps) {
-      for (Map.Entry<String, Sha1HashCode> entry : rule.getPrimaryDexInputHashes().entrySet()) {
+      for (Map.Entry<String, PreDexedFilesSorter.DexMetadata> entry :
+          rule.getPrimaryDexInputMetadata().getMetadata().entrySet()) {
         dexInputHashesBuilder.put(
-            rule.getPrimaryDexRoot().resolve(entry.getKey()), entry.getValue());
+            rule.getPrimaryDexRoot().resolve(entry.getKey()),
+            Sha1HashCode.of(entry.getValue().getHash()));
       }
     }
     return dexInputHashesBuilder.build();
@@ -157,6 +160,7 @@ public class PreDexSplitDexMerge extends PreDexMerge {
             getProjectFilesystem(),
             Optional.of(primaryDexPath),
             Optional.of(this::getPrimaryDexInputs),
+            Optional.of(this::getPrimaryDexWeightDetails),
             Optional.empty(),
             Optional.empty(),
             this::resolvePrimaryDexInputHashPaths,
@@ -236,6 +240,26 @@ public class PreDexSplitDexMerge extends PreDexMerge {
         });
 
     return steps.build();
+  }
+
+  private List<String> getPrimaryDexWeightDetails() {
+    ImmutableMap.Builder<String, PreDexedFilesSorter.DexMetadata> primaryDexInputs =
+        ImmutableMap.builder();
+    for (PreDexSplitDexGroup partialDex : preDexDeps) {
+      primaryDexInputs.putAll(partialDex.getPrimaryDexInputMetadata().getMetadata());
+    }
+    Comparator<PreDexedFilesSorter.DexMetadata> bySizeDescending =
+        (o1, o2) -> Integer.compare(o2.getWeight(), o1.getWeight());
+    primaryDexInputs.orderEntriesByValue(bySizeDescending);
+
+    ImmutableMap<String, PreDexedFilesSorter.DexMetadata> sortedDexContents =
+        primaryDexInputs.build();
+
+    ImmutableList.Builder<String> dexContentsBuilder = ImmutableList.builder();
+    for (Map.Entry<String, PreDexedFilesSorter.DexMetadata> entry : sortedDexContents.entrySet()) {
+      dexContentsBuilder.add(String.format("%s\t%s", entry.getValue().getWeight(), entry.getKey()));
+    }
+    return dexContentsBuilder.build();
   }
 
   private Set<Path> getPrimaryDexInputs() {

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
@@ -39,7 +40,7 @@ import org.junit.Test;
 public class ReDexStepTest {
   @Test
   public void constructorArgsAreUsedToCreateShellCommand() {
-    Path workingDirectory = Paths.get("/where/the/code/is");
+    AbsPath workingDirectory = AbsPath.of(Paths.get("/where/the/code/is").toAbsolutePath());
     List<String> redexBinaryArgs = ImmutableList.of("/usr/bin/redex");
     Map<String, String> redexEnvironmentVariables = ImmutableMap.of("REDEX_DEBUG", "1");
     Path inputApkPath = Paths.get("buck-out/gen/app.apk.zipalign");
@@ -54,7 +55,9 @@ public class ReDexStepTest {
     ImmutableList<Arg> redexExtraArgs = ImmutableList.of(StringArg.of("foo"), StringArg.of("bar"));
     Path proguardMap = Paths.get("buck-out/gen/app/__proguard__/mapping.txt");
     Path proguardConfig = Paths.get("app.proguard.config");
-    Path seeds = Paths.get("buck-out/gen/app/__proguard__/seeds.txt");
+    Path seeds =
+        Paths.get(
+            "buck-out/gen/app/__proshouldEmitGFlagIfProguardConfigPresentshouldEmitGFlagIfProguardConfigPresentshouldEmitGFlagIfProguardConfigPresentguard__/seeds.txt");
 
     Path sdkDirectory = Paths.get("/Users/user/android-sdk-macosx");
 

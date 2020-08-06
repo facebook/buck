@@ -17,6 +17,8 @@
 package com.facebook.buck.util.cache.impl;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -150,7 +152,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     return path ->
         isInBuckOut(projectFilesystem, path)
             || isInEmbeddedCellBuckOut(projectFilesystem, path)
-            || projectFilesystem.isIgnored(path);
+            || projectFilesystem.isIgnored(RelPath.of(path));
   }
 
   /** Check that the file is in the buck-out of the cell that's related to the project filesystem */
@@ -180,7 +182,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
       ProjectFilesystem projectFilesystem =
           projectFilesystemFactory.createOrThrow(
               CanonicalCellName.unsafeNotACell(),
-              root,
+              AbsPath.of(root),
               false /* doesn't matter here, since filesystem here is not even a cell */);
       // A cache which caches hashes of absolute paths which my be accessed by certain
       // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
@@ -194,7 +196,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
 
   private void checkNotIgnored(Path relativePath) {
     if (SHOULD_CHECK_IGNORED_PATHS) {
-      Preconditions.checkArgument(!projectFilesystem.isIgnored(relativePath));
+      Preconditions.checkArgument(!projectFilesystem.isIgnored(RelPath.of(relativePath)));
     }
   }
 

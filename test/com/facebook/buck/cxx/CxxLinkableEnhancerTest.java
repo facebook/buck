@@ -437,11 +437,11 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void platformLdFlags() {
-    ImmutableMap<Linker.LinkableDepType, String> runtimes =
+    ImmutableMap<Linker.LinkableDepType, Arg> runtimes =
         ImmutableMap.of(
-            Linker.LinkableDepType.SHARED, "-ldummy-shared-libc",
-            Linker.LinkableDepType.STATIC, "-ldummy-static-libc",
-            Linker.LinkableDepType.STATIC_PIC, "-ldummy-static-pic-libc");
+            Linker.LinkableDepType.SHARED, StringArg.of("-ldummy-shared-libc"),
+            Linker.LinkableDepType.STATIC, StringArg.of("-ldummy-static-libc"),
+            Linker.LinkableDepType.STATIC_PIC, StringArg.of("-ldummy-static-pic-libc"));
     CxxPlatform cxxPlatform =
         CxxPlatform.builder()
             .from(CXX_PLATFORM)
@@ -449,7 +449,7 @@ public class CxxLinkableEnhancerTest {
             .build();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    for (Map.Entry<Linker.LinkableDepType, String> ent : runtimes.entrySet()) {
+    for (Map.Entry<Linker.LinkableDepType, Arg> ent : runtimes.entrySet()) {
       FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
       CxxLink lib =
           CxxLinkableEnhancer.createCxxLinkableBuildRule(
@@ -473,9 +473,10 @@ public class CxxLinkableEnhancerTest {
               NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
               Optional.empty(),
               TestCellPathResolver.get(filesystem));
+      SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
       assertThat(
-          Arg.stringify(lib.getArgs(), graphBuilder.getSourcePathResolver()),
-          hasItem(ent.getValue()));
+          Arg.stringify(lib.getArgs(), pathResolver),
+          hasItem(Arg.stringify(ent.getValue(), pathResolver)));
     }
   }
 

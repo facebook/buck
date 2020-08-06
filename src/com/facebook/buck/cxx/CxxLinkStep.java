@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
@@ -33,7 +34,7 @@ class CxxLinkStep extends ShellStep {
   private final Path scratchDir;
 
   public CxxLinkStep(
-      Path workingDirectory,
+      AbsPath workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> linker,
       Path argFilePath,

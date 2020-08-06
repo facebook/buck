@@ -257,6 +257,7 @@ public class PythonBinaryDescriptionTest {
                     StringWithMacrosUtils.format(
                         "--arg=%s", LocationMacro.of(genruleBuilder.getTarget()))))
             .build(graphBuilder);
+    assertThat(binary.getBuildDeps(), Matchers.hasItem(genrule));
     ImmutableList<? extends Step> buildSteps =
         binary.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),

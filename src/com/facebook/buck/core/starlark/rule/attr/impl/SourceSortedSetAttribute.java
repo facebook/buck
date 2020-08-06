@@ -17,22 +17,16 @@
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
-import com.facebook.buck.rules.coercer.BuildTargetWithOutputsTypeCoercer;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.PathTypeCoercer;
-import com.facebook.buck.rules.coercer.SortedSetTypeCoercer;
-import com.facebook.buck.rules.coercer.SourcePathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 
 /**
@@ -44,14 +38,9 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 @BuckStyleValue
 public abstract class SourceSortedSetAttribute extends Attribute<ImmutableSortedSet<SourcePath>> {
 
-  private static final TypeCoercer<ImmutableSortedSet<SourcePath>> coercer =
-      new SortedSetTypeCoercer<>(
-          new SourcePathTypeCoercer(
-              new BuildTargetWithOutputsTypeCoercer(
-                  new BuildTargetTypeCoercer(
-                      new UnconfiguredBuildTargetTypeCoercer(
-                          new ParsingUnconfiguredBuildTargetViewFactory()))),
-              new PathTypeCoercer()));
+  private static final TypeCoercer<?, ImmutableSortedSet<SourcePath>> coercer =
+      TypeCoercerFactoryForStarlark.typeCoercerForType(
+          new TypeToken<ImmutableSortedSet<SourcePath>>() {});
 
   @Override
   public abstract ImmutableSortedSet<String> getPreCoercionDefaultValue();
@@ -71,7 +60,7 @@ public abstract class SourceSortedSetAttribute extends Attribute<ImmutableSorted
   }
 
   @Override
-  public TypeCoercer<ImmutableSortedSet<SourcePath>> getTypeCoercer() {
+  public TypeCoercer<?, ImmutableSortedSet<SourcePath>> getTypeCoercer() {
     return coercer;
   }
 

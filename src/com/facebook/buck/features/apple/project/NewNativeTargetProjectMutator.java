@@ -877,14 +877,14 @@ class NewNativeTargetProjectMutator {
         builder.add(
             CopyInXcode.of(
                 CopyInXcode.SourceType.FOLDER_CONTENTS,
-                cell.getFilesystem().relativize(jsOutputPath),
+                cell.getFilesystem().relativize(jsOutputPath).getPath(),
                 CopyInXcode.DestinationBase.UNLOCALIZED_RESOURCES,
                 Paths.get("")));
         Path resOutputPath = resolver.getSourcePathResolver().getAbsolutePath(resOutput);
         builder.add(
             CopyInXcode.of(
                 CopyInXcode.SourceType.FOLDER_CONTENTS,
-                cell.getFilesystem().relativize(resOutputPath),
+                cell.getFilesystem().relativize(resOutputPath).getPath(),
                 CopyInXcode.DestinationBase.UNLOCALIZED_RESOURCES,
                 Paths.get("")));
       }

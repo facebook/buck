@@ -16,13 +16,13 @@
 
 package com.facebook.buck.core.model.impl;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,14 +42,14 @@ import javax.annotation.Nullable;
  */
 public class InMemoryBuildFileTree implements BuildFileTree {
 
-  private static final Comparator<Path> PATH_COMPARATOR =
+  private static final Comparator<RelPath> PATH_COMPARATOR =
       (a, b) ->
           ComparisonChain.start()
-              .compare(a.getNameCount(), b.getNameCount())
+              .compare(a.getPath().getNameCount(), b.getPath().getNameCount())
               .compare(a.toString(), b.toString())
               .result();
 
-  private final Map<Path, Node> basePathToNodeIndex;
+  private final Map<RelPath, Node> basePathToNodeIndex;
 
   /**
    * Creates an InMemoryBuildFileTree from the base paths in the given BuildTargetPaths.
@@ -66,27 +66,27 @@ public class InMemoryBuildFileTree implements BuildFileTree {
    * @param targets targets to return base paths for
    * @return base paths for targets
    */
-  private static Collection<Path> collectBasePaths(
+  private static Collection<RelPath> collectBasePaths(
       Iterable<? extends BuildTarget> targets, ProjectFilesystem filesystem) {
     return StreamSupport.stream(targets.spliterator(), false)
-        .map(t -> t.getCellRelativeBasePath().getPath().toPath(filesystem.getFileSystem()))
+        .map(t -> t.getCellRelativeBasePath().getPath().toRelPath(filesystem.getFileSystem()))
         .collect(ImmutableSet.toImmutableSet());
   }
 
-  public InMemoryBuildFileTree(Collection<Path> basePaths) {
-    TreeSet<Path> sortedBasePaths = Sets.newTreeSet(PATH_COMPARATOR);
+  public InMemoryBuildFileTree(Collection<RelPath> basePaths) {
+    TreeSet<RelPath> sortedBasePaths = Sets.newTreeSet(PATH_COMPARATOR);
     sortedBasePaths.addAll(basePaths);
 
     // Initialize basePathToNodeIndex with a Node that corresponds to the empty string. This ensures
     // that findParent() will always return a non-null Node because the empty string is a prefix of
     // all base paths.
     basePathToNodeIndex = new HashMap<>();
-    Node root = new Node(Paths.get(""));
-    basePathToNodeIndex.put(Paths.get(""), root);
+    Node root = new Node(RelPath.get(""));
+    basePathToNodeIndex.put(RelPath.get(""), root);
 
     // Build up basePathToNodeIndex in a breadth-first manner.
-    for (Path basePath : sortedBasePaths) {
-      if (basePath.equals(Paths.get(""))) {
+    for (RelPath basePath : sortedBasePaths) {
+      if (basePath.getPath().equals(Paths.get(""))) {
         continue;
       }
 
@@ -98,7 +98,7 @@ public class InMemoryBuildFileTree implements BuildFileTree {
   }
 
   @Override
-  public Optional<Path> getBasePathOfAncestorTarget(Path filePath) {
+  public Optional<RelPath> getBasePathOfAncestorTarget(RelPath filePath) {
     Node node = new Node(filePath);
     Node parent = findParent(node, basePathToNodeIndex);
     if (parent != null) {
@@ -118,8 +118,8 @@ public class InMemoryBuildFileTree implements BuildFileTree {
    *     {@code child}'s basePath.
    */
   @Nullable
-  private static Node findParent(Node child, Map<Path, Node> basePathToNodeIndex) {
-    Path current = child.basePath;
+  private static Node findParent(Node child, Map<RelPath, Node> basePathToNodeIndex) {
+    RelPath current = child.basePath;
     while (current != null) {
       Node candidate = basePathToNodeIndex.get(current);
       if (candidate != null) {
@@ -127,19 +127,19 @@ public class InMemoryBuildFileTree implements BuildFileTree {
       }
       current = current.getParent();
     }
-    return basePathToNodeIndex.get(Paths.get(""));
+    return basePathToNodeIndex.get(RelPath.get(""));
   }
 
   /** Represents a build file in the project directory. */
   private static class Node {
 
     /** Build target base path. */
-    private final Path basePath;
+    private final RelPath basePath;
 
     /** List of child nodes: created lazily to save memory. */
     @Nullable private List<Node> children;
 
-    Node(Path basePath) {
+    Node(RelPath basePath) {
       this.basePath = basePath;
     }
 

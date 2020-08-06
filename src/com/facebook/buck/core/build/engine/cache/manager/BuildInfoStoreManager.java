@@ -18,14 +18,15 @@ package com.facebook.buck.core.build.engine.cache.manager;
 
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
 import com.facebook.buck.core.build.engine.buildinfo.SQLiteBuildInfoStore;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** Manages the lifetimes of all {@link BuildInfoStore}s used in the build. */
 public class BuildInfoStoreManager implements AutoCloseable {
-  private final ConcurrentHashMap<Path, BuildInfoStore> buildInfoStores = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<AbsPath, BuildInfoStore> buildInfoStores =
+      new ConcurrentHashMap<>();
 
   @Override
   public void close() {

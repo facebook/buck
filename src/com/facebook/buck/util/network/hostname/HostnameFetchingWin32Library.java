@@ -26,7 +26,15 @@ public interface HostnameFetchingWin32Library extends StdCallLibrary {
       Native.loadLibrary(
           "kernel32", HostnameFetchingWin32Library.class, W32APIOptions.UNICODE_OPTIONS);
 
-  int NAME_TYPE_DNS_HOSTNAME = 1;
+  // See sysinfoapi.h
+  int COMPUTER_NAME_FORMAT__ComputerNameNetBIOS = 0;
+  int COMPUTER_NAME_FORMAT__ComputerNameDnsHostname = 1;
+  int COMPUTER_NAME_FORMAT__ComputerNameDnsDomain = 2;
+  int COMPUTER_NAME_FORMAT__ComputerNameDnsFullyQualified = 3;
+  int COMPUTER_NAME_FORMAT__ComputerNamePhysicalNetBIOS = 4;
+  int COMPUTER_NAME_FORMAT__ComputerNamePhysicalDnsHostname = 5;
+  int COMPUTER_NAME_FORMAT__ComputerNamePhysicalDnsDomain = 6;
+  int COMPUTER_NAME_FORMAT__ComputerNamePhysicalDnsFullyQualified = 7;
 
   boolean GetComputerNameEx(int nameType, char[] buffer, IntByReference bufferSize);
 }

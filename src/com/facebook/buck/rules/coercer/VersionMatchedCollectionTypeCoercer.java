@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -25,27 +24,37 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeParameter;
+import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
 public class VersionMatchedCollectionTypeCoercer<T>
-    implements TypeCoercer<VersionMatchedCollection<T>> {
+    implements TypeCoercer<Object, VersionMatchedCollection<T>> {
 
-  TypeCoercer<ImmutableMap<BuildTarget, Version>> versionsTypeCoercer;
-  TypeCoercer<T> valueTypeCoercer;
+  TypeCoercer<?, ImmutableMap<BuildTarget, Version>> versionsTypeCoercer;
+  TypeCoercer<?, T> valueTypeCoercer;
+  private final TypeToken<VersionMatchedCollection<T>> typeToken;
 
   public VersionMatchedCollectionTypeCoercer(
-      TypeCoercer<ImmutableMap<BuildTarget, Version>> versionsTypeCoercer,
-      TypeCoercer<T> valueTypeCoercer) {
+      TypeCoercer<?, ImmutableMap<BuildTarget, Version>> versionsTypeCoercer,
+      TypeCoercer<?, T> valueTypeCoercer) {
     this.versionsTypeCoercer = versionsTypeCoercer;
     this.valueTypeCoercer = valueTypeCoercer;
+    this.typeToken =
+        new TypeToken<VersionMatchedCollection<T>>() {}.where(
+            new TypeParameter<T>() {}, valueTypeCoercer.getOutputType());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public Class<VersionMatchedCollection<T>> getOutputClass() {
-    return (Class<VersionMatchedCollection<T>>) (Class<?>) VersionMatchedCollection.class;
+  public TypeToken<VersionMatchedCollection<T>> getOutputType() {
+    return typeToken;
+  }
+
+  @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
   }
 
   @Override
@@ -63,8 +72,18 @@ public class VersionMatchedCollectionTypeCoercer<T>
   }
 
   @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
+  }
+
+  @Override
   public VersionMatchedCollection<T> coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -73,18 +92,18 @@ public class VersionMatchedCollectionTypeCoercer<T>
       throws CoerceFailedException {
     if (!(object instanceof List)) {
       throw CoerceFailedException.simple(
-          object, getOutputClass(), "input object should be a list of pairs");
+          object, getOutputType(), "input object should be a list of pairs");
     }
     VersionMatchedCollection.Builder<T> builder = VersionMatchedCollection.builder();
     List<?> list = (List<?>) object;
     for (Object element : list) {
       if (!(element instanceof Collection) || ((Collection<?>) element).size() != 2) {
         throw CoerceFailedException.simple(
-            object, getOutputClass(), "input object should be a list of pairs");
+            object, getOutputType(), "input object should be a list of pairs");
       }
       Iterator<?> pair = ((Collection<?>) element).iterator();
       ImmutableMap<BuildTarget, Version> versionsSelector =
-          versionsTypeCoercer.coerce(
+          versionsTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
@@ -92,7 +111,7 @@ public class VersionMatchedCollectionTypeCoercer<T>
               hostConfiguration,
               pair.next());
       T value =
-          valueTypeCoercer.coerce(
+          valueTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,

@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -94,7 +95,7 @@ public class CopyResourcesStep implements Step {
     for (Map.Entry<String, SourcePath> entry : parameters.getResources().entrySet()) {
       String resource = entry.getKey();
       SourcePath rawResource = entry.getValue();
-      Path relativePathToResource =
+      RelPath relativePathToResource =
           filesystem.relativize(buildContext.getSourcePathResolver().getAbsolutePath(rawResource));
 
       Path javaPackageAsPath =
@@ -105,7 +106,7 @@ public class CopyResourcesStep implements Step {
       if ("".equals(javaPackageAsPath.toString())) {
         // In this case, the project root is acting as the default package, so the resource path
         // works fine.
-        relativeSymlinkPath = relativePathToResource.getFileName();
+        relativeSymlinkPath = relativePathToResource.getPath().getFileName();
       } else {
         int lastIndex =
             resource.lastIndexOf(

@@ -76,11 +76,12 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
@@ -182,7 +183,7 @@ public class ProjectGeneratorTest {
       "com.apple.product-type.watchkit2-extension";
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
-  private Cell projectCell;
+  private Cells projectCell;
   private FakeProjectFilesystem fakeProjectFilesystem;
   private HalideBuckConfig halideBuckConfig;
   private CxxBuckConfig cxxBuckConfig;
@@ -190,7 +191,7 @@ public class ProjectGeneratorTest {
   private SwiftBuckConfig swiftBuckConfig;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
-  private Path rootPath;
+  private AbsPath rootPath;
 
   @Before
   public void setUp() throws IOException {
@@ -198,7 +199,7 @@ public class ProjectGeneratorTest {
     clock = SettableFakeClock.DO_NOT_CARE;
     fakeProjectFilesystem = new FakeProjectFilesystem(clock);
     projectCell = (new TestCellBuilder()).setFilesystem(fakeProjectFilesystem).build();
-    projectFilesystem = projectCell.getFilesystem();
+    projectFilesystem = projectCell.getRootCell().getFilesystem();
     rootPath = projectFilesystem.getRootPath();
 
     // Add files and directories used to test resources.
@@ -4634,9 +4635,7 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings =
         getBuildSettings(buildTarget, generatedProject.getTargets().get(0), "Debug");
     assertThat(settings, hasKey("REPO_ROOT"));
-    assertEquals(
-        projectFilesystem.getRootPath().toAbsolutePath().normalize().toString(),
-        settings.get("REPO_ROOT"));
+    assertEquals(projectFilesystem.getRootPath().normalize().toString(), settings.get("REPO_ROOT"));
   }
 
   /**
@@ -6332,7 +6331,7 @@ public class ProjectGeneratorTest {
             cache,
             projStateCache,
             ImmutableSet.of(lib2Target),
-            projectCell,
+            projectCell.getRootCell(),
             OUTPUT_DIRECTORY,
             PROJECT_NAME,
             "BUCK",
@@ -6379,7 +6378,7 @@ public class ProjectGeneratorTest {
             cache,
             projStateCache,
             ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
-            projectCell,
+            projectCell.getRootCell(),
             OUTPUT_DIRECTORY,
             PROJECT_NAME,
             "BUCK",
@@ -6502,7 +6501,7 @@ public class ProjectGeneratorTest {
             cache,
             projStateCache,
             ImmutableSet.of(lib2Target),
-            projectCell,
+            projectCell.getRootCell(),
             OUTPUT_DIRECTORY,
             PROJECT_NAME,
             "BUCK",
@@ -6557,7 +6556,7 @@ public class ProjectGeneratorTest {
             cache,
             projStateCache,
             ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
-            projectCell,
+            projectCell.getRootCell(),
             OUTPUT_DIRECTORY,
             PROJECT_NAME,
             "BUCK",
@@ -6770,7 +6769,7 @@ public class ProjectGeneratorTest {
         cache,
         projStateCache,
         initialBuildTargets,
-        projectCell,
+        projectCell.getRootCell(),
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
         "BUCK",
@@ -6921,12 +6920,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.builder();
     for (Map.Entry<String, Optional<String>> name : sourcesAndFlags.entrySet()) {
       absolutePathFlagMapBuilder.put(
-          projectFilesystem
-              .getRootPath()
-              .resolve(name.getKey())
-              .toAbsolutePath()
-              .normalize()
-              .toString(),
+          projectFilesystem.getRootPath().resolve(name.getKey()).normalize().toString(),
           name.getValue());
     }
     ImmutableMap<String, Optional<String>> absolutePathFlagMap = absolutePathFlagMapBuilder.build();
@@ -6957,7 +6951,7 @@ public class ProjectGeneratorTest {
     ImmutableSet.Builder<String> absoluteSourcesBuilder = ImmutableSet.builder();
     for (String name : sources) {
       absoluteSourcesBuilder.add(
-          projectFilesystem.getRootPath().resolve(name).toAbsolutePath().normalize().toString());
+          projectFilesystem.getRootPath().resolve(name).normalize().toString());
     }
 
     Iterable<PBXBuildPhase> buildPhases =
@@ -6988,12 +6982,7 @@ public class ProjectGeneratorTest {
     ImmutableSet.Builder<String> expectedResourceSetBuilder = ImmutableSet.builder();
     for (String resource : resources) {
       expectedResourceSetBuilder.add(
-          projectFilesystem
-              .getRootPath()
-              .resolve(resource)
-              .toAbsolutePath()
-              .normalize()
-              .toString());
+          projectFilesystem.getRootPath().resolve(resource).normalize().toString());
     }
     ImmutableSet<String> expectedResourceSet = expectedResourceSetBuilder.build();
 

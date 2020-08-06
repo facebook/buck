@@ -19,6 +19,7 @@ package com.facebook.buck.core.parser;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.util.log.Logger;
@@ -43,7 +44,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
@@ -103,7 +103,8 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
     }
     ProjectFilesystemView projectFilesystemView =
         filesystem.asView().withView(Paths.get("project"), ImmutableSet.of());
-    ImmutableSet<Path> watchedProjects = ImmutableSet.of(filesystem.resolve("project"));
+    ImmutableSet<AbsPath> watchedProjects =
+        ImmutableSet.of(AbsPath.of(filesystem.resolve("project")));
     BuildPackagePaths paths =
         transform(
             key(CanonicalCellName.rootCell(), BuildTargetPattern.Kind.PACKAGE, "dir", ""),
@@ -118,7 +119,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
 
     ProjectFilesystemView projectFilesystemView =
         filesystem.asView().withView(Paths.get("project"), ImmutableSet.of());
-    ImmutableSet<Path> watchedProjects = ImmutableSet.of(filesystem.getRootPath());
+    ImmutableSet<AbsPath> watchedProjects = ImmutableSet.of(filesystem.getRootPath());
 
     thrown.expect(IsInstanceOf.instanceOf(FileSystemNotWatchedException.class));
     getComputationStages("BUCK", projectFilesystemView, watchedProjects);
@@ -174,13 +175,14 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
 
   @Override
   protected ImmutableList<GraphComputationStage<?, ?>> getComputationStages(String buildFileName) {
-    return getComputationStages(buildFileName, filesystem.asView(), ImmutableSet.of(tmp.getRoot()));
+    return getComputationStages(
+        buildFileName, filesystem.asView(), ImmutableSet.of(AbsPath.of(tmp.getRoot())));
   }
 
   private ImmutableList<GraphComputationStage<?, ?>> getComputationStages(
       String buildFileName,
       ProjectFilesystemView filesystemView,
-      ImmutableSet<Path> watchedProjects) {
+      ImmutableSet<AbsPath> watchedProjects) {
     Watchman watchman;
     try {
       watchman = createWatchmanClientFactory(watchedProjects);
@@ -198,7 +200,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
             new WatchmanBuildPackageComputation(buildFileName, filesystemView, watchman)));
   }
 
-  private Watchman createWatchmanClientFactory(ImmutableSet<Path> watchedProjects)
+  private Watchman createWatchmanClientFactory(ImmutableSet<AbsPath> watchedProjects)
       throws IOException, InterruptedException {
     long connectTimeoutNanos = TimeUnit.SECONDS.toNanos(5);
     long endTimeNanos = clock.nanoTime() + connectTimeoutNanos;
@@ -238,7 +240,8 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
     public MockWatchmanFactory() {
       super(
           ImmutableMap.of(
-              tmp.getRoot(), ProjectWatch.of(tmp.getRoot().toString(), Optional.empty())),
+              AbsPath.of(tmp.getRoot()),
+              ProjectWatch.of(tmp.getRoot().toString(), Optional.empty())),
           ImmutableSet.of(),
           ImmutableMap.of(),
           Optional.of(Paths.get("(MockWatchmanFactory socket)")),

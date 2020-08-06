@@ -130,10 +130,7 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
             .setXcrunSdkPath(computeXcrunSdkPath(cxxPlatform.getFlavor()));
 
     if (!linkerOverride.isPresent()) {
-      builder.addAllLinkerArgs(
-          cxxPlatform.getLdflags().stream()
-              .map(StringArg::of)
-              .collect(ImmutableList.toImmutableList()));
+      builder.addAllLinkerArgs(cxxPlatform.getLdflags());
     }
 
     return builder.build();

@@ -134,7 +134,11 @@ public abstract class BaseIjModuleRule<T extends BuildRuleArg> implements IjModu
     ImmutableMultimap<Path, Path> foldersToInputsIndex =
         getSourceFoldersToInputsIndex(
             targetNode.getInputs().stream()
-                .map(path -> projectFilesystem.relativize(targetNode.getFilesystem().resolve(path)))
+                .map(
+                    path ->
+                        projectFilesystem
+                            .relativize(targetNode.getFilesystem().resolve(path))
+                            .getPath())
                 .collect(ImmutableList.toImmutableList()));
 
     if (!resourcePaths.isEmpty()) {
@@ -210,7 +214,7 @@ public abstract class BaseIjModuleRule<T extends BuildRuleArg> implements IjModu
     return resources.stream()
         .filter(PathSourcePath.class::isInstance)
         .map(PathSourcePath.class::cast)
-        .map(path -> projectFilesystem.relativize(Paths.get(path.toString())))
+        .map(path -> projectFilesystem.relativize(Paths.get(path.toString())).getPath())
         .collect(ImmutableSet.toImmutableSet());
   }
 
@@ -219,7 +223,7 @@ public abstract class BaseIjModuleRule<T extends BuildRuleArg> implements IjModu
     return resources.stream()
         .filter(PathSourcePath.class::isInstance)
         .map(PathSourcePath.class::cast)
-        .map(path -> projectFilesystem.relativize(Paths.get(path.toString())))
+        .map(path -> projectFilesystem.relativize(Paths.get(path.toString())).getPath())
         .filter(path -> path.startsWith(resourcesRoot))
         .collect(ImmutableSet.toImmutableSet());
   }

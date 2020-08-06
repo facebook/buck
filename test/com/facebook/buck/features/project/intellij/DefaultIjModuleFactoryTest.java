@@ -750,7 +750,7 @@ public class DefaultIjModuleFactoryTest {
             },
             projectConfig,
             packageFinder);
-    return new DefaultIjModuleFactory(projectFilesystem, typeRegistry);
+    return new DefaultIjModuleFactory(projectFilesystem, projectConfig, typeRegistry);
   }
 
   @Test

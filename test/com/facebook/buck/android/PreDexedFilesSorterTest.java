@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -40,7 +39,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.OptionalInt;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -80,15 +78,6 @@ public class PreDexedFilesSorterTest {
       assertThat(store, is(moduleGraph.getRootAPKModule().getName()));
     }
     assertThat(sortResults.size(), is(1));
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void testPrimaryOverFlow() throws IOException {
-    int numberOfPrimaryDexes = 15;
-    int numberOfSecondaryDexes = 0;
-    int numberOfExtraDexes = 0;
-
-    generatePreDexSorterResults(numberOfPrimaryDexes, numberOfSecondaryDexes, numberOfExtraDexes);
   }
 
   @Test
@@ -237,7 +226,7 @@ public class PreDexedFilesSorterTest {
               DEX_WEIGHT_LIMIT,
               DexStore.JAR,
               tempDir.newFolder(module.getName(), "secondary").toPath(),
-              OptionalInt.empty());
+              Optional.empty());
       results.put(module.getName(), sorter.sortIntoPrimaryAndSecondaryDexes(filesystem, steps));
     }
     return results.build();

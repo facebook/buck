@@ -772,8 +772,7 @@ public class CxxLibraryFactory {
         graphBuilder,
         cxxPlatform,
         staticLibraryName,
-        ImmutableList.copyOf(objects),
-        /* cacheable */ true);
+        ImmutableList.copyOf(objects));
   }
 
   /** @return a {@link CxxLink} rule which builds a shared library version of this C/C++ library. */
@@ -889,7 +888,7 @@ public class CxxLibraryFactory {
 
     // Pass any platform specific or extra linker flags.
     argsBuilder.addAll(
-        SanitizedArg.from(
+        SanitizedArg.fromArgs(
             cxxPlatform.getCompilerDebugPathSanitizer().sanitizer(Optional.empty()),
             cxxPlatform.getLdflags()));
 
@@ -916,8 +915,7 @@ public class CxxLibraryFactory {
     argsBuilder.addAll(StringArg.from(linker.getIgnoreUndefinedSymbolsFlags()));
 
     // Add all arguments needed to link in the C/C++ platform runtime.
-    argsBuilder.addAll(
-        StringArg.from(cxxPlatform.getRuntimeLdflags().get(Linker.LinkableDepType.SHARED)));
+    argsBuilder.addAll(cxxPlatform.getRuntimeLdflags().get(Linker.LinkableDepType.SHARED));
 
     // Add in additional, user-configured flags.
     argsBuilder.addAll(StringArg.from(params.getLdflags()));

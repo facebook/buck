@@ -67,7 +67,7 @@ public class VisibilityPatternParser {
     @Override
     @JsonIgnore
     public boolean checkVisibility(ObeysVisibility viewer) {
-      return getViewerPattern().matches(viewer.getBuildTarget());
+      return getViewerPattern().matches(viewer.getBuildTarget().getUnconfiguredBuildTarget());
     }
 
     @Override

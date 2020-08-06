@@ -25,6 +25,8 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -45,7 +47,7 @@ abstract class CellImpl implements Cell {
 
   @Override
   @Value.Auxiliary
-  public abstract ImmutableSortedSet<Path> getKnownRootsOfAllCells();
+  public abstract ImmutableSortedSet<AbsPath> getKnownRootsOfAllCells();
 
   @Override
   @Value.Auxiliary
@@ -63,10 +65,11 @@ abstract class CellImpl implements Cell {
     ImmutableSet.Builder<PathMatcher> ignores =
         ImmutableSet.builderWithExpectedSize(filesystem.getBlacklistedPaths().size() + 1);
     ignores.addAll(filesystem.getBlacklistedPaths());
-    ignores.add(RecursiveFileMatcher.of(filesystem.getBuckPaths().getBuckOut()));
-    for (Path subCellRoots : getKnownRootsOfAllCells()) {
+    ignores.add(RecursiveFileMatcher.of(RelPath.of(filesystem.getBuckPaths().getBuckOut())));
+    for (AbsPath subCellRoots : getKnownRootsOfAllCells()) {
       if (!subCellRoots.equals(getRoot())) {
-        ignores.add(RecursiveFileMatcher.of(filesystem.relativize(subCellRoots)));
+        ignores.add(
+            RecursiveFileMatcher.of(RelPath.of(filesystem.relativize(subCellRoots).getPath())));
       }
     }
     return filesystem.asView().withView(filesystem.getPath(""), ignores.build());
@@ -90,7 +93,7 @@ abstract class CellImpl implements Cell {
   public abstract ToolchainProvider getToolchainProvider();
 
   @Override
-  public Path getRoot() {
+  public AbsPath getRoot() {
     return getFilesystem().getRootPath();
   }
 
@@ -101,7 +104,7 @@ abstract class CellImpl implements Cell {
 
   @Override
   public Cell getCell(Path cellPath) {
-    if (!getKnownRootsOfAllCells().contains(cellPath)) {
+    if (!getKnownRootsOfAllCells().contains(AbsPath.of(cellPath))) {
       throw new HumanReadableException(
           "Unable to find repository rooted at %s. Known roots are:\n  %s",
           cellPath, Joiner.on(",\n  ").join(getKnownRootsOfAllCells()));
@@ -117,14 +120,15 @@ abstract class CellImpl implements Cell {
   @Override
   public ImmutableList<Cell> getAllCells() {
     return RichStream.from(getKnownRootsOfAllCells())
-        .concat(RichStream.of(getRoot()))
+        .map(AbsPath::getPath)
+        .concat(RichStream.of(getRoot().getPath()))
         .distinct()
         .map(getCellProvider()::getCellByPath)
         .toImmutableList();
   }
 
   @Override
-  public ImmutableMap<Path, Cell> getLoadedCells() {
+  public ImmutableMap<AbsPath, Cell> getLoadedCells() {
     return getCellProvider().getLoadedCells();
   }
 

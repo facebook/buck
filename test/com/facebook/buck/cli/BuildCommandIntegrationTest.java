@@ -21,6 +21,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
@@ -31,6 +32,8 @@ import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -55,13 +58,19 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ThriftRuleKeyDeserializer;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ObjectArrays;
 import com.google.common.io.MoreFiles;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -71,12 +80,32 @@ import org.hamcrest.junit.MatcherAssert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(Parameterized.class)
 public class BuildCommandIntegrationTest {
+  private static final ImmutableMap<String, String[]> SHOW_OUTPUT_TO_SHOW_OUTPUTS =
+      ImmutableMap.of(
+          "--show-output",
+          new String[] {"--show-outputs"},
+          "--show-full-output",
+          new String[] {"--show-outputs", "--output-format", "full"},
+          "--show-json-output",
+          new String[] {"--show-outputs", "--output-format", "json"},
+          "--show-full-json-output",
+          new String[] {"--show-outputs", "--output-format", "full_json"});
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   @Rule public TemporaryPaths tmp2 = new TemporaryPaths();
   @Rule public ExpectedException expectedThrownException = ExpectedException.none();
+
+  @Parameterized.Parameters
+  public static Collection<Object> data() {
+    return Arrays.asList(new Object[] {false, true});
+  }
+
+  @Parameterized.Parameter public boolean useShowOutputs;
 
   private ProjectWorkspace workspace;
 
@@ -107,17 +136,8 @@ public class BuildCommandIntegrationTest {
   public void showOutput() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProcessResult runBuckResult = workspace.runBuckBuild("--show-output", "//:bar");
-    runBuckResult.assertSuccess();
-    assertThat(runBuckResult.getStdout(), Matchers.containsString("//:bar buck-out"));
-  }
-
-  @Test
-  public void showOutputsForRulesWithoutMultipleOutputs() throws IOException {
-    // --show-outputs should work the same as --show-output for rules without multiple outputs
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
-    workspace.setUp();
-    ProcessResult runBuckResult = workspace.runBuckBuild("--show-outputs", "//:bar");
+    String[] args = getCommandArgsForShowOutputOrShowOutputs("--show-output", "//:bar");
+    ProcessResult runBuckResult = workspace.runBuckBuild(args);
     runBuckResult.assertSuccess();
     assertThat(runBuckResult.getStdout(), Matchers.containsString("//:bar buck-out"));
   }
@@ -126,9 +146,9 @@ public class BuildCommandIntegrationTest {
   public void showOutputsForRulesWithMultipleOutputs() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    Path expectedPath1 =
+    RelPath expectedPath1 =
         getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "bar");
-    Path expectedPath2 =
+    RelPath expectedPath2 =
         getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "baz");
 
     ProcessResult runBuckResult =
@@ -170,7 +190,10 @@ public class BuildCommandIntegrationTest {
   public void showFullOutput() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProcessResult runBuckResult = workspace.runBuckBuild("--show-full-output", "//:bar");
+
+    String[] args = getCommandArgsForShowOutputOrShowOutputs("--show-full-output", "//:bar");
+    ProcessResult runBuckResult = workspace.runBuckBuild(args);
+
     runBuckResult.assertSuccess();
     Path expectedRootDirectory = tmp.getRoot();
     String expectedOutputDirectory = expectedRootDirectory.resolve("buck-out/").toString();
@@ -180,14 +203,62 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
+  public void showFullOutputsForRulesWithMultipleOutputs() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    AbsPath expectedPath1 =
+        AbsPath.of(tmp.getRoot())
+            .resolve(
+                getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "bar"));
+    AbsPath expectedPath2 =
+        AbsPath.of(tmp.getRoot())
+            .resolve(
+                getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "baz"));
+
+    ProcessResult runBuckResult =
+        workspace
+            .runBuckBuild(
+                "--show-outputs",
+                "--output-format",
+                "full",
+                "//:bar_with_multiple_outputs[output1]")
+            .assertSuccess();
+    assertThat(
+        runBuckResult.getStdout(),
+        Matchers.containsString(
+            String.format("//:bar_with_multiple_outputs[output1] %s", expectedPath1)));
+    assertFalse(
+        runBuckResult
+            .getStdout()
+            .contains(String.format("//:bar_with_multiple_outputs[output2] %s", expectedPath2)));
+
+    runBuckResult =
+        workspace
+            .runBuckBuild(
+                "--show-outputs",
+                "--output-format",
+                "full",
+                "//:bar_with_multiple_outputs[output2]")
+            .assertSuccess();
+    assertThat(
+        runBuckResult.getStdout(),
+        Matchers.containsString(
+            String.format("//:bar_with_multiple_outputs[output2] %s", expectedPath2)));
+  }
+
+  @Test
   public void showJsonOutput() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProcessResult runBuckResult =
-        workspace.runBuckBuild("--show-json-output", "//:foo", "//:bar", "//:ex ample");
-    runBuckResult.assertSuccess();
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+
+    String[] args =
+        getCommandArgsForShowOutputOrShowOutputs(
+            "--show-json-output", "//:foo", "//:bar", "//:ex ample");
+    ProcessResult runBuckResult = workspace.runBuckBuild(args);
+
+    runBuckResult.assertSuccess();
     assertThat(
         runBuckResult.getStdout(),
         Matchers.containsString(
@@ -202,13 +273,56 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
+  public void showJsonOutputsForRulesWithMultipleOutputs() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    RelPath expectedPath1 =
+        getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "bar");
+    RelPath expectedPath2 =
+        getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "baz");
+
+    ProcessResult runBuckResult =
+        workspace
+            .runBuckBuild(
+                "--show-outputs",
+                "--output-format",
+                "json",
+                "//:bar_with_multiple_outputs[output1]")
+            .assertSuccess();
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(runBuckResult.getStdout()));
+
+    JsonNode path = observed.get("//:bar_with_multiple_outputs[output1]");
+    assertEquals(expectedPath1.toString(), path.asText());
+    assertNull(observed.get("//:bar_with_multiple_outputs[output2]"));
+
+    runBuckResult =
+        workspace
+            .runBuckBuild(
+                "--show-outputs",
+                "--output-format",
+                "json",
+                "//:bar_with_multiple_outputs[output2]")
+            .assertSuccess();
+    observed = ObjectMappers.READER.readTree(ObjectMappers.createParser(runBuckResult.getStdout()));
+
+    path = observed.get("//:bar_with_multiple_outputs[output2]");
+    assertEquals(expectedPath2.toString(), path.asText());
+  }
+
+  @Test
   public void showFullJsonOutput() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build/sub folder", tmp);
     workspace.setUp();
-    ProcessResult runBuckResult =
-        workspace.runBuckBuild("--show-full-json-output", "//:bar", "//:foo", "//:ex ample");
+    ProjectFilesystem projectFilesystem = workspace.getProjectFileSystem();
+
+    String[] args =
+        getCommandArgsForShowOutputOrShowOutputs(
+            "--show-full-json-output", "//:bar", "//:foo", "//:ex ample");
+    ProcessResult runBuckResult = workspace.runBuckBuild(args);
+
     runBuckResult.assertSuccess();
     Path expectedRootDirectory = tmp.getRoot();
     assertThat(
@@ -218,19 +332,55 @@ public class BuildCommandIntegrationTest {
                 "{\n  \"//:bar\" : \"%s/bar\",\n  \"//:ex ample\" : \"%s/example\",\n  \"//:foo\" : \"%s/foo\"\n}",
                 expectedRootDirectory.resolve(
                     BuildTargetPaths.getGenPath(
-                        workspace.getProjectFileSystem(),
-                        BuildTargetFactory.newInstance("//:bar"),
-                        "%s")),
+                        projectFilesystem, BuildTargetFactory.newInstance("//:bar"), "%s")),
                 expectedRootDirectory.resolve(
                     BuildTargetPaths.getGenPath(
-                        workspace.getProjectFileSystem(),
-                        BuildTargetFactory.newInstance("//:ex ample"),
-                        "%s")),
+                        projectFilesystem, BuildTargetFactory.newInstance("//:ex ample"), "%s")),
                 expectedRootDirectory.resolve(
                     BuildTargetPaths.getGenPath(
-                        workspace.getProjectFileSystem(),
-                        BuildTargetFactory.newInstance("//:foo"),
-                        "%s")))));
+                        projectFilesystem, BuildTargetFactory.newInstance("//:foo"), "%s")))));
+  }
+
+  @Test
+  public void showFullJsonOutputsForRulesWithMultipleOutputs() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    AbsPath expectedPath1 =
+        AbsPath.of(tmp.getRoot())
+            .resolve(
+                getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "bar"));
+    AbsPath expectedPath2 =
+        AbsPath.of(tmp.getRoot())
+            .resolve(
+                getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "baz"));
+
+    ProcessResult runBuckResult =
+        workspace
+            .runBuckBuild(
+                "--show-outputs",
+                "--output-format",
+                "full_json",
+                "//:bar_with_multiple_outputs[output1]")
+            .assertSuccess();
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(runBuckResult.getStdout()));
+
+    JsonNode path = observed.get("//:bar_with_multiple_outputs[output1]");
+    assertEquals(expectedPath1.toString(), path.asText());
+    assertNull(observed.get("//:bar_with_multiple_outputs[output2]"));
+
+    runBuckResult =
+        workspace
+            .runBuckBuild(
+                "--show-outputs",
+                "--output-format",
+                "full_json",
+                "//:bar_with_multiple_outputs[output2]")
+            .assertSuccess();
+    observed = ObjectMappers.READER.readTree(ObjectMappers.createParser(runBuckResult.getStdout()));
+
+    path = observed.get("//:bar_with_multiple_outputs[output2]");
+    assertEquals(expectedPath2.toString(), path.asText());
   }
 
   @Test
@@ -252,8 +402,9 @@ public class BuildCommandIntegrationTest {
   public void showRuleKeyAndOutput() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProcessResult runBuckResult =
-        workspace.runBuckBuild("--show-output", "--show-rulekey", "//:bar");
+    String[] args =
+        getCommandArgsForShowOutputOrShowOutputs("--show-output", "--show-rulekey", "//:bar");
+    ProcessResult runBuckResult = workspace.runBuckBuild(args);
     runBuckResult.assertSuccess();
 
     Pattern pattern = Pattern.compile("\\b[0-9a-f]{5,40}\\b"); // sha
@@ -563,7 +714,9 @@ public class BuildCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "buck_out_config_target_hash", tmp);
     workspace.setUp();
 
-    ProcessResult runBuckResult = workspace.runBuckBuild("--show-output", "//:binary");
+    String[] args = getCommandArgsForShowOutputOrShowOutputs("--show-output", "//:binary");
+    ProcessResult runBuckResult = workspace.runBuckBuild(args);
+
     BuildTarget target = BuildTargetFactory.newInstance("//:binary");
     runBuckResult.assertSuccess();
     String expected =
@@ -600,7 +753,7 @@ public class BuildCommandIntegrationTest {
         RegexMatcher.containsRegex("FINISHED IN .* 0/0 JOBS"));
   }
 
-  private Path getExpectedOutputPathRelativeToProjectRoot(String targetName, String pathName)
+  private RelPath getExpectedOutputPathRelativeToProjectRoot(String targetName, String pathName)
       throws IOException {
     return workspace
         .getProjectFileSystem()
@@ -618,7 +771,7 @@ public class BuildCommandIntegrationTest {
     workspace.addBuckConfigLocalOption("project", "buck_out_links_to_hashed_paths", "hardlink");
     workspace.setUp();
 
-    ProcessResult runBuckResult = workspace.runBuckBuild("--show-output", "//:binary");
+    ProcessResult runBuckResult = workspace.runBuckBuild("//:binary");
     runBuckResult.assertSuccess();
     BuildTarget target = BuildTargetFactory.newInstance("//:binary");
     Path expected =
@@ -639,7 +792,7 @@ public class BuildCommandIntegrationTest {
     workspace.addBuckConfigLocalOption("project", "buck_out_links_to_hashed_paths", "symlink");
     workspace.setUp();
 
-    ProcessResult runBuckResult = workspace.runBuckBuild("--show-output", "//:binary");
+    ProcessResult runBuckResult = workspace.runBuckBuild("//:binary");
     runBuckResult.assertSuccess();
     BuildTarget target = BuildTargetFactory.newInstance("//:binary");
     Path expected =
@@ -669,9 +822,9 @@ public class BuildCommandIntegrationTest {
                 target)
             .get();
 
-    workspace.runBuckBuild("--show-output", "//:binary").assertSuccess();
+    workspace.runBuckBuild("//:binary").assertSuccess();
     assertTrue(Files.exists(hardlink));
-    workspace.runBuckBuild("--show-output", "//:binary").assertSuccess();
+    workspace.runBuckBuild("//:binary").assertSuccess();
     assertTrue(Files.exists(hardlink));
   }
 
@@ -692,7 +845,7 @@ public class BuildCommandIntegrationTest {
                 target)
             .get();
 
-    workspace.runBuckBuild("--show-output", "//:dir").assertSuccess();
+    workspace.runBuckBuild("//:dir").assertSuccess();
     assertTrue(Files.isSymbolicLink(symlink));
   }
 
@@ -704,12 +857,35 @@ public class BuildCommandIntegrationTest {
 
     String fullyQualifiedName = "//:binary";
 
-    workspace.runBuckBuild("--show-output", fullyQualifiedName).assertSuccess();
+    workspace.runBuckBuild(fullyQualifiedName).assertSuccess();
 
     workspace.addBuckConfigLocalOption("project", "buck_out_include_target_config_hash", "false");
 
     assertThat(
         workspace.runBuckBuild("--show-output", fullyQualifiedName).assertSuccess().getStderr(),
         Matchers.containsString("100.0% CACHE MISS"));
+  }
+
+  @Test
+  public void outputFormatCanOnlyBeUsedWithShowOutputs() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+
+    ProcessResult runBuckResult =
+        workspace
+            .runBuckBuild("--show-output", "--output-format", "full", "//:bar")
+            .assertFailure();
+    assertThat(
+        runBuckResult.getStderr(),
+        Matchers.containsString("--output-format can only be used with --show-outputs"));
+  }
+
+  private String[] getCommandArgsForShowOutputOrShowOutputs(
+      String showOutputCommand, String... args) {
+    if (useShowOutputs) {
+      return ObjectArrays.concat(
+          SHOW_OUTPUT_TO_SHOW_OUTPUTS.get(showOutputCommand), args, String.class);
+    }
+    return ObjectArrays.concat(showOutputCommand, args);
   }
 }

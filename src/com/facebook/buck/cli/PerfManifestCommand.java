@@ -185,11 +185,11 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
                           .getInputsAfterBuildingLocally(
                               BuildContext.of(
                                   graphBuilder.getSourcePathResolver(),
-                                  params.getCell().getRoot(),
+                                  params.getCells().getRootCell().getRoot().getPath(),
                                   params.getJavaPackageFinder(),
                                   params.getBuckEventBus(),
                                   false),
-                              params.getCell().getCellPathResolver())));
+                              params.getCells().getRootCell().getCellPathResolver())));
             } catch (Exception e) {
               throw new BuckUncheckedExecutionException(
                   e, "When asking %s for its inputs.", rule.getBuildTarget());

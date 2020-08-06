@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BaseName;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
@@ -33,6 +34,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Test;
 
 public class UnconfiguredTargetNodeWithDepsPackageTest {
@@ -51,34 +53,32 @@ public class UnconfiguredTargetNodeWithDepsPackageTest {
 
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         UnconfiguredBuildTarget.of(
-            CanonicalCellName.rootCell(),
-            BaseName.of("//base"),
-            "target1",
-            UnconfiguredBuildTarget.NO_FLAVORS);
+            CanonicalCellName.rootCell(), BaseName.of("//base"), "target1", FlavorSet.NO_FLAVORS);
     UnconfiguredTargetNode unconfiguredTargetNode1 =
         ImmutableUnconfiguredTargetNode.of(
             unconfiguredBuildTarget1,
             RuleType.of("java_library", RuleType.Kind.BUILD),
             rawAttributes1,
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            Optional.empty(),
+            ImmutableList.of());
 
     ImmutableMap<String, Object> rawAttributes2 =
         ImmutableMap.of("name", "target2", "buck.type", "java_library", "buck.base_path", "base");
 
     UnconfiguredBuildTarget unconfiguredBuildTarget2 =
         UnconfiguredBuildTarget.of(
-            CanonicalCellName.rootCell(),
-            BaseName.of("//base"),
-            "target2",
-            UnconfiguredBuildTarget.NO_FLAVORS);
+            CanonicalCellName.rootCell(), BaseName.of("//base"), "target2", FlavorSet.NO_FLAVORS);
     UnconfiguredTargetNode unconfiguredTargetNode2 =
         ImmutableUnconfiguredTargetNode.of(
             unconfiguredBuildTarget2,
             RuleType.of("java_library", RuleType.Kind.BUILD),
             rawAttributes2,
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            Optional.empty(),
+            ImmutableList.of());
 
     UnconfiguredTargetNodeWithDeps unconfiguredTargetNodeWithDeps1 =
         UnconfiguredTargetNodeWithDeps.of(

@@ -131,7 +131,7 @@ class CoercedTypeCache {
     }
   }
 
-  private ImmutableMap<String, ParamInfo> paramTypes(Class<?> coercableType) {
+  private ImmutableMap<String, ParamInfo<?>> paramTypes(Class<?> coercableType) {
     if (Types.getSupertypes(coercableType).stream()
         .noneMatch(c -> c.getAnnotation(RuleArg.class) != null)) {
       // Sniff for @BuckStyleImmutable not @RuleArg because the
@@ -156,7 +156,7 @@ class CoercedTypeCache {
   }
 
   @VisibleForTesting
-  ImmutableMap<String, ParamInfo> extractForImmutableBuilder(Class<?> coercableType) {
+  ImmutableMap<String, ParamInfo<?>> extractForImmutableBuilder(Class<?> coercableType) {
     Map<String, Set<Method>> foundSetters = new HashMap<>();
     for (Method method : coercableType.getDeclaredMethods()) {
       if (!method.getName().startsWith("set")) {
@@ -165,10 +165,10 @@ class CoercedTypeCache {
       foundSetters.putIfAbsent(method.getName(), new HashSet<>());
       foundSetters.get(method.getName()).add(method);
     }
-    ImmutableMap.Builder<String, ParamInfo> allInfo = new ImmutableMap.Builder<>();
+    ImmutableMap.Builder<String, ParamInfo<?>> allInfo = new ImmutableMap.Builder<>();
     for (Map.Entry<String, Set<Method>> entry : foundSetters.entrySet()) {
       if (entry.getValue().size() == 1) {
-        ParamInfo paramInfo =
+        ParamInfo<?> paramInfo =
             ReflectionParamInfo.of(typeCoercerFactory, Iterables.getOnlyElement(entry.getValue()));
         allInfo.put(paramInfo.getName(), paramInfo);
         continue;
@@ -196,7 +196,7 @@ class CoercedTypeCache {
                     + "and non-Optional. Don't know how to coerce.",
                 coercableType.getName(), entry.getKey()));
       }
-      ParamInfo paramInfo = ReflectionParamInfo.of(typeCoercerFactory, takesOptional);
+      ParamInfo<?> paramInfo = ReflectionParamInfo.of(typeCoercerFactory, takesOptional);
       allInfo.put(paramInfo.getName(), paramInfo);
     }
     return allInfo.build();

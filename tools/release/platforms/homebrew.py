@@ -24,6 +24,7 @@ import requests
 
 from platforms.common import ReleaseException, run
 from releases import get_version_and_timestamp_from_release
+from releases import get_current_user
 
 
 def brew(homebrew_dir, command, *run_args, **run_kwargs):
@@ -230,7 +231,7 @@ def update_formula_after_bottle(formula_path, sha, target_macos_version_spec):
     logging.info("Updated formula with new bottle sha")
 
 
-def push_tap(git_repository, tap_path, version):
+def push_tap(git_repository, tap_path, version, github_token):
     """
     Grab any working directory changes for the tap, clone a new tap repository,
     and push those changes upstream. The original tap path is in a clean state
@@ -243,7 +244,8 @@ def push_tap(git_repository, tap_path, version):
     """
     logging.info("Gathering git diff from {}".format(tap_path))
     git_diff = run(["git", "diff"], tap_path, True).stdout
-    git_url = "git@github.com:{}.git".format(git_repository)
+    user = get_current_user(github_token)
+    git_url = "https://{}:{}@github.com/{}.git".format(user["login"], github_token, git_repository)
 
     with tempfile.TemporaryDirectory() as temp_dir:
         logging.info("Cloning {} into {}".format(git_url, temp_dir))
@@ -297,13 +299,13 @@ def audit_tap(homebrew_dir, tap_repository):
     brew(homebrew_dir, ["audit", brew_target])
 
 
-def publish_tap_changes(homebrew_dir, tap_repository, version):
+def publish_tap_changes(homebrew_dir, tap_repository, version, github_token):
     git_user, git_repo = tap_repository.split("/")
     full_git_repo = "{}/homebrew-{}".format(git_user, git_repo)
     formula_path = get_formula_path(homebrew_dir, tap_repository)
     tap_path = os.path.dirname(formula_path)
 
-    push_tap(full_git_repo, tap_path, version)
+    push_tap(full_git_repo, tap_path, version, github_token)
 
 
 def log_about_manual_tap_push(homebrew_dir, tap_repository):

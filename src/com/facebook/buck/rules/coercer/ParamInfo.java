@@ -16,26 +16,22 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.Hint;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.lang.reflect.Type;
 import java.nio.file.Path;
-import java.util.Map;
 import javax.annotation.Nullable;
 
 /** Represents a single field that can be represented in buck build files. */
-public interface ParamInfo extends Comparable<ParamInfo> {
+public interface ParamInfo<T> {
 
   /** @return the user-facing name of this parameter */
   String getName();
 
   /** @return the {@link TypeCoercer} that converts raw values to the correct type for this param */
-  TypeCoercer<?> getTypeCoercer();
+  TypeCoercer<?, T> getTypeCoercer();
 
   /** @return Whether the coerced type is Optional or not */
   boolean isOptional();
@@ -96,22 +92,12 @@ public interface ParamInfo extends Comparable<ParamInfo> {
   Object getImplicitPreCoercionValue();
 
   /** @return the value of this param as set on dto. */
-  Object get(Object dto);
-
-  void setFromParams(
-      CellPathResolver cellRoots,
-      ProjectFilesystem filesystem,
-      BuildTarget buildTarget,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
-      Object arg,
-      Map<String, ?> instance)
-      throws ParamInfoException;
+  T get(Object dto);
 
   /**
    * Sets a single property of the {@code dto}, coercing types as necessary.
    *
-   * @param cellRoots
+   * @param cellNameResolver
    * @param filesystem {@link ProjectFilesystem} used to ensure {@link Path}s exist.
    * @param pathRelativeToProjectRoot The path relative to the project root that this DTO is for.
    * @param hostConfiguration
@@ -119,7 +105,7 @@ public interface ParamInfo extends Comparable<ParamInfo> {
    * @param value The value, which may be coerced depending on the type on {@code dto}.
    */
   void set(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -136,16 +122,6 @@ public interface ParamInfo extends Comparable<ParamInfo> {
    * <p>This is useful for things like making copies of dtos.
    */
   void setCoercedValue(Object dto, Object value);
-
-  /**
-   * Get the {@link Type}s of any generic parameters for the final coerced type.
-   *
-   * <p>e.g. For a parameter that returns a {@code List<String>}, this would return an array
-   * containing a {@link Type} for {@link String}
-   *
-   * @return An array of {@link Type}s, or an empty array if the type is not generic
-   */
-  Type[] getGenericParameterTypes();
 
   /** Traversal interface used when coercing values */
   interface Traversal extends TypeCoercer.Traversal {}

@@ -52,7 +52,10 @@ public class VersionedTargetGraph extends TargetGraph {
   @Nullable
   @Override
   protected TargetNode<?> getInternal(BuildTarget target) {
-    return nodeFinder.get(target).map(n -> n.withFlavors(target.getFlavors())).orElse(null);
+    return nodeFinder
+        .get(target)
+        .map(n -> n.withFlavors(target.getFlavors().getSet()))
+        .orElse(null);
   }
 
   public static VersionedTargetGraph.Builder builder() {

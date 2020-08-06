@@ -17,6 +17,7 @@
 package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.util.config.Config;
@@ -32,7 +33,7 @@ public class TestProjectFilesystems {
     return new DefaultProjectFilesystemFactory()
         .createProjectFilesystem(
             CanonicalCellName.rootCell(),
-            root,
+            AbsPath.of(root),
             config,
             BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
   }
@@ -40,6 +41,12 @@ public class TestProjectFilesystems {
   public static DefaultProjectFilesystem createProjectFilesystem(Path root) {
     return new DefaultProjectFilesystemFactory()
         .createProjectFilesystem(
-            CanonicalCellName.rootCell(), root, BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
+            CanonicalCellName.rootCell(),
+            AbsPath.of(root),
+            BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
+  }
+
+  public static DefaultProjectFilesystem createProjectFilesystem(AbsPath root) {
+    return createProjectFilesystem(root.getPath());
   }
 }

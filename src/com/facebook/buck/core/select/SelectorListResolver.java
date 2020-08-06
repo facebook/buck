@@ -18,6 +18,7 @@ package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.rules.coercer.concat.Concatable;
 import javax.annotation.Nullable;
 
 /**
@@ -34,7 +35,8 @@ public interface SelectorListResolver {
    * @param buildTarget the build target that contains the given list in its arguments
    * @param attributeName the name of the attribute that holds the given selector list
    * @param selectorList a list with selectable elements
-   * @param dependencyStack
+   * @param concatable to be used when concatenating select items (e. g. lists or strings)
+   * @param dependencyStack used to provide error stacks
    * @return an object produced by concatenating resolved elements of the given list or {@code null}
    *     if the list is resolved to an absent element
    */
@@ -44,5 +46,6 @@ public interface SelectorListResolver {
       BuildTarget buildTarget,
       String attributeName,
       SelectorList<T> selectorList,
+      Concatable<T> concatable,
       DependencyStack dependencyStack);
 }

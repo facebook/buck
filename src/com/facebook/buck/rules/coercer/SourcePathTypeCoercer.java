@@ -16,66 +16,97 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.base.Preconditions;
+import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 
-public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
-  private final TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer;
-  private final TypeCoercer<Path> pathTypeCoercer;
+/** Coerce to {@link com.facebook.buck.core.sourcepath.SourcePath}. */
+public class SourcePathTypeCoercer extends LeafTypeNewCoercer<UnconfiguredSourcePath, SourcePath> {
+  private final TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
+      buildTargetWithOutputsTypeCoercer;
+  private final TypeCoercer<Path, Path> pathTypeCoercer;
 
   public SourcePathTypeCoercer(
-      TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer,
-      TypeCoercer<Path> pathTypeCoercer) {
+      TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
+          buildTargetWithOutputsTypeCoercer,
+      TypeCoercer<Path, Path> pathTypeCoercer) {
     this.buildTargetWithOutputsTypeCoercer = buildTargetWithOutputsTypeCoercer;
     this.pathTypeCoercer = pathTypeCoercer;
   }
 
   @Override
-  public Class<SourcePath> getOutputClass() {
-    return SourcePath.class;
+  public TypeToken<SourcePath> getOutputType() {
+    return TypeToken.of(SourcePath.class);
+  }
+
+  @Override
+  public TypeToken<UnconfiguredSourcePath> getUnconfiguredType() {
+    return TypeToken.of(UnconfiguredSourcePath.class);
+  }
+
+  @Override
+  public UnconfiguredSourcePath coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    if (!(object instanceof String)) {
+      throw CoerceFailedException.simple(object, getOutputType());
+    }
+
+    String string = (String) object;
+    if ((string.contains("//") || string.startsWith(":"))) {
+      UnconfiguredBuildTargetWithOutputs buildTargetWithOutputs =
+          buildTargetWithOutputsTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, object);
+      return new UnconfiguredSourcePath.BuildTarget(buildTargetWithOutputs);
+    } else {
+      Path path =
+          pathTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, object);
+      if (path.isAbsolute()) {
+        throw CoerceFailedException.simple(
+            object, getOutputType(), "SourcePath cannot contain an absolute path");
+      }
+      return new UnconfiguredSourcePath.Path(
+          CellRelativePath.of(cellRoots.getCurrentCellName(), ForwardRelativePath.ofPath(path)));
+    }
   }
 
   @Override
   public SourcePath coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      UnconfiguredSourcePath object)
       throws CoerceFailedException {
-    if ((object instanceof String)
-        && (((String) object).contains("//") || ((String) object).startsWith(":"))) {
-      BuildTargetWithOutputs buildTargetWithOutputs =
-          buildTargetWithOutputsTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              targetConfiguration,
-              hostConfiguration,
-              object);
-      return DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
-    } else {
-      Path path =
-          pathTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              targetConfiguration,
-              hostConfiguration,
-              object);
-      if (path.isAbsolute()) {
-        throw CoerceFailedException.simple(
-            object, getOutputClass(), "SourcePath cannot contain an absolute path");
-      }
-      return PathSourcePath.of(filesystem, path);
-    }
+    return object.match(
+        new UnconfiguredSourcePath.Matcher<SourcePath>() {
+          @Override
+          public SourcePath path(CellRelativePath path) {
+            Preconditions.checkState(path.getCellName() == cellRoots.getCurrentCellName());
+            return PathSourcePath.of(
+                filesystem, path.getPath().toRelPath(filesystem.getFileSystem()));
+          }
+
+          @Override
+          public SourcePath buildTarget(UnconfiguredBuildTargetWithOutputs target) {
+            return DefaultBuildTargetSourcePath.of(target.configure(targetConfiguration));
+          }
+        });
   }
 }

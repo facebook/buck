@@ -22,11 +22,13 @@ import static org.hamcrest.Matchers.containsString;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -46,6 +48,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -539,7 +542,7 @@ public class BuildCommandTest {
   private CommandRunnerParams createTestParams(ImmutableSet<String> buildTargetNames) {
     CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
         CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
-    Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
+    Cells cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
@@ -560,7 +563,7 @@ public class BuildCommandTest {
         pluginManager,
         knownRuleTypesProvider,
         new TestParser(
-            TestParserFactory.create(executor.get(), cell, knownRuleTypesProvider),
+            TestParserFactory.create(executor.get(), cell.getRootCell(), knownRuleTypesProvider),
             TargetGraphCreationResult.of(
                 TargetGraph.EMPTY,
                 buildTargetNames.stream()
@@ -678,10 +681,10 @@ public class BuildCommandTest {
     }
 
     @Override
-    public ImmutableList<TargetNode<?>> getAllTargetNodes(
+    public ImmutableList<TargetNodeMaybeIncompatible> getAllTargetNodes(
         PerBuildState perBuildState,
         Cell cell,
-        Path buildFile,
+        AbsPath buildFile,
         Optional<TargetConfiguration> targetConfiguration)
         throws BuildFileParseException {
       return parser.getAllTargetNodes(perBuildState, cell, buildFile, targetConfiguration);
@@ -691,7 +694,7 @@ public class BuildCommandTest {
     public ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
         PerBuildState state,
         Cell cell,
-        Path buildFile,
+        AbsPath buildFile,
         Optional<TargetConfiguration> targetConfiguration)
         throws BuildFileParseException {
       return parser.getAllTargetNodesWithTargetCompatibilityFiltering(
@@ -709,24 +712,24 @@ public class BuildCommandTest {
     }
 
     @Override
-    public TargetNode<?> getTargetNode(
+    public TargetNode<?> getTargetNodeAssertCompatible(
         ParsingContext parsingContext, BuildTarget target, DependencyStack dependencyStack)
         throws BuildFileParseException {
-      return parser.getTargetNode(parsingContext, target, dependencyStack);
+      return parser.getTargetNodeAssertCompatible(parsingContext, target, dependencyStack);
     }
 
     @Override
-    public TargetNode<?> getTargetNode(
+    public TargetNode<?> getTargetNodeAssertCompatible(
         PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)
         throws BuildFileParseException {
-      return parser.getTargetNode(perBuildState, target, dependencyStack);
+      return parser.getTargetNodeAssertCompatible(perBuildState, target, dependencyStack);
     }
 
     @Override
-    public ListenableFuture<TargetNode<?>> getTargetNodeJob(
+    public ListenableFuture<TargetNode<?>> getTargetNodeJobAssertCompatible(
         PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)
         throws BuildTargetException {
-      return parser.getTargetNodeJob(perBuildState, target, dependencyStack);
+      return parser.getTargetNodeJobAssertCompatible(perBuildState, target, dependencyStack);
     }
 
     @Nullable

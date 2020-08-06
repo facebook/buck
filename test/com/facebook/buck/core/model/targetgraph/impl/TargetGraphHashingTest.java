@@ -42,11 +42,9 @@ import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
@@ -64,7 +62,6 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.google.common.collect.ImmutableList;
@@ -115,13 +112,11 @@ public class TargetGraphHashingTest {
     PerBuildState parserState =
         new PerBuildStateFactory(
                 typeCoercerFactory,
-                new DefaultConstructorArgMarshaller(typeCoercerFactory),
+                new DefaultConstructorArgMarshaller(),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
-                ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close),
-                new FakeFileHashCache(ImmutableMap.of()),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 UnconfiguredTargetConfiguration.INSTANCE)
             .create(
@@ -342,10 +337,7 @@ public class TargetGraphHashingTest {
 
     FileHashLoader cache = new FakeFileHashCache(ImmutableMap.of());
 
-    thrown.expectMessage(
-        "Error reading path "
-            + MorePaths.pathWithPlatformSeparators("foo/FooLib.java")
-            + " for rule //foo:lib");
+    thrown.expectMessage("Error reading path foo/FooLib.java for rule //foo:lib");
 
     new TargetGraphHashing(
             eventBus,

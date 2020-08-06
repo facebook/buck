@@ -56,12 +56,12 @@ public class NdkToolchainDescription
     return new NdkToolchainBuildRule(
         buildTarget,
         context.getProjectFilesystem(),
+        context.getActionGraphBuilder().getSourcePathResolver(),
         (ProvidesCxxPlatform) cxxPlatformRule,
         args.getSharedRuntimePath(),
         args.getCxxRuntime(),
         Tools.resolveTool(args.getObjdump(), context.getActionGraphBuilder()),
-        args.getNdkPath()
-            .map(context.getActionGraphBuilder().getSourcePathResolver()::getAbsolutePath));
+        args.getNdkPath());
   }
 
   @Override

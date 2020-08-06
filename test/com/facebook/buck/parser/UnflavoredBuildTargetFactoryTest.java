@@ -16,8 +16,9 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -36,7 +37,7 @@ public class UnflavoredBuildTargetFactoryTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private Cell cell;
+  private Cells cell;
 
   @Before
   public void setUp() {
@@ -47,19 +48,22 @@ public class UnflavoredBuildTargetFactoryTest {
 
   @Test
   public void createSucceeds() {
-    Path buildFilePath = cell.getFilesystem().resolve("BUCK");
-    Path relativeBuildFilePath = cell.getFilesystem().relativize(buildFilePath);
+    Path buildFilePath = cell.getRootCell().getFilesystem().resolve("BUCK");
+    RelPath relativeBuildFilePath = cell.getRootCell().getFilesystem().relativize(buildFilePath);
     String base_path = MorePaths.getParentOrEmpty(relativeBuildFilePath).toString();
 
     Map<String, Object> malformedMap = ImmutableMap.of("buck.base_path", base_path, "name", "bar");
 
     UnflavoredBuildTargetFactory.createFromRawNode(
-        cell.getRoot(), cell.getCanonicalName(), malformedMap, buildFilePath);
+        cell.getRootCell().getRoot().getPath(),
+        cell.getRootCell().getCanonicalName(),
+        malformedMap,
+        buildFilePath);
   }
 
   @Test
   public void exceptionOnMalformedRawNode() {
-    Path buildFilePath = cell.getFilesystem().resolve("BUCK");
+    Path buildFilePath = cell.getRootCell().getFilesystem().resolve("BUCK");
 
     // Missing base_path
     Map<String, Object> malformedMap = ImmutableMap.of("bar", ImmutableMap.of("name", "bar"));
@@ -67,13 +71,16 @@ public class UnflavoredBuildTargetFactoryTest {
     expectedException.expectMessage("malformed raw data");
 
     UnflavoredBuildTargetFactory.createFromRawNode(
-        cell.getRoot(), cell.getCanonicalName(), malformedMap, buildFilePath);
+        cell.getRootCell().getRoot().getPath(),
+        cell.getRootCell().getCanonicalName(),
+        malformedMap,
+        buildFilePath);
   }
 
   @Test
   public void exceptionOnSwappedRawNode() {
-    Path buildFilePath = cell.getFilesystem().resolve("BUCK");
-    Path relativeBuildFilePath = cell.getFilesystem().relativize(buildFilePath);
+    Path buildFilePath = cell.getRootCell().getFilesystem().resolve("BUCK");
+    RelPath relativeBuildFilePath = cell.getRootCell().getFilesystem().relativize(buildFilePath);
     String base_path = MorePaths.getParentOrEmpty(relativeBuildFilePath).toString();
 
     Map<String, Object> malformedMap = ImmutableMap.of("buck.base_path", base_path, "name", "bar");
@@ -81,8 +88,11 @@ public class UnflavoredBuildTargetFactoryTest {
     expectedException.expectMessage(
         "Raw data claims to come from [], but we tried rooting it at [a].");
 
-    buildFilePath = cell.getFilesystem().resolve("a/BUCK");
+    buildFilePath = cell.getRootCell().getFilesystem().resolve("a/BUCK");
     UnflavoredBuildTargetFactory.createFromRawNode(
-        cell.getRoot(), cell.getCanonicalName(), malformedMap, buildFilePath);
+        cell.getRootCell().getRoot().getPath(),
+        cell.getRootCell().getCanonicalName(),
+        malformedMap,
+        buildFilePath);
   }
 }

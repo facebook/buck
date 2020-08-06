@@ -159,7 +159,7 @@ public class JsLibraryDescriptionTest {
             .findAny()
             .get();
 
-    assertThat(filesRule.getBuildTarget().getFlavors(), hasItems(extraFlavors));
+    assertThat(filesRule.getBuildTarget().getFlavors().getSet(), hasItems(extraFlavors));
   }
 
   @Test
@@ -326,7 +326,7 @@ public class JsLibraryDescriptionTest {
                             "JsFile dependency `%s` of JsLibrary `%s` must have flavors `%s`",
                             depTarget, target, flavors),
                         flavors,
-                        everyItem(in(depTarget.getFlavors())))));
+                        everyItem(in(depTarget.getFlavors().getSet())))));
   }
 
   @Test

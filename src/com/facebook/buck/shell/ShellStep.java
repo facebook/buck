@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.step.Step;
@@ -82,6 +83,10 @@ public abstract class ShellStep implements Step {
     if (!workingDirectory.isAbsolute()) {
       LOG.info("Working directory is not absolute: %s", workingDirectory);
     }
+  }
+
+  protected ShellStep(AbsPath workingDirectory) {
+    this(workingDirectory.getPath());
   }
 
   @Override

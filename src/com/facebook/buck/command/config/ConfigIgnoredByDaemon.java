@@ -45,7 +45,8 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
         ImmutableMap.builder();
     ignoreFieldsForDaemonRestartBuilder.put(
         "apple", ImmutableSet.of("generate_header_symlink_tree_only"));
-    ignoreFieldsForDaemonRestartBuilder.put("build", ImmutableSet.of("threads"));
+    ignoreFieldsForDaemonRestartBuilder.put(
+        "build", ImmutableSet.of("threads", "delete_temporaries"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "cache",
         ImmutableSet.of(
@@ -67,7 +68,12 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
         "client", ImmutableSet.of("id", "skip-action-graph-cache"));
     ignoreFieldsForDaemonRestartBuilder.put("doctor", ImmutableSet.of("slb_server_pool"));
     ignoreFieldsForDaemonRestartBuilder.put(
-        "intellij", ImmutableSet.of("multi_cell_module_support"));
+        "intellij",
+        ImmutableSet.of(
+            "android_generated_files_directory",
+            "auto_generate_android_facet_sources",
+            "multi_cell_module_support",
+            "kotlin_java_runtime_library_template_path"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "log",
         ImmutableSet.of(

@@ -39,7 +39,7 @@ public class ZeroArgMacroTypeCoercerTest {
         new ZeroArgMacroTypeCoercer<>(ZeroArgMacro.class, macro);
     ZeroArgMacro result =
         coercer.coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -55,7 +55,7 @@ public class ZeroArgMacroTypeCoercerTest {
     ZeroArgMacroTypeCoercer<ZeroArgMacro> coercer =
         new ZeroArgMacroTypeCoercer<>(ZeroArgMacro.class, new ZeroArgMacro());
     coercer.coerce(
-        createCellRoots(filesystem),
+        createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
         basePath,
         UnconfiguredTargetConfiguration.INSTANCE,

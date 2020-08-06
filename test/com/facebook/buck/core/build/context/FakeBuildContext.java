@@ -41,7 +41,7 @@ public class FakeBuildContext {
   public static BuildContext withSourcePathResolver(SourcePathResolverAdapter pathResolver) {
     return BuildContext.of(
         pathResolver,
-        new FakeProjectFilesystem().getRootPath(),
+        new FakeProjectFilesystem().getRootPath().getPath(),
         new FakeJavaPackageFinder(),
         BuckEventBusForTests.newInstance(),
         false);
@@ -55,7 +55,7 @@ public class FakeBuildContext {
       SourcePathResolverAdapter pathResolver, ProjectFilesystem filesystem) {
     return BuildContext.of(
         pathResolver,
-        filesystem.getRootPath(),
+        filesystem.getRootPath().getPath(),
         new FakeJavaPackageFinder(),
         BuckEventBusForTests.newInstance(),
         false);
@@ -65,7 +65,7 @@ public class FakeBuildContext {
       SourcePathResolverAdapter pathResolver, BuckEventBus buckEventBus) {
     return BuildContext.of(
         pathResolver,
-        new FakeProjectFilesystem().getRootPath(),
+        new FakeProjectFilesystem().getRootPath().getPath(),
         new FakeJavaPackageFinder(),
         buckEventBus,
         false);

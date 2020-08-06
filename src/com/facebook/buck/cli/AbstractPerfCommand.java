@@ -20,6 +20,7 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -175,7 +176,8 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
           params
               .getParser()
               .buildTargetGraph(
-                  createParsingContext(params.getCell(), pool.getListeningExecutorService()),
+                  createParsingContext(
+                      params.getCells().getRootCell(), pool.getListeningExecutorService()),
                   targets);
     } catch (BuildFileParseException e) {
       throw new BuckUncheckedExecutionException(e);
@@ -231,12 +233,17 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
   protected StackedFileHashCache createStackedFileHashCache(CommandRunnerParams params)
       throws InterruptedException {
     FileHashCacheMode cacheMode =
-        params.getCell().getBuckConfig().getView(BuildBuckConfig.class).getFileHashCacheMode();
+        params
+            .getCells()
+            .getRootCell()
+            .getBuckConfig()
+            .getView(BuildBuckConfig.class)
+            .getFileHashCacheMode();
 
     return new StackedFileHashCache(
         ImmutableList.<ProjectFileHashCache>builder()
             .addAll(
-                params.getCell().getAllCells().stream()
+                params.getCells().getRootCell().getAllCells().stream()
                     .flatMap(this::createFileHashCaches)
                     .collect(Collectors.toList()))
             .addAll(
@@ -245,7 +252,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                       @Override
                       public ProjectFilesystem createProjectFilesystem(
                           CanonicalCellName cellName,
-                          Path root,
+                          AbsPath root,
                           Config config,
                           Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
                           boolean buckOutIncludeTargetConfigHash) {
@@ -262,7 +269,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                       @Override
                       public ProjectFilesystem createProjectFilesystem(
                           CanonicalCellName cellName,
-                          Path root,
+                          AbsPath root,
                           Config config,
                           boolean buckOutIncludeTargetConfigHash) {
                         return createProjectFilesystem(
@@ -276,7 +283,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                       @Override
                       public ProjectFilesystem createProjectFilesystem(
                           CanonicalCellName cellName,
-                          Path root,
+                          AbsPath root,
                           boolean buckOutIncludeTargetCofigHash) {
                         final Config config = new Config();
                         return createProjectFilesystem(
@@ -286,7 +293,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                       @Override
                       public ProjectFilesystem createOrThrow(
                           CanonicalCellName cellName,
-                          Path path,
+                          AbsPath path,
                           boolean buckOutIncludeTargetCofigHash) {
                         return createProjectFilesystem(
                             cellName, path, buckOutIncludeTargetCofigHash);

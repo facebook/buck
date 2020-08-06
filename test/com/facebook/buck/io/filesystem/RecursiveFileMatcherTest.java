@@ -20,10 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import org.junit.Test;
@@ -32,20 +32,20 @@ public class RecursiveFileMatcherTest {
 
   @Test
   public void matchesPathsUnderProvidedBasePath() {
-    Path basePath = Paths.get("foo");
+    RelPath basePath = RelPath.get("foo");
     RecursiveFileMatcher matcher = RecursiveFileMatcher.of(basePath);
     assertTrue(matcher.matches(basePath.resolve("bar")));
   }
 
   @Test
   public void doesNotMatchPathsOutsideOfProvidedBasePath() {
-    RecursiveFileMatcher matcher = RecursiveFileMatcher.of(Paths.get("foo"));
+    RecursiveFileMatcher matcher = RecursiveFileMatcher.of(RelPath.get("foo"));
     assertFalse(matcher.matches(Paths.get("not_relative_too_root")));
   }
 
   @Test
   public void usesWatchmanQueryToMatchProvidedBasePath() {
-    RecursiveFileMatcher matcher = RecursiveFileMatcher.of(Paths.get("path"));
+    RecursiveFileMatcher matcher = RecursiveFileMatcher.of(RelPath.get("path"));
     assertEquals(
         matcher.toWatchmanMatchQuery(EnumSet.noneOf(Capability.class)),
         ImmutableList.of("match", "path" + File.separator + "**", "wholename"));
@@ -53,7 +53,7 @@ public class RecursiveFileMatcherTest {
 
   @Test
   public void returnsAPathWhenAskedForPathOrGlob() {
-    RecursiveFileMatcher matcher = RecursiveFileMatcher.of(Paths.get("path"));
+    RecursiveFileMatcher matcher = RecursiveFileMatcher.of(RelPath.get("path"));
     assertEquals(matcher.getPathOrGlob(), "path");
   }
 }

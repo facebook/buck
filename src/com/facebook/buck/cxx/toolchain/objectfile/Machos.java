@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class Machos {
 
@@ -56,6 +57,8 @@ public class Machos {
   static final short N_OSO = (short) 0x66;
 
   static final String LINKEDIT = "__LINKEDIT";
+
+  private static final int NO_VALUE_MARKER = -1;
 
   private Machos() {}
 
@@ -210,66 +213,62 @@ public class Machos {
     byte[] stringTableBytes = new byte[stringTableSize];
     map.position(stringTableOffset);
     map.get(stringTableBytes);
-    ByteBuffer stringTable = ByteBuffer.wrap(stringTableBytes);
 
     map.position(symbolTableOffset);
 
-    Map<Integer, Integer> strings = new HashMap<>();
+    // NB: We need to rewrite the string table as it's not deterministic and it would break
+    //     caching behavior. On the other hand, the symbol table order is deterministic.
+
+    boolean is64bit = header.getIs64Bit();
+    Map<byte[], byte[]> replacementPathMap = generateReplacementMap(cellRoots);
+    IntIntMap strings = new IntIntMap4a(symbolTableCount, 0.75f, NO_VALUE_MARKER);
     for (int i = 0; i < symbolTableCount; i++) {
+      // Each LC_SYMTAB entry consists of the following fields:
+      // - String Index: 4 bytes (offset into the string table)
+      // - Type: 1 byte
+      // - Section: 1 byte
+      // - Description: 2 bytes
+      // - Value: 8 bytes on 64bit, 4 bytes on 32bit
       int stringTableIndexPosition = map.position();
       int stringTableIndex = ObjectFileScrubbers.getLittleEndianInt(map);
       byte type = map.get();
-      /* section */ map.get();
-      /* description */ ObjectFileScrubbers.getLittleEndianShort(map);
-      int valuePosition = map.position();
-      if (header.getIs64Bit()) {
-        /* value */ ObjectFileScrubbers.getLittleEndianLong(map);
-      } else {
-        /* value */ ObjectFileScrubbers.getLittleEndianInt(map);
-      }
-      if (stringTableIndex < 2) {
-        continue;
-      }
 
-      int position = map.position();
-      try {
-        int newStringTableIndex;
-        if (strings.containsKey(stringTableIndex)) {
-          newStringTableIndex = strings.get(stringTableIndex);
-        } else {
-          stringTable.position(stringTableIndex);
-          String string = ObjectFileScrubbers.getAsciiString(stringTable);
+      if (stringTableIndex >= 2) {
+        int newStringTableIndex = strings.get(stringTableIndex);
+        if (newStringTableIndex == NO_VALUE_MARKER) {
+          ByteBuffer charByteBuffer =
+              ObjectFileScrubbers.getCharByteBuffer(stringTableBytes, stringTableIndex);
+
           if (type == N_OSO) {
-            for (Map.Entry<Path, Path> root : cellRoots.entrySet()) {
-              String rootPrefix = root.getKey() + "/";
-              if (string.startsWith(rootPrefix)) {
-                String replacementPrefix = root.getValue().toString();
-                if (replacementPrefix.equals("")) {
-                  replacementPrefix = ".";
-                }
-                string = replacementPrefix + "/" + string.substring(rootPrefix.length());
-              }
+            Optional<ByteBuffer> maybeRewrittenCharByteBuffer =
+                tryRewritingMatchingPath(stringTableBytes, stringTableIndex, replacementPathMap);
+            if (maybeRewrittenCharByteBuffer.isPresent()) {
+              charByteBuffer = maybeRewrittenCharByteBuffer.get();
             }
 
+            int valuePosition = stringTableIndexPosition + 8;
             map.position(valuePosition);
             int lastModifiedValue = ObjectFileCommonModificationDate.COMMON_MODIFICATION_TIME_STAMP;
-            if (header.getIs64Bit()) {
+            if (is64bit) {
               ObjectFileScrubbers.putLittleEndianLong(map, lastModifiedValue);
             } else {
               ObjectFileScrubbers.putLittleEndianInt(map, lastModifiedValue);
             }
           }
-          map.position(currentStringTableOffset);
-          ObjectFileScrubbers.putAsciiString(map, string);
+          ObjectFileScrubbers.putCharByteBuffer(map, currentStringTableOffset, charByteBuffer);
+
           newStringTableIndex = currentStringTableOffset - stringTableOffset;
-          currentStringTableOffset = map.position();
           strings.put(stringTableIndex, newStringTableIndex);
+
+          currentStringTableOffset = map.position();
         }
         map.position(stringTableIndexPosition);
         ObjectFileScrubbers.putLittleEndianInt(map, newStringTableIndex);
-      } finally {
-        map.position(position);
       }
+
+      int symtabEntrySize = 4 + 1 + 1 + 2 + (is64bit ? 8 : 4);
+      int nextSymtabEntryOffset = stringTableIndexPosition + symtabEntrySize;
+      map.position(nextSymtabEntryOffset);
     }
 
     map.position(stringTableSizePosition);
@@ -328,5 +327,116 @@ public class Machos {
     public MachoException(String msg) {
       super(msg);
     }
+  }
+
+  /**
+   * Prepares a replacement map for prefixes. For example, if {@p pathMap} had two entries: 1.
+   * "/path/to/repo" -> "", 2. "/path/to/repo/cell" -> "cell"
+   *
+   * <p>The resulting map would contain: 1. "/path/to/repo/" -> "./" 2. "/path/to/repo/cell/" ->
+   * "cell/"
+   *
+   * <p>The above means we can do very simple (and fast!) search & replace.
+   */
+  public static Map<byte[], byte[]> generateReplacementMap(Map<Path, Path> pathMap) {
+    // Preprocess the input map once, so we can be efficient with byte[] arrays instead of Strings
+    Map<byte[], byte[]> replacementMap = new HashMap<>();
+    for (Map.Entry<Path, Path> pathEntry : pathMap.entrySet()) {
+      String searchPrefix = pathEntry.getKey() + "/";
+
+      String replacementPrefix = pathEntry.getValue().toString();
+      if (replacementPrefix.isEmpty()) {
+        replacementPrefix = ".";
+      }
+      replacementPrefix = replacementPrefix + "/";
+
+      byte[] searchPrefixBytes = searchPrefix.getBytes(Charsets.UTF_8);
+      byte[] replacementBytes = replacementPrefix.getBytes(Charsets.UTF_8);
+
+      if (replacementBytes.length > searchPrefixBytes.length) {
+        throw new IllegalStateException(
+            "Relativization should shorten paths, not lengthen. Prefix="
+                + searchPrefix
+                + "; replacement="
+                + replacementPrefix);
+      }
+
+      replacementMap.put(searchPrefixBytes, replacementBytes);
+    }
+
+    return replacementMap;
+  }
+
+  /**
+   * Checks whether a string matches a prefix and returns a rewritten copy if that's the case. For
+   * example, given a string "/Users/fb/repo/cell" and a replacement map containing
+   * "/Users/fb/repo/" -> "./", it will return a ByteBuffer wrapping "./cell".
+   *
+   * <p>NB: This is a perf sensitive method.
+   */
+  public static Optional<ByteBuffer> tryRewritingMatchingPath(
+      byte[] stringBytes, int stringOffset, Map<byte[], byte[]> replacementMap) {
+    int nullCharOffset = stringOffset;
+    while (stringBytes[nullCharOffset] != 0x0) {
+      ++nullCharOffset;
+    }
+
+    int stringLength = nullCharOffset - stringOffset;
+    for (Map.Entry<byte[], byte[]> replacementEntry : replacementMap.entrySet()) {
+      byte[] searchPrefix = replacementEntry.getKey();
+      if (bytesStartsWith(stringBytes, stringOffset, searchPrefix)) {
+        // stringBytes variable:
+        //
+        //  stringOffset
+        //       |
+        //       v
+        //       +------------------+---------------+
+        //       |   searchPrefix   |    suffix     |
+        //       +------------------+---------------+
+        //                          ^
+        //                          |
+        //                     suffixOffset
+        //
+        // replacement variable:
+        //
+        //       0
+        //       |
+        //       v
+        //       +-------------+---------------+
+        //       | replacement |    suffix     |
+        //       +-------------+---------------+
+        //                     ^
+        //                     |
+        //             replacement.length
+
+        byte[] replacement = replacementEntry.getValue();
+
+        int suffixLength = stringLength - searchPrefix.length;
+        int suffixOffset = stringOffset + searchPrefix.length;
+
+        byte[] rewrittenPath = new byte[replacement.length + suffixLength];
+        System.arraycopy(replacement, 0, rewrittenPath, 0, replacement.length);
+        System.arraycopy(
+            stringBytes, suffixOffset, rewrittenPath, replacement.length, suffixLength);
+
+        return Optional.of(ByteBuffer.wrap(rewrittenPath));
+      }
+    }
+
+    return Optional.empty();
+  }
+
+  private static boolean bytesStartsWith(byte[] haystack, int haystackOffset, byte[] needle) {
+    if (haystackOffset + needle.length > haystack.length) {
+      return false;
+    }
+
+    for (int i = 0; i < needle.length; i++) {
+      if (haystack[haystackOffset + i] != needle[i]) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

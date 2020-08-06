@@ -1,20 +1,10 @@
 java_library(
-    name = "dep",
-    srcs = [
-        "A.java",
-    ],
-    target_compatible_with = [
-        "buck//config/constraints:linux",
-    ],
-)
-
-java_library(
     name = "lib",
     srcs = [
         "B.java",
     ],
     deps = [
-        ":dep",
+        ":dep_with_compatible_with",
     ],
 )
 
@@ -25,7 +15,7 @@ java_library(
     ],
     default_target_platform = "//config:linux_x86-64",
     deps = [
-        ":dep",
+        ":dep_with_compatible_with",
     ],
 )
 
@@ -36,7 +26,7 @@ java_library(
     ],
     default_target_platform = "//config:macos_x86-64",
     deps = [
-        ":dep",
+        ":dep_with_compatible_with",
     ],
 )
 

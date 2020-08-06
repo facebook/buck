@@ -104,14 +104,16 @@ public class IjProjectBuckConfig {
   static IjProjectConfig.Builder createBuilder(BuckConfig buckConfig) {
     return IjProjectConfig.builder()
         .setAutogenerateAndroidFacetSourcesEnabled(
-            !buckConfig.getBooleanValue(
-                PROJECT_BUCK_CONFIG_SECTION, "disable_r_java_idea_generator", false))
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "auto_generate_android_facet_sources", true))
         .setJavaBuckConfig(buckConfig.getView(JavaBuckConfig.class))
         .setBuckConfig(buckConfig)
         .setProjectJdkName(buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "jdk_name"))
         .setProjectJdkType(buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "jdk_type"))
         .setAndroidModuleSdkName(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_module_sdk_name"))
+        .setAndroidGenDir(
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_generated_files_directory"))
         .setAndroidModuleSdkType(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_module_sdk_type"))
         .setIntellijModuleSdkName(
@@ -158,7 +160,10 @@ public class IjProjectBuckConfig {
                 INTELLIJ_BUCK_CONFIG_SECTION, "multi_cell_module_support", false))
         .setGeneratingDummyRDotJavaEnabled(
             buckConfig.getBooleanValue(
-                INTELLIJ_BUCK_CONFIG_SECTION, "generate_dummy_r_dot_java", true));
+                INTELLIJ_BUCK_CONFIG_SECTION, "generate_dummy_r_dot_java", true))
+        .setKotlinJavaRuntimeLibraryTemplatePath(
+            buckConfig.getPath(
+                INTELLIJ_BUCK_CONFIG_SECTION, "kotlin_java_runtime_library_template_path"));
   }
 
   private static String getModuleGroupName(String moduleGroupName, BuckConfig buckConfig) {

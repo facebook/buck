@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.linker;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -69,6 +70,11 @@ public interface Linker extends Tool {
    *     supported.
    */
   Iterable<Arg> fileList(Path fileListPath);
+
+  /** Abs-path version of {@link #fileList(Path)}. */
+  default Iterable<Arg> fileList(AbsPath fileListPath) {
+    return fileList(fileListPath.getPath());
+  }
 
   /**
    * @return the placeholder used by the dynamic loader for the directory containing the top-level

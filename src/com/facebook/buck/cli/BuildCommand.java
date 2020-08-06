@@ -176,6 +176,26 @@ public class BuildCommand extends AbstractCommand {
       usage = "Print the path to the output for each of the built rules relative to the cell.")
   private boolean showOutput;
 
+  /**
+   * Enum with values for `--output-format` CLI parameter. Only applies when --show-outputs is used.
+   */
+  private enum OutputFormat {
+    DEFAULT,
+    FULL,
+    JSON,
+    FULL_JSON,
+  }
+
+  @Option(
+      name = "--output-format",
+      usage =
+          "Output format (default: list).\n"
+              + " default -  output paths are printed relative to the cell.\n"
+              + " full - output paths are printed as absolute paths.\n"
+              + " json - JSON format with relative paths\n"
+              + " full_json - JSON format with absolute paths.\n")
+  private OutputFormat outputFormat = OutputFormat.DEFAULT;
+
   @Option(
       name = SHOW_OUTPUTS_LONG_ARG,
       usage = "Print the path to the outputs for each of the built rules relative to the cell.")
@@ -309,14 +329,14 @@ public class BuildCommand extends AbstractCommand {
   private Path getLogDirectoryPath(CommandRunnerParams params) {
     InvocationInfo invocationInfo = params.getInvocationInfo().get();
     Path logDirectoryPath = invocationInfo.getLogDirectoryPath();
-    ProjectFilesystem filesystem = params.getCell().getFilesystem();
+    ProjectFilesystem filesystem = params.getCells().getRootCell().getFilesystem();
     return filesystem.resolve(logDirectoryPath);
   }
 
   BuildPrehook getPrehook(ListeningProcessExecutor processExecutor, CommandRunnerParams params) {
     return new BuildPrehook(
         processExecutor,
-        params.getCell(),
+        params.getCells().getRootCell(),
         params.getBuckEventBus(),
         params.getBuckConfig(),
         params.getEnvironment(),
@@ -388,7 +408,7 @@ public class BuildCommand extends AbstractCommand {
       specs =
           targetNodeSpecEnhancer.apply(
               parseArgumentsAsTargetNodeSpecs(
-                  params.getCell(),
+                  params.getCells().getRootCell(),
                   params.getClientWorkingDir(),
                   getArguments(),
                   params.getBuckConfig()));
@@ -437,7 +457,9 @@ public class BuildCommand extends AbstractCommand {
     BuildTarget explicitTarget =
         params
             .getUnconfiguredBuildTargetFactory()
-            .create(targetWithOutputLabel.getTargetName(), params.getCell().getCellNameResolver())
+            .create(
+                targetWithOutputLabel.getTargetName(),
+                params.getCells().getRootCell().getCellNameResolver())
             // TODO(nga): ignores default_target_platform and configuration detector
             .configure(targetConfiguration.orElse(UnconfiguredTargetConfiguration.INSTANCE));
     Iterable<BuildRule> actionGraphRules =
@@ -539,6 +561,12 @@ public class BuildCommand extends AbstractCommand {
         || showJsonOutput
         || showFullJsonOutput
         || showRuleKey) {
+      if (outputFormat != OutputFormat.DEFAULT && !showOutputs) {
+        params
+            .getConsole()
+            .printErrorText(String.format("--output-format can only be used with --show-outputs"));
+        return ExitCode.BUILD_ERROR;
+      }
       showOutputs(params, graphsAndBuildTargets, ruleKeyCacheScope);
     }
     if (outputPathForSingleBuildTarget != null) {
@@ -561,7 +589,7 @@ public class BuildCommand extends AbstractCommand {
                 OUT_LONG_ARG,
                 loneTarget);
 
-        ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
+        ProjectFilesystem projectFilesystem = params.getCells().getRootCell().getFilesystem();
         SourcePathResolverAdapter pathResolver =
             graphs.getActionGraphAndBuilder().getActionGraphBuilder().getSourcePathResolver();
 
@@ -643,7 +671,7 @@ public class BuildCommand extends AbstractCommand {
       return;
     }
     Path absolutePathWithoutHash = maybeAbsolutePathWithoutHash.get();
-    Files.deleteIfExists(absolutePathWithoutHash);
+    MostFiles.deleteRecursivelyIfExists(absolutePathWithoutHash);
     Files.createDirectories(absolutePathWithoutHash.getParent());
 
     switch (linkMode) {
@@ -711,7 +739,13 @@ public class BuildCommand extends AbstractCommand {
       CommandRunnerParams params, GraphsAndBuildTargets graphsAndBuildTargets) throws IOException {
     // Clean up last buck-out/last.
     Path lastOutputDirPath =
-        params.getCell().getFilesystem().getBuckPaths().getLastOutputDir().toAbsolutePath();
+        params
+            .getCells()
+            .getRootCell()
+            .getFilesystem()
+            .getBuckPaths()
+            .getLastOutputDir()
+            .toAbsolutePath();
     MostFiles.deleteRecursivelyIfExists(lastOutputDirPath);
     Files.createDirectories(lastOutputDirPath);
 
@@ -776,14 +810,19 @@ public class BuildCommand extends AbstractCommand {
                   showOutputs)
               .map(
                   path ->
-                      showFullOutput || showFullJsonOutput
+                      isShowOutputsPathAbsolute()
                           ? path
-                          : params.getCell().getFilesystem().relativize(path));
+                          : params
+                              .getCells()
+                              .getRootCell()
+                              .getFilesystem()
+                              .relativize(path)
+                              .getPath());
 
       params.getConsole().getStdOut().flush();
-      if (showJsonOutput || showFullJsonOutput) {
+      if (isShowOutputsPathJsonFormat()) {
         sortedJsonOutputs.put(
-            rule.getFullyQualifiedName(), outputPath.map(Object::toString).orElse(""));
+            targetWithOutputs.toString(), outputPath.map(Object::toString).orElse(""));
       } else {
         params
             .getConsole()
@@ -796,13 +835,27 @@ public class BuildCommand extends AbstractCommand {
       }
     }
 
-    if (showJsonOutput || showFullJsonOutput) {
+    if (isShowOutputsPathJsonFormat()) {
       // Print the build rule information as JSON.
       StringWriter stringWriter = new StringWriter();
       ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, sortedJsonOutputs);
       String output = stringWriter.getBuffer().toString();
       params.getConsole().getStdOut().println(output);
     }
+  }
+
+  private boolean isShowOutputsPathAbsolute() {
+    return showFullOutput
+        || showFullJsonOutput
+        || showOutputs
+            && (outputFormat == OutputFormat.FULL || outputFormat == OutputFormat.FULL_JSON);
+  }
+
+  private boolean isShowOutputsPathJsonFormat() {
+    return showJsonOutput
+        || showFullJsonOutput
+        || showOutputs
+            && (outputFormat == OutputFormat.JSON || outputFormat == OutputFormat.FULL_JSON);
   }
 
   private String getOutputPathToShow(Optional<Path> path) {
@@ -820,7 +873,7 @@ public class BuildCommand extends AbstractCommand {
       return params
           .getParser()
           .buildTargetGraphWithoutTopLevelConfigurationTargets(
-              createParsingContext(params.getCell(), executor)
+              createParsingContext(params.getCells().getRootCell(), executor)
                   .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                   .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode()),
               specs,

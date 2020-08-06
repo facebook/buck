@@ -19,11 +19,13 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayloadAndDependencyStack;
 import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversableWithPayloadAndDependencyStack;
@@ -37,14 +39,12 @@ import com.facebook.buck.parser.temporarytargetuniquenesschecker.TemporaryUnconf
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -64,14 +64,17 @@ abstract class AbstractParser implements Parser {
   protected final PerBuildStateFactory perBuildStateFactory;
   protected final DaemonicParserState permState;
   protected final BuckEventBus eventBus;
+  private final boolean buckOutIncludeTargetConfigHash;
 
   AbstractParser(
       DaemonicParserState daemonicParserState,
       PerBuildStateFactory perBuildStateFactory,
-      BuckEventBus eventBus) {
+      BuckEventBus eventBus,
+      boolean buckOutIncludeTargetConfigHash) {
     this.perBuildStateFactory = perBuildStateFactory;
     this.permState = daemonicParserState;
     this.eventBus = eventBus;
+    this.buckOutIncludeTargetConfigHash = buckOutIncludeTargetConfigHash;
   }
 
   @Override
@@ -86,42 +89,41 @@ abstract class AbstractParser implements Parser {
 
   @VisibleForTesting
   static BuildFileManifest getTargetNodeRawAttributes(
-      PerBuildState state, Cell cell, Path buildFile) throws BuildFileParseException {
-    Preconditions.checkState(buildFile.isAbsolute());
+      PerBuildState state, Cell cell, AbsPath buildFile) throws BuildFileParseException {
     return state.getBuildFileManifest(cell, buildFile);
   }
 
   @Override
-  public ImmutableList<TargetNode<?>> getAllTargetNodes(
+  public ImmutableList<TargetNodeMaybeIncompatible> getAllTargetNodes(
       PerBuildState perBuildState,
       Cell cell,
-      Path buildFile,
+      AbsPath buildFile,
       Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException {
     return perBuildState.getAllTargetNodes(cell, buildFile, targetConfiguration);
   }
 
   @Override
-  public TargetNode<?> getTargetNode(
+  public TargetNode<?> getTargetNodeAssertCompatible(
       ParsingContext parsingContext, BuildTarget target, DependencyStack dependencyStack)
       throws BuildFileParseException {
     try (PerBuildState state = perBuildStateFactory.create(parsingContext, permState)) {
-      return state.getTargetNode(target, dependencyStack);
+      return state.getTargetNodeAssertCompatible(target, dependencyStack);
     }
   }
 
   @Override
-  public TargetNode<?> getTargetNode(
+  public TargetNode<?> getTargetNodeAssertCompatible(
       PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)
       throws BuildFileParseException {
-    return perBuildState.getTargetNode(target, dependencyStack);
+    return perBuildState.getTargetNodeAssertCompatible(target, dependencyStack);
   }
 
   @Override
-  public ListenableFuture<TargetNode<?>> getTargetNodeJob(
+  public ListenableFuture<TargetNode<?>> getTargetNodeJobAssertCompatible(
       PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)
       throws BuildTargetException {
-    return perBuildState.getTargetNodeJob(target, dependencyStack);
+    return perBuildState.getTargetNodeJobAssertCompatible(target, dependencyStack);
   }
 
   /**
@@ -177,7 +179,7 @@ abstract class AbstractParser implements Parser {
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
     TemporaryUnconfiguredTargetToTargetUniquenessChecker checker =
-        new TemporaryUnconfiguredTargetToTargetUniquenessChecker();
+        TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(buckOutIncludeTargetConfigHash);
 
     ParseEvent.Started parseStart = ParseEvent.started(toExplore);
     eventBus.post(parseStart);
@@ -186,9 +188,13 @@ abstract class AbstractParser implements Parser {
         (target, dependencyStack) -> {
           TargetNode<?> node;
           try {
-            node = state.getTargetNode(target, dependencyStack);
+            TargetNodeMaybeIncompatible nodeMaybe = state.getTargetNode(target, dependencyStack);
+            node = assertTargetIsCompatible(state, nodeMaybe, dependencyStack);
           } catch (BuildFileParseException e) {
             throw new RuntimeException(e);
+          } catch (HumanReadableException e) {
+            eventBus.post(ParseEvent.finished(parseStart, processedBytes.get(), Optional.empty()));
+            throw e;
           }
 
           // this second lookup loop may *seem* pointless, but it allows us to report which node is
@@ -226,20 +232,21 @@ abstract class AbstractParser implements Parser {
         TargetNode<?> targetNode = targetAndNode.getValue().getFirst();
         DependencyStack dependencyStack = targetAndNode.getValue().getSecond();
 
-        assertTargetIsCompatible(state, targetNode, dependencyStack);
-
         graph.addNode(targetNode);
         MoreMaps.putCheckEquals(index, target, targetNode);
         checker.addTarget(target, dependencyStack);
         if (target.isFlavored()) {
           BuildTarget unflavoredTarget = target.withoutFlavors();
           MoreMaps.putCheckEquals(
-              index, unflavoredTarget, state.getTargetNode(unflavoredTarget, dependencyStack));
+              index,
+              unflavoredTarget,
+              state.getTargetNodeAssertCompatible(unflavoredTarget, dependencyStack));
           // NOTE: do not used uniqueness checked for unflavored target
           // because `target.withoutFlavors()` does not switch unconfigured target
         }
         for (BuildTarget dep : targetNode.getParseDeps()) {
-          graph.addEdge(targetNode, state.getTargetNode(dep, dependencyStack.child(dep)));
+          graph.addEdge(
+              targetNode, state.getTargetNodeAssertCompatible(dep, dependencyStack.child(dep)));
         }
       }
 
@@ -311,9 +318,8 @@ abstract class AbstractParser implements Parser {
    * @throws com.facebook.buck.core.exceptions.HumanReadableException if the target not is not
    *     compatible with the target platform.
    */
-  @SuppressWarnings("unused")
-  protected void assertTargetIsCompatible(
-      PerBuildState state, TargetNode<?> targetNode, DependencyStack dependencyStack) {}
+  protected abstract TargetNode<?> assertTargetIsCompatible(
+      PerBuildState state, TargetNodeMaybeIncompatible targetNode, DependencyStack dependencyStack);
 
   @Override
   public String toString() {

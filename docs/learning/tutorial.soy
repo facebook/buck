@@ -147,7 +147,7 @@ echo "&lt;?xml version='1.0' encoding='utf-8' ?>
 {literal}<pre>
 echo "android_resource(
   name = 'res',
-  res = 'res',
+  res = subdir_glob([('res', '**')]),
   package = 'com.example',
   visibility = [
     '//apps/myapp:',

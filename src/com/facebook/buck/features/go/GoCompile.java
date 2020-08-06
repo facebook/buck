@@ -211,7 +211,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
       steps.add(
           new GoCompileStep(
-              getProjectFilesystem().getRootPath(),
+              getProjectFilesystem().getRootPath().getPath(),
               compiler.getEnvironment(resolver),
               compiler.getCommandPrefix(resolver),
               compilerFlags,
@@ -264,7 +264,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     if (!getAsmSources(groupedSrcs).isEmpty() || !extraAsmOutputs.isEmpty()) {
       steps.add(
           new GoPackStep(
-              getProjectFilesystem().getRootPath(),
+              getProjectFilesystem().getRootPath().getPath(),
               packer.getEnvironment(resolver),
               packer.getCommandPrefix(resolver),
               GoPackStep.Operation.APPEND,

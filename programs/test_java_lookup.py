@@ -84,6 +84,18 @@ class TestJavaPath(unittest.TestCase):
             os.path.join(java_base_path, "jdk1.8.1_100"),
         )
 
+    def test_openjdk_8_highest_version_lookup(self):
+        java_base_path = tempfile.mkdtemp()
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-7.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-8.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-9.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-18.jdk"))
+
+        self.assertEquals(
+            _get_java_path_for_highest_minor_version(java_base_path, 8),
+            os.path.join(java_base_path, "adoptopenjdk-8.jdk"),
+        )
+
     def test_java_11_highest_version_lookup(self):
         java_base_path = tempfile.mkdtemp()
         os.mkdir(os.path.join(java_base_path, "jdk-10.0.1"))
@@ -97,6 +109,25 @@ class TestJavaPath(unittest.TestCase):
         self.assertEquals(
             _get_java_path_for_highest_minor_version(java_base_path, 11),
             os.path.join(java_base_path, "jdk-11.0.2_200"),
+        )
+
+    def test_openjdk_11_highest_version_lookup(self):
+        java_base_path = tempfile.mkdtemp()
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-7.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-8.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-9.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-10.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-11.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-11.0.2.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-12.jdk"))
+
+        self.assertEquals(
+            _get_java_path_for_highest_minor_version(java_base_path, 11),
+            os.path.join(java_base_path, "adoptopenjdk-11.0.2.jdk"),
+        )
+        self.assertEquals(
+            _get_java_path_for_highest_minor_version(java_base_path, 12),
+            os.path.join(java_base_path, "adoptopenjdk-12.jdk"),
         )
 
     def tearDown(self):

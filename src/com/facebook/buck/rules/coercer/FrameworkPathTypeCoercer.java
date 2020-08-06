@@ -18,32 +18,40 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 
-public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
+/** Coerce to {@link com.facebook.buck.rules.coercer.FrameworkPath}. */
+public class FrameworkPathTypeCoercer implements TypeCoercer<Object, FrameworkPath> {
 
-  private final TypeCoercer<SourcePath> sourcePathTypeCoercer;
+  private final TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer;
 
-  public FrameworkPathTypeCoercer(TypeCoercer<SourcePath> sourcePathTypeCoercer) {
+  public FrameworkPathTypeCoercer(
+      TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer) {
     this.sourcePathTypeCoercer = sourcePathTypeCoercer;
   }
 
   @Override
-  public Class<FrameworkPath> getOutputClass() {
-    return FrameworkPath.class;
+  public TypeToken<FrameworkPath> getOutputType() {
+    return TypeToken.of(FrameworkPath.class);
+  }
+
+  @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
   }
 
   @Override
@@ -71,8 +79,18 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
   }
 
   @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
+  }
+
+  @Override
   public FrameworkPath coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -111,7 +129,7 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
         }
       } else {
         return FrameworkPath.ofSourcePath(
-            sourcePathTypeCoercer.coerce(
+            sourcePathTypeCoercer.coerceBoth(
                 cellRoots,
                 filesystem,
                 pathRelativeToProjectRoot,
@@ -122,6 +140,6 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
     }
 
     throw CoerceFailedException.simple(
-        object, getOutputClass(), "input should be either a source tree path or a source path");
+        object, getOutputType(), "input should be either a source tree path or a source path");
   }
 }

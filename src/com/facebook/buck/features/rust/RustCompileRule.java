@@ -18,6 +18,7 @@ package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -86,7 +87,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
       String rootModule,
       RemapSrcPaths remapSrcPaths,
-      Optional<Path> xcrunSdkPath) {
+      Optional<String> xcrunSdkPath) {
     super(
         buildTarget,
         projectFilesystem,
@@ -120,7 +121,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
       String rootModule,
       RemapSrcPaths remapSrcPaths,
-      Optional<Path> xcrunSdkPath) {
+      Optional<String> xcrunSdkPath) {
     return new RustCompileRule(
         buildTarget,
         projectFilesystem,
@@ -174,7 +175,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         reason = "This should probably be properly represented as a ToolChain?",
         serialization = DefaultFieldSerialization.class,
         inputs = IgnoredFieldInputs.class)
-    private final Optional<Path> xcrunSdkpath;
+    private final Optional<String> xcrunSdkpath;
 
     public Impl(
         Tool compiler,
@@ -188,7 +189,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         String outputName,
         ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
         RemapSrcPaths remapSrcPaths,
-        Optional<Path> xcrunpath) {
+        Optional<String> xcrunpath) {
       this.compiler = compiler;
       this.linker = linker;
       this.buildTarget = buildTarget;
@@ -215,9 +216,9 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
 
       SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
-      Path argFilePath =
+      AbsPath argFilePath =
           filesystem.getRootPath().resolve(outputPathResolver.getTempPath("argsfile.txt"));
-      Path fileListPath =
+      AbsPath fileListPath =
           filesystem.getRootPath().resolve(outputPathResolver.getTempPath("filelist.txt"));
 
       ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
@@ -246,14 +247,14 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
                           ent -> resolver.getAbsolutePath(ent.getKey())))));
       steps.addAll(
           CxxPrepareForLinkStep.create(
-              argFilePath,
-              fileListPath,
+              argFilePath.getPath(),
+              fileListPath.getPath(),
               linker.fileList(fileListPath),
               outputPath,
               linkerArgs,
               linker,
               buildTarget.getCell(),
-              filesystem.getRootPath(),
+              filesystem.getRootPath().getPath(),
               resolver));
 
       steps.add(
@@ -320,7 +321,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
                   Maps.transformValues(
                       environment, v -> Arg.stringify(v, buildContext.getSourcePathResolver())));
 
-              Path root = filesystem.getRootPath();
+              AbsPath root = filesystem.getRootPath();
               ForwardRelativePath basePath = buildTarget.getCellRelativeBasePath().getPath();
 
               // These need to be set as absolute paths - the intended use
@@ -333,7 +334,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
                   "RUSTC_BUILD_CONTAINER_BASE_PATH",
                   root.resolve(scratchDir.resolve(basePath.toPath(scratchDir.getFileSystem())))
                       + "/");
-              Impl.this.xcrunSdkpath.ifPresent((path) -> env.put("SDKROOT", path.toString()));
+              Impl.this.xcrunSdkpath.ifPresent((path) -> env.put("SDKROOT", path));
               return env.build();
             }
 

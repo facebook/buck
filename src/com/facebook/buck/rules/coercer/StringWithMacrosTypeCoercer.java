@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.macros.MacroFinderAutomaton;
 import com.facebook.buck.core.macros.MacroMatchResult;
@@ -33,13 +32,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
+import com.google.common.reflect.TypeToken;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
-public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros> {
+/** Coerce to {@link com.facebook.buck.rules.macros.StringWithMacros}. */
+public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWithMacros> {
 
   private final ImmutableMap<String, Class<? extends Macro>> macros;
   private final ImmutableMap<Class<? extends Macro>, MacroTypeCoercer<? extends Macro>> coercers;
@@ -53,16 +54,14 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
     this.coercers = coercers;
   }
 
-  static StringWithMacrosTypeCoercer from(
-      ImmutableMap<String, Class<? extends Macro>> macros,
-      ImmutableList<MacroTypeCoercer<? extends Macro>> coercers) {
-    return new StringWithMacrosTypeCoercer(
-        macros, Maps.uniqueIndex(coercers, MacroTypeCoercer::getOutputClass));
+  @Override
+  public TypeToken<StringWithMacros> getOutputType() {
+    return TypeToken.of(StringWithMacros.class);
   }
 
   @Override
-  public Class<StringWithMacros> getOutputClass() {
-    return StringWithMacros.class;
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
   }
 
   @Override
@@ -90,6 +89,16 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
     }
   }
 
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
+  }
+
   // Most strings with macros do not contain any macros.
   // This method is optimistic fast-path optimization of string with macro parsing.
   @Nullable
@@ -102,7 +111,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
   }
 
   private StringWithMacros parse(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -164,7 +173,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
         try {
           macro =
               coercer.coerce(
-                  cellRoots,
+                  cellNameResolver,
                   filesystem,
                   pathRelativeToProjectRoot,
                   targetConfiguration,
@@ -195,7 +204,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
 
   @Override
   public StringWithMacros coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -203,7 +212,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType());
     }
     return parse(
         cellRoots,
@@ -249,5 +258,33 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
       parts.add(Either.ofLeft(string.toString()));
       string.setLength(0);
     }
+  }
+
+  /** Builder of {@link StringWithMacrosTypeCoercer}. */
+  static class Builder {
+
+    private Builder() {}
+
+    private ImmutableMap.Builder<String, Class<? extends Macro>> macros = ImmutableMap.builder();
+    private ImmutableList.Builder<MacroTypeCoercer<? extends Macro>> macroCoercers =
+        ImmutableList.builder();
+
+    public <M extends Macro> Builder put(
+        String macro, Class<M> macroClass, MacroTypeCoercer<M> coercer) {
+      macros.put(macro, macroClass);
+      macroCoercers.add(coercer);
+      return this;
+    }
+
+    StringWithMacrosTypeCoercer build() {
+      return new StringWithMacrosTypeCoercer(
+          this.macros.build(),
+          Maps.uniqueIndex(this.macroCoercers.build(), MacroTypeCoercer::getOutputClass));
+    }
+  }
+
+  /** New {@link Builder}. */
+  static Builder builder() {
+    return new Builder();
   }
 }

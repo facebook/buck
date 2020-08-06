@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.BaseLocationMacro;
@@ -28,10 +28,12 @@ import com.facebook.buck.rules.macros.BaseLocationMacro;
 abstract class AbstractLocationMacroTypeCoercer<T extends BaseLocationMacro>
     implements MacroTypeCoercer<T> {
 
-  private final TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer;
+  private final TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
+      buildTargetWithOutputsTypeCoercer;
 
   public AbstractLocationMacroTypeCoercer(
-      TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer) {
+      TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
+          buildTargetWithOutputsTypeCoercer) {
     this.buildTargetWithOutputsTypeCoercer = buildTargetWithOutputsTypeCoercer;
   }
 
@@ -46,15 +48,15 @@ abstract class AbstractLocationMacroTypeCoercer<T extends BaseLocationMacro>
   }
 
   protected BuildTargetWithOutputs coerceTarget(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
       String arg)
       throws CoerceFailedException {
-    return buildTargetWithOutputsTypeCoercer.coerce(
-        cellRoots,
+    return buildTargetWithOutputsTypeCoercer.coerceBoth(
+        cellNameResolver,
         filesystem,
         pathRelativeToProjectRoot,
         targetConfiguration,

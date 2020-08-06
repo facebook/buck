@@ -18,6 +18,7 @@ package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
@@ -33,6 +34,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,6 +48,7 @@ public class TestCellBuilder {
   private CellConfig cellConfig;
   private Map<String, String> environment = new HashMap<>();
   @Nullable private ToolchainProvider toolchainProvider = null;
+  private Map<CanonicalCellName, ProjectFilesystem> cells = new HashMap<>();
 
   public TestCellBuilder() {
     cellConfig = CellConfig.EMPTY_INSTANCE;
@@ -76,7 +79,12 @@ public class TestCellBuilder {
     return this;
   }
 
-  public Cell build() {
+  public TestCellBuilder addCell(CanonicalCellName cell, ProjectFilesystem projectFilesystem) {
+    Preconditions.checkState(this.cells.put(cell, projectFilesystem) == null);
+    return this;
+  }
+
+  public Cells build() {
     ProjectFilesystem filesystem =
         this.filesystem != null ? this.filesystem : new FakeProjectFilesystem();
 
@@ -100,17 +108,18 @@ public class TestCellBuilder {
     DefaultCellPathResolver rootCellCellPathResolver =
         DefaultCellPathResolver.create(filesystem.getRootPath(), config.getConfig());
 
-    return LocalCellProviderFactory.create(
-            filesystem,
-            config,
-            cellConfig,
-            rootCellCellPathResolver.getPathMapping(),
-            rootCellCellPathResolver,
-            TestBuckModuleManagerFactory.create(pluginManager),
-            toolchainProviderFactory,
-            new DefaultProjectFilesystemFactory(),
-            new ParsingUnconfiguredBuildTargetViewFactory())
-        .getCellByPath(filesystem.getRootPath());
+    return new Cells(
+        LocalCellProviderFactory.create(
+                filesystem,
+                config,
+                cellConfig,
+                rootCellCellPathResolver.getPathMapping(),
+                rootCellCellPathResolver,
+                TestBuckModuleManagerFactory.create(pluginManager),
+                toolchainProviderFactory,
+                new DefaultProjectFilesystemFactory(),
+                new ParsingUnconfiguredBuildTargetViewFactory())
+            .getCellByPath(filesystem.getRootPath()));
   }
 
   public static CellPathResolver createCellRoots(@Nullable ProjectFilesystem filesystem) {
