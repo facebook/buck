@@ -78,6 +78,9 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   private static final String CONDITIONAL_RELINKING_ENABLED = "conditional_relinking_enabled";
 
+  // TODO(T71284505): This is a temporary flag, remove after successful deployment
+  private static final String BINARY_USES_FALLBACK_PLATFORM = "binary_uses_fallback_platform";
+
   private final BuckConfig delegate;
 
   // Reflection-based factory for ConfigView
@@ -537,6 +540,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean getConditionalRelinkingEnabled() {
     return delegate.getBooleanValue(APPLE_SECTION, CONDITIONAL_RELINKING_ENABLED, false);
+  }
+
+  public boolean getBinaryUsesFallbackPlatform() {
+    return delegate.getBooleanValue(APPLE_SECTION, BINARY_USES_FALLBACK_PLATFORM, false);
   }
 
   @BuckStyleValue

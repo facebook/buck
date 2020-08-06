@@ -42,6 +42,22 @@ public class ApplePlatforms {
     return CxxPlatforms.getCxxPlatform(cxxPlatformsProvider, target, defaultPlatform);
   }
 
+  /**
+   * Returns the {@link UnresolvedAppleCxxPlatform} platform using the same logic used to determine
+   * {@link CxxPlatform} for building sources.
+   */
+  public static UnresolvedAppleCxxPlatform getUnresolvedAppleCxxPlatformForBuildTarget(
+      BuildRuleResolver ruleResolver,
+      CxxPlatformsProvider cxxPlatformsProvider,
+      FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain,
+      BuildTarget target,
+      Optional<Flavor> defaultPlatform) {
+    CxxPlatform cxxPlatform =
+        getCxxPlatformForBuildTarget(cxxPlatformsProvider, target, defaultPlatform)
+            .resolve(ruleResolver, target.getTargetConfiguration());
+    return appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
+  }
+
   public static AppleCxxPlatform getAppleCxxPlatformForBuildTarget(
       BuildRuleResolver ruleResolver,
       CxxPlatformsProvider cxxPlatformsProvider,

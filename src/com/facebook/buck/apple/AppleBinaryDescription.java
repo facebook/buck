@@ -544,8 +544,11 @@ public class AppleBinaryDescription
             CxxBinaryDescriptionArg.Builder delegateArg =
                 CxxBinaryDescriptionArg.builder().from(args);
             Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform =
-                getAppleCxxPlatformFromExplicitBuildTargetFlavor(
-                    appleCxxPlatformsFlavorDomain, buildTarget);
+                getAppleCxxPlatform(
+                    graphBuilder,
+                    appleCxxPlatformsFlavorDomain,
+                    buildTarget,
+                    args.getDefaultPlatform());
             AppleDescriptions.populateCxxBinaryDescriptionArg(
                 graphBuilder, delegateArg, appleCxxPlatform, args, buildTarget);
 
@@ -610,8 +613,8 @@ public class AppleBinaryDescription
       ActionGraphBuilder graphBuilder) {
     Optional<Path> stubBinaryPath = Optional.empty();
     Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform =
-        getAppleCxxPlatformFromExplicitBuildTargetFlavor(
-            appleCxxPlatformsFlavorDomain, buildTarget);
+        getAppleCxxPlatform(
+            graphBuilder, appleCxxPlatformsFlavorDomain, buildTarget, args.getDefaultPlatform());
     if (appleCxxPlatform.isPresent() && args.getSrcs().isEmpty()) {
       stubBinaryPath = appleCxxPlatform.get().resolve(graphBuilder).getStubBinary();
     }
@@ -641,6 +644,26 @@ public class AppleBinaryDescription
             .getApplePlatform());
   }
 
+  private Optional<UnresolvedAppleCxxPlatform> getAppleCxxPlatform(
+      BuildRuleResolver ruleResolver,
+      FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformsFlavorDomain,
+      BuildTarget buildTarget,
+      Optional<Flavor> defaultPlatform) {
+    if (appleConfig.getBinaryUsesFallbackPlatform()) {
+      UnresolvedAppleCxxPlatform unresolvedPlatform =
+          ApplePlatforms.getUnresolvedAppleCxxPlatformForBuildTarget(
+              ruleResolver,
+              getCxxPlatformsProvider(buildTarget.getTargetConfiguration()),
+              appleCxxPlatformsFlavorDomain,
+              buildTarget,
+              defaultPlatform);
+      return Optional.of(unresolvedPlatform);
+    }
+
+    return getAppleCxxPlatformFromExplicitBuildTargetFlavor(
+        appleCxxPlatformsFlavorDomain, buildTarget);
+  }
+
   /**
    * This method inspects _just_ the build target to determine a platform without any fallbacks.
    * Note that this behavior is different than how any sources will be built because source
@@ -663,10 +686,12 @@ public class AppleBinaryDescription
     if (!metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
       CxxBinaryDescriptionArg.Builder delegateArg = CxxBinaryDescriptionArg.builder().from(args);
       Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform =
-          getAppleCxxPlatformFromExplicitBuildTargetFlavor(
+          getAppleCxxPlatform(
+              graphBuilder,
               AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
                   toolchainProvider, buildTarget.getTargetConfiguration()),
-              buildTarget);
+              buildTarget,
+              args.getDefaultPlatform());
       AppleDescriptions.populateCxxBinaryDescriptionArg(
           graphBuilder, delegateArg, appleCxxPlatform, args, buildTarget);
       return cxxBinaryMetadataFactory.createMetadata(
