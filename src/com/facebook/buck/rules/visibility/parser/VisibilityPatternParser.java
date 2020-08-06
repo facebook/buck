@@ -19,9 +19,9 @@ package com.facebook.buck.rules.visibility.parser;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.visibility.ObeysVisibility;
+import com.facebook.buck.rules.visibility.VisibilityDefiningPath;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -42,7 +42,7 @@ public class VisibilityPatternParser {
    * @return
    */
   public static VisibilityPattern parse(
-      CellPathResolver cellNames, ForwardRelativePath definingPath, String buildTargetPattern) {
+      CellPathResolver cellNames, VisibilityDefiningPath definingPath, String buildTargetPattern) {
     if (VISIBILITY_PUBLIC.equals(buildTargetPattern)) {
       return ImmutablePublicVisibilityPattern.ofImpl(definingPath);
     } else {
@@ -65,7 +65,7 @@ public class VisibilityPatternParser {
      */
     @Override
     @JsonProperty("definingPath")
-    public abstract ForwardRelativePath getDefiningPath();
+    public abstract VisibilityDefiningPath getDefiningPath();
 
     @Override
     @JsonIgnore
@@ -87,7 +87,7 @@ public class VisibilityPatternParser {
     /** Cell relative path to the file in which the {@link PublicVisibilityPattern} is defined. */
     @Override
     @JsonProperty("definingPath")
-    public abstract ForwardRelativePath getDefiningPath();
+    public abstract VisibilityDefiningPath getDefiningPath();
 
     @Override
     @JsonIgnore

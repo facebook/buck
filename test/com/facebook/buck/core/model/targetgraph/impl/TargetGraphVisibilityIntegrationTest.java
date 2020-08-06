@@ -25,6 +25,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Rule;
@@ -39,6 +40,7 @@ public class TargetGraphVisibilityIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   public ProjectWorkspace workspace;
+  private static final Optional<String> emptyFormattedDefiningPaths = Optional.empty();
 
   @Before
   public void setUp() throws IOException {
@@ -60,7 +62,24 @@ public class TargetGraphVisibilityIntegrationTest {
     verifySingleError(
         result,
         VisibilityError.errorString(
-            VisibilityError.ErrorType.VISIBILITY, "//foo:Lib2", "//bar:Lib2"));
+            VisibilityError.ErrorType.VISIBILITY,
+            "//foo:Lib2",
+            "//bar:Lib2",
+            emptyFormattedDefiningPaths));
+  }
+
+  @Test
+  public void singleVisibilityErrorWithDefiningPath() {
+    ProcessResult result = workspace.runBuckCommand("targets", "//foo:Lib6");
+    result.assertFailure();
+
+    verifySingleError(
+        result,
+        VisibilityError.errorString(
+            VisibilityError.ErrorType.VISIBILITY,
+            "//foo:Lib6",
+            "//baz:Lib1",
+            Optional.of("baz/PACKAGE")));
   }
 
   @Test
@@ -73,11 +92,17 @@ public class TargetGraphVisibilityIntegrationTest {
     verifyErrorOutputContains(
         result,
         VisibilityError.errorString(
-            VisibilityError.ErrorType.VISIBILITY, "//foo:Lib3", "//bar:Lib2"));
+            VisibilityError.ErrorType.VISIBILITY,
+            "//foo:Lib3",
+            "//bar:Lib2",
+            emptyFormattedDefiningPaths));
     verifyErrorOutputContains(
         result,
         VisibilityError.errorString(
-            VisibilityError.ErrorType.VISIBILITY, "//foo:Lib3", "//bar:Lib3"));
+            VisibilityError.ErrorType.VISIBILITY,
+            "//foo:Lib3",
+            "//bar:Lib3",
+            emptyFormattedDefiningPaths));
   }
 
   @Test
@@ -88,7 +113,24 @@ public class TargetGraphVisibilityIntegrationTest {
     verifySingleError(
         result,
         VisibilityError.errorString(
-            VisibilityError.ErrorType.WITHIN_VIEW, "//bar:Lib5", "//foo:Lib5"));
+            VisibilityError.ErrorType.WITHIN_VIEW,
+            "//bar:Lib5",
+            "//foo:Lib5",
+            emptyFormattedDefiningPaths));
+  }
+
+  @Test
+  public void singleWithinViewErrorWithDefiningPath() {
+    ProcessResult result = workspace.runBuckCommand("targets", "//baz:Lib2");
+    result.assertFailure();
+
+    verifySingleError(
+        result,
+        VisibilityError.errorString(
+            VisibilityError.ErrorType.WITHIN_VIEW,
+            "//baz:Lib2",
+            "//bar:Lib1",
+            Optional.of("baz/PACKAGE")));
   }
 
   @Test
@@ -101,20 +143,32 @@ public class TargetGraphVisibilityIntegrationTest {
     verifyErrorOutputContains(
         result,
         VisibilityError.errorString(
-            VisibilityError.ErrorType.VISIBILITY, "//foo:Lib4", "//bar:Lib3"));
+            VisibilityError.ErrorType.VISIBILITY,
+            "//foo:Lib4",
+            "//bar:Lib3",
+            emptyFormattedDefiningPaths));
 
     verifyErrorOutputContains(
         result,
         VisibilityError.errorString(
-            VisibilityError.ErrorType.WITHIN_VIEW, "//foo:Lib4", "//bar:Lib1"));
+            VisibilityError.ErrorType.WITHIN_VIEW,
+            "//foo:Lib4",
+            "//bar:Lib1",
+            emptyFormattedDefiningPaths));
     verifyErrorOutputContains(
         result,
         VisibilityError.errorString(
-            VisibilityError.ErrorType.WITHIN_VIEW, "//foo:Lib4", "//bar:Lib2"));
+            VisibilityError.ErrorType.WITHIN_VIEW,
+            "//foo:Lib4",
+            "//bar:Lib2",
+            emptyFormattedDefiningPaths));
     verifyErrorOutputContains(
         result,
         VisibilityError.errorString(
-            VisibilityError.ErrorType.WITHIN_VIEW, "//foo:Lib4", "//bar:Lib4"));
+            VisibilityError.ErrorType.WITHIN_VIEW,
+            "//foo:Lib4",
+            "//bar:Lib4",
+            emptyFormattedDefiningPaths));
   }
 
   private void verifyErrorOutputContains(ProcessResult result, String error) {

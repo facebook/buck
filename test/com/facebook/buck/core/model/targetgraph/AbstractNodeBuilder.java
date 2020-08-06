@@ -47,6 +47,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.query.QueryCache;
 import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.rules.visibility.VisibilityDefiningPath;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatternParser;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.versions.Version;
@@ -203,7 +204,7 @@ public abstract class AbstractNodeBuilder<
               ImmutableSet.of(
                   VisibilityPatternParser.parse(
                       null,
-                      ForwardRelativePath.of("BUCK"),
+                      VisibilityDefiningPath.of(ForwardRelativePath.of("BUCK"), true),
                       VisibilityPatternParser.VISIBILITY_PUBLIC)),
               ImmutableSet.of(),
               DescriptionCache.getRuleType(description))

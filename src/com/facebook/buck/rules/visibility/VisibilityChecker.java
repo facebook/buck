@@ -18,6 +18,8 @@ package com.facebook.buck.rules.visibility;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class VisibilityChecker {
   private final ObeysVisibility owner;
@@ -54,11 +56,16 @@ public class VisibilityChecker {
         }
       }
       if (!withinView) {
+        Set<VisibilityDefiningPath> definingPaths =
+            viewer.getVisibilityChecker().withinViewPatterns.stream()
+                .map(visibilityPattern -> visibilityPattern.getDefiningPath())
+                .collect(Collectors.toSet());
         return Optional.of(
             ImmutableVisibilityError.ofImpl(
                 VisibilityError.ErrorType.WITHIN_VIEW,
                 viewer.getBuildTarget(),
-                owner.getBuildTarget()));
+                owner.getBuildTarget(),
+                definingPaths));
       }
     }
 
@@ -69,8 +76,16 @@ public class VisibilityChecker {
       }
     }
 
+    Set<VisibilityDefiningPath> definingPaths =
+        visibilityPatterns.stream()
+            .map(visibilityPattern -> visibilityPattern.getDefiningPath())
+            .collect(Collectors.toSet());
+
     return Optional.of(
         ImmutableVisibilityError.ofImpl(
-            VisibilityError.ErrorType.VISIBILITY, viewer.getBuildTarget(), owner.getBuildTarget()));
+            VisibilityError.ErrorType.VISIBILITY,
+            viewer.getBuildTarget(),
+            owner.getBuildTarget(),
+            definingPaths));
   }
 }

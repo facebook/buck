@@ -63,3 +63,13 @@ java_library(
         "PUBLIC",
     ],
 )
+
+java_library(
+    name = "Lib6",
+    srcs = [
+        "Lib6.java",
+    ],
+    deps = [
+        "//baz:Lib1",
+    ],
+)

@@ -22,6 +22,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.visibility.VisibilityDefiningPath;
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
@@ -32,7 +33,7 @@ public class VisibilityPatternsTest {
         createCellRoots(new FakeProjectFilesystem()),
         "visibility",
         ImmutableList.of(":marmosets"),
-        ForwardRelativePath.of("BUCK"),
+        VisibilityDefiningPath.of(ForwardRelativePath.of("BUCK"), true),
         () ->
             UnconfiguredBuildTargetFactoryForTests.newInstance("//example/path:three")
                 .getFullyQualifiedName());

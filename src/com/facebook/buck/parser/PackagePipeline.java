@@ -40,8 +40,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Converts {@link PackageMetadata}s in a {@link PackageFileManifest} into {@link Package}s and
  * caches them for reuse.
  */
-class PackagePipeline implements AutoCloseable {
-  private static final String PACKAGE_FILE_NAME = "PACKAGE";
+public class PackagePipeline implements AutoCloseable {
+  public static final String PACKAGE_FILE_NAME = "PACKAGE";
   private static final Logger LOG = Logger.get(PackagePipeline.class);
 
   private final ListeningExecutorService executorService;

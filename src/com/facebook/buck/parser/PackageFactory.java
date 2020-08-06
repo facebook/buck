@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.rules.param.CommonParamNames;
+import com.facebook.buck.rules.visibility.VisibilityDefiningPath;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
 import com.google.common.collect.ImmutableSet;
@@ -37,10 +38,12 @@ public class PackageFactory {
   public static Package create(
       Cell cell, AbsPath packageFile, PackageMetadata rawPackage, Optional<Package> parentPackage) {
 
-    ForwardRelativePath relPackageFile =
-        ForwardRelativePath.ofRelPath(cell.getRoot().relativize(packageFile));
+    VisibilityDefiningPath definingPath =
+        VisibilityDefiningPath.of(
+            ForwardRelativePath.ofRelPath(cell.getRoot().relativize(packageFile)), false);
 
-    String visibilityDefinerDescription = String.format("the package() at %s", relPackageFile);
+    String visibilityDefinerDescription =
+        String.format("the package() at %s", definingPath.getPath());
 
     ImmutableSet.Builder<VisibilityPattern> visibilityBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> withinViewBuilder = ImmutableSet.builder();
@@ -58,7 +61,7 @@ public class PackageFactory {
             cell.getCellPathResolver(),
             CommonParamNames.VISIBILITY.getSnakeCase(),
             rawPackage.getVisibility(),
-            relPackageFile,
+            definingPath,
             () -> visibilityDefinerDescription));
 
     withinViewBuilder.addAll(
@@ -66,7 +69,7 @@ public class PackageFactory {
             cell.getCellPathResolver(),
             CommonParamNames.WITHIN_VIEW.getSnakeCase(),
             rawPackage.getWithinView(),
-            relPackageFile,
+            definingPath,
             () -> visibilityDefinerDescription));
 
     return Package.of(

@@ -16,12 +16,20 @@
 
 package com.facebook.buck.rules.visibility;
 
-public interface VisibilityPattern {
-  boolean checkVisibility(ObeysVisibility viewer);
+import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-  /** Cell relative path to the file in which the {@link VisibilityPattern} is defined. */
-  VisibilityDefiningPath getDefiningPath();
+/**
+ * Object wrapping a cell relative path to a file defining visibility and whether the path is a
+ * build file.
+ */
+@BuckStyleValue
+public abstract class VisibilityDefiningPath {
+  public abstract ForwardRelativePath getPath();
 
-  /** User readable value for this pattern. */
-  String getRepresentation();
+  public abstract boolean isBuildFile();
+
+  public static VisibilityDefiningPath of(ForwardRelativePath path, boolean isBuildFile) {
+    return ImmutableVisibilityDefiningPath.ofImpl(path, isBuildFile);
+  }
 }

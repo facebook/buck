@@ -42,6 +42,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.visibility.VisibilityDefiningPath;
 import com.facebook.buck.rules.visibility.VisibilityError;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatternParser;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
@@ -270,6 +271,8 @@ public class TargetNodeVisibilityTest {
     FakeRuleDescription description = new FakeRuleDescription();
     FakeRuleDescriptionArg arg =
         FakeRuleDescriptionArg.builder().setName(buildTarget.getShortName()).build();
+    VisibilityDefiningPath definingPath =
+        VisibilityDefiningPath.of(ForwardRelativePath.ofRelPath(relativeBuildFile), true);
     return new TargetNodeFactory(
             new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE)
         .createFromObject(
@@ -282,16 +285,10 @@ public class TargetNodeVisibilityTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             visibilities.stream()
-                .map(
-                    s ->
-                        VisibilityPatternParser.parse(
-                            cellNames, ForwardRelativePath.ofRelPath(relativeBuildFile), s))
+                .map(s -> VisibilityPatternParser.parse(cellNames, definingPath, s))
                 .collect(ImmutableSet.toImmutableSet()),
             withinView.stream()
-                .map(
-                    s ->
-                        VisibilityPatternParser.parse(
-                            cellNames, ForwardRelativePath.ofRelPath(relativeBuildFile), s))
+                .map(s -> VisibilityPatternParser.parse(cellNames, definingPath, s))
                 .collect(ImmutableSet.toImmutableSet()),
             RuleType.of("fake", RuleType.Kind.BUILD));
   }

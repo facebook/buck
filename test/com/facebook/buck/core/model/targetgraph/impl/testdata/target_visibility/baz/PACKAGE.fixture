@@ -1,0 +1,8 @@
+package(
+    visibility = [
+        "//bar/...",
+    ],
+    within_view = [
+        "//foo/...",
+    ],
+)

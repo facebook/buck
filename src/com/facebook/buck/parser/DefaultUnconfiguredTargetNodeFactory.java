@@ -44,6 +44,7 @@ import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
+import com.facebook.buck.rules.visibility.VisibilityDefiningPath;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
@@ -274,7 +275,9 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             cell.getCellPathResolver(),
             entryType.getSnakeCase(),
             entries,
-            ForwardRelativePath.ofRelPath(cell.getRoot().relativize(buildFile.getPath())),
+            VisibilityDefiningPath.of(
+                ForwardRelativePath.ofRelPath(cell.getRoot().relativize(buildFile.getPath())),
+                true),
             target::getFullyQualifiedName);
 
     if (entryPatterns.isEmpty() || addPackageEntries) {

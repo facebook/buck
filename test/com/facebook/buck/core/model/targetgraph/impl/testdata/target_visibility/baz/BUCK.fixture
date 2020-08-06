@@ -1,0 +1,18 @@
+# Should succeed
+java_library(
+    name = "Lib1",
+    srcs = [
+        "Lib1.java",
+    ],
+)
+
+# Should fail with //bar:Lib1 not being within_view to this target
+java_library(
+    name = "Lib2",
+    srcs = [
+        "Lib2.java",
+    ],
+    deps = [
+        "//bar:Lib1",
+    ],
+)
