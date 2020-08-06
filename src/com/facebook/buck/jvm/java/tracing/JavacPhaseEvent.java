@@ -17,13 +17,14 @@
 package com.facebook.buck.jvm.java.tracing;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 
 /** Base class for events about the phases of compilation within javac. */
-public abstract class JavacPhaseEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
+public abstract class JavacPhaseEvent extends SimplePerfEvent implements WorkAdvanceEvent {
   public enum Phase {
     /** Parsing a single source file. Filename will be in the args. */
     PARSE(Constants.PARSE),
@@ -98,6 +99,7 @@ public abstract class JavacPhaseEvent extends AbstractBuckEvent implements WorkA
     public static final String RUN_ANNOTATION_PROCESSORS = "run annotation processors";
     public static final String ANALYZE = "analyze";
     public static final String GENERATE = "generate";
+    public static final String EVENT_CATEGORY_NAME = "javac";
   }
 
   private final BuildTarget buildTarget;
@@ -129,6 +131,22 @@ public abstract class JavacPhaseEvent extends AbstractBuckEvent implements WorkA
     return buildTarget.toString();
   }
 
+  @Override
+  public String getCategory() {
+    return Constants.EVENT_CATEGORY_NAME;
+  }
+
+  @Override
+  public PerfEventId getEventId() {
+    return PerfEventId.of(getPhase().toString());
+  }
+
+  @Override
+  public ImmutableMap<String, Object> getEventInfo() {
+    return getArgs().entrySet().stream()
+        .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, e -> (Object) e.getValue()));
+  }
+
   public static Started started(
       BuildTarget buildTarget, Phase phase, ImmutableMap<String, String> args) {
     return new Started(buildTarget, phase, args);
@@ -147,10 +165,15 @@ public abstract class JavacPhaseEvent extends AbstractBuckEvent implements WorkA
     public String getEventName() {
       return String.format("javac.%sStarted", getPhase().toString());
     }
+
+    @Override
+    public Type getEventType() {
+      return Type.STARTED;
+    }
   }
 
   public static class Finished extends JavacPhaseEvent {
-    public Finished(Started startedEvent, ImmutableMap<String, String> args) {
+    public Finished(JavacPhaseEvent.Started startedEvent, ImmutableMap<String, String> args) {
       super(
           startedEvent.getEventKey(), startedEvent.getBuildTarget(), startedEvent.getPhase(), args);
     }
@@ -158,6 +181,11 @@ public abstract class JavacPhaseEvent extends AbstractBuckEvent implements WorkA
     @Override
     public String getEventName() {
       return String.format("javac.%sFinished", getPhase().toString());
+    }
+
+    @Override
+    public Type getEventType() {
+      return Type.FINISHED;
     }
   }
 }
