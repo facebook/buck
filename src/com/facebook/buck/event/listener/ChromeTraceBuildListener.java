@@ -33,7 +33,6 @@ import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
-import com.facebook.buck.event.CompilerPluginDurationEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
@@ -719,26 +718,6 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent(
         "javac",
         finished.getPhase().toString(),
-        ChromeTraceEvent.Phase.END,
-        finished.getArgs(),
-        finished);
-  }
-
-  @Subscribe
-  public void compilerPluginDurationEventStarted(CompilerPluginDurationEvent.Started started) {
-    writeChromeTraceEvent(
-        started.getPluginName(),
-        started.getDurationName(),
-        ChromeTraceEvent.Phase.BEGIN,
-        started.getArgs(),
-        started);
-  }
-
-  @Subscribe
-  public void compilerPluginDurationEventFinished(CompilerPluginDurationEvent.Finished finished) {
-    writeChromeTraceEvent(
-        finished.getPluginName(),
-        finished.getDurationName(),
         ChromeTraceEvent.Phase.END,
         finished.getArgs(),
         finished);

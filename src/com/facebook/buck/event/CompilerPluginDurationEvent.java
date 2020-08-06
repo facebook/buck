@@ -18,9 +18,10 @@ package com.facebook.buck.event;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 
 /** Base class for events being reported by plugins to in-process compilers such as JSR199 javac. */
-public abstract class CompilerPluginDurationEvent extends AbstractBuckEvent
+public abstract class CompilerPluginDurationEvent extends SimplePerfEvent
     implements WorkAdvanceEvent {
   private final BuildTarget buildTarget;
   private final String pluginName;
@@ -57,6 +58,22 @@ public abstract class CompilerPluginDurationEvent extends AbstractBuckEvent
   }
 
   @Override
+  public PerfEventId getEventId() {
+    return PerfEventId.of(getDurationName());
+  }
+
+  @Override
+  public String getCategory() {
+    return getPluginName();
+  }
+
+  @Override
+  public ImmutableMap<String, Object> getEventInfo() {
+    return getArgs().entrySet().stream()
+        .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, e -> (Object) e.getValue()));
+  }
+
+  @Override
   protected String getValueString() {
     return "";
   }
@@ -86,10 +103,16 @@ public abstract class CompilerPluginDurationEvent extends AbstractBuckEvent
     public String getEventName() {
       return String.format("%s.%sStarted", getPluginName(), getDurationName());
     }
+
+    @Override
+    public Type getEventType() {
+      return Type.STARTED;
+    }
   }
 
   public static class Finished extends CompilerPluginDurationEvent {
-    public Finished(Started startedEvent, ImmutableMap<String, String> args) {
+    public Finished(
+        CompilerPluginDurationEvent.Started startedEvent, ImmutableMap<String, String> args) {
       super(
           startedEvent.getEventKey(),
           startedEvent.getBuildTarget(),
@@ -101,6 +124,11 @@ public abstract class CompilerPluginDurationEvent extends AbstractBuckEvent
     @Override
     public String getEventName() {
       return String.format("%s.%sFinished", getPluginName(), getDurationName());
+    }
+
+    @Override
+    public Type getEventType() {
+      return Type.FINISHED;
     }
   }
 }
