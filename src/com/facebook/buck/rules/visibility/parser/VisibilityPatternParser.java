@@ -60,6 +60,9 @@ public class VisibilityPatternParser {
     @JsonProperty("pattern")
     abstract BuildTargetMatcher getViewerPattern();
 
+    /**
+     * Cell relative path to the file in which the {@link BuildTargetVisibilityPattern} is defined.
+     */
     @Override
     @JsonProperty("definingPath")
     public abstract ForwardRelativePath getDefiningPath();
@@ -81,6 +84,7 @@ public class VisibilityPatternParser {
   @JsonDeserialize
   abstract static class PublicVisibilityPattern implements VisibilityPattern {
 
+    /** Cell relative path to the file in which the {@link PublicVisibilityPattern} is defined. */
     @Override
     @JsonProperty("definingPath")
     public abstract ForwardRelativePath getDefiningPath();

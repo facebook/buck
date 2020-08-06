@@ -54,7 +54,7 @@ public abstract class VisibilityError {
   @VisibleForTesting
   public static String errorString(ErrorType errorType, String node, String dep) {
     return String.format(
-        "%s depends on %s, which is not %s. More info at:\nhttps://dev.buck.build/concept/visibility.html",
+        "%s depends on %s, which is not %s.",
         node, dep, errorType == VisibilityError.ErrorType.WITHIN_VIEW ? "within view" : "visible");
   }
 }

@@ -50,7 +50,7 @@ java_library(
         "Lib5.java",
     ],
     deps = [
-        "//foo:Lib2",
+        "//foo:Lib5",
     ],
     within_view = [
         "//bar:Lib3",

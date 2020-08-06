@@ -25,6 +25,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
+import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,7 +57,7 @@ public class TargetGraphVisibilityIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("targets", "//foo:Lib2");
     result.assertFailure();
 
-    verifyErrorOutputContains(
+    verifySingleError(
         result,
         VisibilityError.errorString(
             VisibilityError.ErrorType.VISIBILITY, "//foo:Lib2", "//bar:Lib2"));
@@ -66,6 +67,8 @@ public class TargetGraphVisibilityIntegrationTest {
   public void multipleVisibilityErrors() {
     ProcessResult result = workspace.runBuckCommand("targets", "//foo:Lib3");
     result.assertFailure();
+
+    verifyNumberOfErrors(result, 2);
 
     verifyErrorOutputContains(
         result,
@@ -82,16 +85,18 @@ public class TargetGraphVisibilityIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("targets", "//bar:Lib5");
     result.assertFailure();
 
-    verifyErrorOutputContains(
+    verifySingleError(
         result,
         VisibilityError.errorString(
-            VisibilityError.ErrorType.WITHIN_VIEW, "//bar:Lib5", "//foo:Lib2"));
+            VisibilityError.ErrorType.WITHIN_VIEW, "//bar:Lib5", "//foo:Lib5"));
   }
 
   @Test
   public void mixedErrors() {
     ProcessResult result = workspace.runBuckCommand("targets", "//foo:Lib4");
     result.assertFailure();
+
+    verifyNumberOfErrors(result, 4);
 
     verifyErrorOutputContains(
         result,
@@ -113,6 +118,18 @@ public class TargetGraphVisibilityIntegrationTest {
   }
 
   private void verifyErrorOutputContains(ProcessResult result, String error) {
-    assertTrue(result.getStderr().contains(error));
+    String errorWithNewline = error + "\n";
+    assertTrue(result.getStderr().contains(errorWithNewline));
+  }
+
+  private void verifyNumberOfErrors(ProcessResult result, int count) {
+    long counted =
+        Stream.of(result.getStderr().split("\n")).filter(s -> s.contains("which is not")).count();
+    assertEquals(count, counted);
+  }
+
+  private void verifySingleError(ProcessResult result, String error) {
+    verifyNumberOfErrors(result, 1);
+    verifyErrorOutputContains(result, error);
   }
 }

@@ -53,3 +53,13 @@ java_library(
         "//bar:Lib3",
     ],
 )
+
+java_library(
+    name = "Lib5",
+    srcs = [
+        "Lib5.java",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
