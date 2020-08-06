@@ -158,12 +158,14 @@ public class RustCompileUtils {
       relocModel = "static";
     }
 
-    Stream<StringArg> checkArgs;
+    Stream<StringArg> flavorArgs;
     if (crateType.isCheck()) {
       args.add(StringArg.of("--emit=metadata"));
-      checkArgs = rustPlatform.getRustCheckFlags().stream();
+      flavorArgs = rustPlatform.getRustCheckFlags().stream();
+    } else if (crateType.isDoc()) {
+      flavorArgs = rustPlatform.getRustDocFlags().stream();
     } else {
-      checkArgs = Stream.of();
+      flavorArgs = Stream.of();
     }
 
     if (crateType.isSaveAnalysis()) {
@@ -178,7 +180,7 @@ public class RustCompileUtils {
                     String.format("-Crelocation-model=%s", relocModel))
                 .map(StringArg::of),
             extraFlags.stream(),
-            checkArgs)
+            flavorArgs)
         .flatMap(x -> x)
         .forEach(args::add);
 
