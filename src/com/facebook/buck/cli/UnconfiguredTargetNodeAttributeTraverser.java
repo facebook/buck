@@ -144,7 +144,7 @@ public class UnconfiguredTargetNodeAttributeTraverser {
         value,
         v ->
             coercer.traverseUnconfigured(
-                cells.getRootCell().getCellNameResolver(),
+                cells.getCell(node.getBuildTarget().getCell()).getCellNameResolver(),
                 v,
                 object -> {
                   if (predicate.test(object)) {
@@ -161,7 +161,7 @@ public class UnconfiguredTargetNodeAttributeTraverser {
       TypeCoercer<Object, ?> coercer,
       Object value) {
     coercer.traverseUnconfigured(
-        cells.getRootCell().getCellNameResolver(),
+        cells.getCell(currentCellName).getCellNameResolver(),
         value,
         object -> {
           if (object instanceof UnconfiguredBuildTarget) {
