@@ -25,6 +25,7 @@ import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
@@ -72,7 +73,7 @@ public class Build implements Closeable {
   private static final Logger LOG = Logger.get(Build.class);
 
   private final ActionGraphBuilder graphBuilder;
-  private final Cell rootCell;
+  private final Cells cells;
   private final ExecutionContext executionContext;
   private final ArtifactCache artifactCache;
   private final BuildEngine buildEngine;
@@ -83,7 +84,7 @@ public class Build implements Closeable {
 
   public Build(
       ActionGraphBuilder graphBuilder,
-      Cell rootCell,
+      Cells cells,
       BuildEngine buildEngine,
       ArtifactCache artifactCache,
       JavaPackageFinder javaPackageFinder,
@@ -91,7 +92,7 @@ public class Build implements Closeable {
       ExecutionContext executionContext,
       boolean isKeepGoing) {
     this.graphBuilder = graphBuilder;
-    this.rootCell = rootCell;
+    this.cells = cells;
     this.executionContext = executionContext;
     this.artifactCache = artifactCache;
     this.buildEngine = buildEngine;
@@ -105,10 +106,10 @@ public class Build implements Closeable {
     return BuildEngineBuildContext.of(
         BuildContext.of(
             graphBuilder.getSourcePathResolver(),
-            rootCell.getRoot().getPath(),
+            cells.getRootCell().getRoot().getPath(),
             javaPackageFinder,
             executionContext.getBuckEventBus(),
-            rootCell.getBuckConfig().getView(BuildBuckConfig.class).getShouldDeleteTemporaries()),
+            cells.getBuckConfig().getView(BuildBuckConfig.class).getShouldDeleteTemporaries()),
         artifactCache,
         clock,
         buildId,
@@ -157,7 +158,7 @@ public class Build implements Closeable {
    * (`buck-out/`) to this newly configured location for backwards compatibility.
    */
   private void createConfiguredBuckOutSymlinks() throws IOException {
-    for (Cell cell : rootCell.getAllCells()) {
+    for (Cell cell : cells.getAllCells()) {
       BuckConfig buckConfig = cell.getBuckConfig();
       ProjectFilesystem filesystem = cell.getFilesystem();
       BuckPaths configuredPaths = filesystem.getBuckPaths();
@@ -188,7 +189,7 @@ public class Build implements Closeable {
   }
 
   private void createProjectRootFile() throws IOException {
-    for (Cell cell : rootCell.getAllCells()) {
+    for (Cell cell : cells.getAllCells()) {
       ProjectFilesystem filesystem = cell.getFilesystem();
       BuckPaths buckPaths = filesystem.getBuckPaths();
 
@@ -333,7 +334,7 @@ public class Build implements Closeable {
     int exitCode;
 
     BuildReport buildReport =
-        new BuildReport(buildExecutionResult, graphBuilder.getSourcePathResolver(), rootCell);
+        new BuildReport(buildExecutionResult, graphBuilder.getSourcePathResolver(), cells);
 
     if (buildContext.isKeepGoing()) {
       String buildReportText = buildReport.generateForConsole(console);
@@ -427,7 +428,7 @@ public class Build implements Closeable {
     // root, so it is not appropriate to use ProjectFilesystem to write the output.
     BuildReport buildReport =
         new BuildReport(
-            e.createBuildExecutionResult(), graphBuilder.getSourcePathResolver(), rootCell);
+            e.createBuildExecutionResult(), graphBuilder.getSourcePathResolver(), cells);
     try {
       String jsonBuildReport = buildReport.generateJsonBuildReport();
       eventBus.post(BuildEvent.buildReport(jsonBuildReport));

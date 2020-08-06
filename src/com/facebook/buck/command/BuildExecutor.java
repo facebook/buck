@@ -96,7 +96,7 @@ public class BuildExecutor {
     this.build =
         new Build(
             actionGraphAndBuilder.getActionGraphBuilder(),
-            args.getCells().getRootCell(),
+            args.getCells(),
             cachingBuildEngine,
             args.getArtifactCacheFactory().newInstance(),
             args.getBuckConfig().getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),

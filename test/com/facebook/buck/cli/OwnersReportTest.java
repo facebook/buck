@@ -309,7 +309,7 @@ public class OwnersReportTest {
     OwnersReport report =
         OwnersReport.builderForConfigured(
                 cell.getRootCell(), cell.getRootCell().getRoot().getPath(), targetUniverse)
-            .build(getBuildFileTrees(cell.getRootCell()), ImmutableSet.of(input));
+            .build(getBuildFileTrees(cell), ImmutableSet.of(input));
 
     assertEquals(1, report.nonExistentInputs.size());
     assertTrue(report.nonExistentInputs.contains(MorePaths.pathWithPlatformSeparators(input)));
@@ -348,7 +348,7 @@ public class OwnersReportTest {
 
     OwnersReport<TargetNode<?>> report =
         OwnersReport.builderForConfigured(cell.getRootCell(), workingDir, targetUniverse)
-            .build(getBuildFileTrees(cell.getRootCell()), inputs);
+            .build(getBuildFileTrees(cell), inputs);
 
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());
@@ -369,8 +369,8 @@ public class OwnersReportTest {
         targetsToInputs.get(target));
   }
 
-  private ImmutableMap<Cell, BuildFileTree> getBuildFileTrees(Cell rootCell) {
-    return rootCell.getAllCells().stream()
+  private ImmutableMap<Cell, BuildFileTree> getBuildFileTrees(Cells cells) {
+    return cells.getAllCells().stream()
         .collect(
             ImmutableMap.toImmutableMap(
                 Function.identity(),

@@ -20,7 +20,7 @@ import static com.facebook.buck.util.string.MoreStrings.linesToText;
 
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -56,19 +56,20 @@ public class BuildReport {
 
   private final Build.BuildExecutionResult buildExecutionResult;
   private final SourcePathResolverAdapter pathResolver;
-  private final Cell rootCell;
+  private final Cells cells;
 
   /**
    * @param buildExecutionResult the build result to generate the report for.
    * @param pathResolver source path resolver which can be used for the result.
+   * @param cells
    */
   public BuildReport(
       Build.BuildExecutionResult buildExecutionResult,
       SourcePathResolverAdapter pathResolver,
-      Cell rootCell) {
+      Cells cells) {
     this.buildExecutionResult = buildExecutionResult;
     this.pathResolver = pathResolver;
-    this.rootCell = rootCell;
+    this.cells = cells;
   }
 
   public String generateForConsole(Console console) {
@@ -279,6 +280,6 @@ public class BuildReport {
       ProjectFilesystem projectFilesystem, SourcePath sourcePath) {
     RelPath relativeOutputPath = pathResolver.getCellUnsafeRelPath(sourcePath);
     AbsPath absoluteOutputPath = projectFilesystem.resolve(relativeOutputPath);
-    return rootCell.getFilesystem().relativize(absoluteOutputPath);
+    return cells.getRootCell().getFilesystem().relativize(absoluteOutputPath);
   }
 }

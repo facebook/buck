@@ -161,7 +161,7 @@ public class FetchCommand extends BuildCommand {
           Build build =
               new Build(
                   actionGraphAndBuilder.getActionGraphBuilder(),
-                  params.getCells().getRootCell(),
+                  params.getCells(),
                   buildEngine,
                   params.getArtifactCacheFactory().newInstance(),
                   params

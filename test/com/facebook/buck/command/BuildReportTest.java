@@ -176,7 +176,7 @@ public class BuildReportTest {
             "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
             "\tat .*");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver, cells.getRootCell())
+        new BuildReport(buildExecutionResult, resolver, cells)
             .generateForConsole(
                 new Console(
                     Verbosity.STANDARD_INFORMATION,
@@ -208,7 +208,7 @@ public class BuildReportTest {
             "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
             "\tat .*");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver, cells.getRootCell())
+        new BuildReport(buildExecutionResult, resolver, cells)
             .generateForConsole(new TestConsole(Verbosity.COMMANDS));
     assertThat(observedReport, Matchers.matchesPattern(expectedReport));
   }
@@ -270,8 +270,7 @@ public class BuildReportTest {
             "  }",
             "}");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver, cells.getRootCell())
-            .generateJsonBuildReport();
+        new BuildReport(buildExecutionResult, resolver, cells).generateJsonBuildReport();
     assertEquals(expectedReport.replace("\\r\\n", "\\n"), observedReport.replace("\\r\\n", "\\n"));
   }
 }
