@@ -26,10 +26,12 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -57,17 +59,17 @@ public class TargetNodeVisibilityTest {
 
   private static final BuildTarget orcaTarget =
       BuildTargetFactory.newInstance("//src/com/facebook/orca", "orca");
-  private static final Path orcaBuildFile = Paths.get("/src/com/facebook/orca/BUCK");
+  private static final Path orcaBuildFile = Paths.get("src/com/facebook/orca/BUCK");
   private static final BuildTarget publicTarget =
       BuildTargetFactory.newInstance("//src/com/facebook/for", "everyone");
-  private static final Path publicBuildFile = Paths.get("/src/com/facebook/for/BUCK");
+  private static final Path publicBuildFile = Paths.get("src/com/facebook/for/BUCK");
   private static final BuildTarget nonPublicTarget1 =
       BuildTargetFactory.newInstance("//src/com/facebook/something1", "nonPublic");
   private static final BuildTarget nonPublicTarget2 =
       BuildTargetFactory.newInstance("//src/com/facebook/something2", "nonPublic");
   private static final BuildTarget nonPublicTarget3 =
       BuildTargetFactory.newInstance("//src/com/facebook/something1", "nonPublic3");
-  private static final Path nonPublicBuildFile = Paths.get("/src/com/facebook/BUCK");
+  private static final Path nonPublicBuildFile = Paths.get("src/com/facebook/BUCK");
 
   private static final ImmutableList<String> DEFAULT = ImmutableList.of();
   private static final ImmutableList<String> PUBLIC = ImmutableList.of("PUBLIC");
@@ -168,24 +170,24 @@ public class TargetNodeVisibilityTest {
     TargetNode<?> targetInSpecifiedDirectory =
         createTargetNode(
             BuildTargetFactory.newInstance("//src/com/facebook", "test"),
-            Paths.get("/src/com/facebook/BUCK"),
+            Paths.get("src/com/facebook/BUCK"),
             DEFAULT);
     TargetNode<?> targetUnderSpecifiedDirectory =
         createTargetNode(
             BuildTargetFactory.newInstance("//src/com/facebook/buck", "test"),
-            Paths.get("/src/com/facebook/buck/BUCK"),
+            Paths.get("src/com/facebook/buck/BUCK"),
             DEFAULT);
     TargetNode<?> targetInOtherDirectory =
         createTargetNode(
             BuildTargetFactory.newInstance("//src/com/instagram", "test"),
-            Paths.get("/src/com/instagram/BUCK"),
+            Paths.get("src/com/instagram/BUCK"),
             DEFAULT);
     TargetNode<?> targetInParentDirectory =
-        createTargetNode(BuildTargetFactory.newInstance("//", "test"), Paths.get("/BUCK"), DEFAULT);
+        createTargetNode(BuildTargetFactory.newInstance("//", "test"), Paths.get("BUCK"), DEFAULT);
 
     // Build rule that visible to targets in or under directory src/com/facebook
     TargetNode<?> directoryTargetNode =
-        createTargetNode(libTarget, Paths.get("/BUCK"), ImmutableList.of("//src/com/facebook/..."));
+        createTargetNode(libTarget, Paths.get("BUCK"), ImmutableList.of("//src/com/facebook/..."));
     assertTrue(isVisible(directoryTargetNode, targetInSpecifiedDirectory));
     assertTrue(isVisible(directoryTargetNode, targetUnderSpecifiedDirectory));
     assertFalse(isVisible(directoryTargetNode, targetInOtherDirectory));
@@ -193,7 +195,7 @@ public class TargetNodeVisibilityTest {
 
     // Build rule that's visible to all targets, equals to PUBLIC.
     TargetNode<?> pubicTargetNode =
-        createTargetNode(libTarget, Paths.get("/BUCK"), ImmutableList.of("//..."));
+        createTargetNode(libTarget, Paths.get("BUCK"), ImmutableList.of("//..."));
     assertTrue(isVisible(pubicTargetNode, targetInSpecifiedDirectory));
     assertTrue(isVisible(pubicTargetNode, targetUnderSpecifiedDirectory));
     assertTrue(isVisible(pubicTargetNode, targetInOtherDirectory));
@@ -263,6 +265,7 @@ public class TargetNodeVisibilityTest {
       ImmutableList<String> visibilities,
       ImmutableList<String> withinView)
       throws NoSuchBuildTargetException {
+    RelPath relativeBuildFile = filesystem.relativize(filesystem.resolve(buildFile));
     CellPathResolver cellNames = TestCellPathResolver.get(filesystem);
     FakeRuleDescription description = new FakeRuleDescription();
     FakeRuleDescriptionArg arg =
@@ -279,10 +282,16 @@ public class TargetNodeVisibilityTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             visibilities.stream()
-                .map(s -> VisibilityPatternParser.parse(cellNames, buildFile, s))
+                .map(
+                    s ->
+                        VisibilityPatternParser.parse(
+                            cellNames, ForwardRelativePath.ofRelPath(relativeBuildFile), s))
                 .collect(ImmutableSet.toImmutableSet()),
             withinView.stream()
-                .map(s -> VisibilityPatternParser.parse(cellNames, buildFile, s))
+                .map(
+                    s ->
+                        VisibilityPatternParser.parse(
+                            cellNames, ForwardRelativePath.ofRelPath(relativeBuildFile), s))
                 .collect(ImmutableSet.toImmutableSet()),
             RuleType.of("fake", RuleType.Kind.BUILD));
   }

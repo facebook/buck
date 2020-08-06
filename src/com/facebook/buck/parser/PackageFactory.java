@@ -17,13 +17,14 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /** Generic factory to create {@link Package} */
@@ -34,10 +35,12 @@ public class PackageFactory {
 
   /** Create a {@link Package} from the {@code rawPackage} */
   public static Package create(
-      Cell cell, Path packageFile, PackageMetadata rawPackage, Optional<Package> parentPackage) {
+      Cell cell, AbsPath packageFile, PackageMetadata rawPackage, Optional<Package> parentPackage) {
 
-    String visibilityDefinerDescription =
-        String.format("the package() at %s", packageFile.toString());
+    ForwardRelativePath relPackageFile =
+        ForwardRelativePath.ofRelPath(cell.getRoot().relativize(packageFile));
+
+    String visibilityDefinerDescription = String.format("the package() at %s", relPackageFile);
 
     ImmutableSet.Builder<VisibilityPattern> visibilityBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> withinViewBuilder = ImmutableSet.builder();
@@ -55,7 +58,7 @@ public class PackageFactory {
             cell.getCellPathResolver(),
             CommonParamNames.VISIBILITY.getSnakeCase(),
             rawPackage.getVisibility(),
-            packageFile,
+            relPackageFile,
             () -> visibilityDefinerDescription));
 
     withinViewBuilder.addAll(
@@ -63,7 +66,7 @@ public class PackageFactory {
             cell.getCellPathResolver(),
             CommonParamNames.WITHIN_VIEW.getSnakeCase(),
             rawPackage.getWithinView(),
-            packageFile,
+            relPackageFile,
             () -> visibilityDefinerDescription));
 
     return Package.of(

@@ -18,9 +18,9 @@ package com.facebook.buck.rules.visibility.parser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -34,7 +34,7 @@ public class VisibilityPatterns {
       CellPathResolver cellNames,
       String paramName,
       List<String> value,
-      Path definingPath,
+      ForwardRelativePath definingPath,
       Supplier<String> visibilityDefinerDescription) {
     ImmutableSet.Builder<VisibilityPattern> patterns =
         ImmutableSet.builderWithExpectedSize(value.size());

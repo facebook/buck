@@ -101,8 +101,7 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
             .getAbsolutePathToBuildFile(cell, buildTarget, DependencyStack.top(buildTarget));
 
     Package stubPackage =
-        PackageFactory.create(
-            cell, buildFile.getPath(), PackageMetadata.EMPTY_SINGLETON, Optional.empty());
+        PackageFactory.create(cell, buildFile, PackageMetadata.EMPTY_SINGLETON, Optional.empty());
 
     return unconfiguredTargetNodeFactory.create(
         cell,

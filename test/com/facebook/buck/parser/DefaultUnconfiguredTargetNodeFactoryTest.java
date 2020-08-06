@@ -222,7 +222,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
             RawTargetNode.copyOf(
                 ForwardRelativePath.of("a/b"),
                 "java_library",
-                ImmutableList.of("//a/...", "EXTEND_PACKAGE"),
+                ImmutableList.of("//a/..."),
                 ImmutableList.of("//b/...", "EXTEND_PACKAGE"),
                 TwoArraysImmutableHashMap.copyOf(inputAttributes)),
             getPackage());
@@ -247,7 +247,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
 
     return PackageFactory.create(
         cell.getRootCell(),
-        cell.getRootCell().getRoot().resolve("a/b/BUCK").getPath(),
+        cell.getRootCell().getRoot().resolve("a/b/PACKAGE"),
         pkg,
         Optional.empty());
   }

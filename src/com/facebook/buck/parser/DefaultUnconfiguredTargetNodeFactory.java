@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -273,7 +274,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             cell.getCellPathResolver(),
             entryType.getSnakeCase(),
             entries,
-            buildFile.getPath(),
+            ForwardRelativePath.ofRelPath(cell.getRoot().relativize(buildFile.getPath())),
             target::getFullyQualifiedName);
 
     if (entryPatterns.isEmpty() || addPackageEntries) {

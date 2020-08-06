@@ -137,7 +137,7 @@ class PackagePipeline implements AutoCloseable {
     if (!cell.getBuckConfig().getView(ParserConfig.class).getEnablePackageFiles()) {
       Package pkg =
           PackageFactory.create(
-              cell, packageFile.getPath(), PackageMetadata.EMPTY_SINGLETON, Optional.empty());
+              cell, packageFile, PackageMetadata.EMPTY_SINGLETON, Optional.empty());
       return Futures.immediateFuture(pkg);
     }
 
@@ -203,7 +203,7 @@ class PackagePipeline implements AutoCloseable {
             minimumPerfEventTimeMs,
             TimeUnit.MILLISECONDS)) {
 
-      result = PackageFactory.create(cell, packageFile.getPath(), pkg, parentPkg);
+      result = PackageFactory.create(cell, packageFile, pkg, parentPkg);
     }
     return Futures.immediateFuture(result);
   }

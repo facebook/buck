@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.targetgraph.impl.PathsCheckerFactory;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -202,7 +203,7 @@ public abstract class AbstractNodeBuilder<
               ImmutableSet.of(
                   VisibilityPatternParser.parse(
                       null,
-                      filesystem.getRootPath().resolve("BUCK").getPath(),
+                      ForwardRelativePath.of("BUCK"),
                       VisibilityPatternParser.VISIBILITY_PUBLIC)),
               ImmutableSet.of(),
               DescriptionCache.getRuleType(description))

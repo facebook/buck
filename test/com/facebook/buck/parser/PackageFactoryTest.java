@@ -20,12 +20,11 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -34,7 +33,7 @@ public class PackageFactoryTest {
   private final Cells cell = new TestCellBuilder().build();
 
   private Package createGenericPackage() {
-    Path packageFile = Paths.get("foo/PACKAGE");
+    AbsPath packageFile = cell.getRootCell().getRoot().resolve("foo/PACKAGE");
 
     PackageMetadata rawPackage =
         PackageMetadata.of(false, ImmutableList.of("//a/..."), ImmutableList.of("//b/..."));
@@ -56,7 +55,7 @@ public class PackageFactoryTest {
   public void createWithParentNoInherit() {
     Package parentPkg = createGenericPackage();
 
-    Path packageFile = Paths.get("foo/bar/PACKAGE");
+    AbsPath packageFile = cell.getRootCell().getRoot().resolve("foo/bar/PACKAGE");
 
     PackageMetadata rawPackage =
         PackageMetadata.of(false, ImmutableList.of("//c/..."), ImmutableList.of("//d/..."));
@@ -75,7 +74,7 @@ public class PackageFactoryTest {
   public void createWithParentInherit() {
     Package parentPkg = createGenericPackage();
 
-    Path packageFile = Paths.get("foo/bar/PACKAGE");
+    AbsPath packageFile = cell.getRootCell().getRoot().resolve("foo/bar/PACKAGE");
 
     PackageMetadata rawPackage =
         PackageMetadata.of(true, ImmutableList.of("//c/..."), ImmutableList.of("//d/..."));

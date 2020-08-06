@@ -79,7 +79,7 @@ public class PerBuildStateCacheTest {
   }
 
   Package createPackage(Cell cell, AbsPath packageFile, PackageMetadata packageMetadata) {
-    return PackageFactory.create(cell, packageFile.getPath(), packageMetadata, Optional.empty());
+    return PackageFactory.create(cell, packageFile, packageMetadata, Optional.empty());
   }
 
   @Test
@@ -124,20 +124,22 @@ public class PerBuildStateCacheTest {
             false,
             ImmutableList.of("//bar/..."),
             ImmutableList.of());
+
+    AbsPath childPackageFile = childCell.getFilesystem().resolve("Foo");
     Package pkg2 =
         createPackage(
-            childCell, packageFile, false, ImmutableList.of("//bar/..."), ImmutableList.of());
+            childCell, childPackageFile, false, ImmutableList.of("//bar/..."), ImmutableList.of());
 
     packageCache.putComputedNodeIfNotPresent(
         cells.getRootCell(), packageFile, pkg1, false, eventBus);
-    packageCache.putComputedNodeIfNotPresent(childCell, packageFile, pkg2, false, eventBus);
+    packageCache.putComputedNodeIfNotPresent(childCell, childPackageFile, pkg2, false, eventBus);
 
     Optional<Package> lookupPackage =
         packageCache.lookupComputedNode(cells.getRootCell(), packageFile, eventBus);
     Assert.assertSame(lookupPackage.get(), pkg1);
     Assert.assertNotSame(lookupPackage.get(), pkg2);
 
-    lookupPackage = packageCache.lookupComputedNode(childCell, packageFile, eventBus);
+    lookupPackage = packageCache.lookupComputedNode(childCell, childPackageFile, eventBus);
     Assert.assertSame(lookupPackage.get(), pkg2);
     Assert.assertNotSame(lookupPackage.get(), pkg1);
   }

@@ -16,13 +16,13 @@
 
 package com.facebook.buck.rules.visibility;
 
-import java.nio.file.Path;
+import com.facebook.buck.core.path.ForwardRelativePath;
 
 public interface VisibilityPattern {
   boolean checkVisibility(ObeysVisibility viewer);
 
-  /** Cell relative path in which the {@link VisibilityPattern} is defined. */
-  Path getDefiningPath();
+  /** Cell relative path to the file in which the {@link VisibilityPattern} is defined. */
+  ForwardRelativePath getDefiningPath();
 
   /** User readable value for this pattern. */
   String getRepresentation();
