@@ -19,6 +19,7 @@ package com.facebook.buck.event;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.timing.SettableFakeClock;
+import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -39,7 +40,13 @@ public class SimplePerfEventTest {
 
     SimplePerfEvent perfEvent = (SimplePerfEvent) event;
 
-    assertThat(perfEvent.getEventId(), Matchers.equalTo(id));
+    assertThat(
+        perfEvent.getEventId(),
+        Matchers.equalTo(
+            SimplePerfEvent.PerfEventId.of(
+                CaseFormat.UPPER_CAMEL
+                    .converterTo(CaseFormat.LOWER_UNDERSCORE)
+                    .convert(id.getValue()))));
     assertThat(perfEvent.getEventType(), Matchers.equalTo(type));
     assertThat(
         Maps.transformValues(perfEvent.getEventInfo(), Object::toString), Matchers.equalTo(info));
@@ -250,7 +257,7 @@ public class SimplePerfEventTest {
         parentId,
         SimplePerfEvent.Type.FINISHED,
         ImmutableMap.of(
-            "IgnoreMe_accumulated_count", "1",
-            "IgnoreMe_accumulated_duration_ns", "10"));
+            "ignore_me_accumulated_count", "1",
+            "ignore_me_accumulated_duration_ns", "10"));
   }
 }

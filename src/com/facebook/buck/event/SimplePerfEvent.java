@@ -19,6 +19,7 @@ package com.facebook.buck.event;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -547,7 +548,11 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
         String category,
         ImmutableMap<String, Object> info) {
       super(eventKey);
-      this.perfEventId = perfEventId;
+      this.perfEventId =
+          PerfEventId.of(
+              CaseFormat.UPPER_CAMEL
+                  .converterTo(CaseFormat.LOWER_UNDERSCORE)
+                  .convert(perfEventId.getValue()));
       this.perfEventType = perfEventType;
       this.category = category;
       this.info = info;

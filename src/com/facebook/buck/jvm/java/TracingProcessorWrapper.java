@@ -176,7 +176,7 @@ class TracingProcessorWrapper implements Processor {
     private void end(AnnotationProcessingEvent.Started started) {
       eventSink.reportAnnotationProcessingEventFinished(
           started.getBuildTarget(),
-          started.getAnnotationProcessorName(),
+          started.getCategory(),
           started.getOperation().toString(),
           started.getRound(),
           started.isLastRound());

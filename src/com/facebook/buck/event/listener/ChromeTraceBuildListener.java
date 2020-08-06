@@ -46,7 +46,6 @@ import com.facebook.buck.event.chrome_trace.ChromeTraceEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceEvent.Phase;
 import com.facebook.buck.event.chrome_trace.ChromeTraceWriter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.AnnotationProcessingEvent;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
@@ -72,7 +71,6 @@ import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.facebook.buck.util.zip.BestCompressionGZIPOutputStream;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -109,10 +107,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
               new CacheLoader<String, String>() {
                 @Override
                 public String load(String key) {
-                  return CaseFormat.UPPER_CAMEL
-                      .converterTo(CaseFormat.LOWER_UNDERSCORE)
-                      .convert(key)
-                      .intern();
+                  return key.intern();
                 }
               });
 
@@ -726,26 +721,6 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         finished.getPhase().toString(),
         ChromeTraceEvent.Phase.END,
         finished.getArgs(),
-        finished);
-  }
-
-  @Subscribe
-  public void annotationProcessingStarted(AnnotationProcessingEvent.Started started) {
-    writeChromeTraceEvent(
-        started.getAnnotationProcessorName(),
-        started.getCategory(),
-        ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.of(),
-        started);
-  }
-
-  @Subscribe
-  public void annotationProcessingFinished(AnnotationProcessingEvent.Finished finished) {
-    writeChromeTraceEvent(
-        finished.getAnnotationProcessorName(),
-        finished.getCategory(),
-        ChromeTraceEvent.Phase.END,
-        ImmutableMap.of(),
         finished);
   }
 

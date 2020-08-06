@@ -17,13 +17,14 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.google.common.base.CaseFormat;
+import com.google.common.collect.ImmutableMap;
 
 /** Base class for events about Java annotation processing. */
-public abstract class AnnotationProcessingEvent extends AbstractBuckEvent
+public abstract class AnnotationProcessingEvent extends SimplePerfEvent
     implements WorkAdvanceEvent {
 
   public enum Operation {
@@ -60,10 +61,6 @@ public abstract class AnnotationProcessingEvent extends AbstractBuckEvent
     return buildTarget;
   }
 
-  public String getAnnotationProcessorName() {
-    return annotationProcessorName;
-  }
-
   public Operation getOperation() {
     return operation;
   }
@@ -81,10 +78,22 @@ public abstract class AnnotationProcessingEvent extends AbstractBuckEvent
     return buildTarget.toString();
   }
 
+  @Override
   public String getCategory() {
-    return annotationProcessorName
-        + "."
-        + CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, operation.toString());
+    return annotationProcessorName;
+  }
+
+  @Override
+  public PerfEventId getEventId() {
+    return PerfEventId.of(
+        annotationProcessorName
+            + "."
+            + CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, operation.toString()));
+  }
+
+  @Override
+  public ImmutableMap<String, Object> getEventInfo() {
+    return ImmutableMap.of();
   }
 
   public static Started started(
@@ -114,17 +123,22 @@ public abstract class AnnotationProcessingEvent extends AbstractBuckEvent
     public String getEventName() {
       return String.format(
           "%s.%sStarted",
-          getAnnotationProcessorName(),
+          getCategory(),
           CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, getOperation().toString()));
+    }
+
+    @Override
+    public Type getEventType() {
+      return Type.STARTED;
     }
   }
 
   public static class Finished extends AnnotationProcessingEvent {
-    public Finished(Started started) {
+    public Finished(AnnotationProcessingEvent.Started started) {
       super(
           started.getEventKey(),
           started.getBuildTarget(),
-          started.getAnnotationProcessorName(),
+          started.getCategory(),
           started.getOperation(),
           started.getRound(),
           started.isLastRound());
@@ -144,8 +158,13 @@ public abstract class AnnotationProcessingEvent extends AbstractBuckEvent
     public String getEventName() {
       return String.format(
           "%s.%sFinished",
-          getAnnotationProcessorName(),
+          getCategory(),
           CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, getOperation().toString()));
+    }
+
+    @Override
+    public Type getEventType() {
+      return Type.FINISHED;
     }
   }
 }

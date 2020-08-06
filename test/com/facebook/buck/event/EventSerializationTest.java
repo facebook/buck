@@ -344,8 +344,8 @@ public class EventSerializationTest {
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,"
-            + "\"eventKey\":{\"value\":4242},\"category\":\"buck\",\"eventId\":\"PerfId\",\"eventType\":\"STARTED\","
-            + "\"eventInfo\":{\"value\":\"Some value\"},\"type\":\"PerfEvent.PerfId.Started\"}",
+            + "\"eventKey\":{\"value\":4242},\"category\":\"buck\",\"eventId\":\"perf_id\",\"eventType\":\"STARTED\","
+            + "\"eventInfo\":{\"value\":\"Some value\"},\"type\":\"PerfEvent.perf_id.Started\"}",
         message);
   }
 
