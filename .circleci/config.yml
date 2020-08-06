@@ -700,6 +700,55 @@ jobs:
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
 
+  linux_test_android_ndk_20:
+    environment:
+      <<: *linux_environment
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK 20
+          command: |
+            cd "${BUCKROOT}"
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            ./scripts/circleci_unzip_android_ndk.sh android-ndk-r20b
+      - run:
+          <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
+      - run:
+          <<: *install_python
+      - run:
+          <<: *install_dlang
+      - run:
+          <<: *run_ant_build
+      - restore_cache:
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Android NDK 20 Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
+            set -eux
+            ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
+            ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+
   mac_build_openjdk8:
     environment:
       <<: *macos_environment
@@ -1208,6 +1257,55 @@ jobs:
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
 
+  macos_test_android_ndk_20:
+    environment:
+      <<: *macos_environment
+    working_directory: "/Users/distiller/buck"
+    macos:
+      xcode: "11.3.1"
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK 20
+          command: |
+            cd "${BUCKROOT}"
+            export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
+            ./scripts/circleci_unzip_android_ndk.sh android-ndk-r20b "${PLATFORM}"
+      - run:
+          <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
+      - run:
+          <<: *install_python
+      - run:
+          <<: *install_dlang
+      - run:
+          <<: *run_ant_build
+      - restore_cache:
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Android NDK 20 Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
+            export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
+            set -eux
+            ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
+            ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+
   windows_build_test:
     environment:
       <<: *windows_environment
@@ -1380,6 +1478,7 @@ workflows:
       - linux_test_android_ndk_17
       - linux_test_android_ndk_18
       - linux_test_android_ndk_19
+      - linux_test_android_ndk_20
 
   macos_jobs:
     jobs:
@@ -1393,6 +1492,7 @@ workflows:
       - macos_test_android_ndk_17
       - macos_test_android_ndk_18
       - macos_test_android_ndk_19
+      - macos_test_android_ndk_20
 
   windows_jobs:
     jobs:
