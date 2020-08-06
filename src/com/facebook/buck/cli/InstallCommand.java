@@ -1386,7 +1386,7 @@ public class InstallCommand extends BuildCommand {
       this.params = params;
       this.root = params.getCells();
       this.closer = Closer.create();
-      for (Cell cell : root.getRootCell().getAllCells()) {
+      for (Cell cell : root.getAllCells()) {
         invalidateTrigger(cell);
         closer.register(
             () -> {

@@ -19,6 +19,7 @@ package com.facebook.buck.core.cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -48,8 +49,17 @@ public class Cells {
     return rootCell.getCell(cellName);
   }
 
+  /**
+   * Returns a list of all cells, including this cell. If this cell is the root, getAllCells will
+   * necessarily return all possible cells that this build may interact with, since the root cell is
+   * required to declare a mapping for all cell names.
+   */
   public ImmutableList<Cell> getAllCells() {
-    return rootCell.getAllCells();
+    return RichStream.from(rootCell.getKnownRootsOfAllCells())
+        .concat(RichStream.of(rootCell.getRoot()))
+        .distinct()
+        .map(getCellProvider()::getCellByPath)
+        .toImmutableList();
   }
 
   public CellProvider getCellProvider() {

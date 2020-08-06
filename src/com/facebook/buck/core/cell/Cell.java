@@ -24,7 +24,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -61,13 +60,6 @@ public interface Cell {
   AbsPath getRoot();
 
   Cell getCell(CanonicalCellName cellName);
-
-  /**
-   * Returns a list of all cells, including this cell. If this cell is the root, getAllCells will
-   * necessarily return all possible cells that this build may interact with, since the root cell is
-   * required to declare a mapping for all cell names.
-   */
-  ImmutableList<Cell> getAllCells();
 
   /** @return all loaded {@link Cell}s that are children of this {@link Cell}. */
   ImmutableMap<AbsPath, Cell> getLoadedCells();

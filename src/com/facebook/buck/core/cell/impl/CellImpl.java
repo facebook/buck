@@ -32,8 +32,6 @@ import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
-import com.facebook.buck.util.stream.RichStream;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -98,15 +96,6 @@ abstract class CellImpl implements Cell {
   @Override
   public Cell getCell(CanonicalCellName cellName) {
     return getCellProvider().getCellByCanonicalCellName(cellName);
-  }
-
-  @Override
-  public ImmutableList<Cell> getAllCells() {
-    return RichStream.from(getKnownRootsOfAllCells())
-        .concat(RichStream.of(getRoot()))
-        .distinct()
-        .map(getCellProvider()::getCellByPath)
-        .toImmutableList();
   }
 
   @Override
