@@ -2262,14 +2262,14 @@ def main():
 
     configs = {}
     if options.config is not None:
-        with open(options.config, "rb") as f:
+        with open(options.config, "r") as f:
             for section, contents in iteritems(json.load(f)):
                 for field, value in iteritems(contents):
                     configs[(section, field)] = value
 
     ignore_paths = []
     if options.ignore_paths is not None:
-        with open(options.ignore_paths, "rb") as f:
+        with open(options.ignore_paths, "r") as f:
             ignore_paths = [make_glob(i) for i in json.load(f)]
 
     build_file_processor = BuildFileProcessor(
