@@ -23,7 +23,10 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
-import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.io.watchman.StubWatchmanClient;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
@@ -33,6 +36,7 @@ import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.devtools.build.lib.vfs.Path;
 import java.util.Collections;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -42,7 +46,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class HybridGlobberTest {
-  private AbsPath root;
+  private Path root;
   private HybridGlobber globber;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -52,7 +56,10 @@ public class HybridGlobberTest {
 
   @Before
   public void setUp() throws Exception {
-    root = tmp.getRoot();
+    ProjectFilesystem projectFilesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
+    SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem);
+    root = fileSystem.getPath(tmp.getRoot().toString());
     WatchmanFactory watchmanFactory = new WatchmanFactory();
     Watchman watchman =
         watchmanFactory.build(

@@ -22,6 +22,7 @@ import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.LabelCache;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
@@ -266,6 +267,7 @@ public class HostInfoTest {
     return SkylarkProjectBuildFileParser.using(
         options,
         BuckEventBusForTests.newInstance(),
+        SkylarkFilesystem.using(filesystem),
         BuckGlobals.of(
             SkylarkBuildModule.BUILD_MODULE,
             options.getDescriptions(),

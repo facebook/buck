@@ -33,7 +33,7 @@ public class SkylarkFilesystemTest {
   @Before
   public void setUp() {
     projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    skylarkFilesystem = SkylarkFilesystem.using(projectFilesystem.getFileSystem());
+    skylarkFilesystem = SkylarkFilesystem.using(projectFilesystem);
   }
 
   private Path toSkylarkPath(String path) {

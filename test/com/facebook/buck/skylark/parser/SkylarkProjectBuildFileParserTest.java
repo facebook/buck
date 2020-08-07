@@ -96,7 +96,7 @@ public class SkylarkProjectBuildFileParserTest {
   @Before
   public void setUp() {
     projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    skylarkFilesystem = SkylarkFilesystem.using(projectFilesystem.getFileSystem());
+    skylarkFilesystem = SkylarkFilesystem.using(projectFilesystem);
     cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
@@ -224,7 +224,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     boolean result =
         parser.globResultsMatchCurrentState(
-            buildFile,
+            buildFile.getPath(),
             ImmutableList.of(
                 GlobSpecWithResult.of(
                     GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
@@ -248,7 +248,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     boolean result =
         parser.globResultsMatchCurrentState(
-            buildFile,
+            buildFile.getPath(),
             ImmutableList.of(
                 GlobSpecWithResult.of(
                     GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
@@ -272,7 +272,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     boolean result =
         parser.globResultsMatchCurrentState(
-            buildFile,
+            buildFile.getPath(),
             ImmutableList.of(
                 GlobSpecWithResult.of(
                     GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
@@ -295,7 +295,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     boolean result =
         parser.globResultsMatchCurrentState(
-            buildFile,
+            buildFile.getPath(),
             ImmutableList.of(
                 GlobSpecWithResult.of(
                     GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
@@ -317,7 +317,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     boolean result =
         parser.globResultsMatchCurrentState(
-            buildFile,
+            buildFile.getPath(),
             ImmutableList.of(
                 GlobSpecWithResult.of(
                     GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
@@ -1035,6 +1035,7 @@ public class SkylarkProjectBuildFileParserTest {
         SkylarkProjectBuildFileParser.using(
             options,
             BuckEventBusForTests.newInstance(),
+            skylarkFilesystem,
             BuckGlobals.of(
                 SkylarkBuildModule.BUILD_MODULE,
                 options.getDescriptions(),
@@ -1377,7 +1378,9 @@ public class SkylarkProjectBuildFileParserTest {
   public void throwsHumanReadableExceptionWhenFileDoesNotExist()
       throws IOException, InterruptedException {
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("src/test/build_rules.bzl cannot be loaded because it does not exist");
+    thrown.expectMessage(
+        matchesPattern(
+            ".*src[\\\\/]test[\\\\/]build_rules.bzl cannot be loaded because it does not exist"));
 
     AbsPath directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory.getPath());

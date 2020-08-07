@@ -56,7 +56,7 @@ public class ReadConfigTest {
   @Before
   public void setUp() {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem.getFileSystem());
+    SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem);
     root = fileSystem.getPath(projectFilesystem.getRootPath().toString());
     eventHandler = new PrintingEventHandler(EnumSet.allOf(EventKind.class));
     rawConfig = ImmutableMap.of();

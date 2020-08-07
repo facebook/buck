@@ -896,7 +896,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
   @Override
   public boolean globResultsMatchCurrentState(
-      AbsPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
+      Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
     throw new UnsupportedOperationException("Not yet implemented!");
   }
 

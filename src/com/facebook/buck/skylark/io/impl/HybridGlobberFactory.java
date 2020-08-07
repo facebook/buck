@@ -23,6 +23,7 @@ import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.io.GlobberFactory;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.vfs.Path;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
@@ -70,7 +71,7 @@ public class HybridGlobberFactory implements GlobberFactory {
    * @throws IOException
    * @throws InterruptedException
    */
-  public Optional<WatchProjectResult> getWatchmanRelativizedFinalPath(AbsPath filePath)
+  public Optional<WatchProjectResult> getWatchmanRelativizedFinalPath(Path filePath)
       throws IOException, InterruptedException {
     return watchmanClient
         .queryWithTimeout(TIMEOUT_NANOS, WARN_TIMEOUT_NANOS, "watch-project", filePath.toString())
@@ -84,7 +85,7 @@ public class HybridGlobberFactory implements GlobberFactory {
   }
 
   @Override
-  public Globber create(AbsPath basePath) {
+  public Globber create(Path basePath) {
     AbsPath cellPath = AbsPath.of(projectRoot.toAbsolutePath());
     String watchRoot = cellPath.toString();
     @Nullable ProjectWatch projectWatch = projectWatches.get(cellPath);
@@ -93,7 +94,7 @@ public class HybridGlobberFactory implements GlobberFactory {
     }
     String relativeRoot = null;
     try {
-      relativeRoot = cellPath.relativize(basePath).toString();
+      relativeRoot = basePath.relativeTo(basePath.getFileSystem().getPath(watchRoot)).toString();
     } catch (IllegalArgumentException e) {
       if (Platform.detect() == Platform.WINDOWS) {
         // It is possible that on Windows we have a base root that is going through a different

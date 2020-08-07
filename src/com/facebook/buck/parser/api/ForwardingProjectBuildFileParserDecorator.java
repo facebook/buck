@@ -22,6 +22,7 @@ import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  * A convenience decorator for {@link ProjectBuildFileParser} that forwards all method invocation to
@@ -57,7 +58,7 @@ public abstract class ForwardingProjectBuildFileParserDecorator implements Proje
 
   @Override
   public boolean globResultsMatchCurrentState(
-      AbsPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
+      Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
       throws IOException, InterruptedException {
     return delegate.globResultsMatchCurrentState(buildFile, existingGlobsWithResults);
   }

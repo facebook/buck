@@ -25,6 +25,7 @@ import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.starlark.eventhandler.ConsoleEventHandler;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.PackageFileManifest;
 import com.facebook.buck.parser.api.PackageFileParser;
@@ -128,6 +129,10 @@ public class PackageFileParserFactory implements FileParserFactory<PackageFileMa
             augmentor);
 
     return SkylarkPackageFileParser.using(
-        buildFileParserOptions, eventBus, buckGlobals, eventHandler);
+        buildFileParserOptions,
+        eventBus,
+        SkylarkFilesystem.using(cell.getFilesystem()),
+        buckGlobals,
+        eventHandler);
   }
 }

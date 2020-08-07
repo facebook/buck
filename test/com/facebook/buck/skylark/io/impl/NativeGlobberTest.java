@@ -19,13 +19,13 @@ package com.facebook.buck.skylark.io.impl;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.skylark.io.Globber;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Files;
+import com.google.devtools.build.lib.vfs.FileSystemUtils;
+import com.google.devtools.build.lib.vfs.Path;
 import java.util.Collections;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -34,7 +34,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class NativeGlobberTest {
-  private AbsPath root;
+  private Path root;
   private Globber globber;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -42,17 +42,18 @@ public class NativeGlobberTest {
   @Before
   public void setUp() {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    root = projectFilesystem.getRootPath();
+    SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem);
+    root = fileSystem.getPath(projectFilesystem.getRootPath().toString());
     globber = NativeGlobber.create(root);
   }
 
   @Test
   public void testGlobFindsRecursiveIncludes() throws Exception {
-    AbsPath child = root.resolve("child");
-    Files.createDirectory(child.getPath());
-    Files.write(child.resolve("foo.txt").getPath(), new byte[0]);
-    Files.write(child.resolve("bar.txt").getPath(), new byte[0]);
-    Files.write(child.resolve("bar.jpg").getPath(), new byte[0]);
+    Path child = root.getChild("child");
+    child.createDirectory();
+    FileSystemUtils.createEmptyFile(child.getChild("foo.txt"));
+    FileSystemUtils.createEmptyFile(child.getChild("bar.txt"));
+    FileSystemUtils.createEmptyFile(child.getChild("bar.jpg"));
     assertThat(
         globber.run(Collections.singleton("**/*.txt"), Collections.emptySet(), false),
         equalTo(ImmutableSet.of("child/bar.txt", "child/foo.txt")));
@@ -60,11 +61,11 @@ public class NativeGlobberTest {
 
   @Test
   public void testGlobFindsShallowRecursiveIncludes() throws Exception {
-    AbsPath child = root.resolve("child");
-    Files.createDirectory(child.getPath());
-    Files.write(child.resolve("foo.txt").getPath(), new byte[0]);
-    Files.write(child.resolve("bar.txt").getPath(), new byte[0]);
-    Files.write(child.resolve("bar.jpg").getPath(), new byte[0]);
+    Path child = root.getChild("child");
+    child.createDirectory();
+    FileSystemUtils.createEmptyFile(child.getChild("foo.txt"));
+    FileSystemUtils.createEmptyFile(child.getChild("bar.txt"));
+    FileSystemUtils.createEmptyFile(child.getChild("bar.jpg"));
     assertThat(
         globber.run(Collections.singleton("child/**/*.txt"), Collections.emptySet(), false),
         equalTo(ImmutableSet.of("child/bar.txt", "child/foo.txt")));
@@ -72,11 +73,11 @@ public class NativeGlobberTest {
 
   @Test
   public void testGlobFindsDeepRecursiveIncludes() throws Exception {
-    AbsPath child = root.resolve("dir").resolve("child");
-    Files.createDirectories(child.getPath());
-    Files.write(child.resolve("foo.txt").getPath(), new byte[0]);
-    Files.write(child.resolve("bar.txt").getPath(), new byte[0]);
-    Files.write(child.resolve("bar.jpg").getPath(), new byte[0]);
+    Path child = root.getChild("dir").getChild("child");
+    child.createDirectoryAndParents();
+    FileSystemUtils.createEmptyFile(child.getChild("foo.txt"));
+    FileSystemUtils.createEmptyFile(child.getChild("bar.txt"));
+    FileSystemUtils.createEmptyFile(child.getChild("bar.jpg"));
     assertThat(
         globber.run(Collections.singleton("dir/**/child/*.txt"), Collections.emptySet(), false),
         equalTo(ImmutableSet.of("dir/child/bar.txt", "dir/child/foo.txt")));
@@ -84,9 +85,9 @@ public class NativeGlobberTest {
 
   @Test
   public void testGlobFindsIncludes() throws Exception {
-    Files.write(root.resolve("foo.txt").getPath(), new byte[0]);
-    Files.write(root.resolve("bar.txt").getPath(), new byte[0]);
-    Files.write(root.resolve("bar.jpg").getPath(), new byte[0]);
+    FileSystemUtils.createEmptyFile(root.getChild("foo.txt"));
+    FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
+    FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
     assertThat(
         globber.run(Collections.singleton("*.txt"), Collections.emptySet(), false),
         equalTo(ImmutableSet.of("bar.txt", "foo.txt")));
@@ -94,9 +95,9 @@ public class NativeGlobberTest {
 
   @Test
   public void testGlobExcludedElementsAreNotReturned() throws Exception {
-    Files.write(root.resolve("foo.txt").getPath(), new byte[0]);
-    Files.write(root.resolve("bar.txt").getPath(), new byte[0]);
-    Files.write(root.resolve("bar.jpg").getPath(), new byte[0]);
+    FileSystemUtils.createEmptyFile(root.getChild("foo.txt"));
+    FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
+    FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
     assertThat(
         globber.run(Collections.singleton("*.txt"), Collections.singleton("bar.txt"), false),
         equalTo(ImmutableSet.of("foo.txt")));
@@ -104,7 +105,7 @@ public class NativeGlobberTest {
 
   @Test
   public void testMatchingDirectoryIsReturnedWhenDirsAreNotExcluded() throws Exception {
-    Files.createDirectories(root.resolve("some_dir").getPath());
+    root.getChild("some_dir").createDirectoryAndParents();
     assertThat(
         globber.run(Collections.singleton("some_dir"), Collections.emptySet(), false),
         equalTo(ImmutableSet.of("some_dir")));
@@ -112,11 +113,10 @@ public class NativeGlobberTest {
 
   @Test
   public void testMatchingDirectoryIsNotReturnedWhenDirsAreExcluded() throws Exception {
-    Files.createDirectories(root.resolve("some_dir").getPath());
-    AbsPath buildFile = root.resolve("BUCK");
-    Files.write(
-        buildFile.getPath(),
-        ImmutableList.of("txts = glob(['some_dir'], exclude_directories=True)"));
+    root.getChild("some_dir").createDirectoryAndParents();
+    Path buildFile = root.getChild("BUCK");
+    FileSystemUtils.writeContentAsLatin1(
+        buildFile, "txts = glob(['some_dir'], exclude_directories=True)");
     assertThat(
         globber.run(Collections.singleton("some_dir"), Collections.emptySet(), true),
         equalTo(ImmutableSet.of()));

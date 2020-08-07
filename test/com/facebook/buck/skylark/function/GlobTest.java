@@ -22,11 +22,11 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
@@ -49,33 +49,35 @@ import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.SyntaxError;
+import com.google.devtools.build.lib.vfs.FileSystemUtils;
+import com.google.devtools.build.lib.vfs.Path;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.EnumSet;
 import org.junit.Before;
 import org.junit.Test;
 
 public class GlobTest {
 
-  private AbsPath root;
+  private Path root;
   private EventCollector eventHandler;
 
   @Before
   public void setUp() {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    root = projectFilesystem.getRootPath();
+    SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem);
+    root = fileSystem.getPath(projectFilesystem.getRootPath().toString());
     eventHandler = new EventCollector(EnumSet.allOf(EventKind.class));
   }
 
   @Test
   public void testGlobFindsIncludedFiles() throws IOException, InterruptedException, EvalException {
-    Files.write(root.resolve("foo.txt").getPath(), new byte[0]);
-    Files.write(root.resolve("bar.txt").getPath(), new byte[0]);
-    Files.write(root.resolve("bar.jpg").getPath(), new byte[0]);
-    AbsPath buildFile = root.resolve("BUCK");
-    Files.write(buildFile.getPath(), ImmutableList.of("txts = glob(['*.txt'])"));
+    FileSystemUtils.createEmptyFile(root.getChild("foo.txt"));
+    FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
+    FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
+    Path buildFile = root.getChild("BUCK");
+    FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['*.txt'])");
     assertThat(
         assertEvaluate(buildFile).getGlobals().get("txts"),
         equalTo(StarlarkList.immutableCopyOf(ImmutableList.of("bar.txt", "foo.txt"))));
@@ -84,11 +86,11 @@ public class GlobTest {
   @Test
   public void testGlobFindsIncludedFilesUsingKeyword()
       throws IOException, InterruptedException, EvalException {
-    Files.write(root.resolve("foo.txt").getPath(), new byte[0]);
-    Files.write(root.resolve("bar.txt").getPath(), new byte[0]);
-    Files.write(root.resolve("bar.jpg").getPath(), new byte[0]);
-    AbsPath buildFile = root.resolve("BUCK");
-    Files.write(buildFile.getPath(), ImmutableList.of("txts = glob(include=['*.txt'])"));
+    FileSystemUtils.createEmptyFile(root.getChild("foo.txt"));
+    FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
+    FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
+    Path buildFile = root.getChild("BUCK");
+    FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(include=['*.txt'])");
     assertThat(
         assertEvaluate(buildFile).getGlobals().get("txts"),
         equalTo(StarlarkList.immutableCopyOf(ImmutableList.of("bar.txt", "foo.txt"))));
@@ -97,12 +99,11 @@ public class GlobTest {
   @Test
   public void testGlobExcludedElementsAreNotReturned()
       throws IOException, InterruptedException, EvalException {
-    Files.write(root.resolve("foo.txt").getPath(), new byte[0]);
-    Files.write(root.resolve("bar.txt").getPath(), new byte[0]);
-    Files.write(root.resolve("bar.jpg").getPath(), new byte[0]);
-    AbsPath buildFile = root.resolve("BUCK");
-    Files.write(
-        buildFile.getPath(), ImmutableList.of("txts = glob(['*.txt'], exclude=['bar.txt'])"));
+    FileSystemUtils.createEmptyFile(root.getChild("foo.txt"));
+    FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
+    FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
+    Path buildFile = root.getChild("BUCK");
+    FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['*.txt'], exclude=['bar.txt'])");
     assertThat(
         assertEvaluate(buildFile).getGlobals().get("txts"),
         equalTo(StarlarkList.immutableCopyOf(ImmutableList.of("foo.txt"))));
@@ -110,11 +111,10 @@ public class GlobTest {
 
   @Test
   public void testMatchingDirectoryIsReturnedWhenDirsAreNotExcluded() throws Exception {
-    Files.createDirectories(root.resolve("some_dir").getPath());
-    AbsPath buildFile = root.resolve("BUCK");
-    Files.write(
-        buildFile.getPath(),
-        ImmutableList.of("txts = glob(['some_dir'], exclude_directories=False)"));
+    FileSystemUtils.createDirectoryAndParents(root.getChild("some_dir"));
+    Path buildFile = root.getChild("BUCK");
+    FileSystemUtils.writeContentAsLatin1(
+        buildFile, "txts = glob(['some_dir'], exclude_directories=False)");
     assertThat(
         assertEvaluate(buildFile).getGlobals().get("txts"),
         equalTo(StarlarkList.immutableCopyOf(ImmutableList.of("some_dir"))));
@@ -122,11 +122,10 @@ public class GlobTest {
 
   @Test
   public void testMatchingDirectoryIsNotReturnedWhenDirsAreExcluded() throws Exception {
-    Files.createDirectories(root.resolve("some_dir").getPath());
-    AbsPath buildFile = root.resolve("BUCK");
-    Files.write(
-        buildFile.getPath(),
-        ImmutableList.of("txts = glob(['some_dir'], exclude_directories=True)"));
+    FileSystemUtils.createDirectoryAndParents(root.getChild("some_dir"));
+    Path buildFile = root.getChild("BUCK");
+    FileSystemUtils.writeContentAsLatin1(
+        buildFile, "txts = glob(['some_dir'], exclude_directories=True)");
     assertThat(
         assertEvaluate(buildFile).getGlobals().get("txts"),
         equalTo(StarlarkList.immutableCopyOf(ImmutableList.of())));
@@ -134,9 +133,9 @@ public class GlobTest {
 
   @Test
   public void testMatchingDirectoryIsNotReturnedWhenDirExclusionIsNotSpecified() throws Exception {
-    Files.createDirectories(root.resolve("some_dir").getPath());
-    AbsPath buildFile = root.resolve("BUCK");
-    Files.write(buildFile.getPath(), ImmutableList.of("txts = glob(['some_dir'])"));
+    FileSystemUtils.createDirectoryAndParents(root.getChild("some_dir"));
+    Path buildFile = root.getChild("BUCK");
+    FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['some_dir'])");
     assertThat(
         assertEvaluate(buildFile).getGlobals().get("txts"),
         equalTo(StarlarkList.immutableCopyOf(ImmutableList.of())));
@@ -144,8 +143,8 @@ public class GlobTest {
 
   @Test
   public void emptyIncludeListIsReportedAsAWarning() throws Exception {
-    AbsPath buildFile = root.resolve("BUCK");
-    Files.write(buildFile.getPath(), ImmutableList.of("txts = glob([])"));
+    Path buildFile = root.getChild("BUCK");
+    FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob([])");
     assertThat(
         assertEvaluate(buildFile).getGlobals().get("txts"),
         equalTo(StarlarkList.immutableCopyOf(ImmutableList.of())));
@@ -160,16 +159,17 @@ public class GlobTest {
                 + "Please use an empty list ([]) instead."));
   }
 
-  private Module assertEvaluate(AbsPath buildFile)
+  private Module assertEvaluate(Path buildFile)
       throws IOException, InterruptedException, EvalException {
     try (Mutability mutability = Mutability.create("BUCK")) {
       return assertEvaluate(buildFile, mutability);
     }
   }
 
-  private Module assertEvaluate(AbsPath buildFile, Mutability mutability)
+  private Module assertEvaluate(Path buildFile, Mutability mutability)
       throws IOException, InterruptedException, EvalException {
-    byte[] buildFileContent = Files.readAllBytes(buildFile.getPath());
+    byte[] buildFileContent =
+        FileSystemUtils.readWithKnownFileSize(buildFile, buildFile.getFileSize());
     StarlarkFile buildFileAst =
         StarlarkFile.parse(
             ParserInput.create(

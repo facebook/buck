@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.events.EventHandler;
+import com.google.devtools.build.lib.vfs.FileSystem;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -52,9 +53,10 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
   private SkylarkPackageFileParser(
       ProjectBuildFileParserOptions options,
       BuckEventBus buckEventBus,
+      FileSystem fileSystem,
       BuckGlobals buckGlobals,
       EventHandler eventHandler) {
-    super(options, buckGlobals, eventHandler);
+    super(options, fileSystem, buckGlobals, eventHandler);
     Preconditions.checkArgument(
         options.getDescriptions().isEmpty(), "Packages do not support build rules.");
     this.buckEventBus = buckEventBus;
@@ -64,9 +66,11 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
   public static SkylarkPackageFileParser using(
       ProjectBuildFileParserOptions options,
       BuckEventBus buckEventBus,
+      FileSystem fileSystem,
       BuckGlobals buckGlobals,
       EventHandler eventHandler) {
-    return new SkylarkPackageFileParser(options, buckEventBus, buckGlobals, eventHandler);
+    return new SkylarkPackageFileParser(
+        options, buckEventBus, fileSystem, buckGlobals, eventHandler);
   }
 
   @Override
@@ -75,7 +79,7 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
   }
 
   @Override
-  Globber getGlobber(AbsPath parseFile) {
+  Globber getGlobber(Path parseFile) {
     return new UnsupportedGlobber();
   }
 

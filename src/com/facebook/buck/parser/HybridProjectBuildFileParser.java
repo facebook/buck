@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 /**
@@ -77,9 +78,9 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
 
   @Override
   public boolean globResultsMatchCurrentState(
-      AbsPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
+      Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
       throws IOException, InterruptedException {
-    return getParserForBuildFile(buildFile)
+    return getParserForBuildFile(AbsPath.of(buildFile))
         .globResultsMatchCurrentState(buildFile, existingGlobsWithResults);
   }
 

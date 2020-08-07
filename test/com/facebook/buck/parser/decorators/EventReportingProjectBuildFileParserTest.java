@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.eventbus.Subscribe;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -98,7 +99,7 @@ public class EventReportingProjectBuildFileParserTest {
 
     @Override
     public boolean globResultsMatchCurrentState(
-        AbsPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
+        Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
       return false;
     }
 

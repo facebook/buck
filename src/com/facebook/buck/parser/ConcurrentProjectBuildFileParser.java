@@ -27,6 +27,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
@@ -115,7 +116,7 @@ public class ConcurrentProjectBuildFileParser implements ProjectBuildFileParser 
 
   @Override
   public boolean globResultsMatchCurrentState(
-      AbsPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
+      Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
       throws IOException, InterruptedException {
     try (CloseableWrapper<ProjectBuildFileParser> wrapper = getWrapper()) {
       return wrapper.get().globResultsMatchCurrentState(buildFile, existingGlobsWithResults);

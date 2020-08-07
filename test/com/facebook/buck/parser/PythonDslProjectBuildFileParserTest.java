@@ -675,7 +675,7 @@ public class PythonDslProjectBuildFileParserTest {
         this.knownRuleTypesProvider = new KnownRuleTypesProvider(cell1 -> ruleTypes);
         this.parser =
             SkylarkProjectBuildFileParserTestUtils.createParserWithOptions(
-                SkylarkFilesystem.using(filesystem.getFileSystem()),
+                SkylarkFilesystem.using(filesystem),
                 new PrintingEventHandler(EventKind.ALL_EVENTS),
                 options,
                 knownRuleTypesProvider,
