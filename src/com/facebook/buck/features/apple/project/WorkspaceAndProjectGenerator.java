@@ -1272,6 +1272,8 @@ public class WorkspaceAndProjectGenerator {
     Optional<XCScheme.LaunchAction.WatchInterface> watchInterface = Optional.empty();
     Optional<String> notificationPayloadFile = Optional.empty();
     Optional<Boolean> wasCreatedForAppExtension = Optional.empty();
+    Optional<String> applicationLanguage = Optional.empty();
+    Optional<String> applicationRegion = Optional.empty();
 
     if (schemeConfigArg.isPresent()) {
       environmentVariables = schemeConfigArg.get().getEnvironmentVariables();
@@ -1280,6 +1282,8 @@ public class WorkspaceAndProjectGenerator {
       watchInterface = schemeConfigArg.get().getWatchInterface();
       notificationPayloadFile = schemeConfigArg.get().getNotificationPayloadFile();
       wasCreatedForAppExtension = schemeConfigArg.get().getWasCreatedForAppExtension();
+      applicationLanguage = schemeConfigArg.get().getApplicationLanguage();
+      applicationRegion = schemeConfigArg.get().getApplicationRegion();
     }
 
     return new SchemeGenerator(
@@ -1301,6 +1305,8 @@ public class WorkspaceAndProjectGenerator {
         additionalSchemeActions,
         launchStyle,
         watchInterface,
-        notificationPayloadFile);
+        notificationPayloadFile,
+        applicationLanguage,
+        applicationRegion);
   }
 }

@@ -471,14 +471,6 @@ class SchemeGenerator {
       testableElem.appendChild(refElem);
     }
 
-    if (testAction.getApplicationLanguage().isPresent()) {
-      testActionElem.setAttribute("language", testAction.getApplicationLanguage().get());
-    }
-
-    if (testAction.getApplicationRegion().isPresent()) {
-      testActionElem.setAttribute("region", testAction.getApplicationRegion().get());
-    }
-
     if (testAction.getEnvironmentVariables().isPresent()) {
       if (testAction.getExpandVariablesBasedOn().isPresent()) {
         Element expandBasedOnElement =
@@ -491,6 +483,14 @@ class SchemeGenerator {
       Element environmentVariablesElement =
           serializeEnvironmentVariables(doc, testAction.getEnvironmentVariables().get());
       testActionElem.appendChild(environmentVariablesElement);
+    }
+
+    if (testAction.getApplicationLanguage().isPresent()) {
+      testActionElem.setAttribute("language", testAction.getApplicationLanguage().get());
+    }
+
+    if (testAction.getApplicationRegion().isPresent()) {
+      testActionElem.setAttribute("region", testAction.getApplicationRegion().get());
     }
 
     return testActionElem;
