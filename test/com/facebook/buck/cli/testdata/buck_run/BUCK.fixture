@@ -20,6 +20,6 @@ python_binary(
 )
 
 python_binary(
-    name = "pwd",
-    main = "pwd.py",
+    name = "pwd-python",
+    main = "pwdbase.py",
 )

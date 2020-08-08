@@ -98,9 +98,9 @@ public class PythonInterpreterFromConfigTest {
   }
 
   @Test
-  public void whenPython2OnPathThenItIsUsed() throws IOException {
+  public void whenPython3OnPathThenItIsUsed() throws IOException {
     temporaryFolder.newExecutableFile("python");
-    Path python2 = temporaryFolder.newExecutableFile("python2");
+    Path python3 = temporaryFolder.newExecutableFile("python3");
     PythonBuckConfig config =
         new PythonBuckConfig(
             FakeBuckConfig.builder()
@@ -114,8 +114,8 @@ public class PythonInterpreterFromConfigTest {
         new PythonInterpreterFromConfig(config, new ExecutableFinder());
 
     assertEquals(
-        "Should return path to python2.",
-        python2.toAbsolutePath(),
+        "Should return path to python3.",
+        python3.toAbsolutePath(),
         pythonInterpreter.getPythonInterpreterPath(config.getDefaultSection()));
   }
 
@@ -141,8 +141,8 @@ public class PythonInterpreterFromConfigTest {
 
   @Test
   public void whenMultiplePythonExecutablesOnPathFirstIsUsed() throws IOException {
-    Path pythonA = temporaryFolder.newExecutableFile("python2");
-    temporaryFolder2.newExecutableFile("python2");
+    Path pythonA = temporaryFolder.newExecutableFile("python3");
+    temporaryFolder2.newExecutableFile("python3");
     String path =
         temporaryFolder.getRoot().toAbsolutePath()
             + File.pathSeparator

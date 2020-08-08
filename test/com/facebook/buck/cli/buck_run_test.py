@@ -31,7 +31,7 @@ class TestBuckRun(unittest.TestCase):
             self.assertEqual(0, workspace.run_buck("run", "//:hello-python"))
             subdir = workspace.resolve_path("subdir")
             os.mkdir(subdir)
-            proc = run_buck_process(["run", "//:pwd"], subdir)
+            proc = run_buck_process(["run", "//:pwd-python"], subdir)
             stdout, stderr = proc.communicate()
             sys.stdout.write(stdout.decode("utf8"))
             sys.stdout.flush()
