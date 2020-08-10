@@ -20,7 +20,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.step.StepEvent;
+import com.facebook.buck.event.StepEvent;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 

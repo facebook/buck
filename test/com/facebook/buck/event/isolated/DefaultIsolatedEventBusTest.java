@@ -29,7 +29,7 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventKey;
-import com.facebook.buck.step.StepEvent;
+import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.util.concurrent.ListeningExecutorService;

@@ -17,7 +17,7 @@
 package com.facebook.buck.step.isolatedsteps;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
-import com.facebook.buck.step.StepEvent;
+import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.StepFailedException;

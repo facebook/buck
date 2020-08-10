@@ -22,7 +22,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.step.StepEvent;
+import com.facebook.buck.event.StepEvent;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 import java.time.Instant;

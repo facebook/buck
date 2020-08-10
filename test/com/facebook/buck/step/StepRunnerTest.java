@@ -25,6 +25,7 @@ import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.FakeBuckEventListener;
+import com.facebook.buck.event.StepEvent;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;

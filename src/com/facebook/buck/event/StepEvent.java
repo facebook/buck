@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.step;
+package com.facebook.buck.event;
 
-import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.EventKey;
-import com.facebook.buck.event.LeafEvent;
-import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.event.external.events.StepEventExternalInterface;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Objects;

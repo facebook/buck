@@ -109,7 +109,7 @@ public class DownwardApiProcessExecutorTest {
     }
 
     @Subscribe
-    public void step(com.facebook.buck.step.StepEvent event) {
+    public void step(com.facebook.buck.event.StepEvent event) {
       handleEvent(event);
     }
 
@@ -332,8 +332,8 @@ public class DownwardApiProcessExecutorTest {
       String category,
       String description,
       int expectedRelativeDuration) {
-    assertTrue(buckEvent instanceof com.facebook.buck.step.StepEvent);
-    com.facebook.buck.step.StepEvent event = (com.facebook.buck.step.StepEvent) buckEvent;
+    assertTrue(buckEvent instanceof com.facebook.buck.event.StepEvent);
+    com.facebook.buck.event.StepEvent event = (com.facebook.buck.event.StepEvent) buckEvent;
     assertEquals(eventName, event.getEventName());
     assertEquals(category, event.getCategory());
     assertEquals(description, event.getDescription());

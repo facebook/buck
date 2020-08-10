@@ -19,6 +19,7 @@ package com.facebook.buck.step;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.StepEvent;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.Optional;
