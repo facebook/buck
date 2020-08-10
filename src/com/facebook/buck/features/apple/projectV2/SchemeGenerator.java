@@ -529,7 +529,6 @@ class SchemeGenerator {
     if (testAction.getApplicationRegion().isPresent()) {
       testActionElem.setAttribute("region", testAction.getApplicationRegion().get());
     }
-
     return testActionElem;
   }
 

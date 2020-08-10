@@ -131,7 +131,9 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
-            Optional.empty() /* notificationPayloadFile */);
+            Optional.empty(), /* notificationPayloadFile */
+            Optional.empty(), /* applicationRegion */
+            Optional.empty() /* applicationLanguage */);
 
     Path schemePath = schemeGenerator.writeScheme();
     String schemeXml = projectFilesystem.readFileIfItExists(schemePath).get();
@@ -218,7 +220,9 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
-            Optional.empty() /* notificationPayloadFile */);
+            Optional.empty(), /* notificationPayloadFile */
+            Optional.empty(), /* applicationRegion */
+            Optional.empty() /* applicationLanguage */);
 
     Path schemePath = schemeGenerator.writeScheme();
     String schemeXml = projectFilesystem.readFileIfItExists(schemePath).get();
@@ -314,7 +318,9 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
-            Optional.empty() /* notificationPayloadFile */);
+            Optional.empty(), /* notificationPayloadFile */
+            Optional.empty(), /* applicationRegion */
+            Optional.empty() /* applicationLanguage */);
 
     Path schemePath = schemeGenerator.writeScheme();
     String schemeXml = projectFilesystem.readFileIfItExists(schemePath).get();
@@ -375,28 +381,30 @@ public class SchemeGeneratorTest {
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
     targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
-
     SchemeGenerator schemeGenerator =
-        new SchemeGenerator(
-            projectFilesystem,
-            Optional.of(rootTarget),
-            ImmutableSet.of(rootTarget),
-            ImmutableSet.of(),
-            ImmutableSet.of(),
-            "TestScheme",
-            Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
-            false /* parallelizeBuild */,
-            Optional.empty() /* wasCreatedForAppExtension */,
-            Optional.empty() /* runnablePath */,
-            Optional.empty() /* remoteRunnablePath */,
-            SchemeActionType.DEFAULT_CONFIG_NAMES,
-            targetToProjectPathMapBuilder.build(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            XCScheme.LaunchAction.LaunchStyle.AUTO,
-            Optional.empty(), /* watchAdapter */
-            Optional.empty() /* notificationPayloadFile */);
+      new SchemeGenerator(
+        projectFilesystem,
+        Optional.of(rootTarget),
+        ImmutableSet.of(rootTarget),
+        ImmutableSet.of(),
+        ImmutableSet.of(),
+        "TestScheme",
+        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        false /* parallelizeBuild */,
+        Optional.empty() /* wasCreatedForAppExtension */,
+        Optional.empty() /* runnablePath */,
+        Optional.empty() /* remoteRunnablePath */,
+        SchemeActionType.DEFAULT_CONFIG_NAMES,
+        targetToProjectPathMapBuilder.build(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        XCScheme.LaunchAction.LaunchStyle.AUTO,
+        Optional.empty(), /* watchAdapter */
+        Optional.empty(), /* notificationPayloadFile */
+        Optional.empty(), /* applicationRegion */
+        Optional.empty() /* applicationLanguage */);
+
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -460,7 +468,9 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
-            Optional.empty() /* notificationPayloadFile */);
+            Optional.empty(), /* notificationPayloadFile */
+            Optional.empty(), /* applicationRegion */
+            Optional.empty() /* applicationLanguage */);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -548,7 +558,9 @@ public class SchemeGeneratorTest {
               Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO,
               Optional.empty(), /* watchAdapter */
-              Optional.empty() /* notificationPayloadFile */);
+              Optional.empty(), /* notificationPayloadFile */
+              Optional.empty(), /* applicationRegion */
+              Optional.empty() /* applicationLanguage */);
 
       Path schemePath = schemeGenerator.writeScheme();
       assertThat(
@@ -587,7 +599,9 @@ public class SchemeGeneratorTest {
               Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO,
               Optional.empty(), /* watchAdapter */
-              Optional.empty() /* notificationPayloadFile */);
+              Optional.empty(), /* notificationPayloadFile */
+              Optional.empty(), /* applicationRegion */
+              Optional.empty() /* applicationLanguage */);
 
       Path schemePath = schemeGenerator.writeScheme();
       assertThat(
@@ -629,7 +643,9 @@ public class SchemeGeneratorTest {
               Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO,
               Optional.empty(), /* watchAdapter */
-              Optional.empty() /* notificationPayloadFile */);
+              Optional.empty(), /* notificationPayloadFile */
+              Optional.empty(), /* applicationRegion */
+              Optional.empty() /* applicationLanguage */);
 
       Path schemePath = schemeGenerator.writeScheme();
       assertThat(
@@ -668,7 +684,9 @@ public class SchemeGeneratorTest {
               Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO,
               Optional.empty(), /* watchAdapter */
-              Optional.empty() /* notificationPayloadFile */);
+              Optional.empty(), /* notificationPayloadFile */
+              Optional.empty(), /* applicationRegion */
+              Optional.empty() /* applicationLanguage */);
       Path schemePath = schemeGenerator.writeScheme();
       assertThat(
           projectFilesystem.getLastModifiedTime(schemePath), equalTo(FileTime.fromMillis(49152L)));
@@ -731,7 +749,9 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
-            Optional.empty() /* notificationPayloadFile */);
+            Optional.empty(), /* notificationPayloadFile */
+            Optional.empty(), /* applicationRegion */
+            Optional.empty() /* applicationLanguage */);
 
     Path schemePath = schemeGenerator.writeScheme();
     String schemeXml = projectFilesystem.readFileIfItExists(schemePath).get();
@@ -841,7 +861,9 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
-            Optional.empty() /* notificationPayloadFile */);
+            Optional.empty(), /* notificationPayloadFile */
+            Optional.empty(), /* applicationRegion */
+            Optional.empty() /* applicationLanguage */);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -895,7 +917,9 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
-            Optional.empty() /* payloadNotificationFile */);
+            Optional.empty(), /* notificationPayloadFile */
+            Optional.empty(), /* applicationRegion */
+            Optional.empty() /* applicationLanguage */);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -978,7 +1002,9 @@ public class SchemeGeneratorTest {
             Optional.of(schemeActions),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
-            Optional.empty() /* notificationPayloadFile */);
+            Optional.empty(), /* notificationPayloadFile */
+            Optional.empty(), /* applicationRegion */
+            Optional.empty() /* applicationLanguage */);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -1055,7 +1081,9 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
-            Optional.empty() /* notifcationPayloadFile */);
+            Optional.empty(), /* notificationPayloadFile */
+            Optional.empty(), /* applicationRegion */
+            Optional.empty() /* applicationLanguage */);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -1119,7 +1147,9 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
-            Optional.empty() /* notificationPayloadFile */);
+            Optional.empty(), /* notificationPayloadFile */
+            Optional.empty(), /* applicationRegion */
+            Optional.empty() /* applicationLanguage */);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -1137,6 +1167,70 @@ public class SchemeGeneratorTest {
     Node envVar = envVariableList.item(0);
     assertThat(envVar.getAttributes().getNamedItem("key").getNodeValue(), equalTo("ENV_VARIABLE"));
     assertThat(envVar.getAttributes().getNamedItem("value").getNodeValue(), equalTo("IS_SET"));
+  }
+
+  @Test
+  public void serializesRegionAndLanguage() throws Exception {
+    ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
+
+    PBXTarget rootTarget =
+      new PBXNativeTarget("rootRule", AbstractPBXObjectFactory.DefaultFactory());
+    rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+      new PBXFileReference(
+        "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
+    rootTarget.setProductType(ProductTypes.STATIC_LIBRARY);
+
+    Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+    targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
+
+    String region = "pt-BR";
+    String language = "pt";
+
+    SchemeGenerator schemeGenerator =
+      new SchemeGenerator(
+        projectFilesystem,
+        Optional.of(rootTarget),
+        ImmutableSet.of(rootTarget),
+        ImmutableSet.of(),
+        ImmutableSet.of(),
+        "TestScheme",
+        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        true /* parallelizeBuild */,
+        Optional.empty() /* wasCreatedForAppExtension */,
+        Optional.empty() /* runnablePath */,
+        Optional.empty() /* remoteRunnablePath */,
+        SchemeActionType.DEFAULT_CONFIG_NAMES,
+        targetToProjectPathMapBuilder.build(),
+        Optional.empty() /* environmentVariables */,
+        Optional.empty(),
+        Optional.empty(),
+        XCScheme.LaunchAction.LaunchStyle.AUTO,
+        Optional.empty(), /* watchAdapter */
+        Optional.empty(), /* notificationPayloadFile */
+        Optional.of(region),
+        Optional.of(language));
+
+    Path schemePath = schemeGenerator.writeScheme();
+
+    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
+
+    XPathFactory xpathFactory = XPathFactory.newInstance();
+    XPath buildActionXpath = xpathFactory.newXPath();
+
+    XPathExpression launchActionExpr = buildActionXpath.compile("//LaunchAction");
+    XPathExpression testActionExpr = buildActionXpath.compile("//TestAction");
+
+    Node launchActionNode = (Node) launchActionExpr.evaluate(scheme, XPathConstants.NODE);
+    Node testActionNode = (Node) testActionExpr.evaluate(scheme, XPathConstants.NODE);
+
+    assertThat(launchActionNode.getAttributes().getNamedItem("language").getNodeValue(), equalTo("pt-BR"));
+    assertThat(launchActionNode.getAttributes().getNamedItem("region").getNodeValue(), equalTo("pt"));
+
+    assertThat(testActionNode.getAttributes().getNamedItem("language").getNodeValue(), equalTo("pt-BR"));
+    assertThat(testActionNode.getAttributes().getNamedItem("region").getNodeValue(), equalTo("pt"));
   }
 
   /**
@@ -1179,7 +1273,9 @@ public class SchemeGeneratorTest {
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO,
             Optional.empty(), /* watchAdapter */
-            Optional.empty() /* notificationPayloadFile */);
+            Optional.empty(), /* notificationPayloadFile */
+            Optional.empty(), /* applicationRegion */
+            Optional.empty() /* applicationLanguage */);
 
     Path schemePath = schemeGenerator.writeScheme();
 
@@ -1243,7 +1339,9 @@ public class SchemeGeneratorTest {
               Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO,
               Optional.empty(), /* watchAdapter */
-              Optional.empty() /* notificationPayloadFile */);
+              Optional.empty(), /* notificationPayloadFile */
+              Optional.empty(), /* applicationRegion */
+              Optional.empty() /* applicationLanguage */);
 
       Path schemePath = schemeGenerator.writeScheme();
 

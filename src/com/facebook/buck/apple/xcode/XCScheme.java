@@ -414,7 +414,7 @@ public class XCScheme {
     }
 
     public Optional<String> getApplicationLanguage() {
-      return applicationRegion;
+      return applicationLanguage;
     }
 
     public Optional<String> getApplicationRegion() {

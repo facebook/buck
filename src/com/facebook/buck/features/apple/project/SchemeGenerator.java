@@ -304,8 +304,8 @@ class SchemeGenerator {
                         AdditionalActions.POST_SCHEME_ACTIONS,
                         primaryBuildReference),
                     notificationPayloadFile,
-                    applicationRegion,
-                    applicationLanguage));
+                    applicationLanguage,
+                    applicationRegion));
 
         profileAction =
             Optional.of(
