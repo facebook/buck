@@ -11,6 +11,7 @@ EVENT_INTERFACES = [
     "IsolatedEventBus.java",
     "LeafEvent.java",
     "StepEvent.java",
+    "SimplePerfEvent.java",
     "ThrowableConsoleEvent.java",
     "WorkAdvanceEvent.java",
 ]

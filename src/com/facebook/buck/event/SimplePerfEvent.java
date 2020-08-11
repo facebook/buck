@@ -351,7 +351,25 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     void close();
   }
 
-  public interface Started extends BuckEvent {
+  /** The beginning of a {@link SimplePerfEvent}. */
+  public abstract static class Started extends AbstractChainablePerfEvent {
+
+    public Started(
+        EventKey eventKey,
+        PerfEventId perfEventId,
+        Type perfEventType,
+        ImmutableMap<String, Object> info) {
+      super(eventKey, perfEventId, perfEventType, info);
+    }
+
+    public Started(
+        EventKey eventKey,
+        PerfEventId perfEventId,
+        Type perfEventType,
+        String category,
+        ImmutableMap<String, Object> info) {
+      super(eventKey, perfEventId, perfEventType, category, info);
+    }
 
     /**
      * Creates a new event which indicates an update to the performance data being gathered.
@@ -360,13 +378,13 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
      *     and potentially sent over the wire, so please keep this small.
      * @return An event which should be posted to the {@link IsolatedEventBus}.
      */
-    BuckEvent createUpdateEvent(ImmutableMap<String, Object> info);
+    public abstract SimplePerfEvent createUpdateEvent(ImmutableMap<String, Object> info);
 
     /** Convenience wrapper for {@link Started#createUpdateEvent(String, Object)}. */
-    BuckEvent createUpdateEvent(String k1, Object v1);
+    public abstract SimplePerfEvent createUpdateEvent(String k1, Object v1);
 
     /** Convenience wrapper for {@link Started#createUpdateEvent(String, Object)}. */
-    BuckEvent createUpdateEvent(String k1, Object v1, String k2, Object v2);
+    public abstract SimplePerfEvent createUpdateEvent(String k1, Object v1, String k2, Object v2);
 
     /**
      * Creates a new event which indicates the end of a performance event.
@@ -375,16 +393,16 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
      *     and potentially sent over the wire, so please keep this small.
      * @return An event which should be posted to the {@link IsolatedEventBus}.
      */
-    BuckEvent createFinishedEvent(ImmutableMap<String, Object> info);
+    public abstract SimplePerfEvent createFinishedEvent(ImmutableMap<String, Object> info);
 
     /** Convenience wrapper for {@link Started#createFinishedEvent(ImmutableMap)}. */
-    BuckEvent createFinishedEvent();
+    public abstract SimplePerfEvent createFinishedEvent();
 
     /** Convenience wrapper for {@link Started#createFinishedEvent(ImmutableMap)}. */
-    BuckEvent createFinishedEvent(String k1, Object v1);
+    public abstract SimplePerfEvent createFinishedEvent(String k1, Object v1);
 
     /** Convenience wrapper for {@link Started#createFinishedEvent(ImmutableMap)}. */
-    BuckEvent createFinishedEvent(String k1, Object v1, String k2, Object v2);
+    public abstract SimplePerfEvent createFinishedEvent(String k1, Object v1, String k2, Object v2);
   }
 
   /**
@@ -606,7 +624,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     }
   }
 
-  private static class StartedImpl extends AbstractChainablePerfEvent implements Started {
+  private static class StartedImpl extends Started {
 
     private boolean isChainFinished = false;
 
@@ -622,43 +640,43 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     }
 
     @Override
-    public BuckEvent createUpdateEvent(ImmutableMap<String, Object> info) {
+    public SimplePerfEvent createUpdateEvent(ImmutableMap<String, Object> info) {
       Preconditions.checkState(!isChainFinished());
       return new Updated(this, info);
     }
 
     @Override
-    public BuckEvent createUpdateEvent(String k1, Object v1) {
+    public SimplePerfEvent createUpdateEvent(String k1, Object v1) {
       Preconditions.checkState(!isChainFinished());
       return createUpdateEvent(ImmutableMap.of(k1, v1));
     }
 
     @Override
-    public BuckEvent createUpdateEvent(String k1, Object v1, String k2, Object v2) {
+    public SimplePerfEvent createUpdateEvent(String k1, Object v1, String k2, Object v2) {
       Preconditions.checkState(!isChainFinished());
       return createUpdateEvent(ImmutableMap.of(k1, v1, k2, v2));
     }
 
     @Override
-    public BuckEvent createFinishedEvent(ImmutableMap<String, Object> info) {
+    public SimplePerfEvent createFinishedEvent(ImmutableMap<String, Object> info) {
       Preconditions.checkState(!isChainFinished());
       return new Finished(this, info);
     }
 
     @Override
-    public BuckEvent createFinishedEvent() {
+    public SimplePerfEvent createFinishedEvent() {
       Preconditions.checkState(!isChainFinished());
       return createFinishedEvent(ImmutableMap.of());
     }
 
     @Override
-    public BuckEvent createFinishedEvent(String k1, Object v1) {
+    public SimplePerfEvent createFinishedEvent(String k1, Object v1) {
       Preconditions.checkState(!isChainFinished());
       return createFinishedEvent(ImmutableMap.of(k1, v1));
     }
 
     @Override
-    public BuckEvent createFinishedEvent(String k1, Object v1, String k2, Object v2) {
+    public SimplePerfEvent createFinishedEvent(String k1, Object v1, String k2, Object v2) {
       Preconditions.checkState(!isChainFinished());
       return createFinishedEvent(ImmutableMap.of(k1, v1, k2, v2));
     }

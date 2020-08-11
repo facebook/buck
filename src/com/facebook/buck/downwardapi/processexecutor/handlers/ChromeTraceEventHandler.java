@@ -18,7 +18,6 @@ package com.facebook.buck.downwardapi.processexecutor.handlers;
 
 import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiExecutionContext;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.PerfEventId;
 import com.google.common.collect.ImmutableMap;
@@ -54,7 +53,7 @@ enum ChromeTraceEventHandler implements EventHandler<ChromeTraceEvent> {
             Objects.requireNonNull(
                 chromeTraceStartedEvents.remove(eventId),
                 "Started chrome trace event for event id: " + eventId + " is not found");
-        BuckEvent finishedEvent = started.createFinishedEvent(attributes);
+        SimplePerfEvent finishedEvent = started.createFinishedEvent(attributes);
         context.postEvent(finishedEvent, timestamp);
         break;
 
