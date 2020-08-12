@@ -18,10 +18,77 @@ package com.facebook.buck.event;
 
 import com.facebook.buck.core.model.BuildId;
 import java.io.Closeable;
+import java.time.Instant;
 
 /** Minimal event bus that does not know about core buck concepts. */
-public interface IsolatedEventBus extends Closeable, EventDispatcher {
+public interface IsolatedEventBus extends Closeable {
 
   /** Returns the {@link BuildId} associated with the current build. */
   BuildId getBuildId();
+
+  /** Post a {@link ConsoleEvent} to the this event bus. */
+  void post(ConsoleEvent event);
+
+  /** Post a {@link ConsoleEvent} that occurred in the given {@code threadId} to this event bus. */
+  void post(ConsoleEvent event, long threadId);
+
+  /** Post a {@link StepEvent} to the this event bus. */
+  void post(StepEvent event);
+
+  /** Post a {@link StepEvent} that occurred in the given {@code threadId} to this event bus. */
+  void post(StepEvent event, long threadId);
+
+  /**
+   * Post a {@link StepEvent}t that occurred in the given {@code threadId} to this event bus using
+   * the given {@code atTime} timestamp.
+   */
+  void post(StepEvent event, Instant atTime, long threadId);
+
+  /** Post a {@link SimplePerfEvent} to the this event bus. */
+  void post(SimplePerfEvent event);
+
+  /** Post a {@link SimplePerfEvent} to this event bus using the given {@code atTime} timestamp. */
+  void post(SimplePerfEvent event, Instant atTime);
+
+  /**
+   * Post a {@link SimplePerfEvent} that occurred in the given {@code threadId} to this event bus.
+   */
+  void post(SimplePerfEvent event, long threadId);
+
+  /**
+   * Post a {@link SimplePerfEvent}t that occurred in the given {@code threadId} to this event bus
+   * using the given {@code atTime} timestamp.
+   */
+  void post(SimplePerfEvent event, Instant atTime, long threadId);
+
+  /** Post an already configured {@link SimplePerfEvent} to this event bus. */
+  void postWithoutConfiguring(SimplePerfEvent event);
+
+  /**
+   * Timestamp the given {@link ConsoleEvent} that occurred in the current thread. A timestamped
+   * event cannot subsequently being posted and is useful only to pass its timestamp on to another
+   * posted event.
+   */
+  void timestamp(ConsoleEvent event);
+
+  /**
+   * Timestamp the given {@link StepEvent} that occurred in the current thread. A timestamped event
+   * cannot subsequently being posted and is useful only to pass its timestamp on to another posted
+   * event.
+   */
+  void timestamp(StepEvent event);
+
+  /**
+   * Timestamp the given {@link SimplePerfEvent} that occurred in the current thread. A timestamped
+   * event cannot subsequently being posted and is useful only to pass its timestamp on to another
+   * posted event.
+   */
+  void timestamp(SimplePerfEvent event);
+
+  /**
+   * Timestamp the given {@link SimplePerfEvent} that occurred in the given {@code threadId}. A
+   * timestamped event cannot subsequently being posted and is useful only to pass its timestamp on
+   * to another posted event.
+   */
+  void timestamp(SimplePerfEvent event, long threadId);
 }

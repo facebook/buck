@@ -24,8 +24,8 @@ import com.facebook.buck.downwardapi.utils.DownwardApiUtils;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.IsolatedEventBus;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StepEvent;
-import com.facebook.buck.event.chrome_trace.ChromeTraceEvent;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.timing.Clock;
@@ -83,55 +83,85 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
   }
 
   @Override
-  public void post(BuckEvent event) {
+  public void post(ConsoleEvent event) {
     post(event, Thread.currentThread().getId());
   }
 
   @Override
-  public void post(BuckEvent event, Instant atTime, long threadId) {
-    checkBuckEventType(event);
+  public void post(ConsoleEvent event, long threadId) {
+    timestamp(event, threadId);
+    writeConsoleEvent(event);
+  }
+
+  @Override
+  public void post(StepEvent event) {
+    post(event, Thread.currentThread().getId());
+  }
+
+  @Override
+  public void post(StepEvent event, long threadId) {
+    timestamp(event, threadId);
+    writeStepEvent(event);
+  }
+
+  @Override
+  public void post(StepEvent event, Instant atTime, long threadId) {
     long millis = atTime.toEpochMilli();
     long nano = TimeUnit.SECONDS.toNanos(atTime.getEpochSecond()) + atTime.getNano();
     long threadUserNanoTime = clock.threadUserNanoTime(threadId);
     event.configure(millis, nano, threadUserNanoTime, threadId, buildId);
-    dispatch(event);
+    writeStepEvent(event);
   }
 
   @Override
-  public void post(BuckEvent event, Instant atTime) {
+  public void post(SimplePerfEvent event) {
+    post(event, Thread.currentThread().getId());
+  }
+
+  @Override
+  public void post(SimplePerfEvent event, Instant atTime) {
     post(event, atTime, Thread.currentThread().getId());
   }
 
   @Override
-  public void post(BuckEvent event, long threadId) {
-    checkBuckEventType(event);
+  public void post(SimplePerfEvent event, long threadId) {
     timestamp(event, threadId);
-    dispatch(event);
+    // TODO(irenewchen): Write SimplePerfEvent
   }
 
   @Override
-  public void postWithoutConfiguring(BuckEvent event) {
-    Preconditions.checkState(event.isConfigured());
-    dispatch(event);
+  public void post(SimplePerfEvent event, Instant atTime, long threadId) {
+    long millis = atTime.toEpochMilli();
+    long nano = TimeUnit.SECONDS.toNanos(atTime.getEpochSecond()) + atTime.getNano();
+    long threadUserNanoTime = clock.threadUserNanoTime(threadId);
+    event.configure(millis, nano, threadUserNanoTime, threadId, buildId);
+    // TODO(irenewchen): Write SimplePerfEvent
   }
 
   @Override
-  public void timestamp(BuckEvent event) {
+  public void postWithoutConfiguring(SimplePerfEvent event) {
+    Preconditions.checkState(event.isConfigured(), "Event must be configured");
+    // TODO(irenewchen): Write SimplePerfEvent
+  }
+
+  @Override
+  public void timestamp(ConsoleEvent event) {
     timestamp(event, Thread.currentThread().getId());
   }
 
   @Override
-  public void timestamp(BuckEvent event, long threadId) {
-    event.configure(
-        clock.currentTimeMillis(),
-        clock.nanoTime(),
-        clock.threadUserNanoTime(threadId),
-        threadId,
-        buildId);
+  public void timestamp(StepEvent event) {
+    timestamp(event, Thread.currentThread().getId());
   }
 
-  private void dispatch(BuckEvent event) {
-    executorService.submit(() -> writeBuckEvent(event), null);
+  @Override
+  public void timestamp(SimplePerfEvent event) {
+    timestamp(event, Thread.currentThread().getId());
+  }
+
+  @Override
+  public void timestamp(SimplePerfEvent event, long threadId) {
+    timestamp((BuckEvent) event, Thread.currentThread().getId());
   }
 
   @Override
@@ -144,20 +174,16 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
     }
   }
 
-  private void writeBuckEvent(BuckEvent event) {
-    try {
-      // TODO(irenewchen): Support other downward api events
-      if (event instanceof ConsoleEvent) {
-        writeConsoleEvent((ConsoleEvent) event);
-      } else if (event instanceof StepEvent) {
-        writeStepEvent((StepEvent) event);
-      }
-    } catch (IOException e) {
-      LOG.error(e, "Failed to write buck event %s", event.getEventName());
-    }
+  private void timestamp(BuckEvent event, long threadId) {
+    event.configure(
+        clock.currentTimeMillis(),
+        clock.nanoTime(),
+        clock.threadUserNanoTime(threadId),
+        threadId,
+        buildId);
   }
 
-  private void writeConsoleEvent(ConsoleEvent event) throws IOException {
+  private void writeConsoleEvent(ConsoleEvent event) {
     EventTypeMessage eventTypeMessage =
         EventTypeMessage.newBuilder()
             .setEventType(EventTypeMessage.EventType.CONSOLE_EVENT)
@@ -170,7 +196,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
     writeToNamedPipe(eventTypeMessage, consoleEvent);
   }
 
-  private void writeStepEvent(StepEvent event) throws IOException {
+  private void writeStepEvent(StepEvent event) {
     EventTypeMessage eventTypeMessage =
         EventTypeMessage.newBuilder().setEventType(EventTypeMessage.EventType.STEP_EVENT).build();
     com.facebook.buck.downward.model.StepEvent stepEvent =
@@ -193,17 +219,11 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
     return com.facebook.buck.downward.model.StepEvent.StepStatus.UNKNOWN;
   }
 
-  private void writeToNamedPipe(EventTypeMessage eventType, AbstractMessage payload)
-      throws IOException {
-    DownwardProtocolType.BINARY.getDownwardProtocol().write(eventType, payload, outputStream);
-  }
-
-  private static void checkBuckEventType(BuckEvent event) {
-    Preconditions.checkArgument(
-        event instanceof ConsoleEvent
-            || event instanceof StepEvent
-            || event instanceof ChromeTraceEvent,
-        "Unexpected event type: %s",
-        event.getClass().getName());
+  private void writeToNamedPipe(EventTypeMessage eventType, AbstractMessage payload) {
+    try {
+      DownwardProtocolType.BINARY.getDownwardProtocol().write(eventType, payload, outputStream);
+    } catch (IOException e) {
+      LOG.error(e, "Failed to write buck event %s of type", payload, eventType.getEventType());
+    }
   }
 }

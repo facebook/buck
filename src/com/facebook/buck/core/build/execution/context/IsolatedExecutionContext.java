@@ -19,8 +19,9 @@ package com.facebook.buck.core.build.execution.context;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
-import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.IsolatedEventBus;
+import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -115,7 +116,11 @@ public abstract class IsolatedExecutionContext implements Closeable {
     getBuckEventBus().post(ThrowableConsoleEvent.create(error, msg, formatArgs));
   }
 
-  public void postEvent(BuckEvent event) {
+  public void postEvent(ConsoleEvent event) {
+    getBuckEventBus().post(event);
+  }
+
+  public void postEvent(StepEvent event) {
     getBuckEventBus().post(event);
   }
 

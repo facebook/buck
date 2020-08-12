@@ -25,10 +25,8 @@ import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downward.model.LogLevel;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.downwardapi.testutil.StepEventMatcher;
-import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.FakeClock;
@@ -39,13 +37,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
-import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.LogManager;
-import java.util.logging.LogRecord;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -126,51 +119,9 @@ public class DefaultIsolatedEventBusTest {
   }
 
   @Test
-  public void failsIfReceiveUnsupportedBuckEvent() {
-    exception.expect(IllegalArgumentException.class);
-    exception.expectMessage(
-        "Unexpected event type: com.facebook.buck.event.isolated.DefaultIsolatedEventBusTest$FakeBuckEvent");
-    List<LogRecord> logRecords = new ArrayList<>();
-    LogManager.getLogManager()
-        .getLogger(DefaultIsolatedEventBus.class.getSimpleName())
-        .addHandler(
-            new Handler() {
-              @Override
-              public void publish(LogRecord record) {
-                logRecords.add(record);
-              }
-
-              @Override
-              public void flush() {}
-
-              @Override
-              public void close() throws SecurityException {}
-            });
-
-    testEventBus.post(new FakeBuckEvent(EventKey.unique()));
-  }
-
-  @Test
   public void closeShutsDownExecutor() throws Exception {
     assertFalse(executorService.isShutdown());
     testEventBus.close();
     assertTrue(executorService.isShutdown());
-  }
-
-  private static class FakeBuckEvent extends AbstractBuckEvent {
-
-    protected FakeBuckEvent(EventKey eventKey) {
-      super(eventKey);
-    }
-
-    @Override
-    protected String getValueString() {
-      return "fake_value_string";
-    }
-
-    @Override
-    public String getEventName() {
-      return "fake_event";
-    }
   }
 }
