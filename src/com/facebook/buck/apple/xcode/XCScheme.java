@@ -255,6 +255,8 @@ public class XCScheme {
     private final Optional<ImmutableMap<String, String>> environmentVariables;
     private final Optional<BuildableReference> expandVariablesBasedOn;
     private final Optional<String> notificationPayloadFile;
+    private final Optional<String> applicationLanguage;
+    private final Optional<String> applicationRegion;
 
     public LaunchAction(
         BuildableReference buildableReference,
@@ -267,7 +269,9 @@ public class XCScheme {
         Optional<BuildableReference> expandVariablesBasedOn,
         Optional<ImmutableList<SchemePrePostAction>> preActions,
         Optional<ImmutableList<SchemePrePostAction>> postActions,
-        Optional<String> notificationPayloadFile) {
+        Optional<String> notificationPayloadFile,
+        Optional<String> applicationLanguage,
+        Optional<String> applicationRegion) {
       super(preActions, postActions);
       this.buildableReference = buildableReference;
       this.buildConfiguration = buildConfiguration;
@@ -278,6 +282,8 @@ public class XCScheme {
       this.environmentVariables = environmentVariables;
       this.expandVariablesBasedOn = expandVariablesBasedOn;
       this.notificationPayloadFile = notificationPayloadFile;
+      this.applicationLanguage = applicationLanguage;
+      this.applicationRegion = applicationRegion;
     }
 
     public BuildableReference getBuildableReference() {
@@ -314,6 +320,14 @@ public class XCScheme {
 
     public Optional<BuildableReference> getExpandVariablesBasedOn() {
       return expandVariablesBasedOn;
+    }
+
+    public Optional<String> getApplicationLanguage() {
+      return applicationLanguage;
+    }
+
+    public Optional<String> getApplicationRegion() {
+      return applicationRegion;
     }
   }
 
@@ -359,18 +373,24 @@ public class XCScheme {
     private final String buildConfiguration;
     private final Optional<ImmutableMap<String, String>> environmentVariables;
     private final Optional<BuildableReference> expandVariablesBasedOn;
+    private final Optional<String> applicationLanguage;
+    private final Optional<String> applicationRegion;
 
     public TestAction(
         String buildConfiguration,
         Optional<ImmutableMap<String, String>> environmentVariables,
         Optional<BuildableReference> expandVariablesBasedOn,
         Optional<ImmutableList<SchemePrePostAction>> preActions,
-        Optional<ImmutableList<SchemePrePostAction>> postActions) {
+        Optional<ImmutableList<SchemePrePostAction>> postActions,
+        Optional<String> applicationLanguage,
+        Optional<String> applicationRegion) {
       super(preActions, postActions);
       this.testables = new ArrayList<>();
       this.buildConfiguration = buildConfiguration;
       this.environmentVariables = environmentVariables;
       this.expandVariablesBasedOn = expandVariablesBasedOn;
+      this.applicationLanguage = applicationLanguage;
+      this.applicationRegion = applicationRegion;
     }
 
     public void addTestableReference(TestableReference testable) {
@@ -391,6 +411,14 @@ public class XCScheme {
 
     public Optional<BuildableReference> getExpandVariablesBasedOn() {
       return expandVariablesBasedOn;
+    }
+
+    public Optional<String> getApplicationLanguage() {
+      return applicationLanguage;
+    }
+
+    public Optional<String> getApplicationRegion() {
+      return applicationRegion;
     }
   }
 
