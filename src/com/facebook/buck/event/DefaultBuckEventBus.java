@@ -49,6 +49,7 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
   private final Supplier<Long> threadIdSupplier;
   private final BuildId buildId;
   private final int shutdownTimeoutMillis;
+  private final IsolatedEventBus isolatedEventBus;
 
   // synchronization variables to ensure proper shutdown
   private volatile int activeTasks = 0;
@@ -82,6 +83,7 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
     this.threadIdSupplier = DEFAULT_THREAD_ID_SUPPLIER;
     this.buildId = buildId;
     this.shutdownTimeoutMillis = shutdownTimeoutMillis;
+    this.isolatedEventBus = new ForwardingIsolatedEventBus(this);
   }
 
   private void dispatch(BuckEvent event) {
@@ -237,5 +239,10 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
         clock.threadUserNanoTime(threadId),
         threadId,
         buildId);
+  }
+
+  @Override
+  public IsolatedEventBus isolated() {
+    return isolatedEventBus;
   }
 }

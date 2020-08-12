@@ -127,4 +127,7 @@ public interface BuckEventBus extends IsolatedEventBus, EventDispatcher {
   default void timestamp(SimplePerfEvent event, long threadId) {
     timestamp((BuckEvent) event, threadId);
   }
+
+  /** Returns an {@link IsolatedEventBus} representation of this event bus. */
+  IsolatedEventBus isolated();
 }
