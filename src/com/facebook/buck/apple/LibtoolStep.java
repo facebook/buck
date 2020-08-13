@@ -16,16 +16,17 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 
 /** ShellStep for calling libtool. */
-public class LibtoolStep extends ShellStep {
+public class LibtoolStep extends IsolatedShellStep {
 
   /** Style of library to be created, static or dynamic. */
   public enum Style {
@@ -43,6 +44,7 @@ public class LibtoolStep extends ShellStep {
 
   public LibtoolStep(
       ProjectFilesystem filesystem,
+      RelPath cellPath,
       ImmutableMap<String, String> environment,
       ImmutableList<String> libtoolCommand,
       Path argsfile,
@@ -50,7 +52,7 @@ public class LibtoolStep extends ShellStep {
       ImmutableList<String> flags,
       LibtoolStep.Style style,
       boolean withDownwardApi) {
-    super(filesystem.getRootPath(), withDownwardApi);
+    super(filesystem.getRootPath(), cellPath, withDownwardApi);
     this.filesystem = filesystem;
     this.environment = environment;
     this.libtoolCommand = libtoolCommand;
@@ -61,7 +63,7 @@ public class LibtoolStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
     commandBuilder.addAll(libtoolCommand);
     switch (style) {
