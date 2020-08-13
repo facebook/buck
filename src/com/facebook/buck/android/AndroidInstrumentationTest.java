@@ -25,6 +25,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -41,6 +42,7 @@ import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
@@ -216,6 +218,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
         getInstrumentationStep(
             buildContext.getSourcePathResolver(),
             androidPlatformTarget.getAdbExecutable().toString(),
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), buildContext.getBuildCellRootPath()),
             Optional.of(getProjectFilesystem().resolve(pathToTestOutput)),
             Optional.of(device.getSerialNumber()),
             Optional.empty(),
@@ -249,6 +253,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   private InstrumentationStep getInstrumentationStep(
       SourcePathResolverAdapter pathResolver,
       String pathToAdbExecutable,
+      RelPath cellPath,
       Optional<Path> directoryForTestResults,
       Optional<String> deviceSerial,
       Optional<Path> instrumentationApkPath,
@@ -304,6 +309,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
 
     return new InstrumentationStep(
         getProjectFilesystem(),
+        cellPath,
         javaRuntimeLauncher.getCommandPrefix(pathResolver),
         jvmArgs,
         testRuleTimeoutMs,
@@ -447,6 +453,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
         getInstrumentationStep(
             buildContext.getSourcePathResolver(),
             androidPlatformTarget.getAdbExecutable().toString(),
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), buildContext.getBuildCellRootPath()),
             Optional.empty(),
             Optional.empty(),
             instrumentationApkPath,

@@ -17,13 +17,13 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
-public class InstrumentationStep extends ShellStep {
+public class InstrumentationStep extends IsolatedShellStep {
 
   private final ProjectFilesystem filesystem;
   private final ImmutableList<String> javaRuntimeLauncher;
@@ -33,11 +33,12 @@ public class InstrumentationStep extends ShellStep {
 
   public InstrumentationStep(
       ProjectFilesystem filesystem,
+      RelPath cellPath,
       ImmutableList<String> javaRuntimeLauncher,
       AndroidInstrumentationTestJVMArgs jvmArgs,
       Optional<Long> testRuleTimeoutMs,
       boolean withDownwardApi) {
-    super(filesystem.getRootPath(), withDownwardApi);
+    super(filesystem.getRootPath(), cellPath, withDownwardApi);
     this.filesystem = filesystem;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.jvmArgs = jvmArgs;
@@ -45,7 +46,7 @@ public class InstrumentationStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(javaRuntimeLauncher);
 
