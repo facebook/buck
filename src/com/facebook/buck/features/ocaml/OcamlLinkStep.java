@@ -16,11 +16,12 @@
 
 package com.facebook.buck.features.ocaml;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.FluentIterable;
@@ -31,7 +32,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /** OCaml linking step. Dependencies and inputs should be topologically ordered */
-public class OcamlLinkStep extends ShellStep {
+public class OcamlLinkStep extends IsolatedShellStep {
   public final ProjectFilesystem filesystem;
   public final ImmutableMap<String, String> environment;
   public final ImmutableList<String> cxxCompiler;
@@ -50,6 +51,7 @@ public class OcamlLinkStep extends ShellStep {
   /** Factory method for OcamlLinkStep. */
   public static OcamlLinkStep create(
       ProjectFilesystem filesystem,
+      RelPath cellPath,
       ImmutableMap<String, String> environment,
       ImmutableList<String> cxxCompiler,
       ImmutableList<String> ocamlCompilerCommandPrefix,
@@ -79,6 +81,7 @@ public class OcamlLinkStep extends ShellStep {
 
     return new OcamlLinkStep(
         filesystem,
+        cellPath,
         environment,
         cxxCompiler,
         ocamlCompilerCommandPrefix,
@@ -98,6 +101,7 @@ public class OcamlLinkStep extends ShellStep {
 
   private OcamlLinkStep(
       ProjectFilesystem filesystem,
+      RelPath cellPath,
       ImmutableMap<String, String> environment,
       ImmutableList<String> cxxCompiler,
       ImmutableList<String> ocamlCompilerCommandPrefix,
@@ -111,7 +115,7 @@ public class OcamlLinkStep extends ShellStep {
       boolean isLibrary,
       boolean isBytecode,
       boolean withDownwardApi) {
-    super(filesystem.getRootPath(), withDownwardApi);
+    super(filesystem.getRootPath(), cellPath, withDownwardApi);
     this.filesystem = filesystem;
     this.environment = environment;
     this.ocamlCompilerCommandPrefix = ocamlCompilerCommandPrefix;
@@ -133,7 +137,7 @@ public class OcamlLinkStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> cmd =
         ImmutableList.<String>builder()
             .addAll(ocamlCompilerCommandPrefix)

@@ -113,6 +113,8 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             .add(
                 OcamlLinkStep.create(
                     getProjectFilesystem(),
+                    ProjectFilesystemUtils.relativize(
+                        getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
                     cxxCompilerEnvironment,
                     cxxCompiler,
                     ocamlCompiler.getCommandPrefix(context.getSourcePathResolver()),

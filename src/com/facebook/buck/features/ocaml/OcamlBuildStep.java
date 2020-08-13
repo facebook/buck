@@ -19,6 +19,7 @@ package com.facebook.buck.features.ocaml;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -239,9 +240,13 @@ public class OcamlBuildStep implements Step {
     flags.addAll(ocamlContext.getFlags());
     flags.addAll(ocamlContext.getCommonCLinkerFlags());
 
+    RelPath cellPath =
+        ProjectFilesystemUtils.relativize(filesystem.getRootPath(), context.getBuildCellRootPath());
+
     OcamlLinkStep linkStep =
         OcamlLinkStep.create(
             filesystem,
+            cellPath,
             cxxLinkerEnvironment,
             cxxLinker,
             ocamlContext.getOcamlCompiler().get().getCommandPrefix(getResolver()),
@@ -267,9 +272,13 @@ public class OcamlBuildStep implements Step {
     flags.addAll(ocamlContext.getFlags());
     flags.addAll(ocamlContext.getCommonCLinkerFlags());
 
+    RelPath cellPath =
+        ProjectFilesystemUtils.relativize(filesystem.getRootPath(), context.getBuildCellRootPath());
+
     OcamlLinkStep linkStep =
         OcamlLinkStep.create(
             filesystem,
+            cellPath,
             cxxLinkerEnvironment,
             cxxLinker,
             ocamlContext.getOcamlBytecodeCompiler().get().getCommandPrefix(getResolver()),
