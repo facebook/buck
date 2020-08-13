@@ -31,7 +31,7 @@ class SelectorValue:
         return self.__no_match_message
 
     def __str__(self):
-        return "select(" + str(self.__conditions()) + ")"
+        return "select(" + str(self.__conditions) + ")"
 
     def __eq__(self, o):
         if not isinstance(o, SelectorValue):
