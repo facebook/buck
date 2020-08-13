@@ -30,6 +30,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
@@ -102,6 +103,8 @@ public class GoTestMain extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     steps.add(
         new GoTestMainStep(
             getProjectFilesystem().getRootPath(),
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
             testMainGen.getEnvironment(context.getSourcePathResolver()),
             testMainGen.getCommandPrefix(context.getSourcePathResolver()),
             coverageMode,

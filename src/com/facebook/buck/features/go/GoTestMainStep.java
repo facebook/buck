@@ -16,9 +16,10 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -28,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class GoTestMainStep extends ShellStep {
+public class GoTestMainStep extends IsolatedShellStep {
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> generatorCommandPrefix;
   private final GoTestCoverStep.Mode coverageMode;
@@ -39,6 +40,7 @@ public class GoTestMainStep extends ShellStep {
 
   public GoTestMainStep(
       AbsPath workingDirectory,
+      RelPath cellPath,
       ImmutableMap<String, String> environment,
       ImmutableList<String> generatorCommandPrefix,
       GoTestCoverStep.Mode coverageMode,
@@ -47,7 +49,7 @@ public class GoTestMainStep extends ShellStep {
       Iterable<Path> testFiles,
       Path output,
       boolean withDownwardApi) {
-    super(workingDirectory, withDownwardApi);
+    super(workingDirectory, cellPath, withDownwardApi);
     this.environment = environment;
     this.generatorCommandPrefix = generatorCommandPrefix;
     this.coverageMode = coverageMode;
@@ -58,7 +60,7 @@ public class GoTestMainStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> command =
         ImmutableList.<String>builder()
             .addAll(generatorCommandPrefix)
