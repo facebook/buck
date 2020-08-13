@@ -172,7 +172,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     List<AndroidDevice> devices;
 
     try (SimplePerfEvent.Scope ignored =
-        SimplePerfEvent.scope(getBuckEventBus(), "set_up_adb_call")) {
+        SimplePerfEvent.scope(getBuckEventBus().isolated(), "set_up_adb_call")) {
       devices = getDevices(quiet);
       if (devices.isEmpty()) {
         throw new HumanReadableException("Didn't find any attached Android devices/emulators.");
@@ -188,7 +188,7 @@ public class AdbHelper implements AndroidDevicesHelper {
                   () -> {
                     try (SimplePerfEvent.Scope ignored =
                         SimplePerfEvent.scope(
-                            getBuckEventBus(),
+                            getBuckEventBus().isolated(),
                             SimplePerfEvent.PerfEventId.of("adbCall " + description),
                             "device_serial",
                             device.getSerialNumber())) {

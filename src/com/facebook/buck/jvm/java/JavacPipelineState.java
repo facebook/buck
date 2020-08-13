@@ -111,12 +111,13 @@ public class JavacPipelineState implements RulePipelineState {
       if (withDownwardApi) {
         processExecutor =
             processExecutor.withDownwardAPI(
-                DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+                DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
       }
 
       JavacExecutionContext javacExecutionContext =
           ImmutableJavacExecutionContext.ofImpl(
-              new JavacEventSinkToBuckEventBusBridge(firstOrderContext.getBuckEventBus()),
+              new JavacEventSinkToBuckEventBusBridge(
+                  firstOrderContext.getBuckEventBus().isolated()),
               stderr,
               firstOrderContext.getClassLoaderCache(),
               verbosity,

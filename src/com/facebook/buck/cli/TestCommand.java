@@ -368,7 +368,7 @@ public class TestCommand extends BuildCommand {
 
     try (SimplePerfEvent.Scope event =
         SimplePerfEvent.scope(
-            buildContext.getEventBus(),
+            buildContext.getEventBus().isolated(),
             SimplePerfEvent.PerfEventId.of("external-test-runner-specs"))) {
       LOG.info("Starting to write external test runner specs.");
 

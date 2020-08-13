@@ -73,7 +73,8 @@ public class PackagePipeline implements AutoCloseable {
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 10;
     this.perfEventId = SimplePerfEvent.PerfEventId.of("GetPackage");
     this.perfEventScope =
-        SimplePerfEvent.scope(eventBus, SimplePerfEvent.PerfEventId.of("package_pipeline"));
+        SimplePerfEvent.scope(
+            eventBus.isolated(), SimplePerfEvent.PerfEventId.of("package_pipeline"));
 
     this.cache = new PipelineNodeCache<>(packageCache, n -> false);
   }
@@ -195,7 +196,7 @@ public class PackagePipeline implements AutoCloseable {
 
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scopeIgnoringShortEvents(
-            eventBus,
+            eventBus.isolated(),
             perfEventId,
             "packageFile",
             packageFile,

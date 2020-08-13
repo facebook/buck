@@ -116,7 +116,7 @@ class SwiftCompileStep extends SwiftCompileStepBase {
     if (withDownwardApi) {
       processExecutor =
           processExecutor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
     }
     Result processResult = processExecutor.launchAndExecute(params);
 

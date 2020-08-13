@@ -202,7 +202,7 @@ public class JUnitStep extends ShellStep {
             if (isWithDownwardApi()) {
               processExecutor =
                   processExecutor.withDownwardAPI(
-                      DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+                      DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
             }
 
             processExecutor.launchAndExecute(

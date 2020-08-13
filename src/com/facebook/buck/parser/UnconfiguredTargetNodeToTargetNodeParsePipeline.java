@@ -106,7 +106,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     this.requireTargetPlatform = requireTargetPlatform;
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 10;
     this.perfEventScope =
-        SimplePerfEvent.scope(eventBus, SimplePerfEvent.PerfEventId.of(pipelineName));
+        SimplePerfEvent.scope(eventBus.isolated(), SimplePerfEvent.PerfEventId.of(pipelineName));
     this.perfEventId = SimplePerfEvent.PerfEventId.of("GetTargetNode");
     this.eventBus = eventBus;
     this.cache =
@@ -187,7 +187,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       UnconfiguredTargetNode from) {
     try (Scope scope =
         SimplePerfEvent.scopeIgnoringShortEvents(
-            eventBus,
+            eventBus.isolated(),
             perfEventId,
             "target",
             buildTarget,
@@ -197,7 +197,11 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       Function<SimplePerfEvent.PerfEventId, Scope> perfEventScopeFunction =
           perfEventId1 ->
               SimplePerfEvent.scopeIgnoringShortEvents(
-                  eventBus, perfEventId1, scope, minimumPerfEventTimeMs, TimeUnit.MILLISECONDS);
+                  eventBus.isolated(),
+                  perfEventId1,
+                  scope,
+                  minimumPerfEventTimeMs,
+                  TimeUnit.MILLISECONDS);
 
       return computeNodeInScope(cell, buildTarget, dependencyStack, from, perfEventScopeFunction);
     }

@@ -7145,7 +7145,7 @@ public class StubJarTest {
                   testCompiler.getMessager(),
                   jarBuilder,
                   new JavacEventSinkToBuckEventBusBridge(
-                      new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId())),
+                      new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()).isolated()),
                   AbiGenerationMode.CLASS,
                   additionalOptions.contains("-parameters"));
 

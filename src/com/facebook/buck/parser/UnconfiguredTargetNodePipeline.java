@@ -87,7 +87,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
     this.perfEventId = SimplePerfEvent.PerfEventId.of("GetRawTargetNode");
     this.perfEventScope =
         SimplePerfEvent.scope(
-            eventBus, SimplePerfEvent.PerfEventId.of("raw_target_node_parse_pipeline"));
+            eventBus.isolated(), SimplePerfEvent.PerfEventId.of("raw_target_node_parse_pipeline"));
     this.cache =
         new PipelineNodeCache<>(cache, UnconfiguredTargetNodePipeline::targetNodeIsConfiguration);
   }
@@ -198,7 +198,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
 
     try (Scope scope =
         SimplePerfEvent.scopeIgnoringShortEvents(
-            eventBus,
+            eventBus.isolated(),
             perfEventId,
             "target",
             buildTarget,

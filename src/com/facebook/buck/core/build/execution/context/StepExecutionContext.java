@@ -22,6 +22,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Verbosity;
@@ -63,7 +64,6 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
         .build();
   }
 
-  @Override
   public abstract BuckEventBus getBuckEventBus();
 
   public abstract Optional<AndroidDevicesHelper> getAndroidDevicesHelper();
@@ -110,6 +110,12 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
   @Value.Default
   public ConcurrentMap<String, WorkerProcessPool> getWorkerProcessPools() {
     return new ConcurrentHashMap<>();
+  }
+
+  @Override
+  @Value.Default
+  public IsolatedEventBus getIsolatedEventBus() {
+    return getBuckEventBus().isolated();
   }
 
   public StepExecutionContext createSubContext(

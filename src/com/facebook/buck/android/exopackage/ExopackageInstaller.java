@@ -119,7 +119,8 @@ public class ExopackageInstaller {
     File apk = pathResolver.getAbsolutePath(apkInfo.getApkPath()).toFile();
 
     if (shouldAppBeInstalled(apkInfo)) {
-      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_exo_apk")) {
+      try (SimplePerfEvent.Scope ignored =
+          SimplePerfEvent.scope(eventBus.isolated(), "install_exo_apk")) {
         boolean success = device.installApkOnDevice(apk, /*installViaSd=*/ false, false);
         if (!success) {
           throw new RuntimeException("Installing Apk failed.");
@@ -129,7 +130,7 @@ public class ExopackageInstaller {
   }
 
   private void killApp() throws Exception {
-    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "kill_app")) {
+    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus.isolated(), "kill_app")) {
       device.stopPackage(packageName);
     }
   }
@@ -241,7 +242,10 @@ public class ExopackageInstaller {
   private Optional<PackageInfo> getPackageInfo(String packageName) throws Exception {
     try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(
-            eventBus, SimplePerfEvent.PerfEventId.of("get_package_info"), "package", packageName)) {
+            eventBus.isolated(),
+            SimplePerfEvent.PerfEventId.of("get_package_info"),
+            "package",
+            packageName)) {
       return device.getPackageInfo(packageName);
     }
   }
@@ -270,7 +274,8 @@ public class ExopackageInstaller {
   }
 
   private String getInstalledAppSignature(String packagePath) throws Exception {
-    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "get_app_signature")) {
+    try (SimplePerfEvent.Scope ignored =
+        SimplePerfEvent.scope(eventBus.isolated(), "get_app_signature")) {
       String output = device.getSignature(packagePath);
 
       String result = output.trim();
@@ -332,7 +337,7 @@ public class ExopackageInstaller {
   private void installFiles(String filesType, ImmutableMap<Path, Path> filesToInstall)
       throws Exception {
     try (SimplePerfEvent.Scope ignored =
-            SimplePerfEvent.scope(eventBus, "multi_install_" + filesType);
+            SimplePerfEvent.scope(eventBus.isolated(), "multi_install_" + filesType);
         AutoCloseable ignored1 = device.createForward()) {
       // Make sure all the directories exist.
       filesToInstall.keySet().stream()

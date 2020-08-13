@@ -190,7 +190,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
               if (withDownwardApi) {
                 executor =
                     executor.withDownwardAPI(
-                        DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+                        DownwardApiProcessExecutor.FACTORY, context.getIsolatedEventBus());
               }
 
               try (ProcessExecutor.LaunchedProcess process =

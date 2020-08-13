@@ -142,7 +142,7 @@ public class VersionControlStatsGenerator {
           try {
             Optional<FullVersionControlStats> versionControlStats;
             try (SimplePerfEvent.Scope ignored =
-                SimplePerfEvent.scope(buckEventBus, "gen_source_control_info")) {
+                SimplePerfEvent.scope(buckEventBus.isolated(), "gen_source_control_info")) {
               versionControlStats = generateStats(mode);
             }
             versionControlStats.ifPresent(

@@ -480,7 +480,7 @@ public class ProjectGenerator {
     boolean hasAtLeastOneTarget = false;
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(
-            buckEventBus,
+            buckEventBus.isolated(),
             SimplePerfEvent.PerfEventId.of("xcode_project_generation"),
             ImmutableMap.of("Path", getProjectPath()))) {
 

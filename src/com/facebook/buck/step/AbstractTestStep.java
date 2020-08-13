@@ -99,7 +99,8 @@ public abstract class AbstractTestStep implements Step {
     ProcessExecutor executor = context.getProcessExecutor();
     if (withDownwardApi) {
       executor =
-          executor.withDownwardAPI(DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+          executor.withDownwardAPI(
+              DownwardApiProcessExecutor.FACTORY, context.getIsolatedEventBus());
     }
 
     ImmutableSet<ProcessExecutor.Option> options =

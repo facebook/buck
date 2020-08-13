@@ -181,7 +181,7 @@ public class SimplePerfEventTest {
       scope.update(ImmutableMap.of("update", "updateValue"));
     }
 
-    try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(eventBus, testEventId)) {
+    try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(eventBus.isolated(), testEventId)) {
       scope.appendFinishedInfo("finished", "info");
       scope.update(ImmutableMap.of("update", "updateValue"));
       scope.update(ImmutableMap.of("update", "laterUpdate"));
@@ -223,12 +223,12 @@ public class SimplePerfEventTest {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(clock);
     eventBus.register(listener);
 
-    try (SimplePerfEvent.Scope parent = SimplePerfEvent.scope(eventBus, parentId)) {
+    try (SimplePerfEvent.Scope parent = SimplePerfEvent.scope(eventBus.isolated(), parentId)) {
       clock.advanceTimeNanos(10L);
 
       try (SimplePerfEvent.Scope scope =
           SimplePerfEvent.scopeIgnoringShortEvents(
-              eventBus, ignoredEventId, parent, 1, TimeUnit.SECONDS)) {
+              eventBus.isolated(), ignoredEventId, parent, 1, TimeUnit.SECONDS)) {
         clock.advanceTimeNanos(10L);
       }
 
@@ -236,7 +236,7 @@ public class SimplePerfEventTest {
 
       try (SimplePerfEvent.Scope scope =
           SimplePerfEvent.scopeIgnoringShortEvents(
-              eventBus, loggedEventId, parent, 1, TimeUnit.MILLISECONDS)) {
+              eventBus.isolated(), loggedEventId, parent, 1, TimeUnit.MILLISECONDS)) {
         clock.advanceTimeNanos(TimeUnit.MILLISECONDS.toNanos(2));
       }
     }

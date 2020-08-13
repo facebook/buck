@@ -251,7 +251,7 @@ public class DownwardApiProcessExecutorTest {
     return new DownwardApiProcessExecutor(
         fakeProcessExecutor,
         CONSOLE_PARAMS,
-        buckEventBus,
+        buckEventBus.isolated(),
         TEST_ACTION_ID,
         new NamedPipeFactory() {
           @Override

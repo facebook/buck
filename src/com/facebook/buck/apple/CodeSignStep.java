@@ -105,7 +105,7 @@ class CodeSignStep implements Step {
     if (withDownwardApi) {
       processExecutor =
           processExecutor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
     }
     if (LOG.isDebugEnabled()) {
       LOG.debug("codesign command: %s", Joiner.on(" ").join(processExecutorParams.getCommand()));

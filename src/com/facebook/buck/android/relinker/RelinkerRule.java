@@ -224,7 +224,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
                 if (withDownwardApi) {
                   processExecutor =
                       processExecutor.withDownwardAPI(
-                          DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+                          DownwardApiProcessExecutor.FACTORY, context.getIsolatedEventBus());
                 }
 
                 if (linker == null) {

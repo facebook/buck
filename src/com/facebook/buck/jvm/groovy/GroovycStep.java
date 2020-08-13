@@ -91,7 +91,7 @@ class GroovycStep implements Step {
     if (withDownwardApi) {
       processExecutor =
           processExecutor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
     }
     return StepExecutionResult.of(processExecutor.launchAndExecute(params));
   }

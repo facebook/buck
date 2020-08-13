@@ -124,7 +124,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
       return new ConcatenatingMessageHandler();
     }
     if (getUnusedDependenciesAction() == UnusedDependenciesAction.WARN) {
-      return new ConsoleMessageHandler(executionContext.getBuckEventBus());
+      return new ConsoleMessageHandler(executionContext.getIsolatedEventBus());
     }
     throw new IllegalStateException("Invalid action: " + action);
   }

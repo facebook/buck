@@ -119,7 +119,7 @@ public class Jsr199JavacIntegrationTest {
     ProjectFilesystem projectFilesystem = createProjectFilesystem();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
-            new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
+            new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus().isolated()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
             executionContext.getVerbosity(),
@@ -175,7 +175,7 @@ public class Jsr199JavacIntegrationTest {
     ProjectFilesystem projectFilesystem = createProjectFilesystem();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
-            new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
+            new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus().isolated()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
             executionContext.getVerbosity(),
@@ -283,7 +283,7 @@ public class Jsr199JavacIntegrationTest {
     ProjectFilesystem projectFilesystem = createProjectFilesystem();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
-            new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
+            new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus().isolated()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
             executionContext.getVerbosity(),
@@ -377,7 +377,7 @@ public class Jsr199JavacIntegrationTest {
     ProjectFilesystem projectFilesystem = createProjectFilesystem();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
-            new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
+            new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus().isolated()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
             executionContext.getVerbosity(),

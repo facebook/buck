@@ -212,7 +212,7 @@ public class WatchmanWatcher {
               if (query != null && cursor != null) {
                 try (SimplePerfEvent.Scope perfEvent =
                         SimplePerfEvent.scope(
-                            buckEventBus,
+                            buckEventBus.isolated(),
                             SimplePerfEvent.PerfEventId.of("check_watchman"),
                             "cell",
                             cellPath);
@@ -274,7 +274,8 @@ public class WatchmanWatcher {
       throws IOException, InterruptedException {
     try {
       Optional<? extends Map<String, ? extends Object>> queryResponse;
-      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(buckEventBus, "query")) {
+      try (SimplePerfEvent.Scope ignored =
+          SimplePerfEvent.scope(buckEventBus.isolated(), "query")) {
         queryResponse =
             client.queryWithTimeout(
                 TimeUnit.MILLISECONDS.toNanos(timeoutMillis),
@@ -283,7 +284,7 @@ public class WatchmanWatcher {
       }
 
       try (SimplePerfEvent.Scope ignored =
-          SimplePerfEvent.scope(buckEventBus, "process_response")) {
+          SimplePerfEvent.scope(buckEventBus.isolated(), "process_response")) {
         if (!queryResponse.isPresent()) {
           LOG.warn(
               "Could not get response from Watchman for query %s within %d ms",

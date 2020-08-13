@@ -59,7 +59,7 @@ class IsolatedStepsRunner {
     UUID uuid = UUID.randomUUID();
     StepEvent.Started started =
         StepEvent.started(step.getShortName(), step.getIsolatedStepDescription(context), uuid);
-    context.getBuckEventBus().post(started);
+    context.getIsolatedEventBus().post(started);
     StepExecutionResult executionResult = StepExecutionResults.ERROR;
     try {
       executionResult = step.executeIsolatedStep(context);
@@ -67,7 +67,9 @@ class IsolatedStepsRunner {
       throw StepFailedException.createForFailingStepWithException(
           step, step.getIsolatedStepDescription(context), e);
     } finally {
-      context.getBuckEventBus().post(StepEvent.finished(started, executionResult.getExitCode()));
+      context
+          .getIsolatedEventBus()
+          .post(StepEvent.finished(started, executionResult.getExitCode()));
     }
     if (!executionResult.isSuccess()) {
       throw StepFailedException.createForFailingStepWithExitCode(

@@ -249,7 +249,7 @@ public class OutputsMaterializer {
     if (!pending.isEmpty()) {
       try (SimplePerfEvent.Scope ignored =
           SimplePerfEvent.scope(
-              buckEventBus,
+              buckEventBus.isolated(),
               SimplePerfEvent.PerfEventId.of("outputs-materializer"),
               "size",
               size,

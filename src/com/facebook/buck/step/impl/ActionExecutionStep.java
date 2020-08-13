@@ -53,7 +53,8 @@ public class ActionExecutionStep implements Step {
     ProcessExecutor processExecutor = context.getProcessExecutor();
     if (withDownwardApi) {
       processExecutor =
-          processExecutor.withDownwardAPI(DownwardApiProcessExecutor.FACTORY, buckEventBus);
+          processExecutor.withDownwardAPI(
+              DownwardApiProcessExecutor.FACTORY, buckEventBus.isolated());
     }
 
     ActionExecutionContext executionContext =

@@ -16,14 +16,18 @@
 
 package com.facebook.buck.event;
 
-import java.time.Instant;
+import com.facebook.buck.core.model.BuildId;
+import java.io.Closeable;
 
 /**
  * Thin wrapper around guava event bus.
  *
  * <p>This interface exists only to break circular Buck target dependencies.
  */
-public interface BuckEventBus extends IsolatedEventBus, EventDispatcher {
+public interface BuckEventBus extends Closeable, EventDispatcher {
+
+  /** Returns the {@link BuildId} associated with the current build. */
+  BuildId getBuildId();
 
   /** Register a listener to process events */
   void register(Object object);
@@ -39,94 +43,6 @@ public interface BuckEventBus extends IsolatedEventBus, EventDispatcher {
    * @return true if all events were handled and false if timeout was hit
    */
   boolean waitEvents(long timeout);
-
-  /**
-   * TODO(irenewchen): Remove the methods below after BuckEventBus no longer extends
-   * IsolatedEventBus.
-   */
-
-  /** Post event to the EventBus. */
-  @Override
-  default void post(ConsoleEvent event) {
-    post((BuckEvent) event);
-  }
-
-  @Override
-  default void post(ConsoleEvent event, long threadId) {
-    post((BuckEvent) event, threadId);
-  }
-
-  @Override
-  default void post(StepEvent event) {
-    post((BuckEvent) event);
-  }
-
-  @Override
-  default void post(StepEvent event, long threadId) {
-    post((BuckEvent) event, threadId);
-  }
-
-  @Override
-  default void post(StepEvent event, Instant atTime, long threadId) {
-    post((BuckEvent) event, atTime, threadId);
-  }
-
-  @Override
-  default void post(SimplePerfEvent event) {
-    post((BuckEvent) event);
-  }
-
-  /** Post event to the EventBus using the given {@code atTime} timestamp and {@code threadId}. */
-  @Override
-  default void post(SimplePerfEvent event, Instant atTime, long threadId) {
-    post((BuckEvent) event, atTime, threadId);
-  }
-
-  /** Post event to the EventBus using the given {@code atTime} timestamp. */
-  @Override
-  default void post(SimplePerfEvent event, Instant atTime) {
-    post((BuckEvent) event, atTime);
-  }
-
-  /** Post event to the EventBus that occurred in the passing {@code threadId}. */
-  @Override
-  default void post(SimplePerfEvent event, long threadId) {
-    post((BuckEvent) event, threadId);
-  }
-
-  /** Post already configured event to the EventBus. */
-  @Override
-  default void postWithoutConfiguring(SimplePerfEvent event) {
-    postWithoutConfiguring((BuckEvent) event);
-  }
-
-  @Override
-  default void timestamp(ConsoleEvent event) {
-    timestamp((BuckEvent) event);
-  }
-
-  @Override
-  default void timestamp(StepEvent event) {
-    timestamp((BuckEvent) event);
-  }
-
-  /**
-   * Timestamp event. A timestamped event cannot subsequently being posted and is useful only to
-   * pass its timestamp on to another posted event.
-   */
-  @Override
-  default void timestamp(SimplePerfEvent event) {
-    timestamp((BuckEvent) event);
-  }
-
-  /**
-   * Timestamp event that occurred in the passing {@code threadId}. A timestamped event cannot
-   * subsequently being posted and is useful only to pass its timestamp on to another posted event.
-   */
-  @Override
-  default void timestamp(SimplePerfEvent event, long threadId) {
-    timestamp((BuckEvent) event, threadId);
-  }
 
   /** Returns an {@link IsolatedEventBus} representation of this event bus. */
   IsolatedEventBus isolated();

@@ -171,7 +171,7 @@ public class WorkerProcessPoolFactory {
     if (withDownwardApi) {
       processExecutor =
           processExecutor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
     }
     return new WorkerProcess(processExecutor, processParams, filesystem, stdErr, tmpDir);
   }

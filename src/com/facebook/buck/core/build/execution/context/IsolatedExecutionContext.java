@@ -48,7 +48,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
       ProcessExecutor processExecutor,
       AbsPath ruleCellRoot) {
     return ImmutableIsolatedExecutionContext.builder()
-        .setBuckEventBus(eventBus)
+        .setIsolatedEventBus(eventBus)
         .setConsole(console)
         .setPlatform(platform)
         .setProcessExecutor(processExecutor)
@@ -58,7 +58,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
 
   public abstract Console getConsole();
 
-  public abstract IsolatedEventBus getBuckEventBus();
+  public abstract IsolatedEventBus getIsolatedEventBus();
 
   public abstract Platform getPlatform();
 
@@ -104,7 +104,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
 
   @Value.Derived
   public BuildId getBuildId() {
-    return getBuckEventBus().getBuildId();
+    return getIsolatedEventBus().getBuildId();
   }
 
   @Value.Derived
@@ -113,15 +113,15 @@ public abstract class IsolatedExecutionContext implements Closeable {
   }
 
   public void logError(Throwable error, String msg, Object... formatArgs) {
-    getBuckEventBus().post(ThrowableConsoleEvent.create(error, msg, formatArgs));
+    getIsolatedEventBus().post(ThrowableConsoleEvent.create(error, msg, formatArgs));
   }
 
   public void postEvent(ConsoleEvent event) {
-    getBuckEventBus().post(event);
+    getIsolatedEventBus().post(event);
   }
 
   public void postEvent(StepEvent event) {
-    getBuckEventBus().post(event);
+    getIsolatedEventBus().post(event);
   }
 
   @Override

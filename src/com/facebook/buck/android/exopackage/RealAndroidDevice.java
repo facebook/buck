@@ -1357,7 +1357,7 @@ public class RealAndroidDevice implements AndroidDevice {
       Path destination = entry.getKey();
       Path source = entry.getValue();
       try (SimplePerfEvent.Scope ignored =
-          SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
+          SimplePerfEvent.scope(eventBus.isolated(), "install_" + filesType)) {
         // Slurp the file into RAM to make sure we know how many bytes we are getting.
         byte[] bytes = Files.readAllBytes(source);
         byte[] restOfHeader =

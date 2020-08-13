@@ -158,7 +158,8 @@ class SwiftStdlibStep implements Step {
     ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
     if (withDownwardApi) {
       executor =
-          executor.withDownwardAPI(DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+          executor.withDownwardAPI(
+              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
     }
 
     ProcessExecutorParams params = makeProcessExecutorParams(context, getSwiftStdlibCommand());

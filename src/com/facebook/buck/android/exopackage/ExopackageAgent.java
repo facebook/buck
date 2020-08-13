@@ -46,7 +46,8 @@ class ExopackageAgent {
   private static boolean determineBestAgent(BuckEventBus eventBus, AndroidDevice device)
       throws Exception {
     String value;
-    try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(eventBus, "get_device_sdk_version")) {
+    try (SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scope(eventBus.isolated(), "get_device_sdk_version")) {
       value = device.getProperty("ro.build.version.sdk");
       scope.appendFinishedInfo("sdk_version", value);
     }
@@ -106,14 +107,16 @@ class ExopackageAgent {
 
   private static void uninstallAgent(BuckEventBus eventBus, AndroidDevice device)
       throws InstallException {
-    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "uninstall_old_agent")) {
+    try (SimplePerfEvent.Scope ignored =
+        SimplePerfEvent.scope(eventBus.isolated(), "uninstall_old_agent")) {
       device.uninstallPackage(AgentUtil.AGENT_PACKAGE_NAME);
     }
   }
 
   private static void installAgentApk(
       BuckEventBus eventBus, AndroidDevice device, Path agentApkPath) {
-    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_agent_apk")) {
+    try (SimplePerfEvent.Scope ignored =
+        SimplePerfEvent.scope(eventBus.isolated(), "install_agent_apk")) {
       File apkPath = agentApkPath.toFile();
       boolean success =
           device.installApkOnDevice(apkPath, /* installViaSd */ false, /* quiet */ false);

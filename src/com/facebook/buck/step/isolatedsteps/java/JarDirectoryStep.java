@@ -71,7 +71,7 @@ public class JarDirectoryStep extends IsolatedStep {
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException {
     JavacEventSinkToBuckEventBusBridge eventSink =
-        new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus());
+        new JavacEventSinkToBuckEventBusBridge(context.getIsolatedEventBus());
     LoggingJarBuilderObserver loggingObserver =
         new LoggingJarBuilderObserver(eventSink, parameters.getDuplicatesLogLevel());
     AbsPath root = context.getRuleCellRoot();

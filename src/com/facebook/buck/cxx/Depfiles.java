@@ -299,7 +299,7 @@ class Depfiles {
     Logger.get(Depfiles.class).debug("Processing dependency file %s as Makefile", sourceDepFile);
     try (SimplePerfEvent.Scope perfEvent =
         SimplePerfEvent.scope(
-            eventBus,
+            eventBus.isolated(),
             SimplePerfEvent.PerfEventId.of("depfile-parse"),
             ImmutableMap.of("input", inputPath, "output", outputPath))) {
 

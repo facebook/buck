@@ -149,7 +149,7 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
       if (withDownwardApi) {
         processExecutor =
             processExecutor.withDownwardAPI(
-                DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+                DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
       }
 
       ProcessExecutor.Result result = processExecutor.launchAndExecute(params);

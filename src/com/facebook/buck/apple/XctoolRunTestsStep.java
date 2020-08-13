@@ -275,7 +275,7 @@ class XctoolRunTestsStep implements Step {
     if (withDownwardApi) {
       processExecutor =
           processExecutor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
     }
     if (!testSelectorList.isEmpty()) {
       ImmutableList.Builder<String> xctoolFilterParamsBuilder = ImmutableList.builder();

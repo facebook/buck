@@ -310,7 +310,10 @@ public class TargetSpecResolver implements AutoCloseable {
       Cell cell = rootCell.getCellProvider().getCellByCanonicalCellName(cellName);
       try (SimplePerfEvent.Scope perfEventScope =
           SimplePerfEvent.scope(
-              eventBus, SimplePerfEvent.PerfEventId.of("FindBuildFiles"), "targetNodeSpec", spec)) {
+              eventBus.isolated(),
+              SimplePerfEvent.PerfEventId.of("FindBuildFiles"),
+              "targetNodeSpec",
+              spec)) {
 
         BuildFileSpec buildFileSpec = spec.getBuildFileSpec();
         ProjectFilesystemView projectFilesystemView = cell.getFilesystemViewForSourceFiles();
