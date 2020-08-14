@@ -150,6 +150,7 @@ public class RobolectricTest extends JavaTest {
 
   @Override
   public void onPreTest(BuildContext buildContext) throws IOException {
+    super.onPreTest(buildContext);
     robolectricTestHelper.onPreTest(buildContext);
   }
 
