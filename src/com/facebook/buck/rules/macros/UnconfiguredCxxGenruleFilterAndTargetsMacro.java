@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -29,20 +29,20 @@ public abstract class UnconfiguredCxxGenruleFilterAndTargetsMacro implements Unc
 
   public abstract Optional<Pattern> getFilter();
 
-  public abstract ImmutableList<UnconfiguredBuildTarget> getTargets();
+  public abstract ImmutableList<UnconfiguredBuildTargetWithOutputs> getTargetsWithOutputs();
 
   abstract BiFunction<
-          Optional<Pattern>, ImmutableList<BuildTarget>, CxxGenruleFilterAndTargetsMacro>
+          Optional<Pattern>, ImmutableList<BuildTargetWithOutputs>, CxxGenruleFilterAndTargetsMacro>
       getConfiguredFactory();
 
   /** Apply the configuration. */
   @Override
   public CxxGenruleFilterAndTargetsMacro configure(
       TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
-    ImmutableList<BuildTarget> configuredTargets =
-        getTargets().stream()
+    ImmutableList<BuildTargetWithOutputs> targetsWithOutputs =
+        getTargetsWithOutputs().stream()
             .map(t -> t.configure(targetConfiguration))
             .collect(ImmutableList.toImmutableList());
-    return getConfiguredFactory().apply(getFilter(), configuredTargets);
+    return getConfiguredFactory().apply(getFilter(), targetsWithOutputs);
   }
 }

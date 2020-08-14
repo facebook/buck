@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -30,8 +30,9 @@ public abstract class UnconfiguredCudappFlagsMacro
     extends UnconfiguredCxxGenruleFilterAndTargetsMacro {
 
   public static UnconfiguredCudappFlagsMacro of(
-      Optional<Pattern> pattern, ImmutableList<UnconfiguredBuildTarget> buildTargets) {
-    return ImmutableUnconfiguredCudappFlagsMacro.ofImpl(pattern, buildTargets);
+      Optional<Pattern> pattern,
+      ImmutableList<UnconfiguredBuildTargetWithOutputs> targetsWithOutputs) {
+    return ImmutableUnconfiguredCudappFlagsMacro.ofImpl(pattern, targetsWithOutputs);
   }
 
   @Override
@@ -40,7 +41,8 @@ public abstract class UnconfiguredCudappFlagsMacro
   }
 
   @Override
-  public BiFunction<Optional<Pattern>, ImmutableList<BuildTarget>, CxxGenruleFilterAndTargetsMacro>
+  public BiFunction<
+          Optional<Pattern>, ImmutableList<BuildTargetWithOutputs>, CxxGenruleFilterAndTargetsMacro>
       getConfiguredFactory() {
     return CudappFlagsMacro::of;
   }
