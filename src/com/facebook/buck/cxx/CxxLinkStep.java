@@ -16,9 +16,10 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -27,7 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
-class CxxLinkStep extends ShellStep {
+class CxxLinkStep extends IsolatedShellStep {
 
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> linker;
@@ -40,6 +41,7 @@ class CxxLinkStep extends ShellStep {
 
   public CxxLinkStep(
       AbsPath workingDirectory,
+      RelPath cellPath,
       ImmutableMap<String, String> environment,
       ImmutableList<String> linker,
       Path argFilePath,
@@ -47,6 +49,7 @@ class CxxLinkStep extends ShellStep {
       boolean withDownwardApi) {
     this(
         workingDirectory,
+        cellPath,
         environment,
         linker,
         argFilePath,
@@ -57,13 +60,14 @@ class CxxLinkStep extends ShellStep {
 
   public CxxLinkStep(
       AbsPath workingDirectory,
+      RelPath cellPath,
       ImmutableMap<String, String> environment,
       ImmutableList<String> linker,
       Path argFilePath,
       Path scratchDir,
       boolean withDownwardApi,
       Optional<AbsPath> skipLinkingFilePath) {
-    super(workingDirectory, withDownwardApi);
+    super(workingDirectory, cellPath, withDownwardApi);
     this.environment = environment;
     this.linker = linker;
     this.argFilePath = argFilePath;
@@ -72,7 +76,7 @@ class CxxLinkStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     if (skipLinkingStep.isPresent() && Files.exists(skipLinkingStep.get().getPath())) {
       return ImmutableList.of();
     }

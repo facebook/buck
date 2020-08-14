@@ -39,6 +39,7 @@ import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
@@ -328,6 +329,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
               .add(
                   new CxxLinkStep(
                       filesystem.getRootPath(),
+                      ProjectFilesystemUtils.relativize(
+                          filesystem.getRootPath(), context.getBuildCellRootPath()),
                       env,
                       commandPrefix,
                       argFilePath.getPath(),

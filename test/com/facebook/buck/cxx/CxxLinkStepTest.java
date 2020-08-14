@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -40,6 +41,8 @@ public class CxxLinkStepTest {
     CxxLinkStep cxxLinkStep =
         new CxxLinkStep(
             projectFilesystem.getRootPath(),
+            ProjectFilesystemUtils.relativize(
+                projectFilesystem.getRootPath(), context.getBuildCellRootPath()),
             ImmutableMap.of(),
             linker,
             projectFilesystem.getRootPath().resolve("argfile.txt").getPath(),

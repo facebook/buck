@@ -298,6 +298,8 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
           .add(
               new CxxLinkStep(
                   filesystem.getRootPath(),
+                  ProjectFilesystemUtils.relativize(
+                      filesystem.getRootPath(), context.getBuildCellRootPath()),
                   linker.getEnvironment(sourcePathResolverAdapter),
                   linker.getCommandPrefix(sourcePathResolverAdapter),
                   argFilePath.getPath(),
