@@ -91,6 +91,19 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void outputAllAttributes() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_all_attributes", tmp);
+    workspace.setUp();
+
+    for (String arg : new String[] {"-A", "--output-all-attributes"}) {
+      ProcessResult result =
+          workspace.runBuckCommand("cquery", "//...", "--target-universe", "//:gr", arg);
+      assertJSONOutputMatchesFileContents("stdout.json", result, workspace);
+    }
+  }
+
+  @Test
   public void basicDotPrinting() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);

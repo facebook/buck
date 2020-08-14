@@ -120,7 +120,7 @@ public class QueryCommand
               + "Attributes can be regular expressions. The preferred replacement is "
               + "--output-attribute.",
       handler = StringSetOptionHandler.class,
-      forbids = {"--output-attribute"})
+      forbids = {"--output-attribute", "--output-all-attributes"})
   private Supplier<ImmutableSet<String>> outputAttributesDeprecated =
       Suppliers.ofInstance(ImmutableSet.of());
 

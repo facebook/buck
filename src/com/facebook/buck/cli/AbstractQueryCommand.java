@@ -118,16 +118,23 @@ public abstract class AbstractQueryCommand<
               + "regular expressions. Multiple attributes may be selected by specifying this option "
               + "multiple times.",
       handler = SingleStringSetOptionHandler.class,
-      forbids = {"--output-attributes"},
+      forbids = {"--output-attributes", "--output-all-attributes"},
       aliases = {"-a"})
   @VisibleForTesting
   Supplier<ImmutableSet<String>> outputAttributesDoNotUseDirectly =
       Suppliers.ofInstance(ImmutableSet.of());
 
+  @Option(
+      name = "--output-all-attributes",
+      usage = "Output all attributes, equivalent of --output-attribute '.*'",
+      forbids = {"--output-attribute", "--output-attributes"},
+      aliases = {"-A"})
+  private boolean outputAllAttributes = false;
+
   // NOTE: Use this rather than accessing the data directly because subclasses (looking at you,
   // {@link QueryCommand}) override this to support other ways of specifying output attributes.
   protected ImmutableSet<String> outputAttributes() {
-    return outputAttributesDoNotUseDirectly.get();
+    return outputAllAttributes ? ImmutableSet.of(".*") : outputAttributesDoNotUseDirectly.get();
   }
 
   protected boolean shouldOutputAttributes() {

@@ -1,0 +1,12 @@
+{
+    "//:gr (builtin//platform:unconfigured)": {
+        "name": "gr",
+        "cmd": "echo > $OUT",
+        "out": "rrr.txt",
+        "buck.base_path": "",
+        "buck.configuration": "builtin//platform:unconfigured",
+        "buck.direct_dependencies": [],
+        "buck.type": "genrule",
+        "fully_qualified_name": "//:gr"
+    }
+}
