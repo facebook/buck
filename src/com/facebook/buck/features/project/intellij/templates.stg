@@ -170,6 +170,37 @@ ij_module(moduleType, metaInfDirectory, androidFacet, languageLevel, generatedSo
   %elseif(dep.library)%
     <orderEntry type="%dep.type%" name="%dep.library.name%" scope="%dep.library.scope%" %\\%
       level="project" %if(dep.library.exported)%exported="" %endif%/>
+  %elseif(dep.moduleLibrary)%
+    <orderEntry type="%dep.type%" scope="%dep.moduleLibrary.scope%" %if(dep.moduleLibrary.exported)%exported=""%endif%>
+      <library name="%dep.moduleLibrary.name%">
+        <CLASSES>
+      %if(dep.moduleLibrary.element.binaryJars)%
+      %dep.moduleLibrary.element.binaryJars:{binaryJar |
+          <root url="jar://$PROJECT_DIR$/%binaryJar%!/" />
+      }%%endif%
+      %if(dep.moduleLibrary.element.classPaths)%
+      %dep.moduleLibrary.element.classPaths:{classPath |
+          <root url="file://$PROJECT_DIR$/%classPath%" />
+      }%%endif%
+        </CLASSES>
+      %if(dep.moduleLibrary.element.javadocUrls)%
+        <JAVADOC>
+      %dep.moduleLibrary.element.javadocUrls:{javadocUrl |
+          <root url="%javadocUrl%" />
+      }%        </JAVADOC>
+      %else%
+        <JAVADOC />
+      %endif%
+      %if(dep.moduleLibrary.element.sourceJars)%
+        <SOURCES>
+      %dep.moduleLibrary.element.sourceJars:{sourceJar |
+          <root url="jar://$PROJECT_DIR$/%sourceJar%!/" />
+      }%        </SOURCES>
+      %else%
+        <SOURCES />
+      %endif%
+      </library>
+    </orderEntry>
   %endif%
 }%  </component>
 </module>

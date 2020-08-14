@@ -121,7 +121,7 @@ public class IjProjectDataPreparerTest {
     assertEquals("file://$MODULE_DIR$", baseSourceFolder.getUrl());
 
     assertThat(
-        dataPreparer.getDependencies(baseModule),
+        dataPreparer.getDependencies(baseModule, null),
         contains(
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.MODULE)),
@@ -132,7 +132,8 @@ public class IjProjectDataPreparerTest {
                             ImmutableDependencyEntryData.ofImpl(
                                 "third_party_guava",
                                 IjDependencyListBuilder.Scope.COMPILE,
-                                false)))))));
+                                false,
+                                null)))))));
   }
 
   @Test
@@ -216,7 +217,7 @@ public class IjProjectDataPreparerTest {
     IjModule mainModule = IjModuleGraphTest.getModuleForTarget(moduleGraph, mainTargetNode);
 
     assertThat(
-        dataPreparer.getDependencies(mainModule),
+        dataPreparer.getDependencies(mainModule, null),
         contains(
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.MODULE)),
@@ -227,7 +228,8 @@ public class IjProjectDataPreparerTest {
                             ImmutableDependencyEntryData.ofImpl(
                                 "___dep_java_com_example",
                                 IjDependencyListBuilder.Scope.COMPILE,
-                                false)))))));
+                                false,
+                                null)))))));
   }
 
   @Test
@@ -305,7 +307,7 @@ public class IjProjectDataPreparerTest {
         IjModuleGraphTest.getModuleForTarget(moduleGraph, baseTargetNode));
 
     assertThat(
-        dataPreparer.getDependencies(baseModule),
+        dataPreparer.getDependencies(baseModule, null),
         contains(
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
@@ -316,7 +318,8 @@ public class IjProjectDataPreparerTest {
                             ImmutableDependencyEntryData.ofImpl(
                                 "//java/com/example/base:tests",
                                 IjDependencyListBuilder.Scope.PROVIDED,
-                                true))))),
+                                true,
+                                null))))),
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
                 hasProperty(
@@ -326,7 +329,8 @@ public class IjProjectDataPreparerTest {
                             ImmutableDependencyEntryData.ofImpl(
                                 guavaLibrary.getName(),
                                 IjDependencyListBuilder.Scope.COMPILE,
-                                false))))),
+                                false,
+                                null))))),
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
                 hasProperty(
@@ -336,10 +340,11 @@ public class IjProjectDataPreparerTest {
                             ImmutableDependencyEntryData.ofImpl(
                                 hamcrestLibrary.getName(),
                                 IjDependencyListBuilder.Scope.COMPILE,
-                                false)))))));
+                                false,
+                                null)))))));
 
     assertThat(
-        dataPreparer.getDependencies(baseTestModule),
+        dataPreparer.getDependencies(baseTestModule, null),
         contains(
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.MODULE)),
@@ -350,7 +355,8 @@ public class IjProjectDataPreparerTest {
                             ImmutableDependencyEntryData.ofImpl(
                                 baseModule.getName(),
                                 IjDependencyListBuilder.Scope.TEST,
-                                false))))),
+                                false,
+                                null))))),
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
                 hasProperty(
@@ -360,7 +366,8 @@ public class IjProjectDataPreparerTest {
                             ImmutableDependencyEntryData.ofImpl(
                                 hamcrestLibrary.getName(),
                                 IjDependencyListBuilder.Scope.TEST,
-                                false)))))));
+                                false,
+                                null)))))));
   }
 
   @Test

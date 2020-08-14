@@ -247,7 +247,11 @@ public class IjProjectWriter {
     }
 
     moduleContents.add("contentRoots", contentRoots);
-    moduleContents.add("dependencies", projectDataPreparer.getDependencies(module));
+    moduleContents.add(
+        "dependencies",
+        projectDataPreparer.getDependencies(
+            module,
+            projectConfig.isModuleLibraryEnabled() ? this::prepareLibraryToBeWritten : null));
     moduleContents.add("generatedSourceFolders", generatedFolders);
     moduleContents.add("androidFacet", androidProperties);
     moduleContents.add("sdk", module.getModuleType().getSdkName(projectConfig).orElse(null));
@@ -305,6 +309,31 @@ public class IjProjectWriter {
     return !jdkUnder15;
   }
 
+  private IjLibrary prepareLibraryToBeWritten(IjLibrary library) {
+    if (buckOutPathConverter.hasBuckOutPathForGeneratedProjectFiles()) {
+      library = buckOutPathConverter.convert(library);
+    }
+
+    return IjLibrary.builder()
+        .setName(library.getName())
+        .setType(library.getType())
+        .setLevel(library.getLevel())
+        .setBinaryJars(
+            library.getBinaryJars().stream()
+                .map(projectPaths::getProjectRelativePath)
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())))
+        .setClassPaths(
+            library.getClassPaths().stream()
+                .map(projectPaths::getProjectRelativePath)
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())))
+        .setSourceJars(
+            library.getSourceJars().stream()
+                .map(projectPaths::getProjectRelativePath)
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())))
+        .setJavadocUrls(library.getJavadocUrls())
+        .build();
+  }
+
   private void writeLibrary(IjLibrary library) throws IOException {
     ST contents = null;
     if (library.getType() == IjLibrary.Type.DEFAULT) {
@@ -319,26 +348,12 @@ public class IjProjectWriter {
       return;
     }
 
-    if (buckOutPathConverter.hasBuckOutPathForGeneratedProjectFiles()) {
-      library = buckOutPathConverter.convert(library);
-    }
+    library = prepareLibraryToBeWritten(library);
 
     contents.add("name", library.getName());
-    contents.add(
-        "binaryJars",
-        library.getBinaryJars().stream()
-            .map(projectPaths::getProjectRelativePath)
-            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
-    contents.add(
-        "classPaths",
-        library.getClassPaths().stream()
-            .map(projectPaths::getProjectRelativePath)
-            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
-    contents.add(
-        "sourceJars",
-        library.getSourceJars().stream()
-            .map(projectPaths::getProjectRelativePath)
-            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
+    contents.add("binaryJars", library.getBinaryJars());
+    contents.add("classPaths", library.getClassPaths());
+    contents.add("sourceJars", library.getSourceJars());
     contents.add("javadocUrls", library.getJavadocUrls());
     // TODO(mkosiba): support res and assets for aar.
 

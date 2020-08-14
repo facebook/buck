@@ -65,13 +65,17 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
     if (dummyRDotJavaClassPath.isPresent()) {
       BuildTarget dummyRDotJavaTarget =
           target.getBuildTarget().withFlavors(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR);
-      IjLibrary extraLibraryDependency =
+      IjLibrary dummyRDotJavaLibrary =
           IjLibrary.builder()
+              .setLevel(
+                  projectConfig.isModuleLibraryEnabled()
+                      ? IjLibrary.Level.MODULE
+                      : IjLibrary.Level.PROJECT)
               .setBinaryJars(ImmutableSet.of(dummyRDotJavaClassPath.get()))
               .setTargets(ImmutableSet.of(dummyRDotJavaTarget))
               .setName(Util.intelliJLibraryName(dummyRDotJavaTarget))
               .build();
-      context.addExtraLibraryDependency(extraLibraryDependency);
+      context.addExtraLibraryDependency(dummyRDotJavaLibrary);
       context.addExtraModuleDependency(dummyRDotJavaClassPath.get());
     }
 

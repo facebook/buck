@@ -150,6 +150,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testVersion2BuckProjectWithExtraModuleLibraries() throws IOException {
+    runBuckProjectAndVerify("project_with_extra_module_libraries");
+  }
+
+  @Test
   public void testVersion2BuckProjectWithExtraOutputModules() throws IOException {
     runBuckProjectAndVerify("project_with_extra_output_modules");
   }

@@ -37,6 +37,11 @@ public abstract class IjLibrary implements IjProjectElement {
     KOTLIN_JAVA_RUNTIME
   }
 
+  public enum Level {
+    PROJECT,
+    MODULE
+  }
+
   @Override
   public abstract String getName();
 
@@ -59,7 +64,7 @@ public abstract class IjLibrary implements IjProjectElement {
   public abstract ImmutableSet<Path> getSourceDirs();
 
   @Value.Check
-  protected void eitherBinaryJarOrClassPathPresent() {
+  protected void eitherBinaryJarOrClassPathPresentForDefaultLibrary() {
     if (getType() == Type.DEFAULT) {
       // IntelliJ library should have a binary jar or classpath, but we also allow it to have an
       // optional res folder so that resources can be loaded properly.
@@ -67,10 +72,16 @@ public abstract class IjLibrary implements IjProjectElement {
           getClassPaths().stream().anyMatch(input -> !input.endsWith("res"));
 
       Preconditions.checkArgument(!getBinaryJars().isEmpty() ^ hasClasspathsWithoutRes);
-    } else if (getType() == Type.KOTLIN_JAVA_RUNTIME) {
+    }
+  }
+
+  @Value.Check
+  protected void emptyBodyForKotlinJavaRuntime() {
+    if (getType() == Type.KOTLIN_JAVA_RUNTIME) {
       // KotlinJavaRuntime is not generated from a target and it depends on an external template
       // file so all those properties should be empty
       Preconditions.checkArgument(getTargets().isEmpty());
+      Preconditions.checkArgument(getLevel() == Level.PROJECT);
       Preconditions.checkArgument(getBinaryJars().isEmpty());
       Preconditions.checkArgument(getClassPaths().isEmpty());
       Preconditions.checkArgument(getSourceJars().isEmpty());
@@ -91,13 +102,22 @@ public abstract class IjLibrary implements IjProjectElement {
       } else if (dependencyType.equals(DependencyType.RUNTIME)) {
         scope = IjDependencyListBuilder.Scope.RUNTIME;
       }
-      dependencyListBuilder.addLibrary(getName(), scope, false /* exported */);
+      if (getLevel() == Level.PROJECT) {
+        dependencyListBuilder.addLibrary(getName(), scope, false /* exported */);
+      } else {
+        dependencyListBuilder.addModuleLibrary(getName(), scope, false /* exported */, this);
+      }
     }
   }
 
   @Value.Default
   public Type getType() {
     return Type.DEFAULT;
+  }
+
+  @Value.Default
+  public Level getLevel() {
+    return Level.PROJECT;
   }
 
   public static Builder builder() {

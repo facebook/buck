@@ -17,6 +17,8 @@
 package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.features.project.intellij.model.IjLibrary;
+import com.facebook.buck.features.project.intellij.model.IjProjectElement;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
@@ -51,7 +53,8 @@ public class IjDependencyListBuilder {
   /** Set of types supported by IntelliJ for the "orderEntry" element. */
   public enum Type {
     MODULE("module"),
-    LIBRARY("library");
+    LIBRARY("library"),
+    MODULE_LIBRARY("module-library");
 
     private final String value;
 
@@ -69,6 +72,7 @@ public class IjDependencyListBuilder {
     // Declaration order defines sorting order.
     MODULE,
     LIBRARY,
+    MODULE_LIBRARY,
     SOURCE_FOLDER,
     COMPILED_SHADOW
   }
@@ -98,6 +102,15 @@ public class IjDependencyListBuilder {
     @Nullable
     public DependencyEntryData getLibrary() {
       if (getType().equals(Type.LIBRARY)) {
+        return getData().get();
+      } else {
+        return null;
+      }
+    }
+
+    @Nullable
+    public DependencyEntryData getModuleLibrary() {
+      if (getType().equals(Type.MODULE_LIBRARY)) {
         return getData().get();
       } else {
         return null;
@@ -136,6 +149,9 @@ public class IjDependencyListBuilder {
     public abstract Scope getScope();
 
     public abstract boolean getExported();
+
+    @Nullable
+    public abstract IjProjectElement getElement();
   }
 
   private ImmutableSet.Builder<DependencyEntry> builder;
@@ -149,7 +165,7 @@ public class IjDependencyListBuilder {
         ImmutableDependencyEntry.ofImpl(
             Type.MODULE,
             SortOrder.MODULE,
-            Optional.of(ImmutableDependencyEntryData.ofImpl(name, scope, exported))));
+            Optional.of(ImmutableDependencyEntryData.ofImpl(name, scope, exported, null))));
   }
 
   public void addCompiledShadow(String name) {
@@ -157,7 +173,7 @@ public class IjDependencyListBuilder {
         ImmutableDependencyEntry.ofImpl(
             Type.LIBRARY,
             SortOrder.COMPILED_SHADOW,
-            Optional.of(ImmutableDependencyEntryData.ofImpl(name, Scope.PROVIDED, true))));
+            Optional.of(ImmutableDependencyEntryData.ofImpl(name, Scope.PROVIDED, true, null))));
   }
 
   public void addLibrary(String name, Scope scope, boolean exported) {
@@ -165,7 +181,15 @@ public class IjDependencyListBuilder {
         ImmutableDependencyEntry.ofImpl(
             Type.LIBRARY,
             SortOrder.LIBRARY,
-            Optional.of(ImmutableDependencyEntryData.ofImpl(name, scope, exported))));
+            Optional.of(ImmutableDependencyEntryData.ofImpl(name, scope, exported, null))));
+  }
+
+  public void addModuleLibrary(String name, Scope scope, boolean exported, IjLibrary library) {
+    builder.add(
+        ImmutableDependencyEntry.ofImpl(
+            Type.MODULE_LIBRARY,
+            SortOrder.MODULE_LIBRARY,
+            Optional.of(ImmutableDependencyEntryData.ofImpl(name, scope, exported, library))));
   }
 
   public ImmutableSet<DependencyEntry> build() {

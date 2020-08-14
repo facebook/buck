@@ -103,7 +103,10 @@ public class IjProjectTemplateDataPreparer {
     this.projectPaths = projectConfig.getProjectPaths();
     this.sourceRootSimplifier = new IjSourceRootSimplifier(javaPackageFinder);
     this.modulesToBeWritten = createModulesToBeWritten(moduleGraph);
-    this.librariesToBeWritten = moduleGraph.getLibraries();
+    this.librariesToBeWritten =
+        moduleGraph.getLibraries().stream()
+            .filter(library -> library.getLevel() == IjLibrary.Level.PROJECT)
+            .collect(ImmutableSet.toImmutableSet());
     this.androidManifestParser = androidManifestParser;
     this.filesystemTraversalBoundaryPaths =
         createFilesystemTraversalBoundaryPathSet(modulesToBeWritten);
@@ -295,13 +298,19 @@ public class IjProjectTemplateDataPreparer {
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
-  public ImmutableSet<IjDependencyListBuilder.DependencyEntry> getDependencies(IjModule module) {
+  public ImmutableSet<IjDependencyListBuilder.DependencyEntry> getDependencies(
+      IjModule module, @Nullable Function<IjLibrary, IjLibrary> moduleLibraryTransformer) {
     ImmutableMap<IjProjectElement, DependencyType> deps = moduleGraph.getDepsFor(module);
     IjDependencyListBuilder dependencyListBuilder = new IjDependencyListBuilder();
 
     for (Map.Entry<IjProjectElement, DependencyType> entry : deps.entrySet()) {
       IjProjectElement element = entry.getKey();
       DependencyType dependencyType = entry.getValue();
+      if (moduleLibraryTransformer != null
+          && element instanceof IjLibrary
+          && ((IjLibrary) element).getLevel() == IjLibrary.Level.MODULE) {
+        element = moduleLibraryTransformer.apply((IjLibrary) element);
+      }
       element.addAsDependency(dependencyType, dependencyListBuilder);
     }
     return dependencyListBuilder.build();

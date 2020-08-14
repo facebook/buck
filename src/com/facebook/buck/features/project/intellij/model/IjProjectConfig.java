@@ -125,6 +125,8 @@ public abstract class IjProjectConfig {
 
   public abstract Optional<Path> getKotlinJavaRuntimeLibraryTemplatePath();
 
+  public abstract boolean isModuleLibraryEnabled();
+
   public abstract Optional<String> getBuckOutPathForGeneratedProjectFiles();
 
   public static Builder builder() {

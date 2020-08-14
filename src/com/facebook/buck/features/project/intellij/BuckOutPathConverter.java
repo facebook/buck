@@ -85,6 +85,7 @@ public class BuckOutPathConverter {
     return IjLibrary.builder()
         .setName(library.getName())
         .setType(library.getType())
+        .setLevel(library.getLevel())
         .setBinaryJars(
             library.getBinaryJars().stream()
                 .map(this::convert)
