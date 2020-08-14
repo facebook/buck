@@ -32,6 +32,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -80,6 +81,7 @@ public class AppleResourceProcessing {
       boolean ibtoolModuleFlag,
       BuildTarget buildTarget,
       Optional<String> binaryName,
+      RelPath cellPath,
       boolean withDownwardApi) {
     ImmutableList<String> modifiedFlags =
         ImmutableList.<String>builder().addAll(BASE_IBTOOL_FLAGS).addAll(ibtoolFlags).build();
@@ -103,6 +105,7 @@ public class AppleResourceProcessing {
                   .build(),
               sourcePath,
               compiledStoryboardPath.getPath(),
+              cellPath,
               withDownwardApi));
 
       stepsBuilder.add(
@@ -117,6 +120,7 @@ public class AppleResourceProcessing {
                   .build(),
               compiledStoryboardPath.getPath(),
               destinationPath.getParent(),
+              cellPath,
               withDownwardApi));
 
     } else {
@@ -136,6 +140,7 @@ public class AppleResourceProcessing {
               ImmutableList.<String>builder().addAll(modifiedFlags).add("--compile").build(),
               sourcePath,
               compiledStoryboardPath,
+              cellPath,
               withDownwardApi));
     }
   }
@@ -193,6 +198,8 @@ public class AppleResourceProcessing {
           ibtoolModuleFlag,
           buildTarget,
           binaryName,
+          ProjectFilesystemUtils.relativize(
+              projectFilesystem.getRootPath(), context.getBuildCellRootPath()),
           withDownwardApi);
     }
   }
@@ -266,6 +273,7 @@ public class AppleResourceProcessing {
       boolean ibtoolModuleFlag,
       BuildTarget buildTarget,
       Optional<String> binaryName,
+      RelPath cellPath,
       boolean withDownwardApi) {
     String sourcePathExtension =
         Files.getFileExtension(sourcePath.toString()).toLowerCase(Locale.US);
@@ -298,6 +306,7 @@ public class AppleResourceProcessing {
             ibtoolModuleFlag,
             buildTarget,
             binaryName,
+            cellPath,
             withDownwardApi);
         break;
       case "xib":
@@ -318,6 +327,7 @@ public class AppleResourceProcessing {
                     .build(),
                 sourcePath,
                 compiledNibPath,
+                cellPath,
                 withDownwardApi));
         break;
       default:
@@ -380,6 +390,8 @@ public class AppleResourceProcessing {
         ibtoolModuleFlag,
         buildTarget,
         binaryName,
+        ProjectFilesystemUtils.relativize(
+            projectFilesystem.getRootPath(), context.getBuildCellRootPath()),
         withDownwardApi);
     addStepsToCopyFilesNotNeedingProcessing(
         context.getSourcePathResolver(),
@@ -508,6 +520,7 @@ public class AppleResourceProcessing {
       boolean ibtoolModuleFlag,
       BuildTarget buildTarget,
       Optional<String> binaryName,
+      RelPath cellPath,
       boolean withDownwardApi) {
     for (SourcePathWithAppleBundleDestination fileWithDestination : resources.getResourceFiles()) {
       AbsPath resolvedFilePath =
@@ -529,6 +542,7 @@ public class AppleResourceProcessing {
           ibtoolModuleFlag,
           buildTarget,
           binaryName,
+          cellPath,
           withDownwardApi);
       if (fileWithDestination.getCodesignOnCopy()) {
         codeSignOnCopyPathsBuilder.add(destinationPath);

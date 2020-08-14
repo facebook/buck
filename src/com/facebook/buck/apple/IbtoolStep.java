@@ -16,9 +16,9 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -31,7 +31,7 @@ import java.util.Optional;
  * {@link IsolatedShellStep} implementation which invokes Apple's {@code ibtool} utility to compile
  * {@code XIB} files to {@code NIB} files.
  */
-class IbtoolStep extends ShellStep {
+class IbtoolStep extends IsolatedShellStep {
 
   private final ProjectFilesystem filesystem;
   private final ImmutableMap<String, String> environment;
@@ -49,8 +49,9 @@ class IbtoolStep extends ShellStep {
       List<String> flags,
       Path input,
       Path output,
+      RelPath cellPath,
       boolean withDownwardApi) {
-    super(filesystem.getRootPath(), withDownwardApi);
+    super(filesystem.getRootPath(), cellPath, withDownwardApi);
     this.filesystem = filesystem;
     this.environment = environment;
     this.ibtoolCommand = ImmutableList.copyOf(ibtoolCommand);
@@ -61,7 +62,7 @@ class IbtoolStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
 
     commandBuilder.addAll(ibtoolCommand);
