@@ -26,6 +26,7 @@ java_library_with_plugins(
         "ShellDescriptionsProvider.java",
         "TestSuite.java",
         "TestSuiteDescription.java",
+        "WindowsCmdExeEscaper.java",
     ],
     tests = [
         "//test/com/facebook/buck/shell:shell",
@@ -101,6 +102,7 @@ java_library(
         "Shell.java",
         "ShellStep.java",
         "SymlinkFilesIntoDirectoryStep.java",
+        "WindowsCmdExeEscaper.java",
     ],
     tests = [
         "//test/com/facebook/buck/shell:shell",
