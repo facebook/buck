@@ -84,7 +84,8 @@ public class ConfiguredQueryCommandIntegrationTest {
             "//bin:mac-bin",
             "--output-attribute",
             "buck.type",
-            "--output-attribute",
+            // Also test `-a` alias
+            "-a",
             "srcs");
     assertJSONOutputMatchesFileContents("stdout-basic-attribute-printing.json", result, workspace);
   }

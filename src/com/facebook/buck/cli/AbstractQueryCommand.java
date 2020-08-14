@@ -118,7 +118,8 @@ public abstract class AbstractQueryCommand<
               + "regular expressions. Multiple attributes may be selected by specifying this option "
               + "multiple times.",
       handler = SingleStringSetOptionHandler.class,
-      forbids = {"--output-attributes"})
+      forbids = {"--output-attributes"},
+      aliases = {"-a"})
   @VisibleForTesting
   Supplier<ImmutableSet<String>> outputAttributesDoNotUseDirectly =
       Suppliers.ofInstance(ImmutableSet.of());

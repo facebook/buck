@@ -660,7 +660,8 @@ public class QueryCommandIntegrationTest {
             "//example:one + //example:four",
             "--output-attribute",
             "name",
-            "--output-attribute",
+            // Also test `-a` alias
+            "-a",
             "deps");
     result.assertSuccess();
     assertThat(
