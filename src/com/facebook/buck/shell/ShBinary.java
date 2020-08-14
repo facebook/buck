@@ -42,6 +42,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -69,6 +70,8 @@ import java.util.stream.Stream;
 
 public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule, HasRuntimeDeps {
+
+  private static final Logger LOG = Logger.get(ShBinary.class);
 
   private static final Path TEMPLATE =
       Paths.get(
@@ -143,7 +146,17 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       AbsPath cellPath = cellPathResolver.getCellPath(alias.getValue());
       relativePath = projectFilesystem.getRootPath().relativize(cellPath);
       cellsPathsStringsBuilder.add(Escaper.BASH_ESCAPER.apply(relativePath.toString()));
-      cellsNamesBuilder.add(Escaper.BASH_ESCAPER.apply(alias.getKey().get()));
+
+      String cellName = Escaper.BASH_ESCAPER.apply(alias.getKey().get());
+      // MOE::begin_strip
+      // TODO(bobyf) remove the following. This is being used to debug a weird behaviour
+      if (cellName.contains("header ") || cellName.contains(" ")) {
+        LOG.warn(
+            "Cell name contains \"header\" or spaces. Cell name is `%s`, the alias is `%s` for canonical cell `%s`",
+            cellName, alias.getKey().get(), alias.getValue());
+      }
+      // MOE::end_strip
+      cellsNamesBuilder.add(cellName);
     }
 
     // Generate an .sh file that builds up an environment and invokes the user's script.
