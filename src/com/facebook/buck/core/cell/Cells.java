@@ -19,7 +19,6 @@ package com.facebook.buck.core.cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -55,11 +54,9 @@ public class Cells {
    * required to declare a mapping for all cell names.
    */
   public ImmutableList<Cell> getAllCells() {
-    return RichStream.from(rootCell.getKnownRootsOfAllCells())
-        .concat(RichStream.of(rootCell.getRoot()))
-        .distinct()
+    return rootCell.getKnownRootsOfAllCells().stream()
         .map(getCellProvider()::getCellByPath)
-        .toImmutableList();
+        .collect(ImmutableList.toImmutableList());
   }
 
   public CellProvider getCellProvider() {
