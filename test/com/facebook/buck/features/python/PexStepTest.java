@@ -24,12 +24,15 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -100,6 +103,8 @@ public class PexStepTest {
                   .build())
           .build();
   private final ImmutableSortedSet<String> PRELOAD_LIBRARIES = ImmutableSortedSet.of();
+  private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+  private final StepExecutionContext context = TestExecutionContext.newInstance();
 
   @Rule public TemporaryPaths tmpDir = new TemporaryPaths();
 
@@ -107,7 +112,9 @@ public class PexStepTest {
   public void testCommandLine() {
     PexStep step =
         new PexStep(
-            new FakeProjectFilesystem(),
+            projectFilesystem,
+            ProjectFilesystemUtils.relativize(
+                projectFilesystem.getRootPath(), context.getBuildCellRootPath()),
             PEX_ENVIRONMENT,
             PEX_COMMAND,
             PYTHON_PATH,
@@ -117,8 +124,7 @@ public class PexStepTest {
             COMPONENTS,
             PRELOAD_LIBRARIES,
             false);
-    String command =
-        Joiner.on(" ").join(step.getShellCommandInternal(TestExecutionContext.newInstance()));
+    String command = Joiner.on(" ").join(step.getShellCommandInternal(context));
 
     assertThat(command, startsWith(Joiner.on(" ").join(PEX_COMMAND)));
     assertThat(command, containsString("--python " + PYTHON_PATH));
@@ -131,7 +137,9 @@ public class PexStepTest {
   public void testCommandLineNoZipSafe() {
     PexStep step =
         new PexStep(
-            new FakeProjectFilesystem(),
+            projectFilesystem,
+            ProjectFilesystemUtils.relativize(
+                projectFilesystem.getRootPath(), context.getBuildCellRootPath()),
             PEX_ENVIRONMENT,
             PEX_COMMAND,
             PYTHON_PATH,
@@ -144,8 +152,7 @@ public class PexStepTest {
                 .build(),
             PRELOAD_LIBRARIES,
             false);
-    String command =
-        Joiner.on(" ").join(step.getShellCommandInternal(TestExecutionContext.newInstance()));
+    String command = Joiner.on(" ").join(step.getShellCommandInternal(context));
 
     assertThat(command, containsString("--no-zip-safe"));
   }
@@ -167,9 +174,14 @@ public class PexStepTest {
     Files.write(file2, "print(\"file2\")".getBytes(StandardCharsets.UTF_8));
     Files.write(childFile, "print(\"child\")".getBytes(StandardCharsets.UTF_8));
 
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot());
+
     PexStep step =
         new PexStep(
-            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
+            projectFilesystem,
+            ProjectFilesystemUtils.relativize(
+                projectFilesystem.getRootPath(), context.getBuildCellRootPath()),
             PEX_ENVIRONMENT,
             PEX_COMMAND,
             PYTHON_PATH,
@@ -226,7 +238,9 @@ public class PexStepTest {
   public void testArgs() {
     PexStep step =
         new PexStep(
-            new FakeProjectFilesystem(),
+            projectFilesystem,
+            ProjectFilesystemUtils.relativize(
+                projectFilesystem.getRootPath(), context.getBuildCellRootPath()),
             PEX_ENVIRONMENT,
             ImmutableList.<String>builder().add("build").add("--some", "--args").build(),
             PYTHON_PATH,
@@ -236,8 +250,6 @@ public class PexStepTest {
             COMPONENTS,
             PRELOAD_LIBRARIES,
             false);
-    assertThat(
-        step.getShellCommandInternal(TestExecutionContext.newInstance()),
-        hasItems("--some", "--args"));
+    assertThat(step.getShellCommandInternal(context), hasItems("--some", "--args"));
   }
 }

@@ -34,6 +34,7 @@ import com.facebook.buck.features.python.toolchain.PythonEnvironment;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
@@ -140,6 +141,8 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     steps.add(
         new PexStep(
             getProjectFilesystem(),
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
             builder.getEnvironment(resolver),
             ImmutableList.<String>builder()
                 .addAll(builder.getCommandPrefix(resolver))

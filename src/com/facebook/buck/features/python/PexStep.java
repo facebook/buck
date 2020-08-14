@@ -16,10 +16,11 @@
 
 package com.facebook.buck.features.python;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
@@ -30,7 +31,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class PexStep extends ShellStep {
+public class PexStep extends IsolatedShellStep {
 
   // The PEX builder environment variables.
   private final ImmutableMap<String, String> environment;
@@ -54,6 +55,7 @@ public class PexStep extends ShellStep {
 
   public PexStep(
       ProjectFilesystem filesystem,
+      RelPath cellPath,
       ImmutableMap<String, String> environment,
       ImmutableList<String> commandPrefix,
       Path pythonPath,
@@ -63,7 +65,7 @@ public class PexStep extends ShellStep {
       PythonResolvedPackageComponents components,
       ImmutableSet<String> preloadLibraries,
       boolean withDownwardApi) {
-    super(filesystem.getRootPath(), withDownwardApi);
+    super(filesystem.getRootPath(), cellPath, withDownwardApi);
 
     this.environment = environment;
     this.commandPrefix = commandPrefix;
@@ -108,7 +110,7 @@ public class PexStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.addAll(commandPrefix);
     builder.add("--python");
