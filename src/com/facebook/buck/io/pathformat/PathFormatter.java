@@ -16,9 +16,9 @@
 
 package com.facebook.buck.io.pathformat;
 
+import com.facebook.buck.core.filesystems.BuckUnixPath;
 import com.facebook.buck.core.filesystems.PathWrapper;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /** Utilities to format paths with predictable path separators. */
 public class PathFormatter {
@@ -26,11 +26,15 @@ public class PathFormatter {
   private PathFormatter() {}
 
   public static String pathWithUnixSeparators(String path) {
-    return pathWithUnixSeparators(Paths.get(path));
+    return path.replace('\\', '/');
   }
 
   public static String pathWithUnixSeparators(Path path) {
-    return path.toString().replace('\\', '/');
+    if (path instanceof BuckUnixPath) {
+      // Always uses unix slashes
+      return path.toString();
+    }
+    return pathWithUnixSeparators(path.toString());
   }
 
   public static String pathWithUnixSeparators(PathWrapper path) {
