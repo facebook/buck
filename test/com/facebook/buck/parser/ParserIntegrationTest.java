@@ -726,6 +726,18 @@ public class ParserIntegrationTest {
   }
 
   @Test
+  @Parameters(method = "syntaxes")
+  public void select_introspection(Syntax syntax) throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "select_introspection", temporaryFolder);
+    workspace.setUp();
+    workspace
+        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax=" + syntax)
+        .assertSuccess();
+  }
+
+  @Test
   public void getBasePath() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

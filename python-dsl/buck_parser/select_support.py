@@ -14,6 +14,8 @@
 
 from __future__ import absolute_import, division, print_function, with_statement
 
+from typing import Any, Callable, List
+
 
 class SelectorValue:
     """
@@ -78,3 +80,37 @@ def select_equal(this, that):
         return False
 
     return this.items() == that.items()
+
+
+def select_map(selector_list, map_fn):
+    # type: (SelectorList, Callable[[Any], Any]) -> SelectorList
+    """Iterate and modify values in the select expression.
+
+    Returns a select with the values modified.
+    """
+    new_items = []
+    for item in selector_list.items():
+        if isinstance(item, SelectorValue):
+            new_conditions = {}
+            for key, value in item.conditions().items():
+                new_conditions[key] = map_fn(value)
+            new_items.append(SelectorValue(new_conditions, item.no_match_message()))
+        else:
+            new_items.append(map_fn(item))
+
+    return SelectorList(new_items)
+
+
+def select_test(selector_list, test_fn):
+    # type: (SelectorList, Callable[[Any], Any]) -> List[bool]
+    """Check the values in the select expression based on the test function.
+    """
+    bools = []
+    for item in selector_list.items():
+        if isinstance(item, SelectorValue):
+            for value in item.conditions().values():
+                bools.append(test_fn(value))
+        else:
+            bools.append(test_fn(item))
+
+    return bools

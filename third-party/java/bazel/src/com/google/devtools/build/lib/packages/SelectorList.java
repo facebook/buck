@@ -124,7 +124,7 @@ public final class SelectorList implements StarlarkValue, HasBinary {
    *
    * @throws EvalException if all values don't have the same underlying type
    */
-  static SelectorList of(Iterable<?> values) throws EvalException {
+  public static SelectorList of(Iterable<?> values) throws EvalException {
     Preconditions.checkArgument(!Iterables.isEmpty(values));
     ImmutableList.Builder<Object> elements = ImmutableList.builder();
     Object firstValue = null;

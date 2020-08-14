@@ -31,7 +31,12 @@ import com.google.devtools.build.lib.syntax.StarlarkCallable;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.Tuple;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.Param;
@@ -235,5 +240,79 @@ public abstract class AbstractSkylarkFunctions {
     }
 
     return !(it1.hasNext() || it2.hasNext());
+  }
+
+  /**
+   * Exposes a {@code select_map} for Skylark parser.
+   *
+   * <p>This allows users to introspect and manipulate values in a select expression. The mapping
+   * function operates on each individual value in the select expression, and generates a new select
+   * expression with the updated values.
+   */
+  @StarlarkMethod(
+      name = "select_map",
+      doc = "Iterate over and modify a select expression using the map function",
+      parameters = {
+        @Param(name = "selector_list", type = SelectorList.class),
+        @Param(name = "func", type = StarlarkCallable.class)
+      },
+      useStarlarkThread = true)
+  public SelectorList select_map(
+      SelectorList selectorList, StarlarkCallable func, StarlarkThread thread)
+      throws EvalException, InterruptedException {
+    List<Object> new_elements = new ArrayList<>();
+    for (Object element : selectorList.getElements()) {
+      if (element instanceof SelectorValue) {
+        SelectorValue sval = (SelectorValue) element;
+        Map<Object, Object> dictionary = new HashMap<>();
+
+        for (Map.Entry<?, ?> entry : sval.getDictionary().entrySet()) {
+          dictionary.put(
+              entry.getKey(),
+              Starlark.call(thread, func, Arrays.asList(entry.getValue()), ImmutableMap.of()));
+        }
+
+        new_elements.add(new SelectorValue(dictionary, sval.getNoMatchError()));
+      } else {
+        new_elements.add(Starlark.call(thread, func, Arrays.asList(element), ImmutableMap.of()));
+      }
+    }
+    return SelectorList.of(new_elements);
+  }
+
+  /**
+   * Exposes a {@code select_test} for Skylark parser.
+   *
+   * <p>This allows users to introspect and test values in a select expression. Users can then use
+   * either of the builtins {@code any()} or {@code all()} to enforce their constraints in macros.
+   */
+  @StarlarkMethod(
+      name = "select_test",
+      doc = "Iterate over and test valueus in the select expression",
+      parameters = {
+        @Param(name = "selector_list", type = SelectorList.class),
+        @Param(name = "func", type = StarlarkCallable.class)
+      },
+      useStarlarkThread = true)
+  public List<Boolean> select_test(
+      SelectorList selectorList, StarlarkCallable func, StarlarkThread thread)
+      throws EvalException, InterruptedException {
+    List<Boolean> result = new ArrayList<>();
+    for (Object element : selectorList.getElements()) {
+      if (element instanceof SelectorValue) {
+        SelectorValue sval = (SelectorValue) element;
+
+        for (Map.Entry<?, ?> entry : sval.getDictionary().entrySet()) {
+          result.add(
+              (Boolean)
+                  Starlark.call(thread, func, Arrays.asList(entry.getValue()), ImmutableMap.of()));
+        }
+
+      } else {
+        result.add(
+            (Boolean) Starlark.call(thread, func, Arrays.asList(element), ImmutableMap.of()));
+      }
+    }
+    return result;
   }
 }

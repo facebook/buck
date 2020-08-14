@@ -60,7 +60,13 @@ from .glob_watchman import SyncCookieState, glob_watchman
 from .json_encoder import BuckJSONEncoder
 from .module_whitelist import ImportWhitelistManager
 from .profiler import Profiler, Tracer, emit_trace, scoped_trace, traced
-from .select_support import SelectorList, SelectorValue, select_equal
+from .select_support import (
+    SelectorList,
+    SelectorValue,
+    select_equal,
+    select_map as _select_map,
+    select_test as _select_test,
+)
 from .struct import create_struct_class, struct
 from .util import (
     Diagnostic,
@@ -760,6 +766,32 @@ def select(conditions, no_match_message=None, build_env=None):
 @provide_for_build
 def select_equal_internal(this, that, build_env=None):
     return select_equal(this, that)
+
+
+@provide_for_build
+def select_map(selector_list, map_fn, build_env=None):
+    """Create a new select with updated values.
+
+    :param selector_list: The select expression to modify
+    :param map_fn: Function that accepts a single argument, the value to operate on
+
+    :return: select with updated values.
+    :rtype: select
+    """
+    return _select_map(selector_list, map_fn)
+
+
+@provide_for_build
+def select_test(selector_list, map_fn, build_env=None):
+    """Test a select's values.
+
+    :param selector_list: The select expression to test
+    :param map_fn: Function that accepts a single argument, the value to test
+
+    :return: unordered list of booleans, each representing a checked value.
+    :rtype: List[bool]
+    """
+    return _select_test(selector_list, map_fn)
 
 
 @provide_as_native_rule
