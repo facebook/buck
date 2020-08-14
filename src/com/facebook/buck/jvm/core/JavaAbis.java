@@ -16,12 +16,9 @@
 
 package com.facebook.buck.jvm.core;
 
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 
 /** Provides some utilities for dealing with Java abis and abi rules. */
@@ -86,10 +83,5 @@ public class JavaAbis {
     Preconditions.checkArgument(isAbiTarget(abiTarget));
     return abiTarget.withoutFlavors(
         CLASS_ABI_FLAVOR, SOURCE_ABI_FLAVOR, SOURCE_ONLY_ABI_FLAVOR, VERIFIED_SOURCE_ABI_FLAVOR);
-  }
-
-  public static RelPath getTmpGenPathForSourceAbi(
-      ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
-    return BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "__%s_source_abi_tmp__");
   }
 }

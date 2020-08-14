@@ -34,7 +34,6 @@ import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
@@ -76,7 +75,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 
 public class KotlincToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
 
@@ -95,7 +93,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @AddToRuleKey private final boolean withDownwardApi;
 
   private final ImmutableSortedSet<Path> kotlinHomeLibraries;
-  @Nullable private final Path abiGenerationPlugin;
 
   private static final String PLUGIN = "-P";
   private static final String APT_MODE = "aptMode=";
@@ -124,7 +121,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   KotlincToJarStepFactory(
       Kotlinc kotlinc,
       ImmutableSortedSet<Path> kotlinHomeLibraries,
-      @Nullable Path abiGenerationPlugin,
       ImmutableList<String> extraKotlincArguments,
       ImmutableMap<SourcePath, ImmutableMap<String, String>> kotlinCompilerPlugins,
       ImmutableList<SourcePath> friendPaths,
@@ -136,7 +132,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       boolean withDownwardApi) {
     this.kotlinc = kotlinc;
     this.kotlinHomeLibraries = kotlinHomeLibraries;
-    this.abiGenerationPlugin = abiGenerationPlugin;
     this.extraKotlincArguments = extraKotlincArguments;
     this.kotlinCompilerPlugins = kotlinCompilerPlugins;
     this.friendPaths = friendPaths;
@@ -334,16 +329,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             extraArguments.add("-jvm-target");
             extraArguments.add(target);
           });
-
-      AbsPath tmpSourceAbiFolder;
-      if (abiGenerationPlugin != null) {
-        tmpSourceAbiFolder =
-            projectFilesystem.resolve(
-                JavaAbis.getTmpGenPathForSourceAbi(projectFilesystem, invokingRule));
-        extraArguments.add("-Xplugin=" + abiGenerationPlugin);
-        extraArguments.add(
-            "-P", "plugin:org.jetbrains.kotlin.jvm.abi:outputDir=" + tmpSourceAbiFolder);
-      }
 
       steps.add(
           new KotlincStep(
