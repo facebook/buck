@@ -438,7 +438,9 @@ public class OcamlBuildStep implements Step {
           new OcamlYaccStep(
               workingDirectory,
               withDownwardApi,
-              getResolver(),
+              ocamlContext.getYaccCompiler().get().getCommandPrefix(getResolver()),
+              ProjectFilesystemUtils.relativize(
+                  filesystem.getRootPath(), context.getBuildCellRootPath()),
               new OcamlYaccStep.Args(
                   ocamlContext.getYaccCompiler().get(),
                   getResolver().getAbsolutePath(output).getPath(),

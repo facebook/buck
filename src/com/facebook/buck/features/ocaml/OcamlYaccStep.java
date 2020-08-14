@@ -16,18 +16,18 @@
 
 package com.facebook.buck.features.ocaml;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 /** A yacc step which processes .mly files and outputs .ml and mli files */
-public class OcamlYaccStep extends ShellStep {
+public class OcamlYaccStep extends IsolatedShellStep {
 
-  private final SourcePathResolverAdapter resolver;
+  private final ImmutableList<String> ocamlYaccCommand;
 
   public static class Args {
     public final Tool yaccCompiler;
@@ -46,11 +46,12 @@ public class OcamlYaccStep extends ShellStep {
   public OcamlYaccStep(
       AbsPath workingDirectory,
       boolean withDownwardApi,
-      SourcePathResolverAdapter resolver,
+      ImmutableList<String> ocamlYaccCommand,
+      RelPath cellPath,
       Args args) {
-    super(workingDirectory, withDownwardApi);
-    this.resolver = resolver;
+    super(workingDirectory, cellPath, withDownwardApi);
     this.args = args;
+    this.ocamlYaccCommand = ocamlYaccCommand;
   }
 
   @Override
@@ -59,9 +60,9 @@ public class OcamlYaccStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     return ImmutableList.<String>builder()
-        .addAll(args.yaccCompiler.getCommandPrefix(resolver))
+        .addAll(ocamlYaccCommand)
         .add("-b", OcamlUtil.stripExtension(args.output.toString()))
         .add(args.input.toString())
         .build();
