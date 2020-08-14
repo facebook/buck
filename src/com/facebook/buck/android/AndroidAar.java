@@ -173,7 +173,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             BuildCellRelativePath.fromCellRelativePath(
                 buildCellRootPath, filesystem, pathToOutputFile.getParent())));
     commands.add(
-        new ZipStep(
+        ZipStep.of(
             filesystem,
             pathToOutputFile.getPath(),
             ImmutableSet.of(),

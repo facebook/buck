@@ -141,7 +141,7 @@ public class PackageStringAssets extends AbstractBuildRule {
             context.getSourcePathResolver().getIdeallyRelativePath(rDotTxtPath),
             assetPathBuilder));
     steps.add(
-        new ZipStep(
+        ZipStep.of(
             getProjectFilesystem(),
             pathToAllLocalesStringAssetsZip,
             ImmutableSet.of(),
@@ -149,7 +149,7 @@ public class PackageStringAssets extends AbstractBuildRule {
             ZipCompressionLevel.MAX,
             pathToDirContainingAssetsDir));
     steps.add(
-        new ZipStep(
+        ZipStep.of(
             getProjectFilesystem(),
             pathToStringAssetsZip,
             locales.stream().map(assetPathBuilder).collect(ImmutableSet.toImmutableSet()),

@@ -89,7 +89,7 @@ public class ZipStepTest {
     Files.createFile(toZip.resolve("file3.txt").getPath());
 
     ZipStep step =
-        new ZipStep(
+        ZipStep.of(
             filesystem,
             Paths.get("zipstep/output.zip"),
             ImmutableSet.of(),
@@ -123,7 +123,7 @@ public class ZipStepTest {
     Files.createFile(toZip.resolve("file2.bin").getPath()); // To test file offset > 2**32.
 
     ZipStep step =
-        new ZipStep(
+        ZipStep.of(
             filesystem,
             Paths.get("zipstep/output.zip"),
             ImmutableSet.of(),
@@ -165,7 +165,7 @@ public class ZipStepTest {
     Files.createFile(toZip.resolve("file3.txt").getPath());
 
     ZipStep step =
-        new ZipStep(
+        ZipStep.of(
             filesystem,
             Paths.get("zipstep/output.zip"),
             ImmutableSet.of(Paths.get("zipdir/file2.txt")),
@@ -190,7 +190,7 @@ public class ZipStepTest {
     Files.createFile(toZip.resolve("child/file2.txt").getPath());
 
     ZipStep step =
-        new ZipStep(
+        ZipStep.of(
             filesystem,
             Paths.get("zipstep/output.zip"),
             ImmutableSet.of(),
@@ -225,7 +225,7 @@ public class ZipStepTest {
     CreateSymlinksForTests.createSymLink(path, target);
 
     ZipStep step =
-        new ZipStep(
+        ZipStep.of(
             filesystem,
             Paths.get("zipstep/output.zip"),
             ImmutableSet.of(),
@@ -252,7 +252,7 @@ public class ZipStepTest {
     }
 
     ZipStep step =
-        new ZipStep(
+        ZipStep.of(
             filesystem,
             Paths.get("zipstep"),
             ImmutableSet.of(),
@@ -272,7 +272,7 @@ public class ZipStepTest {
     Files.createFile(toZip.resolve("child/file1.txt").getPath());
 
     ZipStep step =
-        new ZipStep(
+        ZipStep.of(
             filesystem,
             Paths.get("zipstep/output.zip"),
             ImmutableSet.of(),
@@ -296,7 +296,7 @@ public class ZipStepTest {
     tmp.newFolder("zipdir/bar/");
 
     ZipStep step =
-        new ZipStep(
+        ZipStep.of(
             filesystem,
             Paths.get("zipstep/output.zip"),
             ImmutableSet.of(),
@@ -335,7 +335,7 @@ public class ZipStepTest {
     Files.write(toZip.resolve("file3.txt").getPath(), contents);
 
     ZipStep step =
-        new ZipStep(
+        ZipStep.of(
             filesystem,
             Paths.get("zipstep/output.zip"),
             ImmutableSet.of(),
@@ -367,7 +367,7 @@ public class ZipStepTest {
     Files.createFile(toZip.resolve("child/file.txt").getPath());
     AbsPath outputZip = parent.resolve("output.zip");
     ZipStep step =
-        new ZipStep(
+        ZipStep.of(
             filesystem,
             outputZip.getPath(),
             ImmutableSet.of(),
@@ -387,7 +387,7 @@ public class ZipStepTest {
   }
 
   @Test
-  public void zipMaintainsExecutablePermissions() throws IOException {
+  public void zipMaintainsExecutablePermissions() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     AbsPath parent = tmp.newFolder("zipstep");
@@ -403,7 +403,7 @@ public class ZipStepTest {
     Files.createFile(file.getPath(), PosixFilePermissions.asFileAttribute(filePermissions));
     AbsPath outputZip = parent.resolve("output.zip");
     ZipStep step =
-        new ZipStep(
+        ZipStep.of(
             filesystem,
             outputZip.getPath(),
             ImmutableSet.of(),
@@ -436,7 +436,7 @@ public class ZipStepTest {
     filesystem.touch(zipdir.resolve("file1"));
     filesystem.touch(zipdir.resolve("file2"));
     ZipStep step =
-        new ZipStep(filesystem, output, ImmutableSet.of(), false, ZipCompressionLevel.NONE, zipdir);
+        ZipStep.of(filesystem, output, ImmutableSet.of(), false, ZipCompressionLevel.NONE, zipdir);
     assertEquals(0, step.execute(context).getExitCode());
     ImmutableList<String> entries1 = getEntries(filesystem, output);
 
@@ -447,7 +447,7 @@ public class ZipStepTest {
     filesystem.touch(zipdir.resolve("file2"));
     filesystem.touch(zipdir.resolve("file1"));
     step =
-        new ZipStep(filesystem, output, ImmutableSet.of(), false, ZipCompressionLevel.NONE, zipdir);
+        ZipStep.of(filesystem, output, ImmutableSet.of(), false, ZipCompressionLevel.NONE, zipdir);
     assertEquals(0, step.execute(context).getExitCode());
     ImmutableList<String> entries2 = getEntries(filesystem, output);
 

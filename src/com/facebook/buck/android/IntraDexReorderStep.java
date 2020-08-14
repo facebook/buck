@@ -139,11 +139,11 @@ public class IntraDexReorderStep implements Step {
       Path outputPath = Paths.get(inputPath.toString().replace(inputSubDir, outputSubDir));
       // re-zip
       steps.add(
-          new ZipStep(
+          ZipStep.of(
               filesystem,
               outputPath,
-              /* paths */ ImmutableSet.of(),
-              /* junkPaths */ false,
+              ImmutableSet.of(),
+              false,
               ZipCompressionLevel.MAX,
               temp.getPath()));
     } else {

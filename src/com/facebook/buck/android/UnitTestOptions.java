@@ -94,7 +94,7 @@ public class UnitTestOptions extends ModernBuildRule<UnitTestOptions.Impl> {
 
       steps.add(RmStep.of(BuildCellRelativePath.of(jarPath)));
       steps.add(
-          new ZipStep(
+          ZipStep.of(
               filesystem,
               jarPath.getPath(),
               ImmutableSet.of(),

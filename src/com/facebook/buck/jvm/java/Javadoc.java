@@ -112,11 +112,11 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
     // Fast path: nothing to do so just create an empty zip and return.
     if (sources.isEmpty()) {
       steps.add(
-          new ZipStep(
+          ZipStep.of(
               getProjectFilesystem(),
               output.getPath(),
               ImmutableSet.of(),
-              /* junk paths */ false,
+              false,
               ZipCompressionLevel.NONE,
               output.getPath()));
       return steps.build();
@@ -183,11 +183,11 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
           }
         });
     steps.add(
-        new ZipStep(
+        ZipStep.of(
             getProjectFilesystem(),
             output.getPath(),
             ImmutableSet.of(),
-            /* junk paths */ false,
+            false,
             ZipCompressionLevel.DEFAULT,
             uncompressedOutputDir));
 

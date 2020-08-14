@@ -143,7 +143,7 @@ public class GenerateRDotJava extends AbstractBuildRule {
     RelPath rzipPath = getPathToRZip();
     steps.add(RmStep.of(BuildCellRelativePath.of(rzipPath)));
     steps.add(
-        new ZipStep(
+        ZipStep.of(
             projectFilesystem,
             rzipPath.getPath(),
             ImmutableSet.of(),

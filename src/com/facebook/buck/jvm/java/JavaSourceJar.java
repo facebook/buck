@@ -108,11 +108,11 @@ public class JavaSourceJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
               getProjectFilesystem(), source, packageDir.resolve(source.getFileName())));
     }
     steps.add(
-        new ZipStep(
+        ZipStep.of(
             getProjectFilesystem(),
             output.getPath(),
             ImmutableSet.of(),
-            /* junk paths */ false,
+            false,
             ZipCompressionLevel.DEFAULT,
             temp.getPath()));
 

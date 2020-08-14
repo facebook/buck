@@ -296,7 +296,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 DirectoryMode.CONTENTS_ONLY));
 
         postKotlinCompilationSteps.add(
-            new ZipStep(
+            ZipStep.of(
                 projectFilesystem,
                 genOutput.getPath(),
                 ImmutableSet.of(),

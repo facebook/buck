@@ -177,7 +177,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     RelPath zipped = outputDir.resolveRel("contents.zip");
 
     Step zipStep =
-        new ZipStep(
+        ZipStep.of(
             filesystem,
             zipped.getPath(),
             ImmutableSet.of(),

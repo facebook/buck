@@ -116,7 +116,7 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
                 pathToOutputFile.getParent())));
 
     commands.add(
-        new ZipStep(
+        ZipStep.of(
             getProjectFilesystem(),
             pathToOutputFile.getPath(),
             ImmutableSet.of(),
