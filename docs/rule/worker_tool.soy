@@ -35,7 +35,7 @@
     Some external tools have high startup costs. To amortize those costs over the whole build
     rather than paying them for each rule invocation, use the <code>worker_tool()</code> rule
     in conjunction with {call buck.genrule /}.
-    Buck then starts the external tool once and reuses it by communicating with it 
+    Buck then starts the external tool once and reuses it by communicating with it
     over <code>stdin</code> and <code>stdout</code> using a simple JSON protocol.
   </p>
 
@@ -63,7 +63,7 @@
   {param name: 'exe' /}
   {param desc}
     A {call buck.build_target /} for a rule that outputs
-    an executable, such as an {call buck.ruleLink}{param name : 'sh_binary' /}{/call}. 
+    an executable, such as an {call buck.ruleLink}{param name : 'sh_binary' /}{/call}.
     Buck runs this executable only once per build.
   {/param}
 {/call}
@@ -92,7 +92,7 @@
   {param desc}
     The maximum ratio of workers of this type that Buck starts per
     thread, specified as a positive integer percentage{sp} (1-100). Must be
-    greater than or equal to <code>1</code> and less than or equal to <code>100</code>. 
+    greater than or equal to <code>1</code> and less than or equal to <code>100</code>.
     Only one of <code>max_workers</code> and <code>max_workers_per_thread_percent</code> may be specified.
   {/param}
 {/call}
@@ -179,10 +179,10 @@ genrule(
 {literal}<pre class="prettyprint lang-py">
 [
   {
-    id: 0,
-    type: 'handshake',
-    protocol_version: '0',
-    capabilities: []
+    "id": 0,
+    "type": "handshake",
+    "protocol_version": "0",
+    "capabilities": []
   }
 </pre>{/literal}
 
@@ -193,10 +193,10 @@ genrule(
 {literal}<pre class="prettyprint lang-py">
 [
   {
-    id: 0,
-    type: 'handshake',
-    protocol_version: '0',
-    capabilities: []
+    "id": 0,
+    "type": "handshake",
+    "protocol_version": "0",
+    "capabilities": []
   }
 </pre>{/literal}
 
@@ -206,26 +206,26 @@ genrule(
 
 {literal}<pre class="prettyprint lang-py">
   ,{
-    id: 1,
-    type: 'command',
-    args_path: '/tmp/1.args',
-    stdout_path: '/tmp/1.out',
-    stderr_path: '/tmp/1.err',
+    "id": 1,
+    "type": "command",
+    "args_path": "/tmp/1.args",
+    "stdout_path": "/tmp/1.out",
+    "stderr_path": "/tmp/1.err"
   }
 </pre>{/literal}
 
 <p>
   The file <code>/tmp/1.args</code> contains <code>argA</code>. The tool should
   perform the necessary work for this job and then write the job's output to the files
-  supplied by Buck&mdash;in this case, <code>/tmp/1.out</code> and <code>/tmp/1.err</code>. 
+  supplied by Buck&mdash;in this case, <code>/tmp/1.out</code> and <code>/tmp/1.err</code>.
   Once the job is done, the tool should reply to Buck on <code>stdout</code> with:
 </p>
 
 {literal}<pre class="prettyprint lang-py">
   ,{
-    id: 1,
-    type: 'result',
-    exit_code: 0
+    "id": 1,
+    "type": "result",
+    "exit_code": 0
   }
 </pre>{/literal}
 
@@ -276,9 +276,9 @@ genrule(
 
 {literal}<pre class="prettyprint lang-py">
 {
-  id: &ltn&gt,
-  type: 'error',
-  exit_code: 1
+  "id": &ltn&gt,
+  "type": "error",
+  "exit_code": 1
 }
 </pre>{/literal}
 
@@ -289,9 +289,9 @@ genrule(
 
 {literal}<pre class="prettyprint lang-py">
 {
-  id: &ltn&gt,
-  type: 'error',
-  exit_code: 2
+  "id": &ltn&gt,
+  "type": "error",
+  "exit_code": 2
 }
 </pre>{/literal}
 
