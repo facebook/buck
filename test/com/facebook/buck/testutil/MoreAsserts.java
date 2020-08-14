@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.stream.RichStream;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
@@ -181,17 +182,52 @@ public final class MoreAsserts {
       List<String> expected,
       List<Step> observed,
       StepExecutionContext context) {
+    assertCommands(userMessage, expected, observed, context, false);
+  }
+
+  /**
+   * Asserts that every {@link com.facebook.buck.step.Step} in the observed list is a {@link
+   * com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep} whose shell command arguments
+   * match those of the corresponding entry in the expected list.
+   */
+  public static void assertIsolatedShellCommands(
+      String userMessage,
+      List<String> expected,
+      List<Step> observed,
+      StepExecutionContext context) {
+    assertCommands(userMessage, expected, observed, context, true);
+  }
+
+  /**
+   * Asserts that every {@link com.facebook.buck.step.Step} in the observed list is either a {@link
+   * com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep} or {@link
+   * com.facebook.buck.shell.ShellStep} whose shell command arguments match those of the
+   * corresponding entry in the expected list.
+   */
+  public static void assertCommands(
+      String userMessage,
+      List<String> expected,
+      List<Step> observed,
+      StepExecutionContext context,
+      Boolean isIsolated) {
     Iterator<String> expectedIter = expected.iterator();
     Iterator<Step> observedIter = observed.iterator();
     Joiner joiner = Joiner.on(" ");
     while (expectedIter.hasNext() && observedIter.hasNext()) {
       String expectedShellCommand = expectedIter.next();
       Step observedStep = observedIter.next();
-      if (!(observedStep instanceof ShellStep)) {
-        failWith(userMessage, "Observed command must be a shell command: " + observedStep);
+      ImmutableList<String> shellCommand;
+      if (isIsolated) {
+        Preconditions.checkState(
+            (observedStep instanceof IsolatedShellStep),
+            "observed step unexpectedly not IsolatedShellStep");
+        shellCommand = ((IsolatedShellStep) observedStep).getShellCommand(context);
+      } else {
+        Preconditions.checkState(
+            (observedStep instanceof ShellStep), "observed step unexpectedly not ShellStep");
+        shellCommand = ((ShellStep) observedStep).getShellCommand(context);
       }
-      ShellStep shellCommand = (ShellStep) observedStep;
-      String observedShellCommand = joiner.join(shellCommand.getShellCommand(context));
+      String observedShellCommand = joiner.join(shellCommand);
       assertEquals(userMessage, expectedShellCommand, observedShellCommand);
     }
 

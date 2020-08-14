@@ -104,7 +104,8 @@ public class NdkLibraryTest {
 
     String libbase =
         BuildTargetPaths.getScratchPath(projectFilesystem, target, "__lib%s").toString();
-    MoreAsserts.assertShellCommands(
+
+    MoreAsserts.assertIsolatedShellCommands(
         "ndk_library() should invoke ndk-build on the given path with some -j value",
         ImmutableList.of(
             String.format(

@@ -34,6 +34,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
@@ -168,6 +169,8 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         new NdkBuildStep(
             getProjectFilesystem(),
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
             androidNdk,
             root,
             makefile,

@@ -17,11 +17,11 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.environment.Platform;
@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.nio.file.Path;
 
-public class NdkBuildStep extends ShellStep {
+public class NdkBuildStep extends IsolatedShellStep {
 
   private final ProjectFilesystem filesystem;
   private final AndroidNdk androidNdk;
@@ -42,6 +42,7 @@ public class NdkBuildStep extends ShellStep {
 
   public NdkBuildStep(
       ProjectFilesystem filesystem,
+      RelPath cellPath,
       AndroidNdk androidNdk,
       Path root,
       Path makefile,
@@ -50,7 +51,7 @@ public class NdkBuildStep extends ShellStep {
       Iterable<String> flags,
       ConcurrencyLimit concurrencyLimit,
       boolean withDownwardApi) {
-    super(filesystem.getRootPath(), withDownwardApi);
+    super(filesystem.getRootPath(), cellPath, withDownwardApi);
 
     this.filesystem = filesystem;
     this.androidNdk = androidNdk;
@@ -68,12 +69,12 @@ public class NdkBuildStep extends ShellStep {
   }
 
   @Override
-  protected boolean shouldPrintStderr(Verbosity verbosity) {
+  public boolean shouldPrintStderr(Verbosity verbosity) {
     return verbosity.shouldPrintStandardInformation();
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.add(
         androidNdk.getNdkBuildExecutable().toAbsolutePath().toString(),
