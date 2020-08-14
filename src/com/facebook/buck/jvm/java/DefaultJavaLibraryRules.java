@@ -190,8 +190,6 @@ public abstract class DefaultJavaLibraryRules {
     BuildTarget rootmostTarget = getLibraryTarget();
     if (willProduceCompareAbis()) {
       rootmostTarget = JavaAbis.getVerifiedSourceAbiJar(rootmostTarget);
-    } else if (willProduceSourceAbiFromLibraryTarget()) {
-      rootmostTarget = JavaAbis.getSourceAbiJar(rootmostTarget);
     } else if (willProduceClassAbi()) {
       rootmostTarget = JavaAbis.getClassAbiJar(rootmostTarget);
     }
@@ -200,20 +198,6 @@ public abstract class DefaultJavaLibraryRules {
     graphBuilder.computeIfAbsent(
         rootmostTarget,
         target -> {
-          if (willProduceSourceAbiFromLibraryTarget()) {
-            DefaultJavaLibrary libraryRule = buildLibraryRule(/* sourceAbiRule */ null);
-            CalculateSourceAbiFromLibraryTarget sourceAbiRule =
-                buildSourceAbiRuleFromLibraryTarget(libraryRule);
-            CalculateClassAbi classAbiRule = buildClassAbiRule(libraryRule);
-
-            if (JavaAbis.isLibraryTarget(target)) {
-              return libraryRule;
-            } else if (JavaAbis.isClassAbiTarget(target)) {
-              return classAbiRule;
-            } else if (JavaAbis.isSourceAbiTarget(target)) {
-              return sourceAbiRule;
-            }
-          }
           CalculateSourceAbi sourceOnlyAbiRule = buildSourceOnlyAbiRule();
           CalculateSourceAbi sourceAbiRule = buildSourceAbiRule();
           DefaultJavaLibrary libraryRule = buildLibraryRule(sourceAbiRule);
@@ -357,11 +341,6 @@ public abstract class DefaultJavaLibraryRules {
     }
 
     return result;
-  }
-
-  private boolean willProduceSourceAbiFromLibraryTarget() {
-    return willProduceSourceAbi()
-        && getConfiguredCompilerFactory().sourceAbiCopiesFromLibraryTargetOutput();
   }
 
   private boolean willProduceSourceAbi() {
@@ -512,23 +491,6 @@ public abstract class DefaultJavaLibraryRules {
                 sourceAbiTarget,
                 getProjectFilesystem(),
                 jarBuildStepsFactory,
-                getActionGraphBuilder()));
-  }
-
-  @Nullable
-  private CalculateSourceAbiFromLibraryTarget buildSourceAbiRuleFromLibraryTarget(
-      DefaultJavaLibrary libraryRule) {
-    if (!willProduceSourceAbi()) {
-      return null;
-    }
-
-    BuildTarget sourceAbiTarget = JavaAbis.getSourceAbiJar(getLibraryTarget());
-    return getActionGraphBuilder()
-        .addToIndex(
-            new CalculateSourceAbiFromLibraryTarget(
-                libraryRule.getSourcePathToOutput(),
-                sourceAbiTarget,
-                getProjectFilesystem(),
                 getActionGraphBuilder()));
   }
 

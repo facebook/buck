@@ -71,10 +71,6 @@ public abstract class ConfiguredCompilerFactory {
     return false;
   }
 
-  public boolean sourceAbiCopiesFromLibraryTargetOutput() {
-    return false;
-  }
-
   public void addTargetDeps(
       @SuppressWarnings("unused") TargetConfiguration targetConfiguration,
       @SuppressWarnings("unused") ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,

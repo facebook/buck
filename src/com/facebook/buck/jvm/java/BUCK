@@ -308,7 +308,6 @@ java_library_with_plugins(
         "BuiltInJavac.java",
         "CalculateClassAbi.java",
         "CalculateSourceAbi.java",
-        "CalculateSourceAbiFromLibraryTarget.java",
         "CompareAbis.java",
         "CompileAgainstLibraryType.java",
         "CompiledClassFileFinder.java",

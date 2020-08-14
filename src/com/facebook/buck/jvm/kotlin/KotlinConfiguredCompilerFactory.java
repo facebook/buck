@@ -134,11 +134,6 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     return kotlinBuckConfig.getAbiGenerationMode().isSourceAbi();
   }
 
-  @Override
-  public boolean sourceAbiCopiesFromLibraryTargetOutput() {
-    return true;
-  }
-
   private static ImmutableList<SourcePath> getFriendSourcePaths(
       BuildRuleResolver buildRuleResolver,
       ImmutableSortedSet<BuildTarget> friendPaths,

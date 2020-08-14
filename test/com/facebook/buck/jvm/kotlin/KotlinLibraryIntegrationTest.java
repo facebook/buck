@@ -160,26 +160,6 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
-  public void shouldCompileLibraryWithDependencyOnAnotherUsingSourceAbi() throws IOException {
-    ProcessResult buildResult =
-        workspace.runBuckBuild(
-            "-c", "kotlin.abi_generation_mode=source", "//com/example/child:child");
-    workspace.getBuildLog().assertTargetBuiltLocally("//com/example/good:example#source-abi");
-    buildResult.assertSuccess("Build should have succeeded.");
-  }
-
-  @Test
-  public void shouldCompileUsingSourceAbiAndCache() throws IOException {
-    workspace.runBuckBuild("-c", "kotlin.abi_generation_mode=source", "//com/example/child:child");
-    workspace.getBuildLog().assertTargetBuiltLocally("//com/example/good:example#source-abi");
-    workspace.runBuckCommand("clean", "--keep-cache");
-    ProcessResult buildResult =
-        workspace.runBuckBuild(
-            "-c", "kotlin.abi_generation_mode=source", "//com/example/child:child");
-    buildResult.assertSuccess("Build should have succeeded.");
-  }
-
-  @Test
   public void shouldFailToCompileInvalidKotlinCode() {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/bad:fail");
     buildResult.assertFailure();

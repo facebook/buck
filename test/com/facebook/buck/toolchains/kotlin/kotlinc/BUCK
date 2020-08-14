@@ -3,7 +3,6 @@ filegroup(
     name = "kotlinc",
     srcs = [
         "libexec/build.txt",
-        "libexec/lib/jvm-abi-gen.jar",
         "libexec/lib/kotlin-annotation-processing.jar",
         "libexec/lib/kotlin-compiler.jar",
         "libexec/lib/kotlin-reflect.jar",
@@ -23,14 +22,6 @@ prebuilt_jar(
 prebuilt_jar(
     name = "compiler",
     binary_jar = "libexec/lib/kotlin-compiler.jar",
-    visibility = [
-        "//test/com/facebook/buck/...",
-    ],
-)
-
-prebuilt_jar(
-    name = "jvm-abi-gen",
-    binary_jar = "libexec/lib/jvm-abi-gen.jar",
     visibility = [
         "//test/com/facebook/buck/...",
     ],
