@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -176,7 +177,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
             .createGenerator(out)
             .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)) {
       json.writeStartArray();
-      for (BuildRule node : graph.getNodes()) {
+      for (BuildRule node : Sets.newLinkedHashSet(graph.getNodes())) {
         writeJsonObjectForBuildRule(json, node, actionGraphBuilder, includeRuntimeDeps, nodeView);
       }
       json.writeEndArray();

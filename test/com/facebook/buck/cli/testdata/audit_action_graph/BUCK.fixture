@@ -1,12 +1,17 @@
 genrule(
     name = "bin",
     srcs = [
-        ":other",
+        ":alias",
     ],
     out = "bin",
     cmd = """
   echo $SRCS > $OUT
   """,
+)
+
+alias(
+    name = "alias",
+    actual = ":other",
 )
 
 genrule(
