@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Portions Copyright (c) Facebook, Inc. and its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +30,9 @@
 
 package com.facebook.buck.skylark.io.impl;
 
-import com.google.common.annotations.VisibleForTesting;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
@@ -54,10 +54,9 @@ import com.google.devtools.build.lib.vfs.FileStatus;
 import com.google.devtools.build.lib.vfs.Path;
 import com.google.devtools.build.lib.vfs.Symlinks;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.nio.file.FileSystem;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -82,16 +81,12 @@ import java.util.regex.Pattern;
 final class UnixGlob {
   private UnixGlob() {}
 
-  private static List<Path> globInternal(
-      Path base,
-      Collection<String> patterns,
-      boolean excludeDirectories,
-      Predicate<Path> dirPred,
-      FilesystemCalls syscalls,
-      Executor executor)
-      throws IOException, InterruptedException {
-    GlobVisitor visitor = new GlobVisitor(executor);
-    return visitor.glob(base, patterns, excludeDirectories, dirPred, syscalls);
+  private static SkylarkFilesystem fileSystem(FileSystem fileSystem) {
+    return SkylarkFilesystem.using(fileSystem);
+  }
+
+  private static Path absPathToVfsPath(AbsPath path) {
+    return fileSystem(path.getFileSystem()).getPath(path.toString());
   }
 
   private static List<Path> globInternalUninterruptible(
@@ -99,36 +94,10 @@ final class UnixGlob {
       Collection<String> patterns,
       boolean excludeDirectories,
       Predicate<Path> dirPred,
-      FilesystemCalls syscalls,
       Executor executor)
       throws IOException {
     GlobVisitor visitor = new GlobVisitor(executor);
-    return visitor.globUninterruptible(base, patterns, excludeDirectories, dirPred, syscalls);
-  }
-
-  private static long globInternalAndReturnNumGlobTasksForTesting(
-      Path base,
-      Collection<String> patterns,
-      boolean excludeDirectories,
-      Predicate<Path> dirPred,
-      FilesystemCalls syscalls,
-      Executor executor)
-      throws IOException, InterruptedException {
-    GlobVisitor visitor = new GlobVisitor(executor);
-    visitor.glob(base, patterns, excludeDirectories, dirPred, syscalls);
-    return visitor.getNumGlobTasksForTesting();
-  }
-
-  private static Future<List<Path>> globAsyncInternal(
-      Path base,
-      Collection<String> patterns,
-      boolean excludeDirectories,
-      Predicate<Path> dirPred,
-      FilesystemCalls syscalls,
-      Executor executor) {
-    Preconditions.checkNotNull(executor, "%s %s", base, patterns);
-    return new GlobVisitor(executor)
-        .globAsync(base, patterns, excludeDirectories, dirPred, syscalls);
+    return visitor.globUninterruptible(base, patterns, excludeDirectories, dirPred);
   }
 
   /**
@@ -151,7 +120,7 @@ final class UnixGlob {
   }
 
   /** @return whether or not {@code pattern} contains illegal characters */
-  public static String checkPatternForError(String pattern) {
+  static String checkPatternForError(String pattern) {
     if (pattern.isEmpty()) {
       return "pattern cannot be empty";
     }
@@ -173,11 +142,6 @@ final class UnixGlob {
     return null;
   }
 
-  /** Calls {@link #matches(String, String, Map) matches(pattern, str, null)} */
-  public static boolean matches(String pattern, String str) {
-    return matches(pattern, str, null);
-  }
-
   /**
    * Returns whether {@code str} matches the glob pattern {@code pattern}. This method may use the
    * {@code patternCache} to speed up the matching process.
@@ -187,7 +151,7 @@ final class UnixGlob {
    * @param patternCache a cache from patterns to compiled Pattern objects, or {@code null} to skip
    *     caching
    */
-  public static boolean matches(String pattern, String str, Map<String, Pattern> patternCache) {
+  private static boolean matches(String pattern, String str, Map<String, Pattern> patternCache) {
     if (pattern.length() == 0 || str.length() == 0) {
       return false;
     }
@@ -279,71 +243,20 @@ final class UnixGlob {
     return Pattern.compile(regexp.toString());
   }
 
-  /** Filesystem calls required for glob(). */
-  public interface FilesystemCalls {
-    /** Get directory entries and their types. Does not follow symlinks. */
-    Collection<Dirent> readdir(Path path) throws IOException;
-
-    /** Return the stat() for the given path, or null. */
-    FileStatus statIfFound(Path path, Symlinks symlinks) throws IOException;
-
-    /**
-     * Return the type of a specific file. This may be answered using stat() or readdir(). Returns
-     * null if the path does not exist.
-     */
-    Dirent.Type getType(Path path, Symlinks symlinks) throws IOException;
-  }
-
-  public static final FilesystemCalls DEFAULT_SYSCALLS =
-      new FilesystemCalls() {
-        @Override
-        public Collection<Dirent> readdir(Path path) throws IOException {
-          return path.readdir(Symlinks.NOFOLLOW);
-        }
-
-        @Override
-        public FileStatus statIfFound(Path path, Symlinks symlinks) throws IOException {
-          return path.statIfFound(symlinks);
-        }
-
-        @Override
-        public Dirent.Type getType(Path path, Symlinks symlinks) throws IOException {
-          return statusToDirentType(statIfFound(path, symlinks));
-        }
-      };
-
-  public static Dirent.Type statusToDirentType(FileStatus status) {
-    if (status == null) {
-      return null;
-    } else if (status.isFile()) {
-      return Dirent.Type.FILE;
-    } else if (status.isDirectory()) {
-      return Dirent.Type.DIRECTORY;
-    } else if (status.isSymbolicLink()) {
-      return Dirent.Type.SYMLINK;
-    }
-    return Dirent.Type.UNKNOWN;
-  }
-
-  public static final AtomicReference<FilesystemCalls> DEFAULT_SYSCALLS_REF =
-      new AtomicReference<>(DEFAULT_SYSCALLS);
-
-  public static Builder forPath(Path path) {
+  public static Builder forPath(AbsPath path) {
     return new Builder(path);
   }
 
   /** Builder class for UnixGlob. */
   public static class Builder {
-    private Path base;
+    private AbsPath base;
     private List<String> patterns;
     private boolean excludeDirectories;
     private Predicate<Path> pathFilter;
     private Executor executor;
-    private AtomicReference<? extends FilesystemCalls> syscalls =
-        new AtomicReference<>(DEFAULT_SYSCALLS);
 
     /** Creates a glob builder with the given base path. */
-    public Builder(Path base) {
+    public Builder(AbsPath base) {
       this.base = base;
       this.patterns = Lists.newArrayList();
       this.excludeDirectories = false;
@@ -355,35 +268,8 @@ final class UnixGlob {
      *
      * <p>For a description of the syntax of the patterns, see {@link UnixGlob}.
      */
-    public Builder addPattern(String pattern) {
-      this.patterns.add(pattern);
-      return this;
-    }
-
-    /**
-     * Adds a pattern to include to the glob builder.
-     *
-     * <p>For a description of the syntax of the patterns, see {@link UnixGlob}.
-     */
-    public Builder addPatterns(String... patterns) {
-      Collections.addAll(this.patterns, patterns);
-      return this;
-    }
-
-    /**
-     * Adds a pattern to include to the glob builder.
-     *
-     * <p>For a description of the syntax of the patterns, see {@link UnixGlob}.
-     */
     public Builder addPatterns(Collection<String> patterns) {
       this.patterns.addAll(patterns);
-      return this;
-    }
-
-    /** Sets the FilesystemCalls interface to use on this glob(). */
-    public Builder setFilesystemCalls(AtomicReference<? extends FilesystemCalls> syscalls) {
-      this.syscalls =
-          (syscalls == null) ? new AtomicReference<FilesystemCalls>(DEFAULT_SYSCALLS) : syscalls;
       return this;
     }
 
@@ -402,45 +288,13 @@ final class UnixGlob {
       return this;
     }
 
-    /**
-     * If set, the given predicate is called for every directory encountered. If it returns false,
-     * the corresponding item is not returned in the output and directories are not traversed
-     * either.
-     */
-    public Builder setDirectoryFilter(Predicate<Path> pathFilter) {
-      this.pathFilter = pathFilter;
-      return this;
-    }
-
     /** Executes the glob. */
-    public List<Path> glob() throws IOException {
+    public List<AbsPath> glob() throws IOException {
       return globInternalUninterruptible(
-          base, patterns, excludeDirectories, pathFilter, syscalls.get(), executor);
-    }
-
-    /**
-     * Executes the glob and returns the result.
-     *
-     * @throws InterruptedException if the thread is interrupted.
-     */
-    public List<Path> globInterruptible() throws IOException, InterruptedException {
-      return globInternal(base, patterns, excludeDirectories, pathFilter, syscalls.get(), executor);
-    }
-
-    @VisibleForTesting
-    public long globInterruptibleAndReturnNumGlobTasksForTesting()
-        throws IOException, InterruptedException {
-      return globInternalAndReturnNumGlobTasksForTesting(
-          base, patterns, excludeDirectories, pathFilter, syscalls.get(), executor);
-    }
-
-    /**
-     * Executes the glob asynchronously. {@link #setExecutor} must have been called already with a
-     * non-null argument.
-     */
-    public Future<List<Path>> globAsync() {
-      return globAsyncInternal(
-          base, patterns, excludeDirectories, pathFilter, syscalls.get(), executor);
+              absPathToVfsPath(base), patterns, excludeDirectories, pathFilter, executor)
+          .stream()
+          .map(p -> AbsPath.of(base.getFileSystem().getPath(p.toString())))
+          .collect(ImmutableList.toImmutableList());
     }
   }
 
@@ -501,47 +355,12 @@ final class UnixGlob {
       this.result = new GlobFuture(this);
     }
 
-    /**
-     * Performs wildcard globbing: returns the list of filenames that match any of {@code patterns}
-     * relative to {@code base}. Directories are traversed if and only if they match {@code
-     * dirPred}. The predicate is also called for the root of the traversal. The order of the
-     * returned list is unspecified.
-     *
-     * <p>Patterns may include "*" and "?", but not "[a-z]".
-     *
-     * <p><code>**</code> gets special treatment in include patterns. If it is used as a complete
-     * path segment it matches the filenames in subdirectories recursively.
-     *
-     * @throws IllegalArgumentException if any glob pattern {@linkplain
-     *     #checkPatternForError(String) contains errors} or if any include pattern segment contains
-     *     <code>**</code> but not equal to it.
-     */
-    List<Path> glob(
-        Path base,
-        Collection<String> patterns,
-        boolean excludeDirectories,
-        Predicate<Path> dirPred,
-        FilesystemCalls syscalls)
-        throws IOException, InterruptedException {
-      try {
-        return globAsync(base, patterns, excludeDirectories, dirPred, syscalls).get();
-      } catch (ExecutionException e) {
-        Throwable cause = e.getCause();
-        Throwables.propagateIfPossible(cause, IOException.class);
-        throw new RuntimeException(e);
-      }
-    }
-
     List<Path> globUninterruptible(
-        Path base,
-        Collection<String> patterns,
-        boolean excludeDirectories,
-        Predicate<Path> dirPred,
-        FilesystemCalls syscalls)
+        Path base, Collection<String> patterns, boolean excludeDirectories, Predicate<Path> dirPred)
         throws IOException {
       try {
         return Uninterruptibles.getUninterruptibly(
-            globAsync(base, patterns, excludeDirectories, dirPred, syscalls));
+            globAsync(base, patterns, excludeDirectories, dirPred));
       } catch (ExecutionException e) {
         Throwable cause = e.getCause();
         Throwables.propagateIfPossible(cause, IOException.class);
@@ -553,20 +372,15 @@ final class UnixGlob {
       return "**".equals(pattern);
     }
 
-    /**
-     * Same as {@link #glob}, except does so asynchronously and returns a {@link Future} for the
-     * result.
-     */
     Future<List<Path>> globAsync(
         Path base,
         Collection<String> patterns,
         boolean excludeDirectories,
-        Predicate<Path> dirPred,
-        FilesystemCalls syscalls) {
+        Predicate<Path> dirPred) {
 
       FileStatus baseStat;
       try {
-        baseStat = syscalls.statIfFound(base, Symlinks.FOLLOW);
+        baseStat = base.statIfFound(Symlinks.FOLLOW);
       } catch (IOException e) {
         return Futures.immediateFailedFuture(e);
       }
@@ -591,9 +405,8 @@ final class UnixGlob {
           }
           GlobTaskContext context =
               numRecursivePatterns > 1
-                  ? new RecursiveGlobTaskContext(
-                      splitPattern, excludeDirectories, dirPred, syscalls)
-                  : new GlobTaskContext(splitPattern, excludeDirectories, dirPred, syscalls);
+                  ? new RecursiveGlobTaskContext(splitPattern, excludeDirectories, dirPred)
+                  : new GlobTaskContext(splitPattern, excludeDirectories, dirPred);
           context.queueGlob(base, baseStat.isDirectory(), 0);
         }
       } finally {
@@ -673,10 +486,6 @@ final class UnixGlob {
       }
     }
 
-    private long getNumGlobTasksForTesting() {
-      return totalOps.get();
-    }
-
     protected void cancel() {
       this.canceled = true;
     }
@@ -703,17 +512,11 @@ final class UnixGlob {
       private final String[] patternParts;
       private final boolean excludeDirectories;
       private final Predicate<Path> dirPred;
-      private final FilesystemCalls syscalls;
 
-      GlobTaskContext(
-          String[] patternParts,
-          boolean excludeDirectories,
-          Predicate<Path> dirPred,
-          FilesystemCalls syscalls) {
+      GlobTaskContext(String[] patternParts, boolean excludeDirectories, Predicate<Path> dirPred) {
         this.patternParts = patternParts;
         this.excludeDirectories = excludeDirectories;
         this.dirPred = dirPred;
-        this.syscalls = syscalls;
       }
 
       protected void queueGlob(Path base, boolean baseIsDir, int patternIdx) {
@@ -759,11 +562,8 @@ final class UnixGlob {
       private final Set<GlobTask> visitedGlobSubTasks = Sets.newConcurrentHashSet();
 
       private RecursiveGlobTaskContext(
-          String[] patternParts,
-          boolean excludeDirectories,
-          Predicate<Path> dirPred,
-          FilesystemCalls syscalls) {
-        super(patternParts, excludeDirectories, dirPred, syscalls);
+          String[] patternParts, boolean excludeDirectories, Predicate<Path> dirPred) {
+        super(patternParts, excludeDirectories, dirPred);
       }
 
       @Override
@@ -820,7 +620,7 @@ final class UnixGlob {
       if (!pattern.contains("*") && !pattern.contains("?")) {
         // We do not need to do a readdir in this case, just a stat.
         Path child = base.getChild(pattern);
-        FileStatus status = context.syscalls.statIfFound(child, Symlinks.FOLLOW);
+        FileStatus status = child.statIfFound(Symlinks.FOLLOW);
         if (status == null || (!status.isDirectory() && !status.isFile())) {
           // The file is a dangling symlink, fifo, does not exist, etc.
           return;
@@ -830,7 +630,7 @@ final class UnixGlob {
         return;
       }
 
-      Collection<Dirent> dents = context.syscalls.readdir(base);
+      Collection<Dirent> dents = base.readdir(Symlinks.NOFOLLOW);
       for (Dirent dent : dents) {
         Dirent.Type childType = dent.getType();
         if (childType == Dirent.Type.UNKNOWN) {
@@ -859,7 +659,7 @@ final class UnixGlob {
       context.queueTask(
           () -> {
             try {
-              FileStatus status = context.syscalls.statIfFound(path, Symlinks.FOLLOW);
+              FileStatus status = path.statIfFound(Symlinks.FOLLOW);
               if (status != null) {
                 processFileOrDirectory(path, status.isDirectory(), idx, context);
               }
@@ -879,81 +679,5 @@ final class UnixGlob {
         results.add(path);
       }
     }
-  }
-
-  /**
-   * Filters out exclude patterns from a Set of paths. Common cases such as wildcard-free patterns
-   * or suffix patterns are special-cased to make this function efficient.
-   */
-  public static void removeExcludes(Set<String> paths, Collection<String> excludes) {
-    ArrayList<String> complexPatterns = new ArrayList<>(excludes.size());
-    Map<String, List<String>> starstarSlashStarHeadTailPairs = new HashMap<>();
-    for (String exclude : excludes) {
-      if (isWildcardFree(exclude)) {
-        paths.remove(exclude);
-        continue;
-      }
-      int patternPos = exclude.indexOf("**/*");
-      if (patternPos != -1) {
-        String head = exclude.substring(0, patternPos);
-        String tail = exclude.substring(patternPos + 4);
-        if (isWildcardFree(head) && isWildcardFree(tail)) {
-          starstarSlashStarHeadTailPairs.computeIfAbsent(head, h -> new ArrayList<>()).add(tail);
-          continue;
-        }
-      }
-      complexPatterns.add(exclude);
-    }
-    for (Map.Entry<String, List<String>> headTailPair : starstarSlashStarHeadTailPairs.entrySet()) {
-      paths.removeIf(
-          path -> {
-            if (path.startsWith(headTailPair.getKey())) {
-              for (String tail : headTailPair.getValue()) {
-                if (path.endsWith(tail)) {
-                  return true;
-                }
-              }
-            }
-            return false;
-          });
-    }
-    if (complexPatterns.isEmpty()) {
-      return;
-    }
-    List<String[]> splitPatterns = checkAndSplitPatterns(complexPatterns);
-    HashMap<String, Pattern> patternCache = new HashMap<>();
-    paths.removeIf(
-        path -> {
-          String[] segments = Iterables.toArray(Splitter.on('/').split(path), String.class);
-          for (String[] splitPattern : splitPatterns) {
-            if (matchesPattern(splitPattern, segments, 0, 0, patternCache)) {
-              return true;
-            }
-          }
-          return false;
-        });
-  }
-
-  /** Returns true if {@code pattern} matches {@code path} starting from the given segments. */
-  private static boolean matchesPattern(
-      String[] pattern, String[] path, int i, int j, Map<String, Pattern> patternCache) {
-    if (i == pattern.length) {
-      return j == path.length;
-    }
-    if (pattern[i].equals("**")) {
-      return matchesPattern(pattern, path, i + 1, j, patternCache)
-          || (j < path.length && matchesPattern(pattern, path, i, j + 1, patternCache));
-    }
-    if (j == path.length) {
-      return false;
-    }
-    if (matches(pattern[i], path[j], patternCache)) {
-      return matchesPattern(pattern, path, i + 1, j + 1, patternCache);
-    }
-    return false;
-  }
-
-  private static boolean isWildcardFree(String pattern) {
-    return !pattern.contains("*") && !pattern.contains("?");
   }
 }

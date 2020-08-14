@@ -45,7 +45,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.vfs.FileSystem;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -69,11 +68,10 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
   SkylarkProjectBuildFileParser(
       ProjectBuildFileParserOptions options,
       BuckEventBus buckEventBus,
-      FileSystem fileSystem,
       BuckGlobals buckGlobals,
       EventHandler eventHandler,
       GlobberFactory globberFactory) {
-    super(options, fileSystem, buckGlobals, eventHandler);
+    super(options, buckGlobals, eventHandler);
     this.buckEventBus = buckEventBus;
     this.globberFactory = globberFactory;
   }
@@ -82,12 +80,11 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
   public static SkylarkProjectBuildFileParser using(
       ProjectBuildFileParserOptions options,
       BuckEventBus buckEventBus,
-      FileSystem fileSystem,
       BuckGlobals buckGlobals,
       EventHandler eventHandler,
       GlobberFactory globberFactory) {
     return new SkylarkProjectBuildFileParser(
-        options, buckEventBus, fileSystem, buckGlobals, eventHandler, globberFactory);
+        options, buckEventBus, buckGlobals, eventHandler, globberFactory);
   }
 
   @VisibleForTesting
@@ -95,7 +92,6 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
     this(
         other.options,
         other.buckEventBus,
-        other.fileSystem,
         other.buckGlobals,
         other.eventHandler,
         other.globberFactory);
@@ -107,7 +103,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
   }
 
   @Override
-  CachingGlobber getGlobber(Path parseFile) {
+  CachingGlobber getGlobber(AbsPath parseFile) {
     return newGlobber(parseFile);
   }
 
@@ -177,9 +173,8 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
   }
 
   /** Creates a globber for the package defined by the provided build file path. */
-  private CachingGlobber newGlobber(Path buildFile) {
-    return CachingGlobber.of(
-        globberFactory.create(fileSystem.getPath(buildFile.getParent().toString())));
+  private CachingGlobber newGlobber(AbsPath buildFile) {
+    return CachingGlobber.of(globberFactory.create(buildFile.getParent()));
   }
 
   @Override
@@ -190,7 +185,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
 
   @Override
   public boolean globResultsMatchCurrentState(
-      Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
+      AbsPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
       throws IOException, InterruptedException {
     CachingGlobber globber = newGlobber(buildFile);
     for (GlobSpecWithResult globSpecWithResult : existingGlobsWithResults) {

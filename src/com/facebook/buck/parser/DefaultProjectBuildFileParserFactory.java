@@ -26,7 +26,6 @@ import com.facebook.buck.core.starlark.eventhandler.ConsoleEventHandler;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.io.watchman.Capability;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
@@ -328,12 +327,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             augmentor);
 
     return SkylarkProjectBuildFileParser.using(
-        buildFileParserOptions,
-        eventBus,
-        SkylarkFilesystem.using(cell.getFilesystem()),
-        buckGlobals,
-        eventHandler,
-        globberFactory);
+        buildFileParserOptions, eventBus, buckGlobals, eventHandler, globberFactory);
   }
 
   private static GlobberFactory getSkylarkGlobberFactory(

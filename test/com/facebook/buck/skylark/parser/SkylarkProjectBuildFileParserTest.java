@@ -96,7 +96,7 @@ public class SkylarkProjectBuildFileParserTest {
   @Before
   public void setUp() {
     projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    skylarkFilesystem = SkylarkFilesystem.using(projectFilesystem);
+    skylarkFilesystem = SkylarkFilesystem.using(projectFilesystem.getFileSystem());
     cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
@@ -224,7 +224,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     boolean result =
         parser.globResultsMatchCurrentState(
-            buildFile.getPath(),
+            buildFile,
             ImmutableList.of(
                 GlobSpecWithResult.of(
                     GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
@@ -248,7 +248,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     boolean result =
         parser.globResultsMatchCurrentState(
-            buildFile.getPath(),
+            buildFile,
             ImmutableList.of(
                 GlobSpecWithResult.of(
                     GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
@@ -272,7 +272,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     boolean result =
         parser.globResultsMatchCurrentState(
-            buildFile.getPath(),
+            buildFile,
             ImmutableList.of(
                 GlobSpecWithResult.of(
                     GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
@@ -295,7 +295,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     boolean result =
         parser.globResultsMatchCurrentState(
-            buildFile.getPath(),
+            buildFile,
             ImmutableList.of(
                 GlobSpecWithResult.of(
                     GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
@@ -317,7 +317,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     boolean result =
         parser.globResultsMatchCurrentState(
-            buildFile.getPath(),
+            buildFile,
             ImmutableList.of(
                 GlobSpecWithResult.of(
                     GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
@@ -1035,7 +1035,6 @@ public class SkylarkProjectBuildFileParserTest {
         SkylarkProjectBuildFileParser.using(
             options,
             BuckEventBusForTests.newInstance(),
-            skylarkFilesystem,
             BuckGlobals.of(
                 SkylarkBuildModule.BUILD_MODULE,
                 options.getDescriptions(),

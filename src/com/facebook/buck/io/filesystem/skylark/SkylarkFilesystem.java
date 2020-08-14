@@ -39,20 +39,20 @@ import com.google.devtools.build.lib.vfs.Path;
  */
 public class SkylarkFilesystem extends JavaIoFileSystem {
 
-  private final ProjectFilesystem filesystem;
+  private final java.nio.file.FileSystem filesystem;
 
-  private SkylarkFilesystem(ProjectFilesystem filesystem) {
+  private SkylarkFilesystem(java.nio.file.FileSystem filesystem) {
     super(DigestHashFunction.SHA1);
     this.filesystem = filesystem;
   }
 
   @Override
-  protected java.nio.file.Path getNioPath(Path path) {
-    return filesystem.resolve(path.toString()).getPath();
+  public java.nio.file.Path getNioPath(Path path) {
+    return filesystem.getPath(path.toString());
   }
 
   /** @return The {@link SkylarkFilesystem} which methods */
-  public static SkylarkFilesystem using(ProjectFilesystem projectFilesystem) {
+  public static SkylarkFilesystem using(java.nio.file.FileSystem projectFilesystem) {
     return new SkylarkFilesystem(projectFilesystem);
   }
 }

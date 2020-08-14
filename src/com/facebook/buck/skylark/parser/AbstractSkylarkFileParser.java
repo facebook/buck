@@ -67,7 +67,6 @@ import com.google.devtools.build.lib.syntax.ParserInput;
 import com.google.devtools.build.lib.syntax.Resolver;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.vfs.FileSystem;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -87,8 +86,6 @@ import org.immutables.value.Value;
 /** Abstract parser for files written using Skylark syntax. */
 abstract class AbstractSkylarkFileParser<T extends FileManifest> implements FileParser<T> {
 
-  protected final FileSystem fileSystem;
-
   protected final ProjectBuildFileParserOptions options;
   protected final EventHandler eventHandler;
   protected final BuckGlobals buckGlobals;
@@ -101,12 +98,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   private final ReadConfigContext readConfigContext;
 
   AbstractSkylarkFileParser(
-      ProjectBuildFileParserOptions options,
-      FileSystem fileSystem,
-      BuckGlobals buckGlobals,
-      EventHandler eventHandler) {
+      ProjectBuildFileParserOptions options, BuckGlobals buckGlobals, EventHandler eventHandler) {
     this.options = options;
-    this.fileSystem = fileSystem;
     this.eventHandler = eventHandler;
     this.buckGlobals = buckGlobals;
 
@@ -130,7 +123,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       Globber globber,
       ImmutableList<String> loadedPaths);
 
-  abstract Globber getGlobber(Path parseFile);
+  abstract Globber getGlobber(AbsPath parseFile);
 
   private ImplicitlyLoadedExtension loadImplicitExtension(
       ForwardRelativePath basePath, Label containingLabel, LoadStack loadStack)
@@ -179,7 +172,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
             LoadStack.top(Location.fromFile(parseFile.toString())),
             getBuckOrPackage().fileKind,
             containingLabel);
-    Globber globber = getGlobber(parseFile.getPath());
+    Globber globber = getGlobber(parseFile);
     PackageContext packageContext =
         createPackageContext(basePath, globber, implicitLoad.getLoadedSymbols());
     ParseContext parseContext = new ParseContext(packageContext);

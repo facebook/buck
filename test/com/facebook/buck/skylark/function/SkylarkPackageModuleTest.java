@@ -20,15 +20,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
@@ -45,24 +46,22 @@ import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.SyntaxError;
-import com.google.devtools.build.lib.vfs.FileSystemUtils;
-import com.google.devtools.build.lib.vfs.Path;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.EnumSet;
 import org.junit.Before;
 import org.junit.Test;
 
 public class SkylarkPackageModuleTest {
-  private Path root;
+  private AbsPath root;
   private EventCollector eventHandler;
 
   @Before
   public void setUp() {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem);
-    root = fileSystem.getPath(projectFilesystem.getRootPath().toString());
+    root = projectFilesystem.getRootPath();
     eventHandler = new EventCollector(EnumSet.allOf(EventKind.class));
   }
 
@@ -88,22 +87,21 @@ public class SkylarkPackageModuleTest {
 
   private ParseContext evaluate(String expression, boolean expectSuccess)
       throws IOException, InterruptedException {
-    Path buildFile = root.getChild("PACKAGE");
-    FileSystemUtils.writeContentAsLatin1(buildFile, expression);
+    AbsPath buildFile = root.resolve("PACKAGE");
+    Files.write(buildFile.getPath(), ImmutableList.of(expression));
     return evaluate(buildFile, expectSuccess);
   }
 
-  private ParseContext evaluate(Path buildFile, boolean expectSuccess)
+  private ParseContext evaluate(AbsPath buildFile, boolean expectSuccess)
       throws IOException, InterruptedException {
     try (Mutability mutability = Mutability.create("PACKAGE")) {
       return evaluate(buildFile, mutability, expectSuccess);
     }
   }
 
-  private ParseContext evaluate(Path buildFile, Mutability mutability, boolean expectSuccess)
+  private ParseContext evaluate(AbsPath buildFile, Mutability mutability, boolean expectSuccess)
       throws IOException, InterruptedException {
-    byte[] buildFileContent =
-        FileSystemUtils.readWithKnownFileSize(buildFile, buildFile.getFileSize());
+    byte[] buildFileContent = Files.readAllBytes(buildFile.getPath());
     StarlarkFile buildFileAst =
         StarlarkFile.parse(
             ParserInput.create(
