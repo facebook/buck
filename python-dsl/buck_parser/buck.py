@@ -804,7 +804,7 @@ def sha256(val, build_env=None):
     Computes a sha256 digest for a string. Returns the hex representation of the digest.
     """
     assert isinstance(val, str), "sha256() works only with string arguments"
-    return hashlib.sha256(val).hexdigest()
+    return hashlib.sha256(val.encode()).hexdigest()
 
 
 class UserDefinedRule(object):
