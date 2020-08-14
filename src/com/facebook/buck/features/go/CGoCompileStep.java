@@ -16,16 +16,17 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 
-public class CGoCompileStep extends ShellStep {
+public class CGoCompileStep extends IsolatedShellStep {
 
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> cgoCommandPrefix;
@@ -35,9 +36,11 @@ public class CGoCompileStep extends ShellStep {
   private final ImmutableList<RelPath> srcs;
   private final GoPlatform platform;
   private final Path outputDir;
+  private final Path absCellPath;
 
   public CGoCompileStep(
       AbsPath workingDirectory,
+      Path absCellPath,
       ImmutableMap<String, String> environment,
       ImmutableList<String> cgoCommandPrefix,
       ImmutableList<String> cppCommandPrefix,
@@ -47,23 +50,27 @@ public class CGoCompileStep extends ShellStep {
       GoPlatform platform,
       Path outputDir,
       boolean withDownwardApi) {
-    super(workingDirectory, withDownwardApi);
+    super(
+        workingDirectory,
+        ProjectFilesystemUtils.relativize(workingDirectory, absCellPath),
+        withDownwardApi);
     this.environment = environment;
     this.cgoCommandPrefix = cgoCommandPrefix;
     this.cppCommandPrefix = cppCommandPrefix;
     this.cgoCompilerFlags = cgoCompilerFlags;
     this.cxxCompilerFlags = cxxCompilerFlags;
     this.srcs = srcs;
+    this.absCellPath = absCellPath;
     this.outputDir = outputDir;
     this.platform = platform;
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     return ImmutableList.<String>builder()
         .addAll(cgoCommandPrefix)
-        .add("-importpath", context.getBuildCellRootPath().toString())
-        .add("-srcdir", context.getBuildCellRootPath().toString())
+        .add("-importpath", absCellPath.toString())
+        .add("-srcdir", absCellPath.toString())
         .add("-objdir", outputDir.toString())
         .addAll(cgoCompilerFlags)
         .add("--")

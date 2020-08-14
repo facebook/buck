@@ -172,6 +172,7 @@ public class CGoGenSource extends AbstractBuildRule {
     steps.add(
         new CGoCompileStep(
             getProjectFilesystem().getRootPath(),
+            context.getBuildCellRootPath(),
             cgo.getEnvironment(context.getSourcePathResolver()),
             cgo.getCommandPrefix(context.getSourcePathResolver()),
             cpp.getCommandPrefix(context.getSourcePathResolver()),
