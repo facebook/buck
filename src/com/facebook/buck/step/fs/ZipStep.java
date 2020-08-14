@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.zip;
+package com.facebook.buck.step.fs;
 
 import static com.facebook.buck.util.zip.ZipOutputStreams.HandleDuplicates.THROW_EXCEPTION;
 
