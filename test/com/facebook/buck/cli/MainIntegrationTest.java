@@ -102,7 +102,6 @@ public class MainIntegrationTest {
             + "and configurations. NOTE: This command's interface is unstable and will change "
             + "without warning.",
         "  project        generates project configuration files for an IDE",
-        "  publish        builds and publishes a library to a central repository",
         "  query          "
             + "provides facilities to query information about the configured target nodes graph (see - cquery)",
         "  rage           debug and fix issues of Buck commands",
