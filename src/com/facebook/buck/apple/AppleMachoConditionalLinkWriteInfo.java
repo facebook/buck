@@ -47,8 +47,8 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Generates the necessary information, ({@link AppleCxxRelinkInfo}, to be able to determine if
- * linking can be skipped if linked dylibs have changed in a compatible way.
+ * Generates the necessary information, ({@link AppleCxxConditionalLinkInfo}, to be able to
+ * determine if linking can be skipped if linked dylibs have changed in a compatible way.
  */
 public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
 
