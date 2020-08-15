@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
+import com.facebook.buck.rules.modern.RemoteExecutionEnabled;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -45,6 +47,11 @@ public class AppleWriteFileHash extends ModernBuildRule<AppleWriteFileHash> impl
   @AddToRuleKey private final SourcePath inputPath;
   @AddToRuleKey private final OutputPath outputPath;
   @AddToRuleKey private final boolean useMachoUuid;
+
+  // This class is used for incremental builds, so it does not make sense to be trying to send
+  // those over remote execution.
+  @CustomFieldBehavior(RemoteExecutionEnabled.class)
+  private final boolean remoteExecutionEnabled = false;
 
   public AppleWriteFileHash(
       BuildTarget buildTarget,
