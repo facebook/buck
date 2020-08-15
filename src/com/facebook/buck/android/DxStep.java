@@ -25,14 +25,12 @@ import com.android.tools.r8.OutputMode;
 import com.android.tools.r8.utils.AbortException;
 import com.android.tools.r8.utils.InternalOptions;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.isolatedsteps.shell.ShellStepDelegate;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -59,9 +57,7 @@ import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-public class DxStep extends ShellStep {
-  private static final Logger LOG = Logger.get(ShellStep.class);
-
+public class DxStep extends IsolatedShellStep {
   /** Options to pass to {@code dx}. */
   public enum Option {
     /** Specify the {@code --no-optimize} flag when running {@code dx}. */
@@ -104,7 +100,10 @@ public class DxStep extends ShellStep {
    */
   private static final int ARG_MAX = 32768;
 
+  // TODO: Refactor project file system out of DxStep to make it a fully conforming isolated step
   private final ProjectFilesystem filesystem;
+  // TODO: Refactor android platform target out of DxStep to make it a fully conforming isolated
+  // step
   private final AndroidPlatformTarget androidPlatformTarget;
   @VisibleForTesting final @Nullable Collection<Path> classpathFiles;
   private final Path outputDexFile;
@@ -126,12 +125,14 @@ public class DxStep extends ShellStep {
    */
   public DxStep(
       ProjectFilesystem filesystem,
+      RelPath cellPath,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
       Iterable<Path> filesToDex,
       boolean withDownwardApi) {
     this(
         filesystem,
+        cellPath,
         androidPlatformTarget,
         outputDexFile,
         filesToDex,
@@ -149,6 +150,7 @@ public class DxStep extends ShellStep {
    */
   public DxStep(
       ProjectFilesystem filesystem,
+      RelPath cellPath,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
       Iterable<Path> filesToDex,
@@ -157,6 +159,7 @@ public class DxStep extends ShellStep {
       boolean withDownwardApi) {
     this(
         filesystem,
+        cellPath,
         androidPlatformTarget,
         outputDexFile,
         filesToDex,
@@ -177,6 +180,7 @@ public class DxStep extends ShellStep {
    */
   public DxStep(
       ProjectFilesystem filesystem,
+      RelPath cellPath,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
       Iterable<Path> filesToDex,
@@ -187,6 +191,7 @@ public class DxStep extends ShellStep {
       boolean withDownwardApi) {
     this(
         filesystem,
+        cellPath,
         androidPlatformTarget,
         outputDexFile,
         filesToDex,
@@ -212,6 +217,7 @@ public class DxStep extends ShellStep {
    */
   public DxStep(
       ProjectFilesystem filesystem,
+      RelPath cellPath,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
       Iterable<Path> filesToDex,
@@ -223,9 +229,7 @@ public class DxStep extends ShellStep {
       Optional<String> bucketId,
       Optional<Integer> minSdkVersion,
       boolean withDownwardApi) {
-    super(
-        getShellStepDelegate(
-            filesystem.getRootPath(), withDownwardApi, options.contains(Option.RUN_IN_PROCESS)));
+    super(filesystem.getRootPath(), cellPath, withDownwardApi);
     this.filesystem = filesystem;
     this.androidPlatformTarget = androidPlatformTarget;
     this.classpathFiles = classpathFiles;
@@ -246,33 +250,8 @@ public class DxStep extends ShellStep {
         !intermediate || dexTool.equals(D8), "Intermediate dexing is only supported with D8");
   }
 
-  private static ShellStepDelegate getShellStepDelegate(
-      AbsPath workingDirectory, boolean withDownwardApi, boolean inProcess) {
-    if (!inProcess) {
-      return new ShellStepDelegate(workingDirectory.getPath(), withDownwardApi, LOG);
-    }
-    // Avoid Precondition checks that should exist for actual shell steps.
-    // TODO don't use a ShellStep for in process dexing
-    return new ShellStepDelegate(workingDirectory.getPath(), withDownwardApi, LOG) {
-      @Override
-      public long getDuration() {
-        return 0;
-      }
-
-      @Override
-      public String getStdout() {
-        return "";
-      }
-
-      @Override
-      public String getStderr() {
-        return "";
-      }
-    };
-  }
-
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     CharsCountingStringList commandArgs = new CharsCountingStringList(10 + filesToDex.size());
 
     // TODO: Support D8 for out of process dexing by respecting dexTool here
@@ -361,16 +340,16 @@ public class DxStep extends ShellStep {
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context)
+  public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
     if (isRunningInProc()) {
       return StepExecutionResult.of(executeInProcess(context));
     } else {
-      return super.execute(context);
+      return super.executeIsolatedStep(context);
     }
   }
 
-  private int executeInProcess(StepExecutionContext context) throws IOException {
+  private int executeInProcess(IsolatedExecutionContext context) throws IOException {
     if (D8.equals(dexTool)) {
 
       D8DiagnosticsHandler diagnosticsHandler = new D8DiagnosticsHandler();
@@ -491,7 +470,7 @@ public class DxStep extends ShellStep {
   }
 
   private void postCompilationFailureToConsole(
-      StepExecutionContext context, D8DiagnosticsHandler diagnosticsHandler) {
+      IsolatedExecutionContext context, D8DiagnosticsHandler diagnosticsHandler) {
     context.postEvent(
         ConsoleEvent.severe(
             String.join(
@@ -502,12 +481,12 @@ public class DxStep extends ShellStep {
   }
 
   @Override
-  protected boolean shouldPrintStderr(Verbosity verbosity) {
+  public boolean shouldPrintStderr(Verbosity verbosity) {
     return verbosity.shouldPrintSelectCommandOutput();
   }
 
   @Override
-  protected boolean shouldPrintStdout(Verbosity verbosity) {
+  public boolean shouldPrintStdout(Verbosity verbosity) {
     return verbosity.shouldPrintSelectCommandOutput();
   }
 

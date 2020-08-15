@@ -23,6 +23,7 @@ import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -539,6 +540,8 @@ public class SmartDexingStep implements Step {
       steps.add(
           new DxStep(
               filesystem,
+              ProjectFilesystemUtils.relativize(
+                  filesystem.getRootPath(), context.getBuildCellRootPath()),
               androidPlatformTarget,
               tempDexJarOutput,
               filesToDex,
@@ -581,6 +584,8 @@ public class SmartDexingStep implements Step {
       steps.add(
           new DxStep(
               filesystem,
+              ProjectFilesystemUtils.relativize(
+                  filesystem.getRootPath(), context.getBuildCellRootPath()),
               androidPlatformTarget,
               tempDexJarOutput,
               filesToDex,
@@ -616,6 +621,8 @@ public class SmartDexingStep implements Step {
       steps.add(
           new DxStep(
               filesystem,
+              ProjectFilesystemUtils.relativize(
+                  filesystem.getRootPath(), context.getBuildCellRootPath()),
               androidPlatformTarget,
               outputPath,
               filesToDex,

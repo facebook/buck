@@ -38,6 +38,7 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -220,6 +221,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         dx =
             new DxStep(
                 filesystem,
+                ProjectFilesystemUtils.relativize(
+                    filesystem.getRootPath(), buildContext.getBuildCellRootPath()),
                 androidPlatformTarget,
                 pathToDex.getPath(),
                 Collections.singleton(pathToOutputFile.getPath()),

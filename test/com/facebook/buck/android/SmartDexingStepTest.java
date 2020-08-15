@@ -210,10 +210,11 @@ public class SmartDexingStepTest {
     Path outputPath = Paths.get("classes.dex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
+    AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
         AndroidTestUtils.createAndroidPlatformTarget(),
         steps,
-        FakeBuildContext.NOOP_CONTEXT,
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
         filesystem,
         filesToDex,
         outputPath,
@@ -226,7 +227,6 @@ public class SmartDexingStepTest {
         Optional.empty(),
         false);
 
-    AbsPath rootPath = filesystem.getRootPath();
     assertEquals(
         Joiner.on(" ")
             .join(
@@ -251,10 +251,11 @@ public class SmartDexingStepTest {
     Path outputPath = Paths.get("classes.dex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
+    AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
         AndroidTestUtils.createAndroidPlatformTarget(),
         steps,
-        FakeBuildContext.NOOP_CONTEXT,
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
         filesystem,
         filesToDex,
         outputPath,
@@ -293,10 +294,11 @@ public class SmartDexingStepTest {
     Path outputPath = Paths.get("classes.dex.jar");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
+    AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
         AndroidTestUtils.createAndroidPlatformTarget(),
         steps,
-        FakeBuildContext.NOOP_CONTEXT,
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
         filesystem,
         filesToDex,
         outputPath,
@@ -338,10 +340,11 @@ public class SmartDexingStepTest {
     EnumSet<DxStep.Option> dxOptions =
         EnumSet.of(DxStep.Option.RUN_IN_PROCESS, DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
+    AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
         AndroidTestUtils.createAndroidPlatformTarget(),
         steps,
-        FakeBuildContext.NOOP_CONTEXT,
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
         filesystem,
         filesToDex,
         outputPath,

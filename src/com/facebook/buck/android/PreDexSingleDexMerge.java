@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
@@ -90,6 +91,8 @@ public class PreDexSingleDexMerge extends PreDexMerge {
     steps.add(
         new DxStep(
             getProjectFilesystem(),
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
             androidPlatformTarget,
             primaryDexPath,
             filesToDex.stream().map(AbsPath::getPath).collect(ImmutableList.toImmutableList()),
