@@ -181,13 +181,26 @@ public class PythonLibraryDescription
               downwardApiConfig.isEnabledForPython());
         case SOURCE_DB:
           {
+            ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+            PythonMappedComponents sourcesBeforeOverriding =
+                sources.orElseGet(() -> PythonMappedComponents.of(ImmutableSortedMap.of()));
+            PythonMappedComponents sourcesOverriddenWithTypeStubs =
+                PythonMappedComponents.of(
+                    ImmutableSortedMap.copyOf(
+                        PythonLibraryDescription.getSourcesOverriddenWithTypeStubs(
+                            sourcesBeforeOverriding.getComponents(),
+                            buildTarget,
+                            graphBuilder,
+                            resolvedCxxPlatform,
+                            args)));
+
             return PythonSourceDatabase.from(
                 buildTarget,
                 context.getProjectFilesystem(),
-                context.getActionGraphBuilder(),
+                graphBuilder,
                 pythonPlatform,
                 resolvedCxxPlatform,
-                sources.orElseGet(() -> PythonMappedComponents.of(ImmutableSortedMap.of())),
+                sourcesOverriddenWithTypeStubs,
                 getPackageDeps(
                     context.getActionGraphBuilder(),
                     baseTarget,
@@ -265,6 +278,43 @@ public class PythonLibraryDescription
         Optional.class,
         pythonPlatform.getFlavor(),
         cxxPlatform.getFlavor());
+  }
+
+  /**
+   * Return sources with any overrides from the `type_stubs` argument.
+   *
+   * @throws HumanReadableException if the type stub does not have a .pyi suffix or if there is no
+   *     matching source file (and `checkForMatchingSource` is true).
+   */
+  public static Map<Path, SourcePath> getSourcesOverriddenWithTypeStubs(
+      Map<Path, SourcePath> sources,
+      BuildTarget buildTarget,
+      ActionGraphBuilder graphBuilder,
+      CxxPlatform cxxPlatform,
+      PythonLibraryDescriptionArg args) {
+    Map<Path, SourcePath> sourcesOverriddenWithTypeStubs = new TreeMap<>(sources);
+    PythonUtil.forEachModuleParam(
+        buildTarget,
+        graphBuilder,
+        cxxPlatform,
+        "type_stubs",
+        PythonUtil.getBasePath(buildTarget, args.getBaseModule()),
+        ImmutableList.of(args.getTypeStubs()),
+        (name, src) -> {
+          if (!MorePaths.getFileExtension(name).equals("pyi")) {
+            throw new HumanReadableException("type stubs must have `.pyi` suffix");
+          }
+          String pyFilename = MorePaths.getNameWithoutExtension(name) + ".py";
+          Path pyName =
+              name.getParent() == null
+                  ? name.getFileSystem().getPath(pyFilename)
+                  : name.getParent().resolve(pyFilename);
+          if (sourcesOverriddenWithTypeStubs.remove(pyName) == null) {
+            throw new HumanReadableException("type stubs must have corresponding `.py` in `srcs`");
+          }
+          sourcesOverriddenWithTypeStubs.put(name, src);
+        });
+    return sourcesOverriddenWithTypeStubs;
   }
 
   @Override
@@ -367,37 +417,16 @@ public class PythonLibraryDescription
           CxxPlatform resolvedCxxPlatform =
               cxxPlatform.getValue().resolve(graphBuilder, buildTarget.getTargetConfiguration());
 
-          // Initialize modules used for typing from the `srcs` parameter.
-          Map<Path, SourcePath> modulesForTyping =
+          Map<Path, SourcePath> sources =
               new TreeMap<>(
                   getModules(
                           graphBuilder, baseTarget, pythonPlatform.getValue(), resolvedCxxPlatform)
                       .map(PythonMappedComponents::getComponents)
                       .orElseGet(ImmutableSortedMap::of));
 
-          // Add in overrides from `type_stubs`.
-          PythonUtil.forEachModuleParam(
-              buildTarget,
-              graphBuilder,
-              cxxPlatform.getValue().resolve(graphBuilder, buildTarget.getTargetConfiguration()),
-              "type_stubs",
-              PythonUtil.getBasePath(buildTarget, args.getBaseModule()),
-              ImmutableList.of(args.getTypeStubs()),
-              (name, src) -> {
-                if (!MorePaths.getFileExtension(name).equals("pyi")) {
-                  throw new HumanReadableException("type stubs must have `.pyi` suffix");
-                }
-                String pyFilename = MorePaths.getNameWithoutExtension(name) + ".py";
-                Path pyName =
-                    name.getParent() == null
-                        ? name.getFileSystem().getPath(pyFilename)
-                        : name.getParent().resolve(pyFilename);
-                if (modulesForTyping.remove(pyName) == null) {
-                  throw new HumanReadableException(
-                      "type stubs must have corresponding `.py` in `srcs`");
-                }
-                modulesForTyping.put(name, src);
-              });
+          Map<Path, SourcePath> modulesForTyping =
+              getSourcesOverriddenWithTypeStubs(
+                  sources, buildTarget, graphBuilder, resolvedCxxPlatform, args);
 
           return Optional.of(
                   modulesForTyping.isEmpty()

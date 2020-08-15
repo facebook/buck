@@ -483,6 +483,35 @@ public class PythonLibraryDescriptionTest {
   }
 
   @Test
+  public void sourceDbWithTypeStubBuiltDirectly() throws Exception {
+    PythonLibraryBuilder libBuilder =
+        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setSrcs(
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(
+                        FakeSourcePath.of("lib1.py"), FakeSourcePath.of("lib2.py"))))
+            .setTypeStubs(
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("lib1.pyi"))));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    PythonSourceDatabase db =
+        (PythonSourceDatabase)
+            graphBuilder.requireRule(
+                libBuilder
+                    .getTarget()
+                    .withAppendedFlavors(
+                        PythonTestUtils.PYTHON_PLATFORM.getFlavor(),
+                        CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                        PythonLibraryDescription.LibraryType.SOURCE_DB.getFlavor()));
+    assertThat(
+        db.getSourceDatabaseForTesting(graphBuilder.getSourcePathResolver()),
+        Matchers.equalTo(
+            ImmutablePythonSourceDatabaseEntry.ofImpl(
+                ImmutableMap.of("lib1.pyi", "lib1.pyi", "lib2.py", "lib2.py"), ImmutableMap.of())));
+  }
+
+  @Test
   public void modulesForTyping() {
     PythonLibraryBuilder builder =
         new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
