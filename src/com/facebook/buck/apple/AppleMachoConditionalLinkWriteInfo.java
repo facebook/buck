@@ -65,6 +65,7 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
   private final SourcePathResolverAdapter sourcePathResolver;
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> commandPrefix;
+  private final boolean fallback;
 
   AppleMachoConditionalLinkWriteInfo(
       ProjectFilesystem filesystem,
@@ -77,7 +78,8 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
       AbsPath skipLinkingPath,
       RelPath linkedExecutablePath,
       ImmutableMap<String, String> environment,
-      ImmutableList<String> commandPrefix) {
+      ImmutableList<String> commandPrefix,
+      boolean fallback) {
     super("apple-conditional-link-write-info");
     Preconditions.checkArgument(commandPrefix.size() > 0);
     this.sourcePaths = sourceToHashPaths;
@@ -91,6 +93,7 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
     this.sourcePathResolver = sourcePathResolver;
     this.environment = environment;
     this.commandPrefix = commandPrefix;
+    this.fallback = fallback;
   }
 
   @Override
@@ -106,6 +109,10 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
     if (maybeRelinkInfo.isPresent()) {
       // Don't use Optional.ifPresent() as we have to wrap inside try/catch
       writeConditionalLinkInfo(filesystem, infoOutputPath, maybeRelinkInfo.get());
+    } else if (fallback) {
+      // The output path would have been recorded as a produced artifact, so it needs to exist
+      // on the filesystem once the rule finishes execution.
+      filesystem.touch(infoOutputPath.getPath());
     }
 
     return StepExecutionResults.SUCCESS;

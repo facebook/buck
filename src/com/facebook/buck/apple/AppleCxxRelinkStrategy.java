@@ -37,14 +37,17 @@ public class AppleCxxRelinkStrategy implements CxxConditionalLinkStrategy, AddsT
   @AddToRuleKey private final ImmutableMap<SourcePath, SourcePath> sourceToHashPaths;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> nonParameterInputPaths;
   @AddToRuleKey private final OutputPath relinkInfoOutputPath;
+  @AddToRuleKey private final boolean fallback;
 
   AppleCxxRelinkStrategy(
       ImmutableMap<SourcePath, SourcePath> sourceToHashPaths,
       ImmutableSortedSet<SourcePath> nonParameterInputPaths,
-      OutputPath relinkInfoPath) {
+      OutputPath relinkInfoPath,
+      boolean fallback) {
     this.sourceToHashPaths = sourceToHashPaths;
     this.nonParameterInputPaths = nonParameterInputPaths;
     this.relinkInfoOutputPath = relinkInfoPath;
+    this.fallback = fallback;
   }
 
   private AbsPath getAbsoluteRelinkInfoPath(
@@ -84,7 +87,8 @@ public class AppleCxxRelinkStrategy implements CxxConditionalLinkStrategy, AddsT
             skipLinkingPath,
             linkedExecutablePath,
             environment,
-            linkerCommandPrefix));
+            linkerCommandPrefix,
+            fallback));
   }
 
   @Override
@@ -110,6 +114,7 @@ public class AppleCxxRelinkStrategy implements CxxConditionalLinkStrategy, AddsT
             skipLinkingPath,
             linkedExecutablePath,
             environment,
-            linkerCommandPrefix));
+            linkerCommandPrefix,
+            fallback));
   }
 }

@@ -57,6 +57,7 @@ public class AppleMachoCxxConditionalLinkCheck extends AbstractExecutionStep {
   private final RelPath linkedExecutablePath;
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> commandPrefix;
+  private final boolean fallback;
 
   AppleMachoCxxConditionalLinkCheck(
       ProjectFilesystem filesystem,
@@ -68,7 +69,8 @@ public class AppleMachoCxxConditionalLinkCheck extends AbstractExecutionStep {
       AbsPath skipLinkingPath,
       RelPath linkedExecutablePath,
       ImmutableMap<String, String> environment,
-      ImmutableList<String> commandPrefix) {
+      ImmutableList<String> commandPrefix,
+      boolean fallback) {
     super("apple-conditional-link-check");
     Preconditions.checkArgument(commandPrefix.size() > 0);
     this.filesystem = filesystem;
@@ -81,6 +83,7 @@ public class AppleMachoCxxConditionalLinkCheck extends AbstractExecutionStep {
     this.linkedExecutablePath = linkedExecutablePath;
     this.environment = environment;
     this.commandPrefix = commandPrefix;
+    this.fallback = fallback;
   }
 
   private Optional<String> getLinkedExecutableUUID() throws IOException {
@@ -299,6 +302,15 @@ public class AppleMachoCxxConditionalLinkCheck extends AbstractExecutionStep {
     // minimal (in the order of tens of milliseconds). The downside is that adding any symbols
     // reimplemented in the dylibs which have the same name as system symbol names would not trigger
     // relinking. We prefer correctness in this case.
+
+    if (fallback
+        && filesystem.exists(infoPath.getPath())
+        && filesystem.getFileSize(infoPath.getPath()) == 0) {
+      // If fallback behavior is enabled and writing failed, we expect to see an empty file.
+      // Not writing the signal file here means fallback to standard linking.
+      return StepExecutionResults.SUCCESS;
+    }
+
     AppleCxxConditionalLinkInfo relinkInfo =
         ObjectMappers.READER.readValue(
             ObjectMappers.createParser(infoPath.getPath()),

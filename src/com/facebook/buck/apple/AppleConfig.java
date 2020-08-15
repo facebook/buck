@@ -77,6 +77,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String COMP_DB_INCLUDES_SWIFT = "compilation_database_includes_swift";
 
   private static final String CONDITIONAL_RELINKING_ENABLED = "conditional_relinking_enabled";
+  private static final String CONDITIONAL_RELINKING_FALLBACK = "conditional_relinking_fallback";
 
   // TODO(T71284505): This is a temporary flag, remove after successful deployment
   private static final String BINARY_USES_FALLBACK_PLATFORM = "binary_uses_fallback_platform";
@@ -543,6 +544,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean getConditionalRelinkingEnabled() {
     return delegate.getBooleanValue(APPLE_SECTION, CONDITIONAL_RELINKING_ENABLED, false);
+  }
+
+  public boolean getConditionalRelinkingFallback() {
+    return delegate.getBooleanValue(APPLE_SECTION, CONDITIONAL_RELINKING_FALLBACK, false);
   }
 
   public boolean getBinaryUsesFallbackPlatform() {

@@ -47,10 +47,16 @@ class AppleCxxRelinkStrategyFactory implements CxxConditionalLinkStrategyFactory
   /** Returns the currently configured relinking strategy. */
   static CxxConditionalLinkStrategyFactory getConfiguredStrategy(AppleConfig appleConfig) {
     if (appleConfig.getConditionalRelinkingEnabled()) {
-      return new AppleCxxRelinkStrategyFactory();
+      return new AppleCxxRelinkStrategyFactory(appleConfig.getConditionalRelinkingFallback());
     }
 
     return CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY;
+  }
+
+  private final boolean fallback;
+
+  private AppleCxxRelinkStrategyFactory(boolean fallback) {
+    this.fallback = fallback;
   }
 
   private BuildRule createHashRule(
@@ -115,6 +121,7 @@ class AppleCxxRelinkStrategyFactory implements CxxConditionalLinkStrategyFactory
         new PublicOutputPath(
             outputPath.resolveSibling(outputPath.getFileName() + ".relink-info.json"));
 
-    return new AppleCxxRelinkStrategy(inputFileHashes.build(), nonParameterInputs, relinkInfoPath);
+    return new AppleCxxRelinkStrategy(
+        inputFileHashes.build(), nonParameterInputs, relinkInfoPath, fallback);
   }
 }
