@@ -86,7 +86,7 @@ class AppleCxxRelinkStrategyFactory implements CxxConditionalLinkStrategyFactory
       BuildableSupport.deriveInputs(arg).forEach(inputs);
     }
 
-    ImmutableList<SourcePath> allInputs = inputs.build().collect(ImmutableList.toImmutableList());
+    ImmutableSet<SourcePath> allInputs = inputs.build().collect(ImmutableSet.toImmutableSet());
     // It's more efficient to store the non-parameter inputs rather than the other way around
     // because the relative sizes of params vs non-params for large targets (i.e., params
     // being about 99%+ of all inputs).

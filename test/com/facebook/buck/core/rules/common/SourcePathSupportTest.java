@@ -32,7 +32,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Before;
@@ -55,8 +55,8 @@ public class SourcePathSupportTest {
     return PathSourcePath.of(projectFilesystem, Paths.get(first, more));
   }
 
-  private ImmutableList<SourcePath> makeSourcePaths() {
-    ImmutableList.Builder<SourcePath> sourcePathsBuilder = ImmutableList.builder();
+  private ImmutableSet<SourcePath> makeSourcePaths() {
+    ImmutableSet.Builder<SourcePath> sourcePathsBuilder = ImmutableSet.builder();
 
     // -- PathSourcePath
 
@@ -116,8 +116,8 @@ public class SourcePathSupportTest {
   @Test
   public void testSourcePathBuildTargetsDeterminism() {
     BuildTarget baseTarget = BuildTargetFactory.newInstance("//A:B");
-    ImmutableList<SourcePath> sourcePaths1 = makeSourcePaths();
-    ImmutableList<SourcePath> sourcePaths2 = makeSourcePaths();
+    ImmutableSet<SourcePath> sourcePaths1 = makeSourcePaths();
+    ImmutableSet<SourcePath> sourcePaths2 = makeSourcePaths();
 
     // Verify determinism by creating different but equal instances of SourcePath and verifying
     // equality of the generated maps
@@ -134,7 +134,7 @@ public class SourcePathSupportTest {
   @Test
   public void testSourcePathBuildTargetsUniqueness() {
     BuildTarget baseTarget = BuildTargetFactory.newInstance("//A:B");
-    ImmutableList<SourcePath> sourcePaths = makeSourcePaths();
+    ImmutableSet<SourcePath> sourcePaths = makeSourcePaths();
     // Verify uniqueness by creating a bi-map
     SourcePathSupport.generateAndCheckUniquenessOfBuildTargetsForSourcePaths(
         sourcePaths, baseTarget, "hash-");

@@ -27,6 +27,7 @@ import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -47,7 +48,7 @@ public class SourcePathSupport {
    */
   public static ImmutableBiMap<SourcePath, BuildTarget>
       generateAndCheckUniquenessOfBuildTargetsForSourcePaths(
-          Iterable<SourcePath> sourcePaths, BuildTarget baseTarget, String prefix) {
+          ImmutableSet<SourcePath> sourcePaths, BuildTarget baseTarget, String prefix) {
     ImmutableBiMap.Builder<SourcePath, BuildTarget> sourcePathToNameMap = ImmutableBiMap.builder();
     for (SourcePath sourcePath : sourcePaths) {
       String flavorName = generateFlavorNameForSourcePath(sourcePath);
