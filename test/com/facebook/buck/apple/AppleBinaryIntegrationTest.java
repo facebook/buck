@@ -40,6 +40,8 @@ import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.ProcessResult;
@@ -57,6 +59,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -1787,5 +1790,59 @@ public class AppleBinaryIntegrationTest {
   private static Optional<String> getDwarfdumpUuidOutput(
       ProjectWorkspace workspace, Path executablePath) throws IOException, InterruptedException {
     return workspace.runCommand("dwarfdump", "--uuid", executablePath.toString()).getStdout();
+  }
+
+  @Test
+  public void testAppleBinaryTargetSpecificSDKVersion() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_target_specific_sdk_version", tmp);
+    workspace.addBuckConfigLocalOption("apple", "target_sdk_version_linker_flag", "true");
+    workspace.setUp();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    // Build binary without target specific SDK version, i.e., latest SDK deployment target
+
+    BuildTarget nonSpecificTarget =
+        BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#macosx-x86_64");
+    ProcessResult result =
+        workspace.runBuckCommand("build", nonSpecificTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path nonSpecificTargetPath =
+        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, nonSpecificTarget, "%s"));
+    assertTrue(Files.exists(nonSpecificTargetPath));
+
+    // Build binary with target specific SDK version (10.14 in BUCK file)
+
+    BuildTarget sdkVersionTarget =
+        BuildTargetFactory.newInstance("//Apps/TestApp:TargetSpecificVersionApp#macosx-x86_64");
+    result = workspace.runBuckCommand("build", sdkVersionTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path sdkVersionTargetPath =
+        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, sdkVersionTarget, "%s"));
+    assertTrue(Files.exists(sdkVersionTargetPath));
+
+    // Extract loader command to verify deployment target
+
+    Optional<String> nonSpecificTargetBuildVersion =
+        AppleLibraryIntegrationTest.getOtoolLoaderCommandByName(
+            workspace, nonSpecificTargetPath, "LC_BUILD_VERSION");
+    assertTrue(nonSpecificTargetBuildVersion.isPresent());
+    Optional<String> specificSDKTargetBuildVersion =
+        AppleLibraryIntegrationTest.getOtoolLoaderCommandByName(
+            workspace, sdkVersionTargetPath, "LC_BUILD_VERSION");
+    assertTrue(specificSDKTargetBuildVersion.isPresent());
+
+    // Verify that only target specific binary has deployment set to 10.14
+
+    assertThat(
+        nonSpecificTargetBuildVersion.get(), CoreMatchers.not(containsString("minos 10.14")));
+    assertThat(specificSDKTargetBuildVersion.get(), containsString("minos 10.14"));
   }
 }
