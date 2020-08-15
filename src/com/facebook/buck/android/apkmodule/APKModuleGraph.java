@@ -86,6 +86,7 @@ public class APKModuleGraph implements AddsToRuleKey {
   @AddToRuleKey private final Set<String> modulesWithResources;
   private final Optional<Set<BuildTarget>> seedTargets;
   private final Map<APKModule, Set<BuildTarget>> buildTargetsMap = new HashMap<>();
+  private final Set<UndeclaredDependency> undeclaredDependencies = new HashSet<>();
 
   private final Supplier<ImmutableMap<BuildTarget, APKModule>> targetToModuleMapSupplier =
       MoreSuppliers.memoize(
@@ -112,6 +113,9 @@ public class APKModuleGraph implements AddsToRuleKey {
 
   private final Supplier<DirectedAcyclicGraph<String>> declaredDependencyGraphSupplier =
       MoreSuppliers.memoize(this::generateDeclaredDependencyGraph);
+
+  private final Supplier<DirectedAcyclicGraph<String>> detectedDepAndDeclaredDepGraphSupplier =
+      MoreSuppliers.memoize(this::generateDetectedDependencyAndDeclaredDependencyGraph);
 
   private final Supplier<ImmutableSet<APKModule>> modulesSupplier =
       MoreSuppliers.memoize(
@@ -289,6 +293,17 @@ public class APKModuleGraph implements AddsToRuleKey {
   }
 
   /**
+   * Lazy generate the detected dep and declared dependency graph. Undeclared dependencies are
+   * detected and automatically added to this DAG.
+   *
+   * @return the DAG representing the declared dependency relationship of declared app module
+   *     configurations.
+   */
+  private DirectedAcyclicGraph<String> getDetectedDepAndDeclaredDepGraph() {
+    return detectedDepAndDeclaredDepGraphSupplier.get();
+  }
+
+  /**
    * Get the APKModule representing the core application that is always included in the apk
    *
    * @return the root APK Module
@@ -396,15 +411,31 @@ public class APKModuleGraph implements AddsToRuleKey {
       for (APKModule node : apkModuleGraph.getNodes()) {
         nameToAPKModules.put(node.getName(), node);
       }
-      DirectedAcyclicGraph<String> declaredDependencies = getDeclaredDependencyGraph();
-      for (String source : declaredDependencies.getNodes()) {
-        for (String sink : declaredDependencies.getOutgoingNodesFor(source)) {
+      final DirectedAcyclicGraph<String> detectedDepAndDeclaredDepGraph =
+          getDetectedDepAndDeclaredDepGraph();
+      for (String source : detectedDepAndDeclaredDepGraph.getNodes()) {
+        for (String sink : detectedDepAndDeclaredDepGraph.getOutgoingNodesFor(source)) {
           apkModuleGraph.addEdge(nameToAPKModules.get(source), nameToAPKModules.get(sink));
         }
       }
     }
 
     return new DirectedAcyclicGraph<>(apkModuleGraph);
+  }
+
+  private DirectedAcyclicGraph<String> generateDetectedDependencyAndDeclaredDependencyGraph() {
+    final DirectedAcyclicGraph<String> declaredDependencies = generateDeclaredDependencyGraph();
+    final MutableDirectedGraph<String> graph = new MutableDirectedGraph<>();
+    for (final String node : declaredDependencies.getNodes()) {
+      graph.addNode(node);
+      for (final String outgoingNode : declaredDependencies.getOutgoingNodesFor(node)) {
+        graph.addEdge(node, outgoingNode);
+      }
+    }
+    for (final UndeclaredDependency undeclaredDependency : undeclaredDependencies) {
+      graph.addEdge(undeclaredDependency.sourceModule, undeclaredDependency.depModule);
+    }
+    return new DirectedAcyclicGraph<>(graph);
   }
 
   private DirectedAcyclicGraph<String> generateDeclaredDependencyGraph() {
@@ -522,7 +553,8 @@ public class APKModuleGraph implements AddsToRuleKey {
         }.start();
       }
     }
-    getUndeclaredDeps(new DirectedAcyclicGraph<>(moduleGraph), declaredDependencies);
+    undeclaredDependencies.addAll(
+        getUndeclaredDeps(new DirectedAcyclicGraph<>(moduleGraph), declaredDependencies));
 
     // Now to generate the minimal covers of APKModules for each set of APKModules that contain
     // a buildTarget

@@ -536,6 +536,207 @@ public class APKModuleTest {
   }
 
   /*
+                             +- - - - - - - - - - - - +
+                             ' root:                  '
+                             '                        '
+                             ' +--------------------+ '
+        +------------------- ' |       Binary       | ' ---------------------+
+        |                    ' +--------------------+ '                      |
+        |                                                                    |
+        |                                                                    |
+        v                                                                    v
+    + - - - - - - +                                              +- - - - - - - - - - - - +
+    ' android:    '                                              ' java:                  '
+    '             '                                              '                        '
+    ' +---------+ '                                              ' +--------------------+ '
+    ' | Android | ' -------------------------------------------> ' |        Java        | '
+    ' +---------+ '                                              ' +--------------------+ '
+    '             '                                              '                        '
+    + - - - - - - +                                              +- - - - - - - - - - - - +
+
+
+       Android module depends on the Java Module
+       -- target dependecy
+       == package and target dependecy
+  */
+  @Test
+  public void testAPKModuleGraphWithMissingDeclaredDependency() {
+    ImmutableSet.Builder<TargetNode<?>> nodeBuilder = ImmutableSet.builder();
+    BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:test-java-library");
+    nodeBuilder.add(
+        JavaLibraryBuilder.createBuilder(javaLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java"))
+            .build());
+
+    BuildTarget androidLibraryTarget = BuildTargetFactory.newInstance("//:test-android-library");
+    nodeBuilder.add(
+        AndroidLibraryBuilder.createBuilder(androidLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
+            .addDep(javaLibraryTarget)
+            .build());
+
+    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//:keystore");
+    nodeBuilder.add(
+        KeystoreBuilder.createBuilder(keystoreTarget)
+            .setStore(FakeSourcePath.of("debug.keystore"))
+            .setProperties(FakeSourcePath.of("keystore.properties"))
+            .build());
+
+    BuildTarget androidBinaryTarget = BuildTargetFactory.newInstance("//:test-android-binary");
+    nodeBuilder.add(
+        AndroidBinaryBuilder.createBuilder(androidBinaryTarget)
+            .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
+            .setKeystore(keystoreTarget)
+            .setOriginalDeps(ImmutableSortedSet.of(androidLibraryTarget, javaLibraryTarget))
+            .build());
+
+    TargetGraph graph = TargetGraphFactory.newInstance(nodeBuilder.build());
+
+    ImmutableMap.Builder<String, ImmutableList<BuildTarget>> seedConfigMap = ImmutableMap.builder();
+    seedConfigMap.put("android", ImmutableList.of(androidLibraryTarget));
+    seedConfigMap.put("java", ImmutableList.of(javaLibraryTarget));
+
+    APKModuleGraph dag =
+        new APKModuleGraph(
+            Optional.of(seedConfigMap.build()),
+            Optional.empty(),
+            Optional.empty(),
+            ImmutableSet.of(),
+            graph,
+            androidBinaryTarget);
+
+    ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
+    assertThat(topLevelNodes.size(), is(1));
+
+    APKModule topModule = Iterables.getFirst(topLevelNodes, null);
+    assertThat(topModule.getName(), is("android"));
+
+    ImmutableSet<APKModule> dependencies = dag.getGraph().getOutgoingNodesFor(topModule);
+    assertThat(dependencies.size(), is(2));
+
+    for (APKModule dependency : dependencies) {
+      assertThat(dependency.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java"));
+      if (dependency.getName().equals("java")) {
+        ImmutableSet<APKModule> javaDeps = dag.getGraph().getOutgoingNodesFor(dependency);
+        assertThat(javaDeps.size(), is(1));
+        assertThat(
+            Iterables.getFirst(javaDeps, null).getName(), is(APKModuleGraph.ROOT_APKMODULE_NAME));
+      }
+    }
+  }
+
+  /*
+                             +- - - - - - - - - - - - +
+                             ' root:                  '
+                             '                        '
+                             ' +--------------------+ '
+        +------------------- ' |       Binary       | ' ---------------------+
+        |                    ' +--------------------+ '                      |
+        |                                                                    |
+        |                                                                    |
+        v                                                                    v
+    + - - - - - - +                                              +- - - - - - - - - - - - +
+    ' android:    '                                              ' java:                  '
+    '             '                                              '                        '
+    ' +---------+ '                                              ' +--------------------+ '
+    ' | Android | ' ===========================================> ' |        Java        | '
+    ' +---------+ '                                              ' +--------------------+ '
+    '             '                                              '          |             '
+    + - - - - - - +                                              '          |             '
+                                                                 '          |             '
+                                                                 '          v             '
+                                                                 ' +--------------------+ '
+                                                                 ' |    Java Dep        | '
+                                                                 ' +--------------------+ '
+                                                                 +- - - - - - - - - - - - +
+
+
+       Android module depends on the Java Module
+       -- target dependecy
+       == package and target dependecy
+  */
+  @Test
+  public void testAPKModuleGraphWithUndeclaredTransitiveDeps() {
+    ImmutableSet.Builder<TargetNode<?>> nodeBuilder = ImmutableSet.builder();
+    BuildTarget javaDepLibraryTarget = BuildTargetFactory.newInstance("//:test-java-dep-library");
+    nodeBuilder.add(
+        AndroidLibraryBuilder.createBuilder(javaDepLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestJavaDepLibrary.java"))
+            .build());
+
+    BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:test-java-library");
+    nodeBuilder.add(
+        JavaLibraryBuilder.createBuilder(javaLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java"))
+            .addDep(javaDepLibraryTarget)
+            .build());
+
+    BuildTarget androidLibraryTarget = BuildTargetFactory.newInstance("//:test-android-library");
+    nodeBuilder.add(
+        AndroidLibraryBuilder.createBuilder(androidLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
+            .addDep(javaLibraryTarget)
+            .build());
+
+    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//:keystore");
+    nodeBuilder.add(
+        KeystoreBuilder.createBuilder(keystoreTarget)
+            .setStore(FakeSourcePath.of("debug.keystore"))
+            .setProperties(FakeSourcePath.of("keystore.properties"))
+            .build());
+
+    BuildTarget androidBinaryTarget = BuildTargetFactory.newInstance("//:test-android-binary");
+    nodeBuilder.add(
+        AndroidBinaryBuilder.createBuilder(androidBinaryTarget)
+            .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
+            .setKeystore(keystoreTarget)
+            .setOriginalDeps(ImmutableSortedSet.of(androidLibraryTarget, javaLibraryTarget))
+            .build());
+
+    TargetGraph graph = TargetGraphFactory.newInstance(nodeBuilder.build());
+
+    ImmutableMap.Builder<String, ImmutableList<BuildTarget>> seedConfigMap = ImmutableMap.builder();
+    seedConfigMap.put("android", ImmutableList.of(androidLibraryTarget));
+    seedConfigMap.put("java", ImmutableList.of(javaLibraryTarget));
+    seedConfigMap.put("java-dep", ImmutableList.of(javaDepLibraryTarget));
+
+    APKModuleGraph dag =
+        new APKModuleGraph(
+            Optional.of(seedConfigMap.build()),
+            Optional.empty(),
+            Optional.empty(),
+            ImmutableSet.of(),
+            graph,
+            androidBinaryTarget);
+
+    ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
+    assertThat(topLevelNodes.size(), is(1));
+
+    APKModule topModule = Iterables.getFirst(topLevelNodes, null);
+    assertThat(topModule.getName(), is("android"));
+
+    ImmutableSet<APKModule> dependencies = dag.getGraph().getOutgoingNodesFor(topModule);
+    assertThat(dependencies.size(), is(2));
+
+    for (final APKModule dependency : dependencies) {
+      assertThat(
+          dependency.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java", "java-dep"));
+      if (dependency.getName().equals("java")) {
+        ImmutableSet<APKModule> javaDeps = dag.getGraph().getOutgoingNodesFor(dependency);
+        assertThat(javaDeps.size(), is(2));
+        for (final APKModule javaDep : javaDeps) {
+          assertThat(javaDep.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java-dep"));
+        }
+      } else if (dependency.getName().equals("java-dep")) {
+        ImmutableSet<APKModule> javaDeps = dag.getGraph().getOutgoingNodesFor(dependency);
+        assertThat(javaDeps.size(), is(1));
+        assertThat(
+            Iterables.getFirst(javaDeps, null).getName(), is(APKModuleGraph.ROOT_APKMODULE_NAME));
+      }
+    }
+  }
+
+  /*
 
                                                              + - - - - - - - - - +
                                                              ' root:             '
