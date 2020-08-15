@@ -63,8 +63,11 @@ public class AndroidResourceIndex extends AbstractBuildRuleWithDeclaredAndExtraD
                 Objects.requireNonNull(getPathToOutputFile().getParent()))));
 
     steps.add(
-        new WriteFileStep(
-            getProjectFilesystem(), "", getPathToOutputFile(), /* executable */ false));
+        WriteFileStep.of(
+            getProjectFilesystem().getRootPath(),
+            "",
+            getPathToOutputFile(), /* executable */
+            false));
 
     steps.add(
         new MiniAapt(

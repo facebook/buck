@@ -109,7 +109,8 @@ public class WriteFile extends AbstractBuildRule {
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
-        new WriteFileStep(projectFilesystem, ByteSource.wrap(fileContents), output, executable));
+        WriteFileStep.of(
+            projectFilesystem.getRootPath(), ByteSource.wrap(fileContents), output, executable));
   }
 
   @Override

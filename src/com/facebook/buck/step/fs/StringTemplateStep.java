@@ -55,7 +55,8 @@ public class StringTemplateStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context)
+      throws IOException, InterruptedException {
     String template;
     template = new String(Files.readAllBytes(templatePath), StandardCharsets.UTF_8);
 
@@ -65,9 +66,13 @@ public class StringTemplateStep implements Step {
       st = st.add(ent.getKey(), ent.getValue());
     }
 
-    return new WriteFileStep(
-            filesystem, Objects.requireNonNull(st.render()), outputPath, /* executable */ false)
-        .execute(context);
+    return WriteFileStep.of(
+            filesystem.getRootPath(),
+            Objects.requireNonNull(st.render()),
+            outputPath, /* executable */
+            false)
+        .createDelegate(context)
+        .executeIsolatedStep(context);
   }
 
   @Override

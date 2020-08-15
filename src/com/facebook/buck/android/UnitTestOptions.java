@@ -90,7 +90,8 @@ public class UnitTestOptions extends ModernBuildRule<UnitTestOptions.Impl> {
         fileContents.append(entry.getKey()).append("=").append(entry.getValue()).append('\n');
       }
 
-      steps.add(new WriteFileStep(filesystem, fileContents.toString(), outputPath, false));
+      steps.add(
+          WriteFileStep.of(filesystem.getRootPath(), fileContents.toString(), outputPath, false));
 
       steps.add(RmStep.of(BuildCellRelativePath.of(jarPath)));
       steps.add(

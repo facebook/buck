@@ -133,7 +133,7 @@ public class ModernBuildRuleIntegrationTest {
         BuildCellRelativePathFactory buildCellPathFactory) {
       Path tmp = outputPathResolver.getTempPath("temporary_writing_rule_temp");
       return ImmutableList.of(
-          new WriteFileStep(filesystem, "", tmp, false),
+          WriteFileStep.of(filesystem.getRootPath(), "", tmp, false),
           CopyStep.forFile(filesystem, tmp, outputPathResolver.resolvePath(output).getPath()));
     }
   }

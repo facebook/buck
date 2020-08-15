@@ -82,7 +82,8 @@ class ProvisioningProfileCopyStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context)
+      throws IOException, InterruptedException {
     String bundleID =
         AppleInfoPlistParsing.getBundleIdFromPlistStream(
                 infoPlist, filesystem.getInputStreamForRelativePath(infoPlist))
@@ -131,12 +132,13 @@ class ProvisioningProfileCopyStep implements Step {
       entitlementsPlist.putAll(selectedProfile.get().getMergeableEntitlements());
       entitlementsPlist.put(APPLICATION_IDENTIFIER, appID);
       entitlementsPlist.put(KEYCHAIN_ACCESS_GROUPS, new String[] {appID});
-      return (new WriteFileStep(
-              filesystem,
+      return (WriteFileStep.of(
+              filesystem.getRootPath(),
               entitlementsPlist.toXMLPropertyList(),
               signingEntitlementsTempPath,
               /* executable */ false))
-          .execute(context);
+          .createDelegate(context)
+          .executeIsolatedStep(context);
     }
   }
 

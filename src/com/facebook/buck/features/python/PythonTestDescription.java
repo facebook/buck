@@ -255,8 +255,8 @@ public class PythonTestDescription
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
-          new WriteFileStep(
-              getProjectFilesystem(),
+          WriteFileStep.of(
+              getProjectFilesystem().getRootPath(),
               Resources.asByteSource(
                   Resources.getResource(PythonTestDescription.class, DEFAULT_TEST_MAIN_NAME)),
               output.getPath(),

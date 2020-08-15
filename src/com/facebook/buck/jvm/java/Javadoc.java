@@ -130,8 +130,8 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
                 context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir)));
     // Write an @-file with all the source files in
     steps.add(
-        new WriteFileStep(
-            getProjectFilesystem(),
+        WriteFileStep.of(
+            getProjectFilesystem().getRootPath(),
             Joiner.on("\n")
                 .join(
                     sources.stream()
@@ -154,8 +154,11 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
                 .map(Object::toString)
                 .iterator());
     steps.add(
-        new WriteFileStep(
-            getProjectFilesystem(), argsBuilder.toString(), atArgs, /* can execute */ false));
+        WriteFileStep.of(
+            getProjectFilesystem().getRootPath(),
+            argsBuilder.toString(),
+            atArgs, /* can execute */
+            false));
 
     Path uncompressedOutputDir = scratchDir.resolve("docs");
 

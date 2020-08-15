@@ -492,7 +492,8 @@ public class SmartDexingStep implements Step {
           minSdkVersion,
           withDownwardApi);
       steps.add(
-          new WriteFileStep(filesystem, newInputsHash, outputHashPath, /* executable */ false));
+          WriteFileStep.of(
+              filesystem.getRootPath(), newInputsHash, outputHashPath, /* executable */ false));
     }
   }
 

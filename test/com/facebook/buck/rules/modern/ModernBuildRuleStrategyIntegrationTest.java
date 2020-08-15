@@ -636,8 +636,11 @@ public class ModernBuildRuleStrategyIntegrationTest {
       FunnyStringBuilder builder = new FunnyStringBuilder();
       dynamic.append(builder);
       return ImmutableList.of(
-          new WriteFileStep(
-              filesystem, builder.build(), outputPathResolver.resolvePath(output), false));
+          WriteFileStep.of(
+              filesystem.getRootPath(),
+              builder.build(),
+              outputPathResolver.resolvePath(output),
+              false));
     }
   }
 

@@ -204,8 +204,8 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     entries.put("depends", Joiner.on(", ").join(depPackages.keySet()));
 
-    return new WriteFileStep(
-        getProjectFilesystem(),
+    return WriteFileStep.of(
+        getProjectFilesystem().getRootPath(),
         entries.entrySet().stream()
             .map(input -> input.getKey() + ": " + input.getValue())
             .collect(Collectors.joining(System.lineSeparator())),

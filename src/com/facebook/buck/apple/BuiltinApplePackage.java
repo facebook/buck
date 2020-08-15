@@ -173,8 +173,8 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
                   BuildCellRelativePath.fromCellRelativePath(
                       context.getBuildCellRootPath(), getProjectFilesystem(), watchKitSupportDir)));
           commands.add(
-              new WriteFileStep(
-                  getProjectFilesystem(),
+              WriteFileStep.of(
+                  getProjectFilesystem().getRootPath(),
                   ByteSource.wrap(((WriteFile) binary).getFileContents()),
                   watchKitSupportDir.resolve("WK"),
                   true /* executable */));
@@ -189,8 +189,8 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
                         getProjectFilesystem(),
                         watchKitSupportDir)));
             commands.add(
-                new WriteFileStep(
-                    getProjectFilesystem(),
+                WriteFileStep.of(
+                    getProjectFilesystem().getRootPath(),
                     ByteSource.wrap(legacyWatchStub.get().getFileContents()),
                     watchKitSupportDir.resolve("WK"),
                     true /* executable */));

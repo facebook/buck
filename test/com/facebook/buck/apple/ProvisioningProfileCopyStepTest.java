@@ -33,6 +33,7 @@ import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -123,7 +124,8 @@ public class ProvisioningProfileCopyStepTest {
         profileEntitlements.containsKey(
             "com.apple.developer.icloud-container-development-container-identifiers"));
 
-    Optional<String> xcentContents = projectFilesystem.readFileIfItExists(xcentFile);
+    Optional<String> xcentContents =
+        ProjectFilesystemUtils.readFileIfItExists(projectFilesystem.getRootPath(), xcentFile);
     assertTrue(xcentContents.isPresent());
     NSDictionary xcentPlist =
         (NSDictionary) PropertyListParser.parse(xcentContents.get().getBytes());

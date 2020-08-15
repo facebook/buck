@@ -68,6 +68,7 @@ public class ApplePkgInfo extends ModernBuildRule<ApplePkgInfo> implements Build
       BuildCellRelativePathFactory buildCellPathFactory) {
     Path outputPath = outputPathResolver.resolvePath(output).getPath();
     boolean isExecutable = false;
-    return ImmutableList.of(new WriteFileStep(filesystem, "APPLWRUN", outputPath, isExecutable));
+    return ImmutableList.of(
+        WriteFileStep.of(filesystem.getRootPath(), "APPLWRUN", outputPath, isExecutable));
   }
 }

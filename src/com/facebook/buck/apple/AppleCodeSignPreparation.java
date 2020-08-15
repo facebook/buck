@@ -237,7 +237,8 @@ public class AppleCodeSignPreparation extends ModernBuildRule<AppleCodeSignPrepa
             () ->
                 codeSignIdentitySupplier.get().getFingerprint().map(HashCode::toString).orElse("");
         Path outputPath = outputPathResolver.resolvePath(output).getPath();
-        stepsBuilder.add(new WriteFileStep(filesystem, fingerprintSupplier, outputPath, false));
+        stepsBuilder.add(
+            WriteFileStep.of(filesystem.getRootPath(), fingerprintSupplier, outputPath, false));
       }
 
       return stepsBuilder.build();

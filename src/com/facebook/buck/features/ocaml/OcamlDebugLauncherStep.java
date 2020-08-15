@@ -51,13 +51,15 @@ public class OcamlDebugLauncherStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context)
+      throws IOException, InterruptedException {
     String debugCmdStr = getDebugCmd();
     String debugLauncherScript = getDebugLauncherScript(debugCmdStr);
 
     WriteFileStep writeFile =
-        new WriteFileStep(filesystem, debugLauncherScript, args.getOutput(), /* executable */ true);
-    return writeFile.execute(context);
+        WriteFileStep.of(
+            filesystem.getRootPath(), debugLauncherScript, args.getOutput(), /* executable */ true);
+    return writeFile.createDelegate(context).executeIsolatedStep(context);
   }
 
   private String getDebugLauncherScript(String debugCmdStr) {

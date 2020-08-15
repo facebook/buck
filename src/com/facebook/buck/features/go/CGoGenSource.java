@@ -156,8 +156,8 @@ public class CGoGenSource extends AbstractBuildRule {
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), genDir)));
     steps.add(
-        new WriteFileStep(
-            getProjectFilesystem(),
+        WriteFileStep.of(
+            getProjectFilesystem().getRootPath(),
             new ImmutableList.Builder<String>()
                 .addAll(getPreprocessorFlags(context.getSourcePathResolver()))
                     .addAll(

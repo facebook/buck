@@ -241,13 +241,14 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
           }
         };
 
-    return new WriteFileStep(getProjectFilesystem(), source, destination, /* executable */ false);
+    return WriteFileStep.of(
+        getProjectFilesystem().getRootPath(), source, destination, /* executable */ false);
   }
 
   /** @return a {@link Step} that writes the final from the resource named {@code name}. */
   private Step writeFromResource(Path destination, String name) {
-    return new WriteFileStep(
-        getProjectFilesystem(),
+    return WriteFileStep.of(
+        getProjectFilesystem().getRootPath(),
         Resources.asByteSource(Resources.getResource(name)),
         destination,
         /* executable */ false);

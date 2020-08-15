@@ -193,8 +193,8 @@ public class DummyRDotJava extends AbstractBuildRule
                   getProjectFilesystem(),
                   emptyRDotJava.getParent())));
       steps.add(
-          new WriteFileStep(
-              getProjectFilesystem(),
+          WriteFileStep.of(
+              getProjectFilesystem().getRootPath(),
               "package com.facebook;\n public class R {}\n",
               emptyRDotJava,
               /* executable */ false));

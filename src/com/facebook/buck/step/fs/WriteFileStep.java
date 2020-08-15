@@ -17,56 +17,61 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.io.file.MostFiles;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.Escaper;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.io.ByteSource;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.function.Supplier;
 
-public class WriteFileStep implements Step {
+@BuckStyleValue
+public abstract class WriteFileStep extends DelegateStep<WriteFileIsolatedStep> {
 
-  private final ByteSource source;
-  private final ProjectFilesystem filesystem;
-  private final Path outputPath;
-  private final boolean executable;
+  abstract AbsPath getRootPath();
 
-  public WriteFileStep(
-      ProjectFilesystem filesystem, ByteSource content, Path outputPath, boolean executable) {
+  abstract ByteSource getSource();
+
+  abstract Path getOutputPath();
+
+  abstract boolean getExecutable();
+
+  @Override
+  public String getShortNameSuffix() {
+    return "write_file";
+  }
+
+  @Override
+  public WriteFileIsolatedStep createDelegate(StepExecutionContext context) {
+    return WriteFileIsolatedStep.of(getRootPath(), getSource(), getOutputPath(), getExecutable());
+  }
+
+  public static WriteFileStep of(
+      AbsPath rootPath, ByteSource content, Path outputPath, boolean executable) {
     Preconditions.checkArgument(
         !outputPath.isAbsolute(), "Output path must not be absolute: %s", outputPath);
-
-    this.source = content;
-    this.filesystem = filesystem;
-    this.outputPath = outputPath;
-    this.executable = executable;
+    return ImmutableWriteFileStep.ofImpl(rootPath, content, outputPath, executable);
   }
 
-  public WriteFileStep(
-      ProjectFilesystem filesystem, ByteSource content, RelPath outputPath, boolean executable) {
-    this(filesystem, content, outputPath.getPath(), executable);
+  public static WriteFileStep of(
+      AbsPath rootPath, ByteSource content, RelPath outputPath, boolean executable) {
+    return ImmutableWriteFileStep.ofImpl(rootPath, content, outputPath.getPath(), executable);
   }
 
-  public WriteFileStep(
-      ProjectFilesystem filesystem, String content, Path outputPath, boolean executable) {
-    this(filesystem, Suppliers.ofInstance(content), outputPath, executable);
+  public static WriteFileStep of(
+      AbsPath rootPath, String content, Path outputPath, boolean executable) {
+    return of(rootPath, Suppliers.ofInstance(content), outputPath, executable);
   }
 
-  public WriteFileStep(
-      ProjectFilesystem filesystem, Supplier<String> content, Path outputPath, boolean executable) {
-    this(
-        filesystem,
+  public static WriteFileStep of(
+      AbsPath rootPath, Supplier<String> content, Path outputPath, boolean executable) {
+    return ImmutableWriteFileStep.ofImpl(
+        rootPath,
         new ByteSource() {
           @Override
           public InputStream openStream() {
@@ -79,38 +84,13 @@ public class WriteFileStep implements Step {
         executable);
   }
 
-  public WriteFileStep(
-      ProjectFilesystem filesystem,
-      Supplier<String> content,
-      RelPath outputPath,
-      boolean executable) {
-    this(filesystem, content, outputPath.getPath(), executable);
+  public static WriteFileStep of(
+      AbsPath rootPath, Supplier<String> content, RelPath outputPath, boolean executable) {
+    return of(rootPath, content, outputPath.getPath(), executable);
   }
 
-  public WriteFileStep(
-      ProjectFilesystem projectFilesystem, String content, RelPath outputPath, boolean executable) {
-    this(projectFilesystem, content, outputPath.getPath(), executable);
-  }
-
-  @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-    try (InputStream sourceStream = source.openStream()) {
-      filesystem.copyToPath(sourceStream, outputPath, StandardCopyOption.REPLACE_EXISTING);
-      if (executable) {
-        Path resolvedPath = filesystem.resolve(outputPath);
-        MostFiles.makeExecutable(resolvedPath);
-      }
-      return StepExecutionResults.SUCCESS;
-    }
-  }
-
-  @Override
-  public String getShortName() {
-    return "write_file";
-  }
-
-  @Override
-  public String getDescription(StepExecutionContext context) {
-    return String.format("echo ... > %s", Escaper.escapeAsBashString(outputPath));
+  public static WriteFileStep of(
+      AbsPath rootPath, String content, RelPath outputPath, boolean executable) {
+    return of(rootPath, content, outputPath.getPath(), executable);
   }
 }

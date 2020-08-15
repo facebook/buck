@@ -189,7 +189,8 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), binPath.getParent())),
-        new WriteFileStep(getProjectFilesystem(), script, binPath, /* executable */ true));
+        WriteFileStep.of(
+            getProjectFilesystem().getRootPath(), script, binPath, /* executable */ true));
   }
 
   @Override

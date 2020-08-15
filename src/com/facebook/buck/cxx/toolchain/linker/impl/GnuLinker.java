@@ -214,8 +214,8 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
                   context.getBuildCellRootPath(),
                   getProjectFilesystem(),
                   linkerScript.getParent())),
-          new WriteFileStep(
-              getProjectFilesystem(),
+          WriteFileStep.of(
+              getProjectFilesystem().getRootPath(),
               () -> {
                 Set<String> symbols = new LinkedHashSet<>();
                 for (SourcePath path : symbolFiles) {

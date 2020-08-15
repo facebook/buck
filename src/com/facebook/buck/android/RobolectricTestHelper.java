@@ -136,15 +136,15 @@ class RobolectricTestHelper {
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(), projectFilesystem, resourceDirectoriesPath)));
     stepsBuilder.add(
-        new WriteFileStep(
-            projectFilesystem,
+        WriteFileStep.of(
+            projectFilesystem.getRootPath(),
             getDirectoriesContent(
                 buildContext.getSourcePathResolver(), HasAndroidResourceDeps::getRes),
             resourceDirectoriesPath,
             false));
     stepsBuilder.add(
-        new WriteFileStep(
-            projectFilesystem,
+        WriteFileStep.of(
+            projectFilesystem.getRootPath(),
             getDirectoriesContent(
                 buildContext.getSourcePathResolver(), HasAndroidResourceDeps::getAssets),
             assetDirectoriesPath,

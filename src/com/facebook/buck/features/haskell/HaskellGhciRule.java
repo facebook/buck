@@ -411,7 +411,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       steps.add(
           new AbstractExecutionStep("ghci_iserv_wrapper") {
             @Override
-            public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+            public StepExecutionResult execute(StepExecutionContext context)
+                throws IOException, InterruptedException {
               String template;
               template =
                   new String(Files.readAllBytes(ghciIservScriptTemplate), StandardCharsets.UTF_8);
@@ -433,12 +434,13 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
               if (enableProfiling) {
                 actualIserv = dir.resolve("iserv-prof");
               }
-              return new WriteFileStep(
-                      getProjectFilesystem(),
+              return WriteFileStep.of(
+                      getProjectFilesystem().getRootPath(),
                       Objects.requireNonNull(st.render()),
                       actualIserv, /* executable */
                       true)
-                  .execute(context);
+                  .createDelegate(context)
+                  .executeIsolatedStep(context);
             }
           });
     }
@@ -473,8 +475,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     Path startGhci = dir.resolve("start.ghci");
     steps.add(
-        new WriteFileStep(
-            getProjectFilesystem(),
+        WriteFileStep.of(
+            getProjectFilesystem().getRootPath(),
             startGhciContents.toString(),
             startGhci,
             /* executable */ false));

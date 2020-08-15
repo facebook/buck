@@ -307,8 +307,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       return steps
           .add(new TouchStep(getProjectFilesystem(), pathToTextSymbolsFile))
           .add(
-              new WriteFileStep(
-                  getProjectFilesystem(),
+              WriteFileStep.of(
+                  getProjectFilesystem().getRootPath(),
                   rDotJavaPackageArgument == null ? "" : rDotJavaPackageArgument,
                   pathToRDotJavaPackageFile,
                   false /* executable */))
@@ -329,8 +329,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
               Objects.requireNonNull(pathToRDotJavaPackageFile)));
     } else {
       steps.add(
-          new WriteFileStep(
-              getProjectFilesystem(),
+          WriteFileStep.of(
+              getProjectFilesystem().getRootPath(),
               rDotJavaPackageArgument,
               pathToRDotJavaPackageFile,
               false /* executable */));

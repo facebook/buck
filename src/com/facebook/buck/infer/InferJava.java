@@ -319,8 +319,8 @@ public final class InferJava extends ModernBuildRule<InferJava.Impl> {
       ImmutableList<String> argsBuilder =
           buildArgs(filesystem, inferOutPath, sourcePathResolverAdapter);
       steps.add(
-          new WriteFileStep(
-              filesystem,
+          WriteFileStep.of(
+              filesystem.getRootPath(),
               Joiner.on(System.lineSeparator()).join(argsBuilder),
               argFilePath.getPath(),
               false));

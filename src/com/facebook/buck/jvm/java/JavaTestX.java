@@ -145,8 +145,8 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 buildContext.getBuildCellRootPath(),
                 getProjectFilesystem(),
                 classPathOutput.getResolvedPath().getParent())),
-        new WriteFileStep(
-            getProjectFilesystem(),
+        WriteFileStep.of(
+            getProjectFilesystem().getRootPath(),
             () ->
                 String.join(
                     System.lineSeparator(),
@@ -155,8 +155,8 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
                         .getClassNamesForSources()),
             classPathOutput.getResolvedPath(),
             false),
-        new WriteFileStep(
-            getProjectFilesystem(),
+        WriteFileStep.of(
+            getProjectFilesystem().getRootPath(),
             () ->
                 String.join(
                     System.lineSeparator(), getJvmArgs(buildContext.getSourcePathResolver())),

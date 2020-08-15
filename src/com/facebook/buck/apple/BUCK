@@ -60,6 +60,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/step/isolatedsteps/common:common",
         "//src/com/facebook/buck/step/isolatedsteps/shell:shell_steps",
         "//src/com/facebook/buck/swift:swift",
         "//src/com/facebook/buck/swift/toolchain:toolchain",

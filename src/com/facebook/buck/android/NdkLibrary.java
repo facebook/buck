@@ -165,7 +165,8 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), makefile.getParent())));
-    steps.add(new WriteFileStep(getProjectFilesystem(), makefileContents, makefile, false));
+    steps.add(
+        WriteFileStep.of(getProjectFilesystem().getRootPath(), makefileContents, makefile, false));
     steps.add(
         new NdkBuildStep(
             getProjectFilesystem(),
