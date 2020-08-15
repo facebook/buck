@@ -418,7 +418,8 @@ public class AppleDescriptions {
       CxxLibraryDescriptionArg.Builder output,
       Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform,
       AppleNativeTargetDescriptionArg arg,
-      BuildTarget buildTarget) {
+      BuildTarget buildTarget,
+      boolean addSDKVersionFlagToLinkerFlags) {
     SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
     populateCxxConstructorArg(
         ruleResolver,
@@ -442,6 +443,11 @@ public class AppleDescriptions {
       output.addCompilerFlags(
           StringWithMacros.ofConstantString(
               "-fmodule-name=" + arg.getHeaderPathPrefix().orElse(buildTarget.getShortName())));
+    }
+
+    if (addSDKVersionFlagToLinkerFlags) {
+      addSDKVersionFlagForTargetIfNecessary(
+          ruleResolver, appleCxxPlatform, arg, output::addLinkerFlags);
     }
   }
 

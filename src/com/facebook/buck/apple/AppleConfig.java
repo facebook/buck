@@ -80,6 +80,9 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   // TODO(T71284505): This is a temporary flag, remove after successful deployment
   private static final String BINARY_USES_FALLBACK_PLATFORM = "binary_uses_fallback_platform";
+  // TODO(T71284505): This is a temporary flag, remove after successful deployment
+  private static final String USE_TARGET_SPECIFIC_SDK_VERSION_LINKER_FLAG =
+      "target_sdk_version_linker_flag";
 
   private final BuckConfig delegate;
 
@@ -544,6 +547,11 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean getBinaryUsesFallbackPlatform() {
     return delegate.getBooleanValue(APPLE_SECTION, BINARY_USES_FALLBACK_PLATFORM, false);
+  }
+
+  public boolean getUseTargetSpecificSDKVersionLinkerFlag() {
+    return delegate.getBooleanValue(
+        APPLE_SECTION, USE_TARGET_SPECIFIC_SDK_VERSION_LINKER_FLAG, false);
   }
 
   @BuckStyleValue

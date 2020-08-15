@@ -663,9 +663,10 @@ public class AppleLibraryDescription
                 toolchainProvider, buildTarget.getTargetConfiguration())
             .getValue(buildTarget);
 
+    boolean addSDKVersionLinkerFlag = shouldAddSDKVersionLinkerFlag(buildTarget);
     CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
     AppleDescriptions.populateCxxLibraryDescriptionArg(
-        graphBuilder, delegateArg, appleCxxPlatform, args, buildTarget);
+        graphBuilder, delegateArg, appleCxxPlatform, args, buildTarget, addSDKVersionLinkerFlag);
 
     BuildRuleParams newParams;
     Optional<BuildRule> swiftCompanionBuildRule =
@@ -737,6 +738,10 @@ public class AppleLibraryDescription
               cxxDelegate,
               AppleCxxRelinkStrategyFactory.getConfiguredStrategy(appleConfig));
         });
+  }
+
+  private boolean shouldAddSDKVersionLinkerFlag(BuildTarget buildTarget) {
+    return appleConfig.getUseTargetSpecificSDKVersionLinkerFlag() && isDylibTarget(buildTarget);
   }
 
   private boolean shouldWrapIntoDebuggableBinary(BuildTarget buildTarget, BuildRule buildRule) {
@@ -1001,9 +1006,10 @@ public class AppleLibraryDescription
                 toolchainProvider, buildTarget.getTargetConfiguration())
             .getValue(buildTarget);
 
+    boolean addSDKVersionLinkerFlag = shouldAddSDKVersionLinkerFlag(buildTarget);
     CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
     AppleDescriptions.populateCxxLibraryDescriptionArg(
-        graphBuilder, delegateArg, appleCxxPlatform, args, buildTarget);
+        graphBuilder, delegateArg, appleCxxPlatform, args, buildTarget, addSDKVersionLinkerFlag);
     return cxxLibraryMetadataFactory.createMetadata(
         buildTarget, graphBuilder, cellRoots, delegateArg.build(), metadataClass);
   }
@@ -1051,6 +1057,15 @@ public class AppleLibraryDescription
     } else {
       return node.getConstructorArg().getPreferredLinkage().equals(Optional.of(Linkage.SHARED));
     }
+  }
+
+  private static boolean isDylibTarget(BuildTarget buildTarget) {
+    FlavorSet flavors = buildTarget.getFlavors();
+    if (AppleLibraryDescription.LIBRARY_TYPE.getFlavor(flavors).isPresent()) {
+      return flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
+    }
+
+    return false;
   }
 
   @RuleArg

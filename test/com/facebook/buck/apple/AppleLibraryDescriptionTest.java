@@ -153,7 +153,8 @@ public class AppleLibraryDescriptionTest {
         delegateArgBuilder,
         Optional.empty(),
         libNode.getConstructorArg(),
-        libTarget);
+        libTarget,
+        false);
     CxxLibraryDescriptionArg delegateArg = delegateArgBuilder.build();
     assertThat(
         delegateArg.getCompilerFlags(),
