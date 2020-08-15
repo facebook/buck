@@ -550,7 +550,12 @@ public class AppleBinaryDescription
                     buildTarget,
                     args.getDefaultPlatform());
             AppleDescriptions.populateCxxBinaryDescriptionArg(
-                graphBuilder, delegateArg, appleCxxPlatform, args, buildTarget);
+                graphBuilder,
+                delegateArg,
+                appleCxxPlatform,
+                args,
+                buildTarget,
+                appleConfig.getUseTargetSpecificSDKVersionLinkerFlag());
 
             Optional<ApplePlatform> applePlatform =
                 getApplePlatformForTarget(
@@ -693,7 +698,12 @@ public class AppleBinaryDescription
               buildTarget,
               args.getDefaultPlatform());
       AppleDescriptions.populateCxxBinaryDescriptionArg(
-          graphBuilder, delegateArg, appleCxxPlatform, args, buildTarget);
+          graphBuilder,
+          delegateArg,
+          appleCxxPlatform,
+          args,
+          buildTarget,
+          appleConfig.getUseTargetSpecificSDKVersionLinkerFlag());
       return cxxBinaryMetadataFactory.createMetadata(
           buildTarget, graphBuilder, delegateArg.build().getDeps(), metadataClass);
     }

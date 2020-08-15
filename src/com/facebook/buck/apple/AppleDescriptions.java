@@ -400,7 +400,8 @@ public class AppleDescriptions {
       CxxBinaryDescriptionArg.Builder output,
       Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform,
       AppleNativeTargetDescriptionArg arg,
-      BuildTarget buildTarget) {
+      BuildTarget buildTarget,
+      boolean addSDKVersionFlagToLinkerFlags) {
     populateCxxConstructorArg(
         graphBuilder,
         appleCxxPlatform,
@@ -411,6 +412,11 @@ public class AppleDescriptions {
         output::setHeaderNamespace,
         output::addCompilerFlags);
     output.setDefaultPlatform(arg.getDefaultPlatform());
+
+    if (addSDKVersionFlagToLinkerFlags) {
+      addSDKVersionFlagForTargetIfNecessary(
+          graphBuilder, appleCxxPlatform, arg, output::addLinkerFlags);
+    }
   }
 
   public static void populateCxxLibraryDescriptionArg(
