@@ -17,12 +17,10 @@
 package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.features.project.intellij.model.ContentRoot;
-import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.project.intellij.model.folders.IjSourceFolder;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -79,30 +77,6 @@ public class BuckOutPathConverter {
         folder.getIjResourceFolderType(),
         folder.getRelativeOutputPath(),
         folder.getPackagePrefix());
-  }
-
-  public IjLibrary convert(IjLibrary library) {
-    return IjLibrary.builder()
-        .setName(library.getName())
-        .setType(library.getType())
-        .setLevel(library.getLevel())
-        .setBinaryJars(
-            library.getBinaryJars().stream()
-                .map(this::convert)
-                .collect(ImmutableSet.toImmutableSet()))
-        .setClassPaths(
-            library.getClassPaths().stream()
-                .map(this::convert)
-                .collect(ImmutableSet.toImmutableSet()))
-        .setSourceJars(
-            library.getSourceJars().stream()
-                .map(this::convert)
-                .collect(ImmutableSet.toImmutableSet()))
-        .setJavadocUrls(
-            library.getJavadocUrls().stream()
-                .map(this::convert)
-                .collect(ImmutableSet.toImmutableSet()))
-        .build();
   }
 
   public Map<String, Object> convert(Map<String, Object> androidProperties) {

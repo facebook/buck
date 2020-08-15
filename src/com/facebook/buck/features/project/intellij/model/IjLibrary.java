@@ -21,7 +21,11 @@ import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.features.project.intellij.IjDependencyListBuilder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.nio.file.Path;
+import java.util.function.Function;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /** Represents a prebuilt library (.jar or .aar) as seen by IntelliJ. */
@@ -49,19 +53,24 @@ public abstract class IjLibrary implements IjProjectElement {
   public abstract ImmutableSet<BuildTarget> getTargets();
 
   /** @return path to the binary (.jar or .aar) the library represents. */
-  public abstract ImmutableSet<Path> getBinaryJars();
+  @Value.NaturalOrder
+  public abstract ImmutableSortedSet<Path> getBinaryJars();
 
   /** @return classPath paths */
-  public abstract ImmutableSet<Path> getClassPaths();
+  @Value.NaturalOrder
+  public abstract ImmutableSortedSet<Path> getClassPaths();
 
   /** @return path to the jar containing sources for the library. */
-  public abstract ImmutableSet<Path> getSourceJars();
+  @Value.NaturalOrder
+  public abstract ImmutableSortedSet<Path> getSourceJars();
 
   /** @return url to the javadoc. */
-  public abstract ImmutableSet<String> getJavadocUrls();
+  @Value.NaturalOrder
+  public abstract ImmutableSortedSet<String> getJavadocUrls();
 
   /** @return path to the directories containing Java sources for the library. */
-  public abstract ImmutableSet<Path> getSourceDirs();
+  @Value.NaturalOrder
+  public abstract ImmutableSortedSet<Path> getSourceDirs();
 
   @Value.Check
   protected void eitherBinaryJarOrClassPathPresentForDefaultLibrary() {
@@ -110,17 +119,34 @@ public abstract class IjLibrary implements IjProjectElement {
     }
   }
 
-  @Value.Default
-  public Type getType() {
-    return Type.DEFAULT;
+  public abstract Type getType();
+
+  public abstract Level getLevel();
+
+  public IjLibrary copyWithTransformer(
+      @Nullable Function<Path, Path> pathTransformer,
+      @Nullable Function<String, String> stringTransformer) {
+    return builder()
+        .from(this)
+        .setBinaryJars(transform(getBinaryJars(), pathTransformer))
+        .setClassPaths(transform(getClassPaths(), pathTransformer))
+        .setSourceJars(transform(getSourceJars(), pathTransformer))
+        .setSourceDirs(transform(getSourceDirs(), pathTransformer))
+        .setJavadocUrls(transform(getJavadocUrls(), stringTransformer))
+        .build();
   }
 
-  @Value.Default
-  public Level getLevel() {
-    return Level.PROJECT;
+  private static <T extends Comparable<T>> ImmutableSortedSet<T> transform(
+      ImmutableSortedSet<T> set, @Nullable Function<T, T> transformer) {
+    if (transformer != null) {
+      return set.stream()
+          .map(transformer)
+          .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+    }
+    return set;
   }
 
-  public static Builder builder() {
+  static Builder builder() {
     return new Builder();
   }
 

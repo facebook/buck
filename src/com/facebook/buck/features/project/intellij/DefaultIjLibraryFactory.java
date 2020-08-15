@@ -34,25 +34,17 @@ import com.facebook.buck.features.project.intellij.model.IjLibraryFactoryResolve
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarDescriptionArg;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Filters out all of the targets which can be represented as IntelliJ prebuilts from the set of
  * TargetNodes and allows resolving those as dependencies of modules.
  */
 class DefaultIjLibraryFactory extends IjLibraryFactory {
-
-  /** Rule describing how to create a {@link IjLibrary} from a {@link TargetNode}. */
-  private interface IjLibraryRule {
-    void applyRule(TargetNode<?> targetNode, IjLibrary.Builder library);
-  }
 
   /**
    * Rule describing how to create a {@link IjLibrary} from a {@link TargetNode}.
@@ -73,7 +65,6 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
   private Map<Class<? extends DescriptionWithTargetGraph<?>>, IjLibraryRule> libraryRuleIndex =
       new HashMap<>();
-  private Set<String> uniqueLibraryNamesSet = new HashSet<>();
   private IjLibraryFactoryResolver libraryFactoryResolver;
   private Map<TargetNode<?>, Optional<IjLibrary>> libraryCache;
 
@@ -96,7 +87,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
   public Optional<IjLibrary> getLibrary(TargetNode<?> target) {
     Optional<IjLibrary> library = libraryCache.get(target);
     if (library == null) {
-      library = createLibrary(target);
+      library = getRule(target).map(rule -> createLibrary(target, rule));
       libraryCache.put(target, library);
     }
     return library;
@@ -113,23 +104,6 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
               .orElse(null);
     }
     return Optional.ofNullable(rule);
-  }
-
-  private Optional<IjLibrary> createLibrary(TargetNode<?> targetNode) {
-    return getRule(targetNode)
-        .map(
-            rule -> {
-              String libraryName = Util.intelliJLibraryName(targetNode.getBuildTarget());
-              Preconditions.checkState(
-                  !uniqueLibraryNamesSet.contains(libraryName),
-                  "Trying to use the same library name for different targets.");
-
-              IjLibrary.Builder libraryBuilder = IjLibrary.builder();
-              rule.applyRule(targetNode, libraryBuilder);
-              libraryBuilder.setName(libraryName);
-              libraryBuilder.setTargets(ImmutableSet.of(targetNode.getBuildTarget()));
-              return libraryBuilder.build();
-            });
   }
 
   private static class JavaLibraryRule implements IjLibraryRule {

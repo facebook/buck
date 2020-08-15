@@ -39,7 +39,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,6 +48,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.stringtemplate.v4.ST;
 
@@ -310,28 +310,14 @@ public class IjProjectWriter {
   }
 
   private IjLibrary prepareLibraryToBeWritten(IjLibrary library) {
+    Function<Path, Path> pathTransformer;
     if (buckOutPathConverter.hasBuckOutPathForGeneratedProjectFiles()) {
-      library = buckOutPathConverter.convert(library);
+      pathTransformer =
+          path -> projectPaths.getProjectRelativePath(buckOutPathConverter.convert(path));
+    } else {
+      pathTransformer = projectPaths::getProjectRelativePath;
     }
-
-    return IjLibrary.builder()
-        .setName(library.getName())
-        .setType(library.getType())
-        .setLevel(library.getLevel())
-        .setBinaryJars(
-            library.getBinaryJars().stream()
-                .map(projectPaths::getProjectRelativePath)
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())))
-        .setClassPaths(
-            library.getClassPaths().stream()
-                .map(projectPaths::getProjectRelativePath)
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())))
-        .setSourceJars(
-            library.getSourceJars().stream()
-                .map(projectPaths::getProjectRelativePath)
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())))
-        .setJavadocUrls(library.getJavadocUrls())
-        .build();
+    return library.copyWithTransformer(pathTransformer, null);
   }
 
   private void writeLibrary(IjLibrary library) throws IOException {
