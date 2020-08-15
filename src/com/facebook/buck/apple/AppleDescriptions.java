@@ -361,6 +361,14 @@ public class AppleDescriptions {
     // the header map itself.
     setHeaderNamespace.accept("");
 
+    addSDKVersionFlagForTargetIfNecessary(ruleResolver, appleCxxPlatform, arg, addCompilerFlags);
+  }
+
+  private static void addSDKVersionFlagForTargetIfNecessary(
+      BuildRuleResolver ruleResolver,
+      Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform,
+      AppleNativeTargetDescriptionArg arg,
+      Consumer<StringWithMacros> addCompilerFlags) {
     if (appleCxxPlatform.isPresent()) {
       String platformVersion = appleCxxPlatform.get().resolve(ruleResolver).getMinVersion();
       Optional<String> targetVersion = arg.getTargetSdkVersion();
