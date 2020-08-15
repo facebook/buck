@@ -36,5 +36,5 @@ public interface ParserTargetNodeFromAttrMapFactory {
       BuildTarget target,
       DependencyStack dependencyStack,
       Map<String, Object> rawNode,
-      Function<SimplePerfEvent.PerfEventId, SimplePerfEvent.Scope> perfEventScope);
+      Function<SimplePerfEvent.PerfEventTitle, SimplePerfEvent.Scope> perfEventScope);
 }

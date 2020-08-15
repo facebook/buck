@@ -33,7 +33,7 @@ public class EventPostingRuleKeyCacheScope<V> implements RuleKeyCacheScope<V> {
 
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(
-            buckEventBus.isolated(), SimplePerfEvent.PerfEventId.of("rule_key_cache_setup"))) {
+            buckEventBus.isolated(), SimplePerfEvent.PerfEventTitle.of("rule_key_cache_setup"))) {
 
       // Run additional setup.
       setup(scope);
@@ -55,7 +55,7 @@ public class EventPostingRuleKeyCacheScope<V> implements RuleKeyCacheScope<V> {
   public final void close() {
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(
-            buckEventBus.isolated(), SimplePerfEvent.PerfEventId.of("rule_key_cache_cleanup"))) {
+            buckEventBus.isolated(), SimplePerfEvent.PerfEventTitle.of("rule_key_cache_cleanup"))) {
 
       // Log stats.
       CacheStats stats = cache.getStats();

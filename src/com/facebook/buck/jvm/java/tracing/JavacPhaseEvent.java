@@ -137,8 +137,8 @@ public abstract class JavacPhaseEvent extends SimplePerfEvent implements WorkAdv
   }
 
   @Override
-  public PerfEventId getEventId() {
-    return PerfEventId.of(getPhase().toString());
+  public PerfEventTitle getTitle() {
+    return PerfEventTitle.of(getPhase().toString());
   }
 
   @Override

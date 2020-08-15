@@ -218,7 +218,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private void init() throws IOException {
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(
-            buckEventBus.isolated(), SimplePerfEvent.PerfEventId.of("ParserInit"))) {
+            buckEventBus.isolated(), SimplePerfEvent.PerfEventTitle.of("ParserInit"))) {
 
       ImmutableMap.Builder<String, String> pythonEnvironmentBuilder =
           ImmutableMap.builderWithExpectedSize(environment.size());

@@ -106,7 +106,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
       BuildTarget target,
       DependencyStack dependencyStack,
       UnconfiguredTargetNode unconfiguredTargetNode,
-      Function<SimplePerfEvent.PerfEventId, Scope> perfEventScope) {
+      Function<SimplePerfEvent.PerfEventTitle, Scope> perfEventScope) {
 
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleType ruleType = unconfiguredTargetNode.getRuleType();
@@ -125,7 +125,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
 
     try (SimplePerfEvent.Scope scope =
         perfEventScope.apply(
-            SimplePerfEvent.PerfEventId.of("MarshalledConstructorArg.convertRawAttributes"))) {
+            SimplePerfEvent.PerfEventTitle.of("MarshalledConstructorArg.convertRawAttributes"))) {
 
       LabelledAnySelectable compatibleWith;
 

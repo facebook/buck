@@ -213,7 +213,7 @@ public class WatchmanWatcher {
                 try (SimplePerfEvent.Scope perfEvent =
                         SimplePerfEvent.scope(
                             buckEventBus.isolated(),
-                            SimplePerfEvent.PerfEventId.of("check_watchman"),
+                            SimplePerfEvent.PerfEventTitle.of("check_watchman"),
                             "cell",
                             cellPath);
                     WatchmanClient client = watchmanClientFactory.newInstance()) {

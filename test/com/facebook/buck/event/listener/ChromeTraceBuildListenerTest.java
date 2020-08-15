@@ -563,10 +563,11 @@ public class ChromeTraceBuildListenerTest {
     try (SimplePerfEvent.Scope scope1 =
         SimplePerfEvent.scope(
             eventBus.isolated(),
-            SimplePerfEvent.PerfEventId.of("planning"),
+            SimplePerfEvent.PerfEventTitle.of("planning"),
             ImmutableMap.of("nefarious", true))) {
       try (SimplePerfEvent.Scope scope2 =
-          SimplePerfEvent.scope(eventBus.isolated(), SimplePerfEvent.PerfEventId.of("scheming"))) {
+          SimplePerfEvent.scope(
+              eventBus.isolated(), SimplePerfEvent.PerfEventTitle.of("scheming"))) {
         scope2.appendFinishedInfo("success", false);
       }
       scope1.appendFinishedInfo(

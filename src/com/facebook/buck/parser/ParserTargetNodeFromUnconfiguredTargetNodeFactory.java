@@ -34,5 +34,5 @@ public interface ParserTargetNodeFromUnconfiguredTargetNodeFactory {
       BuildTarget target,
       DependencyStack dependencyStack,
       UnconfiguredTargetNode rawNode,
-      Function<SimplePerfEvent.PerfEventId, SimplePerfEvent.Scope> perfEventScope);
+      Function<SimplePerfEvent.PerfEventTitle, SimplePerfEvent.Scope> perfEventScope);
 }

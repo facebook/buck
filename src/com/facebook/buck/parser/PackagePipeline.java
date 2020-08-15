@@ -49,7 +49,7 @@ public class PackagePipeline implements AutoCloseable {
   private final PackageFileParsePipeline packageFileParsePipeline;
 
   private final SimplePerfEvent.Scope perfEventScope;
-  private final SimplePerfEvent.PerfEventId perfEventId;
+  private final SimplePerfEvent.PerfEventTitle perfEventTitle;
   /**
    * minimum duration time for performance events to be logged (for use with {@link
    * SimplePerfEvent}s). This is on the base class to make it simpler to enable verbose tracing for
@@ -71,10 +71,10 @@ public class PackagePipeline implements AutoCloseable {
     this.packageFileParsePipeline = packageFileParsePipeline;
 
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 10;
-    this.perfEventId = SimplePerfEvent.PerfEventId.of("GetPackage");
+    this.perfEventTitle = SimplePerfEvent.PerfEventTitle.of("GetPackage");
     this.perfEventScope =
         SimplePerfEvent.scope(
-            eventBus.isolated(), SimplePerfEvent.PerfEventId.of("package_pipeline"));
+            eventBus.isolated(), SimplePerfEvent.PerfEventTitle.of("package_pipeline"));
 
     this.cache = new PipelineNodeCache<>(packageCache, n -> false);
   }
@@ -197,7 +197,7 @@ public class PackagePipeline implements AutoCloseable {
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scopeIgnoringShortEvents(
             eventBus.isolated(),
-            perfEventId,
+            perfEventTitle,
             "packageFile",
             packageFile,
             perfEventScope,

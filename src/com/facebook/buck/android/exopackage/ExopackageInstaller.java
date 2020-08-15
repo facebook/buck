@@ -243,7 +243,7 @@ public class ExopackageInstaller {
     try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(
             eventBus.isolated(),
-            SimplePerfEvent.PerfEventId.of("get_package_info"),
+            SimplePerfEvent.PerfEventTitle.of("get_package_info"),
             "package",
             packageName)) {
       return device.getPackageInfo(packageName);

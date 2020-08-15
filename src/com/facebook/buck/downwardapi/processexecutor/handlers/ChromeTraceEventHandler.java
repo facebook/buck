@@ -19,7 +19,7 @@ package com.facebook.buck.downwardapi.processexecutor.handlers;
 import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiExecutionContext;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.event.SimplePerfEvent.PerfEventId;
+import com.facebook.buck.event.SimplePerfEvent.PerfEventTitle;
 import com.google.common.collect.ImmutableMap;
 import java.time.Instant;
 import java.util.Map;
@@ -42,8 +42,8 @@ enum ChromeTraceEventHandler implements EventHandler<ChromeTraceEvent> {
     SimplePerfEvent.Started started;
     switch (event.getStatus()) {
       case BEGIN:
-        PerfEventId perfEventId = PerfEventId.of(String.valueOf(eventId));
-        started = SimplePerfEvent.started(perfEventId, event.getCategory(), attributes);
+        PerfEventTitle perfEventTitle = PerfEventTitle.of(String.valueOf(eventId));
+        started = SimplePerfEvent.started(perfEventTitle, event.getCategory(), attributes);
         chromeTraceStartedEvents.put(eventId, started);
         context.postEvent(started, timestamp);
         break;

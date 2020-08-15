@@ -200,7 +200,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
             unconfiguredTargetNode,
             id ->
                 SimplePerfEvent.scope(
-                    Optional.empty(), SimplePerfEvent.PerfEventId.of("raw_to_targetnode")));
+                    Optional.empty(), SimplePerfEvent.PerfEventTitle.of("raw_to_targetnode")));
 
     return targetNodeMaybeIncompatible.assertGetTargetNode(dependencyStack).getParseDeps().stream()
         .map(BuildTarget::getUnconfiguredBuildTarget)

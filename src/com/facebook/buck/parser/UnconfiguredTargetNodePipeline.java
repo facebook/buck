@@ -56,7 +56,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
   private final ConcurrentHashMap<AbsPath, ListenableFuture<ImmutableList<UnconfiguredTargetNode>>>
       allNodeCache = new ConcurrentHashMap<>();
   private final Scope perfEventScope;
-  private final SimplePerfEvent.PerfEventId perfEventId;
+  private final SimplePerfEvent.PerfEventTitle perfEventTitle;
   /**
    * minimum duration time for performance events to be logged (for use with {@link
    * SimplePerfEvent}s). This is on the base class to make it simpler to enable verbose tracing for
@@ -84,10 +84,11 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
     this.packagePipeline = packagePipeline;
     this.unconfiguredTargetNodeFactory = unconfiguredTargetNodeFactory;
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 10;
-    this.perfEventId = SimplePerfEvent.PerfEventId.of("GetRawTargetNode");
+    this.perfEventTitle = SimplePerfEvent.PerfEventTitle.of("GetRawTargetNode");
     this.perfEventScope =
         SimplePerfEvent.scope(
-            eventBus.isolated(), SimplePerfEvent.PerfEventId.of("raw_target_node_parse_pipeline"));
+            eventBus.isolated(),
+            SimplePerfEvent.PerfEventTitle.of("raw_target_node_parse_pipeline"));
     this.cache =
         new PipelineNodeCache<>(cache, UnconfiguredTargetNodePipeline::targetNodeIsConfiguration);
   }
@@ -199,7 +200,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
     try (Scope scope =
         SimplePerfEvent.scopeIgnoringShortEvents(
             eventBus.isolated(),
-            perfEventId,
+            perfEventTitle,
             "target",
             buildTarget,
             perfEventScope,

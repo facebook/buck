@@ -223,7 +223,7 @@ public class BuckEventOrdererTest {
     return configureTestEventAtTime(
         (AbstractBuckEvent)
             SimplePerfEvent.started(
-                SimplePerfEvent.PerfEventId.of("BuckEventOrdererTest"),
+                SimplePerfEvent.PerfEventTitle.of("BuckEventOrdererTest"),
                 ImmutableMap.of(
                     "seqNo", seqNo++,
                     "time", timeInMs,

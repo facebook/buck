@@ -232,7 +232,7 @@ public class ProjectGenerator {
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(
             buckEventBus.isolated(),
-            SimplePerfEvent.PerfEventId.of("xcode_project_generation"),
+            SimplePerfEvent.PerfEventTitle.of("xcode_project_generation"),
             ImmutableMap.of("Path", xcodeProjectWriteOptions.xcodeProjPath()))) {
 
       PathRelativizer pathRelativizer =

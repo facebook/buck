@@ -498,7 +498,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     try {
       writeChromeTraceEvent(
           perfEvent.getCategory(),
-          CONVERTED_EVENT_ID_CACHE.get(perfEvent.getEventId().getValue().intern()),
+          CONVERTED_EVENT_ID_CACHE.get(perfEvent.getTitle().getValue().intern()),
           phase,
           ImmutableMap.copyOf(perfEvent.getEventInfo()),
           perfEvent);

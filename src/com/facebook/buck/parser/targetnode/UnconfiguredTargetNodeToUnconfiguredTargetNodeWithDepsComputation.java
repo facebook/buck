@@ -109,7 +109,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
                 key.getUnconfiguredTargetNode(),
                 id ->
                     SimplePerfEvent.scope(
-                        Optional.empty(), SimplePerfEvent.PerfEventId.of("raw_to_targetnode")))
+                        Optional.empty(), SimplePerfEvent.PerfEventTitle.of("raw_to_targetnode")))
             .assertGetTargetNode(dependencyStack);
 
     ImmutableSet<UnconfiguredBuildTarget> deps =

@@ -189,7 +189,7 @@ public class AdbHelper implements AndroidDevicesHelper {
                     try (SimplePerfEvent.Scope ignored =
                         SimplePerfEvent.scope(
                             getBuckEventBus().isolated(),
-                            SimplePerfEvent.PerfEventId.of("adbCall " + description),
+                            SimplePerfEvent.PerfEventTitle.of("adbCall " + description),
                             "device_serial",
                             device.getSerialNumber())) {
                       return func.apply(device);

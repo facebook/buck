@@ -33,7 +33,7 @@ public class SimplePerfEventTest {
 
   private void assertPerfEvent(
       BuckEvent event,
-      SimplePerfEvent.PerfEventId id,
+      SimplePerfEvent.PerfEventTitle id,
       SimplePerfEvent.Type type,
       ImmutableMap<String, String> info) {
     assertThat(event, Matchers.instanceOf(SimplePerfEvent.class));
@@ -41,9 +41,9 @@ public class SimplePerfEventTest {
     SimplePerfEvent perfEvent = (SimplePerfEvent) event;
 
     assertThat(
-        perfEvent.getEventId(),
+        perfEvent.getTitle(),
         Matchers.equalTo(
-            SimplePerfEvent.PerfEventId.of(
+            SimplePerfEvent.PerfEventTitle.of(
                 CaseFormat.UPPER_CAMEL
                     .converterTo(CaseFormat.LOWER_UNDERSCORE)
                     .convert(id.getValue()))));
@@ -54,7 +54,7 @@ public class SimplePerfEventTest {
 
   @Test
   public void testManuallyCreatedStartEvents() {
-    SimplePerfEvent.PerfEventId testEventId = SimplePerfEvent.PerfEventId.of("Test");
+    SimplePerfEvent.PerfEventTitle testEventId = SimplePerfEvent.PerfEventTitle.of("Test");
 
     assertPerfEvent(
         SimplePerfEvent.started(testEventId),
@@ -81,13 +81,13 @@ public class SimplePerfEventTest {
         ImmutableMap.of("k1", "v1", "k2", "v2", "k3", "v3"));
   }
 
-  private SimplePerfEvent.Started newStartedEvent(SimplePerfEvent.PerfEventId testEventId) {
+  private SimplePerfEvent.Started newStartedEvent(SimplePerfEvent.PerfEventTitle testEventId) {
     return SimplePerfEvent.started(testEventId, "XX", "YY");
   }
 
   @Test
   public void testManuallyCreatedUpdateEvents() {
-    SimplePerfEvent.PerfEventId testEventId = SimplePerfEvent.PerfEventId.of("Test");
+    SimplePerfEvent.PerfEventTitle testEventId = SimplePerfEvent.PerfEventTitle.of("Test");
     // Info from the started event does not get folded into the update/finished ones.
 
     assertPerfEvent(
@@ -118,7 +118,7 @@ public class SimplePerfEventTest {
 
   @Test
   public void testManuallyCreatedFinshedEvents() {
-    SimplePerfEvent.PerfEventId testEventId = SimplePerfEvent.PerfEventId.of("Test");
+    SimplePerfEvent.PerfEventTitle testEventId = SimplePerfEvent.PerfEventTitle.of("Test");
 
     assertPerfEvent(
         newStartedEvent(testEventId).createFinishedEvent(ImmutableMap.of()),
@@ -148,7 +148,7 @@ public class SimplePerfEventTest {
 
   @Test(expected = IllegalStateException.class)
   public void testThrowsOnDoubleFinish() {
-    SimplePerfEvent.Started started = newStartedEvent(SimplePerfEvent.PerfEventId.of("test"));
+    SimplePerfEvent.Started started = newStartedEvent(SimplePerfEvent.PerfEventTitle.of("test"));
 
     started.createFinishedEvent();
     started.createFinishedEvent();
@@ -169,7 +169,7 @@ public class SimplePerfEventTest {
 
   @Test
   public void testScopedEvents() {
-    SimplePerfEvent.PerfEventId testEventId = SimplePerfEvent.PerfEventId.of("Unicorn");
+    SimplePerfEvent.PerfEventTitle testEventId = SimplePerfEvent.PerfEventTitle.of("Unicorn");
 
     SimplePerfEventListener listener = new SimplePerfEventListener();
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
@@ -214,9 +214,9 @@ public class SimplePerfEventTest {
 
   @Test
   public void testMinimumTimeScope() {
-    SimplePerfEvent.PerfEventId ignoredEventId = SimplePerfEvent.PerfEventId.of("IgnoreMe");
-    SimplePerfEvent.PerfEventId loggedEventId = SimplePerfEvent.PerfEventId.of("LogMe");
-    SimplePerfEvent.PerfEventId parentId = SimplePerfEvent.PerfEventId.of("Parent");
+    SimplePerfEvent.PerfEventTitle ignoredEventId = SimplePerfEvent.PerfEventTitle.of("IgnoreMe");
+    SimplePerfEvent.PerfEventTitle loggedEventId = SimplePerfEvent.PerfEventTitle.of("LogMe");
+    SimplePerfEvent.PerfEventTitle parentId = SimplePerfEvent.PerfEventTitle.of("Parent");
 
     SimplePerfEventListener listener = new SimplePerfEventListener();
     SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;

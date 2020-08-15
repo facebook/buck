@@ -257,7 +257,7 @@ public class ActionGraphProvider {
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(
-            eventBus.isolated(), SimplePerfEvent.PerfEventId.of("ActionGraphCacheCheck"))) {
+            eventBus.isolated(), SimplePerfEvent.PerfEventTitle.of("ActionGraphCacheCheck"))) {
       // We check that the lastActionGraph is not null because it's possible we had a
       // invalidateCache() between the scheduling and the execution of this task.
       LOG.info("ActionGraph integrity check spawned.");

@@ -250,7 +250,7 @@ public class OutputsMaterializer {
       try (SimplePerfEvent.Scope ignored =
           SimplePerfEvent.scope(
               buckEventBus.isolated(),
-              SimplePerfEvent.PerfEventId.of("outputs-materializer"),
+              SimplePerfEvent.PerfEventTitle.of("outputs-materializer"),
               "size",
               size,
               "items",

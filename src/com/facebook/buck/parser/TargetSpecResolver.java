@@ -311,7 +311,7 @@ public class TargetSpecResolver implements AutoCloseable {
       try (SimplePerfEvent.Scope perfEventScope =
           SimplePerfEvent.scope(
               eventBus.isolated(),
-              SimplePerfEvent.PerfEventId.of("FindBuildFiles"),
+              SimplePerfEvent.PerfEventTitle.of("FindBuildFiles"),
               "targetNodeSpec",
               spec)) {
 

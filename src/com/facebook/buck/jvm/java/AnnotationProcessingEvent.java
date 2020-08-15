@@ -84,8 +84,8 @@ public abstract class AnnotationProcessingEvent extends SimplePerfEvent
   }
 
   @Override
-  public PerfEventId getEventId() {
-    return PerfEventId.of(
+  public PerfEventTitle getTitle() {
+    return PerfEventTitle.of(
         annotationProcessorName
             + "."
             + CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, operation.toString()));

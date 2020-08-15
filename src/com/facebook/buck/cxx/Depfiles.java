@@ -300,7 +300,7 @@ class Depfiles {
     try (SimplePerfEvent.Scope perfEvent =
         SimplePerfEvent.scope(
             eventBus.isolated(),
-            SimplePerfEvent.PerfEventId.of("depfile-parse"),
+            SimplePerfEvent.PerfEventTitle.of("depfile-parse"),
             ImmutableMap.of("input", inputPath, "output", outputPath))) {
 
       List<String> headers =

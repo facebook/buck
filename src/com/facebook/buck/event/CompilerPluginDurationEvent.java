@@ -58,8 +58,8 @@ public abstract class CompilerPluginDurationEvent extends SimplePerfEvent
   }
 
   @Override
-  public PerfEventId getEventId() {
-    return PerfEventId.of(getDurationName());
+  public PerfEventTitle getTitle() {
+    return PerfEventTitle.of(getDurationName());
   }
 
   @Override

@@ -96,7 +96,7 @@ public class TargetGraphHashing {
   public ImmutableMap<BuildTarget, HashCode> hashTargetGraph() throws InterruptedException {
     try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(
-            eventBus.isolated(), SimplePerfEvent.PerfEventId.of("ShowTargetHashes"))) {
+            eventBus.isolated(), SimplePerfEvent.PerfEventTitle.of("ShowTargetHashes"))) {
       return new Runner().run();
     } catch (ExecutionException e) {
       Throwables.throwIfUnchecked(e.getCause());

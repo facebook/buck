@@ -78,7 +78,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
           ListenableFuture<ImmutableList<TargetNodeMaybeIncompatible>>>
       allNodeCache = new ConcurrentHashMap<>();
   private final Scope perfEventScope;
-  private final SimplePerfEvent.PerfEventId perfEventId;
+  private final SimplePerfEvent.PerfEventTitle perfEventTitle;
 
   /**
    * minimum duration time for performance events to be logged (for use with {@link
@@ -106,8 +106,8 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     this.requireTargetPlatform = requireTargetPlatform;
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 10;
     this.perfEventScope =
-        SimplePerfEvent.scope(eventBus.isolated(), SimplePerfEvent.PerfEventId.of(pipelineName));
-    this.perfEventId = SimplePerfEvent.PerfEventId.of("GetTargetNode");
+        SimplePerfEvent.scope(eventBus.isolated(), SimplePerfEvent.PerfEventTitle.of(pipelineName));
+    this.perfEventTitle = SimplePerfEvent.PerfEventTitle.of("GetTargetNode");
     this.eventBus = eventBus;
     this.cache =
         new PipelineNodeCache<BuildTarget, TargetNodeMaybeIncompatible>(
@@ -127,7 +127,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       UnconfiguredTargetNode rawNode,
-      Function<SimplePerfEvent.PerfEventId, Scope> perfEventScopeFunction)
+      Function<SimplePerfEvent.PerfEventTitle, Scope> perfEventScopeFunction)
       throws BuildTargetException {
     TargetNodeMaybeIncompatible targetNodeMaybeIncompatible =
         rawTargetNodeToTargetNodeFactory.createTargetNode(
@@ -188,13 +188,13 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     try (Scope scope =
         SimplePerfEvent.scopeIgnoringShortEvents(
             eventBus.isolated(),
-            perfEventId,
+            perfEventTitle,
             "target",
             buildTarget,
             perfEventScope,
             minimumPerfEventTimeMs,
             TimeUnit.MILLISECONDS)) {
-      Function<SimplePerfEvent.PerfEventId, Scope> perfEventScopeFunction =
+      Function<SimplePerfEvent.PerfEventTitle, Scope> perfEventScopeFunction =
           perfEventId1 ->
               SimplePerfEvent.scopeIgnoringShortEvents(
                   eventBus.isolated(),
