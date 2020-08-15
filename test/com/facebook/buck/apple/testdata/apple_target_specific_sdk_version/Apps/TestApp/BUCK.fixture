@@ -1,0 +1,14 @@
+apple_binary(
+    name = "TargetSpecificVersionApp",
+    srcs = [
+        "main.c",
+    ],
+    target_sdk_version = "10.14",
+)
+
+apple_binary(
+    name = "TestApp",
+    srcs = [
+        "main.c",
+    ],
+)

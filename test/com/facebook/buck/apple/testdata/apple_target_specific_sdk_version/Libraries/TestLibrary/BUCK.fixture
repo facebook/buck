@@ -1,0 +1,12 @@
+apple_library(
+    name = "TargetSpecificVersionLibrary",
+    srcs = ["TestClass.m"],
+    linker_flags = ["-lobjc"],
+    target_sdk_version = "10.14",
+)
+
+apple_library(
+    name = "TestLibrary",
+    srcs = ["TestClass.m"],
+    linker_flags = ["-lobjc"],
+)

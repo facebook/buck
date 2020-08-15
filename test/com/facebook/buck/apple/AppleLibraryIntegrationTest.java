@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import static com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer.sanitize;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -1211,5 +1212,89 @@ public class AppleLibraryIntegrationTest {
   private static void assertIsSymbolicLink(Path link, Path target) throws IOException {
     assertTrue(Files.isSymbolicLink(link));
     assertEquals(target, Files.readSymbolicLink(link));
+  }
+
+  @Test
+  public void testAppleLibraryTargetSpecificSDKVersion() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_target_specific_sdk_version", tmp);
+    workspace.addBuckConfigLocalOption("apple", "target_sdk_version_linker_flag", "true");
+    workspace.setUp();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    // Build dylib without target specific SDK version, i.e., latest SDK deployment target
+
+    BuildTarget nonSpecificTarget =
+        BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary#shared,macosx-x86_64");
+    ProcessResult result =
+        workspace.runBuckCommand("build", nonSpecificTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path nonSpecificTargetPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem, nonSpecificTarget, "%s/libLibraries_TestLibrary_TestLibrary.dylib"));
+    assertTrue(Files.exists(nonSpecificTargetPath));
+
+    // Build dylib with target specific SDK version (10.14 in BUCK file)
+
+    BuildTarget sdkVersionTarget =
+        BuildTargetFactory.newInstance(
+            "//Libraries/TestLibrary:TargetSpecificVersionLibrary#shared,macosx-x86_64");
+    result = workspace.runBuckCommand("build", sdkVersionTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path sdkVersionTargetPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem,
+                sdkVersionTarget,
+                "%s/libLibraries_TestLibrary_TargetSpecificVersionLibrary.dylib"));
+    assertTrue(Files.exists(sdkVersionTargetPath));
+
+    // Extract loader command to verify deployment target
+
+    Optional<String> nonSpecificTargetBuildVersion =
+        getOtoolLoaderCommandByName(workspace, nonSpecificTargetPath, "LC_BUILD_VERSION");
+    assertTrue(nonSpecificTargetBuildVersion.isPresent());
+    Optional<String> specificSDKTargetBuildVersion =
+        getOtoolLoaderCommandByName(workspace, sdkVersionTargetPath, "LC_BUILD_VERSION");
+    assertTrue(specificSDKTargetBuildVersion.isPresent());
+
+    // Verify that only target specific dylib has deployment set to 10.14
+
+    assertThat(nonSpecificTargetBuildVersion.get(), not(containsString("minos 10.14")));
+    assertThat(specificSDKTargetBuildVersion.get(), containsString("minos 10.14"));
+  }
+
+  public static Optional<String> getOtoolLoaderCommandByName(
+      ProjectWorkspace workspace, Path executable, String commandName)
+      throws IOException, InterruptedException {
+    Optional<String> maybeStdOut =
+        workspace.runCommand("otool", "-l", executable.toString()).getStdout();
+
+    return maybeStdOut.flatMap(
+        stdOut -> {
+          String commandStart = String.format("cmd %s", commandName);
+          int commandStartIndex = stdOut.indexOf(commandStart);
+          if (commandStartIndex < 0) {
+            return Optional.empty();
+          }
+
+          int startOfNextCommand =
+              stdOut.indexOf(
+                  "Load command",
+                  Math.min(commandStartIndex + commandStart.length(), stdOut.length() - 1));
+          if (startOfNextCommand < 0) {
+            return Optional.empty();
+          }
+
+          return Optional.of(stdOut.substring(commandStartIndex, startOfNextCommand));
+        });
   }
 }
