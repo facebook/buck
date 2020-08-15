@@ -69,15 +69,16 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
         "intellij",
         ImmutableSet.of(
             "android_generated_files_directory",
-            "flatten_android_generated_files_path_with_hash",
             "auto_generate_android_facet_sources",
-            "multi_cell_module_support",
+            "buck_out_path_for_generated_files",
+            "default_min_android_sdk_version",
+            "flatten_android_generated_files_path_with_hash",
             "keep_module_files_in_module_dirs",
-            "max_module_name_length_before_truncate",
-            "max_library_name_length_before_truncate",
-            "use_module_library",
             "kotlin_java_runtime_library_template_path",
-            "buck_out_path_for_generated_files"));
+            "max_library_name_length_before_truncate",
+            "max_module_name_length_before_truncate",
+            "multi_cell_module_support",
+            "use_module_library"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "log",
         ImmutableSet.of(
