@@ -367,6 +367,12 @@ public class AppleDescriptions {
 
       // If the target has a different target SDK version from the overall platform, we add
       // a compiler flag to override that base version with the per-target version.
+      //
+      // The overall platform flags (compiler _and_ linker) already contain a deployment
+      // target flag for the platform version (i.e., AppleCxxPlatform.getMinVersion()).
+      //
+      // AppleCxxPlatform.getMinVersion() is determined by using [platform]_target_sdk_version
+      // configs if present, otherwise picks up the latest SDK version.
       if (targetVersion.isPresent() && platformVersion != targetVersion.get()) {
         String versionFlag =
             appleCxxPlatform
