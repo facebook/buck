@@ -37,6 +37,8 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -187,6 +189,7 @@ public class AppleBundleDescription
             args.getResourceGroupMap(),
             context.getTargetGraph());
 
+    Optional<String> minOSVersion = getMinimumOSVersionForBundle(args, context.getTargetGraph());
     return AppleDescriptions.createAppleBundle(
         xcodeDescriptions,
         cxxPlatformsProvider,
@@ -231,7 +234,29 @@ public class AppleBundleDescription
         resourceFilter,
         swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
         swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
-        downwardApiConfig.isEnabledForApple());
+        downwardApiConfig.isEnabledForApple(),
+        minOSVersion);
+  }
+
+  private static Optional<String> getMinimumOSVersionForBundle(
+      AppleBundleDescriptionArg args, TargetGraph targetGraph) {
+    Optional<BuildTarget> maybeExecutableTarget = args.getBinary();
+    if (!maybeExecutableTarget.isPresent()) {
+      return Optional.empty();
+    }
+
+    Optional<TargetNode<?>> maybeExecutableNode =
+        targetGraph.getOptional(maybeExecutableTarget.get());
+    if (maybeExecutableNode.isPresent()) {
+      TargetNode<?> executableNode = maybeExecutableNode.get();
+      if (executableNode.getConstructorArg() instanceof AppleNativeTargetDescriptionArg) {
+        AppleNativeTargetDescriptionArg appleTargetArg =
+            (AppleNativeTargetDescriptionArg) executableNode.getConstructorArg();
+        return appleTargetArg.getTargetSdkVersion();
+      }
+    }
+
+    return Optional.empty();
   }
 
   /**

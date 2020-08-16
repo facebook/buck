@@ -62,7 +62,8 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
       Optional<String> maybeProductName,
       String extension,
       AppleCxxPlatform appleCxxPlatform,
-      Map<String, String> substitutions) {
+      Map<String, String> substitutions,
+      Optional<String> minimumOSVersion) {
     super(
         buildTarget,
         projectFilesystem,
@@ -75,7 +76,8 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
             getBinaryName(buildTarget, maybeProductName),
             extension,
             appleCxxPlatform,
-            substitutions));
+            substitutions,
+            minimumOSVersion));
   }
 
   private static String getBinaryName(BuildTarget buildTarget, Optional<String> maybeProductName) {
@@ -114,7 +116,8 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
         String binaryName,
         String extension,
         AppleCxxPlatform appleCxxPlatform,
-        Map<String, String> substitutions) {
+        Map<String, String> substitutions,
+        Optional<String> minimumOSVersion) {
       this.buildTarget = buildTarget;
       this.output = new OutputPath("Info.plist");
       this.sourcePath = sourcePath;
@@ -126,7 +129,7 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
       this.platform = sdk.getApplePlatform();
       this.sdkName = sdk.getName();
       this.sdkVersion = sdk.getVersion();
-      this.minOSVersion = appleCxxPlatform.getMinVersion();
+      this.minOSVersion = minimumOSVersion.orElse(appleCxxPlatform.getMinVersion());
       this.maybePlatformBuildVersion = appleCxxPlatform.getBuildVersion();
       this.maybeXcodeBuildVersion = appleCxxPlatform.getXcodeBuildVersion();
       this.maybeXcodeVersion = appleCxxPlatform.getXcodeVersion();

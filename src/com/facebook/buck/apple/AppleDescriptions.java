@@ -745,7 +745,8 @@ public class AppleDescriptions {
       Predicate<BuildTarget> filter,
       boolean sliceAppPackageSwiftRuntime,
       boolean sliceAppBundleSwiftRuntime,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      Optional<String> minimumOSVersion) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             graphBuilder,
@@ -988,7 +989,8 @@ public class AppleDescriptions {
                         productName,
                         unwrappedExtension,
                         appleCxxPlatform,
-                        infoPlistSubstitutions));
+                        infoPlistSubstitutions,
+                        minimumOSVersion));
 
     Optional<HasEntitlementsFile> maybeHasEntitlementsFile =
         graphBuilder.requireMetadata(unwrappedBinary.getBuildTarget(), HasEntitlementsFile.class);
@@ -1545,7 +1547,8 @@ public class AppleDescriptions {
       Optional<String> maybeProductName,
       String extension,
       AppleCxxPlatform appleCxxPlatform,
-      Map<String, String> substitutions) {
+      Map<String, String> substitutions,
+      Optional<String> minimumOSVersion) {
     return new AppleInfoPlist(
         buildTarget,
         projectFilesystem,
@@ -1556,6 +1559,7 @@ public class AppleDescriptions {
         maybeProductName,
         extension,
         appleCxxPlatform,
-        substitutions);
+        substitutions,
+        minimumOSVersion);
   }
 }

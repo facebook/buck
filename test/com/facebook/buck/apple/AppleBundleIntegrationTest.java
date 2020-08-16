@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -34,6 +35,7 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSNumber;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
+import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -67,11 +69,14 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
+import javax.xml.parsers.ParserConfigurationException;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.xml.sax.SAXException;
 
 public class AppleBundleIntegrationTest {
 
@@ -1753,5 +1758,30 @@ public class AppleBundleIntegrationTest {
             "%s");
     Path appPath = outputPath.resolve(target.getShortName() + ".app");
     assertTrue(Files.exists(workspace.getPath(appPath.resolve("Model.momd"))));
+  }
+
+  @Test
+  public void testCustomTargetSDKVersionOnMobile()
+      throws IOException, ParserConfigurationException, ParseException, SAXException,
+          PropertyListFormatException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_with_target_sdk", tmp);
+    workspace.setUp();
+
+    BuildTarget bundleTarget =
+        BuildTargetFactory.newInstance(
+            "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks");
+    Path bundlePath =
+        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, bundleTarget, "%s/DemoApp.app"));
+    workspace.runBuckBuild(bundleTarget.toString()).assertSuccess();
+
+    Path plistPath = bundlePath.resolve("Info.plist");
+    NSDictionary plist = (NSDictionary) PropertyListParser.parse(plistPath.toFile());
+    NSString minVersion = (NSString) plist.get("MinimumOSVersion");
+
+    // The apple_binary() has a custom target_sdk_version set to 12.1, so we expect to see it
+    // in the Info.plist.
+    assertThat(minVersion.toString(), equalTo("12.1"));
   }
 }
