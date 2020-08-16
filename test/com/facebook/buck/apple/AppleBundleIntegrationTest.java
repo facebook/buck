@@ -703,8 +703,8 @@ public class AppleBundleIntegrationTest {
     RelPath linkMapPath =
         BuildTargetPaths.getGenPath(filesystem, binaryWithLinkerMap, "%s-LinkMap.txt");
 
-    assertThat(Files.exists(workspace.resolve(binaryWithLinkerMapPath)), Matchers.equalTo(true));
-    assertThat(Files.exists(workspace.resolve(linkMapPath)), Matchers.equalTo(true));
+    assertThat(Files.exists(workspace.resolve(binaryWithLinkerMapPath)), equalTo(true));
+    assertThat(Files.exists(workspace.resolve(linkMapPath)), equalTo(true));
 
     BuildTarget binaryWithoutLinkerMap =
         workspace
@@ -712,8 +712,7 @@ public class AppleBundleIntegrationTest {
             .withAppendedFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor());
     RelPath binaryWithoutLinkerMapPath =
         BuildTargetPaths.getGenPath(filesystem, binaryWithoutLinkerMap, "%s");
-    assertThat(
-        Files.exists(workspace.resolve(binaryWithoutLinkerMapPath)), Matchers.equalTo(false));
+    assertThat(Files.exists(workspace.resolve(binaryWithoutLinkerMapPath)), equalTo(false));
   }
 
   public String runSimpleBuildWithDefinedStripStyle(StripStyle stripStyle) throws Exception {
@@ -1783,5 +1782,32 @@ public class AppleBundleIntegrationTest {
     // The apple_binary() has a custom target_sdk_version set to 12.1, so we expect to see it
     // in the Info.plist.
     assertThat(minVersion.toString(), equalTo("12.1"));
+  }
+
+  @Test
+  public void testCustomTargetSDKVersionOnDesktop()
+      throws IOException, ParserConfigurationException, ParseException, SAXException,
+          PropertyListFormatException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_with_target_sdk", tmp);
+    workspace.addBuckConfigLocalOption("apple", "codesign", "/usr/bin/true");
+    workspace.setUp();
+
+    BuildTarget bundleTarget =
+        BuildTargetFactory.newInstance(
+            "//:DemoMacApp#macosx-x86_64,no-debug,no-include-frameworks");
+    Path bundlePath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(filesystem, bundleTarget, "%s/DemoMacApp.app"));
+    workspace.runBuckBuild(bundleTarget.toString()).assertSuccess();
+
+    Path plistPath = bundlePath.resolve("Contents/Info.plist");
+    NSDictionary plist = (NSDictionary) PropertyListParser.parse(plistPath.toFile());
+    NSString minVersion = (NSString) plist.get("LSMinimumSystemVersion");
+
+    // The apple_binary() has a custom target_sdk_version set to 10.14, so we expect to see it
+    // in the Info.plist.
+    assertThat(minVersion.toString(), equalTo("10.14"));
   }
 }

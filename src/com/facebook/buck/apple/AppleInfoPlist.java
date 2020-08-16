@@ -213,7 +213,7 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
       keys.put("DTPlatformName", new NSString(platform.getName()));
       keys.put("DTPlatformVersion", new NSString(sdkVersion));
       keys.put("DTSDKName", new NSString(sdkName + sdkVersion));
-      keys.put("MinimumOSVersion", new NSString(minOSVersion));
+
       if (maybePlatformBuildVersion.isPresent()) {
         keys.put("DTPlatformBuild", new NSString(maybePlatformBuildVersion.get()));
         keys.put("DTSDKBuild", new NSString(maybePlatformBuildVersion.get()));
@@ -227,7 +227,26 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
         keys.put("DTXcode", new NSString(maybeXcodeVersion.get()));
       }
 
+      addAdditionalKeysForDesktopAndMobile(keys);
+
       return keys.build();
+    }
+
+    private void addAdditionalKeysForDesktopAndMobile(ImmutableMap.Builder<String, NSObject> keys) {
+      switch (platform.getType()) {
+        case MAC:
+          keys.put("LSMinimumSystemVersion", new NSString(minOSVersion));
+          break;
+        case IOS_DEVICE:
+        case IOS_SIMULATOR:
+        case WATCH_DEVICE:
+        case WATCH_SIMULATOR:
+        case TV_DEVICE:
+        case TV_SIMULATOR:
+        case UNKNOWN:
+          keys.put("MinimumOSVersion", new NSString(minOSVersion));
+          break;
+      }
     }
 
     private boolean needsAppInfoPlistKeysOnMac() {

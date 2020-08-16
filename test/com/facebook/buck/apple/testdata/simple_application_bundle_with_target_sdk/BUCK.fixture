@@ -12,3 +12,18 @@ apple_binary(
     ]),
     target_sdk_version = "12.1",
 )
+
+apple_bundle(
+    name = "DemoMacApp",
+    binary = ":DemoMacAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+)
+
+apple_binary(
+    name = "DemoMacAppBinary",
+    srcs = glob([
+        "*.m",
+    ]),
+    target_sdk_version = "10.14",
+)
