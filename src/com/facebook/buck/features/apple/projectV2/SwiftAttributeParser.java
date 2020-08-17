@@ -100,17 +100,17 @@ public class SwiftAttributeParser {
   }
 
   private Path getSwiftObjCGeneratedHeaderPath(
-      TargetNode<?> targetNode, String objCbjCGeneratedHeaderName) {
+      TargetNode<?> targetNode, String objCGeneratedHeaderName) {
     Path derivedSourcesDir =
         Utils.getDerivedSourcesDirectoryForBuildTarget(
             targetNode.getBuildTarget(), projectFilesystem);
-    return derivedSourcesDir.resolve(objCbjCGeneratedHeaderName);
+    return derivedSourcesDir.resolve(objCGeneratedHeaderName);
   }
 
   private ImmutableMap<Path, Path> getPublicHeaderMapEntries(
       TargetNode<? extends CxxLibraryDescription.CommonArg> node,
       boolean hasSwiftVersionArg,
-      String objCbjCGeneratedHeaderName) {
+      String objCGeneratedHeaderName) {
     if (!hasSwiftVersionArg) {
       return ImmutableMap.of();
     }
@@ -129,12 +129,12 @@ public class SwiftAttributeParser {
     BuildTarget buildTarget = appleNode.getBuildTarget();
     Path headerPrefix =
         AppleDescriptions.getHeaderPathPrefix(appleNode.getConstructorArg(), buildTarget);
-    Path relativePath = headerPrefix.resolve(objCbjCGeneratedHeaderName);
+    Path relativePath = headerPrefix.resolve(objCGeneratedHeaderName);
 
     ImmutableSortedMap.Builder<Path, Path> builder = ImmutableSortedMap.naturalOrder();
     builder.put(
         relativePath,
-        getSwiftObjCGeneratedHeaderPath(appleNode, objCbjCGeneratedHeaderName).toAbsolutePath());
+        getSwiftObjCGeneratedHeaderPath(appleNode, objCGeneratedHeaderName).toAbsolutePath());
 
     return builder.build();
   }
