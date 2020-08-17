@@ -16,7 +16,7 @@
 import xml.etree.ElementTree as ET
 from asyncio import subprocess
 from enum import Enum, auto
-from typing import List
+from typing import Dict, List
 
 
 class ExitCode(Enum):
@@ -88,8 +88,16 @@ class BuildResult(BuckResult):
     """ Represents a Buck process  of a build command that has finished running """
 
     def __init__(
-        self, process: subprocess.Process, stdout: bytes, stderr: bytes, encoding: str
+        self,
+        process: subprocess.Process,
+        stdout: bytes,
+        stderr: bytes,
+        encoding: str,
+        cwd: str,
+        *argv: str,
     ) -> None:
+        self.args = argv[0]
+        self.cwd = cwd
         super().__init__(process, stdout, stderr, encoding)
 
     def is_success(self) -> bool:
@@ -103,6 +111,26 @@ class BuildResult(BuckResult):
     def is_build_failure(self) -> bool:
         """Returns if a Build Result fails because of a build failue only"""
         return self.get_exit_code() == ExitCode.BUILD_ERROR
+
+    def get_target_to_build_output(self) -> Dict[str, str]:
+        """
+        Returns a dict of the build target and file created in buck-out
+        Prints to build target followed by path to buck-out file to stdout
+        """
+        target_to_output = {}
+        assert (
+            "--show-output" in self.args
+        ), "Must add --show-output arg to get build output"
+        show_output = self.get_stdout().splitlines()
+        for line in show_output:
+            output_mapping = line.split()
+            assert len(output_mapping) <= 2, "Output mapping should be less than 2"
+            target = output_mapping[0]
+            if len(output_mapping) == 1:
+                target_to_output[target] = ""
+            else:
+                target_to_output[target] = output_mapping[1]
+        return target_to_output
 
 
 class TestResultSummary:

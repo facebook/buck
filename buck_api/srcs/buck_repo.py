@@ -40,7 +40,13 @@ class BuckRepo:
         additional arguments
         """
         process = await self._run_buck_command("build", *argv)
-        return BuckProcess(process, result_type=BuildResult, encoding=self.encoding)
+        return BuckProcess(
+            process,
+            result_type=lambda proc, stdin, stdout, encoding: BuildResult(
+                proc, stdin, stdout, encoding, self.cwd, *argv
+            ),
+            encoding=self.encoding,
+        )
 
     async def clean(self, *argv: str) -> BuckProcess[BuckResult]:
         """

@@ -37,8 +37,54 @@ async def test_build():
             (path_of_cwd / "buck-out").iterdir()
         ), "build should have generated outputs in buck-out"
         assert "target_file_success" in result.get_stdout()
-        print(result.get_stdout())
         assert result.is_success()
+
+
+@pytest.mark.asyncio
+async def test_build_with_flag():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        path_of_cwd = Path(temp_dir)
+        test_script = pkg_resources.resource_filename(
+            "test.buck_repo_test", "test_script.py"
+        )
+        repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
+        _create_file(path_of_cwd, "target_file_success", 0)
+        # test --show-output flag
+        result = await (await repo.build("//:target_file_success --show-output")).wait()
+        assert result.is_success()
+        target_to_output = result.get_target_to_build_output()
+        target = next(iter(target_to_output.keys()))
+        assert target == "//:target_file_success"
+        # checks if the buck-out directory was added
+        assert "buck-out/gen/" in target_to_output.get(target)
+
+
+@pytest.mark.asyncio
+async def test_build_with_multiple_targets_flag():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        path_of_cwd = Path(temp_dir)
+        test_script = pkg_resources.resource_filename(
+            "test.buck_repo_test", "test_script.py"
+        )
+        repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
+        target_folder = _create_directory(path_of_cwd, Path("targets"))
+        target_files = [
+            "target_file_success_1",
+            "target_file_success_2",
+            "target_file_success_3",
+        ]
+        for target_file in target_files:
+            _create_file(target_folder, target_file, 0)
+        # test --show-output flag
+        result = await (await repo.build("//targets/... --show-output")).wait()
+        assert result.is_success()
+        target_to_output = result.get_target_to_build_output()
+        for target_file in target_files:
+            target = f"//targets:{target_file}"
+            assert target in target_to_output.keys(), target_to_output
+            # checks if the buck-out directory was added
+            assert "buck-out/gen/" in target_to_output.get(target)
+            assert target_file in target_to_output.get(target)
 
 
 @pytest.mark.asyncio
@@ -172,6 +218,13 @@ async def test_test_failed():
         _create_file(path_of_cwd, "target_file_build_failure", 1)
         result = await (await repo.test("//:target_file_build_failure")).wait()
         assert result.is_build_failure()
+
+
+def _create_directory(dirpath: Path, dirname: Path) -> Path:
+    """ Creates a directiroy in the given path"""
+    output = dirpath / dirname
+    os.makedirs(output)
+    return output
 
 
 def _create_file(dirpath: Path, filepath: Path, exitcode: int) -> None:

@@ -27,13 +27,18 @@ parser = argparse.ArgumentParser()
 
 def run_build(remain_args):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--show-output", action="store_true")
     parser.add_argument("target")
     args = parser.parse_args(remain_args)
-    target = Path(args.target.replace(":", "/").strip("/"))
+    show_output = "--show-output" in args.target
+    target: str = None
+    if show_output:
+        target = args.target.strip("--show-output").strip(" ")
+    else:
+        target = args.target
+    clean_target = Path(target.replace(":", "/").strip("/"))
     # creating a path to a buck-out directory in a temp directory
-    conf_dir = hashlib.md5(args.target.encode()).hexdigest()
-    output = Path("buck-out", "gen") / Path(conf_dir) / target
+    conf_dir = hashlib.md5(str(target).encode()).hexdigest()
+    output = Path("buck-out", "gen") / Path(conf_dir) / clean_target
     os.makedirs(output.parent)
     with open(output, "w") as f1:
         f1.write("Hello, World!")
@@ -41,9 +46,31 @@ def run_build(remain_args):
     os.makedirs(buckd_sock.parent, exist_ok=True)
     with open(buckd_sock, "w") as sock:
         sock.write("buck daemon exists")
-    print(args)
-    with open(target, "r") as target_file:
-        sys.exit(int(target_file.readlines()[-1]))
+    print_target_to_build_location(show_output, clean_target, target, output)
+    if "..." not in str(clean_target):
+        with open(clean_target, "r") as target_file:
+            sys.exit(int(target_file.readlines()[-1]))
+
+
+def print_target_to_build_location(show_output, clean_target, target, output):
+    if show_output:
+        # if target is a folder walk through the folder and create a file for each folder
+        if "..." in str(clean_target):
+            format_target_folder()
+        else:
+            print(target + " " + str(output))
+    else:
+        print(target)
+
+
+def format_target_folder():
+    targets = list(os.walk("targets"))[0][2]
+    for t in targets:
+        temp_target = "//targets:" + t
+        clean_target = Path(temp_target.replace(":", "/").strip("/"))
+        conf_dir = hashlib.md5(str(clean_target).encode()).hexdigest()
+        output = Path("buck-out", "gen") / Path(conf_dir) / clean_target
+        print(f"{temp_target} {str(output)}")
 
 
 def run_clean(remain_args):
