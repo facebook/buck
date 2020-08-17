@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -170,6 +171,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
 
     } catch (IllegalAccessException
         | InvocationTargetException
+        | IOException
         | NoSuchMethodException
         | ClassNotFoundException ex) {
       throw new RuntimeException(ex);
@@ -178,11 +180,10 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
     }
   }
 
-  private Object loadCompilerShim(StepExecutionContext context) {
+  private Object loadCompilerShim(StepExecutionContext context) throws IOException {
+    ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
+    classLoaderCache.addRef();
     try {
-      ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
-      classLoaderCache.addRef();
-
       ClassLoader classLoader =
           classLoaderCache.getClassLoaderForClassPath(
               SynchronizedToolProvider.getSystemToolClassLoader(),
@@ -195,6 +196,8 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
       return classLoader.loadClass(COMPILER_CLASS).newInstance();
     } catch (Exception ex) {
       throw new RuntimeException(ex);
+    } finally {
+      classLoaderCache.close();
     }
   }
 
