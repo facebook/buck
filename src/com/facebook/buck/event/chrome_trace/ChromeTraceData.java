@@ -54,7 +54,7 @@ public class ChromeTraceData {
   }
 
   private final String category;
-  private final String name;
+  private final String title;
   private final Phase phase;
   private final long processId;
   private final long threadId;
@@ -64,7 +64,9 @@ public class ChromeTraceData {
 
   public ChromeTraceData(
       @JsonProperty("cat") String category,
-      @JsonProperty("name") String name,
+      // According to Google's official Trace Event format documentation, "title" in the trace event
+      // UI matches "name" in JSON
+      @JsonProperty("name") String title,
       @JsonProperty("ph") Phase phase,
       @JsonProperty("pid") long processId,
       @JsonProperty("tid") long threadId,
@@ -72,7 +74,7 @@ public class ChromeTraceData {
       @JsonProperty("tts") long microThreadUserTime,
       @JsonProperty("args") ImmutableMap<String, ? extends Object> args) {
     this.category = category;
-    this.name = name;
+    this.title = title;
     this.phase = phase;
     this.processId = processId;
     this.threadId = threadId;
@@ -82,8 +84,8 @@ public class ChromeTraceData {
   }
 
   @JsonProperty("name")
-  public String getName() {
-    return name;
+  public String getTitle() {
+    return title;
   }
 
   @JsonProperty("ph")

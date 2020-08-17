@@ -177,7 +177,7 @@ public class ChromeTraceBuildListenerTest {
     assertThat(originalResultList, Matchers.hasSize(6));
 
     ChromeTraceData testEvent = originalResultList.get(3);
-    assertThat(testEvent.getName(), Matchers.equalTo(event.getEventName()));
+    assertThat(testEvent.getTitle(), Matchers.equalTo(event.getEventName()));
     assertThat(
         testEvent.getMicroTime(),
         Matchers.equalTo(TimeUnit.NANOSECONDS.toMicros(FAKE_CLOCK.nanoTime())));
@@ -214,7 +214,7 @@ public class ChromeTraceBuildListenerTest {
     assertThat(originalResultList, Matchers.hasSize(4));
 
     ChromeTraceData testEvent = originalResultList.get(3);
-    assertThat(testEvent.getName(), Matchers.equalTo("test"));
+    assertThat(testEvent.getTitle(), Matchers.equalTo("test"));
     assertThat(
         testEvent.getMicroTime(),
         Matchers.equalTo(TimeUnit.NANOSECONDS.toMicros(FAKE_CLOCK.nanoTime())));
@@ -817,7 +817,7 @@ public class ChromeTraceBuildListenerTest {
       ChromeTraceData.Phase expectedPhase,
       ImmutableMap<String, ?> expectedArgs) {
     assertTrue(resultList.size() > 0);
-    assertEquals(expectedName, resultList.get(0).getName());
+    assertEquals(expectedName, resultList.get(0).getTitle());
     assertEquals(expectedPhase, resultList.get(0).getPhase());
     assertEquals(expectedArgs, resultList.get(0).getArgs());
     resultList.remove(0);
