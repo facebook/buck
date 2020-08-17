@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
@@ -42,8 +43,12 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class JarBackedReflectedKotlinc implements Kotlinc {
 
@@ -59,6 +64,9 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
           throw new RuntimeException(e);
         }
       };
+
+  // Used to hang onto the KotlinDaemonShim for the life of the buckd process
+  private static final Map<Set<String>, Object> kotlinShims = new ConcurrentHashMap<>();
 
   @AddToRuleKey private final ImmutableSet<SourcePath> compilerClassPath;
   private final Path annotationProcessingClassPath;
@@ -151,12 +159,20 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
                     path -> projectFilesystem.resolve(path).toAbsolutePath().toString()))
             .build();
 
+    Set<File> compilerIdPaths =
+        compilerClassPath.stream()
+            .map(p -> ((PathSourcePath) p).getRelativePath())
+            .map(Path::toFile)
+            .collect(Collectors.toSet());
+
     try {
       BuckTracing.setCurrentThreadTracingInterface(
           new BuckTracingEventBusBridge(context.getBuckEventBus().isolated(), invokingRule));
 
-      Object compilerShim = loadCompilerShim(context);
-
+      Object compilerShim =
+          kotlinShims.computeIfAbsent(
+              compilerIdPaths.stream().map(File::getAbsolutePath).collect(Collectors.toSet()),
+              k -> loadCompilerShim(context));
       Method compile = compilerShim.getClass().getMethod("exec", PrintStream.class, String[].class);
 
       Class<?> exitCodeClass = compilerShim.getClass().getClassLoader().loadClass(EXIT_CODE_CLASS);
@@ -171,7 +187,6 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
 
     } catch (IllegalAccessException
         | InvocationTargetException
-        | IOException
         | NoSuchMethodException
         | ClassNotFoundException ex) {
       throw new RuntimeException(ex);
@@ -180,7 +195,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
     }
   }
 
-  private Object loadCompilerShim(StepExecutionContext context) throws IOException {
+  private Object loadCompilerShim(StepExecutionContext context) {
     ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
     classLoaderCache.addRef();
     try {
@@ -197,7 +212,11 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     } finally {
-      classLoaderCache.close();
+      try {
+        classLoaderCache.close();
+      } catch (IOException ex) {
+        throw new RuntimeException(ex);
+      }
     }
   }
 
