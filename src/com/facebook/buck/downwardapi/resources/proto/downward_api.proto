@@ -95,7 +95,8 @@ message LogEvent {
 }
 
 message StepEvent {
-    // required for matching start to finish events
+    // required for matching start to finish events for downward API. Does not map to a field in
+    // buck's StepEvent
     int32 event_id = 1;
     StepStatus step_status = 2;
     string step_type = 3;
@@ -110,8 +111,10 @@ message StepEvent {
     }
 }
 
+// Maps to SimplePerfEvent in buck.
 message ChromeTraceEvent {
-    // required for matching begin to end events
+    // required for matching begin to end events for downward API. Does not map to a field in
+    // SimplePerfEvent
     int32 event_id = 1;
     string category = 2;
     ChromeTraceEventStatus status = 3;
@@ -119,6 +122,7 @@ message ChromeTraceEvent {
     map<string, string> data = 4;
     // relative time duration from the beginning of the tool invocation
     google.protobuf.Duration duration = 5;
+    string title = 6;
 
     enum ChromeTraceEventStatus {
         UNKNOWN = 0;
