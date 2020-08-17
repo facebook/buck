@@ -10,7 +10,8 @@ public interface StepEventOrBuilder extends
 
   /**
    * <pre>
-   * required for matching start to finish events
+   * required for matching start to finish events for downward API. Does not map to a field in
+   * buck's StepEvent
    * </pre>
    *
    * <code>int32 event_id = 1;</code>

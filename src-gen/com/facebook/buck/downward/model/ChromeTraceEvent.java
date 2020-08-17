@@ -4,6 +4,10 @@
 package com.facebook.buck.downward.model;
 
 /**
+ * <pre>
+ * Maps to SimplePerfEvent in buck.
+ * </pre>
+ *
  * Protobuf type {@code downward.api.v1.ChromeTraceEvent}
  */
 @javax.annotation.Generated(value="protoc", comments="annotations:ChromeTraceEvent.java.pb.meta")
@@ -19,6 +23,7 @@ private static final long serialVersionUID = 0L;
   private ChromeTraceEvent() {
     category_ = "";
     status_ = 0;
+    title_ = "";
   }
 
   @java.lang.Override
@@ -86,6 +91,12 @@ private static final long serialVersionUID = 0L;
               duration_ = subBuilder.buildPartial();
             }
 
+            break;
+          }
+          case 50: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            title_ = s;
             break;
           }
           default: {
@@ -244,7 +255,8 @@ private static final long serialVersionUID = 0L;
   private int eventId_;
   /**
    * <pre>
-   * required for matching begin to end events
+   * required for matching begin to end events for downward API. Does not map to a field in
+   * SimplePerfEvent
    * </pre>
    *
    * <code>int32 event_id = 1;</code>
@@ -429,6 +441,40 @@ private static final long serialVersionUID = 0L;
     return getDuration();
   }
 
+  public static final int TITLE_FIELD_NUMBER = 6;
+  private volatile java.lang.Object title_;
+  /**
+   * <code>string title = 6;</code>
+   */
+  public java.lang.String getTitle() {
+    java.lang.Object ref = title_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      title_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string title = 6;</code>
+   */
+  public com.google.protobuf.ByteString
+      getTitleBytes() {
+    java.lang.Object ref = title_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      title_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -460,6 +506,9 @@ private static final long serialVersionUID = 0L;
         4);
     if (duration_ != null) {
       output.writeMessage(5, getDuration());
+    }
+    if (!getTitleBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 6, title_);
     }
     unknownFields.writeTo(output);
   }
@@ -495,6 +544,9 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
         .computeMessageSize(5, getDuration());
     }
+    if (!getTitleBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, title_);
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -522,6 +574,8 @@ private static final long serialVersionUID = 0L;
       if (!getDuration()
           .equals(other.getDuration())) return false;
     }
+    if (!getTitle()
+        .equals(other.getTitle())) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -547,6 +601,8 @@ private static final long serialVersionUID = 0L;
       hash = (37 * hash) + DURATION_FIELD_NUMBER;
       hash = (53 * hash) + getDuration().hashCode();
     }
+    hash = (37 * hash) + TITLE_FIELD_NUMBER;
+    hash = (53 * hash) + getTitle().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -643,6 +699,10 @@ private static final long serialVersionUID = 0L;
     return builder;
   }
   /**
+   * <pre>
+   * Maps to SimplePerfEvent in buck.
+   * </pre>
+   *
    * Protobuf type {@code downward.api.v1.ChromeTraceEvent}
    */
   public static final class Builder extends
@@ -715,6 +775,8 @@ private static final long serialVersionUID = 0L;
         duration_ = null;
         durationBuilder_ = null;
       }
+      title_ = "";
+
       return this;
     }
 
@@ -753,6 +815,7 @@ private static final long serialVersionUID = 0L;
       } else {
         result.duration_ = durationBuilder_.build();
       }
+      result.title_ = title_;
       result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
@@ -817,6 +880,10 @@ private static final long serialVersionUID = 0L;
       if (other.hasDuration()) {
         mergeDuration(other.getDuration());
       }
+      if (!other.getTitle().isEmpty()) {
+        title_ = other.title_;
+        onChanged();
+      }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
       return this;
@@ -850,7 +917,8 @@ private static final long serialVersionUID = 0L;
     private int eventId_ ;
     /**
      * <pre>
-     * required for matching begin to end events
+     * required for matching begin to end events for downward API. Does not map to a field in
+     * SimplePerfEvent
      * </pre>
      *
      * <code>int32 event_id = 1;</code>
@@ -860,7 +928,8 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * required for matching begin to end events
+     * required for matching begin to end events for downward API. Does not map to a field in
+     * SimplePerfEvent
      * </pre>
      *
      * <code>int32 event_id = 1;</code>
@@ -873,7 +942,8 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * required for matching begin to end events
+     * required for matching begin to end events for downward API. Does not map to a field in
+     * SimplePerfEvent
      * </pre>
      *
      * <code>int32 event_id = 1;</code>
@@ -1301,6 +1371,75 @@ private static final long serialVersionUID = 0L;
         duration_ = null;
       }
       return durationBuilder_;
+    }
+
+    private java.lang.Object title_ = "";
+    /**
+     * <code>string title = 6;</code>
+     */
+    public java.lang.String getTitle() {
+      java.lang.Object ref = title_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        title_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string title = 6;</code>
+     */
+    public com.google.protobuf.ByteString
+        getTitleBytes() {
+      java.lang.Object ref = title_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        title_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string title = 6;</code>
+     */
+    public Builder setTitle(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
+      title_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string title = 6;</code>
+     */
+    public Builder clearTitle() {
+      
+      title_ = getDefaultInstance().getTitle();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string title = 6;</code>
+     */
+    public Builder setTitleBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      title_ = value;
+      onChanged();
+      return this;
     }
     @java.lang.Override
     public final Builder setUnknownFields(

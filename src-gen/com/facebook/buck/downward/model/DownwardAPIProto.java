@@ -71,20 +71,20 @@ public final class DownwardAPIProto {
       "t.StepStatus\022\021\n\tstep_type\030\003 \001(\t\022\023\n\013descr" +
       "iption\030\004 \001(\t\022+\n\010duration\030\005 \001(\0132\031.google." +
       "protobuf.Duration\"4\n\nStepStatus\022\013\n\007UNKNO" +
-      "WN\020\000\022\013\n\007STARTED\020\001\022\014\n\010FINISHED\020\002\"\320\002\n\020Chro" +
+      "WN\020\000\022\013\n\007STARTED\020\001\022\014\n\010FINISHED\020\002\"\337\002\n\020Chro" +
       "meTraceEvent\022\020\n\010event_id\030\001 \001(\005\022\020\n\010catego" +
       "ry\030\002 \001(\t\022H\n\006status\030\003 \001(\01628.downward.api." +
       "v1.ChromeTraceEvent.ChromeTraceEventStat" +
       "us\0229\n\004data\030\004 \003(\0132+.downward.api.v1.Chrom" +
       "eTraceEvent.DataEntry\022+\n\010duration\030\005 \001(\0132" +
-      "\031.google.protobuf.Duration\032+\n\tDataEntry\022" +
-      "\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"9\n\026Chrom" +
-      "eTraceEventStatus\022\013\n\007UNKNOWN\020\000\022\t\n\005BEGIN\020" +
-      "\001\022\007\n\003END\020\002*W\n\010LogLevel\022\013\n\007UNKNOWN\020\000\022\t\n\005F" +
-      "ATAL\020\001\022\t\n\005ERROR\020\002\022\010\n\004WARN\020\003\022\010\n\004INFO\020\004\022\t\n" +
-      "\005DEBUG\020\005\022\t\n\005TRACE\020\006B6\n com.facebook.buck" +
-      ".downward.modelB\020DownwardAPIProtoP\001b\006pro" +
-      "to3"
+      "\031.google.protobuf.Duration\022\r\n\005title\030\006 \001(" +
+      "\t\032+\n\tDataEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001" +
+      "(\t:\0028\001\"9\n\026ChromeTraceEventStatus\022\013\n\007UNKN" +
+      "OWN\020\000\022\t\n\005BEGIN\020\001\022\007\n\003END\020\002*W\n\010LogLevel\022\013\n" +
+      "\007UNKNOWN\020\000\022\t\n\005FATAL\020\001\022\t\n\005ERROR\020\002\022\010\n\004WARN" +
+      "\020\003\022\010\n\004INFO\020\004\022\t\n\005DEBUG\020\005\022\t\n\005TRACE\020\006B6\n co" +
+      "m.facebook.buck.downward.modelB\020Downward" +
+      "APIProtoP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -128,7 +128,7 @@ public final class DownwardAPIProto {
     internal_static_downward_api_v1_ChromeTraceEvent_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_downward_api_v1_ChromeTraceEvent_descriptor,
-        new java.lang.String[] { "EventId", "Category", "Status", "Data", "Duration", });
+        new java.lang.String[] { "EventId", "Category", "Status", "Data", "Duration", "Title", });
     internal_static_downward_api_v1_ChromeTraceEvent_DataEntry_descriptor =
       internal_static_downward_api_v1_ChromeTraceEvent_descriptor.getNestedTypes().get(0);
     internal_static_downward_api_v1_ChromeTraceEvent_DataEntry_fieldAccessorTable = new

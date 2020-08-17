@@ -10,7 +10,8 @@ public interface ChromeTraceEventOrBuilder extends
 
   /**
    * <pre>
-   * required for matching begin to end events
+   * required for matching begin to end events for downward API. Does not map to a field in
+   * SimplePerfEvent
    * </pre>
    *
    * <code>int32 event_id = 1;</code>
@@ -114,4 +115,14 @@ public interface ChromeTraceEventOrBuilder extends
    * <code>.google.protobuf.Duration duration = 5;</code>
    */
   com.google.protobuf.DurationOrBuilder getDurationOrBuilder();
+
+  /**
+   * <code>string title = 6;</code>
+   */
+  java.lang.String getTitle();
+  /**
+   * <code>string title = 6;</code>
+   */
+  com.google.protobuf.ByteString
+      getTitleBytes();
 }

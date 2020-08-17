@@ -225,7 +225,8 @@ private static final long serialVersionUID = 0L;
   private int eventId_;
   /**
    * <pre>
-   * required for matching start to finish events
+   * required for matching start to finish events for downward API. Does not map to a field in
+   * buck's StepEvent
    * </pre>
    *
    * <code>int32 event_id = 1;</code>
@@ -737,7 +738,8 @@ private static final long serialVersionUID = 0L;
     private int eventId_ ;
     /**
      * <pre>
-     * required for matching start to finish events
+     * required for matching start to finish events for downward API. Does not map to a field in
+     * buck's StepEvent
      * </pre>
      *
      * <code>int32 event_id = 1;</code>
@@ -747,7 +749,8 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * required for matching start to finish events
+     * required for matching start to finish events for downward API. Does not map to a field in
+     * buck's StepEvent
      * </pre>
      *
      * <code>int32 event_id = 1;</code>
@@ -760,7 +763,8 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * required for matching start to finish events
+     * required for matching start to finish events for downward API. Does not map to a field in
+     * buck's StepEvent
      * </pre>
      *
      * <code>int32 event_id = 1;</code>
