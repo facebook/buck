@@ -52,8 +52,8 @@ import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
-import com.facebook.buck.event.chrome_trace.ChromeTraceEvent;
-import com.facebook.buck.event.chrome_trace.ChromeTraceEvent.Phase;
+import com.facebook.buck.event.chrome_trace.ChromeTraceData;
+import com.facebook.buck.event.chrome_trace.ChromeTraceData.Phase;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.AnnotationProcessingEvent;
@@ -164,19 +164,19 @@ public class ChromeTraceBuildListenerTest {
     FakeBuckEvent event = new FakeBuckEvent();
     eventBus.post(event); // Populates it with a timestamp
 
-    listener.writeChromeTraceEvent(
-        "test", event.getEventName(), ChromeTraceEvent.Phase.BEGIN, ImmutableMap.of(), event);
+    listener.writeChromeTraceData(
+        "test", event.getEventName(), ChromeTraceData.Phase.BEGIN, ImmutableMap.of(), event);
     listener.close();
     managerScope.close();
 
-    List<ChromeTraceEvent> originalResultList =
+    List<ChromeTraceData> originalResultList =
         ObjectMappers.readValue(
             tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
-            new TypeReference<List<ChromeTraceEvent>>() {});
+            new TypeReference<List<ChromeTraceData>>() {});
 
     assertThat(originalResultList, Matchers.hasSize(6));
 
-    ChromeTraceEvent testEvent = originalResultList.get(3);
+    ChromeTraceData testEvent = originalResultList.get(3);
     assertThat(testEvent.getName(), Matchers.equalTo(event.getEventName()));
     assertThat(
         testEvent.getMicroTime(),
@@ -202,18 +202,18 @@ public class ChromeTraceBuildListenerTest {
             Optional.empty(),
             criticalPathEventListener,
             new FileOutputStreamFactory());
-    listener.writeChromeTraceMetadataEvent("test", ImmutableMap.of());
+    listener.writeChromeTraceMetadata("test", ImmutableMap.of());
     listener.close();
     managerScope.close();
 
-    List<ChromeTraceEvent> originalResultList =
+    List<ChromeTraceData> originalResultList =
         ObjectMappers.readValue(
             tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
-            new TypeReference<List<ChromeTraceEvent>>() {});
+            new TypeReference<List<ChromeTraceData>>() {});
 
     assertThat(originalResultList, Matchers.hasSize(4));
 
-    ChromeTraceEvent testEvent = originalResultList.get(3);
+    ChromeTraceData testEvent = originalResultList.get(3);
     assertThat(testEvent.getName(), Matchers.equalTo("test"));
     assertThat(
         testEvent.getMicroTime(),
@@ -249,11 +249,11 @@ public class ChromeTraceBuildListenerTest {
     listener.close();
     managerScope.close();
 
-    List<ChromeTraceEvent> originalResultList =
+    List<ChromeTraceData> originalResultList =
         ObjectMappers.readValue(
             tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
-            new TypeReference<List<ChromeTraceEvent>>() {});
-    List<ChromeTraceEvent> resultListCopy = new ArrayList<>(originalResultList);
+            new TypeReference<List<ChromeTraceData>>() {});
+    List<ChromeTraceData> resultListCopy = new ArrayList<>(originalResultList);
     assertEquals(3, resultListCopy.size());
   }
 
@@ -281,16 +281,16 @@ public class ChromeTraceBuildListenerTest {
     FakeBuckEvent event = new FakeBuckEvent();
     int threadId = 1;
     event.configure(1, 1, 1, threadId, invocationInfo.getBuildId());
-    listener.writeChromeTraceEvent("category", "name", Phase.METADATA, ImmutableMap.of(), event);
+    listener.writeChromeTraceData("category", "name", Phase.METADATA, ImmutableMap.of(), event);
 
     listener.close();
     managerScope.close();
 
-    List<ChromeTraceEvent> originalResultList =
+    List<ChromeTraceData> originalResultList =
         ObjectMappers.readValue(
             tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
-            new TypeReference<List<ChromeTraceEvent>>() {});
-    List<ChromeTraceEvent> resultListCopy = new ArrayList<>(originalResultList);
+            new TypeReference<List<ChromeTraceData>>() {});
+    List<ChromeTraceData> resultListCopy = new ArrayList<>(originalResultList);
 
     assertPreambleEvents(resultListCopy, projectFilesystem);
 
@@ -396,11 +396,11 @@ public class ChromeTraceBuildListenerTest {
     listener.close();
     managerScope.close();
 
-    List<ChromeTraceEvent> originalResultList =
+    List<ChromeTraceData> originalResultList =
         ObjectMappers.readValue(
             tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
-            new TypeReference<List<ChromeTraceEvent>>() {});
-    List<ChromeTraceEvent> resultListCopy = new ArrayList<>(originalResultList);
+            new TypeReference<List<ChromeTraceData>>() {});
+    List<ChromeTraceData> resultListCopy = new ArrayList<>(originalResultList);
     ImmutableMap<String, String> emptyArgs = ImmutableMap.of();
 
     assertPreambleEvents(resultListCopy, projectFilesystem);
@@ -408,28 +408,28 @@ public class ChromeTraceBuildListenerTest {
     assertNextResult(
         resultListCopy,
         "party",
-        ChromeTraceEvent.Phase.BEGIN,
+        ChromeTraceData.Phase.BEGIN,
         ImmutableMap.of("command_args", "arg1 arg2"));
 
     assertNextResult(
         resultListCopy,
         "thread_name",
-        ChromeTraceEvent.Phase.METADATA,
+        ChromeTraceData.Phase.METADATA,
         ImmutableMap.of("name", Thread.currentThread().getName()));
 
     assertNextResult(
         resultListCopy,
         "thread_sort_index",
-        ChromeTraceEvent.Phase.METADATA,
+        ChromeTraceData.Phase.METADATA,
         ImmutableMap.of("sort_index", (int) Thread.currentThread().getId()));
 
     assertNextResult(
-        resultListCopy, "remote_execution_session", ChromeTraceEvent.Phase.BEGIN, emptyArgs);
+        resultListCopy, "remote_execution_session", ChromeTraceData.Phase.BEGIN, emptyArgs);
 
     assertNextResult(
         resultListCopy,
         "remote_execution_session",
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         reStats.exportFieldsToMap());
   }
 
@@ -592,11 +592,11 @@ public class ChromeTraceBuildListenerTest {
     listener.close();
     managerScope.close();
 
-    List<ChromeTraceEvent> originalResultList =
+    List<ChromeTraceData> originalResultList =
         ObjectMappers.readValue(
             tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
-            new TypeReference<List<ChromeTraceEvent>>() {});
-    List<ChromeTraceEvent> resultListCopy = new ArrayList<>(originalResultList);
+            new TypeReference<List<ChromeTraceData>>() {});
+    List<ChromeTraceData> resultListCopy = new ArrayList<>(originalResultList);
     ImmutableMap<String, String> emptyArgs = ImmutableMap.of();
 
     assertPreambleEvents(resultListCopy, projectFilesystem);
@@ -604,25 +604,25 @@ public class ChromeTraceBuildListenerTest {
     assertNextResult(
         resultListCopy,
         "party",
-        ChromeTraceEvent.Phase.BEGIN,
+        ChromeTraceData.Phase.BEGIN,
         ImmutableMap.of("command_args", "arg1 arg2"));
 
     assertNextResult(
         resultListCopy,
         "thread_name",
-        ChromeTraceEvent.Phase.METADATA,
+        ChromeTraceData.Phase.METADATA,
         ImmutableMap.of("name", Thread.currentThread().getName()));
 
     assertNextResult(
         resultListCopy,
         "thread_sort_index",
-        ChromeTraceEvent.Phase.METADATA,
+        ChromeTraceData.Phase.METADATA,
         ImmutableMap.of("sort_index", (int) Thread.currentThread().getId()));
 
     assertNextResult(
         resultListCopy,
         "memory",
-        ChromeTraceEvent.Phase.COUNTER,
+        ChromeTraceData.Phase.COUNTER,
         ImmutableMap.<String, String>builder()
             .put("used_memory_mb", "2")
             .put("free_memory_mb", "1")
@@ -632,16 +632,16 @@ public class ChromeTraceBuildListenerTest {
             .put("pool_flower_mb", "42")
             .build());
 
-    assertNextResult(resultListCopy, "artifact_connect", ChromeTraceEvent.Phase.BEGIN, emptyArgs);
+    assertNextResult(resultListCopy, "artifact_connect", ChromeTraceData.Phase.BEGIN, emptyArgs);
 
-    assertNextResult(resultListCopy, "artifact_connect", ChromeTraceEvent.Phase.END, emptyArgs);
+    assertNextResult(resultListCopy, "artifact_connect", ChromeTraceData.Phase.END, emptyArgs);
 
-    assertNextResult(resultListCopy, "build", ChromeTraceEvent.Phase.BEGIN, emptyArgs);
+    assertNextResult(resultListCopy, "build", ChromeTraceData.Phase.BEGIN, emptyArgs);
 
     assertNextResult(
         resultListCopy,
         "http_artifact_fetch",
-        ChromeTraceEvent.Phase.BEGIN,
+        ChromeTraceData.Phase.BEGIN,
         ImmutableMap.of(
             "rule_key", "abc123",
             "rule", "//fake:rule"));
@@ -649,7 +649,7 @@ public class ChromeTraceBuildListenerTest {
     assertNextResult(
         resultListCopy,
         "http_artifact_fetch",
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of(
             "rule_key", "abc123",
             "rule", "//fake:rule",
@@ -660,34 +660,33 @@ public class ChromeTraceBuildListenerTest {
     assertNextResult(
         resultListCopy,
         "artifact_compress",
-        ChromeTraceEvent.Phase.BEGIN,
+        ChromeTraceData.Phase.BEGIN,
         ImmutableMap.of("rule_key", "abc123"));
 
     assertNextResult(
         resultListCopy,
         "artifact_compress",
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of("rule_key", "abc123", "full_size", "0", "compressed_size", "0"));
 
     // BuildRuleEvent.Started
-    assertNextResult(
-        resultListCopy, "//fake:rule", ChromeTraceEvent.Phase.BEGIN, ImmutableMap.of());
+    assertNextResult(resultListCopy, "//fake:rule", ChromeTraceData.Phase.BEGIN, ImmutableMap.of());
 
-    assertNextResult(resultListCopy, "fakeStep", ChromeTraceEvent.Phase.BEGIN, emptyArgs);
+    assertNextResult(resultListCopy, "fakeStep", ChromeTraceData.Phase.BEGIN, emptyArgs);
 
     assertNextResult(
-        resultListCopy, "run annotation processors", ChromeTraceEvent.Phase.BEGIN, emptyArgs);
+        resultListCopy, "run annotation processors", ChromeTraceData.Phase.BEGIN, emptyArgs);
 
     assertNextResult(
         resultListCopy,
         "com.facebook.FakeProcessor.process",
-        ChromeTraceEvent.Phase.BEGIN,
+        ChromeTraceData.Phase.BEGIN,
         emptyArgs);
 
     assertNextResult(
         resultListCopy,
         "http_artifact_store",
-        ChromeTraceEvent.Phase.BEGIN,
+        ChromeTraceData.Phase.BEGIN,
         ImmutableMap.of(
             "rule_key", "abc123",
             "rule", "//target:one"));
@@ -695,30 +694,27 @@ public class ChromeTraceBuildListenerTest {
     assertNextResult(
         resultListCopy,
         "http_artifact_store",
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of(
             "success", "true",
             "rule_key", "abc123",
             "rule", "//target:one",
             "artifact_size", "unknown"));
 
-    assertNextResult(resultListCopy, "processingPartOne", ChromeTraceEvent.Phase.BEGIN, emptyArgs);
+    assertNextResult(resultListCopy, "processingPartOne", ChromeTraceData.Phase.BEGIN, emptyArgs);
 
-    assertNextResult(resultListCopy, "processingPartOne", ChromeTraceEvent.Phase.END, emptyArgs);
-
-    assertNextResult(
-        resultListCopy,
-        "com.facebook.FakeProcessor.process",
-        ChromeTraceEvent.Phase.END,
-        emptyArgs);
+    assertNextResult(resultListCopy, "processingPartOne", ChromeTraceData.Phase.END, emptyArgs);
 
     assertNextResult(
-        resultListCopy, "run annotation processors", ChromeTraceEvent.Phase.END, emptyArgs);
+        resultListCopy, "com.facebook.FakeProcessor.process", ChromeTraceData.Phase.END, emptyArgs);
+
+    assertNextResult(
+        resultListCopy, "run annotation processors", ChromeTraceData.Phase.END, emptyArgs);
 
     assertNextResult(
         resultListCopy,
         "fakeStep",
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of(
             "description", "I'm a Fake Step!",
             "exit_code", "0"));
@@ -726,7 +722,7 @@ public class ChromeTraceBuildListenerTest {
     assertNextResult(
         resultListCopy,
         "//fake:rule",
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of(
             "cache_result", "miss",
             "success_type", "BUILT_LOCALLY"));
@@ -734,18 +730,18 @@ public class ChromeTraceBuildListenerTest {
     assertNextResult(
         resultListCopy,
         "planning",
-        ChromeTraceEvent.Phase.BEGIN,
+        ChromeTraceData.Phase.BEGIN,
         ImmutableMap.of("nefarious", true));
 
-    assertNextResult(resultListCopy, "scheming", ChromeTraceEvent.Phase.BEGIN, emptyArgs);
+    assertNextResult(resultListCopy, "scheming", ChromeTraceData.Phase.BEGIN, emptyArgs);
 
     assertNextResult(
-        resultListCopy, "scheming", ChromeTraceEvent.Phase.END, ImmutableMap.of("success", false));
+        resultListCopy, "scheming", ChromeTraceData.Phase.END, ImmutableMap.of("success", false));
 
     assertNextResult(
         resultListCopy,
         "planning",
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of(
             "extras",
             ImmutableList.<ImmutableMap<String, Object>>of(
@@ -753,25 +749,25 @@ public class ChromeTraceBuildListenerTest {
                 ImmutableMap.of("string", "ok"),
                 ImmutableMap.of("int", 42))));
 
-    assertNextResult(resultListCopy, "external_test_run", ChromeTraceEvent.Phase.BEGIN, emptyArgs);
+    assertNextResult(resultListCopy, "external_test_run", ChromeTraceData.Phase.BEGIN, emptyArgs);
     assertNextResult(
         resultListCopy,
         "external_test_spec_calc",
-        ChromeTraceEvent.Phase.BEGIN,
+        ChromeTraceData.Phase.BEGIN,
         ImmutableMap.of("target", "//example:app"));
     assertNextResult(
         resultListCopy,
         "external_test_spec_calc",
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of("target", "//example:app"));
-    assertNextResult(resultListCopy, "external_test_run", ChromeTraceEvent.Phase.END, emptyArgs);
+    assertNextResult(resultListCopy, "external_test_run", ChromeTraceData.Phase.END, emptyArgs);
 
-    assertNextResult(resultListCopy, "build", ChromeTraceEvent.Phase.END, emptyArgs);
+    assertNextResult(resultListCopy, "build", ChromeTraceData.Phase.END, emptyArgs);
 
     assertNextResult(
         resultListCopy,
         "party",
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of(
             "command_args", "arg1 arg2",
             "daemon", "true"));
@@ -780,7 +776,7 @@ public class ChromeTraceBuildListenerTest {
   }
 
   private void assertPreambleEvents(
-      List<ChromeTraceEvent> resultListCopy, ProjectFilesystem projectFilesystem) {
+      List<ChromeTraceData> resultListCopy, ProjectFilesystem projectFilesystem) {
     assertNextResult(
         resultListCopy,
         "process_name",
@@ -816,9 +812,9 @@ public class ChromeTraceBuildListenerTest {
   }
 
   private static void assertNextResult(
-      List<ChromeTraceEvent> resultList,
+      List<ChromeTraceData> resultList,
       String expectedName,
-      ChromeTraceEvent.Phase expectedPhase,
+      ChromeTraceData.Phase expectedPhase,
       ImmutableMap<String, ?> expectedArgs) {
     assertTrue(resultList.size() > 0);
     assertEquals(expectedName, resultList.get(0).getName());

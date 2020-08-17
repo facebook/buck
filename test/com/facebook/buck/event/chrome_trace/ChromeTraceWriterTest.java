@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event.chrome_trace;
 
-import com.facebook.buck.event.chrome_trace.ChromeTraceEvent.Phase;
+import com.facebook.buck.event.chrome_trace.ChromeTraceData.Phase;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.TreeNode;
@@ -34,9 +34,9 @@ public class ChromeTraceWriterTest {
     ChromeTraceWriter writer = new ChromeTraceWriter(byteArrayOutputStream);
     writer.writeStart();
     writer.writeEvent(
-        new ChromeTraceEvent("aa", "bb", Phase.BEGIN, 11, 12, 13, 14, ImmutableMap.of()));
+        new ChromeTraceData("aa", "bb", Phase.BEGIN, 11, 12, 13, 14, ImmutableMap.of()));
     writer.writeEvent(
-        new ChromeTraceEvent("cc", "dd", Phase.END, 11, 12, 13, 14, ImmutableMap.of()));
+        new ChromeTraceData("cc", "dd", Phase.END, 11, 12, 13, 14, ImmutableMap.of()));
     writer.writeEnd();
     writer.close();
 

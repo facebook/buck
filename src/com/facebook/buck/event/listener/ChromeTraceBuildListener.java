@@ -42,8 +42,8 @@ import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.event.UninstallEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
-import com.facebook.buck.event.chrome_trace.ChromeTraceEvent;
-import com.facebook.buck.event.chrome_trace.ChromeTraceEvent.Phase;
+import com.facebook.buck.event.chrome_trace.ChromeTraceData;
+import com.facebook.buck.event.chrome_trace.ChromeTraceData.Phase;
 import com.facebook.buck.event.chrome_trace.ChromeTraceWriter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.GlobalStateManager;
@@ -194,7 +194,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   private void addProcessMetadataEvent(InvocationInfo invocationInfo) {
-    writeChromeTraceMetadataEvent(
+    writeChromeTraceMetadata(
         "process_name",
         ImmutableMap.<String, Object>builder()
             // Unlike process_labels, each value is its own field so it can be extracted from a
@@ -204,7 +204,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             .put("is_daemon", invocationInfo.getIsDaemon())
             .put("timestamp", invocationInfo.getTimestampMillis())
             .build());
-    writeChromeTraceMetadataEvent(
+    writeChromeTraceMetadata(
         "process_labels",
         ImmutableMap.<String, Object>builder()
             .put(
@@ -218,8 +218,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   private void addProjectFilesystemDelegateMetadataEvent(ProjectFilesystem projectFilesystem) {
-    writeChromeTraceMetadataEvent(
-        "ProjectFilesystemDelegate", projectFilesystem.getDelegateDetails());
+    writeChromeTraceMetadata("ProjectFilesystemDelegate", projectFilesystem.getDelegateDetails());
   }
 
   /**
@@ -276,20 +275,20 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void commandStarted(CommandEvent.Started started) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         started.getCommandName(),
-        ChromeTraceEvent.Phase.BEGIN,
+        ChromeTraceData.Phase.BEGIN,
         ImmutableMap.of("command_args", Joiner.on(' ').join(started.getArgs())),
         started);
   }
 
   @Subscribe
   public void commandFinished(CommandEvent.Finished finished) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         finished.getCommandName(),
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of(
             "command_args", Joiner.on(' ').join(finished.getArgs()),
             "daemon", Boolean.toString(finished.isDaemon())),
@@ -307,11 +306,11 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       long startMicros =
           TimeUnit.NANOSECONDS.toMicros(
               node.getEventNanoTime() - TimeUnit.MILLISECONDS.toNanos(node.getElapsedTimeMs()));
-      ChromeTraceEvent startTraceEvent =
-          new ChromeTraceEvent(
+      ChromeTraceData startTraceEvent =
+          new ChromeTraceData(
               "critical_path",
               "critical_path",
-              ChromeTraceEvent.Phase.BEGIN,
+              ChromeTraceData.Phase.BEGIN,
               0,
               finished.getThreadId(),
               startMicros,
@@ -319,11 +318,11 @@ public class ChromeTraceBuildListener implements BuckEventListener {
               ImmutableMap.of("rule", node.getBuildTarget().getFullyQualifiedName()));
       submitTraceEvent(startTraceEvent);
 
-      ChromeTraceEvent endTraceEvent =
-          new ChromeTraceEvent(
+      ChromeTraceData endTraceEvent =
+          new ChromeTraceData(
               "critical_path",
               "critical_path",
-              ChromeTraceEvent.Phase.END,
+              ChromeTraceData.Phase.END,
               0,
               finished.getThreadId(),
               TimeUnit.NANOSECONDS.toMicros(node.getEventNanoTime()),
@@ -341,32 +340,31 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void buildStarted(BuildEvent.Started started) {
-    writeChromeTraceEvent(
-        "buck", "build", ChromeTraceEvent.Phase.BEGIN, ImmutableMap.of(), started);
+    writeChromeTraceData("buck", "build", ChromeTraceData.Phase.BEGIN, ImmutableMap.of(), started);
   }
 
   @Subscribe
   public synchronized void buildFinished(BuildEvent.Finished finished) {
-    writeChromeTraceEvent("buck", "build", ChromeTraceEvent.Phase.END, ImmutableMap.of(), finished);
+    writeChromeTraceData("buck", "build", ChromeTraceData.Phase.END, ImmutableMap.of(), finished);
   }
 
   @Subscribe
   public void ruleStarted(BuildRuleEvent.Started started) {
     BuildRule buildRule = started.getBuildRule();
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         buildRule.getFullyQualifiedName(),
-        ChromeTraceEvent.Phase.BEGIN,
+        ChromeTraceData.Phase.BEGIN,
         ImmutableMap.of(),
         started);
   }
 
   @Subscribe
   public void ruleFinished(BuildRuleEvent.Finished finished) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         finished.getBuildRule().getFullyQualifiedName(),
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of(
             "cache_result", finished.getCacheResult().toString().toLowerCase(),
             "success_type", finished.getSuccessType().map(Object::toString).orElse("failed")),
@@ -376,10 +374,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   @Subscribe
   public void ruleResumed(BuildRuleEvent.Resumed resumed) {
     BuildRule buildRule = resumed.getBuildRule();
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         buildRule.getFullyQualifiedName(),
-        ChromeTraceEvent.Phase.BEGIN,
+        ChromeTraceData.Phase.BEGIN,
         ImmutableMap.of("rule_key", resumed.getRuleKey()),
         resumed);
   }
@@ -400,23 +398,23 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   private void writeRuleSuspended(BuildRuleEvent.Suspended suspended) {
     BuildRule buildRule = suspended.getBuildRule();
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         buildRule.getFullyQualifiedName(),
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of("rule_key", suspended.getRuleKey()),
         suspended);
   }
 
   @Subscribe
   public void stepStarted(StepEvent.Started started) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck", started.getShortStepName(), Phase.BEGIN, ImmutableMap.of(), started);
   }
 
   @Subscribe
   public void stepFinished(StepEvent.Finished finished) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         finished.getShortStepName(),
         Phase.END,
@@ -436,10 +434,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       return;
     }
 
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         started.getEventName(),
-        ChromeTraceEvent.Phase.BEGIN,
+        ChromeTraceData.Phase.BEGIN,
         ImmutableMap.of("description", started.toString()),
         started);
   }
@@ -450,45 +448,44 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       return;
     }
 
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         finished.getEventName(),
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of("description", finished.toString()),
         finished);
   }
 
   @Subscribe
   public void parseStarted(ParseEvent.Started started) {
-    writeChromeTraceEvent(
-        "buck", "parse", ChromeTraceEvent.Phase.BEGIN, ImmutableMap.of(), started);
+    writeChromeTraceData("buck", "parse", ChromeTraceData.Phase.BEGIN, ImmutableMap.of(), started);
   }
 
   @Subscribe
   public void parseFinished(ParseEvent.Finished finished) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         "parse",
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of("targets", Joiner.on(",").join(finished.getBuildTargets())),
         finished);
   }
 
   @Subscribe
   public void simplePerfEvent(SimplePerfEvent perfEvent) {
-    ChromeTraceEvent.Phase phase;
+    ChromeTraceData.Phase phase;
     SimplePerfEvent.Type eventType = perfEvent.getEventType();
     switch (eventType) {
       case STARTED:
-        phase = ChromeTraceEvent.Phase.BEGIN;
+        phase = ChromeTraceData.Phase.BEGIN;
         break;
 
       case FINISHED:
-        phase = ChromeTraceEvent.Phase.END;
+        phase = ChromeTraceData.Phase.END;
         break;
 
       case UPDATED:
-        phase = ChromeTraceEvent.Phase.IMMEDIATE;
+        phase = ChromeTraceData.Phase.IMMEDIATE;
         break;
 
       default:
@@ -496,7 +493,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     }
 
     try {
-      writeChromeTraceEvent(
+      writeChromeTraceData(
           perfEvent.getCategory(),
           CONVERTED_EVENT_ID_CACHE.get(perfEvent.getTitle().getValue().intern()),
           phase,
@@ -509,20 +506,20 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void parseBuckFileStarted(ParseBuckFileEvent.Started started) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         "parse_file",
-        ChromeTraceEvent.Phase.BEGIN,
+        ChromeTraceData.Phase.BEGIN,
         ImmutableMap.of("path", started.getBuckFilePath().toString()),
         started);
   }
 
   @Subscribe
   public void parseBuckFileFinished(ParseBuckFileEvent.Finished finished) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         "parse_file",
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of(
             "path",
             finished.getBuckFilePath().toString(),
@@ -539,48 +536,48 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void actionGraphStarted(ActionGraphEvent.Started started) {
-    writeChromeTraceEvent(
-        "buck", "action_graph", ChromeTraceEvent.Phase.BEGIN, ImmutableMap.of(), started);
+    writeChromeTraceData(
+        "buck", "action_graph", ChromeTraceData.Phase.BEGIN, ImmutableMap.of(), started);
   }
 
   @Subscribe
   public void actionGraphFinished(ActionGraphEvent.Finished finished) {
-    writeChromeTraceEvent(
-        "buck", "action_graph", ChromeTraceEvent.Phase.END, ImmutableMap.of(), finished);
+    writeChromeTraceData(
+        "buck", "action_graph", ChromeTraceData.Phase.END, ImmutableMap.of(), finished);
   }
 
   @Subscribe
   public void actionGraphCacheHit(ActionGraphEvent.Cache.Hit hit) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         "action_graph_cache",
-        ChromeTraceEvent.Phase.IMMEDIATE,
+        ChromeTraceData.Phase.IMMEDIATE,
         ImmutableMap.of("hit", true),
         hit);
   }
 
   @Subscribe
   public void actionGraphCacheMiss(ActionGraphEvent.Cache.Miss miss) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         "action_graph_cache",
-        ChromeTraceEvent.Phase.IMMEDIATE,
+        ChromeTraceData.Phase.IMMEDIATE,
         ImmutableMap.of("hit", false, "cacheWasEmpty", miss.cacheWasEmpty),
         miss);
   }
 
   @Subscribe
   public void installStarted(InstallEvent.Started started) {
-    writeChromeTraceEvent(
-        "buck", "install", ChromeTraceEvent.Phase.BEGIN, ImmutableMap.of(), started);
+    writeChromeTraceData(
+        "buck", "install", ChromeTraceData.Phase.BEGIN, ImmutableMap.of(), started);
   }
 
   @Subscribe
   public void installFinished(InstallEvent.Finished finished) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         "install",
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of(
             "target", finished.getBuildTarget().getFullyQualifiedName(),
             "success", Boolean.toString(finished.isSuccess())),
@@ -589,16 +586,16 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void startActivityStarted(StartActivityEvent.Started started) {
-    writeChromeTraceEvent(
-        "buck", "start_activity", ChromeTraceEvent.Phase.BEGIN, ImmutableMap.of(), started);
+    writeChromeTraceData(
+        "buck", "start_activity", ChromeTraceData.Phase.BEGIN, ImmutableMap.of(), started);
   }
 
   @Subscribe
   public void startActivityFinished(StartActivityEvent.Finished finished) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         "start_activity",
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of(
             "target", finished.getBuildTarget().getFullyQualifiedName(),
             "activity_name", finished.getActivityName(),
@@ -608,16 +605,16 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void uninstallStarted(UninstallEvent.Started started) {
-    writeChromeTraceEvent(
-        "buck", "uninstall", ChromeTraceEvent.Phase.BEGIN, ImmutableMap.of(), started);
+    writeChromeTraceData(
+        "buck", "uninstall", ChromeTraceData.Phase.BEGIN, ImmutableMap.of(), started);
   }
 
   @Subscribe
   public void uninstallFinished(UninstallEvent.Finished finished) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         "uninstall",
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of(
             "package_name", finished.getPackageName(),
             "success", Boolean.toString(finished.isSuccess())),
@@ -626,10 +623,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void artifactCacheEventStarted(ArtifactCacheEvent.Started started) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         started.getCategory(),
-        ChromeTraceEvent.Phase.BEGIN,
+        ChromeTraceData.Phase.BEGIN,
         ImmutableMap.of(
             "rule_key", Joiner.on(", ").join(started.getRuleKeys()),
             "rule", started.getTarget().map(BuildTarget::getFullyQualifiedName).orElse("unknown")),
@@ -655,24 +652,24 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     Optionals.putIfPresent(
         finished.getCacheResult().map(Object::toString), "cache_result", argumentsBuilder);
 
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         finished.getCategory(),
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         argumentsBuilder.build(),
         finished);
   }
 
   @Subscribe
   public void artifactCompressionStarted(ArtifactCompressionEvent.Started started) {
-    writeArtifactCompressionEvent(started, ChromeTraceEvent.Phase.BEGIN, ImmutableMap.builder());
+    writeArtifactCompressionEvent(started, ChromeTraceData.Phase.BEGIN, ImmutableMap.builder());
   }
 
   @Subscribe
   public void artifactCompressionFinished(ArtifactCompressionEvent.Finished finished) {
     writeArtifactCompressionEvent(
         finished,
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.<String, String>builder()
             .put("full_size", Long.toString(finished.fullSize))
             .put("compressed_size", Long.toString(finished.compressedSize)));
@@ -680,9 +677,9 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   public void writeArtifactCompressionEvent(
       ArtifactCompressionEvent event,
-      ChromeTraceEvent.Phase phase,
+      ChromeTraceData.Phase phase,
       ImmutableMap.Builder<String, String> builder) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         event.getCategory(),
         phase,
@@ -692,22 +689,22 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void artifactConnectStarted(ArtifactCacheConnectEvent.Started started) {
-    writeChromeTraceEvent(
-        "buck", "artifact_connect", ChromeTraceEvent.Phase.BEGIN, ImmutableMap.of(), started);
+    writeChromeTraceData(
+        "buck", "artifact_connect", ChromeTraceData.Phase.BEGIN, ImmutableMap.of(), started);
   }
 
   @Subscribe
   public void artifactConnectFinished(ArtifactCacheConnectEvent.Finished finished) {
-    writeChromeTraceEvent(
-        "buck", "artifact_connect", ChromeTraceEvent.Phase.END, ImmutableMap.of(), finished);
+    writeChromeTraceData(
+        "buck", "artifact_connect", ChromeTraceData.Phase.END, ImmutableMap.of(), finished);
   }
 
   @Subscribe
   public void memoryPerfStats(PerfStatsTracking.MemoryPerfStatsEvent memory) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "perf",
         "memory",
-        ChromeTraceEvent.Phase.COUNTER,
+        ChromeTraceData.Phase.COUNTER,
         ImmutableMap.<String, String>builder()
             .put(
                 "used_memory_mb",
@@ -758,16 +755,15 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       builder.put(
           "bytes_written_mb", Long.toString(SizeUnit.BYTES.toMegabytes(res.getIoBytesWritten())));
     }
-    writeChromeTraceEvent(
-        "perf", "process", ChromeTraceEvent.Phase.COUNTER, builder.build(), event);
+    writeChromeTraceData("perf", "process", ChromeTraceData.Phase.COUNTER, builder.build(), event);
   }
 
   @Subscribe
   public void testStartedEvent(TestSummaryEvent.Started started) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         "test",
-        ChromeTraceEvent.Phase.BEGIN,
+        ChromeTraceData.Phase.BEGIN,
         ImmutableMap.of(
             "test_case_name", started.getTestCaseName(),
             "test_name", started.getTestName()),
@@ -776,10 +772,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void testFinishedEvent(TestSummaryEvent.Finished finished) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         "test",
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of(
             "test_case_name", finished.getTestCaseName(),
             "test_name", finished.getTestName()),
@@ -788,14 +784,14 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void ruleKeyCalculationStarted(RuleKeyCalculationEvent.Started started) {
-    writeChromeTraceEvent(
-        "buck", started.getCategory(), ChromeTraceEvent.Phase.BEGIN, ImmutableMap.of(), started);
+    writeChromeTraceData(
+        "buck", started.getCategory(), ChromeTraceData.Phase.BEGIN, ImmutableMap.of(), started);
   }
 
   @Subscribe
   public void ruleKeyCalculationFinished(RuleKeyCalculationEvent.Finished finished) {
-    writeChromeTraceEvent(
-        "buck", finished.getCategory(), ChromeTraceEvent.Phase.END, ImmutableMap.of(), finished);
+    writeChromeTraceData(
+        "buck", finished.getCategory(), ChromeTraceData.Phase.END, ImmutableMap.of(), finished);
     if (finished instanceof BuildRuleEvent.Suspended) {
       writeRuleSuspended((BuildRuleEvent.Suspended) finished);
     }
@@ -803,10 +799,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void externalTestSpecCalculationStarted(ExternalTestSpecCalculationEvent.Started started) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         started.getCategory(),
-        ChromeTraceEvent.Phase.BEGIN,
+        ChromeTraceData.Phase.BEGIN,
         ImmutableMap.of("target", started.getBuildTarget().getFullyQualifiedName()),
         started);
   }
@@ -814,29 +810,29 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   @Subscribe
   public void externalTestSpecCalculationFinished(
       ExternalTestSpecCalculationEvent.Finished finished) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         finished.getCategory(),
-        ChromeTraceEvent.Phase.END,
+        ChromeTraceData.Phase.END,
         ImmutableMap.of("target", finished.getBuildTarget().getFullyQualifiedName()),
         finished);
   }
 
   @Subscribe
   public void externalTestRunStarted(ExternalTestRunEvent.Started started) {
-    writeChromeTraceEvent(
-        "buck", started.getCategory(), ChromeTraceEvent.Phase.BEGIN, ImmutableMap.of(), started);
+    writeChromeTraceData(
+        "buck", started.getCategory(), ChromeTraceData.Phase.BEGIN, ImmutableMap.of(), started);
   }
 
   @Subscribe
   public void externalTestRunFinished(ExternalTestRunEvent.Finished finished) {
-    writeChromeTraceEvent(
-        "buck", finished.getCategory(), ChromeTraceEvent.Phase.END, ImmutableMap.of(), finished);
+    writeChromeTraceData(
+        "buck", finished.getCategory(), ChromeTraceData.Phase.END, ImmutableMap.of(), finished);
   }
 
   @Subscribe
   public void onWatchmanOverflow(WatchmanStatusEvent.Overflow event) {
-    writeChromeTraceMetadataEvent(
+    writeChromeTraceMetadata(
         "watchman_overflow",
         ImmutableMap.of("cellPath", event.getCellPath().toString(), "reason", event.getReason()));
   }
@@ -845,10 +841,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     if (reStatsProvider.isPresent()) {
       for (ImmutableMap.Entry<State, Integer> entry :
           reStatsProvider.get().getActionsPerState().entrySet()) {
-        writeChromeTraceEvent(
+        writeChromeTraceData(
             "remote_execution",
             String.format("re_%s", entry.getKey().toString().toLowerCase()),
-            ChromeTraceEvent.Phase.COUNTER,
+            ChromeTraceData.Phase.COUNTER,
             ImmutableMap.of(entry.getKey().getAbbreviateName(), Integer.toString(entry.getValue())),
             event);
       }
@@ -870,13 +866,13 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   /** Mark the start of a Remote Execution session */
   @Subscribe
   public void onRemoteExecutionSessionStarted(RemoteExecutionSessionEvent.Started event) {
-    writeChromeTraceEvent("buck", event.getCategory(), Phase.BEGIN, ImmutableMap.of(), event);
+    writeChromeTraceData("buck", event.getCategory(), Phase.BEGIN, ImmutableMap.of(), event);
   }
 
   /** Mark the end of a Remote Execution session and write down the related telemetry. */
   @Subscribe
   public void onRemoteExecutionSessionFinished(RemoteExecutionSessionEvent.Finished event) {
-    writeChromeTraceEvent(
+    writeChromeTraceData(
         "buck",
         event.getCategory(),
         Phase.END,
@@ -885,18 +881,18 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   @VisibleForTesting
-  void writeChromeTraceEvent(
+  void writeChromeTraceData(
       String category,
       String name,
-      ChromeTraceEvent.Phase phase,
+      ChromeTraceData.Phase phase,
       ImmutableMap<String, ?> arguments,
       BuckEvent event) {
     long threadId = event.getThreadId();
     long timestampInMicroseconds = TimeUnit.NANOSECONDS.toMicros(event.getNanoTime());
     long threadTimestampInMicroseconds =
         TimeUnit.NANOSECONDS.toMicros(event.getThreadUserNanoTime());
-    ChromeTraceEvent chromeTraceEvent =
-        new ChromeTraceEvent(
+    ChromeTraceData chromeTraceData =
+        new ChromeTraceData(
             category,
             name,
             phase,
@@ -905,11 +901,11 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             timestampInMicroseconds,
             threadTimestampInMicroseconds,
             arguments);
-    submitTraceEvent(chromeTraceEvent);
-    writeThreadNameIfNeeded(chromeTraceEvent);
+    submitTraceEvent(chromeTraceData);
+    writeThreadNameIfNeeded(chromeTraceData);
   }
 
-  void writeThreadNameIfNeeded(ChromeTraceEvent triggeringEvent) {
+  void writeThreadNameIfNeeded(ChromeTraceData triggeringEvent) {
     long threadId = triggeringEvent.getThreadId();
     long timestampInMicroseconds = triggeringEvent.getMicroTime();
     long threadTimestampInMicroseconds = triggeringEvent.getMicroThreadUserTime();
@@ -920,7 +916,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
       if (threadInfo != null) {
         submitTraceEvent(
-            new ChromeTraceEvent(
+            new ChromeTraceData(
                 "buck",
                 "thread_name",
                 Phase.METADATA,
@@ -934,7 +930,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       // Force sort by thread ID so that the sort order is in creation order. This produces the
       // most readable traces.
       submitTraceEvent(
-          new ChromeTraceEvent(
+          new ChromeTraceData(
               "buck",
               "thread_sort_index",
               Phase.METADATA,
@@ -949,31 +945,31 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   @VisibleForTesting
-  void writeChromeTraceMetadataEvent(String name, ImmutableMap<String, ?> arguments) {
+  void writeChromeTraceMetadata(String name, ImmutableMap<String, ?> arguments) {
     long timestampInMicroseconds = TimeUnit.NANOSECONDS.toMicros(clock.nanoTime());
     long threadTimestampInMicroseconds =
         TimeUnit.NANOSECONDS.toMicros(clock.threadUserNanoTime(Thread.currentThread().getId()));
-    ChromeTraceEvent chromeTraceEvent =
-        new ChromeTraceEvent(
+    ChromeTraceData chromeTraceData =
+        new ChromeTraceData(
             /* category */ "buck",
             name,
-            ChromeTraceEvent.Phase.METADATA,
+            ChromeTraceData.Phase.METADATA,
             /* processId */ 0,
             /* threadId */ 0,
             /* microTime */ timestampInMicroseconds,
             /* microThreadUserTime */ threadTimestampInMicroseconds,
             arguments);
-    submitTraceEvent(chromeTraceEvent);
+    submitTraceEvent(chromeTraceData);
   }
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  private void submitTraceEvent(ChromeTraceEvent chromeTraceEvent) {
+  private void submitTraceEvent(ChromeTraceData chromeTraceData) {
     @SuppressWarnings("unused")
     Future<?> unused =
         outputExecutor.submit(
             () -> {
               try {
-                chromeTraceWriter.writeEvent(chromeTraceEvent);
+                chromeTraceWriter.writeEvent(chromeTraceData);
               } catch (IOException e) {
                 // Swallow any failures to write.
               }

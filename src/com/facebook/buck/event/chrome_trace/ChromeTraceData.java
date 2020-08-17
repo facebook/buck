@@ -27,7 +27,8 @@ import com.google.common.collect.ImmutableMap;
  * https://github.com/google/trace-viewer for more information.
  */
 @JsonInclude(Include.NON_NULL)
-public class ChromeTraceEvent {
+public class ChromeTraceData {
+  /** Different phases of an a chrome trace event. */
   public enum Phase {
     BEGIN("B"),
     END("E"),
@@ -61,7 +62,7 @@ public class ChromeTraceEvent {
   private final long microThreadUserTime;
   private final ImmutableMap<String, ? extends Object> args;
 
-  public ChromeTraceEvent(
+  public ChromeTraceData(
       @JsonProperty("cat") String category,
       @JsonProperty("name") String name,
       @JsonProperty("ph") Phase phase,

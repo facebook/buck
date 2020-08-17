@@ -24,7 +24,7 @@ import java.io.OutputStream;
 /**
  * Type-safe utility to write Chrome trace events to files.
  *
- * @see ChromeTraceEvent
+ * @see ChromeTraceData
  */
 public class ChromeTraceWriter implements AutoCloseable {
   private final JsonGenerator jsonGenerator;
@@ -40,8 +40,8 @@ public class ChromeTraceWriter implements AutoCloseable {
   }
 
   /** Write single event. */
-  public void writeEvent(ChromeTraceEvent chromeTraceEvent) throws IOException {
-    ObjectMappers.WRITER.writeValue(jsonGenerator, chromeTraceEvent);
+  public void writeEvent(ChromeTraceData chromeTraceData) throws IOException {
+    ObjectMappers.WRITER.writeValue(jsonGenerator, chromeTraceData);
   }
 
   /** Must be called prior to emitting first event to properly initialize stream. */
