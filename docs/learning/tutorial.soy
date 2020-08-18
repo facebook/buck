@@ -19,7 +19,7 @@
 /***/
 {template .soyweb}
   {call buck.page}
-    {param title: 'Tutorial' /}
+    {param title: 'Tutorials' /}
     {param navid: 'learning_tutorial' /}
     {param prettify: true /}
     {param description}
@@ -41,6 +41,42 @@
 </blockquote>
 </p>
 
+<div class="toggler">
+  <table>
+    <tr>
+      <td><span><strong>Platform:</strong></span></td>
+      <td>
+        <a href="javascript:void(0);" class="button-android" onclick="display('platform', 'android')">Android</a>
+        <a href="javascript:void(0);" class="button-ios" onclick="display('platform', 'ios')">iOS</a>
+      </td>
+    </tr>
+    <tr>
+      <td><span><strong>Development OS:</strong></span></td>
+      <td>
+        <a href="javascript:void(0);" class="button-mac" onclick="display('os', 'mac')">macOS</a>
+        <a href="javascript:void(0);" class="button-linux" onclick="display('os', 'linux')">Linux</a>
+        <a href="javascript:void(0);" class="button-windows" onclick="display('os', 'windows')">Windows</a>
+      </td>
+    </tr>
+    <tr>
+      <td><span><strong>Language:</strong></span></td>
+      <td>
+        <a href="javascript:void(0);" class="button-java" onclick="display('language', 'java')">Java</a>
+        <a href="javascript:void(0);" class="button-kotlin" onclick="display('language', 'kotlin')">Kotlin</a>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p id="testanddebug">DEBUG</p>
+
+<span><block class="mac linux ios" /></span>
+  <p>Tutorials for iOS are coming soon. Feel free to submit a PR if you have a sample code, thanks.</p>
+
+<span><block class="windows ios android" /></span>
+  <p>We don't have tutorials for iOS and Android developed on Windows, Feel free to submit a PR if you have one, thanks.</p>
+
+<span><block class="mac linux android java kotlin" /></span>
 <h2>Path Setup</h2>
 
 <p>
@@ -53,7 +89,6 @@ sudo ln -s ${PWD}/bin/buck /usr/bin/buck
 sudo ln -s ${PWD}/bin/buckd /usr/bin/buckd
 </pre>
 {/literal}
-
 
 <h2>Create Project</h2>
 
@@ -82,6 +117,7 @@ cd ~/my-first-buck-project/
 export ANDROID_SDK=$HOME/android-sdk
 </pre>{/literal}
 
+<span><block class="mac linux android java" /></span>
 <p>
   Now that Buck can locate your Android SDK, it is time to compile some Java code. First, we create a simple <code>Activity</code> at <code>java/com/example/activity/MyFirstActivity.java</code>:
 </p>
@@ -126,6 +162,52 @@ echo "android_library(
 </blockquote>
 </p>
 
+<span><block class="mac linux android kotlin" /></span>
+<p>
+  Now that Buck can locate your Android SDK, it is time to compile some Java code. First, we create a simple <code>Activity</code> at <code>kotlin/com/example/activity/MyFirstActivity.kt</code>:
+</p>
+
+{literal}<pre>
+mkdir -p kotlin/com/example/activity/
+echo "package com.example.activity
+
+import android.app.Activity
+import android.os.Bundle
+
+class MyFirstActivity : Activity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+    }
+}" > kotlin/com/example/activity/MyFirstActivity.kt
+</pre>{/literal}
+
+<p>
+  Now we need a build file that defines a build rule to compile this Java code, so we create an <code><a href="rule/android_library.html">android_library()</a></code> rule in <code>java/com/example/activity/BUCK</code>:
+</p>
+
+{literal}<pre>
+echo "android_library(
+  name = 'activity',
+  srcs = glob(['*.kt']),
+  language = "KOTLIN",
+  visibility = [ 'PUBLIC' ],
+)" > kotlin/com/example/activity/BUCK
+</pre>{/literal}
+
+<p>
+  Now we can compile our Java code using Buck:
+</p>
+
+<pre>buck build{sp}//kotlin/com/example/activity:activity</pre>
+
+<p>
+<blockquote>
+  Buck generates its output in the <code>buck-out</code> directory, so this is a good time to specify <code>buck-out</code> as something that should be ignored by your version control system.
+</blockquote>
+</p>
+
+<span><block class="mac linux android java kotlin" /></span>
 <h2>Package Resources</h2>
 
 <p>
@@ -229,8 +311,8 @@ echo "android_binary(
   manifest_entries = {
     'version_code': 1,
     'version_name': '1.0',
-    'min_sdk_version': 16,
-    'target_sdk_version': 23
+    'min_sdk_version': 26,
+    'target_sdk_version': 29
   },
   keystore = ':debug_keystore',
   deps = [
@@ -279,6 +361,7 @@ echo "[alias]
 
 <pre>buck install app</pre>
 
+<span><block class="mac linux android java" /></span>
 <h2>Create an IntelliJ Project</h2>
 
 <p>
@@ -324,4 +407,101 @@ echo "/.buckd
 
     {/param}
   {/call}
+
+{literal}
+<script>
+// Convert <div>...<span><block /></span>...</div>
+// Into <div>...<block />...</div>
+var blocks = document.getElementsByTagName('block');
+for (var i = 0; i < blocks.length; ++i) {
+  var block = blocks[i];
+  var span = blocks[i].parentNode;
+  var container = span.parentNode;
+  container.insertBefore(block, span);
+  container.removeChild(span);
+}
+// Convert <div>...<block />content<block />...</div>
+// Into <div>...<block>content</block><block />...</div>
+blocks = document.getElementsByTagName('block');
+for (var i = 0; i < blocks.length; ++i) {
+  var block = blocks[i];
+  while (block.nextSibling && block.nextSibling.tagName !== 'BLOCK') {
+    block.appendChild(block.nextSibling);
+  }
+}
+function display(type, value) {
+  var container = document.getElementsByTagName('block')[0].parentNode;
+  container.className = 'disp-' + type + '-' + value + ' ' +
+    container.className.replace(RegExp('disp-' + type + '-[a-z]+ ?'), '');
+  document.getElementById("testanddebug").innerHTML = container.className;
+}
+
+// If we are coming to the page with a hash in it (i.e. from a search, for example), try to get
+// us as close as possible to the correct platform and dev os using the hashtag and block walk up.
+var foundHash = false;
+if (window.location.hash !== '' && window.location.hash !== 'content') { // content is default
+  var hashLinks = document.querySelectorAll('a.hash-link');
+  for (var i = 0; i < hashLinks.length && !foundHash; ++i) {
+    if (hashLinks[i].hash === window.location.hash) {
+      var parent = hashLinks[i].parentElement;
+      while (parent) {
+        if (parent.tagName === 'BLOCK') {
+          var devOS = null;
+          var targetPlatform = null;
+          var languageToUse = null;
+          // Could be more than one target os and dev platform, but just choose some sort of order
+          // of priority here.
+
+          // Dev OS
+          if (parent.className.indexOf('mac') > -1) {
+            devOS = 'mac';
+          } else if (parent.className.indexOf('linux') > -1) {
+            devOS = 'linux';
+          } else if (parent.className.indexOf('windows') > -1) {
+            devOS = 'windows';
+          } else {
+            break; // assume we don't have anything.
+          }
+
+          // Target Platform
+          if (parent.className.indexOf('ios') > -1) {
+            targetPlatform = 'ios';
+          } else if (parent.className.indexOf('android') > -1) {
+            targetPlatform = 'android';
+          } else {
+            break; // assume we don't have anything.
+          }
+
+          // Language
+          if (parent.className.indexOf('java') > -1) {
+            languageToUse = 'java';
+          } else if (parent.className.indexOf('kotlin') > -1) {
+            languageToUse = 'kotlin';
+          } else {
+            break;
+          }
+
+          // We would have broken out if both targetPlatform and devOS hadn't been filled.
+          display('os', devOS);
+          display('platform', targetPlatform);
+          display('language', languageToUse);
+          foundHash = true;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+    }
+  }
+}
+// Do the default if there is no matching hash
+if (!foundHash) {
+  var isMac = navigator.platform.toLowerCase().indexOf('mac') !== -1;
+  var isLinux = navigator.platform.toLowerCase().indexOf('linux') !== -1;
+  display('os', isMac ? 'mac' : (isLinux ? 'linux' : 'windows'));
+  display('platform', 'android');
+  display('language', 'java');
+}
+</script>
+{/literal}
+
 {/template}
