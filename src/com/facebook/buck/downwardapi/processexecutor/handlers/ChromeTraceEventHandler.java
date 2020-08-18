@@ -42,8 +42,8 @@ enum ChromeTraceEventHandler implements EventHandler<ChromeTraceEvent> {
     SimplePerfEvent.Started started;
     switch (event.getStatus()) {
       case BEGIN:
-        PerfEventTitle perfEventTitle = PerfEventTitle.of(String.valueOf(eventId));
-        started = SimplePerfEvent.started(perfEventTitle, event.getCategory(), attributes);
+        PerfEventTitle perfEventId = PerfEventTitle.of(event.getTitle());
+        started = SimplePerfEvent.started(perfEventId, event.getCategory(), attributes);
         chromeTraceStartedEvents.put(eventId, started);
         context.postEvent(started, timestamp);
         break;

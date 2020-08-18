@@ -467,6 +467,7 @@ public class DownwardApiProcessExecutorTest {
     ChromeTraceEvent chromeTraceEvent =
         ChromeTraceEvent.newBuilder()
             .setEventId(789)
+            .setTitle("my_trace_event")
             .setCategory(category)
             .setStatus(status)
             .setDuration(Duration.newBuilder().setSeconds(relativeSeconds).setNanos(10).build())
