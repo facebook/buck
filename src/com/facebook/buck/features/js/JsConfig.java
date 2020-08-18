@@ -17,20 +17,17 @@
 package com.facebook.buck.features.js;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.ConfigView;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** JS specific buck config */
-public class JsConfig {
+@BuckStyleValue
+public abstract class JsConfig implements ConfigView<BuckConfig> {
 
   private static final String SECTION = "js";
 
-  private final BuckConfig delegate;
-
-  private JsConfig(BuckConfig delegate) {
-    this.delegate = delegate;
-  }
-
   public static JsConfig of(BuckConfig delegate) {
-    return new JsConfig(delegate);
+    return ImmutableJsConfig.ofImpl(delegate);
   }
 
   /**
@@ -45,7 +42,6 @@ public class JsConfig {
     return getDelegate().getBooleanValue(SECTION, configKey, false);
   }
 
-  private BuckConfig getDelegate() {
-    return delegate;
-  }
+  @Override
+  public abstract BuckConfig getDelegate();
 }
