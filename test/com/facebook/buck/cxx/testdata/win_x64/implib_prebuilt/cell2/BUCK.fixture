@@ -8,5 +8,5 @@ cxx_binary(
 genrule(
     name = "log",
     out = "log.txt",
-    cmd_exe = "\"$(exe :app#windows-x86_64)\" > %OUT%",
+    cmd_exe = "$(exe :app#windows-x86_64) > %OUT%",
 )
