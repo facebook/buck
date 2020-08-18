@@ -88,7 +88,8 @@ public class IjProjectTemplateDataPreparer {
   private final ImmutableSet<Path> referencedFolderPaths;
   private final ImmutableSet<Path> filesystemTraversalBoundaryPaths;
   private final ImmutableSet<IjModule> modulesToBeWritten;
-  private final ImmutableSet<IjLibrary> librariesToBeWritten;
+  private final ImmutableSet<IjLibrary> allLibraries;
+  private final ImmutableSet<IjLibrary> projectLibrariesToBeWritten;
 
   public IjProjectTemplateDataPreparer(
       JavaPackageFinder javaPackageFinder,
@@ -103,10 +104,8 @@ public class IjProjectTemplateDataPreparer {
     this.projectPaths = projectConfig.getProjectPaths();
     this.sourceRootSimplifier = new IjSourceRootSimplifier(javaPackageFinder);
     this.modulesToBeWritten = createModulesToBeWritten(moduleGraph);
-    this.librariesToBeWritten =
-        moduleGraph.getLibraries().stream()
-            .filter(library -> library.getLevel() == IjLibrary.Level.PROJECT)
-            .collect(ImmutableSet.toImmutableSet());
+    this.allLibraries = moduleGraph.getLibraries();
+    this.projectLibrariesToBeWritten = moduleGraph.getProjectLibraries();
     this.androidManifestParser = androidManifestParser;
     this.filesystemTraversalBoundaryPaths =
         createFilesystemTraversalBoundaryPathSet(modulesToBeWritten);
@@ -185,8 +184,12 @@ public class IjProjectTemplateDataPreparer {
     return modulesToBeWritten;
   }
 
-  public ImmutableSet<IjLibrary> getLibrariesToBeWritten() {
-    return librariesToBeWritten;
+  public ImmutableSet<IjLibrary> getAllLibraries() {
+    return allLibraries;
+  }
+
+  public ImmutableSet<IjLibrary> getProjectLibrariesToBeWritten() {
+    return projectLibrariesToBeWritten;
   }
 
   private ImmutableList<ContentRoot> createContentRoots(

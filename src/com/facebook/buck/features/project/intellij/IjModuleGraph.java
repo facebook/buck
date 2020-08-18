@@ -57,6 +57,16 @@ public class IjModuleGraph {
         .collect(ImmutableSet.toImmutableSet());
   }
 
+  public ImmutableSet<IjLibrary> getProjectLibraries() {
+    return deps.keySet().stream()
+        .filter(
+            node ->
+                node instanceof IjLibrary
+                    && ((IjLibrary) node).getLevel() == IjLibrary.Level.PROJECT)
+        .map(IjLibrary.class::cast)
+        .collect(ImmutableSet.toImmutableSet());
+  }
+
   public ImmutableMap<IjProjectElement, DependencyType> getDepsFor(IjProjectElement source) {
     return Optional.ofNullable(deps.get(source)).orElse(ImmutableMap.of());
   }

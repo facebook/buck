@@ -18,53 +18,30 @@ package com.facebook.buck.features.project.intellij;
 
 import static com.facebook.buck.features.project.intellij.IjProjectPaths.getUrl;
 
-import com.facebook.buck.android.AndroidKotlinCoreArg;
-import com.facebook.buck.android.AndroidLibraryDescription;
-import com.facebook.buck.android.RobolectricTestDescriptionArg;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.features.project.intellij.model.ContentRoot;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.project.intellij.model.ModuleIndexEntry;
-import com.facebook.buck.features.project.intellij.model.folders.IjFolder;
 import com.facebook.buck.features.project.intellij.model.folders.IjSourceFolder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
-import com.facebook.buck.util.json.ObjectMappers;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.stringtemplate.v4.ST;
 
 /** Writes the serialized representations of IntelliJ project components to disk. */
 public class IjProjectWriter {
-  static final String TARGET_INFO_MAP_FILENAME = "target-info.json";
-  static final String INTELLIJ_TYPE = "intellij.type";
-  static final String INTELLIJ_NAME = "intellij.name";
-  static final String INTELLIJ_FILE_PATH = "intellij.file_path";
-  static final String GENERATED_SOURCES = "generated_sources";
-  static final String MODULE_LANG = "module.lang";
-  static final String MODULE_TYPE = "module";
-  static final String BUCK_TYPE = "buck.type";
-  static final String LIBRARY_TYPE = "library";
 
-  private final TargetGraph targetGraph;
   private final IjProjectTemplateDataPreparer projectDataPreparer;
   private final IjProjectConfig projectConfig;
   private final ProjectFilesystem projectFilesystem;
@@ -75,14 +52,13 @@ public class IjProjectWriter {
   private final BuckOutPathConverter buckOutPathConverter;
 
   public IjProjectWriter(
-      TargetGraph targetGraph,
       IjProjectTemplateDataPreparer projectDataPreparer,
       IjProjectConfig projectConfig,
       ProjectFilesystem projectFilesystem,
       IntellijModulesListParser modulesParser,
       IJProjectCleaner cleaner,
-      ProjectFilesystem outFilesystem) {
-    this.targetGraph = targetGraph;
+      ProjectFilesystem outFilesystem,
+      BuckOutPathConverter buckOutPathConverter) {
     this.projectDataPreparer = projectDataPreparer;
     this.projectConfig = projectConfig;
     this.projectPaths = projectConfig.getProjectPaths();
@@ -90,7 +66,7 @@ public class IjProjectWriter {
     this.modulesParser = modulesParser;
     this.cleaner = cleaner;
     this.outFilesystem = outFilesystem;
-    buckOutPathConverter = new BuckOutPathConverter(projectConfig);
+    this.buckOutPathConverter = buckOutPathConverter;
   }
 
   /** Write entire project to disk */
@@ -111,7 +87,7 @@ public class IjProjectWriter {
               }
             });
     projectDataPreparer
-        .getLibrariesToBeWritten()
+        .getProjectLibrariesToBeWritten()
         .parallelStream()
         .forEach(
             library -> {
@@ -124,106 +100,6 @@ public class IjProjectWriter {
 
     writeModulesIndex(projectDataPreparer.getModuleIndexEntries());
     writeWorkspace();
-
-    if (projectConfig.isGeneratingTargetInfoMapEnabled()) {
-      writeTargetInfoMap(projectDataPreparer, false);
-    }
-  }
-
-  private Map<String, Map<String, Object>> readTargetInfoMap() throws IOException {
-    Path targetInfoMapPath = getTargetInfoMapPath();
-    return outFilesystem.exists(targetInfoMapPath)
-        ? ObjectMappers.createParser(outFilesystem.newFileInputStream(targetInfoMapPath))
-            .readValueAs(new TypeReference<TreeMap<String, TreeMap<String, Object>>>() {})
-        : Maps.newTreeMap();
-  }
-
-  private void writeTargetInfoMap(IjProjectTemplateDataPreparer projectDataPreparer, boolean update)
-      throws IOException {
-    Map<String, Map<String, Object>> targetInfoMap =
-        update ? readTargetInfoMap() : Maps.newTreeMap();
-    projectDataPreparer
-        .getModulesToBeWritten()
-        .forEach(
-            module -> {
-              Map<BuildTarget, List<IjFolder>> targetsToGeneratedSourcesMap =
-                  module.getTargetsToGeneratedSourcesMap();
-              module
-                  .getTargets()
-                  .forEach(
-                      target -> {
-                        Map<String, Object> targetInfo = Maps.newTreeMap();
-                        targetInfo.put(INTELLIJ_TYPE, MODULE_TYPE);
-                        targetInfo.put(INTELLIJ_NAME, module.getName());
-                        targetInfo.put(
-                            INTELLIJ_FILE_PATH,
-                            projectPaths.getModuleImlFilePath(module, projectConfig).toString());
-                        targetInfo.put(BUCK_TYPE, getRuleNameForBuildTarget(target));
-                        if (targetsToGeneratedSourcesMap.containsKey(target)) {
-                          if (buckOutPathConverter.hasBuckOutPathForGeneratedProjectFiles()) {
-                            targetInfo.put(
-                                GENERATED_SOURCES,
-                                targetsToGeneratedSourcesMap.get(target).stream()
-                                    .map(folder -> buckOutPathConverter.convert(folder.getPath()))
-                                    .collect(Collectors.toList()));
-                          } else {
-                            targetInfo.put(
-                                GENERATED_SOURCES,
-                                targetsToGeneratedSourcesMap.get(target).stream()
-                                    .map(IjFolder::getPath)
-                                    .collect(Collectors.toList()));
-                          }
-                        }
-                        getModuleLang(target)
-                            .ifPresent(
-                                moduleLang -> targetInfo.put(MODULE_LANG, moduleLang.toString()));
-                        targetInfoMap.put(target.getFullyQualifiedName(), targetInfo);
-                      });
-            });
-    projectDataPreparer
-        .getLibrariesToBeWritten()
-        .forEach(
-            library -> {
-              library
-                  .getTargets()
-                  .forEach(
-                      target -> {
-                        Map<String, Object> targetInfo = Maps.newTreeMap();
-                        targetInfo.put(INTELLIJ_TYPE, LIBRARY_TYPE);
-                        targetInfo.put(INTELLIJ_NAME, library.getName());
-                        targetInfo.put(
-                            INTELLIJ_FILE_PATH,
-                            projectPaths.getLibraryXmlFilePath(library, projectConfig).toString());
-                        targetInfo.put(BUCK_TYPE, getRuleNameForBuildTarget(target));
-                        targetInfoMap.put(target.getFullyQualifiedName(), targetInfo);
-                      });
-            });
-    Path targetInfoMapPath = getTargetInfoMapPath();
-    try (JsonGenerator generator =
-        ObjectMappers.createGenerator(outFilesystem.newFileOutputStream(targetInfoMapPath))
-            .useDefaultPrettyPrinter()) {
-      generator.writeObject(targetInfoMap);
-      cleaner.doNotDelete(targetInfoMapPath);
-    }
-  }
-
-  private Path getTargetInfoMapPath() {
-    return getIdeaConfigDir().resolve(TARGET_INFO_MAP_FILENAME);
-  }
-
-  private String getRuleNameForBuildTarget(BuildTarget buildTarget) {
-    return targetGraph.get(buildTarget).getRuleType().getName();
-  }
-
-  private Optional<AndroidLibraryDescription.JvmLanguage> getModuleLang(BuildTarget buildTarget) {
-    if (targetGraph.get(buildTarget).getConstructorArg() instanceof AndroidKotlinCoreArg
-        || targetGraph.get(buildTarget).getConstructorArg()
-            instanceof RobolectricTestDescriptionArg) {
-      return ((AndroidKotlinCoreArg) (targetGraph.get(buildTarget).getConstructorArg()))
-          .getLanguage();
-    }
-
-    return Optional.empty();
   }
 
   private boolean writeModule(IjModule module, ImmutableList<ContentRoot> contentRoots)
@@ -399,7 +275,7 @@ public class IjProjectWriter {
               }
             });
     projectDataPreparer
-        .getLibrariesToBeWritten()
+        .getProjectLibrariesToBeWritten()
         .parallelStream()
         .forEach(
             library -> {
@@ -410,10 +286,6 @@ public class IjProjectWriter {
               }
             });
     updateModulesIndex(projectDataPreparer.getModulesToBeWritten());
-
-    if (projectConfig.isGeneratingTargetInfoMapEnabled()) {
-      writeTargetInfoMap(projectDataPreparer, true);
-    }
   }
 
   /** Update the modules.xml file with any new modules from the given set */

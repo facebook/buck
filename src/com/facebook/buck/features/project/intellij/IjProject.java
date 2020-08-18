@@ -99,6 +99,8 @@ public class IjProject {
             ? Optional.empty()
             : Optional.of(Sets.newConcurrentHashSet());
     IjProjectSourcePathResolver sourcePathResolver = new IjProjectSourcePathResolver(targetGraph);
+    TargetInfoMapManager targetInfoMapManager =
+        new TargetInfoMapManager(targetGraph, projectConfig, outFilesystem, updateOnly);
     IjLibraryFactory libraryFactory =
         new DefaultIjLibraryFactory(
             new DefaultIjLibraryFactoryResolver(
@@ -132,21 +134,31 @@ public class IjProject {
             projectConfig,
             androidManifestParser);
     IntellijModulesListParser modulesParser = new IntellijModulesListParser();
+    BuckOutPathConverter buckOutPathConverter = new BuckOutPathConverter(projectConfig);
     IjProjectWriter writer =
         new IjProjectWriter(
-            targetGraph,
             templateDataPreparer,
             projectConfig,
             projectFilesystem,
             modulesParser,
             cleaner,
-            outFilesystem);
+            outFilesystem,
+            buckOutPathConverter);
 
     if (updateOnly) {
       writer.update();
     } else {
       writer.write();
     }
+
+    if (projectConfig.isGeneratingTargetInfoMapEnabled()) {
+      targetInfoMapManager.write(
+          templateDataPreparer.getModulesToBeWritten(),
+          templateDataPreparer.getAllLibraries(),
+          buckOutPathConverter,
+          cleaner);
+    }
+
     PregeneratedCodeWriter pregeneratedCodeWriter =
         new PregeneratedCodeWriter(
             templateDataPreparer, projectConfig, outFilesystem, androidManifestParser, cleaner);
