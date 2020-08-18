@@ -41,6 +41,7 @@ import com.facebook.buck.rules.macros.CudaFlagsMacro;
 import com.facebook.buck.rules.macros.CudaMacro;
 import com.facebook.buck.rules.macros.CudappFlagsMacro;
 import com.facebook.buck.rules.macros.CxxFlagsMacro;
+import com.facebook.buck.rules.macros.CxxHeaderTreeMacro;
 import com.facebook.buck.rules.macros.CxxMacro;
 import com.facebook.buck.rules.macros.CxxppFlagsMacro;
 import com.facebook.buck.rules.macros.EnvMacro;
@@ -378,6 +379,11 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 PlatformNameMacro.class,
                 new ZeroArgMacroTypeCoercer<>(
                     PlatformNameMacro.class, PlatformNameMacro.class, PlatformNameMacro.of()))
+            .put(
+                "cxx-header-tree",
+                CxxHeaderTreeMacro.class,
+                new ZeroArgMacroTypeCoercer<>(
+                    CxxHeaderTreeMacro.class, CxxHeaderTreeMacro.class, CxxHeaderTreeMacro.of()))
             .build();
     nonParameterizedTypeCoercers =
         (TypeCoercer<Object, ?>[])

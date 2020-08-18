@@ -2369,7 +2369,8 @@ public class ProjectGeneratorTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget, projectFilesystem)
-            .setExportedPreprocessorFlags(ImmutableList.of("-DHELLO"))
+            .setExportedPreprocessorFlags(
+                StringWithMacrosUtils.fromStrings(ImmutableList.of("-DHELLO")))
             .build();
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
@@ -2394,7 +2395,8 @@ public class ProjectGeneratorTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget, projectFilesystem)
-            .setExportedPreprocessorFlags(ImmutableList.of("-DHELLO"))
+            .setExportedPreprocessorFlags(
+                StringWithMacrosUtils.fromStrings(ImmutableList.of("-DHELLO")))
             .build();
 
     BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance("//foo", "bin");

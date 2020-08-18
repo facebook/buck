@@ -81,6 +81,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
+import com.facebook.buck.rules.macros.CxxHeaderTreeMacro;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -102,6 +103,7 @@ import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -1402,6 +1404,31 @@ public class CxxLibraryDescriptionTest {
             .map(t -> t.withFlavors())
             .toImmutableSet(),
         hasItem(exportedDepBuilder.getTarget()));
+  }
+
+  @Test
+  public void cxxHeaderDirMacro() {
+    CxxLibraryBuilder libraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))))
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
+            .setExportedPreprocessorFlags(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format("-flag=%s", CxxHeaderTreeMacro.of())));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryBuilder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    CxxLibraryGroup rule = (CxxLibraryGroup) graphBuilder.requireRule(libraryBuilder.getTarget());
+    CxxPreprocessorInput input =
+        rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+    CxxSymlinkTreeHeaders publicHeaders = (CxxSymlinkTreeHeaders) input.getIncludes().get(0);
+    MatcherAssert.assertThat(
+        Arg.stringify(
+            input.getPreprocessorFlags().get(CxxSource.Type.CXX),
+            graphBuilder.getSourcePathResolver()),
+        hasItem(
+            String.format(
+                "-flag=%s",
+                graphBuilder.getSourcePathResolver().getAbsolutePath(publicHeaders.getRoot()))));
   }
 
   /**

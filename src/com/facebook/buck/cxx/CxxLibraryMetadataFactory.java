@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -34,6 +35,10 @@ import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.CompositeArg;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
+import com.facebook.buck.rules.macros.CxxHeaderTreeMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.base.Function;
 import com.google.common.collect.Multimaps;
@@ -123,7 +128,17 @@ public class CxxLibraryMetadataFactory {
               args,
               cxxPlatform,
               CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
-                      buildTarget, cellRoots, graphBuilder, cxxPlatform)
+                      baseTarget,
+                      cellRoots,
+                      graphBuilder,
+                      cxxPlatform,
+                      new CxxHeaderTreeMacroExpander(
+                          CxxDescriptionEnhancer.getHeaderModeForPlatform(
+                              graphBuilder,
+                              buildTarget.getTargetConfiguration(),
+                              cxxPlatform,
+                              args.getXcodePublicHeadersSymlinks()
+                                  .orElse(cxxPlatform.getPublicHeadersSymlinksEnabled()))))
                   ::convert);
 
           if (visibility.getValue() == HeaderVisibility.PRIVATE) {
@@ -259,5 +274,33 @@ public class CxxLibraryMetadataFactory {
         CxxPlatformsProvider.DEFAULT_NAME,
         toolchainTargetConfiguration,
         CxxPlatformsProvider.class);
+  }
+
+  private static class CxxHeaderTreeMacroExpander
+      extends AbstractMacroExpanderWithoutPrecomputedWork<CxxHeaderTreeMacro> {
+
+    private final HeaderMode headerMode;
+
+    public CxxHeaderTreeMacroExpander(HeaderMode headerMode) {
+      this.headerMode = headerMode;
+    }
+
+    @Override
+    public Arg expandFrom(
+        BuildTarget target, ActionGraphBuilder graphBuilder, CxxHeaderTreeMacro input)
+        throws MacroException {
+      CxxHeaders cxxHeaders =
+          queryMetadataCxxHeaders(graphBuilder, target, headerMode)
+              .orElseThrow(
+                  () ->
+                      new MacroException(
+                          String.format("Cannot find exported header tree (%s)", headerMode)));
+      return CompositeArg.of(SourcePathArg.from(cxxHeaders.getRoot()));
+    }
+
+    @Override
+    public Class<CxxHeaderTreeMacro> getInputClass() {
+      return CxxHeaderTreeMacro.class;
+    }
   }
 }

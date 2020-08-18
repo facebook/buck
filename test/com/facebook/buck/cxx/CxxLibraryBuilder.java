@@ -131,12 +131,8 @@ public class CxxLibraryBuilder
   }
 
   public CxxLibraryBuilder setExportedPreprocessorFlags(
-      ImmutableList<String> exportedPreprocessorFlags) {
-    getArgForPopulating()
-        .setExportedPreprocessorFlags(
-            RichStream.from(exportedPreprocessorFlags)
-                .map(StringWithMacrosUtils::format)
-                .toImmutableList());
+      ImmutableList<StringWithMacros> exportedPreprocessorFlags) {
+    getArgForPopulating().setExportedPreprocessorFlags(exportedPreprocessorFlags);
     return this;
   }
 

@@ -103,6 +103,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
@@ -1835,16 +1836,22 @@ public class CxxDescriptionEnhancer {
   }
 
   /** @return a {@link StringWithMacrosConverter} to use when converting C/C++ flags. */
+  @SafeVarargs
   public static StringWithMacrosConverter getStringWithMacrosArgsConverter(
       BuildTarget target,
       CellPathResolver cellPathResolver,
       ActionGraphBuilder graphBuilder,
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform,
+      MacroExpander<? extends Macro, ?>... expanders) {
     return StringWithMacrosConverter.of(
         target,
         cellPathResolver.getCellNameResolver(),
         graphBuilder,
-        ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander()),
+        ImmutableList.<MacroExpander<? extends Macro, ?>>builder()
+            .add(new CxxLocationMacroExpander(cxxPlatform))
+            .add(new OutputMacroExpander())
+            .addAll(Arrays.asList(expanders))
+            .build(),
         Optional.of(getStringWithMacrosArgSanitizer(cxxPlatform)));
   }
 
