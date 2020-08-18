@@ -28,11 +28,15 @@ import java.lang.reflect.InvocationTargetException;
  * Utility class for getting the {@link IsolatedStep} instances associated with an {@link
  * ExternalAction}.
  */
-class BuildStepsRetriever {
+public class BuildStepsRetriever {
 
   private BuildStepsRetriever() {}
 
-  static ImmutableList<IsolatedStep> getStepsForBuildable(ParsedArgs parsedArgs) {
+  /**
+   * Returns the {@link IsolatedStep} instances associated with the {@link ExternalAction} from the
+   * {@link ParsedArgs}.
+   */
+  public static ImmutableList<IsolatedStep> getStepsForBuildable(ParsedArgs parsedArgs) {
     Class<? extends ExternalAction> buildableClass = parsedArgs.getBuildableClass();
     try {
       Constructor<? extends ExternalAction> constructor = buildableClass.getDeclaredConstructor();

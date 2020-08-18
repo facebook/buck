@@ -30,11 +30,15 @@ import java.util.UUID;
  *
  * <p>See also {@link com.facebook.buck.step.StepRunner}.
  */
-class IsolatedStepsRunner {
+public class IsolatedStepsRunner {
 
   private IsolatedStepsRunner() {}
 
-  static StepExecutionResult execute(
+  /**
+   * Executes the given {@link IsolatedStep} instances with the given {@link
+   * IsolatedExecutionContext}.
+   */
+  public static StepExecutionResult execute(
       ImmutableList<IsolatedStep> steps, IsolatedExecutionContext executionContext) {
     try {
       for (IsolatedStep step : steps) {

@@ -29,7 +29,7 @@ import java.nio.file.Paths;
 
 /** Data class for variables passed through the environment. */
 @BuckStyleValue
-abstract class ParsedEnvVars {
+public abstract class ParsedEnvVars {
 
   public abstract Verbosity getVerbosity();
 
