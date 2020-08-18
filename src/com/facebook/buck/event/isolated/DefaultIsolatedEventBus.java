@@ -18,6 +18,7 @@ package com.facebook.buck.event.isolated;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.downwardapi.utils.DownwardApiUtils;
@@ -31,6 +32,7 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.AbstractMessage;
@@ -126,7 +128,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
   @Override
   public void post(SimplePerfEvent event, long threadId) {
     timestamp(event, threadId);
-    // TODO(irenewchen): Write SimplePerfEvent
+    writeChromeTraceEvent(event);
   }
 
   @Override
@@ -135,13 +137,13 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
     long nano = TimeUnit.SECONDS.toNanos(atTime.getEpochSecond()) + atTime.getNano();
     long threadUserNanoTime = clock.threadUserNanoTime(threadId);
     event.configure(millis, nano, threadUserNanoTime, threadId, buildId);
-    // TODO(irenewchen): Write SimplePerfEvent
+    writeChromeTraceEvent(event);
   }
 
   @Override
   public void postWithoutConfiguring(SimplePerfEvent event) {
     Preconditions.checkState(event.isConfigured(), "Event must be configured");
-    // TODO(irenewchen): Write SimplePerfEvent
+    writeChromeTraceEvent(event);
   }
 
   @Override
@@ -207,6 +209,34 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
             .setDescription(event.getDescription())
             .build();
     writeToNamedPipe(eventTypeMessage, stepEvent);
+  }
+
+  private void writeChromeTraceEvent(SimplePerfEvent event) {
+    EventTypeMessage eventTypeMessage =
+        EventTypeMessage.newBuilder()
+            .setEventType(EventTypeMessage.EventType.CHROME_TRACE_EVENT)
+            .build();
+    ChromeTraceEvent chromeTraceEvent =
+        ChromeTraceEvent.newBuilder()
+            .setEventId(event.getEventKey().hashCode())
+            .setCategory(event.getCategory())
+            .setTitle(event.getTitle().getValue())
+            .setStatus(convertEventType(event))
+            .putAllData(Maps.transformValues(event.getEventInfo(), object -> object.toString()))
+            .build();
+    writeToNamedPipe(eventTypeMessage, chromeTraceEvent);
+  }
+
+  private ChromeTraceEvent.ChromeTraceEventStatus convertEventType(SimplePerfEvent event) {
+    switch (event.getEventType()) {
+      case STARTED:
+        return ChromeTraceEvent.ChromeTraceEventStatus.BEGIN;
+      case FINISHED:
+        return ChromeTraceEvent.ChromeTraceEventStatus.END;
+      case UPDATED:
+      default:
+        return ChromeTraceEvent.ChromeTraceEventStatus.UNKNOWN;
+    }
   }
 
   private com.facebook.buck.downward.model.StepEvent.StepStatus getStepStatus(StepEvent event) {

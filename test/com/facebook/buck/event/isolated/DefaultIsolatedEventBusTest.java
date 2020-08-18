@@ -21,15 +21,19 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downward.model.LogLevel;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
+import com.facebook.buck.downwardapi.testutil.ChromeTraceEventMatcher;
 import com.facebook.buck.downwardapi.testutil.StepEventMatcher;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.FakeClock;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.File;
@@ -37,6 +41,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Paths;
 import java.util.UUID;
 import java.util.logging.Level;
 import org.junit.After;
@@ -116,6 +121,54 @@ public class DefaultIsolatedEventBusTest {
 
     assertThat(actualEventType, equalTo(EventTypeMessage.EventType.STEP_EVENT));
     assertThat(actualStepEvent, StepEventMatcher.equalsStepEvent(expectedStepEvent));
+  }
+
+  @Test
+  public void perfEventCanBeWrittenToOutputStream() throws Exception {
+    // Creating a scope sends a start event
+    SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scope(
+            testEventBus,
+            SimplePerfEvent.PerfEventTitle.of("my_event"),
+            ImmutableMap.of("my_path_key", Paths.get("my_path_value")));
+    // Closing the scope sends a finish event
+    scope.close();
+
+    ChromeTraceEvent expectedStartEvent =
+        ChromeTraceEvent.newBuilder()
+            .setEventId(123)
+            .setStatus(ChromeTraceEvent.ChromeTraceEventStatus.BEGIN)
+            .setTitle("my_event")
+            .setCategory("buck")
+            .putData("my_path_key", Paths.get("my_path_value").toString())
+            .build();
+    ChromeTraceEvent expectedFinishEvent =
+        ChromeTraceEvent.newBuilder()
+            .setEventId(123)
+            .setStatus(ChromeTraceEvent.ChromeTraceEventStatus.END)
+            .setTitle("my_event")
+            .setCategory("buck")
+            .build();
+
+    EventTypeMessage.EventType actualStartEventType =
+        DownwardProtocolType.BINARY.getDownwardProtocol().readEventType(inputStream);
+    ChromeTraceEvent actualStartEvent =
+        DownwardProtocolType.BINARY
+            .getDownwardProtocol()
+            .readEvent(inputStream, actualStartEventType);
+    assertThat(actualStartEventType, equalTo(EventTypeMessage.EventType.CHROME_TRACE_EVENT));
+    assertThat(actualStartEvent, ChromeTraceEventMatcher.equalsTraceEvent(expectedStartEvent));
+
+    EventTypeMessage.EventType actualFinishEventType =
+        DownwardProtocolType.BINARY.getDownwardProtocol().readEventType(inputStream);
+    ChromeTraceEvent actualFinishEvent =
+        DownwardProtocolType.BINARY
+            .getDownwardProtocol()
+            .readEvent(inputStream, actualFinishEventType);
+    assertThat(actualFinishEventType, equalTo(EventTypeMessage.EventType.CHROME_TRACE_EVENT));
+    assertThat(actualFinishEvent, ChromeTraceEventMatcher.equalsTraceEvent(expectedFinishEvent));
+
+    assertThat(actualStartEvent.getEventId(), equalTo(actualFinishEvent.getEventId()));
   }
 
   @Test
