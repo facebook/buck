@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -51,11 +50,9 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
@@ -132,9 +129,6 @@ public class APKModuleGraph implements AddsToRuleKey {
 
   private final Supplier<Optional<ImmutableMap<String, ImmutableList<BuildTarget>>>>
       configMapSupplier = MoreSuppliers.memoize(this::generateSeedConfigMap);
-
-  private final Supplier<Optional<ImmutableMap<BuildTarget, String>>> seedTargetMapSupplier =
-      MoreSuppliers.memoize(this::generateSeedTargetMap);
 
   /**
    * Constructor for the {@code APKModule} graph generator object that produces a graph with only a
@@ -248,27 +242,6 @@ public class APKModuleGraph implements AddsToRuleKey {
     return Optional.of(seedConfigMapImmutable);
   }
 
-  private Optional<ImmutableMap<BuildTarget, String>> generateSeedTargetMap() {
-    if (suppliedSeedConfigMap.isPresent()) {
-      final Map<BuildTarget, String> seedTargetMap = new HashMap<>();
-      for (final ImmutableMap.Entry<String, ImmutableList<BuildTarget>> suppliedSeedConfig :
-          suppliedSeedConfigMap.get().entrySet()) {
-        for (final BuildTarget seedTarget : suppliedSeedConfig.getValue()) {
-          seedTargetMap.put(seedTarget, suppliedSeedConfig.getKey());
-        }
-      }
-      return Optional.of(ImmutableMap.copyOf(seedTargetMap));
-    }
-    if (!seedTargets.isPresent()) {
-      return Optional.empty();
-    }
-    final Map<BuildTarget, String> seedTargetMap = new HashMap<>();
-    for (final BuildTarget seedTarget : seedTargets.get()) {
-      seedTargetMap.put(seedTarget, generateNameFromTarget(seedTarget));
-    }
-    return Optional.of(ImmutableMap.copyOf(seedTargetMap));
-  }
-
   /**
    * Lazy generate the graph on first use
    *
@@ -304,10 +277,6 @@ public class APKModuleGraph implements AddsToRuleKey {
   public Optional<ImmutableMap<String, ImmutableList<BuildTarget>>> getSeedConfigMap() {
     verifyNoSharedSeeds();
     return configMapSupplier.get();
-  }
-
-  public Optional<ImmutableMap<BuildTarget, String>> getSeedTargetMap() {
-    return seedTargetMapSupplier.get();
   }
 
   /**
@@ -484,37 +453,22 @@ public class APKModuleGraph implements AddsToRuleKey {
    * @return the Multimap containing targets and the seed modules that contain them
    */
   private Multimap<BuildTarget, String> mapTargetsToContainingModules() {
-    final DirectedAcyclicGraph<String> declaredDependencies = getDeclaredDependencyGraph();
-    final MutableDirectedGraph<String> moduleGraph = new MutableDirectedGraph<>();
     Multimap<BuildTarget, String> targetToContainingApkModuleNameMap =
         MultimapBuilder.treeKeys().treeSetValues().build();
     for (Map.Entry<String, ImmutableList<BuildTarget>> seedConfig :
         getSeedConfigMap().get().entrySet()) {
-      final String seedModuleName = seedConfig.getKey();
+      String seedModuleName = seedConfig.getKey();
       for (BuildTarget seedTarget : seedConfig.getValue()) {
-        final Set<BuildTarget> seedBuildDeps = targetGraph.get(seedTarget).getBuildDeps();
         targetToContainingApkModuleNameMap.put(seedTarget, seedModuleName);
         new AbstractBreadthFirstTraversal<TargetNode<?>>(targetGraph.get(seedTarget)) {
           @Override
           public ImmutableSet<TargetNode<?>> visit(TargetNode<?> node) {
+
             ImmutableSet.Builder<TargetNode<?>> depsBuilder = ImmutableSet.builder();
-            for (final BuildTarget depTarget : node.getBuildDeps()) {
-              final String depTargetModuleName = getSeedModule(depTarget);
-              if (depTargetModuleName != null) {
-                moduleGraph.addNode(depTargetModuleName);
-              }
-              if (!isInRootModule(depTarget)) {
-                if (isSeedTarget(depTarget)) {
-                  if (depTargetModuleName != null
-                      && depTargetModuleName != seedModuleName
-                      && seedBuildDeps.contains(depTarget)) {
-                    // Mark depTargetModuleName as a dependency of seedModuleName
-                    moduleGraph.addEdge(seedModuleName, depTargetModuleName);
-                  }
-                } else {
-                  depsBuilder.add(targetGraph.get(depTarget));
-                  targetToContainingApkModuleNameMap.put(depTarget, seedModuleName);
-                }
+            for (BuildTarget depTarget : node.getBuildDeps()) {
+              if (!isInRootModule(depTarget) && !isSeedTarget(depTarget)) {
+                depsBuilder.add(targetGraph.get(depTarget));
+                targetToContainingApkModuleNameMap.put(depTarget, seedModuleName);
               }
             }
             return depsBuilder.build();
@@ -522,10 +476,9 @@ public class APKModuleGraph implements AddsToRuleKey {
         }.start();
       }
     }
-    getUndeclaredDeps(new DirectedAcyclicGraph<>(moduleGraph), declaredDependencies);
-
     // Now to generate the minimal covers of APKModules for each set of APKModules that contain
     // a buildTarget
+    DirectedAcyclicGraph<String> declaredDependencies = getDeclaredDependencyGraph();
     Multimap<BuildTarget, String> targetModuleEntriesToRemove =
         MultimapBuilder.treeKeys().treeSetValues().build();
     for (BuildTarget key : targetToContainingApkModuleNameMap.keySet()) {
@@ -548,38 +501,6 @@ public class APKModuleGraph implements AddsToRuleKey {
       targetToContainingApkModuleNameMap.remove(entryToRemove.getKey(), entryToRemove.getValue());
     }
     return targetToContainingApkModuleNameMap;
-  }
-
-  private Set<UndeclaredDependency> getUndeclaredDeps(
-      final DirectedAcyclicGraph<String> detectedModuleGraph,
-      final DirectedAcyclicGraph<String> declaredDeps) {
-    final Set<UndeclaredDependency> undeclaredDependencies = new HashSet<>();
-    final Set<String> addedModules = new HashSet<>();
-    final Queue<String> moduleGraphQueue = new LinkedList<>();
-    moduleGraphQueue.addAll(detectedModuleGraph.getNodesWithNoIncomingEdges());
-    addedModules.addAll(detectedModuleGraph.getNodesWithNoIncomingEdges());
-    while (!moduleGraphQueue.isEmpty()) {
-      final String currentModule = moduleGraphQueue.poll();
-      final Set<String> outgoingModuleGraphNodes =
-          detectedModuleGraph.getOutgoingNodesFor(currentModule);
-      final Set<String> outgoingDeclaredDepNodes = declaredDeps.getOutgoingNodesFor(currentModule);
-      final Set<String> undeclaredDepNodes =
-          Sets.difference(outgoingModuleGraphNodes, outgoingDeclaredDepNodes);
-      if (!undeclaredDepNodes.isEmpty()) {
-        for (final String undeclaredDepNode : undeclaredDepNodes) {
-          if (undeclaredDepNode != null) {
-            undeclaredDependencies.add(new UndeclaredDependency(currentModule, undeclaredDepNode));
-          }
-        }
-      }
-      for (final String edgeModule : outgoingModuleGraphNodes) {
-        if (!addedModules.contains(edgeModule)) {
-          moduleGraphQueue.add(edgeModule);
-          addedModules.add(edgeModule);
-        }
-      }
-    }
-    return undeclaredDependencies;
   }
 
   /**
@@ -681,11 +602,12 @@ public class APKModuleGraph implements AddsToRuleKey {
     if (!getSeedConfigMap().isPresent()) {
       return false;
     }
-    return getSeedModule(depTarget) != null;
-  }
-
-  private String getSeedModule(final BuildTarget seedTarget) {
-    return getSeedTargetMap().get().get(seedTarget);
+    for (List<BuildTarget> targetsPerConfig : getSeedConfigMap().get().values()) {
+      if (targetsPerConfig.contains(depTarget)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static String generateNameFromTarget(BuildTarget androidModuleTarget) {
@@ -752,20 +674,5 @@ public class APKModuleGraph implements AddsToRuleKey {
 
   public Set<BuildTarget> getBuildTargets(APKModule module) {
     return buildTargetsMap.computeIfAbsent(module, (m) -> new HashSet<>());
-  }
-
-  private class UndeclaredDependency {
-    final String sourceModule;
-    final String depModule;
-
-    public UndeclaredDependency(final String sourceModule, final String depModule) {
-      this.sourceModule = sourceModule;
-      this.depModule = depModule;
-    }
-
-    @Override
-    public String toString() {
-      return "sourceModule:" + sourceModule + " depModule:" + depModule;
-    }
   }
 }
