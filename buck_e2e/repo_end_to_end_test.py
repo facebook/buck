@@ -13,27 +13,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from pathlib import Path
 
 import asserts
-import pkg_resources
-import pytest
-from test_repo import repo  # noqa: F401
-
-
-test_script = pkg_resources.resource_filename(
-    "buck_e2e.repo_end_to_end_test", "test_script.py"
-)
-os.environ["TEST_BUCK_BINARY"] = test_script
+import pytest  # type: ignore
+from buck_result import ExitCode  # type: ignore
+from test_repo import nobuckd, repo  # noqa: F401
 
 
 @pytest.mark.asyncio
 async def test_repo_build(repo):
     _create_file(Path(repo.cwd), Path("target_file_success"), 0)
     result = await (await repo.build("//:target_file_success")).wait()
-    assert "target_file_success" in result.get_stdout(), result.get_stderr()
+    assert "target_file_success" in result.get_stdout()
     asserts.assert_build_success(result)
+
+
+@pytest.mark.asyncio
+async def test_buckd_toggle_enabled(repo):
+    _create_file(Path(repo.cwd), Path("target_file_success"), 0)
+    result = await (await repo.build("//:target_file_success")).wait()
+    assert "target_file_success" in result.get_stdout()
+    asserts.assert_build_success(result)
+    assert (Path(repo.cwd) / ".buckd").exists(), "buck daemon should exist"
+    assert result.get_exit_code() == ExitCode.SUCCESS
+
+
+@pytest.mark.asyncio
+@nobuckd
+async def test_buckd_toggle_disabled(repo):
+    _create_file(Path(repo.cwd), Path("target_file_success"), 0)
+    result = await (await repo.build("//:target_file_success")).wait()
+    assert "target_file_success" in result.get_stdout()
+    asserts.assert_build_success(result)
+    assert not (Path(repo.cwd) / ".buckd").exists(), "buck daemon should not exist"
+    assert result.get_exit_code() == ExitCode.SUCCESS
 
 
 @pytest.mark.asyncio

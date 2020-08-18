@@ -42,10 +42,11 @@ def run_build(remain_args):
     os.makedirs(output.parent)
     with open(output, "w") as f1:
         f1.write("Hello, World!")
-    buckd_sock = Path(".buckd/sock")
-    os.makedirs(buckd_sock.parent, exist_ok=True)
-    with open(buckd_sock, "w") as sock:
-        sock.write("buck daemon exists")
+    if os.environ["NO_BUCKD"] != "1":
+        buckd_sock = Path(".buckd/sock")
+        os.makedirs(buckd_sock.parent, exist_ok=True)
+        with open(buckd_sock, "w") as sock:
+            sock.write("buck daemon exists")
     print_target_to_build_location(show_output, clean_target, target, output)
     if "..." not in str(clean_target):
         with open(clean_target, "r") as target_file:

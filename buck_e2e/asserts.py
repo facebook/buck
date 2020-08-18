@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from buck_result import BuildResult
+from buck_result import BuildResult  # type: ignore
 
 
 def assert_build_success(result: BuildResult):
     """Asserts if buck build was succesful"""
-    assert result.is_success()
+    assert result.is_success(), result.get_stderr()

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from asyncio import subprocess
 from pathlib import Path
 from typing import Tuple
@@ -24,14 +25,24 @@ from buck_result import BuckResult, BuildResult, TestResult
 class BuckRepo:
     """ Instantiates a BuckRepo object with a exectuable path """
 
-    def __init__(self, path_to_buck: str, encoding: str, cwd: str) -> None:
+    def __init__(self, path_to_buck: str, encoding: str, cwd: str = None) -> None:
         # TODO change cwd to take Path object
         self.path_to_buck = path_to_buck
         self.cwd = cwd
         self.encoding = encoding
+        self.set_buckd(False)
         ######################################
         #  path_to_buck is the absolute path
         ######################################
+
+    def set_buckd(self, toggle: bool):
+        """
+        Setting buckd env to value of toggle.
+        toggle can be 0 for enabled and 1 for disabled
+        """
+        child_environment = dict(os.environ)
+        child_environment["NO_BUCKD"] = str(int(toggle))
+        self.buckd_env = child_environment
 
     async def build(self, *argv: str) -> BuckProcess[BuildResult]:
         """
@@ -40,6 +51,7 @@ class BuckRepo:
         additional arguments
         """
         process = await self._run_buck_command("build", *argv)
+        assert process is not None, await process.stderr.readline()
         return BuckProcess(
             process,
             result_type=lambda proc, stdin, stdout, encoding: BuildResult(
@@ -90,9 +102,10 @@ class BuckRepo:
             self.path_to_buck,
             cmd,
             cwd=self.cwd,
+            env=self.buckd_env,
             *argv,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
         )
         return process
 

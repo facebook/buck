@@ -15,6 +15,7 @@
 
 import os
 import tempfile
+from functools import wraps
 
 import pytest  # type: ignore
 from buck_repo import BuckRepo  # type: ignore. For mypy type checker
@@ -29,3 +30,14 @@ def repo() -> BuckRepo:
         # setup
         yield repo
         # teardown
+
+
+def nobuckd(fn):
+    """Disables buck daemon"""
+
+    @wraps(fn)
+    def wrapped(repo, *args, **kwargs):
+        repo.set_buckd(True)
+        return fn(repo, *args, **kwargs)
+
+    return wrapped
