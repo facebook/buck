@@ -31,7 +31,6 @@
 package com.facebook.buck.skylark.io.impl;
 
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -49,12 +48,12 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.devtools.build.lib.profiler.Profiler;
 import com.google.devtools.build.lib.profiler.ProfilerTask;
 import com.google.devtools.build.lib.profiler.SilentCloseable;
-import com.google.devtools.build.lib.vfs.Dirent;
-import com.google.devtools.build.lib.vfs.FileStatus;
-import com.google.devtools.build.lib.vfs.Path;
-import com.google.devtools.build.lib.vfs.Symlinks;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.FileSystem;
+import java.nio.file.FileSystemException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -68,6 +67,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 /**
  * Implementation of a subset of UNIX-style file globbing, expanding "*" and "?" as wildcards, but
@@ -81,19 +81,21 @@ import java.util.regex.Pattern;
 final class UnixGlob {
   private UnixGlob() {}
 
-  private static SkylarkFilesystem fileSystem(FileSystem fileSystem) {
-    return SkylarkFilesystem.using(fileSystem);
+  @Nullable
+  private static BasicFileAttributes statIfFound(AbsPath path) throws IOException {
+    try {
+      return Files.readAttributes(path.getPath(), BasicFileAttributes.class);
+    } catch (FileNotFoundException | FileSystemException e) {
+      // Catch these two exception because that's what Bazel VFS did before we forked it.
+      return null;
+    }
   }
 
-  private static Path absPathToVfsPath(AbsPath path) {
-    return fileSystem(path.getFileSystem()).getPath(path.toString());
-  }
-
-  private static List<Path> globInternalUninterruptible(
-      Path base,
+  private static List<AbsPath> globInternalUninterruptible(
+      AbsPath base,
       Collection<String> patterns,
       boolean excludeDirectories,
-      Predicate<Path> dirPred,
+      Predicate<AbsPath> dirPred,
       Executor executor)
       throws IOException {
     GlobVisitor visitor = new GlobVisitor(executor);
@@ -252,7 +254,7 @@ final class UnixGlob {
     private AbsPath base;
     private List<String> patterns;
     private boolean excludeDirectories;
-    private Predicate<Path> pathFilter;
+    private Predicate<AbsPath> pathFilter;
     private Executor executor;
 
     /** Creates a glob builder with the given base path. */
@@ -290,8 +292,7 @@ final class UnixGlob {
 
     /** Executes the glob. */
     public List<AbsPath> glob() throws IOException {
-      return globInternalUninterruptible(
-              absPathToVfsPath(base), patterns, excludeDirectories, pathFilter, executor)
+      return globInternalUninterruptible(base, patterns, excludeDirectories, pathFilter, executor)
           .stream()
           .map(p -> AbsPath.of(base.getFileSystem().getPath(p.toString())))
           .collect(ImmutableList.toImmutableList());
@@ -299,16 +300,16 @@ final class UnixGlob {
   }
 
   /** Adapts the result of the glob visitation as a Future. */
-  private static class GlobFuture extends ForwardingListenableFuture<List<Path>> {
+  private static class GlobFuture extends ForwardingListenableFuture<List<AbsPath>> {
     private final GlobVisitor visitor;
-    private final SettableFuture<List<Path>> delegate = SettableFuture.create();
+    private final SettableFuture<List<AbsPath>> delegate = SettableFuture.create();
 
     public GlobFuture(GlobVisitor visitor) {
       this.visitor = visitor;
     }
 
     @Override
-    protected ListenableFuture<List<Path>> delegate() {
+    protected ListenableFuture<List<AbsPath>> delegate() {
       return delegate;
     }
 
@@ -316,7 +317,7 @@ final class UnixGlob {
       delegate.setException(throwable);
     }
 
-    public void set(List<Path> paths) {
+    public void set(List<AbsPath> paths) {
       delegate.set(paths);
     }
 
@@ -338,7 +339,7 @@ final class UnixGlob {
    */
   private static final class GlobVisitor {
     // These collections are used across workers and must therefore be thread-safe.
-    private final Collection<Path> results = Sets.newConcurrentHashSet();
+    private final Collection<AbsPath> results = Sets.newConcurrentHashSet();
     private final ConcurrentHashMap<String, Pattern> cache = new ConcurrentHashMap<>();
 
     private final GlobFuture result;
@@ -355,8 +356,11 @@ final class UnixGlob {
       this.result = new GlobFuture(this);
     }
 
-    List<Path> globUninterruptible(
-        Path base, Collection<String> patterns, boolean excludeDirectories, Predicate<Path> dirPred)
+    List<AbsPath> globUninterruptible(
+        AbsPath base,
+        Collection<String> patterns,
+        boolean excludeDirectories,
+        Predicate<AbsPath> dirPred)
         throws IOException {
       try {
         return Uninterruptibles.getUninterruptibly(
@@ -372,20 +376,20 @@ final class UnixGlob {
       return "**".equals(pattern);
     }
 
-    Future<List<Path>> globAsync(
-        Path base,
+    Future<List<AbsPath>> globAsync(
+        AbsPath base,
         Collection<String> patterns,
         boolean excludeDirectories,
-        Predicate<Path> dirPred) {
+        Predicate<AbsPath> dirPred) {
 
-      FileStatus baseStat;
+      BasicFileAttributes baseStat;
       try {
-        baseStat = base.statIfFound(Symlinks.FOLLOW);
+        baseStat = statIfFound(base);
       } catch (IOException e) {
         return Futures.immediateFailedFuture(e);
       }
       if (baseStat == null || patterns.isEmpty()) {
-        return Futures.immediateFuture(Collections.<Path>emptyList());
+        return Futures.immediateFuture(Collections.emptyList());
       }
 
       List<String[]> splitPatterns = checkAndSplitPatterns(patterns);
@@ -431,13 +435,13 @@ final class UnixGlob {
 
     /** Should only be called by link {@GlobTaskContext}. */
     private void queueGlob(
-        final Path base, final boolean baseIsDir, final int idx, final GlobTaskContext context) {
+        final AbsPath base, final boolean baseIsDir, final int idx, final GlobTaskContext context) {
       enqueue(
           new Runnable() {
             @Override
             public void run() {
               try (SilentCloseable c =
-                  Profiler.instance().profile(ProfilerTask.VFS_GLOB, base.getPathString())) {
+                  Profiler.instance().profile(ProfilerTask.VFS_GLOB, base.toString())) {
                 reallyGlob(base, baseIsDir, idx, context);
               } catch (IOException e) {
                 ioException.set(e);
@@ -452,7 +456,7 @@ final class UnixGlob {
             public String toString() {
               return String.format(
                   "%s glob(include=[%s], exclude_directories=%s)",
-                  base.getPathString(),
+                  base,
                   "\"" + Joiner.on("\", \"").join(context.patternParts) + "\"",
                   context.excludeDirectories);
             }
@@ -511,15 +515,16 @@ final class UnixGlob {
     private class GlobTaskContext {
       private final String[] patternParts;
       private final boolean excludeDirectories;
-      private final Predicate<Path> dirPred;
+      private final Predicate<AbsPath> dirPred;
 
-      GlobTaskContext(String[] patternParts, boolean excludeDirectories, Predicate<Path> dirPred) {
+      GlobTaskContext(
+          String[] patternParts, boolean excludeDirectories, Predicate<AbsPath> dirPred) {
         this.patternParts = patternParts;
         this.excludeDirectories = excludeDirectories;
         this.dirPred = dirPred;
       }
 
-      protected void queueGlob(Path base, boolean baseIsDir, int patternIdx) {
+      protected void queueGlob(AbsPath base, boolean baseIsDir, int patternIdx) {
         GlobVisitor.this.queueGlob(base, baseIsDir, patternIdx, this);
       }
 
@@ -536,10 +541,10 @@ final class UnixGlob {
     private class RecursiveGlobTaskContext extends GlobTaskContext {
 
       private class GlobTask {
-        private final Path base;
+        private final AbsPath base;
         private final int patternIdx;
 
-        private GlobTask(Path base, int patternIdx) {
+        private GlobTask(AbsPath base, int patternIdx) {
           this.base = base;
           this.patternIdx = patternIdx;
         }
@@ -562,12 +567,12 @@ final class UnixGlob {
       private final Set<GlobTask> visitedGlobSubTasks = Sets.newConcurrentHashSet();
 
       private RecursiveGlobTaskContext(
-          String[] patternParts, boolean excludeDirectories, Predicate<Path> dirPred) {
+          String[] patternParts, boolean excludeDirectories, Predicate<AbsPath> dirPred) {
         super(patternParts, excludeDirectories, dirPred);
       }
 
       @Override
-      protected void queueGlob(Path base, boolean baseIsDir, int patternIdx) {
+      protected void queueGlob(AbsPath base, boolean baseIsDir, int patternIdx) {
         if (visitedGlobSubTasks.add(new GlobTask(base, patternIdx))) {
           // This is a unique glob task. For example of how duplicates can arise, consider:
           //   glob(['**/a/**/foo.txt'])
@@ -590,7 +595,7 @@ final class UnixGlob {
      *  reallyGlob base [x:xs] = union { reallyGlob(f, xs) | f results "base/x" }
      * </pre>
      */
-    private void reallyGlob(Path base, boolean baseIsDir, int idx, GlobTaskContext context)
+    private void reallyGlob(AbsPath base, boolean baseIsDir, int idx, GlobTaskContext context)
         throws IOException {
       if (baseIsDir && !context.dirPred.apply(base)) {
         return;
@@ -619,9 +624,10 @@ final class UnixGlob {
 
       if (!pattern.contains("*") && !pattern.contains("?")) {
         // We do not need to do a readdir in this case, just a stat.
-        Path child = base.getChild(pattern);
-        FileStatus status = child.statIfFound(Symlinks.FOLLOW);
-        if (status == null || (!status.isDirectory() && !status.isFile())) {
+        AbsPath child = base.resolve(pattern);
+        BasicFileAttributes status = statIfFound(child);
+        if (status == null
+            || (!status.isDirectory() && !(status.isRegularFile() || status.isOther()))) {
           // The file is a dangling symlink, fifo, does not exist, etc.
           return;
         }
@@ -630,20 +636,18 @@ final class UnixGlob {
         return;
       }
 
-      Collection<Dirent> dents = base.readdir(Symlinks.NOFOLLOW);
-      for (Dirent dent : dents) {
-        Dirent.Type childType = dent.getType();
-        if (childType == Dirent.Type.UNKNOWN) {
+      Collection<Path> dents = Files.list(base.getPath()).collect(ImmutableList.toImmutableList());
+      for (Path child : dents) {
+        BasicFileAttributes attributes = Files.readAttributes(child, BasicFileAttributes.class);
+        if (attributes.isOther()) {
           // The file is a special file (fifo, etc.). No need to even match against the pattern.
           continue;
         }
-        if (matches(pattern, dent.getName(), cache)) {
-          Path child = base.getChild(dent.getName());
-
-          if (childType == Dirent.Type.SYMLINK) {
-            processSymlink(child, idx, context);
+        if (matches(pattern, child.getFileName().toString(), cache)) {
+          if (attributes.isSymbolicLink()) {
+            processSymlink(AbsPath.of(child), idx, context);
           } else {
-            processFileOrDirectory(child, childType == Dirent.Type.DIRECTORY, idx, context);
+            processFileOrDirectory(AbsPath.of(child), Files.isDirectory(child), idx, context);
           }
         }
       }
@@ -655,11 +659,11 @@ final class UnixGlob {
      * underlying file system is networked and a single directory contains many symlinks, that can
      * lead to substantial slowness.
      */
-    private void processSymlink(Path path, int idx, GlobTaskContext context) {
+    private void processSymlink(AbsPath path, int idx, GlobTaskContext context) {
       context.queueTask(
           () -> {
             try {
-              FileStatus status = path.statIfFound(Symlinks.FOLLOW);
+              BasicFileAttributes status = statIfFound(path);
               if (status != null) {
                 processFileOrDirectory(path, status.isDirectory(), idx, context);
               }
@@ -671,7 +675,7 @@ final class UnixGlob {
     }
 
     private void processFileOrDirectory(
-        Path path, boolean isDir, int idx, GlobTaskContext context) {
+        AbsPath path, boolean isDir, int idx, GlobTaskContext context) {
       boolean isRecursivePattern = isRecursivePattern(context.patternParts[idx]);
       if (isDir) {
         context.queueGlob(path, /* baseIsDir= */ true, idx + (isRecursivePattern ? 0 : 1));
