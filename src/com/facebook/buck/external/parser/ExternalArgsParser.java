@@ -20,46 +20,44 @@ import com.facebook.buck.external.model.ExternalAction;
 import com.facebook.buck.external.model.ParsedArgs;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Parser for args passed to StepsExecutable.
+ * Parser for args passed to ExternalActionsExecutable.
  *
  * <p>Two args are expected:
  *
  * <ol>
- *   <li>Buildable class name for the steps to be executed
+ *   <li>External action class name for the steps to be executed
  *   <li>Path to a file containing a {@link BuildableCommand}
  * </ol>
+ *
+ * TODO(irenewchen): Add {@link} to ExternalActionsExecutable once it exists.
  */
 public class ExternalArgsParser {
   private static final int NUM_EXPECTED_ARGS = 2;
 
-  /** Returns the {@link ParsedArgs} from the args passed directly to StepsExecutable. */
+  /** Returns the {@link ParsedArgs} from the args passed directly to ExternalActionsExecutable. */
   @SuppressWarnings("unchecked")
-  public ParsedArgs parse(
-      String[] args, ImmutableSet<Class<? extends ExternalAction>> validClasses) {
+  public ParsedArgs parse(String[] args) {
     Preconditions.checkNotNull(args, "Expected %s args. Received null args", NUM_EXPECTED_ARGS);
     Preconditions.checkArgument(
         args.length == NUM_EXPECTED_ARGS,
         "Expected %s args. Received %s",
         NUM_EXPECTED_ARGS,
         args.length);
-    Class<? extends ExternalAction> buildableClass;
+    Class<? extends ExternalAction> externalAction;
     try {
-      buildableClass = (Class<? extends ExternalAction>) Class.forName(args[0]);
-      Preconditions.checkArgument(
-          validClasses.contains(buildableClass), "Invalid buildable class: %s", args[0]);
+      externalAction = (Class<? extends ExternalAction>) Class.forName(args[0]);
     } catch (ClassNotFoundException e) {
       throw new IllegalArgumentException(
-          String.format("Cannot find buildable class: %s", args[0]), e);
+          String.format("Cannot find external actions class: %s", args[0]), e);
     }
     try (InputStream inputStream = new FileInputStream(args[1])) {
       BuildableCommand buildableCommand = BuildableCommand.parseFrom(inputStream);
-      return ParsedArgs.of(buildableClass, buildableCommand);
+      return ParsedArgs.of(externalAction, buildableCommand);
     } catch (IOException e) {
       throw new IllegalArgumentException("Cannot read buildable command", e);
     }

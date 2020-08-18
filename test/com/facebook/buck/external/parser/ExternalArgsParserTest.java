@@ -26,7 +26,6 @@ import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -42,25 +41,14 @@ public class ExternalArgsParserTest {
   public void throwsIfNullArgs() {
     exception.expect(NullPointerException.class);
     exception.expectMessage("Expected 2 args. Received null args");
-    new ExternalArgsParser().parse(null, ImmutableSet.of());
+    new ExternalArgsParser().parse(null);
   }
 
   @Test
   public void throwsIfNotTwoArgs() {
     exception.expect(IllegalArgumentException.class);
     exception.expectMessage("Expected 2 args. Received 1");
-    new ExternalArgsParser().parse(new String[] {"one"}, ImmutableSet.of());
-  }
-
-  @Test
-  public void throwsIfInvalidClass() {
-    exception.expect(IllegalArgumentException.class);
-    exception.expectMessage(
-        String.format("Invalid buildable class: %s", TestExternalActionClassBar.class.getName()));
-    new ExternalArgsParser()
-        .parse(
-            new String[] {TestExternalActionClassBar.class.getName(), "path"},
-            ImmutableSet.of(TestExternalActionClassFoo.class));
+    new ExternalArgsParser().parse(new String[] {"one"});
   }
 
   @Test
@@ -68,21 +56,17 @@ public class ExternalArgsParserTest {
     exception.expect(IllegalArgumentException.class);
     exception.expectMessage("Cannot read buildable command");
     new ExternalArgsParser()
-        .parse(
-            new String[] {TestExternalActionClassFoo.class.getName(), "nonexistent_path"},
-            ImmutableSet.of(TestExternalActionClassFoo.class));
+        .parse(new String[] {TestExternalActionClassFoo.class.getName(), "nonexistent_path"});
   }
 
   @Test
   public void throwsIfClassNotFound() throws Exception {
     exception.expect(IllegalArgumentException.class);
-    exception.expectMessage("Cannot find buildable class: com.facebook.buck.android.foo");
+    exception.expectMessage("Cannot find external actions class: com.facebook.buck.android.foo");
 
     File tempFile = temporaryFolder.newFile("tmp_file").toFile();
     new ExternalArgsParser()
-        .parse(
-            new String[] {"com.facebook.buck.android.foo", tempFile.getAbsolutePath()},
-            ImmutableSet.of(TestExternalActionClassFoo.class));
+        .parse(new String[] {"com.facebook.buck.android.foo", tempFile.getAbsolutePath()});
   }
 
   @Test
@@ -103,22 +87,13 @@ public class ExternalArgsParserTest {
             .parse(
                 new String[] {
                   TestExternalActionClassFoo.class.getName(), tempFile.getAbsolutePath()
-                },
-                ImmutableSet.of(
-                    TestExternalActionClassFoo.class, TestExternalActionClassBar.class));
+                });
 
     assertThat(parsedArgs.getBuildableClass(), equalTo(TestExternalActionClassFoo.class));
     assertThat(parsedArgs.getBuildableCommand(), equalTo(buildableCommand));
   }
 
   private static class TestExternalActionClassFoo implements ExternalAction {
-    @Override
-    public ImmutableList<IsolatedStep> getSteps(BuildableCommand buildableCommand) {
-      return ImmutableList.of();
-    }
-  }
-
-  private static class TestExternalActionClassBar implements ExternalAction {
     @Override
     public ImmutableList<IsolatedStep> getSteps(BuildableCommand buildableCommand) {
       return ImmutableList.of();

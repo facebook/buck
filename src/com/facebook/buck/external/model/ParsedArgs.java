@@ -19,7 +19,11 @@ package com.facebook.buck.external.model;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 
-/** Data class representing args passed to StepsExecutable. */
+/**
+ * Data class representing args passed to ExternalActionsExecutable.
+ *
+ * <p>TODO(irenewchen): Add {@link} to ExternalActionsExecutable once it exists.
+ */
 @BuckStyleValue
 public abstract class ParsedArgs {
   public abstract Class<? extends ExternalAction> getBuildableClass();
