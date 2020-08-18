@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -32,13 +32,12 @@ public abstract class LdflagsStaticPicFilterMacro extends CxxGenruleFilterAndTar
   }
 
   @Override
-  LdflagsStaticPicFilterMacro withTargetsWithOutputs(
-      ImmutableList<BuildTargetWithOutputs> targetsWithOutputs) {
-    return of(getFilter(), targetsWithOutputs);
+  LdflagsStaticPicFilterMacro withTargets(ImmutableList<BuildTarget> targets) {
+    return of(getFilter(), targets);
   }
 
   public static LdflagsStaticPicFilterMacro of(
-      Optional<Pattern> pattern, ImmutableList<BuildTargetWithOutputs> targetsWithOutputs) {
-    return ImmutableLdflagsStaticPicFilterMacro.ofImpl(pattern, targetsWithOutputs);
+      Optional<Pattern> pattern, ImmutableList<BuildTarget> buildTargets) {
+    return ImmutableLdflagsStaticPicFilterMacro.ofImpl(pattern, buildTargets);
   }
 }

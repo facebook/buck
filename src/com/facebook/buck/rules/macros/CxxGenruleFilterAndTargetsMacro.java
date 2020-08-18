@@ -18,8 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
-import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.google.common.collect.Comparators;
 import com.google.common.collect.ComparisonChain;
@@ -27,14 +26,13 @@ import com.google.common.collect.ImmutableList;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 /** Base class for <code>cxx_genrule</code> flags-based macros. */
 public abstract class CxxGenruleFilterAndTargetsMacro implements Macro {
 
   public abstract Optional<Pattern> getFilter();
 
-  public abstract ImmutableList<BuildTargetWithOutputs> getTargetsWithOutputs();
+  public abstract ImmutableList<BuildTarget> getTargets();
 
   @Override
   public int compareTo(Macro o) {
@@ -49,40 +47,23 @@ public abstract class CxxGenruleFilterAndTargetsMacro implements Macro {
             other.getFilter(),
             Comparators.emptiesFirst(Comparator.comparing(Pattern::pattern)))
         .compare(
-            getTargetsWithOutputs(),
-            other.getTargetsWithOutputs(),
-            Comparators.lexicographical(Comparator.<BuildTargetWithOutputs>naturalOrder()))
+            getTargets(),
+            other.getTargets(),
+            Comparators.lexicographical(Comparator.<BuildTarget>naturalOrder()))
         .result();
   }
 
   /**
    * @return a copy of this {@link CxxGenruleFilterAndTargetsMacro} with the given {@link
-   *     BuildTargetWithOutputs}.
+   *     BuildTarget}.
    */
-  abstract CxxGenruleFilterAndTargetsMacro withTargetsWithOutputs(
-      ImmutableList<BuildTargetWithOutputs> targetsWithOutputs);
+  abstract CxxGenruleFilterAndTargetsMacro withTargets(ImmutableList<BuildTarget> targets);
 
   @Override
   public Optional<Macro> translateTargets(
       CellNameResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
-    ImmutableList<BuildTargetWithOutputs> targetsWithOutputs =
-        getTargetsWithOutputs().stream()
-            .map(
-                targetWithOutputs ->
-                    new Pair<>(
-                        translator.translate(
-                            cellPathResolver, targetBaseName, targetWithOutputs.getBuildTarget()),
-                        targetWithOutputs.getOutputLabel()))
-            .flatMap(
-                pair ->
-                    pair.getFirst().isPresent()
-                        ? Stream.of(
-                            BuildTargetWithOutputs.of(pair.getFirst().get(), pair.getSecond()))
-                        : Stream.empty())
-            .collect(ImmutableList.toImmutableList());
-    if (targetsWithOutputs.isEmpty()) {
-      return Optional.empty();
-    }
-    return Optional.of(withTargetsWithOutputs(targetsWithOutputs));
+    return translator
+        .translate(cellPathResolver, targetBaseName, getTargets())
+        .map(this::withTargets);
   }
 }

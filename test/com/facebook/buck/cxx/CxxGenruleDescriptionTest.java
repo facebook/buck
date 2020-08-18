@@ -28,9 +28,7 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.FlavorDomain;
-import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
@@ -115,12 +113,11 @@ public class CxxGenruleDescriptionTest {
 
   @Test
   public void ldFlagsFilter() {
-    for (BiFunction<Optional<Pattern>, ImmutableList<BuildTargetWithOutputs>, Macro> macro :
-        ImmutableList
-            .<BiFunction<Optional<Pattern>, ImmutableList<BuildTargetWithOutputs>, Macro>>of(
-                LdflagsSharedFilterMacro::of,
-                LdflagsStaticFilterMacro::of,
-                LdflagsStaticPicFilterMacro::of)) {
+    for (BiFunction<Optional<Pattern>, ImmutableList<BuildTarget>, Macro> macro :
+        ImmutableList.<BiFunction<Optional<Pattern>, ImmutableList<BuildTarget>, Macro>>of(
+            LdflagsSharedFilterMacro::of,
+            LdflagsStaticFilterMacro::of,
+            LdflagsStaticPicFilterMacro::of)) {
       CxxLibraryBuilder bBuilder =
           new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:b"))
               .setExportedLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-b")));
@@ -138,9 +135,7 @@ public class CxxGenruleDescriptionTest {
                       "%s",
                       macro.apply(
                           Optional.of(Pattern.compile("//:a")),
-                          ImmutableList.of(
-                              BuildTargetWithOutputs.of(
-                                  aBuilder.getTarget(), OutputLabel.defaultLabel())))));
+                          ImmutableList.of(aBuilder.getTarget()))));
       TargetGraph targetGraph =
           TargetGraphFactory.newInstance(bBuilder.build(), aBuilder.build(), builder.build());
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
@@ -236,10 +231,7 @@ public class CxxGenruleDescriptionTest {
                 StringWithMacrosUtils.format(
                     "%s",
                     LdflagsSharedMacro.of(
-                        Optional.empty(),
-                        ImmutableList.of(
-                            BuildTargetWithOutputs.of(
-                                versionedDep.getTarget(), OutputLabel.defaultLabel())))))
+                        Optional.empty(), ImmutableList.of(versionedDep.getTarget()))))
             .setOut("foo");
     TargetGraph graph =
         TargetGraphFactory.newInstance(dep.build(), versionedDep.build(), genruleBuilder.build());
@@ -261,11 +253,7 @@ public class CxxGenruleDescriptionTest {
             Matchers.equalTo(
                 StringWithMacrosUtils.format(
                     "%s",
-                    LdflagsSharedMacro.of(
-                        Optional.empty(),
-                        ImmutableList.of(
-                            BuildTargetWithOutputs.of(
-                                dep.getTarget(), OutputLabel.defaultLabel())))))));
+                    LdflagsSharedMacro.of(Optional.empty(), ImmutableList.of(dep.getTarget()))))));
   }
 
   @Test
@@ -279,11 +267,7 @@ public class CxxGenruleDescriptionTest {
             .setCmd(
                 StringWithMacrosUtils.format(
                     "%s",
-                    LdflagsSharedMacro.of(
-                        Optional.empty(),
-                        ImmutableList.of(
-                            BuildTargetWithOutputs.of(
-                                dep.getTarget(), OutputLabel.defaultLabel())))))
+                    LdflagsSharedMacro.of(Optional.empty(), ImmutableList.of(dep.getTarget()))))
             .setOut("foo");
     TargetGraph graph =
         TargetGraphFactory.newInstance(
@@ -304,8 +288,7 @@ public class CxxGenruleDescriptionTest {
         RichStream.from(arg.getCmd().orElseThrow(AssertionError::new).getMacros())
             .map(MacroContainer::getMacro)
             .filter(LdflagsSharedMacro.class)
-            .flatMap(m -> m.getTargetsWithOutputs().stream())
-            .map(BuildTargetWithOutputs::getBuildTarget)
+            .flatMap(m -> m.getTargets().stream())
             .map(BuildTarget::getFullyQualifiedName)
             .collect(Collectors.toList()),
         Matchers.contains(Matchers.matchesPattern(Pattern.quote("//:dep#v") + "[a-zA-Z0-9]*")));

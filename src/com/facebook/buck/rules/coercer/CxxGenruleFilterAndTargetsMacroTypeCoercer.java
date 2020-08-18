@@ -17,8 +17,8 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.CxxGenruleFilterAndTargetsMacro;
@@ -37,23 +37,19 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<
     implements MacroTypeCoercer<U, M> {
 
   private final Optional<TypeCoercer<Pattern, Pattern>> patternTypeCoercer;
-  private final TypeCoercer<
-          ImmutableList<UnconfiguredBuildTargetWithOutputs>, ImmutableList<BuildTargetWithOutputs>>
+  private final TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ImmutableList<BuildTarget>>
       buildTargetsTypeCoercer;
   private final Class<U> uClass;
   private final Class<M> mClass;
-  private final BiFunction<Optional<Pattern>, ImmutableList<UnconfiguredBuildTargetWithOutputs>, U>
-      factory;
+  private final BiFunction<Optional<Pattern>, ImmutableList<UnconfiguredBuildTarget>, U> factory;
 
   public CxxGenruleFilterAndTargetsMacroTypeCoercer(
       Optional<TypeCoercer<Pattern, Pattern>> patternTypeCoercer,
-      TypeCoercer<
-              ImmutableList<UnconfiguredBuildTargetWithOutputs>,
-              ImmutableList<BuildTargetWithOutputs>>
+      TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ImmutableList<BuildTarget>>
           buildTargetsTypeCoercer,
       Class<U> uClass,
       Class<M> mClass,
-      BiFunction<Optional<Pattern>, ImmutableList<UnconfiguredBuildTargetWithOutputs>, U> factory) {
+      BiFunction<Optional<Pattern>, ImmutableList<UnconfiguredBuildTarget>, U> factory) {
     this.patternTypeCoercer = patternTypeCoercer;
     this.buildTargetsTypeCoercer = buildTargetsTypeCoercer;
     this.uClass = uClass;
@@ -86,8 +82,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<
             macro
                 .getFilter()
                 .ifPresent(filter -> coercer.traverseUnconfigured(cellRoots, filter, traversal)));
-    buildTargetsTypeCoercer.traverseUnconfigured(
-        cellRoots, macro.getTargetsWithOutputs(), traversal);
+    buildTargetsTypeCoercer.traverseUnconfigured(cellRoots, macro.getTargets(), traversal);
   }
 
   @Override
@@ -95,7 +90,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<
     patternTypeCoercer.ifPresent(
         coercer ->
             macro.getFilter().ifPresent(filter -> coercer.traverse(cellRoots, filter, traversal)));
-    buildTargetsTypeCoercer.traverse(cellRoots, macro.getTargetsWithOutputs(), traversal);
+    buildTargetsTypeCoercer.traverse(cellRoots, macro.getTargets(), traversal);
   }
 
   @Override
@@ -125,10 +120,10 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<
     }
 
     // Parse build target args.
-    ImmutableList<UnconfiguredBuildTargetWithOutputs> targetsWithOutputs =
+    ImmutableList<UnconfiguredBuildTarget> targets =
         buildTargetsTypeCoercer.coerceToUnconfigured(
             cellNameResolver, filesystem, pathRelativeToProjectRoot, mArgs);
 
-    return factory.apply(filter, targetsWithOutputs);
+    return factory.apply(filter, targets);
   }
 }
