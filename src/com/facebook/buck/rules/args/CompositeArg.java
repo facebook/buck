@@ -31,7 +31,7 @@ import java.util.function.Consumer;
 @BuckStyleValue
 public abstract class CompositeArg implements Arg {
   @AddToRuleKey
-  abstract ImmutableList<Arg> getArgs();
+  public abstract ImmutableList<Arg> getArgs();
 
   @Override
   public void appendToCommandLine(

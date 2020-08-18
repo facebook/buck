@@ -524,6 +524,7 @@ public class GenruleTest {
     String bash = "rm -rf /usr";
     String cmdExe = "rmdir /s /q C:\\Windows";
     String cmd = "echo \"Hello\"";
+    String cmdForCmdExe = "echo ^\"Hello^\"";
     StepExecutionContext linuxExecutionContext = newEmptyExecutionContext(Platform.LINUX);
     StepExecutionContext windowsExecutionContext = newEmptyExecutionContext(Platform.WINDOWS);
 
@@ -560,7 +561,10 @@ public class GenruleTest {
         cmd);
 
     assertGenruleCommandAndScript(
-        createGenruleStep(genrule, buildContext), windowsExecutionContext, ImmutableList.of(), cmd);
+        createGenruleStep(genrule, buildContext),
+        windowsExecutionContext,
+        ImmutableList.of(),
+        cmdForCmdExe);
 
     // Test command absent
     genrule =

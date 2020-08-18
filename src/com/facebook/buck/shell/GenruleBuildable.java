@@ -35,6 +35,9 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.CompositeArg;
+import com.facebook.buck.rules.args.SanitizedArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.macros.WorkerMacroArg;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -609,8 +612,9 @@ public class GenruleBuildable implements Buildable {
         filesystem,
         new AbstractGenruleStep.CommandString(
             Arg.flattenToSpaceSeparatedString(cmd, sourcePathResolverAdapter),
+            cmd.map(arg -> flattenArgToWindowsCmdExeCommand(arg, sourcePathResolverAdapter)),
             Arg.flattenToSpaceSeparatedString(bash, sourcePathResolverAdapter),
-            Arg.flattenToSpaceSeparatedString(cmdExe, sourcePathResolverAdapter)),
+            cmdExe.map(arg -> flattenArgToWindowsCmdExeCommand(arg, sourcePathResolverAdapter))),
         BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), filesystem, srcPath)
             .getPathRelativeToBuildCellRoot(),
@@ -819,6 +823,51 @@ public class GenruleBuildable implements Buildable {
         return envVarBuilder.build();
       }
     };
+  }
+
+  /**
+   * "Flattens" an {@link Arg} into a {@link WindowsCmdExeEscaper.Command} which is suitable for
+   * later escaping by {@link WindowsCmdExeEscaper#escape(WindowsCmdExeEscaper.Command)}.
+   *
+   * @param cmdExeArg {@link Arg} to flatten to cmd.exe command string.
+   * @param pathResolver {@link SourcePathResolverAdapter} to resolve paths.
+   * @return {@link WindowsCmdExeEscaper.Command} suitable for later escaping by {@link
+   *     WindowsCmdExeEscaper#escape(WindowsCmdExeEscaper.Command)}.
+   */
+  private static WindowsCmdExeEscaper.Command flattenArgToWindowsCmdExeCommand(
+      Arg cmdExeArg, SourcePathResolverAdapter pathResolver) {
+    ImmutableList<Arg> args;
+
+    // "flatten" the arg into a list of args
+    if (cmdExeArg instanceof CompositeArg) {
+      // arg is a mix of literal strings and macros
+      args = ((CompositeArg) cmdExeArg).getArgs();
+    } else {
+      // arg is just a single literal string or a single macro
+      args = ImmutableList.of(cmdExeArg);
+    }
+
+    WindowsCmdExeEscaper.Command.Builder cmdExeCommandBuilder =
+        WindowsCmdExeEscaper.Command.builder();
+
+    for (Arg arg : args) {
+      String argString = Arg.stringify(arg, pathResolver);
+
+      if (arg instanceof StringArg || arg instanceof SanitizedArg) {
+        // StringWithMacrosConverter converts string literals in a genrule
+        // command line to one of StringArg or SanitizedArg. These are intended
+        // for direct consumption as-is by cmd.exe, i.e. may contain
+        // metacharacters.
+        cmdExeCommandBuilder.appendEscapedSubstring(argString);
+      } else {
+        // Macros should be treated as unescaped, i.e. they are assumed to not
+        // contain any cmd.exe metacharacters and any special characters
+        // therein should be escaped.
+        cmdExeCommandBuilder.appendUnescapedSubstring(argString);
+      }
+    }
+
+    return cmdExeCommandBuilder.build();
   }
 
   private static Optional<WorkerJobParams> convertToWorkerJobParams(

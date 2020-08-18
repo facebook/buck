@@ -53,7 +53,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
                       getExecutionArgsAndCommand(platform);
                   return projectFilesystem.resolve(
                       projectFilesystem.createTempFile(
-                          "genrule-", "." + executionArgsAndCommand.shellType.extension));
+                          "genrule-", "." + executionArgsAndCommand.getShellType().extension));
                 }
               });
 
@@ -116,7 +116,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
     Path scriptFilePath = this.scriptFilePath.getUnchecked(context.getPlatform());
 
     return commandLineBuilder
-        .addAll(executionArgsAndCommand.shellType.executionArgs)
+        .addAll(executionArgsAndCommand.getShellType().executionArgs)
         .add(scriptFilePath.toString())
         .build();
   }
@@ -140,7 +140,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
     // Long lists of environment variables can extend the length of the command such that it exceeds
     // exec()'s ARG_MAX limit. Defend against this by filtering out variables that do not appear in
     // the command string.
-    String command = getExecutionArgsAndCommand(platform).command;
+    String command = getExecutionArgsAndCommand(platform).getCommandString();
     ImmutableMap.Builder<String, String> usedEnvironmentVariablesBuilder = ImmutableMap.builder();
     for (Map.Entry<String, String> environmentVariable : allEnvironmentVariables.entrySet()) {
       // We check for the presence of the variable without adornment for $ or %% so it works on both
@@ -166,9 +166,10 @@ public abstract class AbstractGenruleStep extends ShellStep {
     if (platform == Platform.WINDOWS) {
       executionArgsAndCommand =
           getExpandedCommandAndExecutionArgs(
-              executionArgsAndCommand, getEnvironmentVariables(platform));
+              (WindowsCmdExeExecutionArgsAndCommand) executionArgsAndCommand,
+              getEnvironmentVariables(platform));
     }
-    return executionArgsAndCommand.command;
+    return executionArgsAndCommand.getCommandString();
   }
 
   @VisibleForTesting
@@ -188,26 +189,91 @@ public abstract class AbstractGenruleStep extends ShellStep {
   protected abstract void addEnvironmentVariables(
       ImmutableMap.Builder<String, String> environmentVariablesBuilder);
 
-  private static ExecutionArgsAndCommand getExpandedCommandAndExecutionArgs(
-      ExecutionArgsAndCommand original, ImmutableMap<String, String> environmentVariablesToExpand) {
-    String expandedCommand = original.command;
-    for (Map.Entry<String, String> variable : environmentVariablesToExpand.entrySet()) {
-      expandedCommand =
-          expandedCommand
-              .replace("$" + variable.getKey(), variable.getValue())
-              .replace("${" + variable.getKey() + "}", variable.getValue());
+  private static WindowsCmdExeEscaper.Command replaceVariableInCmdExeCommand(
+      WindowsCmdExeEscaper.Command cmdExeCommand, String variableName, String variableValue) {
+    WindowsCmdExeEscaper.Command.Builder replacementCommandBuilder =
+        WindowsCmdExeEscaper.Command.builder();
+
+    for (WindowsCmdExeEscaper.CommandSubstring substring : cmdExeCommand.getSubstrings()) {
+      if (substring instanceof WindowsCmdExeEscaper.EscapedCommandSubstring) {
+        String substringRemainder = substring.string;
+        while (!substringRemainder.isEmpty()) {
+          int i = substringRemainder.indexOf(variableName);
+          if (i != -1) {
+            replacementCommandBuilder.appendEscapedSubstring(substringRemainder.substring(0, i));
+            replacementCommandBuilder.appendUnescapedSubstring(variableValue);
+            substringRemainder = substringRemainder.substring(i + variableName.length());
+          } else {
+            replacementCommandBuilder.appendEscapedSubstring(substringRemainder);
+            break;
+          }
+        }
+      } else if (substring instanceof WindowsCmdExeEscaper.UnescapedCommandSubstring) {
+        replacementCommandBuilder.appendUnescapedSubstring(
+            substring.string.replace(variableName, variableValue));
+      }
     }
-    return new ExecutionArgsAndCommand(original.shellType, expandedCommand);
+
+    return replacementCommandBuilder.build();
   }
 
-  private static class ExecutionArgsAndCommand {
+  private static WindowsCmdExeExecutionArgsAndCommand getExpandedCommandAndExecutionArgs(
+      WindowsCmdExeExecutionArgsAndCommand original,
+      ImmutableMap<String, String> environmentVariablesToExpand) {
+    WindowsCmdExeEscaper.Command expandedCommand = original.command;
+    for (Map.Entry<String, String> variable : environmentVariablesToExpand.entrySet()) {
+      expandedCommand =
+          replaceVariableInCmdExeCommand(
+              expandedCommand, "$" + variable.getKey(), variable.getValue());
+      expandedCommand =
+          replaceVariableInCmdExeCommand(
+              expandedCommand, "${" + variable.getKey() + "}", variable.getValue());
+    }
 
-    private final ShellType shellType;
-    private final String command;
+    return new WindowsCmdExeExecutionArgsAndCommand(expandedCommand);
+  }
 
-    private ExecutionArgsAndCommand(ShellType shellType, String command) {
-      this.shellType = shellType;
+  private interface ExecutionArgsAndCommand {
+    public ShellType getShellType();
+
+    public String getCommandString();
+  }
+
+  private static class BashExecutionArgsAndCommand implements ExecutionArgsAndCommand {
+
+    private String command;
+
+    public BashExecutionArgsAndCommand(String command) {
       this.command = command;
+    }
+
+    @Override
+    public ShellType getShellType() {
+      return ShellType.BASH;
+    }
+
+    @Override
+    public String getCommandString() {
+      return command;
+    }
+  }
+
+  private static class WindowsCmdExeExecutionArgsAndCommand implements ExecutionArgsAndCommand {
+
+    public final WindowsCmdExeEscaper.Command command;
+
+    public WindowsCmdExeExecutionArgsAndCommand(WindowsCmdExeEscaper.Command command) {
+      this.command = command;
+    }
+
+    @Override
+    public ShellType getShellType() {
+      return ShellType.CMD_EXE;
+    }
+
+    @Override
+    public String getCommandString() {
+      return WindowsCmdExeEscaper.escape(command);
     }
   }
 
@@ -225,12 +291,18 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   public static class CommandString {
-    private Optional<String> cmd;
+    private Optional<String> cmdForBash;
+    private Optional<WindowsCmdExeEscaper.Command> cmdForCmdExe;
     private Optional<String> bash;
-    private Optional<String> cmdExe;
+    private Optional<WindowsCmdExeEscaper.Command> cmdExe;
 
-    public CommandString(Optional<String> cmd, Optional<String> bash, Optional<String> cmdExe) {
-      this.cmd = cmd;
+    public CommandString(
+        Optional<String> cmdForBash,
+        Optional<WindowsCmdExeEscaper.Command> cmdForCmdExe,
+        Optional<String> bash,
+        Optional<WindowsCmdExeEscaper.Command> cmdExe) {
+      this.cmdForBash = cmdForBash;
+      this.cmdForCmdExe = cmdForCmdExe;
       this.bash = bash;
       this.cmdExe = cmdExe;
     }
@@ -240,25 +312,26 @@ public abstract class AbstractGenruleStep extends ShellStep {
       //   "cmd.exe /c winCommand" (Windows Only)
       //   "/bin/bash -e -c shCommand" (Non-windows Only)
       //   "(/bin/bash -c) or (cmd.exe /c) cmd" (All platforms)
-      String command;
       if (platform == Platform.WINDOWS) {
-        if (!cmdExe.orElse("").isEmpty()) {
+        WindowsCmdExeEscaper.Command command;
+        if (cmdExe.isPresent()) {
           command = cmdExe.get();
-        } else if (!cmd.orElse("").isEmpty()) {
-          command = cmd.get();
+        } else if (cmdForCmdExe.isPresent()) {
+          command = cmdForCmdExe.get();
         } else {
           throw new HumanReadableException("You must specify either cmd_exe or cmd for genrule.");
         }
-        return new ExecutionArgsAndCommand(ShellType.CMD_EXE, command);
+        return new WindowsCmdExeExecutionArgsAndCommand(command);
       } else {
+        String command;
         if (!bash.orElse("").isEmpty()) {
           command = bash.get();
-        } else if (!cmd.orElse("").isEmpty()) {
-          command = cmd.get();
+        } else if (!cmdForBash.orElse("").isEmpty()) {
+          command = cmdForBash.get();
         } else {
           throw new HumanReadableException("You must specify either bash or cmd for genrule.");
         }
-        return new ExecutionArgsAndCommand(ShellType.BASH, command);
+        return new BashExecutionArgsAndCommand(command);
       }
     }
   }

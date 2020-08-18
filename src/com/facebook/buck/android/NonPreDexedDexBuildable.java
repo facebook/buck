@@ -377,7 +377,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
 
       AbstractGenruleStep.CommandString commandString =
           new AbstractGenruleStep.CommandString(
-              /* cmd */ Optional.empty(),
+              /* cmdForBash */ Optional.empty(),
+              /* cmdForCmdExe */ Optional.empty(),
               /* bash */ Arg.flattenToSpaceSeparatedString(
                   preprocessJavaClassesBash, sourcePathResolver),
               /* cmdExe */ Optional.empty());
