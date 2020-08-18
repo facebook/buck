@@ -35,7 +35,8 @@ public class JsLibraryBuilder
     extends AbstractNodeBuilder<
         JsLibraryDescriptionArg.Builder, JsLibraryDescriptionArg, JsLibraryDescription, JsLibrary> {
   private static final JsLibraryDescription libraryDescription =
-      new JsLibraryDescription(DownwardApiConfig.of(FakeBuckConfig.empty()));
+      new JsLibraryDescription(
+          DownwardApiConfig.of(FakeBuckConfig.empty()), JsConfig.of(FakeBuckConfig.empty()));
 
   JsLibraryBuilder(BuildTarget target, ProjectFilesystem filesystem) {
     super(libraryDescription, target, filesystem);

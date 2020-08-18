@@ -43,12 +43,13 @@ public class JsFlavorsTest {
   public static void setupDescriptions() {
     BuckConfig buckConfig = FakeBuckConfig.empty();
     DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
+    JsConfig jsConfig = JsConfig.of(buckConfig);
     bundleDescription =
         new JsBundleDescription(
             new ToolchainProviderBuilder().build(),
             new AndroidBuckConfig(buckConfig, Platform.detect()),
             downwardApiConfig);
-    libraryDescription = new JsLibraryDescription(downwardApiConfig);
+    libraryDescription = new JsLibraryDescription(downwardApiConfig, jsConfig);
   }
 
   @Test

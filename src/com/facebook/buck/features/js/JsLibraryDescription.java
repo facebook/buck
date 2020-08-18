@@ -92,9 +92,11 @@ public class JsLibraryDescription
               .build();
 
   private final DownwardApiConfig downwardApiConfig;
+  private final JsConfig jsConfig;
 
-  public JsLibraryDescription(DownwardApiConfig downwardApiConfig) {
+  public JsLibraryDescription(DownwardApiConfig downwardApiConfig, JsConfig jsConfig) {
     this.downwardApiConfig = downwardApiConfig;
+    this.jsConfig = jsConfig;
   }
 
   @Override
@@ -130,7 +132,18 @@ public class JsLibraryDescription
         graphBuilder.getRuleWithType(workerTarget, ProvidesWorkerTool.class).getWorkerTool();
 
     boolean withDownwardApi = downwardApiConfig.isEnabledForJs();
+
+    boolean isMissingTransformProfile =
+        jsConfig.getRequireTransformProfileFlavorForFiles()
+            && Sets.intersection(
+                    buildTarget.getFlavors().getSet(),
+                    JsFlavors.TRANSFORM_PROFILE_DOMAIN.getFlavors())
+                .isEmpty();
+
     if (file.isPresent()) {
+      if (isMissingTransformProfile) {
+        throw new HumanReadableException("Cannot instantiate js_file without a transform profile");
+      }
       return buildTarget.getFlavors().contains(JsFlavors.RELEASE)
           ? createReleaseFileRule(
               buildTarget,
@@ -152,7 +165,11 @@ public class JsLibraryDescription
     } else {
       if (buildTarget.getFlavors().contains(JsFlavors.LIBRARY_FILES)) {
         return new LibraryFilesBuilder(graphBuilder, buildTarget, sourcesToFlavors, withDownwardApi)
-            .setSources(args.getSrcs())
+            .setSources(isMissingTransformProfile ? ImmutableSet.of() : args.getSrcs())
+            .setForbidBuildingReason(
+                isMissingTransformProfile
+                    ? Optional.of("missing transform profile")
+                    : Optional.empty())
             .build(projectFilesystem, worker);
       } else {
         // We allow the `deps_query` to contain different kinds of build targets, but filter out
@@ -225,6 +242,7 @@ public class JsLibraryDescription
         sourcesToFlavors;
     private final BuildTarget fileBaseTarget;
     private final boolean withDownwardApi;
+    private Optional<String> forbidBuildingReason = Optional.empty();
 
     @Nullable private ImmutableList<JsFile<?>> jsFileRules;
 
@@ -258,6 +276,11 @@ public class JsLibraryDescription
       return this;
     }
 
+    private LibraryFilesBuilder setForbidBuildingReason(Optional<String> forbidBuildingReason) {
+      this.forbidBuildingReason = forbidBuildingReason;
+      return this;
+    }
+
     private JsFile<?> requireJsFile(Either<SourcePath, Pair<SourcePath, String>> file) {
       Flavor fileFlavor = sourcesToFlavors.get(file);
       BuildTarget target = fileBaseTarget.withAppendedFlavors(fileFlavor);
@@ -276,7 +299,8 @@ public class JsLibraryDescription
               .map(JsFile::getSourcePathToOutput)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
           worker,
-          withDownwardApi);
+          withDownwardApi,
+          forbidBuildingReason);
     }
   }
 

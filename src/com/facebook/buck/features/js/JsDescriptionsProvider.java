@@ -44,9 +44,10 @@ public class JsDescriptionsProvider implements DescriptionProvider {
     CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
+    JsConfig jsConfig = JsConfig.of(buckConfig);
 
     return Arrays.asList(
-        new JsLibraryDescription(downwardApiConfig),
+        new JsLibraryDescription(downwardApiConfig, jsConfig),
         new JsBundleGenruleDescription(
             toolchainProvider,
             sandboxConfig,

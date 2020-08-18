@@ -49,8 +49,9 @@ public class JsFlavorValidationCommonTest {
   private static ImmutableMap<Class<?>, Flavored> getTestData() {
     BuckConfig buckConfig = FakeBuckConfig.empty();
     DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
+    JsConfig jsConfig = JsConfig.of(buckConfig);
     return ImmutableMap.of(
-        JsLibraryDescription.class, new JsLibraryDescription(downwardApiConfig),
+        JsLibraryDescription.class, new JsLibraryDescription(downwardApiConfig, jsConfig),
         JsBundleDescription.class,
             new JsBundleDescription(
                 new ToolchainProviderBuilder().build(),

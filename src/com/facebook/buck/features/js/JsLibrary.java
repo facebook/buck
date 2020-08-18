@@ -17,6 +17,7 @@
 package com.facebook.buck.features.js;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorSet;
@@ -41,6 +42,7 @@ import com.facebook.buck.util.json.JsonBuilder.ObjectBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /** JsLibrary rule */
@@ -182,12 +184,14 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
         SourcePathRuleFinder ruleFinder,
         ImmutableSortedSet<BuildTargetSourcePath> sources,
         WorkerTool worker,
-        boolean withDownwardApi) {
+        boolean withDownwardApi,
+        Optional<String> forbidBuildingReason) {
       super(
           target,
           filesystem,
           ruleFinder,
-          new FilesImpl(sources, worker, target, filesystem, withDownwardApi));
+          new FilesImpl(
+              sources, worker, target, filesystem, withDownwardApi, forbidBuildingReason));
     }
 
     @Override
@@ -214,20 +218,29 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
   static class FilesImpl extends AbstractJsLibraryBuildable {
 
     @AddToRuleKey private final ImmutableSortedSet<BuildTargetSourcePath> sources;
+    @AddToRuleKey private final Optional<String> forbidBuildingReason;
 
     FilesImpl(
         ImmutableSortedSet<BuildTargetSourcePath> sources,
         WorkerTool worker,
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
-        boolean withDownwardApi) {
+        boolean withDownwardApi,
+        Optional<String> forbidBuildingReason) {
       super(worker, buildTarget, projectFilesystem, withDownwardApi);
       this.sources = sources;
+      this.forbidBuildingReason = forbidBuildingReason;
     }
 
     @Override
     ObjectBuilder getJobArgs(
         SourcePathResolverAdapter resolver, Path outputPath, ProjectFilesystem filesystem) {
+      this.forbidBuildingReason.ifPresent(
+          reason -> {
+            throw new HumanReadableException(
+                "This js_library files instance is a dummy rule that cannot be built because: %s",
+                reason);
+          });
       FlavorSet flavors = buildTarget.getFlavors();
 
       return JsonBuilder.object()
