@@ -39,7 +39,6 @@ import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.LabelCache;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.RawTargetNode;
@@ -87,7 +86,6 @@ public class SkylarkProjectBuildFileParserTest {
 
   private SkylarkProjectBuildFileParser parser;
   private ProjectFilesystem projectFilesystem;
-  private SkylarkFilesystem skylarkFilesystem;
   private KnownRuleTypesProvider knownRuleTypesProvider;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -96,7 +94,6 @@ public class SkylarkProjectBuildFileParserTest {
   @Before
   public void setUp() {
     projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    skylarkFilesystem = SkylarkFilesystem.using(projectFilesystem.getFileSystem());
     cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
@@ -111,15 +108,11 @@ public class SkylarkProjectBuildFileParserTest {
   private SkylarkProjectBuildFileParser createParserWithOptions(
       EventHandler eventHandler, ProjectBuildFileParserOptions options) {
     return SkylarkProjectBuildFileParserTestUtils.createParserWithOptions(
-        skylarkFilesystem, eventHandler, options, knownRuleTypesProvider, cell.getRootCell());
+        eventHandler, options, knownRuleTypesProvider, cell.getRootCell());
   }
 
   private SkylarkProjectBuildFileParser createParser(EventHandler eventHandler) {
     return createParserWithOptions(eventHandler, getDefaultParserOptions().build());
-  }
-
-  private com.google.devtools.build.lib.vfs.Path vfs_path(AbsPath p) {
-    return skylarkFilesystem.getPath(p.toString());
   }
 
   @Test

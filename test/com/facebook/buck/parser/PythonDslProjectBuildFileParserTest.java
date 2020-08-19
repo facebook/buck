@@ -39,7 +39,6 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.io.watchman.WatchmanDiagnosticEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.UserDefinedRuleLoader;
@@ -662,7 +661,7 @@ public class PythonDslProjectBuildFileParserTest {
     }
 
     TestSkylarkParser createSkylarkParser(Cell cell) {
-      return new TestSkylarkParser(getOptions("fake-python"), cell.getFilesystem(), cell);
+      return new TestSkylarkParser(getOptions("fake-python"), cell);
     }
 
     private class TestSkylarkParser implements UserDefinedRuleLoader {
@@ -670,12 +669,10 @@ public class PythonDslProjectBuildFileParserTest {
       private final KnownRuleTypesProvider knownRuleTypesProvider;
       private final SkylarkProjectBuildFileParser parser;
 
-      private TestSkylarkParser(
-          ProjectBuildFileParserOptions options, ProjectFilesystem filesystem, Cell cell) {
+      private TestSkylarkParser(ProjectBuildFileParserOptions options, Cell cell) {
         this.knownRuleTypesProvider = new KnownRuleTypesProvider(cell1 -> ruleTypes);
         this.parser =
             SkylarkProjectBuildFileParserTestUtils.createParserWithOptions(
-                SkylarkFilesystem.using(filesystem.getFileSystem()),
                 new PrintingEventHandler(EventKind.ALL_EVENTS),
                 options,
                 knownRuleTypesProvider,

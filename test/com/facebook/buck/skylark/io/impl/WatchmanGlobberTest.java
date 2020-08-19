@@ -23,11 +23,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
-import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.watchman.StubWatchmanClient;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
@@ -40,9 +38,9 @@ import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.vfs.FileSystemUtils;
-import com.google.devtools.build.lib.vfs.Path;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
@@ -57,7 +55,7 @@ import org.junit.rules.ExpectedException;
 public class WatchmanGlobberTest {
   private static final Logger LOG = Logger.get(WatchmanGlobberTest.class);
 
-  private Path root;
+  private AbsPath root;
   private WatchmanGlobber globber;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -66,10 +64,7 @@ public class WatchmanGlobberTest {
 
   @Before
   public void setUp() throws Exception {
-    ProjectFilesystem projectFilesystem =
-        new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
-    SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem.getFileSystem());
-    root = fileSystem.getPath(tmp.getRoot().toString());
+    root = tmp.getRoot();
     WatchmanFactory watchmanFactory = new WatchmanFactory();
     Watchman watchman =
         watchmanFactory.build(
@@ -115,9 +110,8 @@ public class WatchmanGlobberTest {
   @Test
   public void testMatchingDirectoryIsNotReturnedWhenDirsAreExcluded() throws Exception {
     tmp.newFolder("some_dir");
-    Path buildFile = root.getChild("BUCK");
-    FileSystemUtils.writeContentAsLatin1(
-        buildFile, "txts = glob(['some_dir'], exclude_directories=True)");
+    AbsPath buildFile = root.resolve("BUCK");
+    MostFiles.write(buildFile, "txts = glob(['some_dir'], exclude_directories=True)");
     assertThat(
         globber.run(Collections.singleton("some_dir"), Collections.emptySet(), true),
         equalTo(Optional.of(ImmutableSet.of())));
@@ -125,11 +119,13 @@ public class WatchmanGlobberTest {
 
   @Test
   public void testMatchingSymbolicLinkIsReturnedWhenSymlinksAreNotExcluded() throws Exception {
-    FileSystemUtils.ensureSymbolicLink(root.getChild("broken-symlink"), "does-not-exist");
+    Files.createSymbolicLink(root.resolve("broken-symlink").getPath(), Paths.get("does-not-exist"));
     tmp.newFolder("directory");
-    FileSystemUtils.ensureSymbolicLink(root.getChild("symlink-to-directory"), "directory");
+    Files.createSymbolicLink(
+        root.resolve("symlink-to-directory").getPath(), Paths.get("directory"));
     tmp.newFile("regular-file");
-    FileSystemUtils.ensureSymbolicLink(root.getChild("symlink-to-regular-file"), "regular-file");
+    Files.createSymbolicLink(
+        root.resolve("symlink-to-regular-file").getPath(), Paths.get("regular-file"));
 
     assertThat(
         globber.run(
@@ -157,7 +153,8 @@ public class WatchmanGlobberTest {
   public void testMatchingSymbolicLinkToDirectoryIsReturnedWhenDirectoriesAreExcluded()
       throws Exception {
     tmp.newFolder("directory");
-    FileSystemUtils.ensureSymbolicLink(root.getChild("symlink-to-directory"), "directory");
+    Files.createSymbolicLink(
+        root.resolve("symlink-to-directory").getPath(), Paths.get("directory"));
 
     assertThat(
         globber.run(Collections.singleton("symlink-to-directory"), Collections.emptySet(), true),
@@ -246,11 +243,13 @@ public class WatchmanGlobberTest {
 
   @Test
   public void testMatchingSymbolicLinkIsNotReturnedWhenSymlinksAreExcluded() throws Exception {
-    FileSystemUtils.ensureSymbolicLink(root.getChild("broken-symlink"), "does-not-exist");
+    Files.createSymbolicLink(root.resolve("broken-symlink").getPath(), Paths.get("does-not-exist"));
     tmp.newFolder("directory");
-    FileSystemUtils.ensureSymbolicLink(root.getChild("symlink-to-directory"), "directory");
+    Files.createSymbolicLink(
+        root.resolve("symlink-to-directory").getPath(), Paths.get("directory"));
     tmp.newFile("regular-file");
-    FileSystemUtils.ensureSymbolicLink(root.getChild("symlink-to-regular-file"), "regular-file");
+    Files.createSymbolicLink(
+        root.resolve("symlink-to-regular-file").getPath(), Paths.get("regular-file"));
 
     assertThat(
         globber.run(

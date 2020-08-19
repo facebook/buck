@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.LabelCache;
 import com.facebook.buck.parser.api.PackageFileManifest;
 import com.facebook.buck.parser.api.PackageMetadata;
@@ -60,7 +59,6 @@ public class SkylarkPackageFileParserTest {
 
   private SkylarkPackageFileParser parser;
   private ProjectFilesystem projectFilesystem;
-  private SkylarkFilesystem skylarkFilesystem;
   private KnownRuleTypesProvider knownRuleTypesProvider;
   private EventCollector eventCollector;
 
@@ -70,7 +68,6 @@ public class SkylarkPackageFileParserTest {
   @Before
   public void setUp() {
     projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    skylarkFilesystem = SkylarkFilesystem.using(projectFilesystem.getFileSystem());
     cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);

@@ -20,10 +20,11 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.Event;
@@ -39,25 +40,23 @@ import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.SyntaxError;
-import com.google.devtools.build.lib.vfs.FileSystemUtils;
-import com.google.devtools.build.lib.vfs.Path;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.EnumSet;
 import org.junit.Before;
 import org.junit.Test;
 
 public class ReadConfigTest {
 
-  private Path root;
+  private AbsPath root;
   private PrintingEventHandler eventHandler;
   private ImmutableMap<String, ImmutableMap<String, String>> rawConfig;
 
   @Before
   public void setUp() {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem.getFileSystem());
-    root = fileSystem.getPath(projectFilesystem.getRootPath().toString());
+    root = projectFilesystem.getRootPath();
     eventHandler = new PrintingEventHandler(EnumSet.allOf(EventKind.class));
     rawConfig = ImmutableMap.of();
   }
@@ -84,21 +83,20 @@ public class ReadConfigTest {
   }
 
   private Module evaluate(String expression) throws IOException, InterruptedException {
-    Path buildFile = root.getChild("BUCK");
-    FileSystemUtils.writeContentAsLatin1(buildFile, expression);
+    AbsPath buildFile = root.resolve("BUCK");
+    MostFiles.write(buildFile, expression);
     return evaluate(buildFile);
   }
 
-  private Module evaluate(Path buildFile) throws IOException, InterruptedException {
+  private Module evaluate(AbsPath buildFile) throws IOException, InterruptedException {
     try (Mutability mutability = Mutability.create("BUCK")) {
       return evaluate(buildFile, mutability);
     }
   }
 
-  private Module evaluate(Path buildFile, Mutability mutability)
+  private Module evaluate(AbsPath buildFile, Mutability mutability)
       throws IOException, InterruptedException {
-    byte[] buildFileContent =
-        FileSystemUtils.readWithKnownFileSize(buildFile, buildFile.getFileSize());
+    byte[] buildFileContent = Files.readAllBytes(buildFile.getPath());
     StarlarkFile buildFileAst =
         StarlarkFile.parse(
             ParserInput.create(

@@ -34,7 +34,6 @@ import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -65,7 +64,6 @@ public class SkylarkUserDefinedRulesParserTest {
   private SkylarkProjectBuildFileParser parser;
   private ProjectWorkspace workspace;
   private ProjectFilesystem projectFilesystem;
-  private SkylarkFilesystem skylarkFilesystem;
   private KnownRuleTypesProvider knownRuleTypesProvider;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -76,7 +74,6 @@ public class SkylarkUserDefinedRulesParserTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp.getRoot());
     workspace.setUp();
     projectFilesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
-    skylarkFilesystem = SkylarkFilesystem.using(projectFilesystem.getFileSystem());
     cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
@@ -85,7 +82,6 @@ public class SkylarkUserDefinedRulesParserTest {
 
   private SkylarkProjectBuildFileParser createParser(EventHandler eventHandler) {
     return SkylarkProjectBuildFileParserTestUtils.createParserWithOptions(
-        skylarkFilesystem,
         eventHandler,
         SkylarkProjectBuildFileParserTestUtils.getDefaultParserOptions(
                 cell.getRootCell(), knownRuleTypesProvider)

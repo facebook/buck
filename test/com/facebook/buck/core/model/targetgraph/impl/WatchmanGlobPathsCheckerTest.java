@@ -21,11 +21,11 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.cli.TestWithBuckd;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -33,9 +33,8 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.vfs.FileSystemUtils;
-import com.google.devtools.build.lib.vfs.Path;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.junit.Before;
@@ -47,7 +46,7 @@ public class WatchmanGlobPathsCheckerTest {
 
   private ProjectFilesystem projectFilesystem;
   private Watchman watchman;
-  private Path root;
+  private AbsPath root;
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -57,8 +56,7 @@ public class WatchmanGlobPathsCheckerTest {
   public void setUp() throws Exception {
     projectFilesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
     WatchmanFactory watchmanFactory = new WatchmanFactory();
-    SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem.getFileSystem());
-    root = fileSystem.getPath(tmp.getRoot().toString());
+    root = tmp.getRoot();
     watchman =
         watchmanFactory.build(
             ImmutableSet.of(tmp.getRoot()),
@@ -168,7 +166,7 @@ public class WatchmanGlobPathsCheckerTest {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("b");
 
-    FileSystemUtils.ensureSymbolicLink(root.getChild("symlink-to-regular-file"), "b");
+    Files.createSymbolicLink(root.resolve("symlink-to-regular-file").getPath(), Paths.get("b"));
 
     checker.checkFilePaths(
         projectFilesystem,

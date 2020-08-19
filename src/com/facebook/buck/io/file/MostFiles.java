@@ -480,4 +480,9 @@ public final class MostFiles {
       Files.deleteIfExists(tempPath);
     }
   }
+
+  /** Write given string to the file using UTF-8 charset. */
+  public static void write(AbsPath path, String content) throws IOException {
+    Files.write(path.getPath(), content.getBytes(StandardCharsets.UTF_8));
+  }
 }

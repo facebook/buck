@@ -22,7 +22,6 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.LabelCache;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.RawTargetNode;
@@ -94,7 +93,6 @@ public class SkylarkProjectBuildFileParserTestUtils {
   }
 
   public static SkylarkProjectBuildFileParser createParserWithOptions(
-      SkylarkFilesystem skylarkFilesystem,
       EventHandler eventHandler,
       ProjectBuildFileParserOptions options,
       KnownRuleTypesProvider knownRuleTypesProvider,
