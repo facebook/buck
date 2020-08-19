@@ -22,20 +22,13 @@ import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
-import com.facebook.buck.core.toolchain.impl.DefaultToolchainProvider;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
-import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
-import org.pf4j.PluginManager;
 
 /**
  * Creates a root cell, i.e. a cell that is representing the current repository.
@@ -45,45 +38,6 @@ import org.pf4j.PluginManager;
  * name is also empty.
  */
 public class RootCellFactory {
-
-  public static Cell create(
-      ImmutableSortedSet<AbsPath> knownRoots,
-      CellProvider cellProvider,
-      NewCellPathResolver newCellPathResolver,
-      CellPathResolver rootCellCellPathResolver,
-      ProjectFilesystem rootFilesystem,
-      BuckModuleManager moduleManager,
-      PluginManager pluginManager,
-      BuckConfig rootConfig,
-      ImmutableMap<String, String> environment,
-      ProcessExecutor processExecutor,
-      ExecutableFinder executableFinder) {
-    Preconditions.checkState(
-        !rootCellCellPathResolver.getCanonicalCellName(rootFilesystem.getRootPath()).isPresent(),
-        "Root cell should be nameless");
-    RuleKeyConfiguration ruleKeyConfiguration =
-        ConfigRuleKeyConfigurationFactory.create(rootConfig, moduleManager);
-    ToolchainProvider toolchainProvider =
-        new DefaultToolchainProvider(
-            pluginManager,
-            environment,
-            rootConfig,
-            rootFilesystem,
-            processExecutor,
-            executableFinder,
-            ruleKeyConfiguration);
-
-    return ImmutableCellImpl.ofImpl(
-        knownRoots,
-        CanonicalCellName.rootCell(),
-        rootFilesystem,
-        rootConfig,
-        cellProvider,
-        toolchainProvider,
-        rootCellCellPathResolver,
-        newCellPathResolver,
-        rootCellCellPathResolver.getCellNameResolver());
-  }
 
   static Cell create(
       CellProvider cellProvider,
