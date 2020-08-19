@@ -56,7 +56,6 @@ public class RootCellFactory {
         toolchainProviderFactory.create(rootConfig, rootFilesystem, ruleKeyConfiguration);
 
     return ImmutableCellImpl.ofImpl(
-        rootCellCellPathResolver.getKnownRoots(),
         CanonicalCellName.rootCell(),
         rootFilesystem,
         rootConfig,

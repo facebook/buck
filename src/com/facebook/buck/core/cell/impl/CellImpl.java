@@ -34,15 +34,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
 @BuckStyleValue
 abstract class CellImpl implements Cell {
-
-  @Override
-  @Value.Auxiliary
-  public abstract ImmutableSortedSet<AbsPath> getKnownRootsOfAllCells();
 
   @Override
   @Value.Auxiliary
@@ -62,7 +57,7 @@ abstract class CellImpl implements Cell {
         ImmutableSet.builderWithExpectedSize(ignoredPaths.size() + 1);
     ignores.addAll(ignoredPaths);
     ignores.add(RecursiveFileMatcher.of(filesystem.getBuckPaths().getBuckOut()));
-    for (AbsPath subCellRoots : getKnownRootsOfAllCells()) {
+    for (AbsPath subCellRoots : getCellPathResolver().getKnownRoots()) {
       if (!subCellRoots.equals(getRoot())) {
         ignores.add(
             RecursiveFileMatcher.of(RelPath.of(filesystem.relativize(subCellRoots).getPath())));

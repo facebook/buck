@@ -54,7 +54,7 @@ public class Cells {
    * required to declare a mapping for all cell names.
    */
   public ImmutableList<Cell> getAllCells() {
-    return rootCell.getKnownRootsOfAllCells().stream()
+    return cellProvider.getRootCellCellPathResolver().getKnownRoots().stream()
         .map(getCellProvider()::getCellByPath)
         .collect(ImmutableList.toImmutableList());
   }
@@ -66,7 +66,8 @@ public class Cells {
   /** @return Path of the topmost cell's path that roots all other cells */
   public AbsPath getSuperRootPath() {
     AbsPath cellRoot = getRootCell().getRoot();
-    ImmutableSortedSet<AbsPath> allRoots = getRootCell().getKnownRootsOfAllCells();
+    ImmutableSortedSet<AbsPath> allRoots =
+        cellProvider.getRootCellCellPathResolver().getKnownRoots();
     AbsPath path = cellRoot.getRoot();
 
     // check if supercell is a root folder, like '/' or 'C:\'

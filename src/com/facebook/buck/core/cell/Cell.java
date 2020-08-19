@@ -25,7 +25,6 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 
 /**
  * Represents a single checkout of a code base. Two cells model the same code base if their
@@ -34,8 +33,6 @@ import com.google.common.collect.ImmutableSortedSet;
  * <p>Should only be constructed by {@link CellProvider}.
  */
 public interface Cell {
-
-  ImmutableSortedSet<AbsPath> getKnownRootsOfAllCells();
 
   CanonicalCellName getCanonicalName();
 

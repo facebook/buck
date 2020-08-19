@@ -51,7 +51,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.util.Optional;
@@ -219,8 +218,6 @@ final class CellProviderImpl implements CellProvider {
     // TODO(13777679): cells in other watchman roots do not work correctly.
 
     return ImmutableCellImpl.ofImpl(
-        cellPathResolver.getKnownRoots().stream()
-            .collect(ImmutableSortedSet.toImmutableSortedSet(AbsPath.comparator())),
         canonicalCellName,
         cellFilesystem,
         buckConfig,
@@ -259,6 +256,11 @@ final class CellProviderImpl implements CellProvider {
   @Override
   public Cells getRootCell() {
     return new Cells(this);
+  }
+
+  @Override
+  public CellPathResolver getRootCellCellPathResolver() {
+    return rootCellCellPathResolver;
   }
 
   @Override

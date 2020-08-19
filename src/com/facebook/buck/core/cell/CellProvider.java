@@ -31,5 +31,7 @@ public interface CellProvider {
 
   Cells getRootCell();
 
+  CellPathResolver getRootCellCellPathResolver();
+
   ImmutableMap<AbsPath, Cell> getLoadedCells();
 }
