@@ -125,14 +125,8 @@ def get_java_path(required_java_version):
             java_home_path
         )
         if suspected_java_version and suspected_java_version != required_java_version:
-            message = (
-                'Warning: JAVA_HOME is set to "{}", which looks like a Java {} path, '
-                + "but Buck requires Java {}."
-            ).format(java_home_path, suspected_java_version, required_java_version)
             if os.getenv("BUCK_RESPECT_JAVA_HOME") != "1":
-                message += " Ignoring JAVA_HOME. Set BUCK_RESPECT_JAVA_HOME to 1 to disable this behavior."
                 java_home_path = None
-            logging.debug(message)
     if java_home_path is None:
         # Default to a known location of the JDK for the right version of Java, regardless of what
         # version of Java is on the PATH.
