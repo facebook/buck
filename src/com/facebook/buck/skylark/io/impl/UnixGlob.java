@@ -67,6 +67,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -636,7 +637,10 @@ final class UnixGlob {
         return;
       }
 
-      Collection<Path> dents = Files.list(base.getPath()).collect(ImmutableList.toImmutableList());
+      Collection<Path> dents;
+      try (Stream<Path> list = Files.list(base.getPath())) {
+        dents = list.collect(ImmutableList.toImmutableList());
+      }
       for (Path child : dents) {
         BasicFileAttributes attributes = Files.readAttributes(child, BasicFileAttributes.class);
         if (attributes.isOther()) {
