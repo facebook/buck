@@ -65,8 +65,8 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
   private Map<Class<? extends DescriptionWithTargetGraph<?>>, IjLibraryRule> libraryRuleIndex =
       new HashMap<>();
-  private IjLibraryFactoryResolver libraryFactoryResolver;
-  private Map<TargetNode<?>, Optional<IjLibrary>> libraryCache;
+  private final IjLibraryFactoryResolver libraryFactoryResolver;
+  private final Map<String, Optional<IjLibrary>> libraryCache;
 
   public DefaultIjLibraryFactory(IjLibraryFactoryResolver libraryFactoryResolver) {
     this.libraryFactoryResolver = libraryFactoryResolver;
@@ -85,10 +85,29 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
   @Override
   public Optional<IjLibrary> getLibrary(TargetNode<?> target) {
-    Optional<IjLibrary> library = libraryCache.get(target);
+    String libraryName = getLibraryName(target);
+    Optional<IjLibrary> library = libraryCache.get(libraryName);
     if (library == null) {
       library = getRule(target).map(rule -> createLibrary(target, rule));
-      libraryCache.put(target, library);
+      Preconditions.checkState(
+          !libraryCache.containsKey(libraryName),
+          "Trying to use the same library name for different targets.");
+      libraryCache.put(libraryName, library);
+    }
+    return library;
+  }
+
+  @Override
+  public Optional<IjLibrary> getOrConvertToModuleLibrary(IjLibrary projectLibrary) {
+    String libraryName = projectLibrary.getName();
+    Optional<IjLibrary> library = libraryCache.get(libraryName);
+    if (library == null || !library.isPresent()) {
+      return Optional.empty();
+    }
+
+    if (library.map(l -> l.getLevel() == IjLibrary.Level.PROJECT).orElse(false)) {
+      library = library.map(l -> l.copyWithLevel(IjLibrary.Level.MODULE));
+      libraryCache.put(libraryName, library);
     }
     return library;
   }

@@ -20,17 +20,13 @@ import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.features.project.intellij.Util;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 /** Interface for building {@link IjLibrary} objects from {@link TargetNode}s. */
 public abstract class IjLibraryFactory {
-  private final Set<String> uniqueLibraryNamesSet = new HashSet<>();
 
   /** Rule describing how to create a {@link IjLibrary} from a {@link TargetNode}. */
   protected interface IjLibraryRule {
@@ -58,12 +54,10 @@ public abstract class IjLibraryFactory {
    */
   public abstract Optional<IjLibrary> getLibrary(TargetNode<?> target);
 
-  protected IjLibrary createLibrary(TargetNode<?> targetNode, IjLibraryRule rule) {
-    String libraryName = Util.intelliJLibraryName(targetNode.getBuildTarget());
-    Preconditions.checkState(
-        uniqueLibraryNamesSet.add(libraryName),
-        "Trying to use the same library name for different targets.");
+  public abstract Optional<IjLibrary> getOrConvertToModuleLibrary(IjLibrary library);
 
+  protected IjLibrary createLibrary(TargetNode<?> targetNode, IjLibraryRule rule) {
+    String libraryName = getLibraryName(targetNode);
     IjLibrary.Builder libraryBuilder =
         IjLibrary.builder()
             .setName(libraryName)
@@ -72,6 +66,10 @@ public abstract class IjLibraryFactory {
             .setTargets(ImmutableSet.of(targetNode.getBuildTarget()));
     rule.applyRule(targetNode, libraryBuilder);
     return libraryBuilder.build();
+  }
+
+  public static String getLibraryName(TargetNode<?> targetNode) {
+    return Util.intelliJLibraryName(targetNode.getBuildTarget());
   }
 
   public static IjLibrary getKotlinJavaRuntimeLibrary() {

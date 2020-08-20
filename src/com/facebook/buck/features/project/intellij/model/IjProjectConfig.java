@@ -127,6 +127,8 @@ public abstract class IjProjectConfig {
 
   public abstract boolean isModuleLibraryEnabled();
 
+  public abstract int getModuleLibraryThreshold();
+
   public abstract Optional<String> getBuckOutPathForGeneratedProjectFiles();
 
   public static Builder builder() {

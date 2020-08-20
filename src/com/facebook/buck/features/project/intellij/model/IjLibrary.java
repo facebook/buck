@@ -123,6 +123,10 @@ public abstract class IjLibrary implements IjProjectElement {
 
   public abstract Level getLevel();
 
+  public IjLibrary copyWithLevel(Level level) {
+    return builder().from(this).setLevel(level).build();
+  }
+
   public IjLibrary copyWithTransformer(
       @Nullable Function<Path, Path> pathTransformer,
       @Nullable Function<String, String> stringTransformer) {

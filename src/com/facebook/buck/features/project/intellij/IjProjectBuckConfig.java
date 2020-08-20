@@ -179,6 +179,10 @@ public class IjProjectBuckConfig {
                 .orElse(DEFAULT_MAX_LIBRARY_NAME_LENGTH))
         .setModuleLibraryEnabled(
             buckConfig.getBooleanValue(INTELLIJ_BUCK_CONFIG_SECTION, "use_module_library", false))
+        .setModuleLibraryThreshold(
+            buckConfig
+                .getInteger(INTELLIJ_BUCK_CONFIG_SECTION, "module_library_threshold")
+                .orElse(-1))
         .setKotlinJavaRuntimeLibraryTemplatePath(
             buckConfig.getPath(
                 INTELLIJ_BUCK_CONFIG_SECTION, "kotlin_java_runtime_library_template_path"))

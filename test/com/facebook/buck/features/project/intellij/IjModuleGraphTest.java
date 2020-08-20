@@ -782,7 +782,9 @@ public class IjModuleGraphTest {
         TargetGraphFactory.newInstance(targets),
         libraryFactory,
         moduleFactory,
-        new DefaultAggregationModuleFactory(typeRegistry));
+        new DefaultAggregationModuleFactory(typeRegistry),
+        new TargetInfoMapManager(
+            TargetGraphFactory.newInstance(targets), projectConfig, filesystem, false));
   }
 
   public static IjModuleGraph createModuleGraph(
