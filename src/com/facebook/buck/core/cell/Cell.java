@@ -24,7 +24,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
-import com.google.common.collect.ImmutableMap;
 
 /**
  * Represents a single checkout of a code base. Two cells model the same code base if their
@@ -57,9 +56,6 @@ public interface Cell {
   AbsPath getRoot();
 
   Cell getCell(CanonicalCellName cellName);
-
-  /** @return all loaded {@link Cell}s that are children of this {@link Cell}. */
-  ImmutableMap<AbsPath, Cell> getLoadedCells();
 
   CellPathResolver getCellPathResolver();
 

@@ -32,7 +32,6 @@ import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 
@@ -91,11 +90,6 @@ abstract class CellImpl implements Cell {
   @Override
   public Cell getCell(CanonicalCellName cellName) {
     return getCellProvider().getCellByCanonicalCellName(cellName);
-  }
-
-  @Override
-  public ImmutableMap<AbsPath, Cell> getLoadedCells() {
-    return getCellProvider().getLoadedCells();
   }
 
   @Override
