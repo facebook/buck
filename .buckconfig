@@ -89,8 +89,10 @@
 
 [ui]
   build_rule_minimum_duration_millis=500
+
 [parser]
   default_build_file_syntax=skylark
+  python_interpreter = python3
 
 [downward_api]
   cxx_enabled = true
