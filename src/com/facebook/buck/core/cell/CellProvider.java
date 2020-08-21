@@ -18,6 +18,7 @@ package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /** Implementation of this interface holds all the cells. */
@@ -34,4 +35,7 @@ public interface CellProvider {
   CellPathResolver getRootCellCellPathResolver();
 
   ImmutableMap<AbsPath, Cell> getLoadedCells();
+
+  /** Returns a list of all {@link Cell} objects. */
+  ImmutableList<Cell> getAllCells();
 }

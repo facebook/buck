@@ -49,15 +49,9 @@ public class Cells {
     return rootCell.getCell(cellName);
   }
 
-  /**
-   * Returns a list of all cells, including this cell. If this cell is the root, getAllCells will
-   * necessarily return all possible cells that this build may interact with, since the root cell is
-   * required to declare a mapping for all cell names.
-   */
+  /** Returns a list of all cells. */
   public ImmutableList<Cell> getAllCells() {
-    return cellProvider.getRootCellCellPathResolver().getKnownRoots().stream()
-        .map(getCellProvider()::getCellByPath)
-        .collect(ImmutableList.toImmutableList());
+    return cellProvider.getAllCells();
   }
 
   public CellProvider getCellProvider() {

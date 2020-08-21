@@ -49,6 +49,7 @@ import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -266,5 +267,12 @@ final class CellProviderImpl implements CellProvider {
   @Override
   public ImmutableMap<AbsPath, Cell> getLoadedCells() {
     return ImmutableMap.copyOf(cells.asMap());
+  }
+
+  @Override
+  public ImmutableList<Cell> getAllCells() {
+    return getRootCellCellPathResolver().getKnownRoots().stream()
+        .map(this::getCellByPath)
+        .collect(ImmutableList.toImmutableList());
   }
 }
