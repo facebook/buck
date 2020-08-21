@@ -1,5 +1,5 @@
 package lib
 
 func TestScores() int {
-  return 99
+	return 99
 }

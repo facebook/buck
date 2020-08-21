@@ -4,7 +4,7 @@ import "testing"
 import "time"
 
 func TestLib(t *testing.T) {
-    for {
-        time.Sleep(100 * time.Millisecond)
-    }
+	for {
+		time.Sleep(100 * time.Millisecond)
+	}
 }
