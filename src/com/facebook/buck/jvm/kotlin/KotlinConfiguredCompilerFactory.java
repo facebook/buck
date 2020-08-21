@@ -173,7 +173,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     return sourcePaths.build();
   }
 
-  private ImmutableList<String> condenseCompilerArguments(CoreArg kotlinArgs) {
+  ImmutableList<String> condenseCompilerArguments(CoreArg kotlinArgs) {
     ImmutableMap.Builder<String, Optional<String>> optionBuilder = ImmutableMap.builder();
     LinkedHashMap<String, Optional<String>> freeArgs = Maps.newLinkedHashMap();
     kotlinArgs.getFreeCompilerArgs()
@@ -210,7 +210,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       optionBuilder.put("-java-parameters", Optional.empty());
     }
     kotlinArgs.getApiVersion().ifPresent(apiVersion -> optionBuilder.put("-api-version", Optional.of(apiVersion)));
-    kotlinArgs.languageVersion().ifPresent(languageVersion -> optionBuilder.put("-language-version", Optional.of(languageVersion)));
+    kotlinArgs.getLanguageVersion().ifPresent(languageVersion -> optionBuilder.put("-language-version", Optional.of(languageVersion)));
 
     // Return de-duping keys and sorting by them.
     return optionBuilder.build()
@@ -228,7 +228,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         .collect(toImmutableList());
   }
 
-  private static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+  static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
     Set<Object> seen = ConcurrentHashMap.newKeySet();
     return t -> seen.add(keyExtractor.apply(t));
   }

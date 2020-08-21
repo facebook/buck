@@ -287,15 +287,15 @@ public class KotlinLibraryDescription
 
     /**
      * Allow to use declarations only from the specified version of bundled libraries.
-     * Possible values: "1.0", "1.1", "1.2", "1.3", "1.4 (EXPERIMENTAL)".
+     * Possible values: "1.0", "1.1", "1.2", "1.3", "1.4".
      */
     Optional<String> getApiVersion();
 
     /**
      * Provide source compatibility with specified language version.
-     * Possible values: "1.0", "1.1", "1.2", "1.3", "1.4 (EXPERIMENTAL)".
+     * Possible values: "1.0", "1.1", "1.2", "1.3", "1.4".
      */
-    Optional<String> languageVersion();
+    Optional<String> getLanguageVersion();
 
     Optional<AnnotationProcessingTool> getAnnotationProcessingTool();
 
