@@ -76,6 +76,7 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             Optional.empty());
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
@@ -123,6 +124,7 @@ public class XctoolRunTestsStepTest {
             AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
             TestSelectorList.EMPTY,
             false,
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -185,6 +187,7 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             Optional.empty());
 
     ProcessExecutorParams xctoolParams =
@@ -242,6 +245,7 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             Optional.empty());
 
     ProcessExecutorParams xctoolParams =
@@ -292,6 +296,7 @@ public class XctoolRunTestsStepTest {
             AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
             TestSelectorList.EMPTY,
             false,
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -354,6 +359,7 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             Optional.empty());
 
     ProcessExecutorParams xctoolParams =
@@ -409,6 +415,7 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             Optional.empty());
 
     ProcessExecutorParams xctoolParams =
@@ -458,6 +465,7 @@ public class XctoolRunTestsStepTest {
             AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
             TestSelectorList.builder().addRawSelectors("#.*Magic.*").build(),
             false,
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -554,6 +562,7 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             Optional.empty());
 
     ProcessExecutorParams xctoolListOnlyParams =
@@ -615,6 +624,7 @@ public class XctoolRunTestsStepTest {
             AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
             TestSelectorList.builder().addRawSelectors("Blargh#Xyzzy").build(),
             false,
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -682,7 +692,8 @@ public class XctoolRunTestsStepTest {
             Optional.of("TEST_LOG_LEVEL"),
             Optional.of("verbose"),
             Optional.empty(),
-            Optional.of("/path/to/snapshotimages"));
+            Optional.of("/path/to/snapshotimages"),
+            Optional.of("/path/to/snapshotdiffimages"));
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(
@@ -698,12 +709,14 @@ public class XctoolRunTestsStepTest {
             // This is the important part of this test: only if the process is executed
             // with a matching environment will the test pass.
             .setEnvironment(
-                ImmutableMap.of(
-                    "DEVELOPER_DIR", "/path/to/developer/dir",
-                    "XCTOOL_TEST_ENV_TEST_LOG_PATH", "/path/to/test-logs",
-                    "XCTOOL_TEST_ENV_TEST_LOG_LEVEL", "verbose",
-                    "XCTOOL_TEST_ENV_FB_REFERENCE_IMAGE_DIR", "/path/to/snapshotimages",
-                    "LLVM_PROFILE_FILE", "/tmp/some.profraw"))
+                ImmutableMap.<String, String>builder()
+                  .put("DEVELOPER_DIR", "/path/to/developer/dir")
+                  .put("XCTOOL_TEST_ENV_TEST_LOG_PATH", "/path/to/test-logs")
+                  .put("XCTOOL_TEST_ENV_TEST_LOG_LEVEL", "verbose")
+                  .put("XCTOOL_TEST_ENV_FB_REFERENCE_IMAGE_DIR", "/path/to/snapshotimages")
+                  .put("XCTOOL_TEST_ENV_IMAGE_DIFF_DIR", "/path/to/snapshotdiffimages")
+                  .put("LLVM_PROFILE_FILE", "/tmp/some.profraw")
+                .build())
             .setDirectory(projectFilesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();

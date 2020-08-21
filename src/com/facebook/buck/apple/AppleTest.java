@@ -104,6 +104,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path testLogsPath;
 
   private final Optional<Either<SourcePath, String>> snapshotReferenceImagesPath;
+  private final Optional<Either<SourcePath, String>> snapshotImagesDiffPath;
 
   private Optional<Long> testRuleTimeoutMs;
 
@@ -216,6 +217,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Long> testRuleTimeoutMs,
       boolean isUiTest,
       Optional<Either<SourcePath, String>> snapshotReferenceImagesPath,
+      Optional<Either<SourcePath, String>> snapshotImagesDiffPath,
       Optional<ImmutableMap<String, String>> testSpecificEnvironmentVariables,
       boolean useIdb,
       Path idbPath) {
@@ -244,6 +246,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.testLogLevel = testLogLevel;
     this.isUiTest = isUiTest;
     this.snapshotReferenceImagesPath = snapshotReferenceImagesPath;
+    this.snapshotImagesDiffPath = snapshotImagesDiffPath;
     this.testSpecificEnvironmentVariables = testSpecificEnvironmentVariables;
     this.useIdb = useIdb;
     this.idbPath = idbPath;
@@ -363,6 +366,24 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         }
       }
 
+      Optional<String> snapshotImagesDiffPath = Optional.empty();
+      if (this.snapshotImagesDiffPath.isPresent()) {
+        if (this.snapshotImagesDiffPath.get().isLeft()) {
+          snapshotImagesDiffPath =
+            Optional.of(
+              buildContext
+                .getSourcePathResolver()
+                .getAbsolutePath(this.snapshotImagesDiffPath.get().getLeft())
+                .toString());
+        } else if (this.snapshotImagesDiffPath.get().isRight()) {
+          snapshotImagesDiffPath =
+            Optional.of(
+              getProjectFilesystem()
+                .getPathForRelativePath(this.snapshotImagesDiffPath.get().getRight())
+                .toString());
+        }
+      }
+
       XctoolRunTestsStep xctoolStep =
           new XctoolRunTestsStep(
               getProjectFilesystem(),
@@ -384,7 +405,8 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               Optional.of(testLogLevelEnvironmentVariable),
               Optional.of(testLogLevel),
               testRuleTimeoutMs,
-              snapshotReferenceImagesPath);
+              snapshotReferenceImagesPath,
+              snapshotImagesDiffPath);
 
       if (useIdb) {
         idbStdoutReader = Optional.of(new AppleTestIdbStdoutReader(testReportingCallback));
