@@ -13,11 +13,31 @@ java_library(
     ],
 )
 
+SOURCE_WITH_FLAGS_SRCS = [
+    "SourceWithFlags.java",
+    "UnconfiguredSourceWithFlags.java",
+]
+
+java_immutables_library(
+    name = "source_with_flags",
+    srcs = SOURCE_WITH_FLAGS_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        ":sourcepath",
+        ":types",
+        "//src/com/facebook/buck/core/cell/nameresolver:nameresolver",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rulekey:rulekey",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//third-party/java/guava:guava",
+    ],
+)
+
 java_immutables_library(
     name = "sourcepath",
     srcs = glob(
         ["*.java"],
-        exclude = TYPES_SRCS,
+        exclude = TYPES_SRCS + SOURCE_WITH_FLAGS_SRCS,
     ),
     tests = [
     ],
