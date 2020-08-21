@@ -281,6 +281,13 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
       inputsBuilder.add(preprocessorFlags.getPrefixHeader().get());
     }
 
+    // Args can contain things like location macros, so extract any inputs we find.  We don't
+    // actually know whether these are represented in the dep file or not, so to be safe, so
+    // just assume they aren't (and in the case they are, it'll just mean some benign duplication).
+    for (Arg arg : preprocessorFlags.getOtherFlags().getAllFlags()) {
+      BuildableSupport.deriveInputs(arg).forEach(inputsBuilder);
+    }
+
     return inputsBuilder.build().collect(ImmutableList.toImmutableList());
   }
 
@@ -288,11 +295,6 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
     // TODO(jkeljo): I didn't know how to implement this, and didn't have time to figure it out.
     // Add inputs that we always use.
     BuildableSupport.deriveInputs(preprocessor).forEach(inputConsumer);
-
-    // Args can contain things like location macros, so extract any inputs we find.
-    for (Arg arg : preprocessorFlags.getOtherFlags().getAllFlags()) {
-      BuildableSupport.deriveInputs(arg).forEach(inputConsumer);
-    }
   }
 
   public HeaderVerification getHeaderVerification() {
