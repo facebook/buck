@@ -78,7 +78,7 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
     ProcessResult result =
-        workspace.runBuckBuild("//kotlin/com/sample/lib:lib_extra_kotlinc_arguments");
+        workspace.runBuckBuild("//kotlin/com/sample/lib:lib_free_compiler_args");
     result.assertSuccess();
   }
 
