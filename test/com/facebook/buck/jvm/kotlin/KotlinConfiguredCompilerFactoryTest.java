@@ -20,7 +20,7 @@ public class KotlinConfiguredCompilerFactoryTest {
   private KotlinLibraryDescriptionArg.Builder kotlinArgsBuilder;
 
   @Before
-  public void setup() {
+  public void setUp() {
     config = new KotlinBuckConfig(FakeBuckConfig.builder().build());
     jFactory = JavacFactoryHelper.createJavacFactory(JavaCompilationConstants.DEFAULT_JAVA_CONFIG);
     kFactory = new KotlinConfiguredCompilerFactory(config, jFactory);
