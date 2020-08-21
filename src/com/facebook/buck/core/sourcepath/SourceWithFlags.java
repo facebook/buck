@@ -16,19 +16,25 @@
 
 package com.facebook.buck.core.sourcepath;
 
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.versions.TargetNodeTranslator;
+import com.facebook.buck.versions.TargetTranslatable;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
+import java.util.Optional;
 
 /**
  * Simple type representing a {@link com.facebook.buck.core.sourcepath.SourcePath} and a list of
  * file-specific flags.
  */
 @BuckStyleValue
-public abstract class SourceWithFlags implements Comparable<SourceWithFlags>, AddsToRuleKey {
+public abstract class SourceWithFlags
+    implements Comparable<SourceWithFlags>, AddsToRuleKey, TargetTranslatable<SourceWithFlags> {
 
   @AddToRuleKey
   public abstract SourcePath getSourcePath();
@@ -58,5 +64,13 @@ public abstract class SourceWithFlags implements Comparable<SourceWithFlags>, Ad
 
   public SourceWithFlags withSourcePath(SourcePath sourcePath) {
     return of(sourcePath, getFlags());
+  }
+
+  @Override
+  public Optional<SourceWithFlags> translateTargets(
+      CellNameResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
+    Optional<SourcePath> translatedSourcePath =
+        translator.translate(cellPathResolver, targetBaseName, getSourcePath());
+    return translatedSourcePath.map(sourcePath -> SourceWithFlags.of(sourcePath, getFlags()));
   }
 }

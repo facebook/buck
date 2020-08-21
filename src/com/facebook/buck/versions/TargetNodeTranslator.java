@@ -23,8 +23,6 @@ import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgFactory;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.ParamInfo;
@@ -162,14 +160,6 @@ public abstract class TargetNodeTranslator {
     return translatedTarget.map(DefaultBuildTargetSourcePath::of);
   }
 
-  @VisibleForTesting
-  Optional<SourceWithFlags> translateSourceWithFlags(
-      CellNameResolver cellNameResolver, BaseName targetBaseName, SourceWithFlags val) {
-    Optional<SourcePath> translatedSourcePath =
-        translate(cellNameResolver, targetBaseName, val.getSourcePath());
-    return translatedSourcePath.map(sourcePath -> SourceWithFlags.of(sourcePath, val.getFlags()));
-  }
-
   @SuppressWarnings("unchecked")
   private <A, T> Optional<Optional<T>> tryTranslate(
       CellNameResolver cellPathResolver,
@@ -235,9 +225,6 @@ public abstract class TargetNodeTranslator {
       return (Optional<A>)
           translateBuildTargetSourcePath(
               cellNameResolver, targetBaseName, (DefaultBuildTargetSourcePath) object);
-    } else if (object instanceof SourceWithFlags) {
-      return (Optional<A>)
-          translateSourceWithFlags(cellNameResolver, targetBaseName, (SourceWithFlags) object);
     } else if (object instanceof BuildTarget) {
       return (Optional<A>) translateBuildTarget((BuildTarget) object);
     } else if (object instanceof TargetTranslatable) {

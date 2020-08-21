@@ -6,7 +6,11 @@ java_test(
     deps = [
         ":testutil",
         "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/sourcepath:source_with_flags",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
+        "//src/com/facebook/buck/rules/coercer:coercer",
+        "//src/com/facebook/buck/versions:translator",
+        "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules/impl:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",

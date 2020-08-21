@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -186,35 +185,6 @@ public class TargetNodeTranslatorTest {
             BaseName.ROOT,
             DefaultBuildTargetSourcePath.of(a)),
         Matchers.equalTo(Optional.of(DefaultBuildTargetSourcePath.of(b))));
-  }
-
-  @Test
-  public void translateSourceWithFlags() {
-    BuildTarget a = BuildTargetFactory.newInstance("//:a");
-    BuildTarget b = BuildTargetFactory.newInstance("//:b");
-    TargetNodeTranslator translator =
-        new TargetNodeTranslator(
-            new DefaultTypeCoercerFactory(), ImmutableList.of(), new TestCellBuilder().build()) {
-          @Override
-          public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
-            return Optional.of(b);
-          }
-
-          @Override
-          public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
-              BuildTarget target) {
-            return Optional.empty();
-          }
-        };
-    assertThat(
-        translator.translateSourceWithFlags(
-            CELL_PATH_RESOLVER.getCellNameResolver(),
-            BaseName.ROOT,
-            SourceWithFlags.of(DefaultBuildTargetSourcePath.of(a), ImmutableList.of("-flag"))),
-        Matchers.equalTo(
-            Optional.of(
-                SourceWithFlags.of(
-                    DefaultBuildTargetSourcePath.of(b), ImmutableList.of("-flag")))));
   }
 
   @Test
