@@ -250,7 +250,7 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
     public static final String DEFAULT_DESTINATION = "default_destination";
     public static final String DEVELOPER_DIRECTORY_FOR_TESTS = "developer_directory_for_tests";
     public static final String SNAPSHOT_REFERENCE_IMG_PATH = "snapshot_reference_img_path";
-    public static final String SNAPSHOT_IMAGES_DIFF_PATH = "SNAPSHOT_IMAGES_DIFF_PATH";
+    public static final String SNAPSHOT_IMAGES_DIFF_PATH = "snapshot_images_diff_path";
 
     private static final String UI_TEST_TARGET_APP = "ui_test_target_app";
     private static final String TEST_HOST_APP = "test_host_app";
