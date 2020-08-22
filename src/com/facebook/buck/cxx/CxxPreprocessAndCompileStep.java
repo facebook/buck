@@ -34,6 +34,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
@@ -133,7 +134,13 @@ class CxxPreprocessAndCompileStep implements Step {
    * @return Half-configured ProcessExecutorParams.Builder
    */
   private ProcessExecutorParams.Builder makeSubprocessBuilder(StepExecutionContext context) {
-    Map<String, String> env = new HashMap<>(context.getEnvironment());
+    Map<String, String> env = new HashMap<>();
+
+    // On some systems, gcc relies on `PATH` to find it's subprograms.
+    String pathEnv = context.getEnvironment().get("PATH");
+    if (pathEnv != null) {
+      env.put("PATH", pathEnv);
+    }
 
     env.putAll(
         sanitizer.getCompilationEnvironment(
@@ -141,7 +148,9 @@ class CxxPreprocessAndCompileStep implements Step {
 
     // Set `TMPDIR` to `scratchDir` so the compiler/preprocessor uses this dir for it's temp and
     // intermediate files.
-    env.put("TMPDIR", filesystem.resolve(scratchDir).toString());
+    env.put(
+        context.getPlatform() != Platform.WINDOWS ? "TMPDIR" : "TMP",
+        filesystem.resolve(scratchDir).toString());
 
     if (cxxLogInfo.isPresent()) {
       // Add some diagnostic strings into the subprocess's env as well.
