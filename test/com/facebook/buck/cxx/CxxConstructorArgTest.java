@@ -30,6 +30,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -53,13 +54,14 @@ public class CxxConstructorArgTest {
     SourcePath sharedPath = PathSourcePath.of(new FakeProjectFilesystem(), fakePath);
 
     ImmutableSortedSet<SourceWithFlags> srcs =
-        ImmutableSortedSet.of(SourceWithFlags.of(sharedPath, ImmutableList.of("-Dbar", "-Dbaz")));
+        ImmutableSortedSet.of(
+            SourceWithFlags.of(sharedPath, StringWithMacrosUtils.fromStrings("-Dbar", "-Dbaz")));
     PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>> platformSrcs =
         PatternMatchedCollection.<ImmutableSortedSet<SourceWithFlags>>builder()
             .add(
                 Pattern.compile("barbaz"),
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(sharedPath, ImmutableList.of("-DEADBEEF"))))
+                    SourceWithFlags.of(sharedPath, StringWithMacrosUtils.fromStrings("-DEADBEEF"))))
             .build();
 
     TestCxxConstructorArg cxxConstructorArg = new TestCxxConstructorArg(srcs, platformSrcs);

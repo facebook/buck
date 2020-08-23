@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
 import com.google.common.collect.ComparisonChain;
@@ -40,7 +41,7 @@ public abstract class SourceWithFlags
   public abstract SourcePath getSourcePath();
 
   @AddToRuleKey
-  public abstract ImmutableList<String> getFlags();
+  public abstract ImmutableList<StringWithMacros> getFlags();
 
   @Override
   public int compareTo(SourceWithFlags that) {
@@ -50,7 +51,10 @@ public abstract class SourceWithFlags
 
     return ComparisonChain.start()
         .compare(this.getSourcePath(), that.getSourcePath())
-        .compare(this.getFlags(), that.getFlags(), Ordering.<String>natural().lexicographical())
+        .compare(
+            this.getFlags(),
+            that.getFlags(),
+            Ordering.<StringWithMacros>natural().lexicographical())
         .result();
   }
 
@@ -58,7 +62,7 @@ public abstract class SourceWithFlags
     return of(sourcePath, ImmutableList.of());
   }
 
-  public static SourceWithFlags of(SourcePath sourcePath, ImmutableList<String> flags) {
+  public static SourceWithFlags of(SourcePath sourcePath, ImmutableList<StringWithMacros> flags) {
     return ImmutableSourceWithFlags.ofImpl(sourcePath, flags);
   }
 
@@ -71,6 +75,13 @@ public abstract class SourceWithFlags
       CellNameResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
     Optional<SourcePath> translatedSourcePath =
         translator.translate(cellPathResolver, targetBaseName, getSourcePath());
-    return translatedSourcePath.map(sourcePath -> SourceWithFlags.of(sourcePath, getFlags()));
+    Optional<ImmutableList<StringWithMacros>> translatedFlags =
+        translator.translate(cellPathResolver, targetBaseName, getFlags());
+    if (!translatedSourcePath.isPresent() && !translatedFlags.isPresent()) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        SourceWithFlags.of(
+            translatedSourcePath.orElse(getSourcePath()), translatedFlags.orElse(getFlags())));
   }
 }

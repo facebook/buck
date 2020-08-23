@@ -390,7 +390,20 @@ class XcodeNativeTargetProjectWriter {
 
     ImmutableList<String> customFlags =
         ImmutableList.copyOf(
-            Iterables.concat(customLangPreprocessorFlags, sourceWithFlags.getFlags()));
+            Iterables.concat(
+                customLangPreprocessorFlags,
+                sourceWithFlags.getFlags().stream()
+                    .map(
+                        stringWithMacro ->
+                            Joiner.on("")
+                                .join(
+                                    stringWithMacro.map(
+                                        s -> s,
+                                        m -> {
+                                          throw new IllegalStateException(
+                                              "macros aren't supported in source flags");
+                                        })))
+                    .collect(ImmutableList.toImmutableList())));
     if (!customFlags.isEmpty()) {
       NSDictionary settings = new NSDictionary();
       settings.put("COMPILER_FLAGS", Joiner.on(' ').join(customFlags));

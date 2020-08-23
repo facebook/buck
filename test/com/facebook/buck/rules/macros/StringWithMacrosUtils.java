@@ -62,4 +62,8 @@ public class StringWithMacrosUtils {
   public static ImmutableList<StringWithMacros> fromStrings(Iterable<String> flags) {
     return RichStream.from(flags).map(StringWithMacrosUtils::format).toImmutableList();
   }
+
+  public static ImmutableList<StringWithMacros> fromStrings(String... flags) {
+    return RichStream.from(flags).map(StringWithMacrosUtils::format).toImmutableList();
+  }
 }

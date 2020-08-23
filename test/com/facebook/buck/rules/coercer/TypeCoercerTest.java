@@ -37,6 +37,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -465,8 +466,10 @@ public class TypeCoercerTest {
             input);
     ImmutableList<SourceWithFlags> expectedResult =
         ImmutableList.of(
-            SourceWithFlags.of(FakeSourcePath.of("foo.m"), ImmutableList.of("-Wall", "-Werror")),
-            SourceWithFlags.of(FakeSourcePath.of("bar.m"), ImmutableList.of("-fobjc-arc")));
+            SourceWithFlags.of(
+                FakeSourcePath.of("foo.m"), StringWithMacrosUtils.fromStrings("-Wall", "-Werror")),
+            SourceWithFlags.of(
+                FakeSourcePath.of("bar.m"), StringWithMacrosUtils.fromStrings("-fobjc-arc")));
     assertEquals(expectedResult, result);
   }
 
@@ -494,10 +497,12 @@ public class TypeCoercerTest {
         ImmutableList.of(
             SourceWithFlags.of(FakeSourcePath.of("Group1/foo.m")),
             SourceWithFlags.of(
-                FakeSourcePath.of("Group1/bar.m"), ImmutableList.of("-Wall", "-Werror")),
+                FakeSourcePath.of("Group1/bar.m"),
+                StringWithMacrosUtils.fromStrings("-Wall", "-Werror")),
             SourceWithFlags.of(FakeSourcePath.of("Group2/baz.m")),
             SourceWithFlags.of(
-                FakeSourcePath.of("Group2/blech.m"), ImmutableList.of("-fobjc-arc")));
+                FakeSourcePath.of("Group2/blech.m"),
+                StringWithMacrosUtils.fromStrings("-fobjc-arc")));
     assertEquals(expectedResult, result);
   }
 

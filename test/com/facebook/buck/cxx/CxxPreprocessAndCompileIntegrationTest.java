@@ -760,4 +760,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
         projectFileSystem.readFileIfItExists(depfile).orElseThrow(FileNotFoundException::new);
     assertFalse(depfileContent.contains(projectFileSystem.getRootPath().toString()));
   }
+
+  @Test
+  public void sourceWithFlagsMacros() {
+    workspace.runBuckBuild("//:source_with_flags_macro_test").assertSuccess();
+  }
 }

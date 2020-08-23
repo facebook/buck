@@ -378,6 +378,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
     ImmutableMap<String, CxxSource> srcs =
         CxxDescriptionEnhancer.parseCxxSources(
             buildTarget,
+            cellRoots,
             graphBuilder,
             cxxPlatform,
             wrapSourcePathsWithFlags(sources),

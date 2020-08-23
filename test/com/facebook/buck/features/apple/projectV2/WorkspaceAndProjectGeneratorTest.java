@@ -77,6 +77,7 @@ import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.features.halide.HalideLibraryBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
@@ -1114,7 +1115,8 @@ public class WorkspaceAndProjectGeneratorTest {
         AppleLibraryBuilder.createBuilder(explicitStaticBuildTarget)
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(FakeSourcePath.of("foo.m"), ImmutableList.of("-foo")),
+                    SourceWithFlags.of(
+                        FakeSourcePath.of("foo.m"), StringWithMacrosUtils.fromStrings("-foo")),
                     SourceWithFlags.of(FakeSourcePath.of("bar.m"))))
             .setHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
             .build();
@@ -1124,7 +1126,8 @@ public class WorkspaceAndProjectGeneratorTest {
         AppleLibraryBuilder.createBuilder(implicitStaticBuildTarget)
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(FakeSourcePath.of("foo.m"), ImmutableList.of("-foo")),
+                    SourceWithFlags.of(
+                        FakeSourcePath.of("foo.m"), StringWithMacrosUtils.fromStrings("-foo")),
                     SourceWithFlags.of(FakeSourcePath.of("bar.m"))))
             .setHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
             .build();

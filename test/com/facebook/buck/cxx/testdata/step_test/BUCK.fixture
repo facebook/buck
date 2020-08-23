@@ -223,3 +223,10 @@ apple_test(
     ],
     info_plist = "Test.plist",
 )
+
+cxx_binary(
+    name = "source_with_flags_macro_test",
+    srcs = [
+        ("source.cpp", ["-include$(location :genheader)"]),
+    ],
+)

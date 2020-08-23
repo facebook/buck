@@ -46,6 +46,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -126,7 +127,7 @@ public class XcodeNativeTargetProjectWriterTest {
             .setSourcesWithFlags(
                 ImmutableSet.of(
                     SourceWithFlags.of(foo),
-                    SourceWithFlags.of(bar, ImmutableList.of("-Wall")),
+                    SourceWithFlags.of(bar, StringWithMacrosUtils.fromStrings("-Wall")),
                     SourceWithFlags.of(baz)))
             .build();
     XcodeNativeTargetProjectWriter projectWriter =

@@ -153,7 +153,12 @@ public class HalideLibraryDescription
 
     ImmutableMap<String, CxxSource> srcs =
         CxxDescriptionEnhancer.parseCxxSources(
-            buildTarget, graphBuilder, cxxPlatform, halideSources, PatternMatchedCollection.of());
+            buildTarget,
+            cellRoots,
+            graphBuilder,
+            cxxPlatform,
+            halideSources,
+            PatternMatchedCollection.of());
 
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinary(

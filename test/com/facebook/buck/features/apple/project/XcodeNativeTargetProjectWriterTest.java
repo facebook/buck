@@ -69,6 +69,7 @@ import com.facebook.buck.features.js.JsBundleGenruleBuilder;
 import com.facebook.buck.features.js.JsTestScenario;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -162,7 +163,7 @@ public class XcodeNativeTargetProjectWriterTest {
     mutator.setSourcesWithFlags(
         ImmutableSet.of(
             SourceWithFlags.of(foo),
-            SourceWithFlags.of(bar, ImmutableList.of("-Wall")),
+            SourceWithFlags.of(bar, StringWithMacrosUtils.fromStrings("-Wall")),
             SourceWithFlags.of(baz)));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject, true);

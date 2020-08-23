@@ -185,7 +185,7 @@ public class CxxPythonExtensionDescription
 
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
-        CxxDescriptionEnhancer.parseCxxSources(target, graphBuilder, cxxPlatform, args);
+        CxxDescriptionEnhancer.parseCxxSources(target, cellRoots, graphBuilder, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
             target, graphBuilder, projectFilesystem, Optional.of(cxxPlatform), args);

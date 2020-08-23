@@ -427,15 +427,17 @@ public class CxxDescriptionEnhancer {
    */
   public static ImmutableMap<String, CxxSource> parseCxxSources(
       BuildTarget buildTarget,
+      CellPathResolver cellRoots,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args) {
     return parseCxxSources(
-        buildTarget, graphBuilder, cxxPlatform, args.getSrcs(), args.getPlatformSrcs());
+        buildTarget, cellRoots, graphBuilder, cxxPlatform, args.getSrcs(), args.getPlatformSrcs());
   }
 
   public static ImmutableMap<String, CxxSource> parseCxxSources(
       BuildTarget buildTarget,
+      CellPathResolver cellRoots,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       ImmutableSortedSet<SourceWithFlags> srcs,
@@ -446,7 +448,7 @@ public class CxxDescriptionEnhancer {
         platformSrcs.getMatchingValues(cxxPlatform.getFlavor().toString())) {
       putAllSources(buildTarget, graphBuilder, cxxPlatform, sourcesWithFlags, sources);
     }
-    return resolveCxxSources(sources.build());
+    return resolveCxxSources(buildTarget, cellRoots, graphBuilder, cxxPlatform, sources.build());
   }
 
   private static void putAllSources(
@@ -754,7 +756,8 @@ public class CxxDescriptionEnhancer {
       ImmutableSet<BuildTarget> extraDeps,
       Optional<StripStyle> stripStyle,
       Optional<LinkerMapMode> flavoredLinkerMapMode) {
-    ImmutableMap<String, CxxSource> srcs = parseCxxSources(target, graphBuilder, cxxPlatform, args);
+    ImmutableMap<String, CxxSource> srcs =
+        parseCxxSources(target, cellRoots, graphBuilder, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
         parseHeaders(target, graphBuilder, projectFilesystem, Optional.of(cxxPlatform), args);
 
@@ -1032,7 +1035,8 @@ public class CxxDescriptionEnhancer {
       Optional<LinkerMapMode> flavoredLinkerMapMode,
       CxxConditionalLinkStrategyFactory linkStrategyFactory) {
 
-    ImmutableMap<String, CxxSource> srcs = parseCxxSources(target, graphBuilder, cxxPlatform, args);
+    ImmutableMap<String, CxxSource> srcs =
+        parseCxxSources(target, cellRoots, graphBuilder, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
         parseHeaders(target, graphBuilder, projectFilesystem, Optional.of(cxxPlatform), args);
 
@@ -1812,7 +1816,14 @@ public class CxxDescriptionEnhancer {
 
   /** Resolve the map of names to SourcePaths to a map of names to CxxSource objects. */
   private static ImmutableMap<String, CxxSource> resolveCxxSources(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      ActionGraphBuilder graphBuilder,
+      CxxPlatform cxxPlatform,
       ImmutableMap<String, SourceWithFlags> sources) {
+
+    StringWithMacrosConverter macrosConverter =
+        getStringWithMacrosArgsConverter(buildTarget, cellRoots, graphBuilder, cxxPlatform);
 
     ImmutableMap.Builder<String, CxxSource> cxxSources = ImmutableMap.builder();
 
@@ -1829,7 +1840,9 @@ public class CxxDescriptionEnhancer {
           CxxSource.of(
               type.get(),
               ent.getValue().getSourcePath(),
-              StringArg.from(ent.getValue().getFlags())));
+              ent.getValue().getFlags().stream()
+                  .map(macrosConverter::convert)
+                  .collect(ImmutableList.toImmutableList())));
     }
 
     return cxxSources.build();

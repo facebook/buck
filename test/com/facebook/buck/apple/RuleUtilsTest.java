@@ -23,6 +23,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -37,10 +38,12 @@ public class RuleUtilsTest {
     ImmutableList<SourceWithFlags> input =
         ImmutableList.of(
             SourceWithFlags.of(FakeSourcePath.of("Group1/foo.m")),
-            SourceWithFlags.of(FakeSourcePath.of("Group1/bar.m"), ImmutableList.of("-Wall")),
+            SourceWithFlags.of(
+                FakeSourcePath.of("Group1/bar.m"), StringWithMacrosUtils.fromStrings("-Wall")),
             SourceWithFlags.of(FakeSourcePath.of("Group2/baz.m")),
             SourceWithFlags.of(
-                FakeSourcePath.of("Group2/blech.m"), ImmutableList.of("-fobjc-arc")));
+                FakeSourcePath.of("Group2/blech.m"),
+                StringWithMacrosUtils.fromStrings("-fobjc-arc")));
 
     SourcePathResolverAdapter resolver = new TestActionGraphBuilder().getSourcePathResolver();
     ImmutableList<GroupedSource> sources =
@@ -59,7 +62,8 @@ public class RuleUtilsTest {
                 ImmutableList.of(
                     GroupedSource.ofSourceWithFlags(
                         SourceWithFlags.of(
-                            FakeSourcePath.of("Group1/bar.m"), ImmutableList.of("-Wall"))),
+                            FakeSourcePath.of("Group1/bar.m"),
+                            StringWithMacrosUtils.fromStrings("-Wall"))),
                     GroupedSource.ofSourceWithFlags(
                         SourceWithFlags.of(FakeSourcePath.of("Group1/foo.m"))))),
             GroupedSource.ofSourceGroup(
@@ -71,7 +75,7 @@ public class RuleUtilsTest {
                     GroupedSource.ofSourceWithFlags(
                         SourceWithFlags.of(
                             FakeSourcePath.of("Group2/blech.m"),
-                            ImmutableList.of("-fobjc-arc")))))),
+                            StringWithMacrosUtils.fromStrings("-fobjc-arc")))))),
         sources);
   }
 

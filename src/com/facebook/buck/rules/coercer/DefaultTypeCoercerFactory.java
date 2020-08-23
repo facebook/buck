@@ -145,9 +145,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     TypeCoercer<Path, Path> pathTypeCoercer = new PathTypeCoercer();
     TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer =
         new SourcePathTypeCoercer(buildTargetWithOutputsTypeCoercer, pathTypeCoercer);
-    SourceWithFlagsTypeCoercer sourceWithFlagsTypeCoercer =
-        new SourceWithFlagsTypeCoercer(
-            sourcePathTypeCoercer, new ListTypeCoercer<>(stringTypeCoercer));
+
     TypeCoercer<Integer, Integer> intTypeCoercer = new NumberTypeCoercer<>(Integer.class);
     TypeCoercer<Double, Double> doubleTypeCoercer = new NumberTypeCoercer<>(Double.class);
     TypeCoercer<Boolean, Boolean> booleanTypeCoercer = new IdentityTypeCoercer<>(Boolean.class);
@@ -381,6 +379,11 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 new ZeroArgMacroTypeCoercer<>(
                     CxxHeaderTreeMacro.class, CxxHeaderTreeMacro.class, CxxHeaderTreeMacro.of()))
             .build();
+
+    SourceWithFlagsTypeCoercer sourceWithFlagsTypeCoercer =
+        new SourceWithFlagsTypeCoercer(
+            sourcePathTypeCoercer, new ListTypeCoercer<>(stringWithMacrosCoercer));
+
     nonParameterizedTypeCoercers =
         (TypeCoercer<Object, ?>[])
             new TypeCoercer<?, ?>[] {

@@ -173,7 +173,8 @@ public final class CxxInferEnhancer {
             targetWithInferCaptureNoDepsFlavor -> {
               BuildTarget cleanTarget = InferFlavors.targetWithoutAnyInferFlavor(target);
 
-              ImmutableMap<String, CxxSource> sources = collectSources(cleanTarget, args);
+              ImmutableMap<String, CxxSource> sources =
+                  collectSources(cleanTarget, cellRoots, args);
 
               ImmutableSet<CxxInferCapture> captureRules =
                   requireInferCaptureBuildRules(cleanTarget, cellRoots, filesystem, sources, args);
@@ -198,9 +199,10 @@ public final class CxxInferEnhancer {
   }
 
   private ImmutableMap<String, CxxSource> collectSources(
-      BuildTarget buildTarget, CxxConstructorArg args) {
+      BuildTarget buildTarget, CellPathResolver cellRoots, CxxConstructorArg args) {
     InferFlavors.checkNoInferFlavors(buildTarget.getFlavors().getSet());
-    return CxxDescriptionEnhancer.parseCxxSources(buildTarget, graphBuilder, cxxPlatform, args);
+    return CxxDescriptionEnhancer.parseCxxSources(
+        buildTarget, cellRoots, graphBuilder, cxxPlatform, args);
   }
 
   private <T extends BuildRule> ImmutableSet<T> requireTransitiveDependentLibraries(

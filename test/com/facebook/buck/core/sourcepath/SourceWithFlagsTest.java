@@ -26,6 +26,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableList;
@@ -55,11 +57,15 @@ public class SourceWithFlagsTest {
           }
         };
     assertThat(
-        SourceWithFlags.of(DefaultBuildTargetSourcePath.of(a), ImmutableList.of("-flag"))
+        SourceWithFlags.of(
+                DefaultBuildTargetSourcePath.of(a),
+                ImmutableList.of(StringWithMacrosUtils.format("-flag=%s", LocationMacro.of(a))))
             .translateTargets(cellPathResolver.getCellNameResolver(), BaseName.ROOT, translator),
         Matchers.equalTo(
             Optional.of(
                 SourceWithFlags.of(
-                    DefaultBuildTargetSourcePath.of(b), ImmutableList.of("-flag")))));
+                    DefaultBuildTargetSourcePath.of(b),
+                    ImmutableList.of(
+                        StringWithMacrosUtils.format("-flag=%s", LocationMacro.of(b)))))));
   }
 }

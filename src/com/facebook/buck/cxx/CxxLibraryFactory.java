@@ -195,7 +195,7 @@ public class CxxLibraryFactory {
 
       ImmutableMap<String, CxxSource> sources =
           parseCxxSourcesFromArgs(
-              targetWithoutDiagnosticsFlavor, graphBuilder, cxxPlatformOrDefault, args);
+              targetWithoutDiagnosticsFlavor, cellRoots, graphBuilder, cxxPlatformOrDefault, args);
       ImmutableSortedSet<SourcePath> extractionRuleInputs =
           sourceRuleFactory
               .requireDiagnosticExtractionBuildRules(
@@ -538,15 +538,17 @@ public class CxxLibraryFactory {
             transitivePreprocessorInputs,
             delegate);
     return sourceRuleFactory.requirePreprocessAndCompileRules(
-        parseCxxSourcesFromArgs(buildTarget, graphBuilder, cxxPlatform, args));
+        parseCxxSourcesFromArgs(buildTarget, cellRoots, graphBuilder, cxxPlatform, args));
   }
 
   private static ImmutableMap<String, CxxSource> parseCxxSourcesFromArgs(
       BuildTarget buildTarget,
+      CellPathResolver cellRoots,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args) {
-    return CxxDescriptionEnhancer.parseCxxSources(buildTarget, graphBuilder, cxxPlatform, args);
+    return CxxDescriptionEnhancer.parseCxxSources(
+        buildTarget, cellRoots, graphBuilder, cxxPlatform, args);
   }
 
   private static CxxSourceRuleFactory createSourceRuleFactory(

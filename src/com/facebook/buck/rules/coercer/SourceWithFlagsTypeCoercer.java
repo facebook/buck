@@ -24,6 +24,8 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourceWithFlags;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.UnconfiguredStringWithMacros;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
@@ -33,15 +35,18 @@ import java.util.Collection;
 public class SourceWithFlagsTypeCoercer
     implements TypeCoercer<UnconfiguredSourceWithFlags, SourceWithFlags> {
   private final TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer;
-  private final TypeCoercer<ImmutableList<String>, ImmutableList<String>> flagsTypeCoercer;
   private final TypeCoercer<
-          Pair<UnconfiguredSourcePath, ImmutableList<String>>,
-          Pair<SourcePath, ImmutableList<String>>>
+          ImmutableList<UnconfiguredStringWithMacros>, ImmutableList<StringWithMacros>>
+      flagsTypeCoercer;
+  private final TypeCoercer<
+          Pair<UnconfiguredSourcePath, ImmutableList<UnconfiguredStringWithMacros>>,
+          Pair<SourcePath, ImmutableList<StringWithMacros>>>
       sourcePathWithFlagsTypeCoercer;
 
   SourceWithFlagsTypeCoercer(
       TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer,
-      TypeCoercer<ImmutableList<String>, ImmutableList<String>> flagsTypeCoercer) {
+      TypeCoercer<ImmutableList<UnconfiguredStringWithMacros>, ImmutableList<StringWithMacros>>
+          flagsTypeCoercer) {
     this.sourcePathTypeCoercer = sourcePathTypeCoercer;
     this.flagsTypeCoercer = flagsTypeCoercer;
     this.sourcePathWithFlagsTypeCoercer =
@@ -95,9 +100,10 @@ public class SourceWithFlagsTypeCoercer
 
     // If we get this far, we're dealing with a Pair of a SourcePath and a String.
     if (object instanceof Collection<?> && ((Collection<?>) object).size() == 2) {
-      Pair<UnconfiguredSourcePath, ImmutableList<String>> sourcePathWithFlags =
-          sourcePathWithFlagsTypeCoercer.coerceToUnconfigured(
-              cellRoots, filesystem, pathRelativeToProjectRoot, object);
+      Pair<UnconfiguredSourcePath, ImmutableList<UnconfiguredStringWithMacros>>
+          sourcePathWithFlags =
+              sourcePathWithFlagsTypeCoercer.coerceToUnconfigured(
+                  cellRoots, filesystem, pathRelativeToProjectRoot, object);
       return UnconfiguredSourceWithFlags.of(
           sourcePathWithFlags.getFirst(), sourcePathWithFlags.getSecond());
     }
@@ -117,6 +123,6 @@ public class SourceWithFlagsTypeCoercer
       TargetConfiguration hostConfiguration,
       UnconfiguredSourceWithFlags object)
       throws CoerceFailedException {
-    return object.configure(cellRoots, filesystem, targetConfiguration);
+    return object.configure(cellRoots, filesystem, targetConfiguration, hostConfiguration);
   }
 }

@@ -1411,7 +1411,8 @@ public class ProjectGeneratorTest {
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(FakeSourcePath.of("foo.h"), ImmutableList.of("public")),
+                    SourceWithFlags.of(
+                        FakeSourcePath.of("foo.h"), StringWithMacrosUtils.fromStrings("public")),
                     SourceWithFlags.of(FakeSourcePath.of("bar.h"))))
             .setTests(ImmutableSortedSet.of(testTarget))
             .build();
@@ -1459,7 +1460,8 @@ public class ProjectGeneratorTest {
         AppleLibraryBuilder.createBuilder(libraryTarget, projectFilesystem)
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(FakeSourcePath.of("foo.h"), ImmutableList.of("public")),
+                    SourceWithFlags.of(
+                        FakeSourcePath.of("foo.h"), StringWithMacrosUtils.fromStrings("public")),
                     SourceWithFlags.of(FakeSourcePath.of("bar.h"))))
             .setTests(ImmutableSortedSet.of(testTarget))
             .build();
@@ -1525,7 +1527,8 @@ public class ProjectGeneratorTest {
         AppleLibraryBuilder.createBuilder(libraryTarget, projectFilesystem)
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(FakeSourcePath.of("foo.h"), ImmutableList.of("public")),
+                    SourceWithFlags.of(
+                        FakeSourcePath.of("foo.h"), StringWithMacrosUtils.fromStrings("public")),
                     SourceWithFlags.of(FakeSourcePath.of("bar.h"))))
             .build();
 
@@ -1581,7 +1584,8 @@ public class ProjectGeneratorTest {
         AppleBinaryBuilder.createBuilder(binaryTarget)
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(FakeSourcePath.of("foo.h"), ImmutableList.of("public")),
+                    SourceWithFlags.of(
+                        FakeSourcePath.of("foo.h"), StringWithMacrosUtils.fromStrings("public")),
                     SourceWithFlags.of(FakeSourcePath.of("bar.h"))))
             .build();
 
@@ -1690,7 +1694,8 @@ public class ProjectGeneratorTest {
             .setConfigs(ImmutableSortedMap.of("RandomConfig", ImmutableMap.of()))
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(FakeSourcePath.of("foo.m"), ImmutableList.of("-foo")),
+                    SourceWithFlags.of(
+                        FakeSourcePath.of("foo.m"), StringWithMacrosUtils.fromStrings("-foo")),
                     SourceWithFlags.of(FakeSourcePath.of("bar.m"))))
             .setExtraXcodeSources(ImmutableList.of(FakeSourcePath.of("libsomething.a")))
             .setHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
@@ -1777,7 +1782,8 @@ public class ProjectGeneratorTest {
         new CxxLibraryBuilder(buildTarget)
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(FakeSourcePath.of("foo.cpp"), ImmutableList.of("-foo")),
+                    SourceWithFlags.of(
+                        FakeSourcePath.of("foo.cpp"), StringWithMacrosUtils.fromStrings("-foo")),
                     SourceWithFlags.of(FakeSourcePath.of("bar.cpp"))))
             .setHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
             .build();
@@ -2848,7 +2854,8 @@ public class ProjectGeneratorTest {
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(FakeSourcePath.of("foo.m"), ImmutableList.of("-foo"))))
+                    SourceWithFlags.of(
+                        FakeSourcePath.of("foo.m"), StringWithMacrosUtils.fromStrings("-foo"))))
             .setExtraXcodeSources(ImmutableList.of(FakeSourcePath.of("libsomething.a")))
             .setHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
             .setFrameworks(
@@ -3286,7 +3293,8 @@ public class ProjectGeneratorTest {
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(FakeSourcePath.of("foo.m"), ImmutableList.of("-foo")),
+                    SourceWithFlags.of(
+                        FakeSourcePath.of("foo.m"), StringWithMacrosUtils.fromStrings("-foo")),
                     SourceWithFlags.of(FakeSourcePath.of("bar.m"))))
             .setHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
             .build();
@@ -4234,7 +4242,8 @@ public class ProjectGeneratorTest {
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(FakeSourcePath.of("foo.h"), ImmutableList.of("public")),
+                    SourceWithFlags.of(
+                        FakeSourcePath.of("foo.h"), StringWithMacrosUtils.fromStrings("public")),
                     SourceWithFlags.of(FakeSourcePath.of("bar.h"))))
             .setDeps(ImmutableSortedSet.of(libTarget))
             .build();
@@ -4305,7 +4314,8 @@ public class ProjectGeneratorTest {
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(FakeSourcePath.of("foo.h"), ImmutableList.of("public")),
+                    SourceWithFlags.of(
+                        FakeSourcePath.of("foo.h"), StringWithMacrosUtils.fromStrings("public")),
                     SourceWithFlags.of(FakeSourcePath.of("bar.h"))))
             .setDeps(ImmutableSortedSet.of(libTarget))
             .build();

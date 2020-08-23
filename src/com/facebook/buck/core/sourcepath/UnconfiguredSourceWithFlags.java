@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.macros.UnconfiguredStringWithMacros;
 import com.google.common.collect.ImmutableList;
 
 /** Unconfigured graph version of {@link SourceWithFlags}. */
@@ -28,10 +29,10 @@ public abstract class UnconfiguredSourceWithFlags {
 
   public abstract UnconfiguredSourcePath getSourcePath();
 
-  public abstract ImmutableList<String> getFlags();
+  public abstract ImmutableList<UnconfiguredStringWithMacros> getFlags();
 
   public static UnconfiguredSourceWithFlags of(
-      UnconfiguredSourcePath sourcePath, ImmutableList<String> flags) {
+      UnconfiguredSourcePath sourcePath, ImmutableList<UnconfiguredStringWithMacros> flags) {
     return ImmutableUnconfiguredSourceWithFlags.ofImpl(sourcePath, flags);
   }
 
@@ -39,9 +40,12 @@ public abstract class UnconfiguredSourceWithFlags {
   public SourceWithFlags configure(
       CellNameResolver cellNameResolver,
       ProjectFilesystem projectFilesystem,
-      TargetConfiguration targetConfiguration) {
+      TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration) {
     return SourceWithFlags.of(
         getSourcePath().configure(cellNameResolver, projectFilesystem, targetConfiguration),
-        getFlags());
+        getFlags().stream()
+            .map(flag -> flag.configure(targetConfiguration, hostConfiguration))
+            .collect(ImmutableList.toImmutableList()));
   }
 }
