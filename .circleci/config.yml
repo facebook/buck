@@ -1437,8 +1437,7 @@ jobs:
       - run:
           name: Run Windows tests
           command: |
-            cd %BUCKROOT%
-            bin\buck test --all --test-selectors=:windows_failures.txt --test-selectors=:windows_cxx_support.txt
+            cd %BUCKROOT% && refreshenv && bin\buck test --all --test-selectors=:windows_failures.txt --test-selectors=:windows_cxx_support.txt
           shell: cmd.exe
 
   macos_publish_release:
