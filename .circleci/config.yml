@@ -12,7 +12,7 @@ install_dlang: &install_dlang
     curl https://dlang.org/install.sh | bash -s dmd-2.091.0
     source ~/dlang/dmd-2.091.0/activate
     dmd --version
-    
+
 install_lua: &install_lua
   name: Install Lua
   command: |
@@ -27,7 +27,7 @@ install_lua: &install_lua
       sudo make macosx install
     fi
     lua -v
-    
+
 install_ocaml: &install_ocaml
   name: Install Ocaml
   command: |
@@ -174,7 +174,7 @@ run_buck_build: &run_buck_build
     ./bin/buck build buck --out "${BUCK_PEX_LOCATION}" || { cat "buck-out/log/buck-0.log"; exit 1; }
 
 linux_environment: &linux_environment
-  # Use string constant for values, no environment variables 
+  # Use string constant for values, no environment variables
   PLATFORM: "linux"
   BUCKROOT: "/home/circleci/buck"
   ANDROID_SDK: "/home/circleci/android-sdk"
@@ -585,7 +585,7 @@ jobs:
       - run:
           <<: *run_buck_build
       - run:
-          name: Need android-27 and android-28 to run the tests, install them. 
+          name: Need android-27 and android-28 to run the tests, install them.
           command: |
             export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
             echo 'y' |sdkmanager --install "platforms;android-27"
@@ -1434,12 +1434,12 @@ jobs:
           command: cd %BUCKROOT% && refreshenv && bin\buck build buck -c python.interpreter=python
           shell: cmd.exe
       # We know there are some Windows test failures, comment out for now. They should be fixed.
-      #- run:
-      #    name: Run Windows tests
-      #    command: |
-      #      cd %BUCKROOT%
-      #      bin\buck test --all --test-selectors=:windows_failures.txt --test-selectors=:windows_cxx_support.txt
-      #    shell: cmd.exe
+      - run:
+          name: Run Windows tests
+          command: |
+            cd %BUCKROOT%
+            bin\buck test --all --test-selectors=:windows_failures.txt --test-selectors=:windows_cxx_support.txt
+          shell: cmd.exe
 
   macos_publish_release:
     environment:
