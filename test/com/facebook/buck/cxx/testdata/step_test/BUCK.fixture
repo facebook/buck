@@ -230,3 +230,10 @@ cxx_binary(
         ("source.cpp", ["-include$(location :genheader)"]),
     ],
 )
+
+cxx_binary(
+    name = "cc_env_vars",
+    srcs = [
+        "cc_env_vars.cpp",
+    ],
+)

@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -764,5 +765,27 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void sourceWithFlagsMacros() {
     workspace.runBuckBuild("//:source_with_flags_macro_test").assertSuccess();
+  }
+
+  @Test
+  public void ccEnvVarsDoNotAffectCompilation() {
+
+    // An include dir that contains a bad header that should *not* be available to the source being
+    // compiled below.
+    Path badIncludeDir = workspace.resolve("cc_env_var_path");
+    assertTrue(java.nio.file.Files.exists(badIncludeDir.resolve("expected_missing.h")));
+
+    // Run the compilation, which should fail with a missing header error.
+    String stderr =
+        workspace
+            .runBuckBuild(
+                ImmutableMap.<String, String>builder()
+                    .put("CPATH", badIncludeDir.toString())
+                    .put("CPLUS_INCLUDE_PATH", badIncludeDir.toString())
+                    .build(),
+                "//:cc_env_vars")
+            .assertFailure()
+            .getStderr();
+    MatcherAssert.assertThat(stderr, containsString("expected_missing.h"));
   }
 }
