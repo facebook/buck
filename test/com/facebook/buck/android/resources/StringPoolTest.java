@@ -143,7 +143,7 @@ public class StringPoolTest {
       String content = new String(baos.toByteArray(), Charsets.UTF_8);
 
       Path stringsOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".strings"));
-      String expected = new String(Files.readAllBytes(stringsOutput));
+      String expected = new String(Files.readAllBytes(stringsOutput)).replaceAll("\r\n", "\n");
 
       MoreAsserts.assertLargeStringsEqual(expected, content);
     }

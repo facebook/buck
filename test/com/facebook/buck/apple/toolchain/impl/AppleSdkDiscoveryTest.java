@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
@@ -33,6 +34,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CreateSymlinksForTests;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -651,6 +653,7 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void shouldScanRealDirectoryOnlyOnce() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sdk-discovery-symlink", temp);
     workspace.setUp();
