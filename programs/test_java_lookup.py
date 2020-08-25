@@ -84,6 +84,19 @@ class TestJavaPath(unittest.TestCase):
             os.path.join(java_base_path, "jdk1.8.1_100"),
         )
 
+    def test_java_8_highest_version_lookup_linux(self):
+        java_base_path = tempfile.mkdtemp()
+        os.mkdir(os.path.join(java_base_path, "java-1.7.0"))
+        os.mkdir(os.path.join(java_base_path, "java-1.8.0_100"))
+        os.mkdir(os.path.join(java_base_path, "java-1.8.0_200"))
+        os.mkdir(os.path.join(java_base_path, "java-1.8.1"))
+        os.mkdir(os.path.join(java_base_path, "java-1.8.1_100"))
+
+        self.assertEquals(
+            _get_java_path_for_highest_minor_version(java_base_path, 8),
+            os.path.join(java_base_path, "java-1.8.1_100"),
+        )
+
     def test_openjdk_8_highest_version_lookup(self):
         java_base_path = tempfile.mkdtemp()
         os.mkdir(os.path.join(java_base_path, "adoptopenjdk-7.jdk"))
@@ -109,6 +122,19 @@ class TestJavaPath(unittest.TestCase):
         self.assertEquals(
             _get_java_path_for_highest_minor_version(java_base_path, 11),
             os.path.join(java_base_path, "jdk-11.0.2_200"),
+        )
+
+    def test_java_11_highest_version_lookup(self):
+        java_base_path = tempfile.mkdtemp()
+        os.mkdir(os.path.join(java_base_path, "java-10.0.1"))
+        os.mkdir(os.path.join(java_base_path, "java-11"))
+        os.mkdir(os.path.join(java_base_path, "java-11.0.2_200"))
+        os.mkdir(os.path.join(java_base_path, "java-12"))
+        os.mkdir(os.path.join(java_base_path, "java-13"))
+
+        self.assertEquals(
+            _get_java_path_for_highest_minor_version(java_base_path, 11),
+            os.path.join(java_base_path, "java-11.0.2_200"),
         )
 
     def test_openjdk_11_highest_version_lookup(self):
