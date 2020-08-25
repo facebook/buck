@@ -69,7 +69,7 @@ with Robolectric test runner. It extends from <code>java_test()</code> rule.
 {call test_common.contacts_arg /}
 
 {call buck.arg}
-  {param name: 'extra_kotlinc_arguments' /}
+  {param name: 'free_compiler_args' /}
   {param default : '[]' /}
   {param desc}
   List of additional arguments to pass into the Kotlin compiler.
