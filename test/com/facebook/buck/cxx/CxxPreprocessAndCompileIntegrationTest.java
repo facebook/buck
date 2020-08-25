@@ -769,6 +769,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void ccEnvVarsDoNotAffectCompilation() {
+    assumeThat(Platform.detect(), Matchers.not(equalTo(Platform.WINDOWS)));
 
     // An include dir that contains a bad header that should *not* be available to the source being
     // compiled below.

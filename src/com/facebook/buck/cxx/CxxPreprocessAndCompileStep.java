@@ -136,6 +136,11 @@ class CxxPreprocessAndCompileStep implements Step {
   private ProcessExecutorParams.Builder makeSubprocessBuilder(StepExecutionContext context) {
     Map<String, String> env = new HashMap<>();
 
+    // TODO(S208370): Removing the user env breaks some windows builds.
+    if (context.getPlatform() == Platform.WINDOWS) {
+      env.putAll(context.getEnvironment());
+    }
+
     // On some systems, gcc relies on `PATH` to find it's subprograms.
     String pathEnv = context.getEnvironment().get("PATH");
     if (pathEnv != null) {
