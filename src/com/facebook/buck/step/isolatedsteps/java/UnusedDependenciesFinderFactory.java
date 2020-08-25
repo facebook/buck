@@ -29,8 +29,8 @@ import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -90,16 +90,16 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
       Optional<String> buildozerPath,
       boolean onlyPrintCommands,
       boolean doUltralightChecking,
-      BuildRuleResolver buildRuleResolver,
+      ActionGraphBuilder actionGraphBuilder,
       ImmutableSortedSet<BuildTarget> deps,
       ImmutableSortedSet<BuildTarget> providedDeps,
       ImmutableList<String> exportedDeps,
       CellPathResolver cellPathResolver) {
     this.buildozerPath = buildozerPath;
     this.onlyPrintCommands = onlyPrintCommands;
-    this.deps = getDependencies(buildRuleResolver, buildRuleResolver.getAllRules(deps));
+    this.deps = getDependencies(actionGraphBuilder, actionGraphBuilder.getAllRules(deps));
     this.providedDeps =
-        getDependencies(buildRuleResolver, buildRuleResolver.getAllRules(providedDeps));
+        getDependencies(actionGraphBuilder, actionGraphBuilder.getAllRules(providedDeps));
     this.exportedDeps = exportedDeps;
     this.doUltralightChecking = doUltralightChecking;
     this.cellNameResolver = cellPathResolver.getCellNameResolver();
@@ -116,11 +116,11 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
   }
 
   private ImmutableList<DependencyAndExportedDeps> getDependencies(
-      BuildRuleResolver buildRuleResolver, SortedSet<BuildRule> targets) {
+      ActionGraphBuilder actionGraphBuilder, SortedSet<BuildRule> targets) {
     ImmutableList.Builder<DependencyAndExportedDeps> builder = ImmutableList.builder();
     for (BuildRule rule : targets) {
       BuildTargetAndSourcePaths targetAndSourcePaths =
-          getBuildTargetAndSourcePaths(rule, buildRuleResolver);
+          getBuildTargetAndSourcePaths(rule, actionGraphBuilder);
       if (targetAndSourcePaths == null) {
         continue;
       }
@@ -128,7 +128,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
       ImmutableList<DependencyAndExportedDeps> exportedDeps =
           rule instanceof ExportDependencies
               ? getDependencies(
-                  buildRuleResolver,
+                  actionGraphBuilder,
                   ImmutableSortedSet.<BuildRule>naturalOrder()
                       .addAll(((ExportDependencies) rule).getExportedDeps())
                       .addAll(((ExportDependencies) rule).getExportedProvidedDeps())
@@ -141,7 +141,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
   }
 
   private BuildTargetAndSourcePaths getBuildTargetAndSourcePaths(
-      BuildRule rule, BuildRuleResolver buildRuleResolver) {
+      BuildRule rule, ActionGraphBuilder actionGraphBuilder) {
     if (!(rule instanceof JavaLibrary || rule instanceof CalculateAbi)) {
       return null;
     }
@@ -151,19 +151,19 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
     }
 
     SourcePath ruleOutput = rule.getSourcePathToOutput();
-    SourcePath abiRuleOutput = getAbiPath(buildRuleResolver, (HasJavaAbi) rule);
+    SourcePath abiRuleOutput = getAbiPath(actionGraphBuilder, (HasJavaAbi) rule);
     return new BuildTargetAndSourcePaths(
         rule.getBuildTarget().getUnconfiguredBuildTarget().toString(), ruleOutput, abiRuleOutput);
   }
 
-  private SourcePath getAbiPath(BuildRuleResolver buildRuleResolver, HasJavaAbi rule) {
+  private SourcePath getAbiPath(ActionGraphBuilder actionGraphBuilder, HasJavaAbi rule) {
     Optional<BuildTarget> abiJarTarget = getAbiJarTarget(rule);
     if (!abiJarTarget.isPresent()) {
       return null;
     }
 
-    Optional<BuildRule> abiJarRule = buildRuleResolver.getRuleOptional(abiJarTarget.get());
-    return abiJarRule.map(BuildRule::getSourcePathToOutput).orElse(null);
+    BuildRule abiJarRule = actionGraphBuilder.requireRule(abiJarTarget.get());
+    return abiJarRule.getSourcePathToOutput();
   }
 
   private Optional<BuildTarget> getAbiJarTarget(HasJavaAbi dependency) {
