@@ -24,9 +24,6 @@ import com.google.common.collect.ImmutableMap;
 /** Implementation of this interface holds all the cells. */
 public interface CellProvider {
 
-  // TODO(cjhopman): Shouldn't this be based on CanonicalCellName instead?
-  Cell getCellByPath(AbsPath path);
-
   /** Get cell object by canonicall cell name */
   Cell getCellByCanonicalCellName(CanonicalCellName canonicalCellName);
 

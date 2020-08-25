@@ -229,8 +229,7 @@ final class CellProviderImpl implements CellProvider {
         cellNameResolver);
   }
 
-  @Override
-  public Cell getCellByPath(AbsPath path) {
+  private Cell getCellByPath(AbsPath path) {
     try {
       return cells.get(path);
     } catch (ExecutionException e) {
