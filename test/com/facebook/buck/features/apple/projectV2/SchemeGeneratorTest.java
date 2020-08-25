@@ -38,6 +38,7 @@ import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -1295,7 +1296,8 @@ public class SchemeGeneratorTest {
     assertThat(reference.getAttributes().getNamedItem("BlueprintIdentifier").getNodeValue(), equalTo("rootGID"));
     assertThat(reference.getAttributes().getNamedItem("BuildableName").getNodeValue(), equalTo("root.a"));
     assertThat(reference.getAttributes().getNamedItem("BlueprintName").getNodeValue(), equalTo("rootRule"));
-    assertThat(reference.getAttributes().getNamedItem("ReferencedContainer").getNodeValue(), equalTo("container:../../../foo/Foo.xcodeproj/project.pbxproj"));
+    assertThat(reference.getAttributes().getNamedItem("ReferencedContainer").getNodeValue().replace('\\', '/'),
+      equalTo("container:../../../foo/Foo.xcodeproj/project.pbxproj"));
   }
 
   /**

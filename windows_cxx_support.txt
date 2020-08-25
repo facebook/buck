@@ -4,3 +4,4 @@
 !com.facebook.buck.cxx.PrecompiledHeaderFeatureTest
 !com.facebook.buck.cxx.PrecompiledHeaderFeatureTest.*
 !com.facebook.buck.cxx.CxxLinkableEnhancerTest#createCxxLinkableBuildRuleExecutableVsShared
+!com.facebook.buck.cxx.CxxRawHeadersIntegrationTest
