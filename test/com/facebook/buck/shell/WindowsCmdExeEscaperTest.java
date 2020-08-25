@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import org.junit.Test;
 
@@ -155,8 +156,8 @@ public class WindowsCmdExeEscaperTest {
     WindowsCmdExeEscaper.CommandLineToArgvWParser argvParser =
         new WindowsCmdExeEscaper.CommandLineToArgvWParser();
     ArrayList<String> argvBuilder = new ArrayList<String>();
-    BiConsumer<String, WindowsCmdExeEscaper.AnnotatedString> argConsumer =
-        (separator, arg) -> argvBuilder.add(arg.toString());
+    BiConsumer<String, Optional<WindowsCmdExeEscaper.AnnotatedString>> argConsumer =
+        (separator, optionalArg) -> optionalArg.map(arg -> argvBuilder.add(arg.toString()));
     argvParser.parse(new WindowsCmdExeEscaper.AnnotatedString(commandLine), argConsumer);
     argvParser.consumeArg(argConsumer);
     assertThat(argvBuilder.toArray(), equalTo(argv));
@@ -208,6 +209,34 @@ public class WindowsCmdExeEscaperTest {
   }
 
   @Test
+  public void commandLineToArgvWConformityEmptyArg() {
+    String commandLine = "a \"\" b";
+    String[] argv = new String[] {"a", "", "b"};
+    testCommandLineToArgvW(commandLine, argv);
+  }
+
+  @Test
+  public void commandLineToArgvWConformityTrailingEmptyArg() {
+    String commandLine = "a \"\" b \"\"";
+    String[] argv = new String[] {"a", "", "b", ""};
+    testCommandLineToArgvW(commandLine, argv);
+  }
+
+  @Test
+  public void commandLineToArgvWConformityTrailingWhitespace() {
+    String commandLine = "a \"\" b ";
+    String[] argv = new String[] {"a", "", "b"};
+    testCommandLineToArgvW(commandLine, argv);
+  }
+
+  @Test
+  public void commandLineToArgvWConformityTrailingEmptyArgAndWhitespace() {
+    String commandLine = "a \"\" b \"\" ";
+    String[] argv = new String[] {"a", "", "b", ""};
+    testCommandLineToArgvW(commandLine, argv);
+  }
+
+  @Test
   public void escapedSubstringSimple() {
     WindowsCmdExeEscaper.Command.Builder commandBuilder = WindowsCmdExeEscaper.Command.builder();
 
@@ -215,6 +244,36 @@ public class WindowsCmdExeEscaperTest {
     commandBuilder.appendEscapedSubstring("echo");
 
     assertThat(WindowsCmdExeEscaper.escape(commandBuilder.build()), equalTo("echo"));
+  }
+
+  @Test
+  public void escapedSubstringEmptyArg() {
+    WindowsCmdExeEscaper.Command.Builder commandBuilder = WindowsCmdExeEscaper.Command.builder();
+
+    // generic string with no special characters or metacharacters; no transformation needed
+    commandBuilder.appendEscapedSubstring("a \"\" b");
+
+    assertThat(WindowsCmdExeEscaper.escape(commandBuilder.build()), equalTo("a ^\"^\" b"));
+  }
+
+  @Test
+  public void escapedSubstringTrailingEmptyArg() {
+    WindowsCmdExeEscaper.Command.Builder commandBuilder = WindowsCmdExeEscaper.Command.builder();
+
+    // generic string with no special characters or metacharacters; no transformation needed
+    commandBuilder.appendEscapedSubstring("a \"\" b \"\"");
+
+    assertThat(WindowsCmdExeEscaper.escape(commandBuilder.build()), equalTo("a ^\"^\" b ^\"^\""));
+  }
+
+  @Test
+  public void escapedSubstringTrailingEmptyArgWithWhitespace() {
+    WindowsCmdExeEscaper.Command.Builder commandBuilder = WindowsCmdExeEscaper.Command.builder();
+
+    // generic string with no special characters or metacharacters; no transformation needed
+    commandBuilder.appendEscapedSubstring("a \"\" b \"\" ");
+
+    assertThat(WindowsCmdExeEscaper.escape(commandBuilder.build()), equalTo("a ^\"^\" b ^\"^\" "));
   }
 
   @Test
@@ -338,6 +397,36 @@ public class WindowsCmdExeEscaperTest {
   }
 
   @Test
+  public void unescapedSubstringEmptyArg() {
+    WindowsCmdExeEscaper.Command.Builder commandBuilder = WindowsCmdExeEscaper.Command.builder();
+
+    // generic string with no special characters or metacharacters; no transformation needed
+    commandBuilder.appendUnescapedSubstring("a \"\" b");
+
+    assertThat(WindowsCmdExeEscaper.escape(commandBuilder.build()), equalTo("a ^\"^\" b"));
+  }
+
+  @Test
+  public void unescapedSubstringTrailingEmptyArg() {
+    WindowsCmdExeEscaper.Command.Builder commandBuilder = WindowsCmdExeEscaper.Command.builder();
+
+    // generic string with no special characters or metacharacters; no transformation needed
+    commandBuilder.appendUnescapedSubstring("a \"\" b \"\"");
+
+    assertThat(WindowsCmdExeEscaper.escape(commandBuilder.build()), equalTo("a ^\"^\" b ^\"^\""));
+  }
+
+  @Test
+  public void unescapedSubstringTrailingEmptyArgWithWhitespace() {
+    WindowsCmdExeEscaper.Command.Builder commandBuilder = WindowsCmdExeEscaper.Command.builder();
+
+    // generic string with no special characters or metacharacters; no transformation needed
+    commandBuilder.appendUnescapedSubstring("a \"\" b \"\" ");
+
+    assertThat(WindowsCmdExeEscaper.escape(commandBuilder.build()), equalTo("a ^\"^\" b ^\"^\" "));
+  }
+
+  @Test
   public void unescapedSubstringNestedQuotes() {
     WindowsCmdExeEscaper.Command.Builder commandBuilder = WindowsCmdExeEscaper.Command.builder();
 
@@ -430,6 +519,61 @@ public class WindowsCmdExeEscaperTest {
     assertThat(
         WindowsCmdExeEscaper.escape(commandBuilder.build()),
         equalTo("subdir^\"^,^\"flavor\\foo.exe arg | find ^\"bar^\""));
+  }
+
+  @Test
+  public void mixedSubstringsWithTrailingEmptyArg1() {
+    WindowsCmdExeEscaper.Command.Builder commandBuilder = WindowsCmdExeEscaper.Command.builder();
+
+    commandBuilder
+        .appendEscapedSubstring("copy \"")
+        .appendUnescapedSubstring("subdir,flavor\\foo.exe")
+        .appendEscapedSubstring("\" \"\"");
+
+    assertThat(
+        WindowsCmdExeEscaper.escape(commandBuilder.build()),
+        equalTo("copy ^\"subdir^,flavor\\foo.exe^\" ^\"^\""));
+  }
+
+  @Test
+  public void mixedSubstringsWithTrailingEmptyArgAndWhitespace1() {
+    WindowsCmdExeEscaper.Command.Builder commandBuilder = WindowsCmdExeEscaper.Command.builder();
+
+    commandBuilder
+        .appendEscapedSubstring("copy \"")
+        .appendUnescapedSubstring("subdir,flavor\\foo.exe")
+        .appendEscapedSubstring("\" \"\" ");
+
+    assertThat(
+        WindowsCmdExeEscaper.escape(commandBuilder.build()),
+        equalTo("copy ^\"subdir^,flavor\\foo.exe^\" ^\"^\" "));
+  }
+
+  @Test
+  public void mixedSubstringsWithTrailingEmptyArg2() {
+    WindowsCmdExeEscaper.Command.Builder commandBuilder = WindowsCmdExeEscaper.Command.builder();
+
+    commandBuilder
+        .appendEscapedSubstring("type ")
+        .appendUnescapedSubstring("subdir,flavor\\foo.exe \"\"");
+
+    assertThat(
+        WindowsCmdExeEscaper.escape(commandBuilder.build()),
+        equalTo("type subdir^\"^,^\"flavor\\foo.exe ^\"^\""));
+  }
+
+  @Test
+  public void mixedSubstringsWithTrailingEmptyArgAndWhitespace2() {
+    WindowsCmdExeEscaper.Command.Builder commandBuilder = WindowsCmdExeEscaper.Command.builder();
+
+    commandBuilder
+        .appendEscapedSubstring("type ")
+        .appendUnescapedSubstring("subdir,flavor\\foo.exe \"\"")
+        .appendEscapedSubstring(" ");
+
+    assertThat(
+        WindowsCmdExeEscaper.escape(commandBuilder.build()),
+        equalTo("type subdir^\"^,^\"flavor\\foo.exe ^\"^\" "));
   }
 
   @Test

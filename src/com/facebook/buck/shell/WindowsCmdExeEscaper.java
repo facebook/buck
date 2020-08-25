@@ -23,6 +23,7 @@ import java.text.StringCharacterIterator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 /**
@@ -294,6 +295,10 @@ public final class WindowsCmdExeEscaper {
       return annotatedChars.length;
     }
 
+    boolean isEmpty() {
+      return (annotatedChars.length == 0);
+    }
+
     int getChar(int index) {
       return annotatedChars[index];
     }
@@ -417,12 +422,14 @@ public final class WindowsCmdExeEscaper {
     private State state;
     private StringBuilder separatorBuilder; // separating whitespace preceding current argument
     private AnnotatedString.Builder argBuilder; // current argument
+    private boolean argPending; // there is an argument pending consumption
     private boolean inQuotes; // whether "in-quotes" mode active
 
     public CommandLineToArgvWParser() {
       this.state = State.SEPARATOR;
       this.separatorBuilder = new StringBuilder();
       this.argBuilder = AnnotatedString.builder();
+      this.argPending = false;
       this.inQuotes = false;
     }
 
@@ -453,12 +460,13 @@ public final class WindowsCmdExeEscaper {
      *     character is a cmd.exe metacharacter.
      * @param argConsumer A {@link BiConsumer} that will be invoked when an argument has been seen,
      *     with its preceding separating whitespace. The parsed argument is passed to the consumer
-     *     as an {@link AnnotatedString} where each element is a <code>char</code> potentially ORed
-     *     with the {@link #META} flag to indicate that the character is intended as a cmd.exe
-     *     metacharacter and/or the {@link #QUOTED} flag to indicate that the character was
-     *     originally quoted according to <code>CommandLineToArgvW()</code> rules.
+     *     as an optional {@link AnnotatedString} where each element is a <code>char</code>
+     *     potentially ORed with the {@link #META} flag to indicate that the character is intended
+     *     as a cmd.exe metacharacter and/or the {@link #QUOTED} flag to indicate that the character
+     *     was originally quoted according to <code>CommandLineToArgvW()</code> rules.
      */
-    public void parse(AnnotatedString string, BiConsumer<String, AnnotatedString> argConsumer) {
+    public void parse(
+        AnnotatedString string, BiConsumer<String, Optional<AnnotatedString>> argConsumer) {
       int index = 0;
 
       while (true) {
@@ -477,7 +485,11 @@ public final class WindowsCmdExeEscaper {
           }
         } else if (state == State.ARGUMENT) {
 
-          // consume argument
+          // Consume argument. Reaching this state guarantees that there will
+          // be an argument produced for consumption. It may be empty, however,
+          // so we track the fact that an argument is pending explicitly.
+          argPending = true;
+
           int backslashCount = 0;
           while (index < string.length() && (char) string.getChar(index) == '\\') {
             ++backslashCount;
@@ -558,16 +570,19 @@ public final class WindowsCmdExeEscaper {
      *
      * @param argConsumer A {@link BiConsumer} that will be invoked when an argument has been seen,
      *     with its preceding separating whitespace. The parsed argument is passed to the consumer
-     *     as an {@link AnnotatedString} where each element is a <code>char</code> potentially ORed
-     *     with the {@link #META} flag to indicate that the character is a cmd.exe metacharacter and
-     *     the {@link #QUOTED} flag to indicate that the character was originally quoted according
-     *     to <code>CommandLineToArgvW()</code> rules.
+     *     as an optional {@link AnnotatedString} where each element is a <code>char</code>
+     *     potentially ORed with the {@link #META} flag to indicate that the character is a cmd.exe
+     *     metacharacter and the {@link #QUOTED} flag to indicate that the character was originally
+     *     quoted according to <code>CommandLineToArgvW()</code> rules.
      */
-    public void consumeArg(BiConsumer<String, AnnotatedString> argConsumer) {
-      if (separatorBuilder.length() > 0 || !argBuilder.isEmpty()) {
-        argConsumer.accept(separatorBuilder.toString(), argBuilder.build());
+    public void consumeArg(BiConsumer<String, Optional<AnnotatedString>> argConsumer) {
+      if (separatorBuilder.length() > 0 || argPending) {
+        argConsumer.accept(
+            separatorBuilder.toString(),
+            argPending ? Optional.of(argBuilder.build()) : Optional.empty());
         separatorBuilder.setLength(0);
         argBuilder.clear();
+        argPending = false;
       }
     }
 
@@ -596,8 +611,8 @@ public final class WindowsCmdExeEscaper {
 
     CmdExeMetaParser cmdExeMetaParser = new CmdExeMetaParser();
 
-    BiConsumer<String, AnnotatedString> argConsumer =
-        (separator, arg) -> escapeArg(separator, arg, escapedBuilder);
+    BiConsumer<String, Optional<AnnotatedString>> argConsumer =
+        (separator, optionalArg) -> escapeArg(separator, optionalArg, escapedBuilder);
     CommandLineToArgvWParser commandLineToArgvWParser = new CommandLineToArgvWParser();
 
     UnmodifiableIterator<CommandSubstring> substringIter = command.substrings.iterator();
@@ -637,34 +652,43 @@ public final class WindowsCmdExeEscaper {
    *
    * @param separator Whitespace that precedes <code>arg</code> (i.e. separator between prior
    *     argument)
-   * @param arg {@link AnnotatedString} containing containing the characters of the argument to
-   *     escape along with additional metadata flags ({@link #QUOTED} and {@link #META}).
+   * @param optionalArg {@link AnnotatedString} containing containing the characters of the argument
+   *     to escape along with additional metadata flags ({@link #QUOTED} and {@link #META}).
    * @param escapedBuilder {@link StringBuilder} containing the escaped command line.
    */
   private static void escapeArg(
-      String separator, AnnotatedString arg, StringBuilder escapedBuilder) {
+      String separator, Optional<AnnotatedString> optionalArg, StringBuilder escapedBuilder) {
     // append preceding separating whitespace, if any
     escapedBuilder.append(separator);
 
-    // Treat the argument as a series of alternating runs of characters that
-    // require quoting (i.e. have the QUOTE flag set) and characters that do
-    // not require quoting (i.e. do not have the QUOTE flag set), where either
-    // run is potentially of length zero. This method, as opposed to quoting
-    // the entire argument wholesale, allows the command to most closely
-    // resemble the original input. This is acceptable because the
-    // CommandLineToArgvW convention explicitly allows quoting to be started
-    // and stopped multiple times within the same argument.
-    //
-    // There are nuances here. For example, we have to handle cases such as
-    // backslashes in a run that does not require quoting followed immediately
-    // by a run requiring quoting, which changes how the backslash and double
-    // quote escaping logic needs to work to make it comply with
-    // CommandLineToArgvW.
+    if (optionalArg.isPresent()) {
+      AnnotatedString arg = optionalArg.get();
 
-    int index = 0;
-    while (index < arg.length()) {
-      index = escapeArgQuotedRun(arg, index, escapedBuilder);
-      index = escapeArgUnquotedRun(arg, index, escapedBuilder);
+      if (arg.isEmpty()) {
+        // empty argument needs to be preserved
+        escapedBuilder.append("^\"^\"");
+      } else {
+        // Treat the argument as a series of alternating runs of characters that
+        // require quoting (i.e. have the QUOTE flag set) and characters that do
+        // not require quoting (i.e. do not have the QUOTE flag set), where either
+        // run is potentially of length zero. This method, as opposed to quoting
+        // the entire argument wholesale, allows the command to most closely
+        // resemble the original input. This is acceptable because the
+        // CommandLineToArgvW convention explicitly allows quoting to be started
+        // and stopped multiple times within the same argument.
+        //
+        // There are nuances here. For example, we have to handle cases such as
+        // backslashes in a run that does not require quoting followed immediately
+        // by a run requiring quoting, which changes how the backslash and double
+        // quote escaping logic needs to work to make it comply with
+        // CommandLineToArgvW.
+
+        int index = 0;
+        while (index < arg.length()) {
+          index = escapeArgQuotedRun(arg, index, escapedBuilder);
+          index = escapeArgUnquotedRun(arg, index, escapedBuilder);
+        }
+      }
     }
   }
 
