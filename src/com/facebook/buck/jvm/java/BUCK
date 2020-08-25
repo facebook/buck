@@ -355,6 +355,7 @@ java_library_with_plugins(
         "PrebuiltJar.java",
         "PrebuiltJarDescription.java",
         "StandardJavacPlugin.java",
+        "UnusedDependenciesFinderFactory.java",
         "ZipArchiveDependencySupplier.java",
     ],
     resources = [

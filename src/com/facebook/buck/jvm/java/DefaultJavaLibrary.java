@@ -46,7 +46,6 @@ import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.rules.modern.PipelinedModernBuildRule;
-import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinderFactory;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.step.isolatedsteps.java;
+package com.facebook.buck.jvm.java;
 
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
@@ -39,9 +39,8 @@ import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.jvm.java.CompilerOutputPaths;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.modern.CellNameResolverSerialization;
+import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -212,7 +211,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
 
     Path depFilePath = CompilerOutputPaths.getDepFilePath(buildTarget, filesystem);
 
-    return ImmutableUnusedDependenciesFinder.ofImpl(
+    return UnusedDependenciesFinder.of(
         buildTarget,
         convert(deps, resolver, filesystem),
         convert(providedDeps, resolver, filesystem),

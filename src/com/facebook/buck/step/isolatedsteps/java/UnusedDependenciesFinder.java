@@ -28,6 +28,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.DefaultClassUsageFileReader;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -79,6 +80,32 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
   public abstract RelPath getDepFile();
 
   public abstract boolean doUltralightChecking();
+
+  public static ImmutableUnusedDependenciesFinder of(
+      BuildTarget buildTarget,
+      ImmutableList<DependencyAndExportedDepsPath> deps,
+      ImmutableList<DependencyAndExportedDepsPath> providedDeps,
+      ImmutableList<String> exportedDeps,
+      JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction,
+      Optional<String> buildozerPath,
+      boolean onlyPrintCommands,
+      CellNameResolver cellNameResolver,
+      ImmutableMap<String, RelPath> cellToPathMappings,
+      RelPath depFile,
+      boolean doUltralightChecking) {
+    return ImmutableUnusedDependenciesFinder.ofImpl(
+        buildTarget,
+        deps,
+        providedDeps,
+        exportedDeps,
+        unusedDependenciesAction,
+        buildozerPath,
+        onlyPrintCommands,
+        cellNameResolver,
+        cellToPathMappings,
+        depFile,
+        doUltralightChecking);
+  }
 
   @Override
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context) {
@@ -345,11 +372,11 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
   }
 
   /** Recursive hierarchy of a single build target and its exported deps. */
-  static class DependencyAndExportedDepsPath {
+  public static class DependencyAndExportedDepsPath {
     private final BuildTargetAndPaths dependency;
     private final ImmutableList<DependencyAndExportedDepsPath> exportedDeps;
 
-    DependencyAndExportedDepsPath(
+    public DependencyAndExportedDepsPath(
         BuildTargetAndPaths dependency, ImmutableList<DependencyAndExportedDepsPath> exportedDeps) {
       this.dependency = dependency;
       this.exportedDeps = exportedDeps;
@@ -357,12 +384,12 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
   }
 
   /** Holder for a build target string and the source paths of its output. */
-  static class BuildTargetAndPaths {
+  public static class BuildTargetAndPaths {
     private final String buildTarget;
     private final @Nullable RelPath fullJarPath;
     private final @Nullable RelPath abiPath;
 
-    BuildTargetAndPaths(
+    public BuildTargetAndPaths(
         String buildTarget, @Nullable RelPath fullJarSourcePath, @Nullable RelPath abiSourcePath) {
       this.buildTarget = buildTarget;
       this.fullJarPath = fullJarSourcePath;
