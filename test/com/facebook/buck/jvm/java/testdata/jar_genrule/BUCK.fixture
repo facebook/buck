@@ -13,6 +13,7 @@ jar_genrule(
     name = "jar-genrule",
     srcs = ["resource.txt"],
     cmd = "cp $(location :bin) $OUT && jar uf $OUT resource.txt",
+    cmd_exe = "copy $(location :bin) $OUT && jar uf $OUT resource.txt",
 )
 
 genrule(

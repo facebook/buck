@@ -39,6 +39,6 @@ public class JarGenruleTest {
 
     Path output = workspace.buildAndReturnOutput("//:execute-jar-genrule");
     String outputContents = workspace.getFileContents(output);
-    assertThat(outputContents, is(equalTo("I am a test resource file.\n")));
+    assertThat(outputContents, is(equalTo("I am a test resource file." + System.lineSeparator())));
   }
 }
