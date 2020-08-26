@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -52,6 +53,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -146,7 +148,7 @@ public class AppleResourceProcessing {
   }
 
   /** Adds Variant file processing steps to a build rule */
-  public static void addVariantFileProcessingSteps(
+  public static void deprecated_addVariantFileProcessingSteps(
       AppleBundleResources resources,
       BuildContext context,
       Path dirRoot,
@@ -184,7 +186,7 @@ public class AppleResourceProcessing {
                   bundleVariantDestinationPath)));
 
       Path destinationPath = bundleVariantDestinationPath.resolve(variantFilePath.getFileName());
-      AppleResourceProcessing.addResourceProcessingSteps(
+      AppleResourceProcessing.deprecated_addResourceProcessingSteps(
           context.getSourcePathResolver(),
           variantFilePath.getPath(),
           destinationPath,
@@ -259,7 +261,7 @@ public class AppleResourceProcessing {
   }
 
   /** Adds Resources processing steps to a build rule */
-  public static void addResourceProcessingSteps(
+  private static void deprecated_addResourceProcessingSteps(
       SourcePathResolverAdapter resolver,
       Path sourcePath,
       Path destinationPath,
@@ -337,7 +339,7 @@ public class AppleResourceProcessing {
   }
 
   /** Adds required copy resources steps */
-  public static void addStepsToCopyResources(
+  public static void deprecated_addStepsToCopyResources(
       BuildContext context,
       ImmutableList.Builder<Step> stepsBuilder,
       ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
@@ -357,7 +359,7 @@ public class AppleResourceProcessing {
       boolean withDownwardApi) {
     addStepsToCreateDirectoriesWhereBundlePartsAreCopied(
         context, stepsBuilder, resources, bundleParts, dirRoot, destinations, projectFilesystem);
-    addStepsToCopyDirectories(
+    deprecated_addStepsToCopyDirectories(
         context.getSourcePathResolver(),
         stepsBuilder,
         codeSignOnCopyPathsBuilder,
@@ -374,7 +376,7 @@ public class AppleResourceProcessing {
         dirRoot,
         destinations,
         projectFilesystem);
-    addStepsToProcessAndCopyFiles(
+    deprecated_addStepsToProcessAndCopyFiles(
         context.getSourcePathResolver(),
         stepsBuilder,
         codeSignOnCopyPathsBuilder,
@@ -393,10 +395,50 @@ public class AppleResourceProcessing {
         ProjectFilesystemUtils.relativize(
             projectFilesystem.getRootPath(), context.getBuildCellRootPath()),
         withDownwardApi);
-    addStepsToCopyFilesNotNeedingProcessing(
+    deprecated_addStepsToCopyFilesNotNeedingProcessing(
         context.getSourcePathResolver(),
         stepsBuilder,
         codeSignOnCopyPathsBuilder,
+        bundleParts,
+        dirRoot,
+        destinations,
+        projectFilesystem);
+  }
+
+  /** Adds required copy resources steps */
+  public static void addStepsToCopyResources(
+      BuildContext context,
+      ImmutableList.Builder<Step> stepsBuilder,
+      ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
+      AppleBundleResources resources,
+      ImmutableList<AppleBundlePart> bundleParts,
+      Path dirRoot,
+      AppleBundleDestinations destinations,
+      ProjectFilesystem projectFilesystem,
+      SourcePath processedResourcesDir) {
+    addStepsToCreateDirectoriesWhereBundlePartsAreCopied(
+        context, stepsBuilder, resources, bundleParts, dirRoot, destinations, projectFilesystem);
+    addStepsToCopyContentOfDirectories(
+        context.getSourcePathResolver(),
+        stepsBuilder,
+        resources,
+        bundleParts,
+        dirRoot,
+        destinations,
+        projectFilesystem);
+    addStepsToCopyProcessedResources(
+        context.getSourcePathResolver(),
+        stepsBuilder,
+        resources,
+        dirRoot,
+        destinations,
+        projectFilesystem,
+        processedResourcesDir);
+    addStepsToCopyNonProcessedFilesAndDirectories(
+        context.getSourcePathResolver(),
+        stepsBuilder,
+        codeSignOnCopyPathsBuilder,
+        resources,
         bundleParts,
         dirRoot,
         destinations,
@@ -425,7 +467,7 @@ public class AppleResourceProcessing {
     }
   }
 
-  private static void addStepsToCopyDirectories(
+  private static void deprecated_addStepsToCopyDirectories(
       SourcePathResolverAdapter sourcePathResolver,
       ImmutableList.Builder<Step> stepsBuilder,
       ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
@@ -504,7 +546,65 @@ public class AppleResourceProcessing {
     }
   }
 
-  public static void addStepsToProcessAndCopyFiles(
+  private static void addStepsToCopyProcessedResources(
+      SourcePathResolverAdapter sourcePathResolver,
+      ImmutableList.Builder<Step> stepsBuilder,
+      AppleBundleResources resources,
+      Path dirRoot,
+      AppleBundleDestinations destinations,
+      ProjectFilesystem projectFilesystem,
+      SourcePath processedResourcesDir) {
+    Set<AppleBundleDestination> destinationsForAllProcessedResources = new HashSet<>();
+    {
+      if (resources.getResourceVariantFiles().size() > 0) {
+        destinationsForAllProcessedResources.add(AppleBundleDestination.RESOURCES);
+      }
+      destinationsForAllProcessedResources.addAll(
+          resources.getResourceFiles().stream()
+              .filter(
+                  pathWithDestination ->
+                      AppleProcessResources.shouldBeProcessed(
+                          pathWithDestination, sourcePathResolver))
+              .map(SourcePathWithAppleBundleDestination::getDestination)
+              .collect(Collectors.toSet()));
+    }
+    stepsBuilder.add(
+        new AbstractExecutionStep("copy-processed-resources") {
+          @Override
+          public StepExecutionResult execute(StepExecutionContext stepContext) throws IOException {
+
+            AbsPath rootDirWithProcessedResourcesPath =
+                sourcePathResolver.getAbsolutePath(processedResourcesDir);
+
+            for (AppleBundleDestination destination : destinationsForAllProcessedResources) {
+              RelPath subdirectoryNameForDestination =
+                  AppleProcessResources.directoryNameWithProcessedFilesForDestination(destination);
+              AbsPath processedResourcesContainerDirForDestination =
+                  rootDirWithProcessedResourcesPath.resolve(subdirectoryNameForDestination);
+
+              Path bundleDestinationPath = destination.getPath(destinations);
+
+              for (String fileName :
+                  Objects.requireNonNull(
+                      new File(processedResourcesContainerDirForDestination.toUri()).list())) {
+
+                AbsPath fromPath = processedResourcesContainerDirForDestination.resolve(fileName);
+                Path toPath = dirRoot.resolve(bundleDestinationPath).resolve(fileName);
+
+                boolean isDirectory = projectFilesystem.isDirectory(fromPath);
+                projectFilesystem.copy(
+                    fromPath.getPath(),
+                    isDirectory ? toPath.getParent() : toPath,
+                    isDirectory ? CopySourceMode.DIRECTORY_AND_CONTENTS : CopySourceMode.FILE);
+              }
+            }
+
+            return StepExecutionResults.SUCCESS;
+          }
+        });
+  }
+
+  private static void deprecated_addStepsToProcessAndCopyFiles(
       SourcePathResolverAdapter sourcePathResolver,
       ImmutableList.Builder<Step> stepsBuilder,
       ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
@@ -528,7 +628,7 @@ public class AppleResourceProcessing {
       Path bundleDestinationPath =
           dirRoot.resolve(fileWithDestination.getDestination().getPath(destinations));
       Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());
-      AppleResourceProcessing.addResourceProcessingSteps(
+      AppleResourceProcessing.deprecated_addResourceProcessingSteps(
           sourcePathResolver,
           resolvedFilePath.getPath(),
           destinationPath,
@@ -550,7 +650,114 @@ public class AppleResourceProcessing {
     }
   }
 
-  private static void addStepsToCopyFilesNotNeedingProcessing(
+  /**
+   * All files and directories which are good to be copied to the result apple bundle without any
+   * processing are treated as "non processed". That includes any file or directory provided as
+   * `AppleBundlePart`, all directories from resources (provided via `apple_resource` rule), all
+   * files from resources that are skipped by `AppleProcessResources` build rule (based on
+   * extension).
+   */
+  private static void addStepsToCopyNonProcessedFilesAndDirectories(
+      SourcePathResolverAdapter sourcePathResolver,
+      ImmutableList.Builder<Step> stepsBuilder,
+      ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
+      AppleBundleResources resources,
+      ImmutableList<AppleBundlePart> bundleParts,
+      Path dirRoot,
+      AppleBundleDestinations destinations,
+      ProjectFilesystem projectFilesystem) {
+
+    List<CopySpec> copySpecs = new LinkedList<>();
+
+    Set<AbsPath> ignoreIfMissingPaths = new HashSet<>();
+
+    {
+      List<FileAppleBundlePart> filesToCopyWithoutProcessing =
+          bundleParts.stream()
+              .filter(p -> p instanceof FileAppleBundlePart)
+              .map(p -> (FileAppleBundlePart) p)
+              .collect(Collectors.toList());
+
+      for (FileAppleBundlePart bundlePart : filesToCopyWithoutProcessing) {
+        CopySpec copySpec = new CopySpec(bundlePart, sourcePathResolver, destinations);
+        copySpecs.add(copySpec);
+
+        if (bundlePart.getIgnoreIfMissing()) {
+          ignoreIfMissingPaths.add(copySpec.sourcePath);
+        }
+
+        if (bundlePart.getCodesignOnCopy()) {
+          Path toPath =
+              dirRoot.resolve(copySpec.getDestinationPathRelativeToBundleRoot().getPath());
+          codeSignOnCopyPathsBuilder.add(toPath);
+        }
+      }
+    }
+
+    {
+      List<DirectoryAppleBundlePart> directoryBundleParts =
+          bundleParts.stream()
+              .filter(p -> p instanceof DirectoryAppleBundlePart)
+              .map(p -> (DirectoryAppleBundlePart) p)
+              .collect(Collectors.toList());
+
+      for (DirectoryAppleBundlePart bundlePart : directoryBundleParts) {
+        CopySpec copySpec = new CopySpec(bundlePart, sourcePathResolver, destinations);
+        copySpecs.add(copySpec);
+
+        if (bundlePart.getCodesignOnCopy()) {
+          Path toPath =
+              dirRoot.resolve(copySpec.getDestinationPathRelativeToBundleRoot().getPath());
+          codeSignOnCopyPathsBuilder.add(toPath);
+        }
+      }
+    }
+
+    Stream.concat(
+            resources.getResourceDirs().stream(),
+            resources.getResourceFiles().stream()
+                .filter(
+                    pathWithDestination ->
+                        !AppleProcessResources.shouldBeProcessed(
+                            pathWithDestination, sourcePathResolver)))
+        .forEach(
+            pathWithDestination -> {
+              CopySpec copySpec =
+                  new CopySpec(pathWithDestination, sourcePathResolver, destinations);
+              copySpecs.add(copySpec);
+
+              if (pathWithDestination.getCodesignOnCopy()) {
+                Path toPath =
+                    dirRoot.resolve(copySpec.getDestinationPathRelativeToBundleRoot().getPath());
+                codeSignOnCopyPathsBuilder.add(toPath);
+              }
+            });
+
+    stepsBuilder.add(
+        new AbstractExecutionStep("copy-non-processed-bundle-parts") {
+          @Override
+          public StepExecutionResult execute(StepExecutionContext stepContext) throws IOException {
+            for (CopySpec copySpec : copySpecs) {
+              AbsPath fromPath = copySpec.getSourcePath();
+              if (ignoreIfMissingPaths.contains(fromPath)
+                  && !projectFilesystem.exists(fromPath.getPath())) {
+                continue;
+              }
+
+              boolean isDirectory = projectFilesystem.isDirectory(fromPath);
+              Path toPath =
+                  dirRoot.resolve(copySpec.getDestinationPathRelativeToBundleRoot().getPath());
+              projectFilesystem.copy(
+                  fromPath.getPath(),
+                  isDirectory ? toPath.getParent() : toPath,
+                  isDirectory ? CopySourceMode.DIRECTORY_AND_CONTENTS : CopySourceMode.FILE);
+            }
+            return StepExecutionResults.SUCCESS;
+          }
+        });
+  }
+
+  private static void deprecated_addStepsToCopyFilesNotNeedingProcessing(
       SourcePathResolverAdapter sourcePathResolver,
       ImmutableList.Builder<Step> stepsBuilder,
       ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,

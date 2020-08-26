@@ -746,7 +746,8 @@ public class AppleDescriptions {
       boolean sliceAppPackageSwiftRuntime,
       boolean sliceAppBundleSwiftRuntime,
       boolean withDownwardApi,
-      Optional<String> minimumOSVersion) {
+      Optional<String> minimumOSVersion,
+      boolean useSeparateRuleToProcessResources) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             graphBuilder,
@@ -1170,6 +1171,34 @@ public class AppleDescriptions {
             RecursiveDependenciesMode.COPYING,
             filter);
 
+    Optional<SourcePath> maybeProcessedResourcesDir;
+    if (useSeparateRuleToProcessResources) {
+      BuildTarget processResourcesTarget =
+          stripBundleSpecificFlavors(buildTarget).withAppendedFlavors(AppleProcessResources.FLAVOR);
+      AppleProcessResources processResources =
+          (AppleProcessResources)
+              graphBuilder.computeIfAbsent(
+                  processResourcesTarget,
+                  target ->
+                      new AppleProcessResources(
+                          target,
+                          projectFilesystem,
+                          graphBuilder,
+                          collectedResources.getResourceFiles(),
+                          collectedResources.getResourceVariantFiles(),
+                          ibtoolFlagsUnwrapped,
+                          AppleBundleSupport.isLegacyWatchApp(unwrappedExtension, unwrappedBinary),
+                          appleCxxPlatform.getIbtool(),
+                          ibtoolModuleFlag.orElse(false),
+                          buildTarget,
+                          Optional.of(AppleBundle.getBinaryName(buildTarget, productName)),
+                          withDownwardApi,
+                          appleCxxPlatform.getAppleSdk().getApplePlatform()));
+      maybeProcessedResourcesDir = Optional.of(processResources.getSourcePathToOutput());
+    } else {
+      maybeProcessedResourcesDir = Optional.empty();
+    }
+
     BuildRuleParams bundleParamsWithFlavoredBinaryDep =
         getBundleParamsWithUpdatedDeps(
             params,
@@ -1219,7 +1248,8 @@ public class AppleDescriptions {
         withDownwardApi,
         entitlementsReadyForCodeSign,
         dryRunCodeSigning,
-        codeSignIdentityFingerprint);
+        codeSignIdentityFingerprint,
+        maybeProcessedResourcesDir);
   }
 
   /**

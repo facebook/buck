@@ -383,7 +383,8 @@ public class AppleTestDescription
                         swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
                         swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
                         downwardApiConfig.isEnabledForApple(),
-                        args.getTargetSdkVersion()));
+                        args.getTargetSdkVersion(),
+                        appleConfig.getResourceProcessingSeparateRuleFlag()));
 
     Optional<SourcePath> xctool =
         getXctool(projectFilesystem, params, targetConfiguration, graphBuilder);
@@ -564,6 +565,29 @@ public class AppleTestDescription
     Path outputPath =
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s")
             .resolve(AppleTestDescription.COMPILE_DEPS.getName());
+
+    BuildTarget processResourcesTarget =
+        buildTarget.withoutFlavors().withAppendedFlavors(AppleProcessResources.FLAVOR);
+    AppleProcessResources processResources =
+        (AppleProcessResources)
+            graphBuilder.computeIfAbsent(
+                processResourcesTarget,
+                target ->
+                    new AppleProcessResources(
+                        target,
+                        projectFilesystem,
+                        graphBuilder,
+                        collectedResources.getResourceFiles(),
+                        collectedResources.getResourceVariantFiles(),
+                        ImmutableList.of(),
+                        false,
+                        appleCxxPlatform.getIbtool(),
+                        false,
+                        buildTarget,
+                        Optional.empty(),
+                        downwardApiConfig.isEnabledForApple(),
+                        appleCxxPlatform.getAppleSdk().getApplePlatform()));
+
     return new AppleTestAggregatedDependencies(
         buildTarget,
         projectFilesystem,
@@ -572,7 +596,8 @@ public class AppleTestDescription
         collectedResources,
         appleCxxPlatform,
         depBuildRuleSourcePaths,
-        downwardApiConfig.isEnabledForApple());
+        downwardApiConfig.isEnabledForApple(),
+        processResources.getSourcePathToOutput());
   }
 
   private ImmutableSortedSet<BuildRule> collectTransitiveStaticLibraries(
