@@ -34,3 +34,4 @@
 !com.facebook.buck.cli.bootstrapper.class_loader_test.ClassLoaderTest
 !com.facebook.buck.features.python.PexStepTest
 !com.facebook.buck.maven.ResolverIntegrationTest
+!com.facebook.buck.features.python.PythonBinaryIntegrationTest

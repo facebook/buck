@@ -7,3 +7,4 @@
 !com.facebook.buck.cxx.CxxRawHeadersIntegrationTest
 !com.facebook.buck.features.go.GoBinaryIntegrationTest
 !com.facebook.buck.features.go.GoTestIntegrationTest
+!com.facebook.buck.features.go.GoProjectIntegrationTest
