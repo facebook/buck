@@ -32,6 +32,7 @@ import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
@@ -603,18 +604,32 @@ class HeaderSearchPaths {
         targetNode,
         (nativeNode, headerVisibility) -> {
           if ((!enableIndexingFix || nativeNode != targetNode)
-              && headerVisibility.equals(HeaderVisibility.PUBLIC)
-              && NodeHelper.isModularAppleLibrary(nativeNode)) {
+              && headerVisibility.equals(HeaderVisibility.PUBLIC)) {
             Flavor defaultPlatformFlavor =
                 targetNode.getConstructorArg().getDefaultPlatform().orElse(cxxPlatform.getFlavor());
-            BuildTarget flavoredBuildTarget =
-                NodeHelper.getModularMapTarget(
-                    nativeNode, HeaderMode.SYMLINK_TREE_WITH_MODULEMAP, defaultPlatformFlavor);
 
-            RelPath symlinkPath =
-                CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
-                    projectFilesystem, flavoredBuildTarget, headerVisibility);
-            builder.add(projectFilesystem.resolve(symlinkPath).getPath());
+            // Only "modular" libraries will have a modulemap generated for them.
+            if (NodeHelper.isModularAppleLibrary(nativeNode)) {
+              BuildTarget flavoredModuleMapTarget =
+                  NodeHelper.getModularMapTarget(
+                      nativeNode, HeaderMode.SYMLINK_TREE_WITH_MODULEMAP, defaultPlatformFlavor);
+
+              RelPath symlinkTreePath =
+                  CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                      projectFilesystem, flavoredModuleMapTarget, headerVisibility);
+              builder.add(projectFilesystem.resolve(symlinkTreePath).getPath());
+            }
+
+            // However, Swift libraries that are not marked "modular" will still have a swiftmodule.
+            if (enableIndexingFix
+                && AppleDescriptions.targetNodeContainsSwiftSourceCode(nativeNode)) {
+              BuildTarget flavoredSwiftCompileTarget =
+                  NodeHelper.getSwiftModuleTarget(nativeNode, defaultPlatformFlavor);
+
+              RelPath swiftModuleMap =
+                  BuildTargetPaths.getGenPath(projectFilesystem, flavoredSwiftCompileTarget, "%s");
+              builder.add(projectFilesystem.resolve(swiftModuleMap).getPath());
+            }
           }
         });
     return builder.build();

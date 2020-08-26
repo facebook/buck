@@ -20,6 +20,7 @@ import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleLibraryDescriptionArg;
 import com.facebook.buck.apple.AppleTestDescription;
@@ -91,6 +92,13 @@ public class NodeHelper {
             // for module maps.
             platformFlavor,
             headerMode.getFlavor());
+  }
+
+  static BuildTarget getSwiftModuleTarget(TargetNode<?> targetNode, Flavor platformFlavor) {
+    return targetNode
+        .getBuildTarget()
+        .withoutFlavors(CxxLibraryDescription.LIBRARY_TYPE.getFlavors())
+        .withAppendedFlavors(AppleDescriptions.SWIFT_COMPILE_FLAVOR, platformFlavor);
   }
 
   /**
