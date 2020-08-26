@@ -20,7 +20,6 @@ import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.collect.nestedset.Depset;
 import com.google.devtools.build.lib.collect.nestedset.Order;
-import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.packages.Info;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Sequence;
@@ -139,15 +138,6 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
       throws EvalException, IOException, InterruptedException {
     ParseContext parseContext = ParseContext.getParseContext(env, "glob");
     if (include.isEmpty()) {
-      parseContext
-          .getPackageContext()
-          .getEventHandler()
-          .handle(
-              Event.warn(
-                  env.getCallerLocation(),
-                  "glob's 'include' attribute is empty. "
-                      + "Such calls are expensive and unnecessary. "
-                      + "Please use an empty list ([]) instead."));
       return StarlarkList.empty();
     }
     if (parseContext.getPackageContext().getPackageIdentifier().getRunfilesPath().isEmpty()

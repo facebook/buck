@@ -16,8 +16,6 @@
 
 package com.facebook.buck.skylark.function;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -32,7 +30,6 @@ import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.Event;
@@ -143,21 +140,12 @@ public class GlobTest {
   }
 
   @Test
-  public void emptyIncludeListIsReportedAsAWarning() throws Exception {
+  public void emptyIncludeListIsOk() throws Exception {
     AbsPath buildFile = root.resolve("BUCK");
     Files.write(buildFile.getPath(), ImmutableList.of("txts = glob([])"));
     assertThat(
         assertEvaluate(buildFile).getGlobals().get("txts"),
         equalTo(StarlarkList.immutableCopyOf(ImmutableList.of())));
-    Event event = Iterables.getOnlyElement(eventHandler);
-    assertThat(event.getKind(), is(EventKind.WARNING));
-    assertThat(event.getLocation(), notNullValue());
-    assertThat(
-        event.getMessage(),
-        is(
-            "glob's 'include' attribute is empty. "
-                + "Such calls are expensive and unnecessary. "
-                + "Please use an empty list ([]) instead."));
   }
 
   private Module assertEvaluate(AbsPath buildFile)
