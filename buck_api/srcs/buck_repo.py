@@ -16,7 +16,7 @@
 import os
 from asyncio import subprocess
 from pathlib import Path
-from typing import Tuple
+from typing import Awaitable, Tuple
 
 from buck_process import BuckProcess
 from buck_result import BuckResult, BuildResult, TestResult
@@ -44,61 +44,64 @@ class BuckRepo:
         child_environment["NO_BUCKD"] = str(int(toggle))
         self.buckd_env = child_environment
 
-    async def build(self, *argv: str) -> BuckProcess[BuildResult]:
+    def build(self, *argv: str) -> BuckProcess[BuildResult]:
         """
         Returns a BuckProcess with BuildResult type using a process
         created with the build command and any
         additional arguments
         """
-        process = await self._run_buck_command("build", *argv)
-        assert process is not None, await process.stderr.readline()
+        awaitable_process = self._run_buck_command("build", *argv)
         return BuckProcess(
-            process,
+            awaitable_process,
             result_type=lambda proc, stdin, stdout, encoding: BuildResult(
                 proc, stdin, stdout, encoding, self.cwd, *argv
             ),
             encoding=self.encoding,
         )
 
-    async def clean(self, *argv: str) -> BuckProcess[BuckResult]:
+    def clean(self, *argv: str) -> BuckProcess[BuckResult]:
         """
         Returns a BuckProcess with BuckResult type using a process
         created with the clean command and any
         additional arguments
         """
-        process = await self._run_buck_command("clean", *argv)
-        return BuckProcess(process, result_type=BuckResult, encoding=self.encoding)
+        awaitable_process = self._run_buck_command("clean", *argv)
+        return BuckProcess(
+            awaitable_process, result_type=BuckResult, encoding=self.encoding
+        )
 
-    async def kill(self) -> BuckProcess[BuckResult]:
+    def kill(self) -> BuckProcess[BuckResult]:
         """
         Returns a BuckProcess with BuckResult type using a process
         created with the kill command
         """
-        process = await self._run_buck_command("kill")
-        return BuckProcess(process, result_type=BuckResult, encoding=self.encoding)
+        awaitable_process = self._run_buck_command("kill")
+        return BuckProcess(
+            awaitable_process, result_type=BuckResult, encoding=self.encoding
+        )
 
-    async def test(self, *argv: str) -> BuckProcess[TestResult]:
+    def test(self, *argv: str) -> BuckProcess[TestResult]:
         """
         Returns a BuckProcess with TestResult type using a process
         created with the test command and any
         additional arguments
         """
         xml_flag, test_output_file = self._create_xml_file()
-        process = await self._run_buck_command("test", *argv, xml_flag)
+        awaitable_process = self._run_buck_command("test", *argv, xml_flag)
         return BuckProcess(
-            process,
+            awaitable_process,
             result_type=lambda proc, stdin, stdout, encoding: TestResult(
                 proc, stdin, stdout, encoding, str(Path(self.cwd) / test_output_file)
             ),
             encoding=self.encoding,
         )
 
-    async def _run_buck_command(self, cmd: str, *argv: str) -> subprocess.Process:
+    def _run_buck_command(self, cmd: str, *argv: str) -> Awaitable[subprocess.Process]:
         """
         Returns a process created from the execuable path,
         command and any additional arguments
         """
-        process = await subprocess.create_subprocess_exec(
+        awaitable_process = subprocess.create_subprocess_exec(
             self.path_to_buck,
             cmd,
             cwd=self.cwd,
@@ -107,7 +110,7 @@ class BuckRepo:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        return process
+        return awaitable_process
 
     def _create_xml_file(self, *argv: str) -> Tuple[str, str]:
         """

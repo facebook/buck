@@ -14,7 +14,7 @@
 # limitations under the License.
 
 from asyncio import StreamReader, subprocess
-from typing import Callable, Generic, TypeVar
+from typing import Awaitable, Callable, Generic, TypeVar
 
 
 T = TypeVar("T")
@@ -25,36 +25,39 @@ class BuckProcess(Generic[T]):
 
     def __init__(
         self,
-        process: subprocess.Process,
+        awaitable_process: Awaitable[subprocess.Process],
         result_type: Callable[[subprocess.Process, bytes, bytes, str], T],
         encoding: str,
     ) -> None:
-        self._process = process
+        self._awaitable_process = awaitable_process
         self._result_type = result_type
         self._encoding = encoding
 
     async def wait(self) -> T:
         """ Returns a BuckResult with a finished process """
-        stdout, stderr = await self._process.communicate()
-        return self._result_type(self._process, stdout, stderr, self._encoding)
+        process = await self._awaitable_process
+        stdout, stderr = await process.communicate()
+        return self._result_type(process, stdout, stderr, self._encoding)
 
-    def get_stderr(self) -> StreamReader:
+    async def get_stderr(self) -> StreamReader:
         """ Returns the standard error of the Buck Process instance. """
-        assert self._process.stderr is not None
-        return self._process.stderr
+        process = await self._awaitable_process
+        assert process.stderr is not None
+        return process.stderr
         ###################################################################
         # Exception is thrown if stderr is None, but should never
         # return None with expectation that stderr=asyncio.subprocess.PIPE
         # when creating a subprocess.Process
         ###################################################################
 
-    def get_stdout(self) -> StreamReader:
+    async def get_stdout(self) -> StreamReader:
         """
         Returns the standard error that is redirected into
         standard output of the Buck Process instance.
         """
-        assert self._process.stdout is not None
-        return self._process.stdout
+        process = await self._awaitable_process
+        assert process.stdout is not None
+        return process.stdout
         ###################################################################
         # Exception is thrown if stdout is None, but should never
         # return None with expectation that stdout=asyncio.subprocess.PIPE

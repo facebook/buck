@@ -32,7 +32,7 @@ async def test_build():
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
         _create_file(path_of_cwd, "target_file_success", 0)
-        result = await (await repo.build("//:target_file_success")).wait()
+        result = await repo.build("//:target_file_success").wait()
         assert list(
             (path_of_cwd / "buck-out").iterdir()
         ), "build should have generated outputs in buck-out"
@@ -50,7 +50,7 @@ async def test_build_with_flag():
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
         _create_file(path_of_cwd, "target_file_success", 0)
         # test --show-output flag
-        result = await (await repo.build("//:target_file_success --show-output")).wait()
+        result = await repo.build("//:target_file_success --show-output").wait()
         assert result.is_success()
         target_to_output = result.get_target_to_build_output()
         target = next(iter(target_to_output.keys()))
@@ -76,7 +76,7 @@ async def test_build_with_multiple_targets_flag():
         for target_file in target_files:
             _create_file(target_folder, target_file, 0)
         # test --show-output flag
-        result = await (await repo.build("//targets/... --show-output")).wait()
+        result = await repo.build("//targets/... --show-output").wait()
         assert result.is_success()
         target_to_output = result.get_target_to_build_output()
         for target_file in target_files:
@@ -98,11 +98,11 @@ async def test_build_failed():
 
         # testing failures
         _create_file(path_of_cwd, "target_file_build_failure", 1)
-        result = await (await repo.build("//:target_file_build_failure")).wait()
+        result = await repo.build("//:target_file_build_failure").wait()
         assert result.is_build_failure()
 
         _create_file(path_of_cwd, "target_file_failure", 13)
-        result = await (await repo.build("//:target_file_failure")).wait()
+        result = await repo.build("//:target_file_failure").wait()
         assert result.is_failure()
 
 
@@ -114,11 +114,11 @@ async def test_clean():
             "test.buck_repo_test", "test_script.py"
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
-        await (await repo.build("//:target_file")).wait()
+        await repo.build("//:target_file").wait()
         assert list(
             (path_of_cwd / "buck-out").iterdir()
         ), "build should have generated outputs in buck-out"
-        result = await (await repo.clean()).wait()
+        result = await repo.clean().wait()
         assert not (
             path_of_cwd / "buck-out"
         ).exists(), "clean should have deleted outputs in buck-out"
@@ -134,12 +134,12 @@ async def test_kill():
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
 
-        await (await repo.build("//:target_file")).wait()
+        await repo.build("//:target_file").wait()
         assert list(
             (path_of_cwd / ".buckd").iterdir()
         ), "build should have generated buck daemon"
 
-        result = await (await repo.kill()).wait()
+        result = await repo.kill().wait()
         assert not (
             path_of_cwd / ".buckd"
         ).exists(), "kill should have deleted buck daemon"
@@ -156,7 +156,7 @@ async def test_test_passed():
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
         _create_file(path_of_cwd, "target_file_success", 0)
-        result = await (await repo.test("//:target_file_success")).wait()
+        result = await repo.test("//:target_file_success").wait()
         assert list(
             (path_of_cwd / "buck-out").iterdir()
         ), "test should have generated outputs in buck-out"
@@ -180,7 +180,7 @@ async def test_test_skipped():
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
         # test skipped test
         _create_file(path_of_cwd, "target_file_skipped", "0")
-        result = await (await repo.test("//:target_file_skipped")).wait()
+        result = await repo.test("//:target_file_skipped").wait()
         assert list(
             (path_of_cwd / "buck-out").iterdir()
         ), "test should have generated outputs in buck-out"
@@ -205,18 +205,18 @@ async def test_test_failed():
 
         # testing failures
         _create_file(path_of_cwd, "target_file_test_failure", 32)
-        result = await (await repo.test("//:target_file_test_failure")).wait()
+        result = await repo.test("//:target_file_test_failure").wait()
         assert result.is_test_failure()
 
         _create_file(path_of_cwd, "target_file_failure", 13)
-        result = await (await repo.test("//:target_file_failure")).wait()
+        result = await repo.test("//:target_file_failure").wait()
         assert result.is_failure()
         assert result.get_tests()[0].get_name() == "test1"
         assert result.get_failure_count() == 1
 
         # testing failures
         _create_file(path_of_cwd, "target_file_build_failure", 1)
-        result = await (await repo.test("//:target_file_build_failure")).wait()
+        result = await repo.test("//:target_file_build_failure").wait()
         assert result.is_build_failure()
 
 

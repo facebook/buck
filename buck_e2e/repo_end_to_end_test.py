@@ -24,7 +24,7 @@ from test_repo import nobuckd, repo  # noqa: F401
 @pytest.mark.asyncio
 async def test_repo_build(repo):
     _create_file(Path(repo.cwd), Path("target_file_success"), 0)
-    result = await (await repo.build("//:target_file_success")).wait()
+    result = await repo.build("//:target_file_success").wait()
     assert "target_file_success" in result.get_stdout()
     asserts.assert_build_success(result)
 
@@ -32,7 +32,7 @@ async def test_repo_build(repo):
 @pytest.mark.asyncio
 async def test_buckd_toggle_enabled(repo):
     _create_file(Path(repo.cwd), Path("target_file_success"), 0)
-    result = await (await repo.build("//:target_file_success")).wait()
+    result = await repo.build("//:target_file_success").wait()
     assert "target_file_success" in result.get_stdout()
     asserts.assert_build_success(result)
     assert (Path(repo.cwd) / ".buckd").exists(), "buck daemon should exist"
@@ -43,7 +43,7 @@ async def test_buckd_toggle_enabled(repo):
 @nobuckd
 async def test_buckd_toggle_disabled(repo):
     _create_file(Path(repo.cwd), Path("target_file_success"), 0)
-    result = await (await repo.build("//:target_file_success")).wait()
+    result = await repo.build("//:target_file_success").wait()
     assert "target_file_success" in result.get_stdout()
     asserts.assert_build_success(result)
     assert not (Path(repo.cwd) / ".buckd").exists(), "buck daemon should not exist"
@@ -54,7 +54,7 @@ async def test_buckd_toggle_disabled(repo):
 @pytest.mark.xfail(raises=AssertionError)
 async def test_repo_build_failure(repo):
     _create_file(Path(repo.cwd), Path("target_file_failure"), 1)
-    result = await (await repo.build("//:target_file_failure")).wait()
+    result = await repo.build("//:target_file_failure").wait()
     assert "target_file_failure" in result.get_stdout()
     asserts.assert_build_success(result)
 

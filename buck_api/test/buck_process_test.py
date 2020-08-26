@@ -22,27 +22,29 @@ from buck_result import BuckResult
 
 @pytest.mark.asyncio
 async def test_wait():
-    process = await subprocess.create_subprocess_shell(
+    awaitable_process = subprocess.create_subprocess_shell(
         "echo hello", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    bp = BuckProcess(process, BuckResult, "utf-8")
+    bp = BuckProcess(awaitable_process, BuckResult, "utf-8")
     br: BuckResult = await bp.wait()
     assert br.get_stdout() == "hello\n"
 
 
 @pytest.mark.asyncio
 async def test_get_out():
-    process = await subprocess.create_subprocess_shell(
+    awaitable_process = subprocess.create_subprocess_shell(
         "echo hello", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    bp = BuckProcess(process, BuckResult, "utf-8")
-    assert (await bp.get_stdout().readline()).decode("utf-8") == "hello\n"
+    bp = BuckProcess(awaitable_process, BuckResult, "utf-8")
+    stdout = await bp.get_stdout()
+    assert (await stdout.readline()).decode("utf-8") == "hello\n"
 
 
 @pytest.mark.asyncio
 async def test_get_err():
-    process = await subprocess.create_subprocess_shell(
+    awaitable_process = subprocess.create_subprocess_shell(
         '>&2 echo "hello"', stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    bp = BuckProcess(process, BuckResult, "utf-8")
-    assert (await bp.get_stderr().readline()).decode("utf-8") == "hello\n"
+    bp = BuckProcess(awaitable_process, BuckResult, "utf-8")
+    stderr = await bp.get_stderr()
+    assert (await stderr.readline()).decode("utf-8") == "hello\n"
