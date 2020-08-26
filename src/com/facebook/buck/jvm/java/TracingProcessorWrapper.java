@@ -27,6 +27,7 @@ import javax.annotation.processing.Completion;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -34,6 +35,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 
 /** Wraps an annotation processor, tracing all method calls to BuckEventBus. */
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 class TracingProcessorWrapper implements Processor {
   private final JavacEventSink eventSink;
   private final Processor innerProcessor;
