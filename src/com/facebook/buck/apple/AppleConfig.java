@@ -89,6 +89,9 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String ENABLE_PROJECT_V2_SWIFT_INDEXING_FIX =
       "enable_project_v2_swift_indexing_fix";
 
+  private static final String RESOURCE_PROCESSING_SEPARATE_RULE =
+      "resource_processing_separate_rule";
+
   private final BuckConfig delegate;
 
   // Reflection-based factory for ConfigView
@@ -565,6 +568,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean getEnableProjectV2SwiftIndexingFix() {
     return delegate.getBooleanValue(APPLE_SECTION, ENABLE_PROJECT_V2_SWIFT_INDEXING_FIX, false);
+  }
+
+  public boolean getResourceProcessingSeparateRuleFlag() {
+    return delegate.getBooleanValue(APPLE_SECTION, RESOURCE_PROCESSING_SEPARATE_RULE, false);
   }
 
   @BuckStyleValue
