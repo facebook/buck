@@ -85,6 +85,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String USE_TARGET_SPECIFIC_SDK_VERSION_LINKER_FLAG =
       "target_sdk_version_linker_flag";
 
+  // TODO(T74039357): This is a temporary flag, remove after successful deployment
+  private static final String ENABLE_PROJECT_V2_SWIFT_INDEXING_FIX =
+      "enable_project_v2_swift_indexing_fix";
+
   private final BuckConfig delegate;
 
   // Reflection-based factory for ConfigView
@@ -557,6 +561,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   public boolean getUseTargetSpecificSDKVersionLinkerFlag() {
     return delegate.getBooleanValue(
         APPLE_SECTION, USE_TARGET_SPECIFIC_SDK_VERSION_LINKER_FLAG, false);
+  }
+
+  public boolean getEnableProjectV2SwiftIndexingFix() {
+    return delegate.getBooleanValue(APPLE_SECTION, ENABLE_PROJECT_V2_SWIFT_INDEXING_FIX, false);
   }
 
   @BuckStyleValue

@@ -17,6 +17,7 @@
 package com.facebook.buck.features.apple.projectV2;
 
 import com.facebook.buck.apple.AppleBuildRules;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleHeaderVisibilities;
@@ -89,6 +90,7 @@ class HeaderSearchPaths {
   private final ProjectSourcePathResolver projectSourcePathResolver;
   private final PathRelativizer pathRelativizer;
   private final SwiftAttributeParser swiftAttributeParser;
+  private final AppleConfig appleConfig;
 
   private final ProjectFilesystem projectFilesystem;
 
@@ -103,7 +105,8 @@ class HeaderSearchPaths {
       AppleDependenciesCache dependenciesCache,
       ProjectSourcePathResolver projectSourcePathResolver,
       PathRelativizer pathRelativizer,
-      SwiftAttributeParser swiftAttributeParser) {
+      SwiftAttributeParser swiftAttributeParser,
+      AppleConfig appleConfig) {
     this.projectCell = projectCell;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatform = cxxPlatform;
@@ -115,6 +118,7 @@ class HeaderSearchPaths {
     this.projectSourcePathResolver = projectSourcePathResolver;
     this.pathRelativizer = pathRelativizer;
     this.swiftAttributeParser = swiftAttributeParser;
+    this.appleConfig = appleConfig;
 
     this.projectFilesystem = projectCell.getFilesystem();
   }
@@ -594,10 +598,12 @@ class HeaderSearchPaths {
   private ImmutableSet<Path> collectRecursiveSwiftIncludePaths(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+    final boolean enableIndexingFix = appleConfig.getEnableProjectV2SwiftIndexingFix();
     visitRecursiveHeaderSymlinkTrees(
         targetNode,
         (nativeNode, headerVisibility) -> {
-          if (headerVisibility.equals(HeaderVisibility.PUBLIC)
+          if ((!enableIndexingFix || nativeNode != targetNode)
+              && headerVisibility.equals(HeaderVisibility.PUBLIC)
               && NodeHelper.isModularAppleLibrary(nativeNode)) {
             Flavor defaultPlatformFlavor =
                 targetNode.getConstructorArg().getDefaultPlatform().orElse(cxxPlatform.getFlavor());

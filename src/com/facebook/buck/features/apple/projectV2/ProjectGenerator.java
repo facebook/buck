@@ -250,7 +250,8 @@ public class ProjectGenerator {
               dependenciesCache,
               projectSourcePathResolver,
               pathRelativizer,
-              swiftAttributeParser);
+              swiftAttributeParser,
+              appleConfig);
 
       FlagParser flagParser =
           new FlagParser(

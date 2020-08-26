@@ -155,7 +155,8 @@ public class XcodeNativeTargetGeneratorTest {
             dependenciesCache,
             projectSourcePathResolver,
             pathRelativizer,
-            swiftAttributeParser);
+            swiftAttributeParser,
+            appleConfig);
 
     FlagParser flagParser =
         new FlagParser(
