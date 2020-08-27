@@ -1433,6 +1433,35 @@ jobs:
           name: Buck build
           command: cd %BUCKROOT% && refreshenv && bin\buck build buck -c python.interpreter=python
           shell: cmd.exe
+
+  windows_tests:
+    environment:
+      <<: *windows_environment
+    working_directory: "C:\\Users\\circleci\\buck"
+    executor: win/default
+    steps:
+      - checkout
+      - run:
+          name: Install ant
+          command: choco install ant --version=1.9.7
+          shell: cmd.exe
+      - run:
+          name: Install OpenJDK8
+          command: choco install adoptopenjdk8
+          shell: cmd.exe
+      - run:
+          # on Windows, python3 is installed as python but buck expect the name python3
+          name: Create symlink to python
+          command: $pythonpath=(Split-Path((Get-Command python).Path)); cmd /c mklink ${pythonpath}\python3.exe ${pythonpath}\python.exe
+          shell: powershell.exe
+      - run:
+          name: Ant build
+          command: cd %BUCKROOT% && refreshenv && ant
+          shell: cmd.exe
+      - run:
+          name: Buck build
+          command: cd %BUCKROOT% && refreshenv && bin\buck build buck -c python.interpreter=python
+          shell: cmd.exe
       # We know there are some Windows test failures, comment out for now. They should be fixed.
       - run:
           name: Run Windows tests
@@ -1597,6 +1626,7 @@ workflows:
   windows_jobs:
     jobs:
       - windows_build_test
+      - windows_tests
 
   publish_jobs:
     jobs:
