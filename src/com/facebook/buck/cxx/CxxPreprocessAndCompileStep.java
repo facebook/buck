@@ -153,9 +153,7 @@ class CxxPreprocessAndCompileStep implements Step {
 
     // Set `TMPDIR` to `scratchDir` so the compiler/preprocessor uses this dir for it's temp and
     // intermediate files.
-    env.put(
-        context.getPlatform() != Platform.WINDOWS ? "TMPDIR" : "TMP",
-        filesystem.resolve(scratchDir).toString());
+    env.put("TMPDIR", filesystem.resolve(scratchDir).toString());
 
     if (cxxLogInfo.isPresent()) {
       // Add some diagnostic strings into the subprocess's env as well.
