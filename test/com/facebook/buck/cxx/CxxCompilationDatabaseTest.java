@@ -47,6 +47,7 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -67,7 +68,13 @@ public class CxxCompilationDatabaseTest {
         BuildTargetFactory.newInstance("//foo:baz")
             .withAppendedFlavors(ImmutableSet.of(CxxCompilationDatabase.COMPILATION_DATABASE));
 
-    String root = "/Users/user/src";
+    String root;
+    if (Platform.detect() == Platform.WINDOWS)  {
+      root = "C:\\Users\\user\\src";
+    }
+    else {
+      root = "/Users/user/src";
+    }
     Path fakeRoot = Paths.get(root);
     ProjectFilesystem filesystem =
         new FakeProjectFilesystem(CanonicalCellName.rootCell(), AbsPath.of(fakeRoot));

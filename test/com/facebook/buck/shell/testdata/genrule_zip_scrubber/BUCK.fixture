@@ -75,7 +75,7 @@ genrule(
     ],
     out = "output.zip",
     bash = "cp $SRCS $OUT",
-    cmd_exe = "copy $SRCS $OUT",
+    cmd_exe = "copy %SRCS% %OUT%",
 )
 
 genrule(

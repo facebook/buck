@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.oneOf;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -27,6 +28,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -94,6 +96,7 @@ public class CxxErrorTransformerTest {
 
   @Test
   public void shouldProperlyTransformErrorLinesInPrimaryIncludeTrace() {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     assertThat(
         transformer.transformLine(
             pathResolver, String.format("In file included from %s:", originalPath)),
@@ -114,6 +117,7 @@ public class CxxErrorTransformerTest {
 
   @Test
   public void shouldProperlyTransformLinesInSubsequentIncludeTrace() {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     assertThat(
         transformer.transformLine(pathResolver, String.format("   from %s:", originalPath)),
         equalTo(String.format("   from %s:", expectedPath)));
@@ -130,6 +134,7 @@ public class CxxErrorTransformerTest {
 
   @Test
   public void shouldProperlyTransformLinesInErrorMessages() {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     assertThat(
         transformer.transformLine(pathResolver, String.format("%s: something bad", originalPath)),
         equalTo(String.format("%s: something bad", expectedPath)));
@@ -144,6 +149,7 @@ public class CxxErrorTransformerTest {
 
   @Test
   public void shouldProperlyTransformColoredLinesInErrorMessages() {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     Ansi ansi = new Ansi(/* isAnsiTerminal */ true);
     assertThat(
         transformer.transformLine(
