@@ -15,11 +15,13 @@
 import glob
 import os
 import unittest
+import platform
 
 from project_workspace import ProjectWorkspace
 
 
 class LogRotationTest(unittest.TestCase):
+    @unittest.skipIf(platform.system() == "Windows", "Skip on Windows platform.")
     def test_log_retention(self):
         """ Tests that the default java.util.logging setup can maintain at least 'a couple'
             of log files. """
