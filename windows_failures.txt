@@ -35,3 +35,4 @@
 !com.facebook.buck.features.python.PexStepTest
 !com.facebook.buck.maven.ResolverIntegrationTest
 !com.facebook.buck.features.python.PythonBinaryIntegrationTest
+!com.facebook.buck.log
