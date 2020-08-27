@@ -57,7 +57,7 @@ public class AndroidInstrumentationTestDescription
       ToolchainProvider toolchainProvider) {
     this.testBuckConfig = testBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
-    this.javaOptions = JavaOptionsProvider.getDefaultJavaOptions(toolchainProvider);
+    this.javaOptions = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
     this.resourceSupplierCache = new ConcurrentHashMap<>();
   }
 
