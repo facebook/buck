@@ -127,6 +127,7 @@ genrule(
     }),
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
 )
 
 genrule(
@@ -137,6 +138,7 @@ genrule(
     }),
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
 )
 
 genrule(
@@ -147,6 +149,7 @@ genrule(
     }),
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
 )
 
 genrule(
@@ -157,4 +160,5 @@ genrule(
     }),
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
 )

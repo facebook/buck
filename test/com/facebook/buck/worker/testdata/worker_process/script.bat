@@ -9,7 +9,7 @@ FOR /L %%i IN (1,1,1024) DO (
 
 REM Write invalid JSON to stdout to trigger an exception when Buck tries to
 REM consume our output.
-ECHO "}"
+ECHO }
 
 REM Consume all of stdin to avoid a race with Buck trying to talk to us.
 TYPE CON

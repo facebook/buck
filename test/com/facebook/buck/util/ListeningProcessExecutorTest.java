@@ -212,7 +212,10 @@ public class ListeningProcessExecutorTest {
     ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
     int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
-    assertThat(listener.capturedStdout.toString("UTF-8"), is(emptyString()));
+    if (Platform.detect() != Platform.WINDOWS) {
+      // Variable %COMSPEC% is always in Windows environment so don't assert empty on it.
+      assertThat(listener.capturedStdout.toString("UTF-8"), is(emptyString()));
+    }
     assertThat(listener.capturedStderr.toString("UTF-8"), is(emptyString()));
   }
 }

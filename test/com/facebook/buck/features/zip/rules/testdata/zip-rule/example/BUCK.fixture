@@ -107,6 +107,7 @@ genrule(
     srcs = ["cake.txt"],
     out = "copy_out",
     cmd = "mkdir -p $OUT && cp $SRCS $OUT",
+    cmd_exe = "mkdir $OUT && copy %SRCS% %OUT%",
 )
 
 zip_file(

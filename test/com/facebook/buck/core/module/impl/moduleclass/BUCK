@@ -35,6 +35,10 @@ genrule(
         "mkdir $OUT && ",
         "cp $(location :{}) $OUT/module-binary-hash.txt".format("known-hash.txt"),
     ]),
+    cmd_exe = " ".join([
+        "mkdir $OUT && ",
+        "copy $(location :{}) $OUT\module-binary-hash.txt".format("known-hash.txt"),
+    ]),
 )
 
 zip_file(

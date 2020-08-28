@@ -38,6 +38,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -145,14 +146,15 @@ public class JavacStepTest {
 
     // JavacStep itself writes stdout to the console on error; we expect the Build class to write
     // the stderr stream returned in the StepExecutionResult
+    String separator = System.getProperty("line.separator");
     assertThat(
         result,
         equalTo(
             StepExecutionResult.builder()
                 .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
-                .setStderr(Optional.of("javac stderr\n"))
+                .setStderr(Optional.of("javac stderr" + separator))
                 .build()));
-    assertThat(listener.getLogMessages(), equalTo(ImmutableList.of("javac stdout\n")));
+    assertThat(listener.getLogMessages(), equalTo(ImmutableList.of("javac stdout" + separator)));
   }
 
   @Test
@@ -160,6 +162,13 @@ public class JavacStepTest {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    String bootClassPath;
+    if (Platform.detect() == Platform.WINDOWS) {
+      bootClassPath = "C:\\this-totally-exists";
+    }
+    else {
+      bootClassPath = "/this-totally-exists";
+    }
     JavacOptions javacOptions =
         JavacOptions.builder()
             .setLanguageLevelOptions(
@@ -167,7 +176,7 @@ public class JavacStepTest {
                     .setSourceLevel("8.0")
                     .setTargetLevel("8.0")
                     .build())
-            .setBootclasspath("/this-totally-exists")
+            .setBootclasspath(bootClassPath)
             .build();
     ClasspathChecker classpathChecker =
         new ClasspathChecker(
@@ -207,6 +216,13 @@ public class JavacStepTest {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    String bootClassPath;
+    if (Platform.detect() == Platform.WINDOWS) {
+      bootClassPath = "C:\\this-totally-exists;relative-path";
+    }
+    else {
+      bootClassPath = "/this-totally-exists:relative-path";
+    }
     JavacOptions javacOptions =
         JavacOptions.builder()
             .setLanguageLevelOptions(
@@ -214,7 +230,7 @@ public class JavacStepTest {
                     .setSourceLevel("8.0")
                     .setTargetLevel("8.0")
                     .build())
-            .setBootclasspath("/this-totally-exists:relative-path")
+            .setBootclasspath(bootClassPath)
             .build();
     ClasspathChecker classpathChecker =
         new ClasspathChecker(

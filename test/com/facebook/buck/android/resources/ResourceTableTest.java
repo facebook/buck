@@ -208,7 +208,7 @@ public class ResourceTableTest {
       }
       resourceTable = ResourceTable.slice(resourceTable, counts);
       Path resourcesOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".resources.sliced"));
-      String expected = filesystem.readFileIfItExists(resourcesOutput).get();
+      String expected = filesystem.readFileIfItExists(resourcesOutput).get().replaceAll("\r\n", "\n");
 
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       resourceTable.dump(new PrintStream(baos));
