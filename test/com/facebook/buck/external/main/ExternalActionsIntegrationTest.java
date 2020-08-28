@@ -18,12 +18,14 @@ package com.facebook.buck.external.main;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.event.IsolatedEventBus;
+import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.external.utils.ExternalBinaryBuckConstants;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -44,7 +46,10 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,7 +61,8 @@ public class ExternalActionsIntegrationTest {
       ConsoleParams.of(false, Verbosity.STANDARD_INFORMATION);
 
   private ProcessExecutor defaultExecutor;
-  private IsolatedEventBus eventBus;
+  private BuckEventBus eventBusForTests;
+  private BuckEventBusForTests.CapturingEventListener eventBusListener;
   private ProcessExecutor downwardApiProcessExecutor;
   private Path testBinary;
 
@@ -65,10 +71,12 @@ public class ExternalActionsIntegrationTest {
   @Before
   public void setUp() throws Exception {
     defaultExecutor = new DefaultProcessExecutor(new TestConsole());
-    eventBus = BuckEventBusForTests.newInstance().isolated();
+    eventBusForTests = BuckEventBusForTests.newInstance();
+    eventBusListener = new BuckEventBusForTests.CapturingEventListener();
+    eventBusForTests.register(eventBusListener);
     downwardApiProcessExecutor =
         DownwardApiProcessExecutor.FACTORY.create(
-            defaultExecutor, CONSOLE_PARAMS, eventBus, TEST_ACTION_ID);
+            defaultExecutor, CONSOLE_PARAMS, eventBusForTests.isolated(), TEST_ACTION_ID);
 
     String packageName = getClass().getPackage().getName().replace('.', '/');
     URL binary = Resources.getResource(packageName + "/external_actions_bin_for_tests.jar");
@@ -76,6 +84,12 @@ public class ExternalActionsIntegrationTest {
     try (FileOutputStream stream = new FileOutputStream(testBinary.toFile())) {
       stream.write(Resources.toByteArray(binary));
     }
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    eventBusForTests.unregister(eventBusListener);
+    eventBusForTests.close();
   }
 
   @Test
@@ -118,7 +132,16 @@ public class ExternalActionsIntegrationTest {
             Optional.empty());
 
     assertThat(result.getExitCode(), equalTo(0));
-    AbsPath actual = temporaryFolder.getRoot().resolve("test_path");
-    assertTrue(Files.isDirectory(actual.getPath()));
+    AbsPath actualOutput = temporaryFolder.getRoot().resolve("test_path");
+    assertTrue(Files.isDirectory(actualOutput.getPath()));
+
+    StepEvent.Started expectedStartEvent =
+        StepEvent.started(
+            "mkdir", String.format("mkdir -p %s", actualOutput.getPath()), UUID.randomUUID());
+    StepEvent.Finished expectedFinishEvent = StepEvent.finished(expectedStartEvent, 0);
+    List<String> actualStepEvents = eventBusListener.getStepEventLogMessages();
+    assertThat(actualStepEvents, hasSize(2));
+    assertThat(actualStepEvents.get(0), equalTo(expectedStartEvent.toLogMessage()));
+    assertThat(actualStepEvents.get(1), equalTo(expectedFinishEvent.toLogMessage()));
   }
 }
