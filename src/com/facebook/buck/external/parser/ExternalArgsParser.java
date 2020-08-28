@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Parser for args passed to ExternalActionsExecutable.
+ * Parser for args passed to {@link com.facebook.buck.external.main.ExternalActionsExecutable}.
  *
  * <p>Two args are expected:
  *
@@ -33,8 +33,6 @@ import java.io.InputStream;
  *   <li>External action class name for the steps to be executed
  *   <li>Path to a file containing a {@link BuildableCommand}
  * </ol>
- *
- * TODO(irenewchen): Add {@link} to ExternalActionsExecutable once it exists.
  */
 public class ExternalArgsParser {
   private static final int NUM_EXPECTED_ARGS = 2;

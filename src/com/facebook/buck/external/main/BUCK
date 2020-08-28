@@ -1,0 +1,27 @@
+java_library(
+    name = "external_actions_lib",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/external/...",
+        "//test/com/facebook/buck/external/...",
+    ],
+    deps = [
+        "//src-gen:buildable-command-model",
+        "//src/com/facebook/buck/downwardapi/protocol:protocol",
+        "//src/com/facebook/buck/event/isolated:isolated",
+        "//src/com/facebook/buck/external/model:model",
+        "//src/com/facebook/buck/external/parser:parser",
+        "//src/com/facebook/buck/external/utils:utils",
+        "//src/com/facebook/buck/io/namedpipes:namedpipes",
+        "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
+        "//src/com/facebook/buck/util/environment:environment",
+        "//third-party/java/guava:guava",
+    ],
+)
+
+java_binary(
+    name = "external_actions_bin",
+    main_class = "com.facebook.buck.external.main.ExternalActionsExecutable",
+    visibility = ["PUBLIC"],
+    deps = [":external_actions_lib"],
+)
