@@ -179,17 +179,22 @@ public class AppleCxxPlatforms {
       toolSearchPathsBuilder.add(sdkPaths.getDeveloperPath().get().resolve("Tools"));
     }
 
+    AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
+
     // TODO(beng): Add more and better cflags.
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
     cflagsBuilder.add("-isysroot", sdkPaths.getSdkPath().toString());
-    cflagsBuilder.add("-arch", targetArchitecture);
+    if (appleConfig.getTargetTripleEnabled()) {
+      AppleCompilerTargetTriple triple = getAppleTargetTripleForSdk(targetSdk, targetArchitecture);
+      cflagsBuilder.add("-target", triple.getUnversionedTriple());
+    } else {
+      cflagsBuilder.add("-arch", targetArchitecture);
+    }
     cflagsBuilder.add(targetSdk.getApplePlatform().getMinVersionFlagPrefix() + minVersion);
 
     if (targetSdk.getApplePlatform().equals(ApplePlatform.WATCHOS)) {
       cflagsBuilder.add("-fembed-bitcode");
     }
-
-    AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
 
     // Populate Xcode version keys from Xcode's own Info.plist if available.
     Optional<String> xcodeBuildVersion = Optional.empty();
@@ -518,6 +523,22 @@ public class AppleCxxPlatforms {
         .setCodesignProvider(appleConfig.getCodesignProvider());
 
     return platformBuilder.build();
+  }
+
+  private static AppleCompilerTargetTriple getAppleTargetTripleForSdk(
+      AppleSdk targetSdk, String targetArchitecture) {
+    Optional<String> sdkVendor = targetSdk.getTargetTripleVendor();
+    Optional<String> sdkPlatform = targetSdk.getTargetTriplePlatformName();
+    if (sdkVendor.isPresent() && sdkPlatform.isPresent()) {
+      return AppleCompilerTargetTriple.ofUnversionedABI(
+          targetArchitecture, sdkVendor.get(), sdkPlatform.get(), targetSdk.getTargetTripleABI());
+    }
+
+    String fallbackVendor = "apple";
+    String fallbackPlatform = targetSdk.getApplePlatform().getPlatformName();
+    Optional<String> fallbackABI = Optional.empty();
+    return AppleCompilerTargetTriple.ofUnversionedABI(
+        targetArchitecture, fallbackVendor, fallbackPlatform, fallbackABI);
   }
 
   private static ImmutableList<String> getLdFlags(

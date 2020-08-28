@@ -54,11 +54,22 @@ public abstract class AppleCompilerTargetTriple implements AddsToRuleKey {
     return getArchitecture() + "-" + getVendor() + "-" + getPlatformName() + sdkVersion + abiSuffix;
   }
 
+  public String getUnversionedTriple() {
+    String abiSuffix = getABI().map(abi -> "-" + abi).orElse("");
+    return getArchitecture() + "-" + getVendor() + "-" + getPlatformName() + abiSuffix;
+  }
+
   public static AppleCompilerTargetTriple of(
       String architecture, String vendor, String platformName, String targetSdkVersion) {
     Optional<String> abi = Optional.empty();
     return ImmutableAppleCompilerTargetTriple.ofImpl(
         architecture, vendor, platformName, abi, Optional.of(targetSdkVersion));
+  }
+
+  public static AppleCompilerTargetTriple ofUnversionedABI(
+      String architecture, String vendor, String platformName, Optional<String> abi) {
+    return ImmutableAppleCompilerTargetTriple.ofImpl(
+        architecture, vendor, platformName, abi, Optional.empty());
   }
 
   /** Creates a copy of the triple with a different SDK version. */

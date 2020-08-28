@@ -18,6 +18,7 @@ package com.facebook.buck.apple.toolchain;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 import java.util.Set;
 
 /** Metadata about an Apple SDK. */
@@ -34,6 +35,12 @@ public abstract class AppleSdk {
 
   /** The architectures supported by the SDK. For example: {@code [i386, x86_64]}. */
   public abstract Set<String> getArchitectures();
+
+  public abstract Optional<String> getTargetTripleVendor();
+
+  public abstract Optional<String> getTargetTriplePlatformName();
+
+  public abstract Optional<String> getTargetTripleABI();
 
   /**
    * The toolchains used by the SDK. For example: {@code ["com.apple.dt.toolchain.XcodeDefault"]}

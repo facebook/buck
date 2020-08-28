@@ -92,6 +92,9 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String RESOURCE_PROCESSING_SEPARATE_RULE =
       "resource_processing_separate_rule";
 
+  // TODO(T71539769): This is a temporary flag, remove after successful deployment
+  private static final String TARGET_TRIPLE_ENABLED = "target_triple_enabled";
+
   private final BuckConfig delegate;
 
   // Reflection-based factory for ConfigView
@@ -572,6 +575,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean getResourceProcessingSeparateRuleFlag() {
     return delegate.getBooleanValue(APPLE_SECTION, RESOURCE_PROCESSING_SEPARATE_RULE, false);
+  }
+
+  public boolean getTargetTripleEnabled() {
+    return delegate.getBooleanValue(APPLE_SECTION, TARGET_TRIPLE_ENABLED, false);
   }
 
   @BuckStyleValue

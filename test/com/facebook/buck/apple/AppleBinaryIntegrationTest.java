@@ -1845,4 +1845,28 @@ public class AppleBinaryIntegrationTest {
         nonSpecificTargetBuildVersion.get(), CoreMatchers.not(containsString("minos 10.14")));
     assertThat(specificSDKTargetBuildVersion.get(), containsString("minos 10.14"));
   }
+
+  public void testAppleBinaryWithTargetTripleBuildsSomething() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_library_dependency_builds_something", tmp);
+    workspace.addBuckConfigLocalOption("apple", "target_triple_enabled", "true");
+    workspace.setUp();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
+            .withAppendedFlavors(InternalFlavor.of("macosx-x86_64"));
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
+    assertThat(Files.exists(outputPath), is(true));
+    assertThat(
+        workspace.runCommand("file", outputPath.toString()).getStdout().get(),
+        containsString("executable"));
+  }
 }
