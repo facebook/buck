@@ -43,7 +43,7 @@ public class BuildStepsRetrieverTest {
     ImmutableList<IsolatedStep> steps =
         BuildStepsRetriever.getStepsForBuildable(
             ParsedArgs.of(
-                FakeWorkingExternalBuildableWithOneStep.class,
+                FakeWorkingExternalActionWithOneStep.class,
                 BuildableCommand.newBuilder()
                     .addArgs("fake_path")
                     .putAllEnv(ImmutableMap.of())
@@ -71,20 +71,20 @@ public class BuildStepsRetrieverTest {
   @Test
   public void throwsIfNoEmptyConstructor() {
     exception.expect(IllegalStateException.class);
-    exception.expectMessage("FakeNotWorkingExternalBuildable must have empty constructor");
+    exception.expectMessage("FakeNotWorkingExternalAction must have empty constructor");
 
     BuildStepsRetriever.getStepsForBuildable(
         ParsedArgs.of(
-            FakeNotWorkingExternalBuildable.class,
+            FakeNotWorkingExternalAction.class,
             BuildableCommand.newBuilder()
                 .addArgs("fake_path")
                 .putAllEnv(ImmutableMap.of())
                 .build()));
   }
 
-  private static class FakeWorkingExternalBuildableWithOneStep implements ExternalAction {
+  private static class FakeWorkingExternalActionWithOneStep implements ExternalAction {
 
-    private FakeWorkingExternalBuildableWithOneStep() {}
+    private FakeWorkingExternalActionWithOneStep() {}
 
     @Override
     public ImmutableList<IsolatedStep> getSteps(BuildableCommand buildableCommand) {
@@ -108,10 +108,10 @@ public class BuildStepsRetrieverTest {
     }
   }
 
-  private static class FakeNotWorkingExternalBuildable implements ExternalAction {
+  private static class FakeNotWorkingExternalAction implements ExternalAction {
 
     @SuppressWarnings("unused")
-    private FakeNotWorkingExternalBuildable(String constructorParam) {}
+    private FakeNotWorkingExternalAction(String constructorParam) {}
 
     @Override
     public ImmutableList<IsolatedStep> getSteps(BuildableCommand buildableCommand) {

@@ -89,7 +89,7 @@ public class ExternalArgsParserTest {
                   TestExternalActionClassFoo.class.getName(), tempFile.getAbsolutePath()
                 });
 
-    assertThat(parsedArgs.getBuildableClass(), equalTo(TestExternalActionClassFoo.class));
+    assertThat(parsedArgs.getExternalActionClass(), equalTo(TestExternalActionClassFoo.class));
     assertThat(parsedArgs.getBuildableCommand(), equalTo(buildableCommand));
   }
 

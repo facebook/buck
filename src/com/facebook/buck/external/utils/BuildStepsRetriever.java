@@ -37,17 +37,20 @@ public class BuildStepsRetriever {
    * {@link ParsedArgs}.
    */
   public static ImmutableList<IsolatedStep> getStepsForBuildable(ParsedArgs parsedArgs) {
-    Class<? extends ExternalAction> buildableClass = parsedArgs.getBuildableClass();
+    Class<? extends ExternalAction> externalActionClass = parsedArgs.getExternalActionClass();
     try {
-      Constructor<? extends ExternalAction> constructor = buildableClass.getDeclaredConstructor();
+      Constructor<? extends ExternalAction> constructor =
+          externalActionClass.getDeclaredConstructor();
       constructor.setAccessible(true);
       ExternalAction ExternalAction = constructor.newInstance();
       return ExternalAction.getSteps(parsedArgs.getBuildableCommand());
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException(
-          String.format("Buildable %s must have empty constructor", buildableClass.getName()));
+          String.format(
+              "External action %s must have empty constructor", externalActionClass.getName()));
     } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
-      throw new HumanReadableException(e, "Failed to instantiate buildable %s", buildableClass);
+      throw new HumanReadableException(
+          e, "Failed to instantiate external action %s", externalActionClass);
     }
   }
 }

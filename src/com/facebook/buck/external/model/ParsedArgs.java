@@ -25,12 +25,12 @@ import com.facebook.buck.rules.modern.model.BuildableCommand;
  */
 @BuckStyleValue
 public abstract class ParsedArgs {
-  public abstract Class<? extends ExternalAction> getBuildableClass();
+  public abstract Class<? extends ExternalAction> getExternalActionClass();
 
   public abstract BuildableCommand getBuildableCommand();
 
   public static ParsedArgs of(
-      Class<? extends ExternalAction> buildableName, BuildableCommand buildableCommand) {
-    return ImmutableParsedArgs.ofImpl(buildableName, buildableCommand);
+      Class<? extends ExternalAction> externalActionName, BuildableCommand buildableCommand) {
+    return ImmutableParsedArgs.ofImpl(externalActionName, buildableCommand);
   }
 }
