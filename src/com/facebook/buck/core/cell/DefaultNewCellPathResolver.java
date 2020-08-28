@@ -37,8 +37,9 @@ public abstract class DefaultNewCellPathResolver implements NewCellPathResolver 
   // Path in places where they shouldn't do that.
   abstract ImmutableMap<AbsPath, CanonicalCellName> getPathToNameMap();
 
+  @Override
   @Value.Derived
-  ImmutableSortedMap<CanonicalCellName, AbsPath> getCellToPathMap() {
+  public ImmutableSortedMap<CanonicalCellName, AbsPath> getCellToPathMap() {
     ImmutableSortedMap<CanonicalCellName, AbsPath> cellToPathMap =
         getPathToNameMap().entrySet().stream()
             .collect(

@@ -18,6 +18,7 @@ package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.google.common.collect.ImmutableSortedMap;
 import java.nio.file.Path;
 
 /**
@@ -28,6 +29,7 @@ import java.nio.file.Path;
  * {@link CellPathResolver}).
  */
 public interface NewCellPathResolver {
+
   /**
    * Note: unlike {@link CellPathResolver#getCellPath(CanonicalCellName)} this function always
    * returns a value. Existence/visibility of the cell is enforced when the {@link
@@ -43,4 +45,7 @@ public interface NewCellPathResolver {
    * @return Canonical name of the cell.
    */
   CanonicalCellName getCanonicalCellName(Path path);
+
+  /** Get all cells. */
+  ImmutableSortedMap<CanonicalCellName, AbsPath> getCellToPathMap();
 }

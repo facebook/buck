@@ -61,7 +61,7 @@ import java.util.concurrent.ExecutionException;
 final class CellProviderImpl implements CellProvider {
 
   private final NewCellPathResolver newCellPathResolver;
-  private final LoadingCache<AbsPath, Cell> cells;
+  private final LoadingCache<CanonicalCellName, Cell> cells;
   private final ImmutableSet<AbsPath> allRoots;
   private final ImmutableMap<AbsPath, RawConfig> pathToConfigOverrides;
   private final ProjectFilesystem rootFilesystem;
@@ -114,9 +114,9 @@ final class CellProviderImpl implements CellProvider {
     this.cells =
         CacheBuilder.newBuilder()
             .build(
-                new CacheLoader<AbsPath, Cell>() {
+                new CacheLoader<CanonicalCellName, Cell>() {
                   @Override
-                  public Cell load(AbsPath cellPath) throws IOException {
+                  public Cell load(CanonicalCellName cellPath) throws IOException {
                     return loadCell(cellPath);
                   }
                 });
@@ -130,10 +130,11 @@ final class CellProviderImpl implements CellProvider {
             rootFilesystem,
             moduleManager,
             rootConfig);
-    cells.put(rootCell.getRoot(), rootCell);
+    cells.put(CanonicalCellName.rootCell(), rootCell);
   }
 
-  private Cell loadCell(AbsPath cellPath) throws IOException {
+  private Cell loadCell(CanonicalCellName canonicalCellName) throws IOException {
+    AbsPath cellPath = newCellPathResolver.getCellPath(canonicalCellName);
     AbsPath normalizedCellPath = cellPath.toRealPath().normalize();
 
     Preconditions.checkState(
@@ -179,10 +180,6 @@ final class CellProviderImpl implements CellProvider {
             rootCellCellPathResolver, cellNameResolver, cellMapping.keySet(), cellPath);
 
     Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo = Optional.empty();
-    CanonicalCellName canonicalCellName =
-        cellPathResolver
-            .getNewCellPathResolver()
-            .getCanonicalCellName(normalizedCellPath.getPath());
     rootConfig.getView(BuildBuckConfig.class);
     if (canonicalCellName.getLegacyName().isPresent()) {
       embeddedCellBuckOutInfo =
@@ -229,14 +226,16 @@ final class CellProviderImpl implements CellProvider {
         cellNameResolver);
   }
 
-  private Cell getCellByPath(AbsPath path) {
+  @Override
+  public Cell getCellByCanonicalCellName(CanonicalCellName canonicalCellName) {
     try {
-      return cells.get(path);
+      return cells.get(canonicalCellName);
     } catch (ExecutionException e) {
       if (e.getCause() instanceof IOException) {
-        throw new HumanReadableException(e.getCause(), "Failed to load Cell at: %s", path);
+        throw new HumanReadableException(
+            e.getCause(), "Failed to load Cell at: %s", canonicalCellName);
       } else if (e.getCause() instanceof InterruptedException) {
-        throw new RuntimeException("Interrupted while loading Cell: " + path, e);
+        throw new RuntimeException("Interrupted while loading Cell: " + canonicalCellName, e);
       } else {
         throw new IllegalStateException(
             "Unexpected checked exception thrown from cell loader.", e.getCause());
@@ -245,12 +244,6 @@ final class CellProviderImpl implements CellProvider {
       Throwables.throwIfUnchecked(e.getCause());
       throw e;
     }
-  }
-
-  @Override
-  public Cell getCellByCanonicalCellName(CanonicalCellName canonicalCellName) {
-    // TODO(nga): skip resolving to cell path
-    return getCellByPath(newCellPathResolver.getCellPath(canonicalCellName));
   }
 
   @Override
@@ -270,8 +263,8 @@ final class CellProviderImpl implements CellProvider {
 
   @Override
   public ImmutableList<Cell> getAllCells() {
-    return getRootCellCellPathResolver().getKnownRoots().stream()
-        .map(this::getCellByPath)
+    return newCellPathResolver.getCellToPathMap().keySet().stream()
+        .map(this::getCellByCanonicalCellName)
         .collect(ImmutableList.toImmutableList());
   }
 }
