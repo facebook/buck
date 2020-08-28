@@ -264,8 +264,8 @@ final class CellProviderImpl implements CellProvider {
   }
 
   @Override
-  public ImmutableMap<AbsPath, Cell> getLoadedCells() {
-    return ImmutableMap.copyOf(cells.asMap());
+  public ImmutableList<Cell> getLoadedCells() {
+    return ImmutableList.copyOf(cells.asMap().values());
   }
 
   @Override

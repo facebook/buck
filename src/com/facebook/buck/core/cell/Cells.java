@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -87,7 +86,7 @@ public class Cells {
   }
 
   /** @return all loaded {@link Cell}s. */
-  public ImmutableMap<AbsPath, Cell> getLoadedCells() {
+  public ImmutableList<Cell> getLoadedCells() {
     return cellProvider.getLoadedCells();
   }
 }
