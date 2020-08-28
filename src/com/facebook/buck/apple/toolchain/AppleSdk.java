@@ -44,6 +44,13 @@ public abstract class AppleSdk {
   public abstract Optional<String> getTargetTripleABI();
 
   /**
+   * Specifies the UI framework family to be used when calling actool. Detected from
+   * RESOURCES_UI_FRAMEWORK_FAMILY in the SDK, if missing, no --ui-framework-family parameter will
+   * be passed.
+   */
+  public abstract Optional<String> getResourcesUIFrameworkFamily();
+
+  /**
    * Specifies the target device to be used when calling actool and ibtool. Detected from
    * RESOURCES_TARGETED_DEVICE_FAMILY in the SDK, if missing, then built-in logic used to determine
    * the value.

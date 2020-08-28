@@ -70,6 +70,8 @@ public class AppleAssetCatalog extends AbstractBuildRule {
 
   @AddToRuleKey private final Optional<String> deviceFamily;
 
+  @AddToRuleKey private final Optional<String> uiFrameworkFamily;
+
   @AddToRuleKey private final Tool actool;
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> assetCatalogDirs;
@@ -113,6 +115,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
       ApplePlatform applePlatform,
       String targetSDKVersion,
       Optional<String> maybeDeviceFamily,
+      Optional<String> maybeUIFrameworkFamily,
       Tool actool,
       ImmutableSortedSet<SourcePath> assetCatalogDirs,
       Optional<String> appIcon,
@@ -124,6 +127,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
     this.applePlatform = applePlatform;
     this.targetSDKVersion = targetSDKVersion;
     this.deviceFamily = maybeDeviceFamily;
+    this.uiFrameworkFamily = maybeUIFrameworkFamily;
     this.actool = actool;
     this.assetCatalogDirs = assetCatalogDirs;
     this.withDownwardApi = withDownwardApi;
@@ -175,6 +179,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
             applePlatform,
             targetSDKVersion,
             deviceFamily,
+            uiFrameworkFamily,
             actool.getEnvironment(context.getSourcePathResolver()),
             actool.getCommandPrefix(context.getSourcePathResolver()),
             absoluteAssetCatalogDirs.stream()

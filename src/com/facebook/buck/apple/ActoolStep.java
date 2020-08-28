@@ -36,6 +36,7 @@ class ActoolStep extends IsolatedShellStep {
   private final String applePlatformExternalName;
   private final String targetSDKVersion;
   private final Optional<String> deviceFamily;
+  private final Optional<String> uiFrameworkFamily;
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> actoolCommand;
   private final SortedSet<Path> assetCatalogDirs;
@@ -50,6 +51,7 @@ class ActoolStep extends IsolatedShellStep {
       ApplePlatform applePlatform,
       String targetSDKVersion,
       Optional<String> maybeDeviceFamily,
+      Optional<String> maybeUIFrameworkFamily,
       ImmutableMap<String, String> environment,
       List<String> actoolCommand,
       SortedSet<Path> assetCatalogDirs,
@@ -65,6 +67,7 @@ class ActoolStep extends IsolatedShellStep {
     this.applePlatformExternalName = applePlatform.getExternalName();
     this.targetSDKVersion = targetSDKVersion;
     this.deviceFamily = maybeDeviceFamily;
+    this.uiFrameworkFamily = maybeUIFrameworkFamily;
     this.environment = environment;
     this.actoolCommand = ImmutableList.copyOf(actoolCommand);
     this.assetCatalogDirs = assetCatalogDirs;
@@ -89,6 +92,9 @@ class ActoolStep extends IsolatedShellStep {
         output.toString(),
         "--output-partial-info-plist",
         outputPlist.toString());
+
+    uiFrameworkFamily.ifPresent(
+        frameworkFamily -> commandBuilder.add("--ui-framework-family", frameworkFamily));
 
     if (deviceFamily.isPresent()) {
       commandBuilder.add("--target-device", deviceFamily.get());
