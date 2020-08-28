@@ -68,6 +68,8 @@ public class AppleAssetCatalog extends AbstractBuildRule {
 
   @AddToRuleKey private final String targetSDKVersion;
 
+  @AddToRuleKey private final Optional<String> deviceFamily;
+
   @AddToRuleKey private final Tool actool;
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> assetCatalogDirs;
@@ -110,6 +112,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
       SourcePathRuleFinder ruleFinder,
       ApplePlatform applePlatform,
       String targetSDKVersion,
+      Optional<String> maybeDeviceFamily,
       Tool actool,
       ImmutableSortedSet<SourcePath> assetCatalogDirs,
       Optional<String> appIcon,
@@ -120,6 +123,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
     super(buildTarget, projectFilesystem);
     this.applePlatform = applePlatform;
     this.targetSDKVersion = targetSDKVersion;
+    this.deviceFamily = maybeDeviceFamily;
     this.actool = actool;
     this.assetCatalogDirs = assetCatalogDirs;
     this.withDownwardApi = withDownwardApi;
@@ -170,6 +174,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
             getProjectFilesystem().getRootPath(),
             applePlatform,
             targetSDKVersion,
+            deviceFamily,
             actool.getEnvironment(context.getSourcePathResolver()),
             actool.getCommandPrefix(context.getSourcePathResolver()),
             absoluteAssetCatalogDirs.stream()

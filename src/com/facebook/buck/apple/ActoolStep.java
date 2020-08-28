@@ -35,6 +35,7 @@ class ActoolStep extends IsolatedShellStep {
   private final String applePlatformName;
   private final String applePlatformExternalName;
   private final String targetSDKVersion;
+  private final Optional<String> deviceFamily;
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> actoolCommand;
   private final SortedSet<Path> assetCatalogDirs;
@@ -48,6 +49,7 @@ class ActoolStep extends IsolatedShellStep {
       AbsPath workingDirectory,
       ApplePlatform applePlatform,
       String targetSDKVersion,
+      Optional<String> maybeDeviceFamily,
       ImmutableMap<String, String> environment,
       List<String> actoolCommand,
       SortedSet<Path> assetCatalogDirs,
@@ -62,6 +64,7 @@ class ActoolStep extends IsolatedShellStep {
     this.applePlatformName = applePlatform.getName();
     this.applePlatformExternalName = applePlatform.getExternalName();
     this.targetSDKVersion = targetSDKVersion;
+    this.deviceFamily = maybeDeviceFamily;
     this.environment = environment;
     this.actoolCommand = ImmutableList.copyOf(actoolCommand);
     this.assetCatalogDirs = assetCatalogDirs;
@@ -87,7 +90,9 @@ class ActoolStep extends IsolatedShellStep {
         "--output-partial-info-plist",
         outputPlist.toString());
 
-    if (applePlatformName.equals(ApplePlatform.APPLETVOS.getName())
+    if (deviceFamily.isPresent()) {
+      commandBuilder.add("--target-device", deviceFamily.get());
+    } else if (applePlatformName.equals(ApplePlatform.APPLETVOS.getName())
         || applePlatformName.equals(ApplePlatform.APPLETVSIMULATOR.getName())) {
       commandBuilder.add("--target-device", "tv");
     } else if (applePlatformName.equals(ApplePlatform.WATCHOS.getName())

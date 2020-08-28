@@ -43,6 +43,13 @@ public abstract class AppleSdk {
 
   public abstract Optional<String> getTargetTripleABI();
 
+  /**
+   * Specifies the target device to be used when calling actool and ibtool. Detected from
+   * RESOURCES_TARGETED_DEVICE_FAMILY in the SDK, if missing, then built-in logic used to determine
+   * the value.
+   */
+  public abstract Optional<String> getResourcesDeviceFamily();
+
   /** Defines a list of SDK-specific system framework search paths. Passed using -iframework. */
   @Value.Default
   public ImmutableList<String> getAdditionalSystemFrameworkSearchPaths() {
