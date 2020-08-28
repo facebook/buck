@@ -212,7 +212,7 @@ public class DiffRuleKeysScriptIntegrationTest {
             "  (zipFiles):",
             "    -[<missing>]",
             "    +[\"//:java_lib_3#class-abi\"@ruleKey(sha1=", /* some rulekey */
-            ")]",
+            "    +[string(\"Pair(//:java_lib_3#class-abi,",
             ")]"));
   }
 

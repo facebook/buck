@@ -109,6 +109,8 @@ java_test(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/event/listener:listener",
+        "//src/com/facebook/buck/features/filebundler:filebundler",
+        "//src/com/facebook/buck/features/filegroup:filegroup",
         "//src/com/facebook/buck/features/python/toolchain/impl:impl",
         "//src/com/facebook/buck/file:file",
         "//src/com/facebook/buck/io:executable-finder",

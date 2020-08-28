@@ -23,19 +23,25 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.impl.PathReferenceRuleWithMultipleOutputs;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.features.filegroup.Filegroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics.Result;
@@ -455,6 +461,66 @@ public class DefaultRuleKeyFactoryTest {
         Matchers.containsInAnyOrder(
             ImmutableRuleKeyInput.ofImpl(filesystem, input.getRelativePath())));
     assertThat(result.deps, Matchers.containsInAnyOrder(dep, appendable));
+  }
+
+  @Test
+  public void srcsWithDifferentOutputLabelsShouldHaveDifferentRulekeys() {
+    ActionGraphBuilder ruleFinder = new TestActionGraphBuilder();
+    NoopRuleKeyCache<RuleKey> noopRuleKeyCache = new NoopRuleKeyCache<>();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DefaultRuleKeyFactory factory =
+        new DefaultRuleKeyFactory(
+            new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create()),
+            new StackedFileHashCache(
+                ImmutableList.of(
+                    DefaultFileHashCache.createDefaultFileHashCache(
+                        filesystem, FileHashCacheMode.DEFAULT))),
+            ruleFinder,
+            noopRuleKeyCache,
+            Optional.empty());
+
+    BuildTarget srcTarget = BuildTargetFactory.newInstance("//:src");
+    BuildRule srcRule =
+        new PathReferenceRuleWithMultipleOutputs(
+            srcTarget,
+            filesystem,
+            Paths.get("default_path"),
+            ImmutableMap.of(
+                OutputLabel.of("label_one"),
+                ImmutableSortedSet.of(Paths.get("path_one")),
+                OutputLabel.of("label_two"),
+                ImmutableSet.of(Paths.get("path_two"))));
+    ruleFinder.addToIndex(srcRule);
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:target");
+
+    BuildRule rule1 =
+        new Filegroup(
+            buildTarget,
+            filesystem,
+            ruleFinder,
+            "output_name",
+            ImmutableSortedSet.of(
+                DefaultBuildTargetSourcePath.of(
+                    BuildTargetWithOutputs.of(srcTarget, OutputLabel.of("label_one")))));
+    BuildRule rule2 =
+        new Filegroup(
+            buildTarget,
+            filesystem,
+            ruleFinder,
+            "output_name",
+            ImmutableSortedSet.of(
+                DefaultBuildTargetSourcePath.of(
+                    BuildTargetWithOutputs.of(srcTarget, OutputLabel.of("label_two")))));
+
+    // Build the rule key.
+    factory.build(rule1);
+    factory.build(rule2);
+
+    // Verify the input was properly reported to the rule key cache.
+    RuleKeyResult<RuleKey> result = noopRuleKeyCache.results.get(rule1);
+    RuleKeyResult<RuleKey> result2 = noopRuleKeyCache.results.get(rule2);
+    assertNotEquals(result.result, result2.result);
   }
 
   @Test

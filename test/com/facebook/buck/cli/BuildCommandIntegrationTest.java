@@ -26,6 +26,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -541,5 +542,42 @@ public class BuildCommandIntegrationTest {
     assertThat(
         workspace.runBuckBuild("--show-output", fullyQualifiedName).assertSuccess().getStderr(),
         Matchers.containsString("100.0% CACHE MISS"));
+  }
+
+  @Test
+  public void outputLabelIsIncludedInRulekey() throws Exception {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "build_cache", tmp).setUp();
+    String target = "//:my_file";
+
+    // Build the target twice. Second build should be cached
+    workspace.runBuckBuild(target);
+    workspace.getBuildLog().assertTargetBuiltLocally(target);
+    workspace.runBuckBuild(target);
+    assertEquals(
+        BuildRuleSuccessType.MATCHING_RULE_KEY,
+        workspace.getBuildLog().getLogEntry(target).getSuccessType().get());
+
+    // Change the target to depend on its original dep target, but now the dep has a different
+    // output label
+    workspace.replaceFileContents("BUCK", "outputs_map[output1]", "outputs_map[output2]");
+
+    // Build the target twice again. First build should not be cached. Second build should be cached
+    workspace.runBuckBuild(target);
+    workspace.getBuildLog().assertTargetBuiltLocally(target);
+    workspace.runBuckBuild(target);
+    assertEquals(
+        BuildRuleSuccessType.MATCHING_RULE_KEY,
+        workspace.getBuildLog().getLogEntry(target).getSuccessType().get());
+
+    // Change something about the dep target
+    workspace.replaceFileContents("BUCK", "out2.txt", "new_out.txt");
+
+    // Build the target twice again. First build should not be cached. Second build should be cached
+    workspace.runBuckBuild(target);
+    workspace.getBuildLog().assertTargetBuiltLocally(target);
+    workspace.runBuckBuild(target);
+    assertEquals(
+        BuildRuleSuccessType.MATCHING_RULE_KEY,
+        workspace.getBuildLog().getLogEntry(target).getSuccessType().get());
   }
 }

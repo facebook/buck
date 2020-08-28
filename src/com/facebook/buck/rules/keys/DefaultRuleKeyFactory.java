@@ -190,7 +190,9 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
     @Override
     protected RuleKeyBuilder<RULE_KEY> setSourcePath(SourcePath sourcePath) throws IOException {
       if (sourcePath instanceof BuildTargetSourcePath) {
-        return setSourcePathAsRule((BuildTargetSourcePath) sourcePath);
+        BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
+        return setSourcePathAsRule(buildTargetSourcePath)
+            .setSingleValue((buildTargetSourcePath).representationForRuleKey());
       } else {
         // Add `PathSourcePath`s to our tracked inputs.
         PathSourcePath.from(sourcePath)
