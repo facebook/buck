@@ -96,6 +96,7 @@ public enum SwiftSdkLayoutType {
       case WATCH_SIMULATOR:
         return comparator.compare(sdkVersion, WATCH_VERSION_AT_XCODE_11);
       case MAC:
+      case MAC_CATALYST:
         return comparator.compare(sdkVersion, MAC_VERSION_AT_XCODE_11);
       case IOS_DEVICE:
       case IOS_SIMULATOR:

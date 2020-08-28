@@ -182,6 +182,7 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
 
       switch (platform.getType()) {
         case MAC:
+        case MAC_CATALYST:
           if (needsAppInfoPlistKeysOnMac()) {
             keys.put("NSHighResolutionCapable", new NSNumber(true));
             keys.put("NSSupportsAutomaticGraphicsSwitching", new NSNumber(true));
@@ -235,6 +236,7 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
     private void addAdditionalKeysForDesktopAndMobile(ImmutableMap.Builder<String, NSObject> keys) {
       switch (platform.getType()) {
         case MAC:
+        case MAC_CATALYST:
           keys.put("LSMinimumSystemVersion", new NSString(minOSVersion));
           break;
         case IOS_DEVICE:
@@ -252,7 +254,8 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
     private boolean needsAppInfoPlistKeysOnMac() {
       // XPC bundles on macOS don't require app-specific keys
       // (which also confuses Finder in displaying the XPC bundles as apps)
-      return !extension.equals(AppleBundleExtension.XPC.fileExtension);
+      return platform.getType() == ApplePlatformType.MAC
+          && !extension.equals(AppleBundleExtension.XPC.fileExtension);
     }
 
     private ImmutableMap<String, NSObject> getInfoPlistOverrideKeys() {

@@ -84,6 +84,13 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
           .setArchitectures(ImmutableList.of("i386", "x86_64", "arm64"))
           .setAppIncludesFrameworks(true)
           .build();
+  public static final ApplePlatform MACOSXCATALYST =
+      ImmutableApplePlatform.builder()
+          .setName("maccatalyst")
+          .setArchitectures(ImmutableList.of("x86_64", "arm64"))
+          .setMinVersionFlagPrefix("-mios-version-min=")
+          .setAppIncludesFrameworks(true)
+          .build();
   public static final ApplePlatform DRIVERKIT =
       ApplePlatform.builder()
           .setName("driverkit")
@@ -93,6 +100,7 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
       ImmutableList.of(
           IPHONEOS,
           IPHONESIMULATOR,
+          MACOSXCATALYST,
           WATCHOS,
           WATCHSIMULATOR,
           APPLETVOS,
@@ -148,6 +156,7 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
   public static boolean needsCodeSign(String name) {
     return name.startsWith(IPHONEOS.getName())
         || name.startsWith(IPHONESIMULATOR.getName())
+        || name.startsWith(MACOSXCATALYST.getName())
         || name.startsWith(WATCHOS.getName())
         || name.startsWith(WATCHSIMULATOR.getName())
         || name.startsWith(APPLETVOS.getName())
@@ -157,6 +166,7 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
 
   public static boolean adHocCodeSignIsSufficient(String name) {
     return name.startsWith(IPHONESIMULATOR.getName())
+        || name.startsWith(MACOSXCATALYST.getName())
         || name.startsWith(WATCHSIMULATOR.getName())
         || name.startsWith(APPLETVSIMULATOR.getName())
         || name.startsWith(MACOSX.getName());
@@ -167,7 +177,7 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
   }
 
   public static boolean needsEntitlementsInBinary(String name) {
-    return name.startsWith(IPHONESIMULATOR.getName());
+    return name.startsWith(IPHONESIMULATOR.getName()) || name.startsWith(MACOSXCATALYST.getName());
   }
 
   public static boolean isSimulator(String name) {

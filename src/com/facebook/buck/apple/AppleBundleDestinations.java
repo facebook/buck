@@ -120,7 +120,8 @@ abstract class AppleBundleDestinations implements AddsToRuleKey {
           IOS_FRAMEWORK_CONTENTS_PATH);
 
   public static AppleBundleDestinations platformDestinations(ApplePlatform platform) {
-    if (platform.getType() == ApplePlatformType.MAC) {
+    if (platform.getType() == ApplePlatformType.MAC
+        || platform.getType() == ApplePlatformType.MAC_CATALYST) {
       return AppleBundleDestinations.OSX_DESTINATIONS;
     } else {
       return AppleBundleDestinations.IOS_DESTINATIONS;
@@ -128,7 +129,8 @@ abstract class AppleBundleDestinations implements AddsToRuleKey {
   }
 
   public static AppleBundleDestinations platformFrameworkDestinations(ApplePlatform platform) {
-    if (platform.getType() == ApplePlatformType.MAC) {
+    if (platform.getType() == ApplePlatformType.MAC
+        || platform.getType() == ApplePlatformType.MAC_CATALYST) {
       return AppleBundleDestinations.OSX_FRAMEWORK_DESTINATIONS;
     } else {
       return AppleBundleDestinations.IOS_FRAMEWORK_DESTINATIONS;

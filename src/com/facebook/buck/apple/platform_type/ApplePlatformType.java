@@ -18,6 +18,7 @@ package com.facebook.buck.apple.platform_type;
 
 public enum ApplePlatformType {
   MAC,
+  MAC_CATALYST,
   IOS_DEVICE,
   IOS_SIMULATOR,
   WATCH_DEVICE,
@@ -34,6 +35,7 @@ public enum ApplePlatformType {
       case MAC:
       case IOS_DEVICE:
       case IOS_SIMULATOR:
+      case MAC_CATALYST:
       case TV_DEVICE:
       case TV_SIMULATOR:
       case UNKNOWN:
@@ -70,6 +72,10 @@ public enum ApplePlatformType {
 
     if (platformName.contains("appletvsimulator")) {
       return ApplePlatformType.TV_SIMULATOR;
+    }
+
+    if (platformName.contains("maccatalyst")) {
+      return ApplePlatformType.MAC_CATALYST;
     }
 
     return ApplePlatformType.UNKNOWN;
