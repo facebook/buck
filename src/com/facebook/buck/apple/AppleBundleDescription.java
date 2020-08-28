@@ -235,8 +235,7 @@ public class AppleBundleDescription
         swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
         swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
         downwardApiConfig.isEnabledForApple(),
-        minOSVersion,
-        appleConfig.getResourceProcessingSeparateRuleFlag());
+        minOSVersion);
   }
 
   private static Optional<String> getMinimumOSVersionForBundle(

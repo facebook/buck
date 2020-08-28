@@ -150,8 +150,6 @@ public class AppleBundle extends AbstractBuildRule
 
   private final Path infoPlistBundlePath;
 
-  @AddToRuleKey private final Optional<SourcePath> maybeProcessedResourcesDir;
-
   AppleBundle(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -182,8 +180,7 @@ public class AppleBundle extends AbstractBuildRule
       boolean withDownwardApi,
       Optional<SourcePath> maybeEntitlementsFile,
       boolean dryRunCodeSigning,
-      Optional<SourcePath> maybeCodeSignIdentityFingerprintFile,
-      Optional<SourcePath> maybeProcessedResourcesDir) {
+      Optional<SourcePath> maybeCodeSignIdentityFingerprintFile) {
     super(buildTarget, projectFilesystem);
     this.buildRuleParams = params;
     this.extension = extension;
@@ -213,7 +210,6 @@ public class AppleBundle extends AbstractBuildRule
     this.ibtoolFlags = ibtoolFlags;
     this.dryRunCodeSigning = dryRunCodeSigning;
     this.maybeCodeSignIdentityFingerprintFile = maybeCodeSignIdentityFingerprintFile;
-    this.maybeProcessedResourcesDir = maybeProcessedResourcesDir;
 
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
 
@@ -304,54 +300,41 @@ public class AppleBundle extends AbstractBuildRule
           resources, bundleParts, context.getSourcePathResolver(), destinations);
     }
 
-    if (maybeProcessedResourcesDir.isPresent()) {
-      AppleResourceProcessing.addStepsToCopyResources(
-          context,
-          stepsBuilder,
-          codeSignOnCopyPathsBuilder,
-          resources,
-          bundleParts,
-          bundleRoot,
-          destinations,
-          getProjectFilesystem(),
-          maybeProcessedResourcesDir.get());
-    } else {
-      AppleResourceProcessing.deprecated_addStepsToCopyResources(
-          context,
-          stepsBuilder,
-          codeSignOnCopyPathsBuilder,
-          resources,
-          bundleParts,
-          bundleRoot,
-          destinations,
-          getProjectFilesystem(),
-          ibtoolFlags,
-          isLegacyWatchApp,
-          platform,
-          LOG,
-          ibtool,
-          ibtoolModuleFlag,
-          getBuildTarget(),
-          Optional.of(binaryName),
-          withDownwardApi);
+    AppleResourceProcessing.addStepsToCopyResources(
+        context,
+        stepsBuilder,
+        codeSignOnCopyPathsBuilder,
+        resources,
+        bundleParts,
+        bundleRoot,
+        destinations,
+        getProjectFilesystem(),
+        ibtoolFlags,
+        isLegacyWatchApp,
+        platform,
+        LOG,
+        ibtool,
+        ibtoolModuleFlag,
+        getBuildTarget(),
+        Optional.of(binaryName),
+        withDownwardApi);
 
-      AppleResourceProcessing.deprecated_addVariantFileProcessingSteps(
-          resources,
-          context,
-          bundleRoot,
-          destinations,
-          stepsBuilder,
-          getProjectFilesystem(),
-          ibtoolFlags,
-          isLegacyWatchApp,
-          platform,
-          LOG,
-          ibtool,
-          ibtoolModuleFlag,
-          getBuildTarget(),
-          Optional.of(binaryName),
-          withDownwardApi);
-    }
+    AppleResourceProcessing.addVariantFileProcessingSteps(
+        resources,
+        context,
+        bundleRoot,
+        destinations,
+        stepsBuilder,
+        getProjectFilesystem(),
+        ibtoolFlags,
+        isLegacyWatchApp,
+        platform,
+        LOG,
+        ibtool,
+        ibtoolModuleFlag,
+        getBuildTarget(),
+        Optional.of(binaryName),
+        withDownwardApi);
 
     if (codeSignType != AppleCodeSignType.SKIP) {
       Supplier<CodeSignIdentity> codeSignIdentitySupplier =

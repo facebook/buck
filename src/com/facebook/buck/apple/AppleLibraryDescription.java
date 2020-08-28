@@ -495,8 +495,7 @@ public class AppleLibraryDescription
         swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
         swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
         downwardApiConfig.isEnabledForApple(),
-        args.getTargetSdkVersion(),
-        appleConfig.getResourceProcessingSeparateRuleFlag());
+        args.getTargetSdkVersion());
   }
 
   /**

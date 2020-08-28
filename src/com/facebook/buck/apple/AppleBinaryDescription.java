@@ -423,8 +423,7 @@ public class AppleBinaryDescription
         swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
         swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
         downwardApiConfig.isEnabledForApple(),
-        args.getTargetSdkVersion(),
-        appleConfig.getResourceProcessingSeparateRuleFlag());
+        args.getTargetSdkVersion());
   }
 
   private BuildRule createBinary(

@@ -860,7 +860,7 @@ public class AppleBundleIntegrationTest {
         processResult.getStderr(),
         allOf(
             containsString("Variant files have to be in a directory with name ending in '.lproj',"),
-            containsString("cc/Localizable.strings' is not.")));
+            containsString("/cc/Localizable.strings' is not.")));
   }
 
   @Test
@@ -1025,8 +1025,7 @@ public class AppleBundleIntegrationTest {
         AppleDescriptions.INCLUDE_FRAMEWORKS.getFlavors();
     ImmutableSet<Flavor>
         expectedInternalFlavorsForSameBaseNameAsBundleExclusiveToIncludeFrameworkFlavors =
-            ImmutableSet.of(
-                AppleInfoPlist.FLAVOR, ApplePkgInfo.FLAVOR, AppleProcessResources.FLAVOR);
+            ImmutableSet.of(AppleInfoPlist.FLAVOR, ApplePkgInfo.FLAVOR);
 
     for (BuildTarget builtTarget : buckBuildLog.getAllTargets()) {
       ImmutableSet<Flavor> allFlavors = builtTarget.getFlavors().getSet();
@@ -1165,40 +1164,6 @@ public class AppleBundleIntegrationTest {
     workspace.setUp();
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
-
-    workspace.verify(
-        RelPath.get("DemoApp_output.expected"),
-        BuildTargetPaths.getGenPath(
-            filesystem,
-            target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
-            "%s"));
-
-    Path appPath =
-        BuildTargetPaths.getGenPath(
-                filesystem,
-                target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
-                "%s")
-            .resolve(target.getShortName() + ".app");
-    assertTrue(Files.exists(workspace.getPath(appPath.resolve("AppViewController.nib"))));
-    assertTrue(Files.exists(workspace.getPath(appPath.resolve("Model.momd"))));
-    assertTrue(Files.exists(workspace.getPath(appPath.resolve("Model2.momd"))));
-    assertTrue(Files.exists(workspace.getPath(appPath.resolve("DemoApp.scnassets"))));
-  }
-
-  @Test
-  public void resourcesAreCompiledGivenProcessingHappensInSeparateRule() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "app_bundle_with_compiled_resources", tmp);
-    workspace.setUp();
-    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
-    workspace
-        .runBuckCommand(
-            "build",
-            target.getFullyQualifiedName(),
-            "--config",
-            "apple.resource_processing_separate_rule=true")
-        .assertSuccess();
 
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
