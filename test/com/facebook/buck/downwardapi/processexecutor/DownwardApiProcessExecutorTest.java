@@ -28,7 +28,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ChromeTraceEvent;
@@ -63,7 +62,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Duration;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -94,7 +92,6 @@ public class DownwardApiProcessExecutorTest {
   private static final String TEST_ACTION_ID = "test_action_id";
 
   @Rule public TestLogSink logSink = new TestLogSink(TEST_LOGGER_NAME);
-  @Rule public TestLogSink allLogs = new TestLogSink("");
 
   private static class TestListener {
 
@@ -233,77 +230,6 @@ public class DownwardApiProcessExecutorTest {
     verifyLogEvent();
 
     assertFalse("Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipe.getName())));
-  }
-
-  @Test
-  public void logsIfInvalidProtocol() throws Exception {
-    NamedPipeReader namedPipe = NamedPipeFactory.getFactory().createAsReader();
-    Instant instant = Instant.now();
-    BuckEventBus buckEventBus =
-        BuckEventBusForTests.newInstance(
-            new SettableFakeClock(instant.toEpochMilli(), Instant.now().getNano()));
-
-    ProcessExecutorParams params = getProcessExecutorParams(namedPipe, buckEventBus);
-    FakeProcess fakeProcess =
-        new FakeProcess(
-            0,
-            System.err,
-            new ByteArrayInputStream(new byte[0]),
-            new ByteArrayInputStream(new byte[0]),
-            Optional.of(
-                () -> {
-                  try (NamedPipeWriter pipeWriter =
-                          NamedPipeFactory.getFactory()
-                              .connectAsWriter(Paths.get(namedPipe.getName()));
-                      OutputStream outputStream = pipeWriter.getOutputStream()) {
-                    // "a" is not a valid protocol. See DownwardProtocolType for valid protocols
-                    outputStream.write("a".getBytes(StandardCharsets.UTF_8));
-                    outputStream.write(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
-                  } catch (Exception e) {
-                    fail();
-                  }
-                  return Optional.empty();
-                }));
-
-    DownwardApiProcessExecutor processExecutor =
-        getDownwardApiProcessExecutor(namedPipe, buckEventBus, params, fakeProcess);
-    launchAndExecute(processExecutor);
-
-    assertTrue(getLogMessages().get().contains("Cannot read from named pipe"));
-  }
-
-  @Test
-  public void logsIfCannotReadProtocol() throws Exception {
-    NamedPipeReader namedPipe = NamedPipeFactory.getFactory().createAsReader();
-    Instant instant = Instant.now();
-    TestListener listener = new TestListener();
-    BuckEventBus buckEventBus =
-        BuckEventBusForTests.newInstance(
-            new SettableFakeClock(instant.toEpochMilli(), instant.getNano()));
-    buckEventBus.register(listener);
-    ProcessExecutorParams params = getProcessExecutorParams(namedPipe, buckEventBus);
-
-    FakeProcess fakeProcess =
-        new FakeProcess(
-            0,
-            System.err,
-            new ByteArrayInputStream(new byte[0]),
-            new ByteArrayInputStream(new byte[0]),
-            Optional.of(
-                () -> {
-                  try {
-                    consoleEvent(DownwardProtocolType.BINARY.getDownwardProtocol());
-                  } catch (IOException e) {
-                    fail();
-                  }
-                  return Optional.empty();
-                }));
-
-    DownwardApiProcessExecutor processExecutor =
-        getDownwardApiProcessExecutor(namedPipe, buckEventBus, params, fakeProcess);
-    launchAndExecute(processExecutor);
-
-    assertTrue(getLogMessages().get().contains("Did not establish downward protocol"));
   }
 
   private DownwardApiExecutionResult launchAndExecute(DownwardApiProcessExecutor processExecutor)
@@ -560,11 +486,5 @@ public class DownwardApiProcessExecutorTest {
     downwardProtocol.write(
         EventTypeMessage.newBuilder().setEventType(eventType).build(), message, outputStream);
     return outputStream.toString(StandardCharsets.UTF_8.name());
-  }
-
-  private Optional<String> getLogMessages() {
-    return allLogs.getRecords().stream()
-        .map(LogRecord::getMessage)
-        .reduce((record, acc) -> String.join(System.lineSeparator(), record, acc));
   }
 }

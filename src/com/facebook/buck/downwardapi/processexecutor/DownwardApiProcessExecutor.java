@@ -256,12 +256,14 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
 
     void run() {
       String namedPipeName = namedPipe.getName();
-      DownwardProtocol downwardProtocol = null;
       try (InputStream inputStream = namedPipe.getInputStream()) {
         LOG.info("Starting to read events from named pipe: %s", namedPipeName);
-        downwardProtocol = DownwardProtocolType.readProtocol(inputStream);
+        DownwardProtocol downwardProtocol = null;
         while (!Thread.currentThread().isInterrupted()) {
           try {
+            if (downwardProtocol == null) {
+              downwardProtocol = DownwardProtocolType.readProtocol(inputStream);
+            }
             EventTypeMessage.EventType eventType = downwardProtocol.readEventType(inputStream);
             AbstractMessage event = downwardProtocol.readEvent(inputStream, eventType);
             EventHandler<AbstractMessage> eventHandler = EventHandler.getEventHandler(eventType);
@@ -272,7 +274,6 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
             }
           } catch (ClosedChannelException e) {
             LOG.info("Named pipe %s is closed", namedPipeName);
-            break;
           } catch (IOException e) {
             LOG.error(e, "Exception during processing events from named pipe: %s", namedPipeName);
           }
@@ -286,9 +287,6 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
         // TODO: maybe the pipe closed too early, should investigate this more
         LOG.debug(e, "Cannot read from named pipe: %s", namedPipeName);
       } finally {
-        if (downwardProtocol == null) {
-          LOG.debug("Did not establish downward protocol");
-        }
         done.set(null);
       }
     }
