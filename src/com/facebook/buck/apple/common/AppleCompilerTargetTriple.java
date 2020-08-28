@@ -45,7 +45,7 @@ public abstract class AppleCompilerTargetTriple implements AddsToRuleKey {
   @AddToRuleKey
   public abstract Optional<String> getTargetSdkVersion();
 
-  public String getTriple() {
+  public String getVersionedTriple() {
     String sdkVersion = getTargetSdkVersion().orElse("");
     return getArchitecture() + "-" + getVendor() + "-" + getPlatformName() + sdkVersion;
   }

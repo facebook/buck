@@ -218,7 +218,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   /** Creates the list of arguments to pass to the Swift compiler */
   protected ImmutableList<String> constructCompilerArgs(SourcePathResolverAdapter resolver) {
     ImmutableList.Builder<String> compilerArgs = ImmutableList.builder();
-    compilerArgs.add("-target", swiftTarget.getTriple());
+    compilerArgs.add("-target", swiftTarget.getVersionedTriple());
 
     if (bridgingHeader.isPresent()) {
       compilerArgs.add(
