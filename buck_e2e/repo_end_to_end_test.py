@@ -15,10 +15,10 @@
 
 from pathlib import Path
 
-import asserts
-import pytest  # type: ignore
-from buck_result import ExitCode  # type: ignore
-from test_repo import nobuckd, repo  # noqa: F401
+import pytest
+from buck_api.srcs.buck_result import ExitCode
+from buck_e2e import asserts
+from buck_e2e.test_repo import nobuckd, repo  # noqa: F401
 
 
 @pytest.mark.asyncio

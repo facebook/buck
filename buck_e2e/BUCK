@@ -3,7 +3,6 @@ load("//tools/build_rules:python_rules.bzl", "pytest_test")
 python_library(
     name = "test_repo_lib",
     srcs = ["test_repo.py"],
-    base_module = "",
     visibility = [
         "PUBLIC",
     ],
@@ -15,7 +14,6 @@ python_library(
 python_library(
     name = "asserts_lib",
     srcs = ["asserts.py"],
-    base_module = "",
     visibility = [
         "PUBLIC",
     ],

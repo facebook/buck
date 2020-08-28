@@ -16,13 +16,14 @@
 import os
 import tempfile
 from functools import wraps
+from typing import Iterator
 
-import pytest  # type: ignore
-from buck_repo import BuckRepo  # type: ignore. For mypy type checker
+import pytest
+from buck_api.srcs.buck_repo import BuckRepo
 
 
 @pytest.fixture(scope="function")
-def repo() -> BuckRepo:
+def repo() -> Iterator[BuckRepo]:
     """Returns a BuckRepo for testing"""
     with tempfile.TemporaryDirectory() as temp_dir:
         test_buck_binary: str = os.environ["TEST_BUCK_BINARY"]

@@ -3,7 +3,6 @@ python_library(
     srcs = [
         "buck_result.py",
     ],
-    base_module = "",
     visibility = [
         "PUBLIC",
     ],
@@ -14,7 +13,6 @@ python_library(
     srcs = [
         "buck_process.py",
     ],
-    base_module = "",
     visibility = [
         "PUBLIC",
     ],
@@ -28,9 +26,6 @@ python_library(
     srcs = [
         "buck_repo.py",
     ],
-    base_module = "",
-    # TODO namespace properly modules should align with the path in repo
-    # e.g. buck_client so that you import buck_client.buck_repo or something.
     visibility = [
         "PUBLIC",
     ],

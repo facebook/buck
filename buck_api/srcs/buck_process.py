@@ -43,7 +43,7 @@ class BuckProcess(Generic[T]):
         """ Returns the standard error of the Buck Process instance. """
         process = await self._awaitable_process
         assert process.stderr is not None
-        return process.stderr
+        return process.stderr  # type: ignore
         ###################################################################
         # Exception is thrown if stderr is None, but should never
         # return None with expectation that stderr=asyncio.subprocess.PIPE
@@ -57,7 +57,7 @@ class BuckProcess(Generic[T]):
         """
         process = await self._awaitable_process
         assert process.stdout is not None
-        return process.stdout
+        return process.stdout  # type: ignore
         ###################################################################
         # Exception is thrown if stdout is None, but should never
         # return None with expectation that stdout=asyncio.subprocess.PIPE

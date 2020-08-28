@@ -18,14 +18,14 @@ from asyncio import subprocess
 from pathlib import Path
 from typing import Awaitable, Tuple
 
-from buck_process import BuckProcess
-from buck_result import BuckResult, BuildResult, TestResult
+from buck_api.srcs.buck_process import BuckProcess
+from buck_api.srcs.buck_result import BuckResult, BuildResult, TestResult
 
 
 class BuckRepo:
     """ Instantiates a BuckRepo object with a exectuable path """
 
-    def __init__(self, path_to_buck: str, encoding: str, cwd: str = None) -> None:
+    def __init__(self, path_to_buck: str, encoding: str, cwd: str) -> None:
         # TODO change cwd to take Path object
         self.path_to_buck = path_to_buck
         self.cwd = cwd

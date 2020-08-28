@@ -16,7 +16,7 @@
 from asyncio import subprocess
 
 import pytest
-from buck_result import BuckResult, ExitCode
+from buck_api.srcs.buck_result import BuckResult, ExitCode
 
 
 @pytest.mark.asyncio

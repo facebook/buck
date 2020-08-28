@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pkg_resources
 import pytest
-from buck_repo import BuckRepo
-from buck_result import ExitCode
+from buck_api.srcs.buck_repo import BuckRepo
+from buck_api.srcs.buck_result import ExitCode
 
 
 @pytest.mark.asyncio
@@ -28,7 +28,7 @@ async def test_build():
     with tempfile.TemporaryDirectory() as temp_dir:
         path_of_cwd = Path(temp_dir)
         test_script = pkg_resources.resource_filename(
-            "test.buck_repo_test", "test_script.py"
+            "buck_api.test.buck_repo_test", "test_script.py"
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
         _create_file(path_of_cwd, "target_file_success", 0)
@@ -45,7 +45,7 @@ async def test_build_with_flag():
     with tempfile.TemporaryDirectory() as temp_dir:
         path_of_cwd = Path(temp_dir)
         test_script = pkg_resources.resource_filename(
-            "test.buck_repo_test", "test_script.py"
+            "buck_api.test.buck_repo_test", "test_script.py"
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
         _create_file(path_of_cwd, "target_file_success", 0)
@@ -64,7 +64,7 @@ async def test_build_with_multiple_targets_flag():
     with tempfile.TemporaryDirectory() as temp_dir:
         path_of_cwd = Path(temp_dir)
         test_script = pkg_resources.resource_filename(
-            "test.buck_repo_test", "test_script.py"
+            "buck_api.test.buck_repo_test", "test_script.py"
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
         target_folder = _create_directory(path_of_cwd, Path("targets"))
@@ -92,7 +92,7 @@ async def test_build_failed():
     with tempfile.TemporaryDirectory() as temp_dir:
         path_of_cwd = Path(temp_dir)
         test_script = pkg_resources.resource_filename(
-            "test.buck_repo_test", "test_script.py"
+            "buck_api.test.buck_repo_test", "test_script.py"
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
 
@@ -111,7 +111,7 @@ async def test_clean():
     with tempfile.TemporaryDirectory() as temp_dir:
         path_of_cwd = Path(temp_dir)
         test_script = pkg_resources.resource_filename(
-            "test.buck_repo_test", "test_script.py"
+            "buck_api.test.buck_repo_test", "test_script.py"
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
         await repo.build("//:target_file").wait()
@@ -130,7 +130,7 @@ async def test_kill():
     with tempfile.TemporaryDirectory() as temp_dir:
         path_of_cwd = Path(temp_dir)
         test_script = pkg_resources.resource_filename(
-            "test.buck_repo_test", "test_script.py"
+            "buck_api.test.buck_repo_test", "test_script.py"
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
 
@@ -152,7 +152,7 @@ async def test_test_passed():
     with tempfile.TemporaryDirectory() as temp_dir:
         path_of_cwd = Path(temp_dir)
         test_script = pkg_resources.resource_filename(
-            "test.buck_repo_test", "test_script.py"
+            "buck_api.test.buck_repo_test", "test_script.py"
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
         _create_file(path_of_cwd, "target_file_success", 0)
@@ -175,7 +175,7 @@ async def test_test_skipped():
     with tempfile.TemporaryDirectory() as temp_dir:
         path_of_cwd = Path(temp_dir)
         test_script = pkg_resources.resource_filename(
-            "test.buck_repo_test", "test_script.py"
+            "buck_api.test.buck_repo_test", "test_script.py"
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
         # test skipped test
@@ -199,7 +199,7 @@ async def test_test_failed():
     with tempfile.TemporaryDirectory() as temp_dir:
         path_of_cwd = Path(temp_dir)
         test_script = pkg_resources.resource_filename(
-            "test.buck_repo_test", "test_script.py"
+            "buck_api.test.buck_repo_test", "test_script.py"
         )
         repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
 
