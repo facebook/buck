@@ -33,6 +33,7 @@ import java.util.SortedSet;
 class ActoolStep extends IsolatedShellStep {
 
   private final String applePlatformName;
+  private final String applePlatformExternalName;
   private final String targetSDKVersion;
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> actoolCommand;
@@ -45,7 +46,7 @@ class ActoolStep extends IsolatedShellStep {
 
   public ActoolStep(
       AbsPath workingDirectory,
-      String applePlatformName,
+      ApplePlatform applePlatform,
       String targetSDKVersion,
       ImmutableMap<String, String> environment,
       List<String> actoolCommand,
@@ -58,7 +59,8 @@ class ActoolStep extends IsolatedShellStep {
       RelPath cellPath,
       boolean withDownwardApi) {
     super(workingDirectory, cellPath, withDownwardApi);
-    this.applePlatformName = applePlatformName;
+    this.applePlatformName = applePlatform.getName();
+    this.applePlatformExternalName = applePlatform.getExternalName();
     this.targetSDKVersion = targetSDKVersion;
     this.environment = environment;
     this.actoolCommand = ImmutableList.copyOf(actoolCommand);
@@ -77,7 +79,7 @@ class ActoolStep extends IsolatedShellStep {
     commandBuilder.addAll(actoolCommand);
     commandBuilder.add(
         "--platform",
-        applePlatformName,
+        applePlatformExternalName,
         "--minimum-deployment-target",
         targetSDKVersion,
         "--compile",

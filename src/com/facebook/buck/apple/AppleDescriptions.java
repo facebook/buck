@@ -535,7 +535,7 @@ public class AppleDescriptions {
             assetCatalogBuildTarget,
             projectFilesystem,
             ruleFinder,
-            applePlatform.getName(),
+            applePlatform,
             targetSDKVersion,
             actool,
             assetCatalogDirs,

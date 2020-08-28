@@ -87,6 +87,7 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
   public static final ApplePlatform MACOSXCATALYST =
       ImmutableApplePlatform.builder()
           .setName("maccatalyst")
+          .setExternalName("macosx")
           .setArchitectures(ImmutableList.of("x86_64", "arm64"))
           .setMinVersionFlagPrefix("-mios-version-min=")
           .setAppIncludesFrameworks(true)
@@ -117,6 +118,16 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
 
   /** The full name of the platform. For example: {@code macosx}. */
   public abstract String getName();
+
+  @Value.Default
+  /**
+   * Defines the external name of the platform, i.e., the name that will be passed to tools (e.g.,
+   * compiler, linker, ibtool, actool, etc). By default, the external name is the same as the
+   * internal name but that's not always the case (e.g., Mac Catalyst).
+   */
+  public String getExternalName() {
+    return getName();
+  }
 
   /**
    * The Swift name for the platform. For example: {@code ios}. If absent, use {@link #getName()}

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -63,7 +64,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
 
   private static final String BUNDLE_DIRECTORY_EXTENSION = ".bundle";
 
-  @AddToRuleKey private final String applePlatformName;
+  @AddToRuleKey private final ApplePlatform applePlatform;
 
   @AddToRuleKey private final String targetSDKVersion;
 
@@ -107,7 +108,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      String applePlatformName,
+      ApplePlatform applePlatform,
       String targetSDKVersion,
       Tool actool,
       ImmutableSortedSet<SourcePath> assetCatalogDirs,
@@ -117,7 +118,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
       String bundleName,
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
-    this.applePlatformName = applePlatformName;
+    this.applePlatform = applePlatform;
     this.targetSDKVersion = targetSDKVersion;
     this.actool = actool;
     this.assetCatalogDirs = assetCatalogDirs;
@@ -167,7 +168,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
     stepsBuilder.add(
         new ActoolStep(
             getProjectFilesystem().getRootPath(),
-            applePlatformName,
+            applePlatform,
             targetSDKVersion,
             actool.getEnvironment(context.getSourcePathResolver()),
             actool.getCommandPrefix(context.getSourcePathResolver()),
