@@ -24,7 +24,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
+import com.facebook.buck.event.BuckEventBusForTests.CapturingEventListener;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.RawTargetNode;
@@ -43,7 +43,7 @@ import org.junit.Test;
 
 public class TargetCountVerificationParserDecoratorTest {
 
-  private CapturingConsoleEventListener capturingConsoleEventListener;
+  private CapturingEventListener capturingEventListener;
   private Path path;
   private ProjectBuildFileParser parserMock;
   private ImmutableMap<String, RawTargetNode> rawTargets;
@@ -52,8 +52,8 @@ public class TargetCountVerificationParserDecoratorTest {
   @Before
   public void setUp() {
     eventBus = BuckEventBusForTests.newInstance();
-    capturingConsoleEventListener = new CapturingConsoleEventListener();
-    eventBus.register(capturingConsoleEventListener);
+    capturingEventListener = new CapturingEventListener();
+    eventBus.register(capturingEventListener);
     path = Paths.get("/foo/bar").toAbsolutePath();
     parserMock = EasyMock.createMock(ProjectBuildFileParser.class);
 
@@ -90,13 +90,14 @@ public class TargetCountVerificationParserDecoratorTest {
             5, path.toString(), 3);
 
     assertThat(
-        capturingConsoleEventListener.getLogMessages(), equalTo(singletonList(expectedWarning)));
+        capturingEventListener.getConsoleEventLogMessages(),
+        equalTo(singletonList(expectedWarning)));
   }
 
   private void assertWarningIsNotEmitted() {
     EasyMock.verify(parserMock);
 
-    assertThat(capturingConsoleEventListener.getLogMessages().size(), equalTo(0));
+    assertThat(capturingEventListener.getConsoleEventLogMessages().size(), equalTo(0));
   }
 
   private TargetCountVerificationParserDecorator newParserDelegate(int threshold) {

@@ -48,7 +48,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
+import com.facebook.buck.event.BuckEventBusForTests.CapturingEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -101,7 +101,7 @@ public class TargetsCommandTest {
   private CommandRunnerParams params;
   private ProjectFilesystem filesystem;
   private ListeningExecutorService executor;
-  private CapturingConsoleEventListener capturingConsoleEventListener;
+  private CapturingEventListener capturingEventListener;
 
   @Rule
   public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor =
@@ -129,8 +129,8 @@ public class TargetsCommandTest {
     Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
-    capturingConsoleEventListener = new CapturingConsoleEventListener();
-    eventBus.register(capturingConsoleEventListener);
+    capturingEventListener = new CapturingEventListener();
+    eventBus.register(capturingEventListener);
 
     targetsCommand = new TargetsCommand();
     params =
@@ -244,7 +244,7 @@ public class TargetsCommandTest {
     String output = console.getTextWrittenToStdOut();
     assertEquals("[" + System.lineSeparator() + "]" + System.lineSeparator(), output);
     assertThat(
-        capturingConsoleEventListener.getLogMessages(),
+        capturingEventListener.getConsoleEventLogMessages(),
         contains("unable to find rule for target //:nonexistent"));
   }
 

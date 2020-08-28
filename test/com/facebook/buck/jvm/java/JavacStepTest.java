@@ -92,14 +92,14 @@ public class JavacStepTest {
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
             .build();
-    BuckEventBusForTests.CapturingConsoleEventListener listener =
-        new BuckEventBusForTests.CapturingConsoleEventListener();
+    BuckEventBusForTests.CapturingEventListener listener =
+        new BuckEventBusForTests.CapturingEventListener();
     executionContext.getBuckEventBus().register(listener);
     StepExecutionResult result = step.execute(executionContext);
 
     // Note that we don't include stderr in the step result on success.
     assertThat(result, equalTo(StepExecutionResults.SUCCESS));
-    assertThat(listener.getLogMessages(), empty());
+    assertThat(listener.getConsoleEventLogMessages(), empty());
   }
 
   @Test
@@ -140,8 +140,8 @@ public class JavacStepTest {
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
             .build();
-    BuckEventBusForTests.CapturingConsoleEventListener listener =
-        new BuckEventBusForTests.CapturingConsoleEventListener();
+    BuckEventBusForTests.CapturingEventListener listener =
+        new BuckEventBusForTests.CapturingEventListener();
     executionContext.getBuckEventBus().register(listener);
     StepExecutionResult result = step.execute(executionContext);
 
@@ -154,7 +154,7 @@ public class JavacStepTest {
                 .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
                 .setStderr(Optional.of("javac stderr\n"))
                 .build()));
-    assertThat(listener.getLogMessages(), equalTo(ImmutableList.of("javac stdout\n")));
+    assertThat(listener.getConsoleEventLogMessages(), equalTo(ImmutableList.of("javac stdout\n")));
   }
 
   @Test
@@ -196,13 +196,13 @@ public class JavacStepTest {
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
             .build();
-    BuckEventBusForTests.CapturingConsoleEventListener listener =
-        new BuckEventBusForTests.CapturingConsoleEventListener();
+    BuckEventBusForTests.CapturingEventListener listener =
+        new BuckEventBusForTests.CapturingEventListener();
     executionContext.getBuckEventBus().register(listener);
     StepExecutionResult result = step.execute(executionContext);
 
     assertThat(result, equalTo(StepExecutionResults.SUCCESS));
-    assertThat(listener.getLogMessages(), empty());
+    assertThat(listener.getConsoleEventLogMessages(), empty());
   }
 
   @Test
@@ -298,8 +298,8 @@ public class JavacStepTest {
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
             .build();
-    BuckEventBusForTests.CapturingConsoleEventListener listener =
-        new BuckEventBusForTests.CapturingConsoleEventListener();
+    BuckEventBusForTests.CapturingEventListener listener =
+        new BuckEventBusForTests.CapturingEventListener();
     executionContext.getBuckEventBus().register(listener);
     thrown.expectMessage("Bootstrap classpath /no-such-dir contains no valid entries");
     step.execute(executionContext);

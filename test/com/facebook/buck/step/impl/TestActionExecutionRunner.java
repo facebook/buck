@@ -92,8 +92,8 @@ public class TestActionExecutionRunner {
         new ActionExecutionStep(
             action, new ArtifactFilesystem(projectFilesystem), WITH_DOWNWARD_API);
     BuckEventBus testEventBus = BuckEventBusForTests.newInstance();
-    BuckEventBusForTests.CapturingConsoleEventListener consoleEventListener =
-        new BuckEventBusForTests.CapturingConsoleEventListener();
+    BuckEventBusForTests.CapturingEventListener consoleEventListener =
+        new BuckEventBusForTests.CapturingEventListener();
     testEventBus.register(consoleEventListener);
 
     AbsPath rootPath = projectFilesystem.getRootPath();

@@ -37,7 +37,7 @@ import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
+import com.facebook.buck.event.BuckEventBusForTests.CapturingEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -104,8 +104,7 @@ public class ActionExecutionStepTest {
         new ActionExecutionStep(
             action, new ArtifactFilesystem(projectFilesystem), WITH_DOWNWARD_API);
     BuckEventBus testEventBus = BuckEventBusForTests.newInstance();
-    BuckEventBusForTests.CapturingConsoleEventListener consoleEventListener =
-        new CapturingConsoleEventListener();
+    CapturingEventListener consoleEventListener = new CapturingEventListener();
     testEventBus.register(consoleEventListener);
     assertEquals(
         StepExecutionResult.builder().setExitCode(0).setStderr(Optional.of("my std err")).build(),
@@ -113,7 +112,7 @@ public class ActionExecutionStepTest {
             getCommonExecutionContentBuilder(projectFilesystem, baseCell, testEventBus).build()));
 
     assertThat(
-        consoleEventListener.getLogMessages(),
+        consoleEventListener.getConsoleEventLogMessages(),
         Matchers.contains(
             Matchers.containsString(
                 "my error 1" + System.lineSeparator() + "java.lang.RuntimeException: message"),

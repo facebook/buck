@@ -72,16 +72,40 @@ public class BuckEventBusForTests {
     }
   }
 
-  public static class CapturingConsoleEventListener {
-    private final List<ConsoleEvent> logEvents = new ArrayList<>();
+  public static class CapturingEventListener {
+    private final List<ConsoleEvent> consoleEvents = new ArrayList<>();
+    private final List<StepEvent> stepEvents = new ArrayList<>();
+    private final List<SimplePerfEvent> simplePerfEvents = new ArrayList<>();
 
     @Subscribe
-    public void logEvent(ConsoleEvent event) {
-      logEvents.add(event);
+    public void consoleEvent(ConsoleEvent event) {
+      consoleEvents.add(event);
     }
 
-    public List<String> getLogMessages() {
-      return logEvents.stream().map(Object::toString).collect(ImmutableList.toImmutableList());
+    @Subscribe
+    public void stepEvent(StepEvent event) {
+      stepEvents.add(event);
+    }
+
+    @Subscribe
+    public void simplePerfEvent(SimplePerfEvent event) {
+      simplePerfEvents.add(event);
+    }
+
+    public List<String> getConsoleEventLogMessages() {
+      return toLogMessages(consoleEvents);
+    }
+
+    public List<String> getStepEventLogMessages() {
+      return toLogMessages(stepEvents);
+    }
+
+    public List<String> getSimplePerfEvents() {
+      return toLogMessages(simplePerfEvents);
+    }
+
+    private List<String> toLogMessages(List<? extends AbstractBuckEvent> events) {
+      return events.stream().map(Object::toString).collect(ImmutableList.toImmutableList());
     }
   }
 }

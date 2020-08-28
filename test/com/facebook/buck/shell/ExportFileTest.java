@@ -44,7 +44,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
+import com.facebook.buck.event.BuckEventBusForTests.CapturingEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -375,7 +375,7 @@ public class ExportFileTest {
             .build(graphBuilder, projectFilesystem);
 
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
-    CapturingConsoleEventListener listener = new CapturingConsoleEventListener();
+    CapturingEventListener listener = new CapturingEventListener();
     buckEventBus.register(listener);
 
     exportFile.getBuildSteps(
@@ -384,7 +384,7 @@ public class ExportFileTest {
         new FakeBuildableContext());
 
     assertThat(
-        listener.getLogMessages().get(0),
+        listener.getConsoleEventLogMessages().get(0),
         MatchesPattern.matchesPattern("Trying to export a directory .* but it is not allowed."));
   }
 
@@ -401,7 +401,7 @@ public class ExportFileTest {
             .build(graphBuilder, projectFilesystem);
 
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
-    CapturingConsoleEventListener listener = new CapturingConsoleEventListener();
+    CapturingEventListener listener = new CapturingEventListener();
     buckEventBus.register(listener);
 
     exportFile.getBuildSteps(

@@ -343,8 +343,8 @@ public class AdbHelperTest {
 
   @Test
   public void testQuietDeviceInstall() throws InterruptedException {
-    BuckEventBusForTests.CapturingConsoleEventListener listener =
-        new BuckEventBusForTests.CapturingConsoleEventListener();
+    BuckEventBusForTests.CapturingEventListener listener =
+        new BuckEventBusForTests.CapturingEventListener();
     testContext.getBuckEventBus().register(listener);
 
     File apk = new File("/some/file.apk");
@@ -366,13 +366,13 @@ public class AdbHelperTest {
     adbHelper.adbCall("install apk", (d) -> d.installApkOnDevice(apk, false, true, false), true);
 
     assertEquals(apk.getAbsolutePath(), apkPath.get());
-    assertTrue(listener.getLogMessages().isEmpty());
+    assertTrue(listener.getConsoleEventLogMessages().isEmpty());
   }
 
   @Test
   public void testNonQuietShowsOutput() throws InterruptedException {
-    BuckEventBusForTests.CapturingConsoleEventListener listener =
-        new BuckEventBusForTests.CapturingConsoleEventListener();
+    BuckEventBusForTests.CapturingEventListener listener =
+        new BuckEventBusForTests.CapturingEventListener();
     testContext.getBuckEventBus().register(listener);
 
     File apk = new File("/some/file.apk");
@@ -395,7 +395,7 @@ public class AdbHelperTest {
 
     assertEquals(apk.getAbsolutePath(), apkPath.get());
     MoreAsserts.assertListEquals(
-        listener.getLogMessages(),
+        listener.getConsoleEventLogMessages(),
         ImmutableList.of(
             "Installing apk on serial#1.", "Successfully ran install apk on 1 device(s)"));
   }

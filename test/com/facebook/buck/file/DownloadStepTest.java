@@ -73,14 +73,14 @@ public class DownloadStepTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   ProjectFilesystem filesystem;
-  BuckEventBusForTests.CapturingConsoleEventListener listener;
+  BuckEventBusForTests.CapturingEventListener listener;
   StepExecutionContext context;
   final Path outputPath = Paths.get("some", "dir", "out.txt");
 
   @Before
   public void setUp() {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    listener = new BuckEventBusForTests.CapturingConsoleEventListener();
+    listener = new BuckEventBusForTests.CapturingEventListener();
     context = TestExecutionContext.newInstance();
     context.getBuckEventBus().register(listener);
   }
@@ -99,7 +99,7 @@ public class DownloadStepTest {
     StepExecutionResult result = step.execute(context);
 
     Assert.assertThat(
-        listener.getLogMessages().get(0),
+        listener.getConsoleEventLogMessages().get(0),
         Matchers.containsString("Unable to download: https://example.com"));
     Assert.assertEquals(-1, result.getExitCode());
   }
@@ -128,13 +128,17 @@ public class DownloadStepTest {
             "Unable to download https://mirror3.example.com/ (canonical URI: https://example.com/)");
 
     Assert.assertThat(
-        listener.getLogMessages().get(0), Matchers.containsString(expectedErrors.get(0)));
+        listener.getConsoleEventLogMessages().get(0),
+        Matchers.containsString(expectedErrors.get(0)));
     Assert.assertThat(
-        listener.getLogMessages().get(1), Matchers.containsString(expectedErrors.get(1)));
+        listener.getConsoleEventLogMessages().get(1),
+        Matchers.containsString(expectedErrors.get(1)));
     Assert.assertThat(
-        listener.getLogMessages().get(2), Matchers.containsString(expectedErrors.get(2)));
+        listener.getConsoleEventLogMessages().get(2),
+        Matchers.containsString(expectedErrors.get(2)));
     Assert.assertThat(
-        listener.getLogMessages().get(3), Matchers.containsString(expectedErrors.get(3)));
+        listener.getConsoleEventLogMessages().get(3),
+        Matchers.containsString(expectedErrors.get(3)));
     Assert.assertEquals(-1, result.getExitCode());
   }
 
@@ -169,9 +173,11 @@ public class DownloadStepTest {
             "Unable to download https://mirror1.example.com/ (canonical URI: https://example.com/), trying to download from https://mirror2.example.com/ instead");
 
     Assert.assertThat(
-        listener.getLogMessages().get(0), Matchers.containsString(expectedErrors.get(0)));
+        listener.getConsoleEventLogMessages().get(0),
+        Matchers.containsString(expectedErrors.get(0)));
     Assert.assertThat(
-        listener.getLogMessages().get(1), Matchers.containsString(expectedErrors.get(1)));
+        listener.getConsoleEventLogMessages().get(1),
+        Matchers.containsString(expectedErrors.get(1)));
     Assert.assertEquals(StepExecutionResults.SUCCESS.getExitCode(), result.getExitCode());
     Assert.assertEquals("test", filesystem.readFileIfItExists(outputPath).get());
   }
@@ -209,9 +215,11 @@ public class DownloadStepTest {
             "Unable to download https://mirror1.example.com/ (canonical URI: https://example.com/), trying to download from https://mirror2.example.com/ instead");
 
     Assert.assertThat(
-        listener.getLogMessages().get(0), Matchers.containsString(expectedErrors.get(0)));
+        listener.getConsoleEventLogMessages().get(0),
+        Matchers.containsString(expectedErrors.get(0)));
     Assert.assertThat(
-        listener.getLogMessages().get(1), Matchers.containsString(expectedErrors.get(1)));
+        listener.getConsoleEventLogMessages().get(1),
+        Matchers.containsString(expectedErrors.get(1)));
     Assert.assertEquals(StepExecutionResults.SUCCESS.getExitCode(), result.getExitCode());
     Assert.assertEquals("test", filesystem.readFileIfItExists(outputPath).get());
   }
@@ -239,7 +247,8 @@ public class DownloadStepTest {
     String expectedError =
         "Unable to download https://example.com/ (hashes do not match. Expected a94a8fe5ccb19ba61c4c0873d391e987982fbbd3, saw 2fbb3ff08bfc730eb74aab66df6af048517276bd)";
 
-    Assert.assertThat(listener.getLogMessages().get(0), Matchers.containsString(expectedError));
+    Assert.assertThat(
+        listener.getConsoleEventLogMessages().get(0), Matchers.containsString(expectedError));
     Assert.assertEquals(-1, result.getExitCode());
   }
 
@@ -268,7 +277,8 @@ public class DownloadStepTest {
     String expectedError =
         "Unable to download https://example.com/ (hashes do not match. Expected 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08, saw a18d4d9219cee377aa2c4a35428caf63d8462ea6d762904badd828bb5f8f04c4)";
 
-    Assert.assertThat(listener.getLogMessages().get(0), Matchers.containsString(expectedError));
+    Assert.assertThat(
+        listener.getConsoleEventLogMessages().get(0), Matchers.containsString(expectedError));
     Assert.assertEquals(-1, result.getExitCode());
   }
 

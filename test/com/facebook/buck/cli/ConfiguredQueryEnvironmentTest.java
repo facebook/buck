@@ -37,7 +37,7 @@ import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
+import com.facebook.buck.event.BuckEventBusForTests.CapturingEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -93,7 +93,7 @@ public class ConfiguredQueryEnvironmentTest {
   private ListeningExecutorService executor;
   private PerBuildState parserState;
   private BuckEventBus eventBus;
-  private CapturingConsoleEventListener capturingConsoleEventListener;
+  private CapturingEventListener capturingEventListener;
 
   private ConfiguredQueryTarget createQueryBuildTarget(String baseName, String shortName) {
     return ConfiguredQueryBuildTarget.of(BuildTargetFactory.newInstance(baseName, shortName));
@@ -103,8 +103,8 @@ public class ConfiguredQueryEnvironmentTest {
   public void setUp() throws IOException {
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     eventBus = BuckEventBusForTests.newInstance();
-    capturingConsoleEventListener = new CapturingConsoleEventListener();
-    eventBus.register(capturingConsoleEventListener);
+    capturingEventListener = new CapturingEventListener();
+    eventBus.register(capturingEventListener);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
@@ -229,7 +229,7 @@ public class ConfiguredQueryEnvironmentTest {
     String expectedWarning =
         "File " + MorePaths.pathWithPlatformSeparators("/foo/bar") + " does not exist";
     assertThat(
-        capturingConsoleEventListener.getLogMessages(),
+        capturingEventListener.getConsoleEventLogMessages(),
         CoreMatchers.equalTo(singletonList(expectedWarning)));
   }
 }

@@ -129,8 +129,8 @@ public class JarDirectoryStepTest {
                 .build());
 
     StepExecutionContext context = TestExecutionContext.newInstance(jarDirectory);
-    BuckEventBusForTests.CapturingConsoleEventListener listener =
-        new BuckEventBusForTests.CapturingConsoleEventListener();
+    BuckEventBusForTests.CapturingEventListener listener =
+        new BuckEventBusForTests.CapturingEventListener();
     context.getBuckEventBus().register(listener);
 
     executeStep(step, context);
@@ -139,7 +139,7 @@ public class JarDirectoryStepTest {
         String.format(
             "Duplicate found when adding 'com/example/common/Helper.class' to '%s' from '%s'",
             filesystem.getPathForRelativePath(outputPath), second);
-    assertThat(listener.getLogMessages(), hasItem(expectedMessage));
+    assertThat(listener.getConsoleEventLogMessages(), hasItem(expectedMessage));
   }
 
   @Test(expected = HumanReadableException.class)
