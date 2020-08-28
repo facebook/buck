@@ -5,6 +5,13 @@ apple_bundle(
     info_plist = "Info.plist",
 )
 
+apple_bundle(
+    name = "CatalystDemoApp",
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Catalyst-Info.plist",
+)
+
 apple_binary(
     name = "DemoAppBinary",
     srcs = glob([

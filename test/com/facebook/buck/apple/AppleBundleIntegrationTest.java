@@ -26,6 +26,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -174,6 +175,39 @@ public class AppleBundleIntegrationTest {
     workspace.runBuckCommand("clean", "--keep-cache");
     workspace.runBuckBuild("-c", "apple.cache_bundles_and_packages=false", target).assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(target);
+  }
+
+  @Test
+  public void simpleApplicationBundleCatalyst()
+      throws IOException, PropertyListFormatException, ParserConfigurationException, SAXException,
+          ParseException {
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_no_debug", tmp);
+    workspace.setUp();
+
+    BuildTarget target = workspace.newBuildTarget("//:CatalystDemoApp#maccatalyst-x86_64,no-debug");
+    workspace.addBuckConfigLocalOption("apple", "target_triple_enabled", "true");
+    workspace.addBuckConfigLocalOption("apple", "use_entitlements_when_adhoc_code_signing", "true");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path appPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve(target.getShortName() + ".app"));
+
+    assertTrue(Files.exists(appPath));
+
+    Path plistPath = appPath.resolve("Contents/Info.plist");
+    NSDictionary plist = (NSDictionary) PropertyListParser.parse(plistPath.toString());
+
+    assertNull(plist.get("LSRequiresIPhoneOS"));
+    assertNull(plist.get("MinimumOSVersion"));
+    assertNotNull(plist.get("LSMinimumSystemVersion"));
   }
 
   @Test

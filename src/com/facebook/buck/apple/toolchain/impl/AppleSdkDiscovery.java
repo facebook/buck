@@ -18,6 +18,7 @@ package com.facebook.buck.apple.toolchain.impl;
 
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
+import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
@@ -39,9 +40,11 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import javax.xml.parsers.ParserConfigurationException;
@@ -248,7 +251,15 @@ public class AppleSdkDiscovery {
         LOG.warn("No toolchains found and no default toolchain. Skipping SDK path %s.", sdkDir);
         return ImmutableList.of();
       } else {
-        return extractSdksWithToolchains(sdkDir, name, version, platformName, sdkToolchains);
+        return extractSdksWithToolchains(
+            sdkDir,
+            name,
+            version,
+            platformName,
+            sdkToolchains.build(),
+            sdkSettings,
+            defaultProperties,
+            defaultToolchain);
       }
     } catch (NoSuchFileException e) {
       LOG.warn(e, "Skipping SDK at path %s, no SDKSettings.plist found", sdkDir);
@@ -261,16 +272,35 @@ public class AppleSdkDiscovery {
       String name,
       String version,
       NSString platformName,
-      ImmutableList.Builder<AppleToolchain> sdkToolchains)
+      ImmutableList<AppleToolchain> sdkToolchains,
+      NSDictionary sdkSettings,
+      NSDictionary defaultProperties,
+      Optional<AppleToolchain> defaultToolchain)
       throws IOException {
     AppleSdk.Builder sdkBuilder = AppleSdk.builder();
-    sdkBuilder.addAllToolchains(sdkToolchains.build());
+    sdkBuilder.addAllToolchains(sdkToolchains);
     ApplePlatform applePlatform = ApplePlatform.of(platformName.toString());
     sdkBuilder.setName(name).setVersion(version).setApplePlatform(applePlatform);
     ImmutableList<String> architectures = validArchitecturesForPlatform(applePlatform, sdkDir);
     sdkBuilder.addAllArchitectures(architectures);
     AppleSdk sdk = sdkBuilder.build();
-    return ImmutableList.of(sdk);
+
+    ImmutableList.Builder<AppleSdk> sdkList = ImmutableList.builder();
+
+    sdkList.add(sdk);
+
+    tryExtractingCatalystSdk(
+        sdkDir,
+        name,
+        version,
+        sdkToolchains,
+        sdkSettings,
+        defaultProperties,
+        defaultToolchain,
+        architectures,
+        sdkList);
+
+    return sdkList.build();
   }
 
   private static ImmutableList<String> validArchitecturesForPlatform(
@@ -295,5 +325,206 @@ public class AppleSdkDiscovery {
       }
     }
     return architectures;
+  }
+
+  private static void tryExtractingCatalystSdk(
+      Path sdkDir,
+      String name,
+      String version,
+      ImmutableList<AppleToolchain> sdkToolchains,
+      NSDictionary sdkSettings,
+      NSDictionary defaultProperties,
+      Optional<AppleToolchain> defaultToolchain,
+      ImmutableList<String> architectures,
+      ImmutableList.Builder<AppleSdk> sdkList) {
+    Optional<NSDictionary> maybeCatalystBuildSettings = extractCatalystBuildSettings(sdkSettings);
+    if (maybeCatalystBuildSettings.isPresent() && name.indexOf("macosx") == 0) {
+      NSDictionary catalystBuildSettings = maybeCatalystBuildSettings.get();
+
+      AppleSdk.Builder catalystSdkBuilder = AppleSdk.builder();
+      String catalystSdkName = name.replace("macosx", "maccatalyst");
+      catalystSdkBuilder
+          .setName(catalystSdkName)
+          .setVersion(version)
+          .setApplePlatform(ApplePlatform.MACOSXCATALYST)
+          .addAllToolchains(sdkToolchains)
+          .addAllArchitectures(architectures);
+
+      updateCatalystSDKTargetTripleProperties(catalystSdkBuilder, sdkSettings);
+      updateCatalystSDKAdditionalSearchPaths(
+          catalystSdkBuilder, catalystBuildSettings, sdkDir, defaultProperties, defaultToolchain);
+      updateCatalystSDKResourceFamilies(catalystSdkBuilder, catalystBuildSettings);
+
+      sdkList.add(catalystSdkBuilder.build());
+    }
+  }
+
+  private static Optional<String> extractStringFromNSDictionary(
+      NSDictionary dictionary, String key) {
+    NSObject untypedValue = dictionary.get(key);
+    if (untypedValue instanceof NSString) {
+      NSString stringValue = (NSString) untypedValue;
+      return Optional.of(stringValue.getContent());
+    }
+
+    return Optional.empty();
+  }
+
+  private static void updateCatalystSDKResourceFamilies(
+      AppleSdk.Builder sdkBuilder, NSDictionary buildSettings) {
+    sdkBuilder
+        .setResourcesDeviceFamily(
+            extractStringFromNSDictionary(buildSettings, "RESOURCES_TARGETED_DEVICE_FAMILY"))
+        .setResourcesUIFrameworkFamily(
+            extractStringFromNSDictionary(buildSettings, "RESOURCES_UI_FRAMEWORK_FAMILY"));
+  }
+
+  private static void updateCatalystSDKTargetTripleProperties(
+      AppleSdk.Builder sdkBuilder, NSDictionary sdkSettings) {
+    NSObject untypedSupportedTargets = sdkSettings.get("SupportedTargets");
+    if (!(untypedSupportedTargets instanceof NSDictionary)) {
+      return;
+    }
+
+    NSDictionary supportedTargets = (NSDictionary) untypedSupportedTargets;
+    NSObject untypedCatalystTargetDict = supportedTargets.get("iosmac");
+    if (!(untypedCatalystTargetDict instanceof NSDictionary)) {
+      return;
+    }
+
+    NSDictionary catalystTargetDict = (NSDictionary) untypedCatalystTargetDict;
+    sdkBuilder
+        .setTargetTripleVendor(
+            extractStringFromNSDictionary(catalystTargetDict, "LLVMTargetTripleVendor"))
+        .setTargetTriplePlatformName(
+            extractStringFromNSDictionary(catalystTargetDict, "LLVMTargetTripleSys"))
+        .setTargetTripleABI(
+            extractStringFromNSDictionary(catalystTargetDict, "LLVMTargetTripleEnvironment"));
+  }
+
+  private static void updateCatalystSDKAdditionalSearchPaths(
+      AppleSdk.Builder sdkBuilder,
+      NSDictionary buildSettings,
+      Path sdkDir,
+      NSDictionary defaultProperties,
+      Optional<AppleToolchain> defaultToolchain) {
+    ImmutableMap<String, String> variableMap =
+        generateCatalystVariableMap(sdkDir, defaultProperties, defaultToolchain);
+    ImmutableList<String> libSearchPaths =
+        expandAdditionalSearchPaths(buildSettings, "LIBRARY_SEARCH_PATHS", variableMap);
+    ImmutableList<String> systemFrameworkSearchPaths =
+        expandAdditionalSearchPaths(buildSettings, "SYSTEM_FRAMEWORK_SEARCH_PATHS", variableMap);
+    ImmutableList<String> systemHeaderSearchPaths =
+        expandAdditionalSearchPaths(buildSettings, "SYSTEM_HEADER_SEARCH_PATHS", variableMap);
+
+    sdkBuilder
+        .addAllAdditionalSystemFrameworkSearchPaths(systemFrameworkSearchPaths)
+        .addAllAdditionalLibrarySearchPaths(libSearchPaths)
+        .addAllAdditionalSystemHeaderSearchPaths(systemHeaderSearchPaths);
+  }
+
+  private static ImmutableMap<String, String> generateCatalystVariableMap(
+      Path sdkDir, NSDictionary defaultProperties, Optional<AppleToolchain> maybeToolchain) {
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    builder.put("$(SDKROOT)", sdkDir.toString());
+
+    NSObject maybeMobileSupportDir = defaultProperties.get("IOS_UNZIPPERED_TWIN_PREFIX_PATH");
+    if (maybeMobileSupportDir instanceof NSString) {
+      NSString mobileSupportDir = (NSString) maybeMobileSupportDir;
+      builder.put("$(IOS_UNZIPPERED_TWIN_PREFIX_PATH)", mobileSupportDir.getContent());
+    }
+
+    maybeToolchain.ifPresent(
+        toolchain -> builder.put("$(TOOLCHAIN_DIR)", toolchain.getPath().toString()));
+
+    return builder.build();
+  }
+
+  private static ImmutableList<String> expandAdditionalSearchPaths(
+      NSDictionary buildSettings, String key, ImmutableMap<String, String> variableMap) {
+    NSObject untypedPathString = buildSettings.get(key);
+    if (!(untypedPathString instanceof NSString)) {
+      return ImmutableList.of();
+    }
+
+    String pathString = ((NSString) untypedPathString).getContent();
+    ImmutableList<String> stringParts = ImmutableList.copyOf(pathString.split("\\s+"));
+    if (!stringParts.contains("$(inherited)")) {
+      // The additional search paths returned are _additive_, so if there's no $(inherited),
+      // it cannot be represented.
+      LOG.warn(
+          "Additional search path for key '%s' does not contain $(inherited): '%s'",
+          key, stringParts);
+      return ImmutableList.of();
+    }
+
+    ImmutableList<String> expandedPaths =
+        stringParts.stream()
+            .filter(part -> !part.equals("$(inherited)"))
+            .map(
+                part -> {
+                  String currentPart = part;
+                  for (Map.Entry<String, String> entry : variableMap.entrySet()) {
+                    String variable = entry.getKey();
+                    String value = entry.getValue();
+                    currentPart = currentPart.replace(variable, value);
+                  }
+                  return currentPart;
+                })
+            .filter(
+                expandedPath -> {
+                  boolean containsUnexpandedVariables = expandedPath.contains("$");
+                  if (containsUnexpandedVariables) {
+                    LOG.warn(
+                        "Found search path for key '%s' containing unexpanded variable, skipping: '%s'",
+                        key, expandedPath);
+                  }
+                  return !containsUnexpandedVariables;
+                })
+            .filter(
+                expandedPath -> {
+                  Path path = Paths.get(expandedPath);
+                  if (path.isAbsolute() && !Files.isDirectory(path)) {
+                    // The SDK plist for certain versions of Xcode contain non-existent/invalid
+                    // absolute paths, passing those to the linker will trigger warnings and
+                    // possibly failure if -fatal_warnings is passed.
+                    LOG.warn(
+                        "Found search path for key '%s' which does not exist/not a directory, skipping: '%s'",
+                        key, expandedPath);
+                    return false;
+                  }
+
+                  return true;
+                })
+            .collect(ImmutableList.toImmutableList());
+
+    return expandedPaths;
+  }
+
+  private static Optional<NSDictionary> extractCatalystBuildSettings(NSDictionary sdkSettings) {
+    NSObject variantsObject = sdkSettings.get("Variants");
+    if (!(variantsObject instanceof NSArray)) {
+      return Optional.empty();
+    }
+
+    NSArray variants = (NSArray) variantsObject;
+    for (NSObject variantObject : variants.getArray()) {
+      if (!(variantObject instanceof NSDictionary)) {
+        continue;
+      }
+
+      NSDictionary variant = (NSDictionary) variantObject;
+      NSString catalystName = new NSString("iosmac");
+      if (!catalystName.equals(variant.get("Name"))) {
+        continue;
+      }
+
+      NSObject settingsObject = variant.get("BuildSettings");
+      if (settingsObject instanceof NSDictionary) {
+        return Optional.of((NSDictionary) settingsObject);
+      }
+    }
+
+    return Optional.empty();
   }
 }
