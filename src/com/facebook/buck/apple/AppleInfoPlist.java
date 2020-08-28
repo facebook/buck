@@ -265,7 +265,9 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
         if (needsLSRequiresIPhoneOSInfoPlistKeyOnMac()) {
           keys.put("LSRequiresIPhoneOS", new NSNumber(false));
         }
-      } else if (!platform.getType().isWatch() && !isLegacyWatchApp) {
+      } else if (!platform.getType().isWatch()
+          && !isLegacyWatchApp
+          && platform.getType() != ApplePlatformType.MAC_CATALYST) {
         keys.put("LSRequiresIPhoneOS", new NSNumber(true));
       }
 
