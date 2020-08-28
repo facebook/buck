@@ -280,11 +280,14 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
         LOG.info("Finishing reader thread for pipe: %s", namedPipeName);
       } catch (PipeNotConnectedException e) {
         LOG.info("Named pipe %s is closed", namedPipeName);
-      } catch (Exception e) {
+      } catch (IOException e) {
         LOG.error(e, "Cannot read from named pipe: %s", namedPipeName);
+      } catch (Exception e) {
+        // TODO: maybe the pipe closed too early, should investigate this more
+        LOG.debug(e, "Cannot read from named pipe: %s", namedPipeName);
       } finally {
         if (downwardProtocol == null) {
-          LOG.error("Did not establish downward protocol");
+          LOG.debug("Did not establish downward protocol");
         }
         done.set(null);
       }
