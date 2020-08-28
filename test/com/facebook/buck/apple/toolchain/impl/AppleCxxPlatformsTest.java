@@ -35,6 +35,7 @@ import static org.junit.Assume.assumeTrue;
 import com.dd.plist.NSDictionary;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.FakeAppleRuleDescriptions;
+import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
@@ -84,7 +85,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
-import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.util.environment.Platform;
@@ -1245,7 +1245,7 @@ public class AppleCxxPlatformsTest {
     assertThat(swiftc, instanceOf(VersionedTool.class));
     assertThat(
         swiftPlatform.getSwiftTarget(),
-        equalTo(SwiftTargetTriple.of("i386", "apple", "ios", "7.0")));
+        equalTo(AppleCompilerTargetTriple.of("i386", "apple", "ios", "7.0")));
   }
 
   @Test

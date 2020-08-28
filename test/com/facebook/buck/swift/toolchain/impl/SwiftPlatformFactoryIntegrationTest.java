@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
+import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
@@ -30,7 +31,6 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
-import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -88,7 +88,8 @@ public class SwiftPlatformFactoryIntegrationTest {
   @Test
   public void testBuildSwiftPlatformWithEmptyToolchainPaths() throws IOException {
     AbsPath developerDir = tmp.newFolder("Developer");
-    SwiftTargetTriple triple = SwiftTargetTriple.of("x86_64", "apple", "ios", "9.3");
+    AppleCompilerTargetTriple triple =
+        AppleCompilerTargetTriple.of("x86_64", "apple", "ios", "9.3");
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
             createAppleSdk(),
@@ -115,7 +116,7 @@ public class SwiftPlatformFactoryIntegrationTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
-            SwiftTargetTriple.of("x86_64", "apple", "ios", "9.3"));
+            AppleCompilerTargetTriple.of("x86_64", "apple", "ios", "9.3"));
     assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
   }
@@ -138,7 +139,7 @@ public class SwiftPlatformFactoryIntegrationTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
-            SwiftTargetTriple.of("x86_64", "apple", "ios", "9.3"));
+            AppleCompilerTargetTriple.of("x86_64", "apple", "ios", "9.3"));
     assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), hasSize(1));
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), hasSize(2));
   }

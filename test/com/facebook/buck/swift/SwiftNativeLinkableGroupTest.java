@@ -18,6 +18,7 @@ package com.facebook.buck.swift;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
@@ -32,7 +33,6 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
-import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
@@ -115,7 +115,7 @@ public class SwiftNativeLinkableGroupTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
-            SwiftTargetTriple.of("x86_64", "apple", "ios", "9.3"));
+            AppleCompilerTargetTriple.of("x86_64", "apple", "ios", "9.3"));
 
     ImmutableList.Builder<Arg> staticArgsBuilder = ImmutableList.builder();
     SwiftRuntimeNativeLinkableGroup.populateLinkerArguments(
@@ -156,7 +156,7 @@ public class SwiftNativeLinkableGroupTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
-            SwiftTargetTriple.of("x86_64", "apple", "ios", "9.3"));
+            AppleCompilerTargetTriple.of("x86_64", "apple", "ios", "9.3"));
 
     ImmutableList.Builder<Arg> sharedArgsBuilder = ImmutableList.builder();
     SwiftRuntimeNativeLinkableGroup.populateLinkerArguments(

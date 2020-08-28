@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
@@ -48,7 +49,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.swift.SwiftToolchainBuildRule;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
-import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -128,8 +128,8 @@ public class AppleToolchainDescription
             .setArchitectures(applePlatform.getArchitectures())
             .build();
 
-    SwiftTargetTriple swiftTarget =
-        SwiftTargetTriple.of(
+    AppleCompilerTargetTriple swiftTarget =
+        AppleCompilerTargetTriple.of(
             args.getArchitecture(),
             "apple",
             applePlatform.getSwiftName().orElse(applePlatform.getName()),

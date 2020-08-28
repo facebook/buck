@@ -16,6 +16,7 @@
 
 package com.facebook.buck.swift.toolchain;
 
+import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableList;
@@ -62,7 +63,7 @@ public interface SwiftPlatform {
    * @return Structure that represents the architecture target the swift module is built for e.g.
    *     x86_64-apple-ios9.0
    */
-  SwiftTargetTriple getSwiftTarget();
+  AppleCompilerTargetTriple getSwiftTarget();
 
   static Builder builder() {
     return new Builder();

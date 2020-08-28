@@ -16,6 +16,7 @@
 
 package com.facebook.buck.swift;
 
+import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -36,7 +37,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -51,7 +51,7 @@ public class SwiftCompilationDatabase extends SwiftCompileBase {
   SwiftCompilationDatabase(
       SwiftBuckConfig swiftBuckConfig,
       BuildTarget buildTarget,
-      SwiftTargetTriple swiftTarget,
+      AppleCompilerTargetTriple swiftTarget,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       Tool swiftCompiler,

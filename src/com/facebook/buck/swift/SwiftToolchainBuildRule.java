@@ -16,12 +16,12 @@
 
 package com.facebook.buck.swift;
 
+import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
-import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -58,7 +58,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
   }
 
   /** Provides SwiftPlatform for given Swift target triple */
-  public SwiftPlatform getSwiftPlatform(SwiftTargetTriple swiftTarget) {
+  public SwiftPlatform getSwiftPlatform(AppleCompilerTargetTriple swiftTarget) {
     return SwiftPlatform.builder()
         .setSwiftc(swiftc)
         .setSwiftStdlibTool(swiftStdlibTool)

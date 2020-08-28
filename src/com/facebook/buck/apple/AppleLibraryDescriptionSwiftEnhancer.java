@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -40,7 +41,6 @@ import com.facebook.buck.swift.SwiftDescriptions;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftLibraryDescriptionArg;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
-import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -89,7 +89,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         getSwiftTargetTruple(args, swiftPlatform));
   }
 
-  private static Optional<SwiftTargetTriple> getSwiftTargetTruple(
+  private static Optional<AppleCompilerTargetTriple> getSwiftTargetTruple(
       AppleNativeTargetDescriptionArg args, SwiftPlatform swiftPlatform) {
     return args.getTargetSdkVersion()
         .map(version -> swiftPlatform.getSwiftTarget().withTargetSdkVersion(version));

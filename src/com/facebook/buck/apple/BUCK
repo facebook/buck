@@ -15,6 +15,7 @@ java_library_with_plugins(
     deps = [
         "//src/com/facebook/buck/android/toolchain/ndk:ndk",
         "//src/com/facebook/buck/apple/clang:clang",
+        "//src/com/facebook/buck/apple/common:common",
         "//src/com/facebook/buck/apple/platform_type:type",
         "//src/com/facebook/buck/apple/simulator:simulator",
         "//src/com/facebook/buck/apple/toolchain:toolchain",

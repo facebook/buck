@@ -16,6 +16,7 @@
 
 package com.facebook.buck.swift;
 
+import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -50,7 +51,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -97,7 +97,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   @AddToRuleKey private final boolean shouldEmitSwiftdocs;
 
   @AddToRuleKey protected final ImmutableSortedSet<SourcePath> srcs;
-  @AddToRuleKey private final SwiftTargetTriple swiftTarget;
+  @AddToRuleKey private final AppleCompilerTargetTriple swiftTarget;
   @AddToRuleKey private final Optional<String> version;
   @AddToRuleKey private final ImmutableList<? extends Arg> compilerFlags;
 
@@ -131,7 +131,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   SwiftCompileBase(
       SwiftBuckConfig swiftBuckConfig,
       BuildTarget buildTarget,
-      SwiftTargetTriple swiftTarget,
+      AppleCompilerTargetTriple swiftTarget,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       Tool swiftCompiler,

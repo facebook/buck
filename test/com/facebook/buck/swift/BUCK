@@ -25,6 +25,7 @@ java_test(
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/aapt:aapt",
         "//src/com/facebook/buck/android/redex:options",
+        "//src/com/facebook/buck/apple/common:common",
         "//src/com/facebook/buck/apple/toolchain:toolchain",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/core/config:config",

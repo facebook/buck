@@ -16,6 +16,7 @@
 
 package com.facebook.buck.swift;
 
+import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
@@ -70,7 +71,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
-import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.swift.toolchain.UnresolvedSwiftPlatform;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Predicates;
@@ -460,7 +460,7 @@ public class SwiftLibraryDescription
       Preprocessor preprocessor,
       PreprocessorFlags preprocessFlags,
       boolean importUnderlyingModule,
-      Optional<SwiftTargetTriple> swiftTarget) {
+      Optional<AppleCompilerTargetTriple> swiftTarget) {
     return new SwiftCompilationDatabase(
         swiftBuckConfig,
         buildTarget,
@@ -484,8 +484,8 @@ public class SwiftLibraryDescription
         downwardApiConfig.isEnabledForApple());
   }
 
-  private static SwiftTargetTriple getSwiftTarget(
-      SwiftPlatform swiftPlatform, Optional<SwiftTargetTriple> swiftTarget) {
+  private static AppleCompilerTargetTriple getSwiftTarget(
+      SwiftPlatform swiftPlatform, Optional<AppleCompilerTargetTriple> swiftTarget) {
     return swiftTarget.orElse(swiftPlatform.getSwiftTarget());
   }
 
@@ -522,7 +522,7 @@ public class SwiftLibraryDescription
       Preprocessor preprocessor,
       PreprocessorFlags preprocessFlags,
       boolean importUnderlyingModule,
-      Optional<SwiftTargetTriple> swiftTarget) {
+      Optional<AppleCompilerTargetTriple> swiftTarget) {
     return new SwiftCompile(
         swiftBuckConfig,
         buildTarget,

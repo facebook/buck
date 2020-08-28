@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.swift.toolchain;
+package com.facebook.buck.apple.common;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /**
- * Expresses the target platform for Swift compilation. For more details, see the LLVM
- * documentation:
+ * Expresses the compiler triple for Apple platforms when using Clang. For more details, see the
+ * LLVM documentation at https://clang.llvm.org/docs/CrossCompilation.html#target-triple
  *
- * <p>https://clang.llvm.org/docs/CrossCompilation.html#target-triple
+ * <p>The triple has the general format <arch><sub>-<vendor>-<sys>-<abi>, where: arch = x86_64,
+ * i386, arm, etc. sub = v5, v6m, v7a, v7m, etc. vendor = apple sys = macosx, ios, watchos, etc. abi
+ * = macabi (catalyst), etc. [optional]
+ *
+ * <p>Note that the "sys" component can optionally have a target SDK version.
  */
 @BuckStyleValue
-public abstract class SwiftTargetTriple implements AddsToRuleKey {
+public abstract class AppleCompilerTargetTriple implements AddsToRuleKey {
   @AddToRuleKey
   public abstract String getArchitecture();
 
@@ -44,12 +48,14 @@ public abstract class SwiftTargetTriple implements AddsToRuleKey {
     return getArchitecture() + "-" + getVendor() + "-" + getPlatformName() + getTargetSdkVersion();
   }
 
-  public static SwiftTargetTriple of(
+  public static AppleCompilerTargetTriple of(
       String architecture, String vendor, String platformName, String targetSdkVersion) {
-    return ImmutableSwiftTargetTriple.ofImpl(architecture, vendor, platformName, targetSdkVersion);
+    return ImmutableAppleCompilerTargetTriple.ofImpl(
+        architecture, vendor, platformName, targetSdkVersion);
   }
 
-  public SwiftTargetTriple withTargetSdkVersion(String targetSdkVersion) {
+  /** Creates a copy of the triple with a different SDK version. */
+  public AppleCompilerTargetTriple withTargetSdkVersion(String targetSdkVersion) {
     if (targetSdkVersion.equals(getTargetSdkVersion())) {
       return this;
     }
