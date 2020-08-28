@@ -19,6 +19,7 @@ package com.facebook.buck.apple.common;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import java.util.Optional;
 
 /**
  * Expresses the compiler triple for Apple platforms when using Clang. For more details, see the
@@ -42,21 +43,23 @@ public abstract class AppleCompilerTargetTriple implements AddsToRuleKey {
   public abstract String getPlatformName();
 
   @AddToRuleKey
-  public abstract String getTargetSdkVersion();
+  public abstract Optional<String> getTargetSdkVersion();
 
   public String getTriple() {
-    return getArchitecture() + "-" + getVendor() + "-" + getPlatformName() + getTargetSdkVersion();
+    String sdkVersion = getTargetSdkVersion().orElse("");
+    return getArchitecture() + "-" + getVendor() + "-" + getPlatformName() + sdkVersion;
   }
 
   public static AppleCompilerTargetTriple of(
       String architecture, String vendor, String platformName, String targetSdkVersion) {
     return ImmutableAppleCompilerTargetTriple.ofImpl(
-        architecture, vendor, platformName, targetSdkVersion);
+        architecture, vendor, platformName, Optional.of(targetSdkVersion));
   }
 
   /** Creates a copy of the triple with a different SDK version. */
   public AppleCompilerTargetTriple withTargetSdkVersion(String targetSdkVersion) {
-    if (targetSdkVersion.equals(getTargetSdkVersion())) {
+    Optional<String> maybeTargetSDkVersion = Optional.of(targetSdkVersion);
+    if (maybeTargetSDkVersion.equals(getTargetSdkVersion())) {
       return this;
     }
     return of(getArchitecture(), getVendor(), getPlatformName(), targetSdkVersion);
