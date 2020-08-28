@@ -36,7 +36,7 @@ otherwise share most configuration specifications.
 <p>
 Flavors can also be used to simultaneously build for two different platforms, 
 such as iOS and watchOS. Being able to build for both of these at the same 
-time is important because our iOS application has a dependency on the Watch 
+time is important because iOS application can have a dependency on the Watch 
 application.
 </p>
 
@@ -145,11 +145,11 @@ control conditional fields in the Buck target's rule.
   </tr>
   <tr>
     <td>iphoneos-i386</td>
-    <td>WTF</td>
+    <td></td>
   </tr>
   <tr>
     <td>iphoneos-x86_64</td>
-    <td>WTF</td>
+    <td></td>
   </tr>
   <tr>
     <td>iphonesimulator</td>
@@ -371,7 +371,7 @@ libraries that depend on this library.
 
 <h2 id="apple_debug_http">Apple debug flavors<a class="inline-link" href="#apple_debug_http">#</a></h2>
 <p>
-Selects the actual binary used to represent a {call buck.cxx_binary /}. These are used internally.
+Selects the actual binary used to represent a {call buck.cxx_binary /}.
 </p>
 
 <h3>Stripped binary</h3>
@@ -415,7 +415,7 @@ apple-debuggable-binary
 {/literal}
 
 <p>
-[Description needed]
+Could be stripped and unstripped, depending on requirements.
 </p>
 
 <h2 id="apple_bundles_http">Apple bundles flavors<a class="inline-link" href="#apple_bundles_http">#</a></h2>
