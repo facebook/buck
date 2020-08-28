@@ -192,6 +192,13 @@ public class AppleCxxPlatforms {
     }
     cflagsBuilder.add(targetSdk.getApplePlatform().getMinVersionFlagPrefix() + minVersion);
 
+    for (String frameworksPath : targetSdk.getAdditionalSystemFrameworkSearchPaths()) {
+      cflagsBuilder.add("-iframework", frameworksPath);
+    }
+    for (String headerSearchPath : targetSdk.getAdditionalSystemHeaderSearchPaths()) {
+      cflagsBuilder.add("-isystem", headerSearchPath);
+    }
+
     if (targetSdk.getApplePlatform().equals(ApplePlatform.WATCHOS)) {
       cflagsBuilder.add("-fembed-bitcode");
     }
@@ -572,6 +579,10 @@ public class AppleCxxPlatforms {
     }
     if (targetSdk.getApplePlatform().equals(ApplePlatform.WATCHOS)) {
       builder.addAll(Linkers.iXlinker("-bitcode_verify"));
+    }
+
+    for (String libSearchPath : targetSdk.getAdditionalLibrarySearchPaths()) {
+      builder.add("-L" + libSearchPath);
     }
 
     return builder.build();

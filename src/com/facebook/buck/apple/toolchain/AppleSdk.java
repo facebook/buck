@@ -20,6 +20,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.Set;
+import org.immutables.value.Value;
 
 /** Metadata about an Apple SDK. */
 @BuckStyleValueWithBuilder
@@ -41,6 +42,24 @@ public abstract class AppleSdk {
   public abstract Optional<String> getTargetTriplePlatformName();
 
   public abstract Optional<String> getTargetTripleABI();
+
+  /** Defines a list of SDK-specific system framework search paths. Passed using -iframework. */
+  @Value.Default
+  public ImmutableList<String> getAdditionalSystemFrameworkSearchPaths() {
+    return ImmutableList.of();
+  }
+
+  /** Defines a list of SDK-specific library search paths. Passed using -L. */
+  @Value.Default
+  public ImmutableList<String> getAdditionalLibrarySearchPaths() {
+    return ImmutableList.of();
+  }
+
+  /** Defines a list of SDK-specific system header search paths. Passed using -isystem. */
+  @Value.Default
+  public ImmutableList<String> getAdditionalSystemHeaderSearchPaths() {
+    return ImmutableList.of();
+  }
 
   /**
    * The toolchains used by the SDK. For example: {@code ["com.apple.dt.toolchain.XcodeDefault"]}
