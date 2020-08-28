@@ -40,8 +40,3 @@ pytest_test(
         "//third-party/py/pytest-asyncio:pytest-asyncio",
     ],
 )
-
-pytest_test(
-    name = "pytest",
-    srcs = glob(["*_test.py"]),
-)
