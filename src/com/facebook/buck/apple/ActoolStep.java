@@ -100,6 +100,8 @@ class ActoolStep extends IsolatedShellStep {
       commandBuilder.add("--target-device", "watch");
     } else if (applePlatformName.equals(ApplePlatform.MACOSX.getName())) {
       commandBuilder.add("--target-device", "mac");
+    } else if (applePlatformName.equals(ApplePlatform.MACOSXCATALYST.getName())) {
+      commandBuilder.add("--target-device", "ipad");
     } else {
       // TODO(jakubzika): Let apps decide which device they want to target (iPhone / iPad / both)
       commandBuilder.add(
