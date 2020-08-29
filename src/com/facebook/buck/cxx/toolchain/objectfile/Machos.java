@@ -60,6 +60,7 @@ public class Machos {
   static final short N_OSO = (short) 0x66;
 
   static final String LINKEDIT = "__LINKEDIT";
+  private static byte[] fakePathReplacement = "fake/path".getBytes();
 
   private static final int NO_VALUE_MARKER = -1;
 
@@ -132,8 +133,7 @@ public class Machos {
       throws IOException, MachoException {
     // We expect either cell roots or exempt paths be present, and only one of which should be
     // present.
-    assert (cellRoots.isPresent() || exemptPaths.isPresent());
-    assert (!(cellRoots.isPresent() && exemptPaths.isPresent()));
+    Preconditions.checkArgument(cellRoots.isPresent() ^ exemptPaths.isPresent());
 
     if (cellRoots.isPresent()) {
       cellRoots
@@ -517,7 +517,6 @@ public class Machos {
       return Optional.empty();
     }
 
-    byte[] fakePathReplacement = "fake/path".getBytes();
     return Optional.of(ByteBuffer.wrap(fakePathReplacement));
   }
 
