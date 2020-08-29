@@ -49,7 +49,8 @@ public class FileScrubberStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context)
+      throws IOException, InterruptedException {
     Path filePath = filesystem.resolve(input);
     try {
       for (FileScrubber scrubber : scrubbers) {
@@ -57,7 +58,9 @@ public class FileScrubberStep implements Step {
           if (scrubber instanceof FileContentsScrubber) {
             ((FileContentsScrubber) scrubber).scrubFile(channel);
           } else if (scrubber instanceof FileAttributesScrubber) {
-            ((FileAttributesScrubber) scrubber).scrubFileWithPath(filePath);
+            ((FileAttributesScrubber) scrubber)
+                .scrubFileWithPath(
+                    filePath, context.getProcessExecutor(), context.getEnvironment());
           }
         }
       }

@@ -408,7 +408,8 @@ class CxxPreprocessAndCompileStep implements Step {
       // compilation directory with the one we really want.
       if (shouldSanitizeOutputBinary()) {
         sanitizer.restoreCompilationDirectory(path.getPath(), filesystem.getRootPath().getPath());
-        FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(path.getPath());
+        FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(
+            path.getPath(), context.getProcessExecutor(), context.getEnvironment());
       }
     }
 

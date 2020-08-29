@@ -16,6 +16,9 @@
 
 package com.facebook.buck.io.file;
 
+import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import java.nio.file.Path;
 
 /** Created by beefon on 06/06/2016. */
@@ -24,6 +27,13 @@ public interface FileAttributesScrubber extends FileScrubber {
    * Override this method to perform the modification of the file attributes (modification date,
    * creation date, etc.) WARNING: You should not delete, rename or move the file, as the the
    * behaviour is undefined.
+   *
+   * @param path the path to the file to be scrubbed
+   * @param processExecutor executor to run shell commands, used when file scrubbing involve running
+   *     shell commands, for example: "strip -S file_path" to strip debug symbol tables
+   * @param environment the environment variables when running the command through processExecutor
    */
-  void scrubFileWithPath(Path path);
+  void scrubFileWithPath(
+      Path path, ProcessExecutor processExecutor, ImmutableMap<String, String> environment)
+      throws IOException, InterruptedException;
 }

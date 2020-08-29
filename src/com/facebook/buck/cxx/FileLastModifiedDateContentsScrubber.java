@@ -18,13 +18,16 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.file.FileAttributesScrubber;
 import com.facebook.buck.util.ObjectFileCommonModificationDate;
+import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 
 /** Resets the file's last modification date. */
 class FileLastModifiedDateContentsScrubber implements FileAttributesScrubber {
 
   @Override
-  public void scrubFileWithPath(Path path) {
+  public void scrubFileWithPath(
+      Path path, ProcessExecutor processExecutor, ImmutableMap<String, String> environment) {
     path.toFile()
         .setLastModified(
             (long) ObjectFileCommonModificationDate.COMMON_MODIFICATION_TIME_STAMP * 1000);

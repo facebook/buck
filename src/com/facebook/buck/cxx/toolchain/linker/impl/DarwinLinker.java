@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.objectfile.LcUuidContentsScrubber;
 import com.facebook.buck.cxx.toolchain.objectfile.OsoSymbolsContentsScrubber;
+import com.facebook.buck.cxx.toolchain.objectfile.StripDebugSymbolTableScrubber;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -132,8 +133,7 @@ public class DarwinLinker extends DelegatingTool
 
       return ImmutableList.of(new OsoSymbolsContentsScrubber(focusedTargetsPaths));
     } else {
-      // there's no point scrubbing the debug info if the linked objects are never getting cached
-      return ImmutableList.of();
+      return ImmutableList.of(new StripDebugSymbolTableScrubber());
     }
   }
 
