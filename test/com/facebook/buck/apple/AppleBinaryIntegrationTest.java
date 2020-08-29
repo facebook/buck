@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.matchesRegex;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -52,10 +53,12 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -553,23 +556,38 @@ public class AppleBinaryIntegrationTest {
 
   private String getMacDylibSymbolTable(
       String dylibTargetName, String dylibName, ProjectWorkspace workspace) throws Exception {
-    BuildTarget dylibTarget =
-        BuildTargetFactory.newInstance(dylibTargetName)
-            .withAppendedFlavors(InternalFlavor.of("macosx-x86_64"), InternalFlavor.of("shared"));
-
-    Path dylibDirOutputPath =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), dylibTarget, "%s"));
-    Path dylibOutputPath = dylibDirOutputPath.resolve(dylibName);
-    assertThat(Files.exists(dylibOutputPath), is(true));
-    assertThat(
-        workspace.runCommand("file", dylibOutputPath.toString()).getStdout().get(),
-        containsString("dynamically linked shared library"));
-
+    Path dylibOutputPath = getMacDylibOutputPath(dylibTargetName, dylibName, workspace);
     return workspace.runCommand("nm", dylibOutputPath.toString()).getStdout().get();
   }
 
   private String buildAndGetMacBinarySymbolTable(String appTargetName, ProjectWorkspace workspace)
+      throws Exception {
+    Path binaryOutputPath = buildAndGetMacBinaryOutputPath(appTargetName, workspace);
+    return workspace.runCommand("nm", binaryOutputPath.toString()).getStdout().get();
+  }
+
+  private String getDebugSymbolFiles(Path buildOutputPath, ProjectWorkspace workspace)
+      throws Exception {
+    String symtab =
+        workspace.runCommand("dsymutil", "-s", buildOutputPath.toString()).getStdout().get();
+    String[] debugSymbolFiles =
+        Arrays.stream(symtab.split("\n")).filter(s -> s.contains("N_OSO")).toArray(String[]::new);
+    return String.join("\n", debugSymbolFiles);
+  }
+
+  private String buildAndGetMacBinaryDebugSymbolFiles(
+      String appTargetName, ProjectWorkspace workspace) throws Exception {
+    Path binaryOutputPath = buildAndGetMacBinaryOutputPath(appTargetName, workspace);
+    return getDebugSymbolFiles(binaryOutputPath, workspace);
+  }
+
+  private String getMacDylibDebugSymbolFiles(
+      String dylibTargetName, String dylibName, ProjectWorkspace workspace) throws Exception {
+    Path dylibOutputPath = getMacDylibOutputPath(dylibTargetName, dylibName, workspace);
+    return getDebugSymbolFiles(dylibOutputPath, workspace);
+  }
+
+  private Path buildAndGetMacBinaryOutputPath(String appTargetName, ProjectWorkspace workspace)
       throws Exception {
     BuildTarget binaryTarget =
         BuildTargetFactory.newInstance(appTargetName)
@@ -584,7 +602,25 @@ public class AppleBinaryIntegrationTest {
         workspace.runCommand("file", binaryOutputPath.toString()).getStdout().get(),
         containsString("executable"));
 
-    return workspace.runCommand("nm", binaryOutputPath.toString()).getStdout().get();
+    return binaryOutputPath;
+  }
+
+  private Path getMacDylibOutputPath(
+      String dylibTargetName, String dylibName, ProjectWorkspace workspace) throws Exception {
+    BuildTarget dylibTarget =
+        BuildTargetFactory.newInstance(dylibTargetName)
+            .withAppendedFlavors(InternalFlavor.of("macosx-x86_64"), InternalFlavor.of("shared"));
+
+    Path dylibDirOutputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), dylibTarget, "%s"));
+    Path dylibOutputPath = dylibDirOutputPath.resolve(dylibName);
+    assertThat(Files.exists(dylibOutputPath), is(true));
+    assertThat(
+        workspace.runCommand("file", dylibOutputPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
+
+    return dylibOutputPath;
   }
 
   private void runLinkGroupTestForSingleDylib(
@@ -767,6 +803,109 @@ public class AppleBinaryIntegrationTest {
         getMacDylibSymbolTable("//Apps/TestApp:Dylib", "Dylib.dylib", workspace);
     assertThat(dylibSymbolTable, containsString("T _get_value_from_a"));
     assertThat(dylibSymbolTable, not(containsString("T _get_value_from_b")));
+  }
+
+  @Test
+  public void testAppleBinaryWithLinkGroupsWithDebugSymbolsNoFocus() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_link_groups_multiples_dylibs_select_debug_info", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+    // Check that binary has path to main.c.o
+    String binaryDebugSymbolFiles =
+        buildAndGetMacBinaryDebugSymbolFiles("//Apps/TestApp:TestApp", workspace);
+    assertThat(
+        binaryDebugSymbolFiles,
+        containsString("Apps/TestApp/TestApp#compile-main.c.ofc85ff2c,macosx-x86_64/main.c.o"));
+    // Check that Dylib1 has path to B.c.o
+    String dylibDebugSymbolFiles =
+        getMacDylibDebugSymbolFiles("//Apps/TestApp:Dylib1", "Dylib1.dylib", workspace);
+    assertThat(
+        dylibDebugSymbolFiles, containsString("Apps/Libs/B#macosx-x86_64,static/libB.a(B.c.o)"));
+
+    // Check that Dylib2 contains paths to A.c.o and  C.c.o
+    String dylib2DebugSymbolFiles =
+        getMacDylibDebugSymbolFiles("//Apps/TestApp:Dylib2", "Dylib2.dylib", workspace);
+    assertThat(
+        dylib2DebugSymbolFiles, containsString("Apps/Libs/C#macosx-x86_64,static/libC.a(C.c.o)"));
+    assertThat(
+        dylib2DebugSymbolFiles, containsString("Apps/Libs/A#macosx-x86_64,static/libA.a(A.c.o)"));
+  }
+
+  @Test
+  public void testAppleBinaryWithLinkGroupsWithSelectDebugSymbolsDylibFocus() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    Path focusedTargetsPath = Files.createTempFile("focused_targets", ".json");
+    // Only link debug symbols for Libs:A
+    String focusedTargets = "{\"targets\":[\"//Apps/Libs:A\"], \"version\":\"abc\"}";
+    Files.write(focusedTargetsPath, focusedTargets.getBytes(Charset.defaultCharset()));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_link_groups_multiples_dylibs_select_debug_info", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+    workspace.addBuckConfigLocalOption("cxx", "cache_links", "false");
+    workspace.addBuckConfigLocalOption(
+        "apple", "focused_targets_path", focusedTargetsPath.toString());
+
+    // Check that binary has no debug symbols
+    String binaryDebugSymbolFiles =
+        buildAndGetMacBinaryDebugSymbolFiles("//Apps/TestApp:TestApp", workspace);
+    assertEquals(binaryDebugSymbolFiles, "");
+
+    // Check that Dylib1 has no debug symbols
+    String dylibDebugSymbolFiles =
+        getMacDylibDebugSymbolFiles("//Apps/TestApp:Dylib1", "Dylib1.dylib", workspace);
+    assertEquals(dylibDebugSymbolFiles, "");
+
+    // Check that Dylib2 contains relative path to A.c.o and fake path to C.c.o
+    String dylib2DebugSymbolFiles =
+        getMacDylibDebugSymbolFiles("//Apps/TestApp:Dylib2", "Dylib2.dylib", workspace);
+    assertThat(
+        dylib2DebugSymbolFiles, matchesRegex("(.*)buck-out/gen/(.*)/libA.a(.*)[\\n\\r](.*)"));
+    assertThat(dylib2DebugSymbolFiles, matchesRegex("(.*)[\\n\\r](.*)fake/path(.*)"));
+  }
+
+  @Test
+  public void testAppleBinaryWithLinkGroupsWithSelectDebugSymbolsExecutableFocus()
+      throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    Path focusedTargetsPath = Files.createTempFile("focused_targets", ".json");
+    // Only link debug symbols for the executable
+    String focusedTargets = "{\"targets\":[\"//Apps/TestApp:TestApp\"], \"version\":\"abc\"}";
+    Files.write(focusedTargetsPath, focusedTargets.getBytes(Charset.defaultCharset()));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_link_groups_multiples_dylibs_select_debug_info", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+    workspace.addBuckConfigLocalOption("cxx", "cache_links", "false");
+    workspace.addBuckConfigLocalOption(
+        "apple", "focused_targets_path", focusedTargetsPath.toString());
+    // Check that binary has debug symbols from main.c
+    String binaryDebugSymbolFiles =
+        buildAndGetMacBinaryDebugSymbolFiles("//Apps/TestApp:TestApp", workspace);
+    assertThat(binaryDebugSymbolFiles, matchesRegex("(.*)buck-out/gen/(.*)/main.c.o(.*)"));
+
+    // Check that Dylib1 has no debug symbols
+    String dylibDebugSymbolFiles =
+        getMacDylibDebugSymbolFiles("//Apps/TestApp:Dylib1", "Dylib1.dylib", workspace);
+    assertEquals(dylibDebugSymbolFiles, "");
+
+    // Check that Dylib2 has no debug symbols
+    String dylib2DebugSymbolFiles =
+        getMacDylibDebugSymbolFiles("//Apps/TestApp:Dylib2", "Dylib2.dylib", workspace);
+    assertEquals(dylib2DebugSymbolFiles, "");
   }
 
   @Test
