@@ -253,6 +253,15 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBuildTarget(APPLE_SECTION, "xctool_zip_target", targetConfiguration);
   }
 
+  /**
+   * The path to the json file containing the focused targets, which are specified by the user.
+   *
+   * @return optional path to the focused targets json file.
+   */
+  public Optional<Path> getFocusedTargetsPath() {
+    return getOptionalPath(APPLE_SECTION, "focused_targets_path");
+  }
+
   public ToolProvider getCodesignProvider() {
     String codesignField = "codesign";
     Optional<UnconfiguredBuildTarget> target =
