@@ -186,7 +186,8 @@ public class CxxLinkableEnhancer {
         runtimeDepType,
         linkOptions,
         postprocessor,
-        CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY);
+        CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY,
+        CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY);
   }
 
   /** Creates a {@link CxxLink} rule which supports an optional relinking strategy. */
@@ -205,7 +206,8 @@ public class CxxLinkableEnhancer {
       LinkableDepType runtimeDepType,
       CxxLinkOptions linkOptions,
       Optional<LinkOutputPostprocessor> postprocessor,
-      CxxConditionalLinkStrategyFactory linkStrategyFactory) {
+      CxxConditionalLinkStrategyFactory linkStrategyFactory,
+      CxxDebugSymbolLinkStrategyFactory debugSymbolLinkStrategyFactory) {
 
     Linker linker = cxxPlatform.getLd().resolve(ruleResolver, target.getTargetConfiguration());
 
@@ -262,6 +264,9 @@ public class CxxLinkableEnhancer {
         linkStrategyFactory.createStrategy(
             graphBuilder, projectFilesystem, ruleResolver, target, ldArgs, linker, output);
 
+    CxxDebugSymbolLinkStrategy debugStrategy =
+        debugSymbolLinkStrategyFactory.createStrategy(cellPathResolver, ldArgs);
+
     return new CxxLink(
         target,
         projectFilesystem,
@@ -277,7 +282,8 @@ public class CxxLinkableEnhancer {
         linkOptions.getThinLto(),
         linkOptions.getFatLto(),
         downwardApiConfig.isEnabledForCxx(),
-        linkStrategy);
+        linkStrategy,
+        debugStrategy);
   }
 
   private static ImmutableList<Arg> createDepSharedLibFrameworkArgsForLink(
@@ -444,7 +450,8 @@ public class CxxLinkableEnhancer {
         immediateLinkableInput,
         postprocessor,
         cellPathResolver,
-        CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY);
+        CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY,
+        CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY);
   }
 
   /**
@@ -477,7 +484,8 @@ public class CxxLinkableEnhancer {
       NativeLinkableInput immediateLinkableInput,
       Optional<LinkOutputPostprocessor> postprocessor,
       CellPathResolver cellPathResolver,
-      CxxConditionalLinkStrategyFactory linkStrategyFactory) {
+      CxxConditionalLinkStrategyFactory linkStrategyFactory,
+      CxxDebugSymbolLinkStrategyFactory debugSymbolLinkStrategyFactory) {
 
     ImmutableList<Arg> allArgs =
         createDepSharedLibFrameworkArgsForLink(
@@ -514,7 +522,8 @@ public class CxxLinkableEnhancer {
         runtimeDepType,
         linkOptions,
         postprocessor,
-        linkStrategyFactory);
+        linkStrategyFactory,
+        debugSymbolLinkStrategyFactory);
   }
 
   private static void addSharedLibrariesLinkerArgs(
@@ -590,7 +599,8 @@ public class CxxLinkableEnhancer {
         Linker.LinkableDepType.SHARED,
         CxxLinkOptions.of(),
         Optional.empty(),
-        CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY);
+        CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY,
+        CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY);
   }
 
   /**

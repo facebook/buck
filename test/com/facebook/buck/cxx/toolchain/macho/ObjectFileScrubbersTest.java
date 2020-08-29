@@ -18,6 +18,7 @@ package com.facebook.buck.cxx.toolchain.macho;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -27,12 +28,15 @@ import com.facebook.buck.cxx.toolchain.objectfile.Machos;
 import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.Test;
 
 public class ObjectFileScrubbersTest {
@@ -303,6 +307,34 @@ public class ObjectFileScrubbersTest {
 
     Optional<ByteBuffer> rewrittenBuffer =
         Machos.tryRewritingMatchingPath(stringBytes, 0, replacementMap);
+    assertFalse(rewrittenBuffer.isPresent());
+  }
+
+  @Test
+  public void rewriteToFakePathNoExempt() {
+    // Due to Unix vs Windows path separators
+    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+
+    byte[] stringBytes = makeNullTerminatedCString("/Users/fb/repo/cell/folder");
+
+    Optional<ByteBuffer> rewrittenBuffer =
+        Machos.tryRewritingToFakePath(stringBytes, 0, ImmutableSet.of());
+
+    String rewrittenPath = new String(rewrittenBuffer.get().array());
+    assertEquals(rewrittenPath, "fake/path");
+  }
+
+  @Test
+  public void rewriteToFakePathExempt() {
+    // Due to Unix vs Windows path separators
+    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+
+    byte[] stringBytes = makeNullTerminatedCString("/Users/fb/repo/cell/folder");
+
+    Set<byte[]> exemptSet = new HashSet<>();
+    exemptSet.add("/Users/fb/repo/cell/".getBytes(StandardCharsets.UTF_8));
+
+    Optional<ByteBuffer> rewrittenBuffer = Machos.tryRewritingToFakePath(stringBytes, 0, exemptSet);
     assertFalse(rewrittenBuffer.isPresent());
   }
 

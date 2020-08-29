@@ -29,6 +29,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -44,13 +45,17 @@ public interface Linker extends Tool {
    *
    * @param cellRootMap Replacement map for cell roots found in paths, to some suitably normalized
    *     form (such as a relative path from root cell).
+   * @param focusedTargetsPaths Paths to the build outputs of focused targets. Focused targets are a
+   *     set of targets specified by the user, intended for local developments.
+   * @return The scrubbers for scrubbing the linked binaries.
    */
-  ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap);
+  ImmutableList<FileScrubber> getScrubbers(
+      ImmutableMap<Path, Path> cellRootMap, ImmutableSet<AbsPath> focusedTargetsPaths);
 
   /**
    * Provides a way to pass normalization arguments to the linker. If the linker does not support
-   * such arguments, then {@link #getScrubbers(ImmutableMap)} can be used to perform post-processing
-   * instead.
+   * such arguments, then {@link #getScrubbers(ImmutableMap, ImmutableSet)} can be used to perform
+   * post-processing instead.
    *
    * @param cellRootMap Replacement map for cell roots found in paths.
    */

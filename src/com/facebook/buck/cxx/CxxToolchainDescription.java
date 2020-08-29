@@ -193,7 +193,8 @@ public class CxxToolchainDescription
             ToolProviders.getToolProvider(args.getLinker()),
             args.getCacheLinks(),
             scrubConcurrently,
-            args.getLinkPathNormalizationArgsEnabled()));
+            args.getLinkPathNormalizationArgsEnabled(),
+            false));
 
     if (linkerType == LinkerProvider.Type.GNU) {
       cxxPlatform.setLdflags(

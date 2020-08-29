@@ -43,6 +43,7 @@ import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxConditionalLinkStrategyFactoryAlwaysLink;
+import com.facebook.buck.cxx.CxxDebugSymbolLinkStrategyFactoryAlwaysDebug;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxFlags.TranslateMacrosFunction;
 import com.facebook.buck.cxx.CxxLinkAndCompileRules;
@@ -197,7 +198,8 @@ public class HalideLibraryDescription
             rawHeaders,
             includeDirectories,
             Optional.empty(),
-            CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY);
+            CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY,
+            CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY);
 
     buildTarget = CxxStrip.restoreStripStyleFlavorInTarget(buildTarget, flavoredStripStyle);
     buildTarget =

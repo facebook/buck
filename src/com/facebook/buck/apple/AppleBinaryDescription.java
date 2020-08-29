@@ -594,7 +594,8 @@ public class AppleBinaryDescription
                 cellRoots,
                 delegateArg.build(),
                 extraCxxDeps,
-                AppleCxxRelinkStrategyFactory.getConfiguredStrategy(appleConfig));
+                AppleCxxRelinkStrategyFactory.getConfiguredStrategy(appleConfig),
+                AppleCxxDebugSymbolLinkStrategyFactory.getDebugStrategyFactory(appleConfig));
           }
         });
   }

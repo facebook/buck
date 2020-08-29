@@ -16,9 +16,11 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxDebugSymbolLinkStrategy;
 import com.facebook.buck.cxx.CxxDebugSymbolLinkStrategyFactory;
+import com.facebook.buck.cxx.CxxDebugSymbolLinkStrategyFactoryAlwaysDebug;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -28,7 +30,6 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /** Factory to create {@link AppleCxxDebugSymbolLinkStrategy}. */
 public class AppleCxxDebugSymbolLinkStrategyFactory implements CxxDebugSymbolLinkStrategyFactory {
@@ -36,20 +37,22 @@ public class AppleCxxDebugSymbolLinkStrategyFactory implements CxxDebugSymbolLin
   private final ImmutableSet<String> focusedTargets;
   private static final Logger LOG = Logger.get(AppleCxxDebugSymbolLinkStrategyFactory.class);
 
-  public AppleCxxDebugSymbolLinkStrategyFactory(Optional<Path> focusedTargetsPath) {
-    this.focusedTargets =
-        focusedTargetsPath
-            .map(AppleCxxDebugSymbolLinkStrategyFactory::getFocusedTargets)
-            .orElse(ImmutableSet.of());
+  public AppleCxxDebugSymbolLinkStrategyFactory(Path focusedTargetsPath) {
+    this.focusedTargets = getFocusedTargets(focusedTargetsPath);
   }
 
   public static CxxDebugSymbolLinkStrategyFactory getDebugStrategyFactory(AppleConfig appleConfig) {
-    return new AppleCxxDebugSymbolLinkStrategyFactory(appleConfig.getFocusedTargetsPath());
+    if (appleConfig.getFocusedTargetsPath().isPresent()) {
+      return new AppleCxxDebugSymbolLinkStrategyFactory(appleConfig.getFocusedTargetsPath().get());
+    } else {
+      return CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY;
+    }
   }
 
   @Override
-  public CxxDebugSymbolLinkStrategy createStrategy(ImmutableList<Arg> linkerArgs) {
-    return new AppleCxxDebugSymbolLinkStrategy(focusedTargets, linkerArgs);
+  public CxxDebugSymbolLinkStrategy createStrategy(
+      CellPathResolver cellPathResolver, ImmutableList<Arg> linkerArgs) {
+    return new AppleCxxDebugSymbolLinkStrategy(focusedTargets, cellPathResolver, linkerArgs);
   }
 
   private static ImmutableSet<String> getFocusedTargets(Path focusedTargetsPath) {

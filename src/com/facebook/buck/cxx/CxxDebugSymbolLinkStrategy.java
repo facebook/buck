@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 
 /**
  * {@link CxxDebugSymbolLinkStrategy} provides the information to implement focused debugging, where
@@ -32,5 +32,5 @@ public interface CxxDebugSymbolLinkStrategy extends AddsToRuleKey {
    *
    * @return A set to focused build output paths.
    */
-  ImmutableSet<Path> getFocusedBuildOutputPaths();
+  ImmutableSet<AbsPath> getFocusedBuildOutputPaths();
 }

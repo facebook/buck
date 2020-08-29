@@ -57,6 +57,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
@@ -110,7 +111,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
         thinLto,
         fatLto,
         withDownwardApi,
-        CxxConditionalLinkStrategyAlwaysLink.STRATEGY);
+        CxxConditionalLinkStrategyAlwaysLink.STRATEGY,
+        CxxDebugSymbolLinkStrategyAlwaysDebug.STRATEGY);
   }
 
   public CxxLink(
@@ -128,7 +130,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       boolean thinLto,
       boolean fatLto,
       boolean withDownwardApi,
-      CxxConditionalLinkStrategy linkStrategy) {
+      CxxConditionalLinkStrategy linkStrategy,
+      CxxDebugSymbolLinkStrategy debugSymbolLinkStrategy) {
     super(
         buildTarget,
         projectFilesystem,
@@ -144,7 +147,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
             buildTarget,
             computeCellRoots(cellResolver, buildTarget.getCell()),
             withDownwardApi,
-            linkStrategy));
+            linkStrategy,
+            debugSymbolLinkStrategy));
     this.output = output;
     this.ruleScheduleInfo = ruleScheduleInfo;
     this.incremental = linkStrategy.isIncremental();
@@ -204,6 +208,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     @AddToRuleKey private final BuildTarget buildTarget;
     @AddToRuleKey private final boolean withDownwardApi;
     @AddToRuleKey private final CxxConditionalLinkStrategy linkStrategy;
+    @AddToRuleKey private final CxxDebugSymbolLinkStrategy debugStrategy;
 
     public Impl(
         Linker linker,
@@ -216,7 +221,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
         BuildTarget buildTarget,
         ImmutableSortedSet<Path> relativeCellRoots,
         boolean withDownwardApi,
-        CxxConditionalLinkStrategy linkStrategy) {
+        CxxConditionalLinkStrategy linkStrategy,
+        CxxDebugSymbolLinkStrategy debugSymbolLinkStrategy) {
       this.linker = linker;
       this.output = new PublicOutputPath(output);
       this.extraOutputs =
@@ -247,6 +253,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
       this.buildTarget = buildTarget;
       this.linkStrategy = linkStrategy;
+      this.debugStrategy = debugSymbolLinkStrategy;
     }
 
     @Override
@@ -307,6 +314,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                 commandPrefix);
       }
 
+      ImmutableSet<AbsPath> focusedBuildOutputPaths = debugStrategy.getFocusedBuildOutputPaths();
+
       Builder<Step> stepsBuilder =
           new Builder<Step>()
               .add(MkdirStep.of(buildCellPathFactory.from(outputPath.getParent())))
@@ -350,7 +359,9 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                       .orElse(ImmutableList.of()))
               .add(
                   new FileScrubberStep(
-                      filesystem, outputPath.getPath(), linker.getScrubbers(cellRootMap)))
+                      filesystem,
+                      outputPath.getPath(),
+                      linker.getScrubbers(cellRootMap, focusedBuildOutputPaths)))
               .addAll(relinkWriteSteps);
       if (linkerMapPath.isPresent()) {
         // In some case (when there are no `dll_export`s eg) an import library is not produced by

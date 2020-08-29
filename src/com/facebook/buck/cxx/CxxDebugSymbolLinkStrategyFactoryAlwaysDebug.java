@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 
@@ -27,7 +28,8 @@ public class CxxDebugSymbolLinkStrategyFactoryAlwaysDebug
       new CxxDebugSymbolLinkStrategyFactoryAlwaysDebug();
 
   @Override
-  public CxxDebugSymbolLinkStrategy createStrategy(ImmutableList<Arg> linkerArgs) {
+  public CxxDebugSymbolLinkStrategy createStrategy(
+      CellPathResolver cellPathResolver, ImmutableList<Arg> linkerArgs) {
     return new CxxDebugSymbolLinkStrategyAlwaysDebug();
   }
 }

@@ -30,6 +30,7 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.CxxConditionalLinkStrategyFactoryAlwaysLink;
+import com.facebook.buck.cxx.CxxDebugSymbolLinkStrategyFactoryAlwaysDebug;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLink;
@@ -421,7 +422,8 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
             args.getRawHeaders(),
             args.getIncludeDirectories(),
             Optional.empty(),
-            CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY);
+            CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY,
+            CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY);
 
     return cxxLinkAndCompileRules.getCxxLink();
   }

@@ -197,7 +197,8 @@ public class CxxTestDescription
               getImplicitFrameworkDeps(buildTarget.getTargetConfiguration(), args),
               flavoredStripStyle,
               flavoredLinkerMapMode,
-              CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY);
+              CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY,
+              CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY);
       return CxxCompilationDatabase.createCompilationDatabase(
           buildTarget, projectFilesystem, cxxLinkAndCompileRules.compileRules, ImmutableList.of());
     }
@@ -257,7 +258,8 @@ public class CxxTestDescription
             getImplicitFrameworkDeps(buildTarget.getTargetConfiguration(), args),
             flavoredStripStyle,
             flavoredLinkerMapMode,
-            CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY);
+            CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY,
+            CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY);
 
     // Construct the actual build params we'll use, notably with an added dependency on the
     // CxxLink rule above which builds the test binary.

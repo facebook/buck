@@ -97,7 +97,8 @@ public class CxxBinaryDescription
         context.getCellPathResolver(),
         args,
         ImmutableSortedSet.of(),
-        CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY);
+        CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY,
+        CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY);
   }
 
   @Override

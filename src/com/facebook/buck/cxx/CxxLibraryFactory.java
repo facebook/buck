@@ -107,7 +107,8 @@ public class CxxLibraryFactory {
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction
           transitiveCxxPreprocessorInputFunction,
       CxxLibraryDescriptionDelegate delegate,
-      CxxConditionalLinkStrategyFactory linkStrategyFactory) {
+      CxxConditionalLinkStrategyFactory linkStrategyFactory,
+      CxxDebugSymbolLinkStrategyFactory debugSymbolLinkStrategyFactory) {
 
     CxxPlatformsProvider cxxPlatformsProvider =
         getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
@@ -297,7 +298,8 @@ public class CxxLibraryFactory {
               blacklist,
               transitiveCxxPreprocessorInputFunction,
               configuredDelegate,
-              linkStrategyFactory);
+              linkStrategyFactory,
+              debugSymbolLinkStrategyFactory);
         case SHARED_INTERFACE:
           return createSharedLibraryInterface(
               untypedBuildTarget,
@@ -324,7 +326,8 @@ public class CxxLibraryFactory {
               blacklist,
               transitiveCxxPreprocessorInputFunction,
               configuredDelegate,
-              linkStrategyFactory);
+              linkStrategyFactory,
+              debugSymbolLinkStrategyFactory);
         case STATIC:
           return createStaticLibraryBuildRule(
               untypedBuildTarget,
@@ -710,7 +713,8 @@ public class CxxLibraryFactory {
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction
           transitiveCxxPreprocessorInputFunction,
       Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> delegate,
-      CxxConditionalLinkStrategyFactory linkStrategyFactory) {
+      CxxConditionalLinkStrategyFactory linkStrategyFactory,
+      CxxDebugSymbolLinkStrategyFactory debugSymbolLinkStrategyFactory) {
     BuildTarget buildTargetWithoutLinkerMapMode =
         LinkerMapMode.removeLinkerMapModeFlavorInTarget(
             buildTargetMaybeWithLinkerMapMode,
@@ -792,7 +796,8 @@ public class CxxLibraryFactory {
             .build(),
         Optional.empty(),
         cellRoots,
-        linkStrategyFactory);
+        linkStrategyFactory,
+        debugSymbolLinkStrategyFactory);
   }
 
   /** @return a {@link HeaderSymlinkTree} for the headers of this C/C++ library. */
@@ -931,7 +936,8 @@ public class CxxLibraryFactory {
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction
           transitiveCxxPreprocessorInputFunction,
       Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> delegate,
-      CxxConditionalLinkStrategyFactory linkStrategyFactory) {
+      CxxConditionalLinkStrategyFactory linkStrategyFactory,
+      CxxDebugSymbolLinkStrategyFactory debugSymbolLinkStrategyFactory) {
     ImmutableList.Builder<StringWithMacros> linkerFlags = ImmutableList.builder();
 
     linkerFlags.addAll(
@@ -977,7 +983,8 @@ public class CxxLibraryFactory {
         blacklist,
         transitiveCxxPreprocessorInputFunction,
         delegate,
-        linkStrategyFactory);
+        linkStrategyFactory,
+        debugSymbolLinkStrategyFactory);
   }
 
   // Create a shared library interface from the shared library built by this description.

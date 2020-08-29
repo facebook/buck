@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.linker.impl;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -37,6 +38,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -56,27 +58,79 @@ public class DarwinLinker extends DelegatingTool
 
   private final boolean cacheLinks;
   private final boolean scrubConcurrently;
+  private final boolean hasFocusedTargets;
 
   @AddToRuleKey private final boolean usePathNormalizationArgs;
 
   public DarwinLinker(
-      Tool tool, boolean cacheLinks, boolean scrubConcurrently, boolean usePathNormalizationArgs) {
+      Tool tool,
+      boolean cacheLinks,
+      boolean scrubConcurrently,
+      boolean usePathNormalizationArgs,
+      boolean hasFocusedTargets) {
     super(tool);
     this.cacheLinks = cacheLinks;
     this.scrubConcurrently = scrubConcurrently;
     this.usePathNormalizationArgs = usePathNormalizationArgs;
+    this.hasFocusedTargets = hasFocusedTargets;
   }
 
   @Override
-  public ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap) {
+  public ImmutableList<FileScrubber> getScrubbers(
+      ImmutableMap<Path, Path> cellRootMap, ImmutableSet<AbsPath> focusedTargetsPaths) {
     if (cacheLinks) {
       FileScrubber uuidScrubber = new LcUuidContentsScrubber(scrubConcurrently);
       if (usePathNormalizationArgs) {
         // Path normalization would happen via pathNormalizationArgs()
         return ImmutableList.of(uuidScrubber);
       }
-
       return ImmutableList.of(new OsoSymbolsContentsScrubber(cellRootMap), uuidScrubber);
+    } else if (hasFocusedTargets) {
+      return getFocusedDebugSymbolScrubbers(focusedTargetsPaths);
+    } else {
+      return ImmutableList.of();
+    }
+  }
+
+  /**
+   * Acquires the scrubber to enable focused debug symbols - loading debug symbols only for focused
+   * targets. To do that, we'll scrub all unfocused targets to have fake paths to their .o files in
+   * the linked binaries' symbol tables. We'll preserve the correct paths to .o files for only the
+   * focused targets.
+   *
+   * <p>For example:
+   *
+   * <p>For a binary that original includes: /Users/tmp/buck-out/some/object/file1.o
+   * /Users/tmp/buck-out/some/object/file2.o /Users/tmp/buck-out/some/object/libTest.a(file3.o)
+   * /Users/tmp/buck-out/some/object/libTest.a(file4.o)
+   * /Users/tmp/buck-out/some/object/libHouse.a(file5.o)
+   *
+   * <p>And when given these focused targets absolute paths: /Users/tmp/buck-out/some/object/file1.o
+   * /Users/tmp/buck-out/some/object/libTest.a
+   *
+   * <p>Then scrub the linked binary with OsoSymbolsContentsScrubber. Eventually the linked binary
+   * will have: /Users/tmp/buck-out/some/object/file1.o -> SAME
+   * /Users/tmp/buck-out/some/object/file2.o -> fake/path/file.o
+   * /Users/tmp/buck-out/some/object/libTest.a(file3.o) -> SAME
+   * /Users/tmp/buck-out/some/object/libTest.a(file4.o) -> SAME
+   * /Users/tmp/buck-out/some/object/libHouse.a(file5.o) -> fake/path/file.o
+   *
+   * <p>For linked binaries with no focused targets, we call "strip -S" on them to strip their debug
+   * symbol tables.
+   *
+   * @param focusedTargetsAbsolutePaths the relative paths to the focused targets' build outputs.
+   * @return the file scrubber that'll scrub the binary to only contain debug symbols for focused
+   *     targets.
+   */
+  private ImmutableList<FileScrubber> getFocusedDebugSymbolScrubbers(
+      ImmutableSet<AbsPath> focusedTargetsAbsolutePaths) {
+    if (!focusedTargetsAbsolutePaths.isEmpty()) {
+      ImmutableSet<Path> focusedTargetsPaths =
+          focusedTargetsAbsolutePaths.stream()
+              .map(AbsPath::getPath)
+              .collect(ImmutableSet.toImmutableSet());
+
+      return ImmutableList.of(new OsoSymbolsContentsScrubber(focusedTargetsPaths));
     } else {
       // there's no point scrubbing the debug info if the linked objects are never getting cached
       return ImmutableList.of();

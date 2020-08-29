@@ -234,7 +234,8 @@ public class CxxLibraryDescription
         ImmutableSortedSet.of(),
         TransitiveCxxPreprocessorInputFunction.fromLibraryRule(),
         CxxLibraryDescriptionDelegate.noop(),
-        CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY);
+        CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY,
+        CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY);
   }
 
   public static Optional<Map.Entry<Flavor, Type>> getLibType(BuildTarget buildTarget) {

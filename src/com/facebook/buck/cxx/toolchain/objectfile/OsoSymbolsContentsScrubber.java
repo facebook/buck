@@ -19,6 +19,7 @@ package com.facebook.buck.cxx.toolchain.objectfile;
 import com.facebook.buck.io.file.FileContentsScrubber;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -28,10 +29,17 @@ import java.util.Optional;
 
 public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
 
-  private final ImmutableMap<Path, Path> cellRootMap;
+  private final Optional<ImmutableMap<Path, Path>> cellRootMap;
+  private final Optional<ImmutableSet<Path>> exemptPaths;
 
   public OsoSymbolsContentsScrubber(ImmutableMap<Path, Path> cellRootMap) {
-    this.cellRootMap = cellRootMap;
+    this.cellRootMap = Optional.of(cellRootMap);
+    this.exemptPaths = Optional.empty();
+  }
+
+  public OsoSymbolsContentsScrubber(ImmutableSet<Path> exemptPaths) {
+    this.cellRootMap = Optional.empty();
+    this.exemptPaths = Optional.of(exemptPaths);
   }
 
   @Override
@@ -40,7 +48,7 @@ public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
       return;
     }
     try {
-      Machos.relativizeOsoSymbols(file, cellRootMap);
+      Machos.relativizeOsoSymbols(file, cellRootMap, exemptPaths);
     } catch (Machos.MachoException e) {
       throw new ScrubException(e.getMessage());
     }

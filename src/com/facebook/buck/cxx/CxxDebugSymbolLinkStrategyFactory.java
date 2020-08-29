@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 
@@ -29,9 +30,11 @@ public interface CxxDebugSymbolLinkStrategyFactory {
   /**
    * Creates the strategy for loading limited debug info.
    *
+   * @param cellPathResolver
    * @param linkerArgs arguments passed to the linker, used to identify build output paths for
    *     focused targets
    * @return A {@link CxxDebugSymbolLinkStrategy}
    */
-  CxxDebugSymbolLinkStrategy createStrategy(ImmutableList<Arg> linkerArgs);
+  CxxDebugSymbolLinkStrategy createStrategy(
+      CellPathResolver cellPathResolver, ImmutableList<Arg> linkerArgs);
 }

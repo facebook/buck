@@ -1033,7 +1033,8 @@ public class CxxDescriptionEnhancer {
       ImmutableSet<BuildTarget> extraDeps,
       Optional<StripStyle> stripStyle,
       Optional<LinkerMapMode> flavoredLinkerMapMode,
-      CxxConditionalLinkStrategyFactory linkStrategyFactory) {
+      CxxConditionalLinkStrategyFactory linkStrategyFactory,
+      CxxDebugSymbolLinkStrategyFactory debugStrategyFactory) {
 
     ImmutableMap<String, CxxSource> srcs =
         parseCxxSources(target, cellRoots, graphBuilder, cxxPlatform, args);
@@ -1102,7 +1103,8 @@ public class CxxDescriptionEnhancer {
         args.getRawHeaders(),
         args.getIncludeDirectories(),
         args.getExecutableName(),
-        linkStrategyFactory);
+        linkStrategyFactory,
+        debugStrategyFactory);
   }
 
   private static ImmutableList<Arg> createLinkArgsForCxxBinary(
@@ -1407,7 +1409,8 @@ public class CxxDescriptionEnhancer {
       ImmutableSortedSet<SourcePath> rawHeaders,
       ImmutableSortedSet<String> includeDirectories,
       Optional<String> outputRootName,
-      CxxConditionalLinkStrategyFactory linkStrategyFactory) {
+      CxxConditionalLinkStrategyFactory linkStrategyFactory,
+      CxxDebugSymbolLinkStrategyFactory debugStrategyFactory) {
     //    TODO(beefon): should be:
     //    Path linkOutput = getLinkOutputPath(
     //        createCxxLinkTarget(params.getBuildTarget(), flavoredLinkerMapMode),
@@ -1506,7 +1509,8 @@ public class CxxDescriptionEnhancer {
                             .build(),
                         Optional.empty(),
                         cellRoots,
-                        linkStrategyFactory));
+                        linkStrategyFactory,
+                        debugStrategyFactory));
 
     BuildRule binaryRuleForExecutable;
     Optional<CxxStrip> cxxStrip = Optional.empty();

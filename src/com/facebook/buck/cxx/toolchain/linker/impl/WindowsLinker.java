@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.linker.impl;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -33,6 +34,7 @@ import com.facebook.buck.rules.args.HasSourcePath;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -76,7 +78,8 @@ public class WindowsLinker extends DelegatingTool implements Linker, HasImportLi
   }
 
   @Override
-  public ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap) {
+  public ImmutableList<FileScrubber> getScrubbers(
+      ImmutableMap<Path, Path> cellRootMap, ImmutableSet<AbsPath> focusedTargetsPaths) {
     return ImmutableList.of();
   }
 
