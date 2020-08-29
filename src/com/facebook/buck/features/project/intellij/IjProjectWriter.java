@@ -26,6 +26,7 @@ import com.facebook.buck.features.project.intellij.model.ModuleIndexEntry;
 import com.facebook.buck.features.project.intellij.model.folders.IjSourceFolder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -37,6 +38,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import org.stringtemplate.v4.ST;
 
 /** Writes the serialized representations of IntelliJ project components to disk. */
@@ -127,7 +129,9 @@ public class IjProjectWriter {
         "dependencies",
         projectDataPreparer.getDependencies(
             module,
-            projectConfig.isModuleLibraryEnabled() ? this::prepareLibraryToBeWritten : null));
+            projectConfig.isModuleLibraryEnabled()
+                ? library -> this.prepareLibraryToBeWritten(library, module)
+                : null));
     moduleContents.add("generatedSourceFolders", generatedFolders);
     moduleContents.add("androidFacet", androidProperties);
     moduleContents.add("sdk", module.getModuleType().getSdkName(projectConfig).orElse(null));
@@ -185,15 +189,20 @@ public class IjProjectWriter {
     return !jdkUnder15;
   }
 
-  private IjLibrary prepareLibraryToBeWritten(IjLibrary library) {
+  private IjLibrary prepareLibraryToBeWritten(IjLibrary library, @Nullable IjModule module) {
+    Preconditions.checkState(library.getLevel() != IjLibrary.Level.MODULE || module != null);
     Function<Path, Path> pathTransformer;
-    if (buckOutPathConverter.hasBuckOutPathForGeneratedProjectFiles()) {
-      pathTransformer =
-          path -> projectPaths.getProjectRelativePath(buckOutPathConverter.convert(path));
-    } else {
+    if (module == null) {
       pathTransformer = projectPaths::getProjectRelativePath;
+    } else {
+      pathTransformer = path -> projectPaths.getModuleRelativePath(path, module);
     }
-    return library.copyWithTransformer(pathTransformer, null);
+    if (buckOutPathConverter.hasBuckOutPathForGeneratedProjectFiles()) {
+      return library.copyWithTransformer(
+          path -> pathTransformer.apply(buckOutPathConverter.convert(path)), null);
+    } else {
+      return library.copyWithTransformer(pathTransformer, null);
+    }
   }
 
   private void writeLibrary(IjLibrary library) throws IOException {
@@ -210,7 +219,7 @@ public class IjProjectWriter {
       return;
     }
 
-    library = prepareLibraryToBeWritten(library);
+    library = prepareLibraryToBeWritten(library, null);
 
     contents.add("name", library.getName());
     contents.add("binaryJars", library.getBinaryJars());

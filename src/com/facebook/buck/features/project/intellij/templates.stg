@@ -176,11 +176,11 @@ ij_module(moduleType, metaInfDirectory, androidFacet, languageLevel, generatedSo
         <CLASSES>
       %if(dep.moduleLibrary.element.binaryJars)%
       %dep.moduleLibrary.element.binaryJars:{binaryJar |
-          <root url="jar://$PROJECT_DIR$/%binaryJar%!/" />
+          <root url="jar://$MODULE_DIR$/%binaryJar%!/" />
       }%%endif%
       %if(dep.moduleLibrary.element.classPaths)%
       %dep.moduleLibrary.element.classPaths:{classPath |
-          <root url="file://$PROJECT_DIR$/%classPath%" />
+          <root url="file://$MODULE_DIR$/%classPath%" />
       }%%endif%
         </CLASSES>
       %if(dep.moduleLibrary.element.javadocUrls)%
@@ -194,7 +194,7 @@ ij_module(moduleType, metaInfDirectory, androidFacet, languageLevel, generatedSo
       %if(dep.moduleLibrary.element.sourceJars)%
         <SOURCES>
       %dep.moduleLibrary.element.sourceJars:{sourceJar |
-          <root url="jar://$PROJECT_DIR$/%sourceJar%!/" />
+          <root url="jar://$MODULE_DIR$/%sourceJar%!/" />
       }%        </SOURCES>
       %else%
         <SOURCES />
