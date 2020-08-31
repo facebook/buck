@@ -83,7 +83,14 @@ if native_libs_preload is not None:
         for l in native_libs_preload.split(":")
     )
 
+# Note: this full block of code will be included as the argument to Python,
+# and will be the first thing that shows up in the process arguments as displayed
+# by programs like ps and top.
+#
+# We include arg0 at the start of this comment just to make it more visible what program
+# is being run in the ps and top output.
 STARTUP = """\
+# {arg0!r}
 # Wrap everything in a private function to prevent globals being captured by
 # the `runpy._run_module_as_main` below.
 def __run():
