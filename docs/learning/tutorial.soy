@@ -47,7 +47,6 @@
       <td><span><strong>Platform:</strong></span></td>
       <td>
         <a href="javascript:void(0);" class="button-android" onclick="display('platform', 'android')">Android</a>
-        <a href="javascript:void(0);" class="button-ios" onclick="display('platform', 'ios')">iOS</a>
       </td>
     </tr>
     <tr>
@@ -55,7 +54,6 @@
       <td>
         <a href="javascript:void(0);" class="button-mac" onclick="display('os', 'mac')">macOS</a>
         <a href="javascript:void(0);" class="button-linux" onclick="display('os', 'linux')">Linux</a>
-        <a href="javascript:void(0);" class="button-windows" onclick="display('os', 'windows')">Windows</a>
       </td>
     </tr>
     <tr>
@@ -67,14 +65,6 @@
     </tr>
   </table>
 </div>
-
-<p id="testanddebug">DEBUG</p>
-
-<span><block class="mac linux ios" /></span>
-  <p>Tutorials for iOS are coming soon. Feel free to submit a PR if you have a sample code, thanks.</p>
-
-<span><block class="windows ios android" /></span>
-  <p>We don't have tutorials for iOS and Android developed on Windows, Feel free to submit a PR if you have one, thanks.</p>
 
 <span><block class="mac linux android java kotlin" /></span>
 <h2>Path Setup</h2>
@@ -110,7 +100,7 @@ cd ~/my-first-buck-project/
 <h2>Compile Your Code</h2>
 
 <p>
-  Android applications are typically written in Java, so the first thing we will do is configure Buck to compile Java code against the Android API. To do so, Buck needs to know where your Android SDK is. Assuming that your Android SDK is installed in <code>~/android-sdk</code>, run the following command to set a <code>ANDROID_SDK</code> environment variable that tells Buck where to find your Android SDK:
+  Android applications are typically written in Javai and kotlin, so the first thing we will do is to configure Buck to compile code against the Android API. To do so, Buck needs to know where your Android SDK is. Assuming that your Android SDK is installed in <code>~/android-sdk</code>, run the following command to set a <code>ANDROID_SDK</code> environment variable that tells Buck where to find your Android SDK:
 </p>
 
 {literal}<pre>
@@ -164,7 +154,7 @@ echo "android_library(
 
 <span><block class="mac linux android kotlin" /></span>
 <p>
-  Now that Buck can locate your Android SDK, it is time to compile some Java code. First, we create a simple <code>Activity</code> at <code>kotlin/com/example/activity/MyFirstActivity.kt</code>:
+  Now that Buck can locate your Android SDK, it is time to compile some kotlin code. First, we create a simple <code>Activity</code> at <code>kotlin/com/example/activity/MyFirstActivity.kt</code>:
 </p>
 
 {literal}<pre>
@@ -183,7 +173,7 @@ class MyFirstActivity : Activity() {
 </pre>{/literal}
 
 <p>
-  Now we need a build file that defines a build rule to compile this Java code, so we create an <code><a href="rule/android_library.html">android_library()</a></code> rule in <code>java/com/example/activity/BUCK</code>:
+  Now we need a build file that defines a build rule to compile this kotlin code, so we create an <code><a href="rule/android_library.html">android_library()</a></code> rule in <code>kotlin/com/example/activity/BUCK</code>:
 </p>
 
 {literal}<pre>
@@ -433,7 +423,6 @@ function display(type, value) {
   var container = document.getElementsByTagName('block')[0].parentNode;
   container.className = 'disp-' + type + '-' + value + ' ' +
     container.className.replace(RegExp('disp-' + type + '-[a-z]+ ?'), '');
-  document.getElementById("testanddebug").innerHTML = container.className;
 }
 
 // If we are coming to the page with a hash in it (i.e. from a search, for example), try to get
