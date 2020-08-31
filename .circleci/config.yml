@@ -937,7 +937,7 @@ jobs:
     working_directory: "/Users/distiller/buck"
     macos:
       # The tests do not support xcode 11.x.x yet.
-      xcode: "10.14.0"
+      xcode: "10.3.0"
     steps:
       - checkout
       - run:
