@@ -965,7 +965,8 @@ jobs:
           # https://stackoverflow.com/questions/59269208/errorrootcode-for-hash-md5-was-not-found-not-able-to-use-any-hg-mercurial-co
           name: Reinstall Python2
           command: |
-            brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/86a44a0a552c673a05f11018459c9f5faae3becc/Formula/python@2.rb
+            brew uninstall python@2 || echo "python2 was not installed."
+            brew install python@2
       - run:
           <<: *install_python
       - run:
