@@ -16,6 +16,7 @@
 import os
 import tempfile
 from functools import wraps
+from pathlib import Path
 from typing import Iterator
 
 import pytest
@@ -26,8 +27,8 @@ from buck_api.buck_repo import BuckRepo
 def repo() -> Iterator[BuckRepo]:
     """Returns a BuckRepo for testing"""
     with tempfile.TemporaryDirectory() as temp_dir:
-        test_buck_binary: str = os.environ["TEST_BUCK_BINARY"]
-        repo: BuckRepo = BuckRepo(test_buck_binary, cwd=temp_dir, encoding="utf-8")
+        test_buck_binary = os.environ["TEST_BUCK_BINARY"]
+        repo = BuckRepo(Path(test_buck_binary), cwd=Path(temp_dir), encoding="utf-8")
         # setup
         yield repo
         # teardown

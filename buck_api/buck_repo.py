@@ -16,7 +16,7 @@
 import os
 from asyncio import subprocess
 from pathlib import Path
-from typing import Awaitable, Tuple
+from typing import Awaitable, Optional, Tuple
 
 from buck_api.buck_process import BuckProcess
 from buck_api.buck_result import BuckResult, BuildResult, TestResult
@@ -25,10 +25,13 @@ from buck_api.buck_result import BuckResult, BuildResult, TestResult
 class BuckRepo:
     """ Instantiates a BuckRepo object with a exectuable path """
 
-    def __init__(self, path_to_buck: str, encoding: str, cwd: str) -> None:
-        # TODO change cwd to take Path object
+    def __init__(
+        self, path_to_buck: Path, encoding: str, cwd: Optional[Path] = None
+    ) -> None:
+        assert path_to_buck.exists(), str(path_to_buck)
         self.path_to_buck = path_to_buck
-        self.cwd = cwd
+        self.cwd = Path() if cwd is None else cwd
+        assert self.cwd.exists(), str(self.cwd)
         self.encoding = encoding
         self.set_buckd(False)
         ######################################
@@ -54,7 +57,7 @@ class BuckRepo:
         return BuckProcess(
             awaitable_process,
             result_type=lambda proc, stdin, stdout, encoding: BuildResult(
-                proc, stdin, stdout, encoding, self.cwd, *argv
+                proc, stdin, stdout, encoding, str(self.cwd), *argv
             ),
             encoding=self.encoding,
         )
@@ -91,7 +94,7 @@ class BuckRepo:
         return BuckProcess(
             awaitable_process,
             result_type=lambda proc, stdin, stdout, encoding: TestResult(
-                proc, stdin, stdout, encoding, str(Path(self.cwd) / test_output_file)
+                proc, stdin, stdout, encoding, str(self.cwd / test_output_file)
             ),
             encoding=self.encoding,
         )
@@ -102,7 +105,7 @@ class BuckRepo:
         command and any additional arguments
         """
         awaitable_process = subprocess.create_subprocess_exec(
-            self.path_to_buck,
+            str(self.path_to_buck),
             cmd,
             cwd=self.cwd,
             env=self.buckd_env,

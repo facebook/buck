@@ -30,7 +30,7 @@ async def test_build():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
+        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
         _create_file(path_of_cwd, "target_file_success", 0)
         result = await repo.build("//:target_file_success").wait()
         assert list(
@@ -47,7 +47,7 @@ async def test_build_with_flag():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
+        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
         _create_file(path_of_cwd, "target_file_success", 0)
         # test --show-output flag
         result = await repo.build("//:target_file_success --show-output").wait()
@@ -66,7 +66,7 @@ async def test_build_with_multiple_targets_flag():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
+        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
         target_folder = _create_directory(path_of_cwd, Path("targets"))
         target_files = [
             "target_file_success_1",
@@ -94,7 +94,7 @@ async def test_build_failed():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
+        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
 
         # testing failures
         _create_file(path_of_cwd, "target_file_build_failure", 1)
@@ -113,7 +113,7 @@ async def test_clean():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
+        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
         await repo.build("//:target_file").wait()
         assert list(
             (path_of_cwd / "buck-out").iterdir()
@@ -132,7 +132,7 @@ async def test_kill():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
+        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
 
         await repo.build("//:target_file").wait()
         assert list(
@@ -154,7 +154,7 @@ async def test_test_passed():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
+        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
         _create_file(path_of_cwd, "target_file_success", 0)
         result = await repo.test("//:target_file_success").wait()
         assert list(
@@ -177,7 +177,7 @@ async def test_test_skipped():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
+        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
         # test skipped test
         _create_file(path_of_cwd, "target_file_skipped", "0")
         result = await repo.test("//:target_file_skipped").wait()
@@ -201,7 +201,7 @@ async def test_test_failed():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(test_script, cwd=temp_dir, encoding="utf-8")
+        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
 
         # testing failures
         _create_file(path_of_cwd, "target_file_test_failure", 32)
