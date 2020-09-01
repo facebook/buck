@@ -151,7 +151,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       // MOE::begin_strip
       // TODO(bobyf) remove the following. This is being used to debug a weird behaviour
       if (cellName.contains("header ") || cellName.contains(" ")) {
-        LOG.warn(
+        LOG.error(
             "Cell name contains \"header\" or spaces. Cell name is `%s`, the alias is `%s` for canonical cell `%s`",
             cellName, alias.getKey().get(), alias.getValue());
       }
