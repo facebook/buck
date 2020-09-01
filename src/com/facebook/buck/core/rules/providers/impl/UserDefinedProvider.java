@@ -17,13 +17,13 @@
 package com.facebook.buck.core.rules.providers.impl;
 
 import com.facebook.buck.core.rules.providers.Provider;
+import com.facebook.buck.core.starlark.compatible.StarlarkExportable;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.packages.StarlarkExportable;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FunctionSignature;

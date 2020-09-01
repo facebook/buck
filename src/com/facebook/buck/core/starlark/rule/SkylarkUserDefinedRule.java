@@ -18,6 +18,7 @@ package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.coercer.SkylarkParamInfo;
+import com.facebook.buck.core.starlark.compatible.StarlarkExportable;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
@@ -33,7 +34,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.packages.StarlarkExportable;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
