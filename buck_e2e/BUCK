@@ -7,7 +7,7 @@ python_library(
         "PUBLIC",
     ],
     deps = [
-        "//buck_api/srcs:buck_repo_lib",
+        "//buck_api:buck_repo_lib",
     ],
 )
 
@@ -18,7 +18,7 @@ python_library(
         "PUBLIC",
     ],
     deps = [
-        "//buck_api/srcs:buck_result_lib",
+        "//buck_api:buck_result_lib",
     ],
 )
 

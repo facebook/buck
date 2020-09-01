@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from buck_api.srcs.buck_result import BuildResult
+from buck_api.buck_result import BuildResult
 
 
 def assert_build_success(result: BuildResult):

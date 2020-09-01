@@ -19,7 +19,7 @@ from functools import wraps
 from typing import Iterator
 
 import pytest
-from buck_api.srcs.buck_repo import BuckRepo
+from buck_api.buck_repo import BuckRepo
 
 
 @pytest.fixture(scope="function")

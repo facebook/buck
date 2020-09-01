@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pkg_resources
 import pytest
-from buck_api.srcs.buck_repo import BuckRepo
-from buck_api.srcs.buck_result import ExitCode
+from buck_api.buck_repo import BuckRepo
+from buck_api.buck_result import ExitCode
 
 
 @pytest.mark.asyncio

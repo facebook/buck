@@ -6,7 +6,7 @@ pytest_test(
         "buck_result_test.py",
     ],
     deps = [
-        "//buck_api/srcs:buck_result_lib",
+        "//buck_api:buck_result_lib",
         "//third-party/py/pytest-asyncio:pytest-asyncio",
     ],
 )
@@ -17,7 +17,7 @@ pytest_test(
         "buck_process_test.py",
     ],
     deps = [
-        "//buck_api/srcs:buck_process_lib",
+        "//buck_api:buck_process_lib",
         "//third-party/py/pytest-asyncio:pytest-asyncio",
     ],
 )
@@ -31,7 +31,7 @@ pytest_test(
         "test_script.py",
     ],
     deps = [
-        "//buck_api/srcs:buck_repo_lib",
+        "//buck_api:buck_repo_lib",
         "//third-party/py/pytest-asyncio:pytest-asyncio",
     ],
 )

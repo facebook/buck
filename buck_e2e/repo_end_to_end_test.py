@@ -16,7 +16,7 @@
 from pathlib import Path
 
 import pytest
-from buck_api.srcs.buck_result import ExitCode
+from buck_api.buck_result import ExitCode
 from buck_e2e import asserts
 from buck_e2e.test_repo import nobuckd, repo  # noqa: F401
 

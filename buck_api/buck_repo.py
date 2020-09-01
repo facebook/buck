@@ -18,8 +18,8 @@ from asyncio import subprocess
 from pathlib import Path
 from typing import Awaitable, Tuple
 
-from buck_api.srcs.buck_process import BuckProcess
-from buck_api.srcs.buck_result import BuckResult, BuildResult, TestResult
+from buck_api.buck_process import BuckProcess
+from buck_api.buck_result import BuckResult, BuildResult, TestResult
 
 
 class BuckRepo:

@@ -16,8 +16,8 @@
 from asyncio import subprocess
 
 import pytest
-from buck_api.srcs.buck_process import BuckProcess
-from buck_api.srcs.buck_result import BuckResult
+from buck_api.buck_process import BuckProcess
+from buck_api.buck_result import BuckResult
 
 
 @pytest.mark.asyncio
