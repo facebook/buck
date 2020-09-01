@@ -219,6 +219,7 @@ public class RobolectricTestDescription
             AndroidPlatformTarget.class);
 
     Optional<UnitTestOptions> unitTestOptions = Optional.empty();
+    Optional<Aapt2Link> optionalAapt2Link = Optional.empty();
     if (dummyRDotJava.isPresent()) {
       DummyRDotJava actualDummyRDotJava = dummyRDotJava.get();
       ImmutableSortedSet<BuildRule> newDeclaredDeps =
@@ -288,6 +289,7 @@ public class RobolectricTestDescription
                 downwardApiConfig.isEnabledForAndroid());
 
         graphBuilder.addToIndex(aapt2Link);
+        optionalAapt2Link = Optional.of(aapt2Link);
         AaptOutputInfo aaptOutputInfo = aapt2Link.getAaptOutputInfo();
 
         unitTestOptions =
@@ -434,6 +436,7 @@ public class RobolectricTestDescription
           TestRunnerSpecCoercer.coerce(args.getSpecs().get(), macrosConverter),
           vmArgs,
           dummyRDotJava,
+          optionalAapt2Link,
           args.getUnbundledResourcesRoot(),
           args.getRobolectricRuntimeDependency(),
           javaBuckConfig
@@ -456,6 +459,7 @@ public class RobolectricTestDescription
         vmArgs,
         cxxLibraryEnhancement.nativeLibsEnvironment,
         args.isUseBinaryResources() ? Optional.empty() : dummyRDotJava,
+        optionalAapt2Link,
         unitTestOptions,
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
