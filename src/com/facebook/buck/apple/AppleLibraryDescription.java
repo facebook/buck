@@ -65,6 +65,7 @@ import com.facebook.buck.cxx.CxxLibraryMetadataFactory;
 import com.facebook.buck.cxx.CxxLinkGroupMapDatabase;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.CxxSymlinkTreeHeaders;
 import com.facebook.buck.cxx.FrameworkDependencies;
@@ -85,6 +86,8 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftCompile;
 import com.facebook.buck.swift.SwiftLibraryDescription;
@@ -101,6 +104,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -157,6 +161,7 @@ public class AppleLibraryDescription
     SWIFT_EXPORTED_OBJC_GENERATED_HEADER(
         AppleDescriptions.SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR),
     SWIFT_UNDERLYING_MODULE(AppleDescriptions.SWIFT_UNDERLYING_MODULE_FLAVOR),
+    SWIFT_UNDERLYING_VFS_OVERLAY(AppleDescriptions.SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR),
     ;
 
     private final Flavor flavor;
@@ -288,7 +293,30 @@ public class AppleLibraryDescription
           FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
               getCxxPlatformsProvider(buildTarget.getTargetConfiguration())
                   .getUnresolvedCxxPlatforms();
-          if (type.getValue().equals(Type.SWIFT_UNDERLYING_MODULE)) {
+          if (type.getValue().equals(Type.SWIFT_UNDERLYING_VFS_OVERLAY)) {
+            CxxPlatform cxxPlatform =
+                cxxPlatforms
+                    .getValue(buildTarget)
+                    .orElseThrow(IllegalArgumentException::new)
+                    .resolve(graphBuilder, buildTarget.getTargetConfiguration());
+
+            BuildTarget nonVfsUnderlyingTarget =
+                buildTarget.withFlavors(
+                    cxxPlatform.getFlavor(), Type.SWIFT_UNDERLYING_MODULE.getFlavor());
+            HeaderSymlinkTreeWithModuleMap symlinkTreeRule =
+                (HeaderSymlinkTreeWithModuleMap) graphBuilder.requireRule(nonVfsUnderlyingTarget);
+
+            Path placeholderPath =
+                AppleVFSOverlayBuildRule.getPlaceHolderPath(projectFilesystem, buildTarget);
+            AppleVFSOverlayBuildRule vfsRule =
+                new AppleVFSOverlayBuildRule(
+                    buildTarget,
+                    projectFilesystem,
+                    graphBuilder,
+                    symlinkTreeRule.getRootSourcePath(),
+                    placeholderPath.toString());
+            return Optional.of(vfsRule);
+          } else if (type.getValue().equals(Type.SWIFT_UNDERLYING_MODULE)) {
             return Optional.of(
                 createUnderlyingModuleSymlinkTreeBuildRule(
                     buildTarget, projectFilesystem, graphBuilder, args));
@@ -881,6 +909,7 @@ public class AppleLibraryDescription
         METADATA_TYPE.getFlavorAndValue(buildTarget);
     if (metaType.isPresent()) {
       BuildTarget baseTarget = buildTarget.withoutFlavors(metaType.get().getKey());
+
       switch (metaType.get().getValue()) {
         case APPLE_SWIFT_METADATA:
           {
@@ -894,17 +923,42 @@ public class AppleLibraryDescription
             if (!args.isModular()) {
               return Optional.empty();
             }
-            BuildTarget swiftCompileTarget =
-                baseTarget.withAppendedFlavors(Type.SWIFT_UNDERLYING_MODULE.getFlavor());
-            HeaderSymlinkTreeWithModuleMap modulemap =
-                (HeaderSymlinkTreeWithModuleMap) graphBuilder.requireRule(swiftCompileTarget);
-            if (modulemap.getLinks().size() > 0) {
-              CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
-              builder.addIncludes(
-                  CxxSymlinkTreeHeaders.from(modulemap, CxxPreprocessables.IncludeType.LOCAL));
-              return Optional.of(builder.build()).map(metadataClass::cast);
+
+            if (appleConfig.shouldUseVFSOverlays()) {
+              BuildTarget underlyingVfsTarget =
+                  baseTarget.withAppendedFlavors(Type.SWIFT_UNDERLYING_VFS_OVERLAY.getFlavor());
+              AppleVFSOverlayBuildRule vfsOverlayRule =
+                  (AppleVFSOverlayBuildRule) graphBuilder.requireRule(underlyingVfsTarget);
+
+              ImmutableMultimap.Builder<CxxSource.Type, Arg> argBuilder =
+                  ImmutableMultimap.builder();
+
+              argBuilder.putAll(
+                  CxxSource.Type.SWIFT,
+                  StringArg.of("-ivfsoverlay"),
+                  SourcePathArg.of(vfsOverlayRule.getSourcePathToOutput()),
+                  StringArg.of("-I"),
+                  StringArg.of(vfsOverlayRule.getPlaceholderPath()));
+
+              CxxPreprocessorInput.Builder inputBuilder = CxxPreprocessorInput.builder();
+              inputBuilder.setPreprocessorFlags(argBuilder.build());
+
+              CxxPreprocessorInput input = inputBuilder.build();
+              return Optional.of(input).map(metadataClass::cast);
+            } else {
+              BuildTarget swiftCompileTarget =
+                  baseTarget.withAppendedFlavors(Type.SWIFT_UNDERLYING_MODULE.getFlavor());
+              HeaderSymlinkTreeWithModuleMap modulemap =
+                  (HeaderSymlinkTreeWithModuleMap) graphBuilder.requireRule(swiftCompileTarget);
+              if (modulemap.getLinks().size() > 0) {
+                CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
+                builder.addIncludes(
+                    CxxSymlinkTreeHeaders.from(modulemap, CxxPreprocessables.IncludeType.LOCAL));
+                return Optional.of(builder.build()).map(metadataClass::cast);
+              } else {
+                return Optional.empty();
+              }
             }
-            return Optional.empty();
           }
       }
     }

@@ -1182,19 +1182,54 @@ public class AppleLibraryIntegrationTest {
     testModularScenarioWithFlavor("target_sdk_version", "Test", Optional.empty());
   }
 
+  @Test
+  public void testBuildAppleLibraryWhereModularObjcUsesSwiftSameLibVFSOverlay() throws Exception {
+    testModularScenarioWithLocalConfigs(
+        "apple_library_modular_objc_uses_swift_same_lib",
+        "Mixed",
+        ImmutableMap.of("apple", ImmutableMap.of("swift_uses_vfs_overlays", "true")));
+  }
+
+  @Test
+  public void testBuildAppleLibraryWhereModularSwiftUsesObjcSameLibWithVFSOverlay()
+      throws Exception {
+    testModularScenarioWithLocalConfigs(
+        "apple_library_modular_swift_uses_objc_same_lib",
+        "Mixed",
+        ImmutableMap.of("apple", ImmutableMap.of("swift_uses_vfs_overlays", "true")));
+  }
+
   private void testModularScenario(String scenario, String targetName) throws Exception {
     testModularScenarioWithFlavor(
         scenario, targetName, Optional.of(CxxDescriptionEnhancer.SHARED_FLAVOR));
   }
 
+  private void testModularScenarioWithLocalConfigs(
+      String scenario, String targetName, Map<String, Map<String, String>> localConfigs)
+      throws Exception {
+    testModularScenarioWithFlavorAndLocalConfigs(
+        scenario, targetName, Optional.of(CxxDescriptionEnhancer.SHARED_FLAVOR), localConfigs);
+  }
+
   private ProjectWorkspace testModularScenarioWithFlavor(
       String scenario, String targetName, Optional<Flavor> flavor) throws Exception {
+    return testModularScenarioWithFlavorAndLocalConfigs(
+        scenario, targetName, flavor, ImmutableMap.of());
+  }
+
+  private ProjectWorkspace testModularScenarioWithFlavorAndLocalConfigs(
+      String scenario,
+      String targetName,
+      Optional<Flavor> flavor,
+      Map<String, Map<String, String>> localConfigs)
+      throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
     workspace.setUp();
+    workspace.addBuckConfigLocalOptions(localConfigs);
     workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
     workspace.addBuckConfigLocalOption("cxx", "cflags", "-fmodules");
     BuildTarget target =

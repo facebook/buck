@@ -40,7 +40,8 @@ public class CxxSourceTypes {
         || sourceType == CxxSource.Type.CUDA
         || sourceType == CxxSource.Type.HIP
         || sourceType == CxxSource.Type.ASM_WITH_CPP
-        || sourceType == CxxSource.Type.PCM;
+        || sourceType == CxxSource.Type.PCM
+        || sourceType == CxxSource.Type.SWIFT;
   }
 
   /**
@@ -81,6 +82,7 @@ public class CxxSourceTypes {
       case PCM:
         preprocessor = cxxPlatform.getCxxpp();
         break;
+      case SWIFT:
       case OBJC:
         preprocessor = cxxPlatform.getCpp();
         break;
@@ -130,6 +132,7 @@ public class CxxSourceTypes {
       case PCM:
         flags.addAll(cxxPlatform.getCxxppflags());
         break;
+      case SWIFT:
       case OBJC:
         flags.addAll(cxxPlatform.getCppflags());
         break;
@@ -167,6 +170,7 @@ public class CxxSourceTypes {
       case CXX:
         outputType = CxxSource.Type.CXX_CPP_OUTPUT;
         break;
+      case SWIFT:
       case OBJC:
         outputType = CxxSource.Type.OBJC_CPP_OUTPUT;
         break;

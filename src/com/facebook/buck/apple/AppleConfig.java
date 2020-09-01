@@ -375,6 +375,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, FORCE_LOAD_LINK_WHOLE_LIBRARY_ENABLED, false);
   }
 
+  public boolean shouldUseVFSOverlays() {
+    return delegate.getBooleanValue(APPLE_SECTION, "swift_uses_vfs_overlays", false);
+  }
+
   public String getForceLoadLibraryPath(boolean isFocusedTarget) {
     Optional<String> path = delegate.getValue(APPLE_SECTION, FORCE_LOAD_LIBRARY_PATH);
     if (!isFocusedTarget && path.isPresent()) {

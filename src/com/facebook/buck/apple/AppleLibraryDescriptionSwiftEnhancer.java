@@ -27,6 +27,9 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.CxxLibraryGroup;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.cxx.CxxToolFlags;
+import com.facebook.buck.cxx.ExplicitCxxToolFlags;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
@@ -114,8 +117,16 @@ public class AppleLibraryDescriptionSwiftEnhancer {
 
   private static PreprocessorFlags getPreprocessorFlags(ImmutableSet<CxxPreprocessorInput> inputs) {
     PreprocessorFlags.Builder flagsBuilder = PreprocessorFlags.builder();
+    ExplicitCxxToolFlags.Builder explicitCxxToolFlags = CxxToolFlags.explicitBuilder();
     inputs.forEach(input -> flagsBuilder.addAllIncludes(input.getIncludes()));
     inputs.forEach(input -> flagsBuilder.addAllFrameworkPaths(input.getFrameworks()));
+    inputs.forEach(
+        input -> {
+          explicitCxxToolFlags.addAllRuleFlags(
+              input.getPreprocessorFlags().get(CxxSource.Type.SWIFT));
+        });
+
+    flagsBuilder.setOtherFlags(explicitCxxToolFlags.build());
     return flagsBuilder.build();
   }
 

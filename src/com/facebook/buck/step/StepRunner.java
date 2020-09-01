@@ -65,6 +65,7 @@ public final class StepRunner {
       logStepEvent(context, finished, buildTargetName, executionResult.getExecutedCommand());
       context.getBuckEventBus().post(finished);
     }
+
     if (!executionResult.isSuccess()) {
       throw StepFailedException.createForFailingStepWithExitCode(step, context, executionResult);
     }

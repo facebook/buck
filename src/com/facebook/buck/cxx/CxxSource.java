@@ -54,6 +54,7 @@ public abstract class CxxSource { // NOPMD
     OBJCXX("objective-c++", "objective-c++-cpp-output", Optional.of("objective-c++-header"), "mm"),
     CUDA("cuda", "cuda-cpp-output", "cu"),
     HIP("hip", "hip-cpp-output", "hip"),
+    SWIFT("swift", "swift-output", Optional.of("swiftmodule"), "swift"),
 
     C_CPP_OUTPUT("cpp-output", "cpp-output", "i"),
     CXX_CPP_OUTPUT("c++-cpp-output", "c++-cpp-output", "ii"),
