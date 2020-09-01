@@ -128,6 +128,10 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   protected final Optional<AbsPath> swiftFileListPath; // internal scratch temp path
   protected final Optional<AbsPath> argfilePath; // internal scratch temp path
 
+  public static String getNormalizedModuleName(String moduleName) {
+    return CxxDescriptionEnhancer.normalizeModuleName(moduleName);
+  }
+
   SwiftCompileBase(
       SwiftBuckConfig swiftBuckConfig,
       BuildTarget buildTarget,
@@ -158,7 +162,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.importUnderlyingModule = importUnderlyingModule;
     this.headerPath = outputPath.resolve(SwiftDescriptions.toSwiftHeaderName(moduleName) + ".h");
 
-    String escapedModuleName = CxxDescriptionEnhancer.normalizeModuleName(moduleName);
+    String escapedModuleName = SwiftCompileBase.getNormalizedModuleName(moduleName);
     this.moduleName = escapedModuleName;
     this.objectFilePath = outputPath.resolve(escapedModuleName + ".o");
     this.modulePath = outputPath.resolve(escapedModuleName + ".swiftmodule");

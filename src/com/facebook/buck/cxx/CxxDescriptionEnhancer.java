@@ -178,7 +178,12 @@ public class CxxDescriptionEnhancer {
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
             projectFilesystem, buildTarget, headerVisibility, flavors);
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-        headerSymlinkTreeTarget, projectFilesystem, headerSymlinkTreeRoot.getPath(), headers, mode);
+        headerSymlinkTreeTarget,
+        projectFilesystem,
+        headerSymlinkTreeRoot.getPath(),
+        headers,
+        mode,
+        Optional.empty());
   }
 
   public static HeaderSymlinkTree createHeaderSymlinkTree(

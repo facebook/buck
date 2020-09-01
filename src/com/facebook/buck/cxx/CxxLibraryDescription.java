@@ -380,7 +380,7 @@ public class CxxLibraryDescription
     }
   }
 
-  public interface CommonArg extends LinkableCxxConstructorArg {
+  public interface CommonArg extends LinkableCxxConstructorArg, AbstractSwiftCxxCommonArg {
     @Hint(pathsMustBe = Hint.PathsMustBe.REGULAR_FILE)
     @Value.Default
     default SourceSortedSet getExportedHeaders() {
@@ -493,8 +493,6 @@ public class CxxLibraryDescription
      */
     @Hint(pathsMustBe = Hint.PathsMustBe.REGULAR_FILE)
     Optional<SourcePath> getBridgingHeader();
-
-    Optional<String> getModuleName();
 
     /**
      * A list of include directories to be added to the compile command for compiling this cxx

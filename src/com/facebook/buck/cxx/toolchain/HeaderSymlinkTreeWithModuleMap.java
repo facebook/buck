@@ -53,8 +53,10 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
       BuildTarget target,
       ProjectFilesystem filesystem,
       Path root,
-      ImmutableMap<Path, SourcePath> links) {
-    Optional<String> moduleName = getModuleName(links);
+      ImmutableMap<Path, SourcePath> links,
+      Optional<String> inputModuleName) {
+    Optional<String> moduleName =
+        inputModuleName.isPresent() ? inputModuleName : getModuleName(links);
     return new HeaderSymlinkTreeWithModuleMap(target, filesystem, root, links, moduleName);
   }
 

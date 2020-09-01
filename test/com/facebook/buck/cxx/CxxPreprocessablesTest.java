@@ -50,6 +50,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -216,7 +217,7 @@ public class CxxPreprocessablesTest {
     // Build our symlink tree rule using the helper method.
     HeaderSymlinkTree symlinkTree =
         CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-            target, filesystem, root, links, HeaderMode.SYMLINK_TREE_ONLY);
+            target, filesystem, root, links, HeaderMode.SYMLINK_TREE_ONLY, Optional.empty());
 
     // Verify that the symlink tree has no deps.  This is by design, since setting symlinks can
     // be done completely independently from building the source that the links point to and

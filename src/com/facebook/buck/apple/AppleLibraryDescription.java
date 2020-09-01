@@ -805,12 +805,16 @@ public class AppleLibraryDescription
                 args.getExportedHeaders()));
 
     RelPath root = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
+
+    String moduleName = SwiftLibraryDescription.getModuleName(buildTarget, args, true);
+
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
         buildTarget,
         projectFilesystem,
         root.getPath(),
         headers,
-        HeaderMode.SYMLINK_TREE_WITH_MODULEMAP);
+        HeaderMode.SYMLINK_TREE_WITH_MODULEMAP,
+        Optional.of(moduleName));
   }
 
   <U> Optional<U> createMetadataForLibrary(

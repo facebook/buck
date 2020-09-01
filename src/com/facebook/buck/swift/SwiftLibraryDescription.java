@@ -44,6 +44,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.cxx.AbstractSwiftCxxCommonArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLinkOptions;
@@ -305,7 +306,7 @@ public class SwiftLibraryDescription
           args.getFrameworks(),
           getFrameworkPathToSearchPath(cxxPlatform, graphBuilder),
           cxxPlatform.getFlavor(),
-          getModuleName(buildTarget, args),
+          getModuleName(buildTarget, args, false),
           BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").getPath(),
           args.getSrcs(),
           args.getVersion(),
@@ -471,7 +472,7 @@ public class SwiftLibraryDescription
         args.getFrameworks(),
         getFrameworkPathToSearchPath(cxxPlatform, graphBuilder),
         cxxPlatform.getFlavor(),
-        getModuleName(buildTarget, args),
+        getModuleName(buildTarget, args, false),
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").getPath(),
         args.getSrcs(),
         args.getVersion(),
@@ -533,7 +534,7 @@ public class SwiftLibraryDescription
         args.getFrameworks(),
         getFrameworkPathToSearchPath(cxxPlatform, graphBuilder),
         cxxPlatform.getFlavor(),
-        getModuleName(buildTarget, args),
+        getModuleName(buildTarget, args, false),
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").getPath(),
         args.getSrcs(),
         args.getVersion(),
@@ -546,8 +547,11 @@ public class SwiftLibraryDescription
         downwardApiConfig.isEnabledForApple());
   }
 
-  private static String getModuleName(BuildTarget buildTarget, SwiftLibraryDescriptionArg args) {
-    return args.getModuleName().orElse(buildTarget.getShortName());
+  public static String getModuleName(
+      BuildTarget buildTarget, AbstractSwiftCxxCommonArg args, boolean shouldNormalizeName) {
+    String moduleName = args.getModuleName().orElse(buildTarget.getShortName());
+
+    return shouldNormalizeName ? SwiftCompileBase.getNormalizedModuleName(moduleName) : moduleName;
   }
 
   public static boolean isSwiftTarget(BuildTarget buildTarget) {
@@ -566,9 +570,8 @@ public class SwiftLibraryDescription
   }
 
   @RuleArg
-  interface AbstractSwiftLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps, HasSrcs {
-    Optional<String> getModuleName();
-
+  interface AbstractSwiftLibraryDescriptionArg
+      extends BuildRuleArg, HasDeclaredDeps, HasSrcs, AbstractSwiftCxxCommonArg {
     ImmutableList<StringWithMacros> getCompilerFlags();
 
     Optional<String> getVersion();

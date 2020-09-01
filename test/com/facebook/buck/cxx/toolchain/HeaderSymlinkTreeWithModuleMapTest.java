@@ -61,6 +61,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -112,7 +113,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule =
         HeaderSymlinkTreeWithModuleMap.create(
-            buildTarget, projectFilesystem, symlinkTreeRoot.getPath(), links);
+            buildTarget, projectFilesystem, symlinkTreeRoot.getPath(), links, Optional.empty());
   }
 
   @Test
@@ -163,7 +164,8 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             new ImmutableMap.Builder<Path, SourcePath>()
                 .putAll(links)
                 .put(Paths.get("SomeModule", "SomeModule-Swift.h"), FakeSourcePath.of("SomeModule"))
-                .build());
+                .build(),
+            Optional.empty());
 
     ImmutableList<Step> actualBuildSteps =
         linksWithSwiftHeader.getBuildSteps(buildContext, buildableContext);
@@ -191,7 +193,8 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             ImmutableMap.of(
                 Paths.get("OtherModule", "Header.h"),
                 PathSourcePath.of(
-                    projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))));
+                    projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))),
+            Optional.empty());
 
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =
