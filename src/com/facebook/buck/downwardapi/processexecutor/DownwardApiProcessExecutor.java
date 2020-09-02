@@ -154,6 +154,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
       } catch (CancellationException e) {
         // this is fine. it's just canceled
       } catch (InterruptedException e) {
+        LOG.info(e, "Got interrupted while cancelling downward events processing");
         Thread.currentThread().interrupt();
       } catch (ExecutionException e) {
         LOG.warn(e.getCause(), "Exception while cancelling named pipe events processing.");
@@ -278,7 +279,9 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
             LOG.error(e, "Exception during processing events from named pipe: %s", namedPipeName);
           }
         }
-        LOG.info("Finishing reader thread for pipe: %s", namedPipeName);
+        LOG.info(
+            "Finishing reader thread for pipe: %s; interrupted = %s",
+            namedPipeName, Thread.currentThread().isInterrupted());
       } catch (PipeNotConnectedException e) {
         LOG.info("Named pipe %s is closed", namedPipeName);
       } catch (IOException e) {
@@ -314,6 +317,9 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     try {
       result =
           getDelegate().execute(process.getDelegate(), options, stdin, timeOutMs, timeOutHandler);
+    } catch (InterruptedException e) {
+      LOG.info(e, "Downward process interrupted during execution");
+      throw e;
     } finally {
       launchedProcess.close();
     }
