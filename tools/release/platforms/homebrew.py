@@ -105,13 +105,13 @@ def update_formula_before_bottle(
         all_data = fin.read()
         all_data = re.sub(
             r"BUCK_VERSION = .*$",
-            'BUCK_VERSION = "{}".freeze'.format(release_version),
+            'BUCK_VERSION = "{}"'.format(release_version),
             all_data,
             flags=re.MULTILINE,
         )
         all_data = re.sub(
             r"BUCK_RELEASE_TIMESTAMP = .*$",
-            'BUCK_RELEASE_TIMESTAMP = "{}".freeze'.format(release_timestamp),
+            'BUCK_RELEASE_TIMESTAMP = "{}"'.format(release_timestamp),
             all_data,
             flags=re.MULTILINE,
         )
