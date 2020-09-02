@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern.builders;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
@@ -32,6 +33,7 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
@@ -358,6 +360,8 @@ public class HybridLocalStrategyTest {
     // When the HybridLocal strategy is working correctly, this shouldn't have any flakiness. If
     // hybrid local has a race, it's difficult to write a test that identifies it with no flakiness
     // (though this test was failing in 100/100 tests on a particular race).
+    assumeTrue(Platform.detect() != Platform.WINDOWS); // Skip flay tests for Windows
+
     ResourceAmounts resourceAmounts = ResourceAmounts.of(8, 1, 0, 0);
     ListeningExecutorService service =
         new WeightedListeningExecutorService(
