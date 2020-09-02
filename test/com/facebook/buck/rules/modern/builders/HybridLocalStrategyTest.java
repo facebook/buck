@@ -360,7 +360,7 @@ public class HybridLocalStrategyTest {
     // When the HybridLocal strategy is working correctly, this shouldn't have any flakiness. If
     // hybrid local has a race, it's difficult to write a test that identifies it with no flakiness
     // (though this test was failing in 100/100 tests on a particular race).
-    assumeTrue(Platform.detect() != Platform.WINDOWS); // Skip flay tests for Windows
+    assumeTrue(Platform.detect() != Platform.WINDOWS); // Skip flaky tests for Windows
 
     ResourceAmounts resourceAmounts = ResourceAmounts.of(8, 1, 0, 0);
     ListeningExecutorService service =
