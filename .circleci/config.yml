@@ -1637,4 +1637,6 @@ workflows:
       - windows_publish_release:
           <<: *tags_only_filter
       - publish_docs:
+          requires:
+            - linux_publish_release
           <<: *tags_only_filter
