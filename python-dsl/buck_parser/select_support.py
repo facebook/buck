@@ -102,15 +102,19 @@ def select_map(selector_list, map_fn):
 
 
 def select_test(selector_list, test_fn):
-    # type: (SelectorList, Callable[[Any], Any]) -> List[bool]
-    """Check the values in the select expression based on the test function.
+    # type: (SelectorList, Callable[[Any], bool]) -> bool
+    """Test values in the select expression using the given function.
+
+    Returns:
+        True, if any value in the select passes, else False
     """
-    bools = []
     for item in selector_list.items():
         if isinstance(item, SelectorValue):
             for value in item.conditions().values():
-                bools.append(test_fn(value))
+                if test_fn(value):
+                    return True
         else:
-            bools.append(test_fn(item))
+            if test_fn(item):
+                return True
 
-    return bools
+    return False

@@ -283,36 +283,41 @@ public abstract class AbstractSkylarkFunctions {
   /**
    * Exposes a {@code select_test} for Skylark parser.
    *
-   * <p>This allows users to introspect and test values in a select expression. Users can then use
-   * either of the builtins {@code any()} or {@code all()} to enforce their constraints in macros.
+   * <p>This API allows testing values in a select expression. The API returns true if any value in
+   * the select expression passes the given test function.
    */
   @StarlarkMethod(
       name = "select_test",
-      doc = "Iterate over and test valueus in the select expression",
+      doc = "Test values in the select expression using the given function",
       parameters = {
         @Param(name = "selector_list", type = SelectorList.class),
         @Param(name = "func", type = StarlarkCallable.class)
       },
       useStarlarkThread = true)
-  public List<Boolean> select_test(
+  public boolean select_test(
       SelectorList selectorList, StarlarkCallable func, StarlarkThread thread)
       throws EvalException, InterruptedException {
-    List<Boolean> result = new ArrayList<>();
     for (Object element : selectorList.getElements()) {
       if (element instanceof SelectorValue) {
         SelectorValue sval = (SelectorValue) element;
 
         for (Map.Entry<?, ?> entry : sval.getDictionary().entrySet()) {
-          result.add(
+          Boolean result =
               (Boolean)
-                  Starlark.call(thread, func, Arrays.asList(entry.getValue()), ImmutableMap.of()));
+                  Starlark.call(thread, func, Arrays.asList(entry.getValue()), ImmutableMap.of());
+          if (result) {
+            return true;
+          }
         }
 
       } else {
-        result.add(
-            (Boolean) Starlark.call(thread, func, Arrays.asList(element), ImmutableMap.of()));
+        Boolean result =
+            (Boolean) Starlark.call(thread, func, Arrays.asList(element), ImmutableMap.of());
+        if (result) {
+          return true;
+        }
       }
     }
-    return result;
+    return false;
   }
 }

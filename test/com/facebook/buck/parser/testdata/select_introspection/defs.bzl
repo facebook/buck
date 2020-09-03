@@ -20,13 +20,6 @@ def _assert_eq(expected, actual):
     if not result:
         fail("expected %s but got %s" % (expected, actual))
 
-def _assert_test_count(result, true_count = 0, false_count = 0):
-    given_true = len([r for r in result if r])
-    given_false = len(result) - given_true
-
-    _assert_eq(true_count, given_true)
-    _assert_eq(false_count, given_false)
-
 def _test_single_config_str():
     str_select = select({"config/windows:x86_64": "flag_TEST"})
 
@@ -34,7 +27,7 @@ def _test_single_config_str():
         select({"config/windows:x86_64": "flag_replaced"}),
         select_map(str_select, _map_func),
     )
-    _assert_eq([True], select_test(str_select, _test_func))
+    _assert_eq(True, select_test(str_select, _test_func))
 
 def _test_single_config_list():
     list_select = select({"config/windows:x86_64": ["flag", "INVALID"]})
@@ -43,7 +36,7 @@ def _test_single_config_list():
         select({"config/windows:x86_64": ["flag"]}),
         select_map(list_select, _map_func),
     )
-    _assert_eq([False], select_test(list_select, _test_func))
+    _assert_eq(False, select_test(list_select, _test_func))
 
 def _test_single_config_dict():
     dict_select = select({
@@ -54,7 +47,7 @@ def _test_single_config_dict():
         select({"config/windows:x86_64": {"test.h": "windows/test.h"}}),
         select_map(dict_select, _map_func),
     )
-    _assert_eq([False], select_test(dict_select, _test_func))
+    _assert_eq(False, select_test(dict_select, _test_func))
 
 def _test_multi_config():
     multi_select = select({
@@ -74,7 +67,7 @@ def _test_multi_config():
         select_map(multi_select, _map_func),
     )
     res = select_test(multi_select, _test_func)
-    _assert_test_count(res, true_count = 2, false_count = 2)
+    _assert_eq(True, res)
 
 def _test_concatenated_native():
     expr_select = ["INVALID"] + ["TEST"] + select({"config/windows:x86_64": ["-DWINDOWS"]})
@@ -84,7 +77,7 @@ def _test_concatenated_native():
         select_map(expr_select, _map_func),
     )
     res = select_test(expr_select, _test_func)
-    _assert_test_count(res, true_count = 1, false_count = 1)
+    _assert_eq(True, res)
 
 def _test_concatenated_nested():
     expr_select = ["TEST"] + select({"config/windows:x86_64": ["-DWINDOWS", "INVALID"]})
@@ -94,7 +87,7 @@ def _test_concatenated_nested():
         select_map(expr_select, _map_func),
     )
     res = select_test(expr_select, _test_func)
-    _assert_test_count(res, true_count = 1, false_count = 1)
+    _assert_eq(True, res)
 
 def test():
     _test_single_config_str()
