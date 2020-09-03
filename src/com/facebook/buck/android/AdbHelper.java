@@ -111,6 +111,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   private final Supplier<ExecutionContext> contextSupplier;
   private final boolean restartAdbOnFailure;
   private final ImmutableList<String> rapidInstallTypes;
+  // Caches the list of android devices for this execution
   private final Supplier<ImmutableList<AndroidDevice>> devicesSupplier;
   private final boolean chmodExoFilesRemotely;
   private final boolean skipMetadataIfNoInstalls;

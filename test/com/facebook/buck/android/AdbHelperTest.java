@@ -43,6 +43,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -57,6 +58,11 @@ public class AdbHelperTest {
     testContext = TestExecutionContextUtils.executionContextBuilder().build();
     testConsole = (TestConsole) testContext.getConsole();
     basicAdbHelper = createAdbHelper(createAdbOptions(), new TargetDeviceOptions());
+  }
+
+  @After
+  public void tearDown() {
+    AdbHelper.setDevicesSupplierForTests(Optional.empty());
   }
 
   private TestDevice createRealDevice(String serial, IDevice.DeviceState state) {
@@ -341,11 +347,22 @@ public class AdbHelperTest {
     }
   }
 
-  @Test
-  public void testQuietDeviceInstall() throws InterruptedException {
+  private BuckEventBusForTests.CapturingEventListener listenToEvents() {
     BuckEventBusForTests.CapturingEventListener listener =
         new BuckEventBusForTests.CapturingEventListener();
     testContext.getBuckEventBus().register(listener);
+    return listener;
+  }
+
+  private void assertLoggedToConsole(
+      BuckEventBusForTests.CapturingEventListener listener, String... messages) {
+    MoreAsserts.assertListEquals(
+        listener.getConsoleEventLogMessages(), ImmutableList.copyOf(messages));
+  }
+
+  @Test
+  public void testQuietDeviceInstall() throws InterruptedException {
+    BuckEventBusForTests.CapturingEventListener listener = listenToEvents();
 
     File apk = new File("/some/file.apk");
     AtomicReference<String> apkPath = new AtomicReference<>();
@@ -371,9 +388,7 @@ public class AdbHelperTest {
 
   @Test
   public void testNonQuietShowsOutput() throws InterruptedException {
-    BuckEventBusForTests.CapturingEventListener listener =
-        new BuckEventBusForTests.CapturingEventListener();
-    testContext.getBuckEventBus().register(listener);
+    BuckEventBusForTests.CapturingEventListener listener = listenToEvents();
 
     File apk = new File("/some/file.apk");
     AtomicReference<String> apkPath = new AtomicReference<>();
@@ -394,13 +409,22 @@ public class AdbHelperTest {
     adbHelper.adbCall("install apk", (d) -> d.installApkOnDevice(apk, false, false, false), false);
 
     assertEquals(apk.getAbsolutePath(), apkPath.get());
-    MoreAsserts.assertListEquals(
-        listener.getConsoleEventLogMessages(),
-        ImmutableList.of(
-            "Installing apk on serial#1.", "Successfully ran install apk on 1 device(s)"));
+    assertLoggedToConsole(
+        listener, "Installing apk on serial#1.", "Successfully ran install apk on 1 device(s)");
   }
 
   private AdbHelper createAdbHelper(List<IDevice> deviceList) {
+    AdbHelper.setDevicesSupplierForTests(
+        Optional.of(
+            () -> {
+              return deviceList.stream()
+                  .map(
+                      id ->
+                          (AndroidDevice)
+                              new RealAndroidDevice(testContext.getBuckEventBus(), id, testConsole))
+                  .collect(ImmutableList.toImmutableList());
+            }));
+
     return new AdbHelper(
         createAdbOptions(),
         new TargetDeviceOptions(),
@@ -412,17 +436,7 @@ public class AdbHelperTest {
         true,
         ImmutableList.of(),
         /* chmodExoFilesRemotely= */ true,
-        /* skipMetadataIfNoInstalls= */ false) {
-      @Override
-      public ImmutableList<AndroidDevice> getDevices(boolean quiet) {
-        return deviceList.stream()
-            .map(
-                id ->
-                    (AndroidDevice)
-                        new RealAndroidDevice(testContext.getBuckEventBus(), id, testConsole))
-            .collect(ImmutableList.toImmutableList());
-      }
-    };
+        /* skipMetadataIfNoInstalls= */ false);
   }
 
   private static AdbOptions createAdbOptions() {
