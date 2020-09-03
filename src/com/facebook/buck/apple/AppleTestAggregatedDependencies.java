@@ -59,6 +59,7 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
   @AddToRuleKey private final Tool libTool;
   @AddToRuleKey private final Tool ibTool;
   @AddToRuleKey private final boolean withDownwardApi;
+  @AddToRuleKey private final Optional<SourcePath> processedResourceDir;
 
   AppleTestAggregatedDependencies(
       BuildTarget buildTarget,
@@ -68,7 +69,8 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
       AppleBundleResources resources,
       AppleCxxPlatform appleCxxPlatform,
       ImmutableList<SourcePath> staticLibDeps,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      Optional<SourcePath> processedResourceDir) {
     super(buildTarget, projectFilesystem, params);
     this.aggregationRoot = aggregationRoot;
     this.resources = resources;
@@ -77,6 +79,7 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
     this.ibTool = appleCxxPlatform.getIbtool();
     this.staticLibDeps = ImmutableList.copyOf(staticLibDeps);
     this.withDownwardApi = withDownwardApi;
+    this.processedResourceDir = processedResourceDir;
   }
 
   @Override
@@ -102,24 +105,37 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), codeDir)));
 
-    AppleResourceProcessing.addStepsToCopyResources(
-        context,
-        stepsBuilder,
-        codeSignOnCopyPathsBuilder,
-        resources,
-        ImmutableList.of(),
-        resourcesDir,
-        AppleBundleDestinations.platformDestinations(applePlatform),
-        getProjectFilesystem(),
-        ImmutableList.of(),
-        false,
-        applePlatform,
-        LOG,
-        ibTool,
-        false,
-        getBuildTarget(),
-        Optional.empty(),
-        withDownwardApi);
+    if (processedResourceDir.isPresent()) {
+      AppleResourceProcessing.addStepsToCopyResources(
+          context,
+          stepsBuilder,
+          codeSignOnCopyPathsBuilder,
+          resources,
+          ImmutableList.of(),
+          resourcesDir,
+          AppleBundleDestinations.platformDestinations(applePlatform),
+          getProjectFilesystem(),
+          processedResourceDir.get());
+    } else {
+      AppleResourceProcessing.deprecated_addStepsToCopyResources(
+          context,
+          stepsBuilder,
+          codeSignOnCopyPathsBuilder,
+          resources,
+          ImmutableList.of(),
+          resourcesDir,
+          AppleBundleDestinations.platformDestinations(applePlatform),
+          getProjectFilesystem(),
+          ImmutableList.of(),
+          false,
+          applePlatform,
+          LOG,
+          ibTool,
+          false,
+          getBuildTarget(),
+          Optional.empty(),
+          withDownwardApi);
+    }
 
     if (staticLibDeps.size() > 0) {
       RelPath argsFile =

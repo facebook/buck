@@ -383,7 +383,8 @@ public class AppleTestDescription
                         swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
                         swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
                         downwardApiConfig.isEnabledForApple(),
-                        args.getTargetSdkVersion()));
+                        args.getTargetSdkVersion(),
+                        appleConfig.getResourceProcessingSeparateRuleFlag()));
 
     Optional<SourcePath> xctool =
         getXctool(projectFilesystem, params, targetConfiguration, graphBuilder);
@@ -553,7 +554,6 @@ public class AppleTestDescription
     ImmutableSortedSet<BuildRule> transitiveStaticLibraryDependencies =
         collectTransitiveStaticLibraries(
             targetGraph, buildTarget, cxxPlatform, args, graphBuilder, context, params);
-    BuildRuleParams newParams = params.withExtraDeps(transitiveStaticLibraryDependencies);
     ImmutableList<SourcePath> depBuildRuleSourcePaths =
         transitiveStaticLibraryDependencies.stream()
             .map(BuildRule::getSourcePathToOutput)
@@ -564,6 +564,43 @@ public class AppleTestDescription
     Path outputPath =
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s")
             .resolve(AppleTestDescription.COMPILE_DEPS.getName());
+
+    ImmutableSortedSet.Builder<BuildRule> extraDepsBuilder = ImmutableSortedSet.naturalOrder();
+    extraDepsBuilder.addAll(transitiveStaticLibraryDependencies);
+
+    Optional<SourcePath> maybeProcessedResourcesDir;
+    if (appleConfig.getResourceProcessingSeparateRuleFlag()) {
+      BuildTarget processResourcesTarget =
+          buildTarget
+              .withoutFlavors(SUPPORTED_FLAVORS)
+              .withAppendedFlavors(AppleProcessResources.FLAVOR);
+      AppleProcessResources processResources =
+          (AppleProcessResources)
+              graphBuilder.computeIfAbsent(
+                  processResourcesTarget,
+                  target ->
+                      new AppleProcessResources(
+                          target,
+                          projectFilesystem,
+                          graphBuilder,
+                          collectedResources.getResourceFiles(),
+                          collectedResources.getResourceVariantFiles(),
+                          ImmutableList.of(),
+                          false,
+                          appleCxxPlatform.getIbtool(),
+                          false,
+                          buildTarget,
+                          Optional.empty(),
+                          downwardApiConfig.isEnabledForApple(),
+                          appleCxxPlatform.getAppleSdk().getApplePlatform()));
+      maybeProcessedResourcesDir = Optional.of(processResources.getSourcePathToOutput());
+      extraDepsBuilder.add(processResources);
+    } else {
+      maybeProcessedResourcesDir = Optional.empty();
+    }
+
+    BuildRuleParams newParams = params.withExtraDeps(extraDepsBuilder.build());
+
     return new AppleTestAggregatedDependencies(
         buildTarget,
         projectFilesystem,
@@ -572,7 +609,8 @@ public class AppleTestDescription
         collectedResources,
         appleCxxPlatform,
         depBuildRuleSourcePaths,
-        downwardApiConfig.isEnabledForApple());
+        downwardApiConfig.isEnabledForApple(),
+        maybeProcessedResourcesDir);
   }
 
   private ImmutableSortedSet<BuildRule> collectTransitiveStaticLibraries(
