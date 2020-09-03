@@ -112,7 +112,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   private final boolean restartAdbOnFailure;
   private final ImmutableList<String> rapidInstallTypes;
   // Caches the list of android devices for this execution
-  private final Supplier<ImmutableList<AndroidDevice>> devicesSupplier;
+  private final Supplier<GetDevicesResult> devicesSupplier;
   private final boolean chmodExoFilesRemotely;
   private final boolean skipMetadataIfNoInstalls;
 
@@ -146,12 +146,13 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   @Override
   public ImmutableList<AndroidDevice> getDevices(boolean quiet) {
-    ImmutableList<AndroidDevice> devices = devicesSupplier.get();
-    if (!quiet && devices.size() > 1) {
+    GetDevicesResult result = devicesSupplier.get();
+    if (!quiet && result.devices.size() > 1) {
       // Report if multiple devices are matching the filter.
-      printMessage("Found " + devices.size() + " matching devices.\n");
+      printMessage("Found " + result.devices.size() + " matching devices.\n");
     }
-    return devices;
+    result.errorMessage.ifPresent(message -> printError(message));
+    return result.devices;
   }
 
   /**
@@ -174,10 +175,17 @@ public class AdbHelper implements AndroidDevicesHelper {
 
     try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(getBuckEventBus().isolated(), "set_up_adb_call")) {
-      devices = getDevices(quiet);
-      if (devices.isEmpty()) {
+      GetDevicesResult result = devicesSupplier.get();
+      if (!quiet && result.devices.size() > 1) {
+        // Report if multiple devices are matching the filter.
+        printMessage("Found " + result.devices.size() + " matching devices.\n");
+      }
+      if (result.errorMessage.isPresent()) {
+        throw new HumanReadableException(result.errorMessage.get());
+      } else if (result.devices.isEmpty()) {
         throw new HumanReadableException("Didn't find any attached Android devices/emulators.");
       }
+      devices = result.devices;
     }
 
     // Start executions on all matching devices.
@@ -618,9 +626,27 @@ public class AdbHelper implements AndroidDevicesHelper {
     return target.getAdbExecutable().toString();
   }
 
-  private ImmutableList<AndroidDevice> getDevicesImpl() {
+  private static class GetDevicesResult {
+    private final ImmutableList<AndroidDevice> devices;
+    private final Optional<String> errorMessage;
+
+    private GetDevicesResult(ImmutableList<AndroidDevice> devices, Optional<String> errorMessage) {
+      this.devices = devices;
+      this.errorMessage = errorMessage;
+    }
+
+    static GetDevicesResult createSuccess(ImmutableList<AndroidDevice> devices) {
+      return new GetDevicesResult(devices, Optional.empty());
+    }
+
+    static GetDevicesResult createFailure(String message) {
+      return new GetDevicesResult(ImmutableList.of(), Optional.of(message));
+    }
+  }
+
+  private GetDevicesResult getDevicesImpl() {
     if (devicesSupplierForTests.isPresent()) {
-      return devicesSupplierForTests.get().get();
+      return GetDevicesResult.createSuccess(devicesSupplierForTests.get().get());
     }
 
     // Initialize adb connection.
@@ -633,20 +659,18 @@ public class AdbHelper implements AndroidDevicesHelper {
       waitForConnection(adb);
     }
     if (!adb.isConnected()) {
-      printError("Failed to create adb connection.");
-      return ImmutableList.of();
+      return GetDevicesResult.createFailure("Failed to create adb connection.");
     }
 
     // Build list of matching devices.
     List<IDevice> devices = filterDevices(adb.getDevices());
     // Found multiple devices but multi-install mode is not enabled.
     if (devices != null && devices.size() > 1 && !options.isMultiInstallModeEnabled()) {
-      printError(
+      return GetDevicesResult.createFailure(
           String.format(
-              "%d device(s) matches specified device filter (1 expected).\n"
+              "%d devices match specified device filter (1 expected).\n"
                   + "Either disconnect other devices or enable multi-install mode (%s).",
               devices.size(), AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG));
-      return ImmutableList.of();
     }
 
     if (devices == null && restartAdbOnFailure) {
@@ -658,15 +682,15 @@ public class AdbHelper implements AndroidDevicesHelper {
       printError("No devices found with adb after restart, terminating and restarting adb-server.");
       adb.terminate();
       if (!waitForConnection(adb)) {
-        printError("Failed to re-create adb connection.");
-        return ImmutableList.of();
+        return GetDevicesResult.createFailure("Failed to re-create adb connection.");
       }
       devices = filterDevices(adb.getDevices());
     }
     if (devices == null) {
-      return ImmutableList.of();
+      return GetDevicesResult.createSuccess(ImmutableList.of());
     }
-    return devices.stream().map(this::createDevice).collect(ImmutableList.toImmutableList());
+    return GetDevicesResult.createSuccess(
+        devices.stream().map(this::createDevice).collect(ImmutableList.toImmutableList()));
   }
 
   private Console getConsole() {

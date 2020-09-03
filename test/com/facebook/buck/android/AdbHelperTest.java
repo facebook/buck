@@ -477,6 +477,51 @@ public class AdbHelperTest {
     assertEquals(1, helper.getDevices(true).size());
   }
 
+  @Test
+  public void testAdbCallShouldFailForMultipleDevices() throws Exception {
+    exceptionRule.expect(HumanReadableException.class);
+    exceptionRule.expectMessage("2 devices match specified device filter");
+
+    AndroidDebugBridgeFacade adb =
+        createAdbForDevices(TestDevice.createRealDevice("one"), TestDevice.createRealDevice("two"));
+    AdbHelper helper = createAdbHelper(adb);
+    helper.adbCall("test", d -> true, /*quiet=*/ true);
+  }
+
+  @Test
+  public void testAdbCallShouldFailForNoDevices() throws Exception {
+    exceptionRule.expect(HumanReadableException.class);
+    exceptionRule.expectMessage("Didn't find any attached Android devices/emulators.");
+
+    AndroidDebugBridgeFacade adb = createAdbForDevices();
+    AdbHelper helper = createAdbHelper(adb);
+    helper.adbCall("test", d -> true, /*quiet=*/ true);
+  }
+
+  private AndroidDebugBridgeFacade createAdbForDevices(IDevice... devices) {
+    return new AndroidDebugBridgeFacade() {
+      @Override
+      boolean connect() {
+        return true;
+      }
+
+      @Override
+      boolean isConnected() {
+        return true;
+      }
+
+      @Override
+      boolean hasInitialDeviceList() {
+        return true;
+      }
+
+      @Override
+      IDevice[] getDevices() {
+        return devices;
+      }
+    };
+  }
+
   private AndroidDebugBridgeFacade createFlakyAdb(
       int connectOnAttempt, int returnDevicesOnAttempt, IDevice... devices) {
     return new AndroidDebugBridgeFacade() {
