@@ -30,6 +30,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.engine.impl.TestExecutionContextUtils;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.step.AdbOptions;
@@ -45,9 +46,12 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class AdbHelperTest {
+  @Rule public ExpectedException exceptionRule = ExpectedException.none();
 
   private TestConsole testConsole;
   private ExecutionContext testContext;
@@ -411,6 +415,49 @@ public class AdbHelperTest {
     assertEquals(apk.getAbsolutePath(), apkPath.get());
     assertLoggedToConsole(
         listener, "Installing apk on serial#1.", "Successfully ran install apk on 1 device(s)");
+  }
+
+  private TestDevice createTestDevice(String serial, String name) {
+    TestDevice device = new TestDevice();
+    device.setSerialNumber(serial);
+    device.setName(name);
+
+    return device;
+  }
+
+  @Test
+  public void testGetDevicesShouldLogWhenMultipleDevices() {
+    BuckEventBusForTests.CapturingEventListener listener = listenToEvents();
+
+    AdbHelper adbHelper =
+        createAdbHelper(
+            ImmutableList.of(
+                createTestDevice("first", "First"), createTestDevice("second", "Second")));
+
+    assertEquals(adbHelper.getDevices(false).size(), 2);
+    assertLoggedToConsole(listener, "Found 2 matching devices.\n");
+  }
+
+  @Test
+  public void testGetDevicesShouldRespectQuietFlag() {
+    BuckEventBusForTests.CapturingEventListener listener = listenToEvents();
+
+    AdbHelper adbHelper =
+        createAdbHelper(
+            ImmutableList.of(
+                createTestDevice("first", "First"), createTestDevice("second", "Second")));
+
+    assertEquals(adbHelper.getDevices(true).size(), 2);
+    assertTrue(listener.getConsoleEventLogMessages().isEmpty());
+  }
+
+  @Test
+  public void testAdbCallShouldFailWhenNoDevices() throws Exception {
+    AdbHelper adbHelper = createAdbHelper(ImmutableList.of());
+
+    exceptionRule.expect(HumanReadableException.class);
+    exceptionRule.expectMessage("Didn't find any attached Android devices/emulators.");
+    adbHelper.adbCall("dummy", d -> true, true);
   }
 
   private AdbHelper createAdbHelper(List<IDevice> deviceList) {
