@@ -1183,6 +1183,31 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testBuildAppleLibraryWhereModularObjcAndSwiftUseEachOtherVFSOverlay()
+      throws Exception {
+    testModularScenarioWithLocalConfigs(
+        "apple_library_modular_objc_swift_bidirectional",
+        "Mixed",
+        ImmutableMap.of("apple", ImmutableMap.of("swift_uses_vfs_overlays", "true")));
+  }
+
+  @Test
+  public void testBuildAppleLibraryWhereModularObjcUsesSwiftDiffLibVFSOverlay() throws Exception {
+    testModularScenarioWithLocalConfigs(
+        "apple_library_modular_objc_uses_swift_diff_lib",
+        "Bar",
+        ImmutableMap.of("apple", ImmutableMap.of("swift_uses_vfs_overlays", "true")));
+  }
+
+  @Test
+  public void testBuildAppleLibraryWhereModularSwiftUsesObjcDiffLibVFSOverlay() throws Exception {
+    testModularScenarioWithLocalConfigs(
+        "apple_library_modular_swift_uses_objc_diff_lib",
+        "Bar",
+        ImmutableMap.of("apple", ImmutableMap.of("swift_uses_vfs_overlays", "true")));
+  }
+
+  @Test
   public void testBuildAppleLibraryWhereModularObjcUsesSwiftSameLibVFSOverlay() throws Exception {
     testModularScenarioWithLocalConfigs(
         "apple_library_modular_objc_uses_swift_same_lib",

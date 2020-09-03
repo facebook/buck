@@ -158,12 +158,13 @@ public class AppleVFSOverlayBuildRule extends ModernBuildRule<AppleVFSOverlayBui
               VFSOverlay vfsOverlay = new VFSOverlay(vfsBuilder.build());
               try {
                 String render = vfsOverlay.render();
+                filesystem.createParentDirs(yamlRelPath.getPath());
                 filesystem.writeContentsToPath(render, yamlRelPath.getPath());
+                return StepExecutionResults.SUCCESS;
               } catch (IOException e) {
                 LOG.debug("Couldn't generate modulemap: %s", e.getMessage());
+                return StepExecutionResults.ERROR;
               }
-
-              return StepExecutionResults.SUCCESS;
             }
           });
     }

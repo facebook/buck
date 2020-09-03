@@ -162,6 +162,7 @@ public class AppleLibraryDescription
         AppleDescriptions.SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR),
     SWIFT_UNDERLYING_MODULE(AppleDescriptions.SWIFT_UNDERLYING_MODULE_FLAVOR),
     SWIFT_UNDERLYING_VFS_OVERLAY(AppleDescriptions.SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR),
+    SWIFT_DEPENDENT_VFS_OVERLAY(AppleDescriptions.SWIFT_DEPENDENT_VFS_OVERLAY_FLAVOR),
     ;
 
     private final Flavor flavor;
@@ -303,11 +304,13 @@ public class AppleLibraryDescription
             BuildTarget nonVfsUnderlyingTarget =
                 buildTarget.withFlavors(
                     cxxPlatform.getFlavor(), Type.SWIFT_UNDERLYING_MODULE.getFlavor());
+
             HeaderSymlinkTreeWithModuleMap symlinkTreeRule =
                 (HeaderSymlinkTreeWithModuleMap) graphBuilder.requireRule(nonVfsUnderlyingTarget);
 
             Path placeholderPath =
                 AppleVFSOverlayBuildRule.getPlaceHolderPath(projectFilesystem, buildTarget);
+
             AppleVFSOverlayBuildRule vfsRule =
                 new AppleVFSOverlayBuildRule(
                     buildTarget,
@@ -320,6 +323,33 @@ public class AppleLibraryDescription
             return Optional.of(
                 createUnderlyingModuleSymlinkTreeBuildRule(
                     buildTarget, projectFilesystem, graphBuilder, args));
+          } else if (type.getValue().equals(Type.SWIFT_DEPENDENT_VFS_OVERLAY)) {
+            CxxPlatform cxxPlatform =
+                cxxPlatforms
+                    .getValue(buildTarget)
+                    .orElseThrow(IllegalArgumentException::new)
+                    .resolve(graphBuilder, buildTarget.getTargetConfiguration());
+
+            BuildTarget headerModeSymlinkTarget =
+                buildTarget.withFlavors(
+                    cxxPlatform.getFlavor(),
+                    Type.EXPORTED_HEADERS.getFlavor(),
+                    HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor());
+
+            HeaderSymlinkTreeWithModuleMap headerModeSymlinkRule =
+                (HeaderSymlinkTreeWithModuleMap) graphBuilder.requireRule(headerModeSymlinkTarget);
+            Path placeholderPath =
+                AppleVFSOverlayBuildRule.getPlaceHolderPath(projectFilesystem, buildTarget);
+
+            AppleVFSOverlayBuildRule vfsRule =
+                new AppleVFSOverlayBuildRule(
+                    buildTarget,
+                    projectFilesystem,
+                    graphBuilder,
+                    headerModeSymlinkRule.getRootSourcePath(),
+                    placeholderPath.toString());
+
+            return Optional.of(vfsRule);
           } else if (type.getValue().equals(Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER)) {
             CxxPlatform cxxPlatform =
                 cxxPlatforms
@@ -374,7 +404,11 @@ public class AppleLibraryDescription
                         () ->
                             AppleLibraryDescriptionSwiftEnhancer
                                 .getPreprocessorInputsForAppleLibrary(
-                                    buildTarget, graphBuilder, cxxPlatform, args));
+                                    buildTarget,
+                                    graphBuilder,
+                                    cxxPlatform,
+                                    args,
+                                    appleConfig.shouldUseVFSOverlays()));
 
             if (type.getValue().equals(Type.SWIFT_COMPILE)) {
               return Optional.of(
@@ -404,7 +438,6 @@ public class AppleLibraryDescription
                       preprocessorInputs));
             }
           }
-
           return Optional.empty();
         });
   }
@@ -924,10 +957,10 @@ public class AppleLibraryDescription
             if (!args.isModular()) {
               return Optional.empty();
             }
-
             if (appleConfig.shouldUseVFSOverlays()) {
               BuildTarget underlyingVfsTarget =
                   baseTarget.withAppendedFlavors(Type.SWIFT_UNDERLYING_VFS_OVERLAY.getFlavor());
+
               AppleVFSOverlayBuildRule vfsOverlayRule =
                   (AppleVFSOverlayBuildRule) graphBuilder.requireRule(underlyingVfsTarget);
 

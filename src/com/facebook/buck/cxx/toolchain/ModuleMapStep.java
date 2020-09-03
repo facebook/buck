@@ -54,8 +54,17 @@ class ModuleMapStep implements Step {
   @Override
   public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     LOG.debug("Writing modulemap to %s", output);
-    filesystem.writeContentsToPath(moduleMap.render(), output);
-    return StepExecutionResults.SUCCESS;
+    if (!filesystem.exists(output)) {
+      filesystem.createParentDirs(output);
+    }
+
+    try {
+      filesystem.writeContentsToPath(moduleMap.render(), output);
+      return StepExecutionResults.SUCCESS;
+    } catch (IOException e) {
+      LOG.debug("Error writing modulemap to %s:\n%s", output, e.getMessage());
+      return StepExecutionResults.ERROR;
+    }
   }
 
   @Override

@@ -38,6 +38,9 @@ import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftCompile;
 import com.facebook.buck.swift.SwiftDescriptions;
@@ -45,6 +48,7 @@ import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftLibraryDescriptionArg;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -125,7 +129,6 @@ public class AppleLibraryDescriptionSwiftEnhancer {
           explicitCxxToolFlags.addAllRuleFlags(
               input.getPreprocessorFlags().get(CxxSource.Type.SWIFT));
         });
-
     flagsBuilder.setOtherFlags(explicitCxxToolFlags.build());
     return flagsBuilder.build();
   }
@@ -177,19 +180,64 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
       CxxPlatform platform,
-      AppleNativeTargetDescriptionArg arg) {
+      AppleNativeTargetDescriptionArg arg,
+      boolean shouldUseVFSOverlay) {
     CxxLibraryGroup lib = (CxxLibraryGroup) graphBuilder.requireRule(target.withFlavors());
+
     ImmutableMap<BuildTarget, CxxPreprocessorInput> transitiveMap =
         TransitiveCxxPreprocessorInputCache.computeTransitiveCxxToPreprocessorInputMap(
             platform, lib, false, graphBuilder);
-
     ImmutableSet.Builder<CxxPreprocessorInput> builder = ImmutableSet.builder();
-    builder.addAll(transitiveMap.values());
+
     if (arg.isModular()) {
       Optional<CxxPreprocessorInput> underlyingModule =
           getUnderlyingModulePreprocessorInput(target, graphBuilder, platform);
       underlyingModule.ifPresent(builder::add);
+
+      if (shouldUseVFSOverlay) {
+        ImmutableMap.Builder<BuildTarget, CxxPreprocessorInput> replacementTransitiveMap =
+            ImmutableMap.builder();
+        for (BuildTarget buildTarget : transitiveMap.keySet()) {
+          BuildTarget vfsOverlayTarget =
+              buildTarget.withFlavors(
+                  platform.getFlavor(),
+                  AppleLibraryDescription.Type.SWIFT_DEPENDENT_VFS_OVERLAY.getFlavor());
+          BuildRule buildRule = graphBuilder.requireRule(vfsOverlayTarget);
+          CxxPreprocessorInput baseInput = transitiveMap.get(buildTarget);
+          CxxPreprocessorInput.Builder inputBuilder = CxxPreprocessorInput.builder();
+          ImmutableMultimap.Builder<CxxSource.Type, Arg> argBuilder = ImmutableMultimap.builder();
+
+          if (buildRule instanceof AppleVFSOverlayBuildRule) {
+            AppleVFSOverlayBuildRule vfsOverlayRule = (AppleVFSOverlayBuildRule) buildRule;
+
+            baseInput
+                .getIncludes()
+                .forEach(
+                    headers -> {
+                      if (!vfsOverlayRule.getSymlinkTreePath().equals(headers.getRoot())) {
+                        inputBuilder.addIncludes(headers);
+                      }
+                    });
+
+            argBuilder.putAll(
+                CxxSource.Type.SWIFT,
+                StringArg.of("-ivfsoverlay"),
+                SourcePathArg.of(vfsOverlayRule.getSourcePathToOutput()),
+                StringArg.of("-I"),
+                StringArg.of(vfsOverlayRule.getPlaceholderPath()));
+            inputBuilder.setPreprocessorFlags(argBuilder.build());
+            replacementTransitiveMap.put(buildTarget, inputBuilder.build());
+          } else {
+            replacementTransitiveMap.put(buildTarget, baseInput);
+          }
+        }
+
+        transitiveMap = replacementTransitiveMap.build();
+      }
+
+      builder.addAll(transitiveMap.values());
     } else {
+      builder.addAll(transitiveMap.values());
       builder.add(lib.getPublicCxxPreprocessorInputExcludingDelegate(platform, graphBuilder));
     }
 

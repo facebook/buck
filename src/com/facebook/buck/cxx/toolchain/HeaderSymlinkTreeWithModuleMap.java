@@ -85,11 +85,13 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
               paths.stream()
                   .filter(path -> !path.equals(expectedSwiftHeaderPath))
                   .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+          Path moduleMapPath =
+              moduleMapPath(getProjectFilesystem(), getBuildTarget(), moduleName).getPath();
 
           builder.add(
               new ModuleMapStep(
                   getProjectFilesystem(),
-                  moduleMapPath(getProjectFilesystem(), getBuildTarget(), moduleName).getPath(),
+                  moduleMapPath,
                   ModuleMap.create(
                       moduleName,
                       paths.contains(expectedSwiftHeaderPath)
