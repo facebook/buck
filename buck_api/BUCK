@@ -1,36 +1,7 @@
 python_library(
-    name = "buck_result_lib",
-    srcs = [
-        "buck_result.py",
-    ],
+    name = "api",
+    srcs = glob(["*.py"]),
     visibility = [
         "PUBLIC",
-    ],
-)
-
-python_library(
-    name = "buck_process_lib",
-    srcs = [
-        "buck_process.py",
-    ],
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        ":buck_result_lib",
-    ],
-)
-
-python_library(
-    name = "buck_repo_lib",
-    srcs = [
-        "buck_repo.py",
-    ],
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        ":buck_process_lib",
-        ":buck_result_lib",
     ],
 )

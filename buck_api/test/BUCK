@@ -1,48 +1,14 @@
 load("//tools/build_rules:python_rules.bzl", "pytest_test")
 
 pytest_test(
-    name = "buck_result_test",
-    srcs = [
-        "buck_result_test.py",
-    ],
-    deps = [
-        "//buck_api:buck_result_lib",
-        "//third-party/py/pytest-asyncio:pytest-asyncio",
-    ],
-)
-
-pytest_test(
-    name = "buck_process_test",
-    srcs = [
-        "buck_process_test.py",
-    ],
-    deps = [
-        "//buck_api:buck_process_lib",
-        "//third-party/py/pytest-asyncio:pytest-asyncio",
-    ],
-)
-
-pytest_test(
-    name = "buck_repo_test",
-    srcs = [
-        "buck_repo_test.py",
-    ],
+    name = "api_test",
+    srcs = glob(["*test.py"]),
     resources = [
         "test_script.py",
     ],
     deps = [
-        "//buck_api:buck_repo_lib",
+        "//buck_api:api",
         "//third-party/py/pytest-asyncio:pytest-asyncio",
-    ],
-)
-
-python_library(
-    name = "test_script_lib",
-    srcs = [
-        "test_script.py",
-    ],
-    visibility = [
-        "PUBLIC",
     ],
 )
 
