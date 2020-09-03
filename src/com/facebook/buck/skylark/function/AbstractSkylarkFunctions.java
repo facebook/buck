@@ -245,9 +245,52 @@ public abstract class AbstractSkylarkFunctions {
   /**
    * Exposes a {@code select_map} for Skylark parser.
    *
-   * <p>This allows users to introspect and manipulate values in a select expression. The mapping
-   * function operates on each individual value in the select expression, and generates a new select
-   * expression with the updated values.
+   * <p>This API allows modifying values in a select expression. The mapping function operates on
+   * each individual value in the select expression, and generates a new select expression with the
+   * updated values.
+   *
+   * <p>Example 1: Inject a value:
+   *
+   * <pre>{@code
+   * def add_foo(flags):
+   *   if "-DBAR" not in flags:
+   *     return flags + ["-DFOO"]
+   *
+   *   return flags
+   *
+   * flags = select({":config": ["-DBAR"], "DEFAULT": []})
+   *
+   * select_map(flags, add_foo) # returns select({":config": ["-DBAR"], "DEFAULT": ["-DFOO"]})
+   * }</pre>
+   *
+   * Example 2: Filter a value.
+   *
+   * <pre>{@code
+   * def drop_foo(flags):
+   *   return [f for f in flags if f != "-DFOO"]
+   *
+   * flags = select({":config": ["-DFOO", "-DBAR"], "DEFAULT": ["-DBAZ"]})
+   *
+   * select_map(flags, drop_foo) # returns select({":config": ["-DBAR"], "DEFAULT": ["-DBAZ"]}
+   * }</pre>
+   *
+   * Example 3: Update values.
+   *
+   * <pre>{@code
+   * def convert_foo(flags):
+   *   new_flags = []
+   *   for flag in flags:
+   *     if flag == "-DFOO":
+   *       new_flags.append("-DFOOBAR")
+   *    else:
+   *       new_flags.append(flag)
+   *
+   *   return new_flags
+   *
+   * flags = select({":config": ["-DFOO"], "DEFAULT": ["-DBAZ"]})
+   *
+   * select_map(flags, convert_foo) # returns select({":config": ["-DFOOBAR"], "DEFAULT": ["-DBAZ"]}
+   * }</pre>
    */
   @StarlarkMethod(
       name = "select_map",
@@ -285,6 +328,52 @@ public abstract class AbstractSkylarkFunctions {
    *
    * <p>This API allows testing values in a select expression. The API returns true if any value in
    * the select expression passes the given test function.
+   *
+   * <p>Example 1: Check if the expression contains a specific value.
+   *
+   * <pre>{@code
+   * def has_foo(val):
+   *   return "foo" in val
+   *
+   * attr1 = ["foo"] + select({":config": ["bar"], "DEFAULT": []})
+   * attr2 = ["bar"] + select({":config": ["foo"], "DEFAULT": []})
+   * attr3 = ["bar"] + select({":config": ["baz"], "DEFAULT": []})
+   *
+   * select_test(attr1, has_foo) # True
+   * select_test(attr2, has_foo) # True
+   * select_test(attr3, has_foo) # False
+   * }</pre>
+   *
+   * Example 2: Check all values conform to restrictions.
+   *
+   * <pre>{@code
+   * def has_non_c_files(srcs):
+   *   for src in srcs:
+   *     if not src.endswith(".c"):
+   *        return True
+   *   return False
+   *
+   * def assert_only_c_sources(srcs):
+   *   if is_select(srcs):
+   *     if select_test(srcs, has_non_c_files):
+   *       fail("Error")
+   *   else:
+   *     if has_non_c_files(srcs):
+   *       fail("Error")
+   *
+   * base_srcs = ["foo.c", "bar.c"]
+   * select_srcs = select({":windows": ["foo_windows.c", "bar.c"], "DEFAULT": []})
+   * mixed_srcs = base_srcs + select_srcs
+   * cpp_srcs = ["baz.cpp"]
+   *
+   * assert_only_c_sources(base_srcs) # Doesn't fail
+   * assert_only_c_sources(select_srcs) # Doesn't fail
+   * assert_only_c_sources(mixed_srcs) # Doesn't fail
+   *
+   * assert_only_c_sources(cpp_srcs) # fails
+   * assert_only_c_sources(select({":android": cpp_srcs} + mixed_srcs)) # fails
+   *
+   * }</pre>
    */
   @StarlarkMethod(
       name = "select_test",
