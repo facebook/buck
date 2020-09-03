@@ -17,12 +17,11 @@
 package com.facebook.buck.android;
 
 import com.android.common.sdklib.build.ApkBuilder;
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.rules.coercer.ManifestEntries;
-import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableList;
@@ -35,7 +34,7 @@ import java.nio.file.Path;
  * Frequently, the {@code pathsToRawFilesDirs} excludes {@code classes.dex}, as {@code classes.dex}
  * will be added separately to the final APK via {@link ApkBuilder}.
  */
-public class AaptStep extends ShellStep {
+public class AaptStep extends IsolatedShellStep {
 
   // aapt, unless specified a pattern, ignores certain files and directories. We follow the same
   // logic as the default pattern found at http://goo.gl/OTTK88 and line 61.
@@ -64,12 +63,12 @@ public class AaptStep extends ShellStep {
         || fileName.endsWith("~");
   }
 
-  private final SourcePathResolverAdapter pathResolver;
+  private final ImmutableList<String> aaptCommandPrefix;
 
-  private final AndroidPlatformTarget androidPlatformTarget;
   private final Path androidManifest;
   private final ImmutableList<Path> resDirectories;
   private final ImmutableSortedSet<Path> assetsDirectories;
+  private final Path pathToAndroidJar;
   private final Path pathToOutputApkFile;
   private final Path pathToRDotTxtDir;
   private final Path pathToGeneratedProguardConfig;
@@ -82,12 +81,12 @@ public class AaptStep extends ShellStep {
   private final ImmutableList<String> additionalAaptParams;
 
   public AaptStep(
-      SourcePathResolverAdapter pathResolver,
-      AndroidPlatformTarget androidPlatformTarget,
       AbsPath workingDirectory,
+      RelPath cellPath,
       Path androidManifest,
       ImmutableList<Path> resDirectories,
       ImmutableSortedSet<Path> assetsDirectories,
+      Path pathToAndroidJar,
       Path pathToOutputApkFile,
       Path pathToRDotTxtDir,
       Path pathToGeneratedProguardConfig,
@@ -95,14 +94,14 @@ public class AaptStep extends ShellStep {
       boolean isCrunchPngFiles,
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries,
+      ImmutableList<String> aaptCommandPrefix,
       ImmutableList<String> additionalAaptParams,
       boolean withDownwardApi) {
-    super(workingDirectory, withDownwardApi);
-    this.pathResolver = pathResolver;
-    this.androidPlatformTarget = androidPlatformTarget;
+    super(workingDirectory, cellPath, withDownwardApi);
     this.androidManifest = androidManifest;
     this.resDirectories = resDirectories;
     this.assetsDirectories = assetsDirectories;
+    this.pathToAndroidJar = pathToAndroidJar;
     this.pathToOutputApkFile = pathToOutputApkFile;
     this.pathToRDotTxtDir = pathToRDotTxtDir;
     this.pathToGeneratedProguardConfig = pathToGeneratedProguardConfig;
@@ -110,13 +109,14 @@ public class AaptStep extends ShellStep {
     this.isCrunchPngFiles = isCrunchPngFiles;
     this.includesVectorDrawables = includesVectorDrawables;
     this.manifestEntries = manifestEntries;
+    this.aaptCommandPrefix = aaptCommandPrefix;
     this.additionalAaptParams = additionalAaptParams;
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
+  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
-    builder.addAll(androidPlatformTarget.getAaptExecutable().get().getCommandPrefix(pathResolver));
+    builder.addAll(aaptCommandPrefix);
     builder.add("package");
 
     // verbose flag, if appropriate.
@@ -149,7 +149,7 @@ public class AaptStep extends ShellStep {
     builder.add("-J").add(pathToRDotTxtDir.toString());
 
     builder.add("-M").add(androidManifest.toString());
-    builder.add("-I", androidPlatformTarget.getAndroidJar().toString());
+    builder.add("-I", pathToAndroidJar.toString());
     builder.add("-F", pathToOutputApkFile.toString());
 
     builder.add("--ignore-assets", IGNORE_ASSETS_PATTERN);

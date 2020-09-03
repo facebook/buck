@@ -31,6 +31,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -185,13 +186,14 @@ public class AaptPackageResources extends AbstractBuildRule {
 
     steps.add(
         new AaptStep(
-            context.getSourcePathResolver(),
-            androidPlatformTarget,
             getProjectFilesystem().getRootPath(),
+            ProjectFilesystemUtils.relativize(
+                getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
             getAndroidManifestXml().getPath(),
             filteredResourcesProvider.getRelativeResDirectories(
                 getProjectFilesystem(), context.getSourcePathResolver()),
             ImmutableSortedSet.of(),
+            androidPlatformTarget.getAndroidJar(),
             getResourceApkPath().getPath(),
             rDotTxtDir.getPath(),
             pathToGeneratedProguardConfig.getPath(),
@@ -212,6 +214,10 @@ public class AaptPackageResources extends AbstractBuildRule {
             !skipCrunchPngs /* && packageType.isCrunchPngFiles() */,
             includesVectorDrawables,
             manifestEntries,
+            androidPlatformTarget
+                .getAaptExecutable()
+                .get()
+                .getCommandPrefix(context.getSourcePathResolver()),
             additionalAaptParams,
             withDownwardApi),
         ZipScrubberStep.of(

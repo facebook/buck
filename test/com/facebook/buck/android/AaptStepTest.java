@@ -21,12 +21,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
@@ -69,8 +73,8 @@ public class AaptStepTest {
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries,
       ImmutableList<String> additionalAaptParams) {
-    return new AaptStep(
-        new TestActionGraphBuilder().getSourcePathResolver(),
+
+    AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTarget.of(
             "android",
             basePath.resolve("mock_android.jar").getPath(),
@@ -84,11 +88,18 @@ public class AaptStepTest {
             /* androidFrameworkIdlFile= */ Paths.get(""),
             /* proguardJar= */ Paths.get(""),
             /* proguardConfig= */ Paths.get(""),
-            /* optimizedProguardConfig= */ Paths.get("")),
+            /* optimizedProguardConfig= */ Paths.get(""));
+    AbsPath rootPath = FakeProjectFilesystem.createJavaOnlyFilesystem().getRootPath();
+    BuildContext buildContext =
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath());
+
+    return new AaptStep(
         /* workingDirectory= */ basePath,
+        ProjectFilesystemUtils.relativize(rootPath, buildContext.getBuildCellRootPath()),
         /* manifestDirectory= */ basePath.resolve("AndroidManifest.xml").getPath(),
         /* resDirectories= */ ImmutableList.of(),
         /* assetsDirectories= */ ImmutableSortedSet.of(),
+        /* pathToAndroidJar= */ androidPlatformTarget.getAndroidJar(),
         /* pathToOutputApk= */ basePath.resolve("build").resolve("out.apk").getPath(),
         /* pathToRDotDText= */ basePath.resolve("r").getPath(),
         pathToGeneratedProguardConfig,
@@ -96,6 +107,10 @@ public class AaptStepTest {
         isCrunchFiles,
         includesVectorDrawables,
         manifestEntries,
+        androidPlatformTarget
+            .getAaptExecutable()
+            .get()
+            .getCommandPrefix(new TestActionGraphBuilder().getSourcePathResolver()),
         additionalAaptParams,
         false);
   }
