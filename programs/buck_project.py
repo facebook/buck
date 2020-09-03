@@ -79,7 +79,7 @@ def _add_eden_bindmount(eden_root, path):
         "Adding eden mount at {}, path relative to eden {}".format(path, relative_path)
     )
     try:
-        subprocess.check_output(["eden", "redirect", "add", relative_path, "bind"])
+        subprocess.check_output(["edenfsctl", "redirect", "add", relative_path, "bind"])
     except subprocess.CalledProcessError:
         logging.warning("Could not add eden redirect for " + path)
         raise
