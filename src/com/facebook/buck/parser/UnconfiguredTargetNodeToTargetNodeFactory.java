@@ -144,7 +144,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
 
         if (!compatibleWith.matchesPlatform(targetPlatform, buckConfig, dependencyStack)) {
           return TargetNodeMaybeIncompatible.ofIncompatible(
-              target, unconfiguredTargetNode.getCompatibleWith());
+              target, unconfiguredTargetNode.getCompatibleWith(), targetPlatform);
         }
       } else {
         compatibleWith = LabelledAnySelectable.any();

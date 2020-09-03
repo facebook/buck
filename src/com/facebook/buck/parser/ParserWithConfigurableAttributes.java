@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.HasDefaultFlavors;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
@@ -476,45 +475,5 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     Optional<TargetNode<?>> targetNodeOptional =
         targetNodeMaybeIncompatible.getTargetNodeOptional();
     return !targetNodeOptional.isPresent() || targetNodeOptional.get().getRuleType().isBuildRule();
-  }
-
-  @Override
-  public TargetNode<?> assertTargetIsCompatible(
-      PerBuildState state,
-      TargetNodeMaybeIncompatible targetNodeMaybeIncompatible,
-      DependencyStack dependencyStack) {
-    Optional<TargetNode<?>> targetNodeOptional =
-        targetNodeMaybeIncompatible.getTargetNodeOptional();
-    if (targetNodeOptional.isPresent()) {
-      return targetNodeOptional.get();
-    }
-
-    Platform targetPlatform =
-        state
-            .getConfigurationRuleRegistry()
-            .getTargetPlatformResolver()
-            .getTargetPlatform(
-                targetNodeMaybeIncompatible.getBuildTarget().getTargetConfiguration(),
-                dependencyStack);
-
-    StringBuilder diagnostics = new StringBuilder();
-    if (!targetNodeMaybeIncompatible.getCompatibleWith().isEmpty()) {
-      diagnostics.append("%nTarget compatible with configurations:%n");
-      targetNodeMaybeIncompatible
-          .getCompatibleWith()
-          .forEach(
-              target ->
-                  diagnostics
-                      .append(target.getFullyQualifiedName())
-                      .append(System.lineSeparator()));
-    }
-
-    throw new HumanReadableException(
-        dependencyStack,
-        "Build target %s is restricted to constraints in \"compatible_with\""
-            + " that do not match the target platform %s."
-            + diagnostics,
-        targetNodeMaybeIncompatible.getBuildTarget(),
-        targetPlatform);
   }
 }

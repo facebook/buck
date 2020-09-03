@@ -181,7 +181,7 @@ abstract class AbstractParser implements Parser {
           TargetNode<?> node;
           try {
             TargetNodeMaybeIncompatible nodeMaybe = state.getTargetNode(target, dependencyStack);
-            node = assertTargetIsCompatible(state, nodeMaybe, dependencyStack);
+            node = nodeMaybe.assertGetTargetNode(dependencyStack);
           } catch (BuildFileParseException e) {
             throw new RuntimeException(e);
           } catch (HumanReadableException e) {
@@ -303,15 +303,6 @@ abstract class AbstractParser implements Parser {
       Optional<TargetConfiguration> targetConfiguration,
       boolean excludeConfigurationTargets)
       throws InterruptedException;
-
-  /**
-   * Verifies that the provided target node is compatible with the target platform.
-   *
-   * @throws com.facebook.buck.core.exceptions.HumanReadableException if the target not is not
-   *     compatible with the target platform.
-   */
-  protected abstract TargetNode<?> assertTargetIsCompatible(
-      PerBuildState state, TargetNodeMaybeIncompatible targetNode, DependencyStack dependencyStack);
 
   @Override
   public String toString() {

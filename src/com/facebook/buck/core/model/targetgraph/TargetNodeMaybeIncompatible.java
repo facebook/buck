@@ -16,11 +16,11 @@
 
 package com.facebook.buck.core.model.targetgraph;
 
-import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.platform.Platform;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
@@ -28,61 +28,96 @@ import java.util.Optional;
  * This may have a TargetNode or some diagnostic information, in case the target was found
  * incompatible.
  */
-public class TargetNodeMaybeIncompatible {
-  private final Optional<TargetNode<?>> targetNode;
-  private final BuildTarget buildTarget;
-  private final ImmutableList<UnflavoredBuildTarget> compatibleWith;
+public abstract class TargetNodeMaybeIncompatible {
 
-  private TargetNodeMaybeIncompatible(
-      BuildTarget buildTarget,
-      Optional<TargetNode<?>> targetNode,
-      ImmutableList<UnflavoredBuildTarget> compatibleWith) {
-    this.buildTarget = buildTarget;
-    this.targetNode = targetNode;
-    this.compatibleWith = compatibleWith;
+  private TargetNodeMaybeIncompatible() {}
+
+  private static class Compatible extends TargetNodeMaybeIncompatible {
+
+    private final TargetNode<?> targetNode;
+
+    private Compatible(TargetNode<?> targetNode) {
+      this.targetNode = targetNode;
+    }
+
+    @Override
+    public TargetNode<?> assertGetTargetNode(DependencyStack dependencyStack) {
+      return targetNode;
+    }
+
+    @Override
+    public Optional<TargetNode<?>> getTargetNodeOptional() {
+      return Optional.of(targetNode);
+    }
+
+    @Override
+    public BuildTarget getBuildTarget() {
+      return targetNode.getBuildTarget();
+    }
+  }
+
+  private static class Incompatible extends TargetNodeMaybeIncompatible {
+
+    protected final ImmutableList<UnflavoredBuildTarget> compatibleWith;
+    protected final BuildTarget buildTarget;
+    private final Platform targetPlatform;
+
+    private Incompatible(
+        BuildTarget buildTarget,
+        ImmutableList<UnflavoredBuildTarget> compatibleWith,
+        Platform targetPlatform) {
+      this.buildTarget = buildTarget;
+      this.targetPlatform = targetPlatform;
+      this.compatibleWith = compatibleWith;
+    }
+
+    @Override
+    public TargetNode<?> assertGetTargetNode(DependencyStack dependencyStack) {
+      StringBuilder diagnostics = new StringBuilder();
+      if (!compatibleWith.isEmpty()) {
+        diagnostics.append("%nTarget compatible with configurations:%n");
+        compatibleWith.forEach(
+            target ->
+                diagnostics.append(target.getFullyQualifiedName()).append(System.lineSeparator()));
+      }
+
+      throw new HumanReadableException(
+          dependencyStack,
+          "Build target %s is restricted to constraints in \"compatible_with\""
+              + " that do not match the target platform %s."
+              + diagnostics,
+          buildTarget,
+          targetPlatform);
+    }
+
+    @Override
+    public Optional<TargetNode<?>> getTargetNodeOptional() {
+      return Optional.empty();
+    }
+
+    @Override
+    public BuildTarget getBuildTarget() {
+      return buildTarget;
+    }
   }
 
   /** Constructor to create object for a target node which was incompatible. */
   public static TargetNodeMaybeIncompatible ofIncompatible(
-      BuildTarget target, ImmutableList<UnflavoredBuildTarget> compatibleWith) {
-    return new TargetNodeMaybeIncompatible(target, Optional.empty(), compatibleWith);
+      BuildTarget target,
+      ImmutableList<UnflavoredBuildTarget> compatibleWith,
+      Platform targetPlatform) {
+    return new Incompatible(target, compatibleWith, targetPlatform);
   }
 
   /** Constructor to create object for a compatible target node. */
   public static TargetNodeMaybeIncompatible ofCompatible(TargetNode<?> targetNode) {
-    ImmutableList<UnflavoredBuildTarget> compatibleWith = ImmutableList.of();
-    if (targetNode.getConstructorArg() instanceof BuildRuleArg) {
-      compatibleWith = ((BuildRuleArg) targetNode.getConstructorArg()).getCompatibleWith();
-    }
-    return new TargetNodeMaybeIncompatible(
-        targetNode.getBuildTarget(), Optional.of(targetNode), compatibleWith);
+    return new Compatible(targetNode);
   }
 
-  public TargetNode<?> assertGetTargetNode(DependencyStack dependencyStack) {
-    if (targetNode.isPresent()) {
-      return targetNode.get();
-    }
-    StringBuilder compatibles = new StringBuilder();
-    compatibleWith.forEach(
-        target ->
-            compatibles.append(target.getFullyQualifiedName()).append(System.lineSeparator()));
-    throw new HumanReadableException(
-        dependencyStack,
-        "Build target %s is restricted to constraints in \"compatible_with\""
-            + " that do not match the target platform "
-            + compatibles,
-        buildTarget);
-  }
+  /** Get target node or throw exception if it is "incompatible". */
+  public abstract TargetNode<?> assertGetTargetNode(DependencyStack dependencyStack);
 
-  public Optional<TargetNode<?>> getTargetNodeOptional() {
-    return targetNode;
-  }
+  public abstract Optional<TargetNode<?>> getTargetNodeOptional();
 
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
-  }
-
-  public ImmutableList<UnflavoredBuildTarget> getCompatibleWith() {
-    return compatibleWith;
-  }
+  public abstract BuildTarget getBuildTarget();
 }
