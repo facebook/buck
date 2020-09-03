@@ -374,8 +374,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               ProjectFilesystemUtils.relativize(ruleRootPath, context.getBuildCellRootPath()),
               RelPath.of(apkToAlign),
               RelPath.of(zipalignedApkPath),
-              zipalignTool.getCommandPrefix(pathResolver),
-              withDownwardApi));
+              withDownwardApi,
+              zipalignTool.getCommandPrefix(pathResolver)));
       steps.add(
           new ApkSignerStep(
               getProjectFilesystem(),
@@ -391,8 +391,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               ProjectFilesystemUtils.relativize(ruleRootPath, context.getBuildCellRootPath()),
               RelPath.of(apkToAlign),
               RelPath.of(v2SignedApkPath),
-              zipalignTool.getCommandPrefix(pathResolver),
-              withDownwardApi));
+              withDownwardApi,
+              zipalignTool.getCommandPrefix(pathResolver)));
     }
     buildableContext.recordArtifact(v2SignedApkPath);
     return steps.build();

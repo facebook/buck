@@ -34,8 +34,8 @@ public class ZipalignStep extends IsolatedShellStep {
       RelPath cellRootPath,
       RelPath inputFile,
       RelPath outputFile,
-      ImmutableList<String> zipAlignCommandPrefix,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      ImmutableList<String> zipAlignCommandPrefix) {
     super(workingDirectory, cellRootPath, withDownwardApi);
     this.inputFile = inputFile;
     this.outputFile = outputFile;

@@ -149,8 +149,8 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
                       filesystem.getRootPath(), buildContext.getBuildCellRootPath()),
                   RelPath.of(getUnalignedExoPath(filesystem)),
                   outputPathResolver.resolvePath(exoResourcesOutputPath),
-                  zipalignTool.getCommandPrefix(buildContext.getSourcePathResolver()),
-                  withDownwardApi))
+                  withDownwardApi,
+                  zipalignTool.getCommandPrefix(buildContext.getSourcePathResolver())))
           .build();
     }
 
