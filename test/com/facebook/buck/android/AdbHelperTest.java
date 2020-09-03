@@ -23,6 +23,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.android.ddmlib.IDevice;
+import com.facebook.buck.android.AdbHelper.AndroidDebugBridgeFacade;
 import com.facebook.buck.android.device.TargetDeviceOptions;
 import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
@@ -417,14 +418,6 @@ public class AdbHelperTest {
         listener, "Installing apk on serial#1.", "Successfully ran install apk on 1 device(s)");
   }
 
-  private TestDevice createTestDevice(String serial, String name) {
-    TestDevice device = new TestDevice();
-    device.setSerialNumber(serial);
-    device.setName(name);
-
-    return device;
-  }
-
   @Test
   public void testGetDevicesShouldLogWhenMultipleDevices() {
     BuckEventBusForTests.CapturingEventListener listener = listenToEvents();
@@ -432,7 +425,7 @@ public class AdbHelperTest {
     AdbHelper adbHelper =
         createAdbHelper(
             ImmutableList.of(
-                createTestDevice("first", "First"), createTestDevice("second", "Second")));
+                TestDevice.createRealDevice("first"), TestDevice.createRealDevice("second")));
 
     assertEquals(adbHelper.getDevices(false).size(), 2);
     assertLoggedToConsole(listener, "Found 2 matching devices.\n");
@@ -445,7 +438,7 @@ public class AdbHelperTest {
     AdbHelper adbHelper =
         createAdbHelper(
             ImmutableList.of(
-                createTestDevice("first", "First"), createTestDevice("second", "Second")));
+                TestDevice.createRealDevice("first"), TestDevice.createRealDevice("second")));
 
     assertEquals(adbHelper.getDevices(true).size(), 2);
     assertTrue(listener.getConsoleEventLogMessages().isEmpty());
@@ -458,6 +451,83 @@ public class AdbHelperTest {
     exceptionRule.expect(HumanReadableException.class);
     exceptionRule.expectMessage("Didn't find any attached Android devices/emulators.");
     adbHelper.adbCall("dummy", d -> true, true);
+  }
+
+  @Test
+  public void testGetDevicesShouldReconnectIfFirstConnectionFails() throws Exception {
+    AndroidDebugBridgeFacade adb =
+        createFlakyAdb(
+            /*connectOnAttempt=*/ 2,
+            /*returnDevicesOnAttempt=*/ 0,
+            TestDevice.createRealDevice("device"));
+    AdbHelper helper = createAdbHelper(adb);
+
+    assertEquals(1, helper.getDevices(true).size());
+  }
+
+  @Test
+  public void testGetDevicesShouldRetryIfNoDevicesFound() throws Exception {
+    AndroidDebugBridgeFacade adb =
+        createFlakyAdb(
+            /*connectOnAttempt=*/ 1,
+            /*returnDevicesOnAttempt=*/ 3,
+            TestDevice.createRealDevice("device"));
+    AdbHelper helper = createAdbHelper(adb);
+
+    assertEquals(1, helper.getDevices(true).size());
+  }
+
+  private AndroidDebugBridgeFacade createFlakyAdb(
+      int connectOnAttempt, int returnDevicesOnAttempt, IDevice... devices) {
+    return new AndroidDebugBridgeFacade() {
+      int connectCount = 0;
+      int getDevicesCount = 0;
+
+      @Override
+      boolean connect() {
+        connectCount++;
+        return isConnected();
+      }
+
+      @Override
+      boolean isConnected() {
+        return connectCount >= connectOnAttempt;
+      }
+
+      @Override
+      boolean hasInitialDeviceList() {
+        return true;
+      }
+
+      @Override
+      IDevice[] getDevices() {
+        getDevicesCount++;
+        if (getDevicesCount >= returnDevicesOnAttempt) {
+          return devices;
+        }
+        return new IDevice[0];
+      }
+    };
+  }
+
+  private AdbHelper createAdbHelper(AndroidDebugBridgeFacade facade) {
+    return new AdbHelper(
+        createAdbOptions(),
+        new TargetDeviceOptions(),
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
+            .build(),
+        () -> testContext,
+        true,
+        ImmutableList.of(),
+        /* chmodExoFilesRemotely= */ true,
+        /* skipMetadataIfNoInstalls= */ false) {
+      @Override
+      AndroidDebugBridgeFacade createAdb() {
+        return facade;
+      }
+    };
   }
 
   private AdbHelper createAdbHelper(List<IDevice> deviceList) {

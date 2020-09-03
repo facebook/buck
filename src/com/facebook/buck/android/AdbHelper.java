@@ -571,46 +571,51 @@ public class AdbHelper implements AndroidDevicesHelper {
         chmodExoFilesRemotely);
   }
 
-  private static boolean isAdbInitialized(AndroidDebugBridge adb) {
-    return adb.isConnected() && adb.hasInitialDeviceList();
+  @VisibleForTesting
+  AndroidDebugBridgeFacade createAdb() {
+    return new AndroidDebugBridgeFacadeImpl(getAdbExecutable());
   }
 
   /**
    * Creates connection to adb and waits for this connection to be initialized and receive initial
    * list of devices.
+   *
+   * <p>The returned bridge is not guaranteed to be connected.
    */
-  @Nullable
-  @SuppressWarnings("PMD.EmptyCatchBlock")
-  private static AndroidDebugBridge createAdb(
-      AndroidPlatformTarget androidPlatformTarget, ExecutionContext context, int adbTimeout)
-      throws InterruptedException {
-    DdmPreferences.setTimeOut(adbTimeout);
-
-    try {
-      AndroidDebugBridge.init(/* clientSupport */ false);
-    } catch (IllegalStateException ex) {
-      // ADB was already initialized, we're fine, so just ignore.
+  private boolean waitForConnection(AndroidDebugBridgeFacade adb) {
+    if (!adb.connect()) {
+      getConsole().printBuildFailure("Failed to connect to adb. Make sure adb server is running.");
+      return false;
     }
 
-    String adbExecutable = androidPlatformTarget.getAdbExecutable().toString();
-    log.debug("Using %s to create AndroidDebugBridge", adbExecutable);
-    AndroidDebugBridge adb = AndroidDebugBridge.createBridge(adbExecutable, false);
-    if (adb == null) {
-      context
-          .getConsole()
-          .printBuildFailure("Failed to connect to adb. Make sure adb server is running.");
-      return null;
-    }
+    waitUntil(() -> adb.isInitialized(), ADB_CONNECT_TIMEOUT_MS, ADB_CONNECT_TIME_STEP_MS);
+    return adb.isInitialized();
+  }
 
+  private static void waitUntil(Supplier<Boolean> condition, long timeoutMs, long stepTimeMs) {
     long start = System.currentTimeMillis();
-    while (!isAdbInitialized(adb)) {
-      long timeLeft = start + ADB_CONNECT_TIMEOUT_MS - System.currentTimeMillis();
+    while (!condition.get()) {
+      long timeLeft = start + timeoutMs - System.currentTimeMillis();
       if (timeLeft <= 0) {
         break;
       }
-      Thread.sleep(ADB_CONNECT_TIME_STEP_MS);
+      try {
+        Thread.sleep(stepTimeMs);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
     }
-    return isAdbInitialized(adb) ? adb : null;
+  }
+
+  private String getAdbExecutable() {
+    AndroidPlatformTarget target =
+        toolchainProvider.getByName(
+            AndroidPlatformTarget.DEFAULT_NAME,
+            // TODO(nga): use something else
+            UnconfiguredTargetConfiguration.INSTANCE,
+            AndroidPlatformTarget.class);
+
+    return target.getAdbExecutable().toString();
   }
 
   private ImmutableList<AndroidDevice> getDevicesImpl() {
@@ -618,43 +623,16 @@ public class AdbHelper implements AndroidDevicesHelper {
       return devicesSupplierForTests.get().get();
     }
 
-    // TODO(nga): use something else
-    UnconfiguredTargetConfiguration toolchainTargetConfiguration =
-        UnconfiguredTargetConfiguration.INSTANCE;
-
     // Initialize adb connection.
-    AndroidDebugBridge adb;
-    try {
-      adb =
-          createAdb(
-              toolchainProvider.getByName(
-                  AndroidPlatformTarget.DEFAULT_NAME,
-                  toolchainTargetConfiguration,
-                  AndroidPlatformTarget.class),
-              contextSupplier.get(),
-              options.getAdbTimeout());
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
-    if (adb == null) {
+    AndroidDebugBridgeFacade adb = createAdb();
+    waitForConnection(adb);
+    if (!adb.isConnected()) {
       // Try resetting state and reconnecting
       printError("Unable to reconnect to existing server, starting a new one");
-      try {
-        AndroidDebugBridge.disconnectBridge();
-        AndroidDebugBridge.terminate();
-        adb =
-            createAdb(
-                toolchainProvider.getByName(
-                    AndroidPlatformTarget.DEFAULT_NAME,
-                    toolchainTargetConfiguration,
-                    AndroidPlatformTarget.class),
-                contextSupplier.get(),
-                options.getAdbTimeout());
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
+      adb.terminate();
+      waitForConnection(adb);
     }
-    if (adb == null) {
+    if (!adb.isConnected()) {
       printError("Failed to create adb connection.");
       return ImmutableList.of();
     }
@@ -678,25 +656,12 @@ public class AdbHelper implements AndroidDevicesHelper {
     }
     if (devices == null && restartAdbOnFailure) {
       printError("No devices found with adb after restart, terminating and restarting adb-server.");
-      AndroidDebugBridge.disconnectBridge();
-      AndroidDebugBridge.terminate();
-      try {
-        adb =
-            createAdb(
-                toolchainProvider.getByName(
-                    AndroidPlatformTarget.DEFAULT_NAME,
-                    toolchainTargetConfiguration,
-                    AndroidPlatformTarget.class),
-                contextSupplier.get(),
-                options.getAdbTimeout());
-        if (adb == null) {
-          printError("Failed to re-create adb connection.");
-          return ImmutableList.of();
-        }
-        devices = filterDevices(adb.getDevices());
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
+      adb.terminate();
+      if (!waitForConnection(adb)) {
+        printError("Failed to re-create adb connection.");
+        return ImmutableList.of();
       }
+      devices = filterDevices(adb.getDevices());
     }
     if (devices == null) {
       return ImmutableList.of();
@@ -771,5 +736,101 @@ public class AdbHelper implements AndroidDevicesHelper {
         String.format("install apk %s", hasInstallableApk.getBuildTarget().toString()),
         (device) -> device.installApkOnDevice(apk, installViaSd, quiet),
         quiet);
+  }
+
+  /**
+   * A facade for the AndroidDebugBridge which makes it easier to test logic in AdbHelper without
+   * talking to a real adb.
+   */
+  @VisibleForTesting
+  abstract static class AndroidDebugBridgeFacade {
+    /** Initializes and connects the debug bridge. */
+    boolean connect() {
+      return false;
+    }
+
+    /** Returns true if the bridge is connected. */
+    boolean isConnected() {
+      return false;
+    }
+
+    /** Returns true if the bridge has an initial device list. */
+    boolean hasInitialDeviceList() {
+      return false;
+    }
+
+    /** Returns connected devices. */
+    IDevice[] getDevices() {
+      return new IDevice[0];
+    }
+
+    /** Restarts the adb server. */
+    boolean restart() {
+      return false;
+    }
+
+    /** Terminates adb and disconnects the bridge. */
+    void terminate() {}
+
+    /** Returns true if the bridge is initialized. */
+    final boolean isInitialized() {
+      return isConnected() && hasInitialDeviceList();
+    }
+  }
+
+  private class AndroidDebugBridgeFacadeImpl extends AndroidDebugBridgeFacade {
+    private final String adbExecutable;
+    private @Nullable AndroidDebugBridge bridge;
+
+    AndroidDebugBridgeFacadeImpl(String adbExecutable) {
+      this.adbExecutable = adbExecutable;
+    }
+
+    @Override
+    public boolean connect() {
+      DdmPreferences.setTimeOut(options.getAdbTimeout());
+
+      try {
+        AndroidDebugBridge.init(/* clientSupport */ false);
+      } catch (IllegalStateException ex) {
+        // ADB was already initialized, we're fine, so just ignore.
+      }
+
+      log.debug("Using %s to create AndroidDebugBridge", adbExecutable);
+      this.bridge = AndroidDebugBridge.createBridge(adbExecutable, false);
+      return this.bridge != null;
+    }
+
+    @Override
+    public boolean isConnected() {
+      return bridge != null && bridge.isConnected();
+    }
+
+    @Override
+    public boolean hasInitialDeviceList() {
+      return bridge != null && bridge.hasInitialDeviceList();
+    }
+
+    @Override
+    public IDevice[] getDevices() {
+      if (bridge == null) {
+        throw new IllegalStateException("Not connected");
+      }
+      return bridge.getDevices();
+    }
+
+    @Override
+    public boolean restart() {
+      if (bridge == null) {
+        throw new IllegalStateException("Not connected");
+      }
+      return bridge.restart();
+    }
+
+    @Override
+    public void terminate() {
+      AndroidDebugBridge.disconnectBridge();
+      AndroidDebugBridge.terminate();
+    }
   }
 }
