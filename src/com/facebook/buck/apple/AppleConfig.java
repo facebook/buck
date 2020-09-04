@@ -95,6 +95,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   // TODO(T71539769): This is a temporary flag, remove after successful deployment
   private static final String TARGET_TRIPLE_ENABLED = "target_triple_enabled";
 
+  private static final String INCREMENTAL_BUNDLING_ENABLED = "incremental_bundling_enabled";
+
   private final BuckConfig delegate;
 
   // Reflection-based factory for ConfigView
@@ -592,6 +594,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean getTargetTripleEnabled() {
     return delegate.getBooleanValue(APPLE_SECTION, TARGET_TRIPLE_ENABLED, false);
+  }
+
+  public boolean getIncrementalBundlingEnabled() {
+    return delegate.getBooleanValue(APPLE_SECTION, INCREMENTAL_BUNDLING_ENABLED, false);
   }
 
   @BuckStyleValue
