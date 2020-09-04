@@ -949,18 +949,13 @@ public class AppleDescriptions {
     String unwrappedExtension =
         extension.isLeft() ? extension.getLeft().fileExtension : extension.getRight();
 
-    if (ApplePkgInfo.isPkgInfoNeeded(unwrappedExtension)) {
-      BuildTarget pkgInfoBuildTarget =
-          stripBundleSpecificFlavors(buildTarget).withAppendedFlavors(ApplePkgInfo.FLAVOR);
-      ApplePkgInfo pkgInfo =
-          (ApplePkgInfo)
-              graphBuilder.computeIfAbsent(
-                  pkgInfoBuildTarget,
-                  pkgInfoTarget ->
-                      new ApplePkgInfo(pkgInfoBuildTarget, projectFilesystem, graphBuilder));
-      bundlePartsReadyToCopy.add(
-          FileAppleBundlePart.of(pkgInfo.getSourcePathToOutput(), AppleBundleDestination.METADATA));
-    }
+    addPkgInfoIfNeededToBundleParts(
+        incrementalBundlingEnabled,
+        bundlePartsReadyToCopy,
+        buildTarget,
+        unwrappedExtension,
+        graphBuilder,
+        projectFilesystem);
 
     Stream.of(assetCatalog, coreDataModel, sceneKitAssets)
         .map(buildRule -> buildRule.map(b -> Objects.requireNonNull(b.getSourcePathToOutput())))
@@ -1269,35 +1264,6 @@ public class AppleDescriptions {
         extraBinaries.stream()
             .map(
                 buildRule -> {
-                  Optional<SourcePath> contentHashSourcePath;
-                  if (incrementalBundlingEnabled) {
-                    SourcePath binarySourcePath =
-                        Objects.requireNonNull(buildRule.getSourcePathToOutput());
-                    ImmutableBiMap<SourcePath, BuildTarget> sourcePathToContentHashTarget =
-                        SourcePathSupport.generateAndCheckUniquenessOfBuildTargetsForSourcePaths(
-                            ImmutableSet.of(binarySourcePath), buildRule.getBuildTarget(), "hash-");
-                    BuildTarget calculateHashTarget =
-                        sourcePathToContentHashTarget.values().stream()
-                            .findFirst()
-                            .orElseThrow(
-                                () ->
-                                    new IllegalStateException(
-                                        "Expected to generate target name for content hash calculation"));
-                    AppleWriteFileHash calculateHash =
-                        (AppleWriteFileHash)
-                            graphBuilder.computeIfAbsent(
-                                calculateHashTarget,
-                                target ->
-                                    new AppleWriteFileHash(
-                                        target,
-                                        projectFilesystem,
-                                        graphBuilder,
-                                        binarySourcePath,
-                                        true));
-                    contentHashSourcePath = Optional.of(calculateHash.getSourcePathToOutput());
-                  } else {
-                    contentHashSourcePath = Optional.empty();
-                  }
                   BuildTarget unflavoredTarget = buildRule.getBuildTarget().withFlavors();
                   String binaryName = AppleBundle.getBinaryName(unflavoredTarget, Optional.empty());
                   final boolean codeSignOnCopy = true;
@@ -1306,12 +1272,77 @@ public class AppleDescriptions {
                   return FileAppleBundlePart.of(
                       buildRule.getSourcePathToOutput(),
                       AppleBundleDestination.EXECUTABLES,
-                      contentHashSourcePath,
+                      getSourcePathToContentHash(
+                          incrementalBundlingEnabled,
+                          buildRule.getSourcePathToOutput(),
+                          buildRule.getBuildTarget(),
+                          graphBuilder,
+                          projectFilesystem),
                       codeSignOnCopy,
                       newNameAfterCopy,
                       ignoreIfMissing);
                 })
             .collect(ImmutableSet.toImmutableSet()));
+  }
+
+  private static Optional<SourcePath> getSourcePathToContentHash(
+      boolean incrementalBundlingEnabled,
+      SourcePath sourcePath,
+      BuildTarget baseTarget,
+      ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem) {
+    if (!incrementalBundlingEnabled) {
+      return Optional.empty();
+    }
+    ImmutableBiMap<SourcePath, BuildTarget> sourcePathToContentHashTarget =
+        SourcePathSupport.generateAndCheckUniquenessOfBuildTargetsForSourcePaths(
+            ImmutableSet.of(sourcePath), baseTarget, "hash-");
+    BuildTarget calculateHashTarget =
+        sourcePathToContentHashTarget.values().stream()
+            .findFirst()
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "Expected to generate target name for content hash calculation"));
+    AppleWriteFileHash calculateHash =
+        (AppleWriteFileHash)
+            graphBuilder.computeIfAbsent(
+                calculateHashTarget,
+                target ->
+                    new AppleWriteFileHash(
+                        target, projectFilesystem, graphBuilder, sourcePath, true));
+    return Optional.of(calculateHash.getSourcePathToOutput());
+  }
+
+  private static void addPkgInfoIfNeededToBundleParts(
+      boolean incrementalBundlingEnabled,
+      ImmutableList.Builder<AppleBundlePart> bundlePartsBuilder,
+      BuildTarget bundleTarget,
+      String extension,
+      ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem) {
+    if (!ApplePkgInfo.isPkgInfoNeeded(extension)) {
+      return;
+    }
+
+    BuildTarget pkgInfoBuildTarget =
+        stripBundleSpecificFlavors(bundleTarget).withAppendedFlavors(ApplePkgInfo.FLAVOR);
+    ApplePkgInfo pkgInfo =
+        (ApplePkgInfo)
+            graphBuilder.computeIfAbsent(
+                pkgInfoBuildTarget,
+                pkgInfoTarget ->
+                    new ApplePkgInfo(pkgInfoBuildTarget, projectFilesystem, graphBuilder));
+    bundlePartsBuilder.add(
+        FileAppleBundlePart.of(
+            pkgInfo.getSourcePathToOutput(),
+            AppleBundleDestination.METADATA,
+            getSourcePathToContentHash(
+                incrementalBundlingEnabled,
+                pkgInfo.getSourcePathToOutput(),
+                pkgInfoBuildTarget,
+                graphBuilder,
+                projectFilesystem)));
   }
 
   /**

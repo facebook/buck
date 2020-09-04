@@ -55,6 +55,13 @@ public abstract class FileAppleBundlePart extends AppleBundlePart
   public static FileAppleBundlePart of(
       SourcePath sourcePath,
       AppleBundleDestination destination,
+      Optional<SourcePath> maybeContentHashSourcePath) {
+    return of(sourcePath, destination, maybeContentHashSourcePath, false, Optional.empty(), false);
+  }
+
+  public static FileAppleBundlePart of(
+      SourcePath sourcePath,
+      AppleBundleDestination destination,
       Optional<SourcePath> maybeContentHashSourcePath,
       boolean codesignOnCopy,
       Optional<String> maybeNewName,
