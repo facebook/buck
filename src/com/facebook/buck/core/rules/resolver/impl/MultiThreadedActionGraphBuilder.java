@@ -170,6 +170,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
 
   @Override
   public ImmutableSortedSet<BuildRule> requireAllRules(Iterable<BuildTarget> buildTargets) {
+    Preconditions.checkState(isValid);
     ImmutableSortedSet.Builder<BuildRule> resultBuilder = ImmutableSortedSet.naturalOrder();
     transformParallel(
         buildTargets, this::addRequireTask, (ignored, value) -> resultBuilder.add(value));
@@ -179,6 +180,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
   @Override
   public ImmutableSortedMap<BuildTarget, BuildRule> computeAllIfAbsent(
       ImmutableMap<BuildTarget, Function<BuildTarget, BuildRule>> mappings) {
+    Preconditions.checkState(isValid);
     ImmutableSortedMap.Builder<BuildTarget, BuildRule> resultBuilder =
         ImmutableSortedMap.naturalOrder();
     transformParallel(
@@ -199,6 +201,8 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
 
   private <T, U> void transformParallel(
       Iterable<T> inputs, Function<T, Task<U>> taskFactory, BiConsumer<T, U> consumer) {
+    Preconditions.checkState(isValid);
+
     List<Task<U>> tasks = new ArrayList<>();
 
     for (T item : inputs) {
