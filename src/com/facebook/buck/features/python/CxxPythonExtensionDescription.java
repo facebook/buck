@@ -19,6 +19,8 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
+import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
@@ -83,6 +85,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
@@ -93,6 +96,7 @@ public class CxxPythonExtensionDescription
     implements DescriptionWithTargetGraph<CxxPythonExtensionDescriptionArg>,
         ImplicitDepsInferringDescription<
             CxxPythonExtensionDescription.AbstractCxxPythonExtensionDescriptionArg>,
+        ImplicitFlavorsInferringDescription,
         VersionPropagator<CxxPythonExtensionDescriptionArg>,
         Flavored {
 
@@ -605,6 +609,43 @@ public class CxxPythonExtensionDescription
             toolchainTargetConfiguration,
             CxxPlatformsProvider.class)
         .getUnresolvedCxxPlatforms();
+  }
+
+  @Override
+  public ImmutableSortedSet<Flavor> addImplicitFlavors(
+      ImmutableSortedSet<Flavor> argDefaultFlavors,
+      TargetConfiguration toolchainTargetConfiguration) {
+    ImmutableMap<String, Flavor> libraryDefaults =
+        cxxBuckConfig.getDefaultFlavorsForRuleType(DescriptionCache.getRuleType(this));
+
+    ImmutableSortedSet.Builder<Flavor> flavors = ImmutableSortedSet.naturalOrder();
+
+    // Type flavor.
+    Optional<Flavor> typeFlavor = LIBRARY_TYPE.getFlavor(argDefaultFlavors);
+    if (!typeFlavor.isPresent()) {
+      typeFlavor =
+          Optional.ofNullable(libraryDefaults.get(CxxBuckConfig.DEFAULT_FLAVOR_LIBRARY_TYPE));
+    }
+    typeFlavor.ifPresent(flavors::add);
+
+    // Python platform flavor.
+    Optional<Flavor> platformFlavor =
+        getPythonPlatforms(toolchainTargetConfiguration).getFlavor(argDefaultFlavors);
+    if (!platformFlavor.isPresent()) {
+      platformFlavor = Optional.ofNullable(libraryDefaults.get("python_platform"));
+    }
+    platformFlavor.ifPresent(flavors::add);
+
+    // C++ platform flavor.
+    Optional<Flavor> cxxPlatformFlavor =
+        getCxxPlatforms(toolchainTargetConfiguration).getFlavor(argDefaultFlavors);
+    if (!cxxPlatformFlavor.isPresent()) {
+      cxxPlatformFlavor =
+          Optional.ofNullable(libraryDefaults.get(CxxBuckConfig.DEFAULT_FLAVOR_PLATFORM));
+    }
+    cxxPlatformFlavor.ifPresent(flavors::add);
+
+    return flavors.build();
   }
 
   @RuleArg

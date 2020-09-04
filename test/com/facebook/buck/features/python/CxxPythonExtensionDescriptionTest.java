@@ -666,4 +666,34 @@ public class CxxPythonExtensionDescriptionTest {
             builder.getTarget().withAppendedFlavors(Type.COMPILATION_DATABASE.getFlavor()));
     assertThat(rule, Matchers.instanceOf(CxxCompilationDatabase.class));
   }
+
+  @Test
+  public void addImplicitFlavors() {
+    CxxPythonExtensionBuilder builder =
+        new CxxPythonExtensionBuilder(
+            BuildTargetFactory.newInstance("//:ext"),
+            FlavorDomain.of("Python Platform", PY2, PY3),
+            new CxxBuckConfig(FakeBuckConfig.empty()),
+            CxxPlatformUtils.DEFAULT_PLATFORMS);
+    CxxPythonExtensionDescription description =
+        (CxxPythonExtensionDescription) builder.build().getDescription();
+    assertThat(
+        description.addImplicitFlavors(
+            ImmutableSortedSet.of(), UnconfiguredTargetConfiguration.INSTANCE),
+        Matchers.equalTo(ImmutableSortedSet.of()));
+    assertThat(
+        description.addImplicitFlavors(
+            ImmutableSortedSet.of(PY2.getFlavor()), UnconfiguredTargetConfiguration.INSTANCE),
+        Matchers.equalTo(ImmutableSortedSet.of(PY2.getFlavor())));
+    assertThat(
+        description.addImplicitFlavors(
+            ImmutableSortedSet.of(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()),
+            UnconfiguredTargetConfiguration.INSTANCE),
+        Matchers.equalTo(ImmutableSortedSet.of(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor())));
+    assertThat(
+        description.addImplicitFlavors(
+            ImmutableSortedSet.of(Type.EXTENSION.getFlavor()),
+            UnconfiguredTargetConfiguration.INSTANCE),
+        Matchers.equalTo(ImmutableSortedSet.of(Type.EXTENSION.getFlavor())));
+  }
 }
