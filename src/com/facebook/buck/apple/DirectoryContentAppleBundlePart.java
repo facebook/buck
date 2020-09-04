@@ -16,21 +16,42 @@
 
 package com.facebook.buck.apple;
 
+import static com.facebook.buck.core.util.Optionals.compare;
+
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import java.util.Optional;
 
 /** Directory which content is copied to specific subdirectory in bundle. */
 @BuckStyleValue
 public abstract class DirectoryContentAppleBundlePart extends AppleBundlePart
     implements Comparable<DirectoryContentAppleBundlePart> {
 
+  @Override
+  @AddToRuleKey
+  public abstract SourcePath getSourcePath();
+
+  @Override
+  @AddToRuleKey
+  public abstract AppleBundleDestination getDestination();
+
+  @AddToRuleKey
+  public abstract Optional<SourcePath> getContentHashSourcePath();
+
   public static DirectoryContentAppleBundlePart of(
-      SourcePath sourcePath, AppleBundleDestination destination) {
-    return ImmutableDirectoryContentAppleBundlePart.ofImpl(sourcePath, destination);
+      SourcePath sourcePath,
+      AppleBundleDestination destination,
+      Optional<SourcePath> maybeContentHashSourcePath) {
+    return ImmutableDirectoryContentAppleBundlePart.ofImpl(
+        sourcePath, destination, maybeContentHashSourcePath);
   }
 
   @Override
   public int compareTo(DirectoryContentAppleBundlePart o) {
+    if (getContentHashSourcePath() != o.getContentHashSourcePath()) {
+      return compare(getContentHashSourcePath(), o.getContentHashSourcePath());
+    }
     return super.compareTo(o);
   }
 }

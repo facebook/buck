@@ -958,12 +958,21 @@ public class AppleDescriptions {
         projectFilesystem);
 
     Stream.of(assetCatalog, coreDataModel, sceneKitAssets)
-        .map(buildRule -> buildRule.map(b -> Objects.requireNonNull(b.getSourcePathToOutput())))
         .filter(Optional::isPresent)
         .map(Optional::get)
         .map(
-            sourcePath ->
-                DirectoryContentAppleBundlePart.of(sourcePath, AppleBundleDestination.RESOURCES))
+            buildRule -> {
+              SourcePath sourcePath = Objects.requireNonNull(buildRule.getSourcePathToOutput());
+              return DirectoryContentAppleBundlePart.of(
+                  sourcePath,
+                  AppleBundleDestination.RESOURCES,
+                  getSourcePathToContentHash(
+                      incrementalBundlingEnabled,
+                      sourcePath,
+                      buildRule.getBuildTarget(),
+                      graphBuilder,
+                      projectFilesystem));
+            })
         .forEach(bundlePartsReadyToCopy::add);
 
     addFirstLevelDependencyBundlesToBundleParts(params.getBuildDeps(), bundlePartsReadyToCopy);
