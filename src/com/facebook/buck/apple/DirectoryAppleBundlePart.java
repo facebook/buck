@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import java.util.Optional;
 
 /** Directory that is copied as a whole to specific subdirectory in bundle. */
 @BuckStyleValue
@@ -33,17 +34,25 @@ public abstract class DirectoryAppleBundlePart extends AppleBundlePart
   @AddToRuleKey
   public abstract AppleBundleDestination getDestination();
 
+  @Override
+  @AddToRuleKey
+  public abstract Optional<SourcePath> getContentHashSourcePath();
+
   @AddToRuleKey
   public abstract boolean getCodesignOnCopy();
 
   public static DirectoryAppleBundlePart of(
       SourcePath sourcePath, AppleBundleDestination destination) {
-    return of(sourcePath, destination, false);
+    return of(sourcePath, destination, Optional.empty(), false);
   }
 
   public static DirectoryAppleBundlePart of(
-      SourcePath sourcePath, AppleBundleDestination destination, boolean codesignOnCopy) {
-    return ImmutableDirectoryAppleBundlePart.ofImpl(sourcePath, destination, codesignOnCopy);
+      SourcePath sourcePath,
+      AppleBundleDestination destination,
+      Optional<SourcePath> maybeContentHashSourcePath,
+      boolean codesignOnCopy) {
+    return ImmutableDirectoryAppleBundlePart.ofImpl(
+        sourcePath, destination, maybeContentHashSourcePath, codesignOnCopy);
   }
 
   @Override

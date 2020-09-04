@@ -975,7 +975,12 @@ public class AppleDescriptions {
             })
         .forEach(bundlePartsReadyToCopy::add);
 
-    addFirstLevelDependencyBundlesToBundleParts(params.getBuildDeps(), bundlePartsReadyToCopy);
+    addFirstLevelDependencyBundlesToBundleParts(
+        params.getBuildDeps(),
+        bundlePartsReadyToCopy,
+        graphBuilder,
+        projectFilesystem,
+        incrementalBundlingEnabled);
 
     BuildRule unwrappedBinary = getBinaryFromBuildRuleWithBinary(flavoredBinaryRule);
 
@@ -1167,7 +1172,10 @@ public class AppleDescriptions {
               .map(
                   sourcePath ->
                       DirectoryAppleBundlePart.of(
-                          sourcePath, AppleBundleDestination.FRAMEWORKS, codeSignOnCopy))
+                          sourcePath,
+                          AppleBundleDestination.FRAMEWORKS,
+                          Optional.empty(),
+                          codeSignOnCopy))
               .collect(ImmutableSet.toImmutableSet()));
     }
 
@@ -1509,7 +1517,10 @@ public class AppleDescriptions {
 
   private static void addFirstLevelDependencyBundlesToBundleParts(
       SortedSet<BuildRule> dependencies,
-      ImmutableList.Builder<AppleBundlePart> bundlePartsBuilder) {
+      ImmutableList.Builder<AppleBundlePart> bundlePartsBuilder,
+      ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem,
+      boolean incrementalBundlingEnabled) {
     // We only care about the direct layer of dependencies. ExtensionBundles inside ExtensionBundles
     // do not get pulled in to the top-level Bundle.
     dependencies.stream()
@@ -1561,7 +1572,16 @@ public class AppleDescriptions {
               }
 
               bundlePartsBuilder.add(
-                  DirectoryAppleBundlePart.of(sourcePath, destination, codeSignOnCopy));
+                  DirectoryAppleBundlePart.of(
+                      sourcePath,
+                      destination,
+                      getSourcePathToContentHash(
+                          incrementalBundlingEnabled,
+                          sourcePath,
+                          appleBundle.getBuildTarget(),
+                          graphBuilder,
+                          projectFilesystem),
+                      codeSignOnCopy));
             });
   }
 
