@@ -384,7 +384,8 @@ public class AppleTestDescription
                         swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
                         downwardApiConfig.isEnabledForApple(),
                         args.getTargetSdkVersion(),
-                        appleConfig.getResourceProcessingSeparateRuleFlag()));
+                        appleConfig.getResourceProcessingSeparateRuleFlag(),
+                        appleConfig.getIncrementalBundlingEnabled()));
 
     Optional<SourcePath> xctool =
         getXctool(projectFilesystem, params, targetConfiguration, graphBuilder);

@@ -37,6 +37,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import javax.annotation.Nonnull;
 
 /**
  * Computes the hash of the given file or integral hash of directory content and writes it out as
@@ -88,6 +89,7 @@ public class AppleWriteFileHash extends ModernBuildRule<AppleWriteFileHash> impl
         });
   }
 
+  @Nonnull
   @Override
   public SourcePath getSourcePathToOutput() {
     return getSourcePath(outputPath);

@@ -37,6 +37,9 @@ public abstract class FileAppleBundlePart extends AppleBundlePart
   public abstract AppleBundleDestination getDestination();
 
   @AddToRuleKey
+  public abstract Optional<SourcePath> getContentHashSourcePath();
+
+  @AddToRuleKey
   public abstract boolean getCodesignOnCopy();
 
   @AddToRuleKey
@@ -46,17 +49,23 @@ public abstract class FileAppleBundlePart extends AppleBundlePart
   public abstract boolean getIgnoreIfMissing();
 
   public static FileAppleBundlePart of(SourcePath sourcePath, AppleBundleDestination destination) {
-    return of(sourcePath, destination, false, Optional.empty(), false);
+    return of(sourcePath, destination, Optional.empty(), false, Optional.empty(), false);
   }
 
   public static FileAppleBundlePart of(
       SourcePath sourcePath,
       AppleBundleDestination destination,
+      Optional<SourcePath> maybeContentHashSourcePath,
       boolean codesignOnCopy,
       Optional<String> maybeNewName,
       boolean ignoreIfMissing) {
     return ImmutableFileAppleBundlePart.ofImpl(
-        sourcePath, destination, codesignOnCopy, maybeNewName, ignoreIfMissing);
+        sourcePath,
+        destination,
+        maybeContentHashSourcePath,
+        codesignOnCopy,
+        maybeNewName,
+        ignoreIfMissing);
   }
 
   @Override
@@ -69,6 +78,9 @@ public abstract class FileAppleBundlePart extends AppleBundlePart
     }
     if (getIgnoreIfMissing() != o.getIgnoreIfMissing()) {
       return Boolean.compare(getIgnoreIfMissing(), o.getIgnoreIfMissing());
+    }
+    if (getContentHashSourcePath() != o.getContentHashSourcePath()) {
+      return compare(getContentHashSourcePath(), o.getContentHashSourcePath());
     }
     return super.compareTo(o);
   }

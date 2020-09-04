@@ -52,6 +52,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRules;
+import com.facebook.buck.core.rules.common.SourcePathSupport;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -87,6 +88,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -755,7 +757,8 @@ public class AppleDescriptions {
       boolean sliceAppBundleSwiftRuntime,
       boolean withDownwardApi,
       Optional<String> minimumOSVersion,
-      boolean useSeparateRuleToProcessResources) {
+      boolean useSeparateRuleToProcessResources,
+      boolean incrementalBundlingEnabled) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             graphBuilder,
@@ -936,23 +939,12 @@ public class AppleDescriptions {
 
     ImmutableList.Builder<AppleBundlePart> bundlePartsReadyToCopy = ImmutableList.builder();
 
-    bundlePartsReadyToCopy.addAll(
-        extraBinaries.stream()
-            .map(
-                buildRule -> {
-                  BuildTarget unflavoredTarget = buildRule.getBuildTarget().withFlavors();
-                  String binaryName = AppleBundle.getBinaryName(unflavoredTarget, Optional.empty());
-                  final boolean codeSignOnCopy = true;
-                  final boolean ignoreIfMissing = false;
-                  Optional<String> newNameAfterCopy = Optional.of(binaryName);
-                  return FileAppleBundlePart.of(
-                      buildRule.getSourcePathToOutput(),
-                      AppleBundleDestination.EXECUTABLES,
-                      codeSignOnCopy,
-                      newNameAfterCopy,
-                      ignoreIfMissing);
-                })
-            .collect(ImmutableSet.toImmutableSet()));
+    addExtraBinariesToBundleParts(
+        bundlePartsReadyToCopy,
+        extraBinaries,
+        graphBuilder,
+        projectFilesystem,
+        incrementalBundlingEnabled);
 
     String unwrappedExtension =
         extension.isLeft() ? extension.getLeft().fileExtension : extension.getRight();
@@ -1084,6 +1076,7 @@ public class AppleDescriptions {
                     FileAppleBundlePart.of(
                         sourcePath,
                         AppleBundleDestination.BUNDLEROOT,
+                        Optional.empty(),
                         codeSignOnCopy,
                         Optional.empty(),
                         ignoreMissingSource));
@@ -1095,6 +1088,7 @@ public class AppleDescriptions {
             FileAppleBundlePart.of(
                 codeSignPrepRule.getSourcePathToEntitlementsOutput(),
                 AppleBundleDestination.BUNDLEROOT,
+                Optional.empty(),
                 codeSignOnCopy,
                 Optional.of("BUCK_code_sign_entitlements.plist"),
                 ignoreMissingSource));
@@ -1108,6 +1102,7 @@ public class AppleDescriptions {
             FileAppleBundlePart.of(
                 codeSignPrepRule.getSourcePathToProvisioningProfile(),
                 AppleBundleDestination.RESOURCES,
+                Optional.empty(),
                 codeSignOnCopy,
                 newNameAfterCopy,
                 ignoreIfMissing));
@@ -1140,6 +1135,7 @@ public class AppleDescriptions {
             FileAppleBundlePart.of(
                 unwrappedBinary.getSourcePathToOutput(),
                 AppleBundleDestination.EXECUTABLES,
+                Optional.empty(),
                 codeSignOnCopy,
                 Optional.of(binaryName),
                 ignoreIfMissing));
@@ -1153,6 +1149,7 @@ public class AppleDescriptions {
             FileAppleBundlePart.of(
                 unwrappedBinary.getSourcePathToOutput(),
                 AppleBundleDestination.WATCHKITSTUB,
+                Optional.empty(),
                 codeSignOnCopy,
                 Optional.of("WK"),
                 ignoreIfMissing));
@@ -1260,6 +1257,61 @@ public class AppleDescriptions {
         dryRunCodeSigning,
         codeSignIdentityFingerprint,
         maybeProcessedResourcesDir);
+  }
+
+  private static void addExtraBinariesToBundleParts(
+      ImmutableList.Builder<AppleBundlePart> bundlePartsBuilder,
+      ImmutableSet<BuildRule> extraBinaries,
+      ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem,
+      boolean incrementalBundlingEnabled) {
+    bundlePartsBuilder.addAll(
+        extraBinaries.stream()
+            .map(
+                buildRule -> {
+                  Optional<SourcePath> contentHashSourcePath;
+                  if (incrementalBundlingEnabled) {
+                    SourcePath binarySourcePath =
+                        Objects.requireNonNull(buildRule.getSourcePathToOutput());
+                    ImmutableBiMap<SourcePath, BuildTarget> sourcePathToContentHashTarget =
+                        SourcePathSupport.generateAndCheckUniquenessOfBuildTargetsForSourcePaths(
+                            ImmutableSet.of(binarySourcePath), buildRule.getBuildTarget(), "hash-");
+                    BuildTarget calculateHashTarget =
+                        sourcePathToContentHashTarget.values().stream()
+                            .findFirst()
+                            .orElseThrow(
+                                () ->
+                                    new IllegalStateException(
+                                        "Expected to generate target name for content hash calculation"));
+                    AppleWriteFileHash calculateHash =
+                        (AppleWriteFileHash)
+                            graphBuilder.computeIfAbsent(
+                                calculateHashTarget,
+                                target ->
+                                    new AppleWriteFileHash(
+                                        target,
+                                        projectFilesystem,
+                                        graphBuilder,
+                                        binarySourcePath,
+                                        true));
+                    contentHashSourcePath = Optional.of(calculateHash.getSourcePathToOutput());
+                  } else {
+                    contentHashSourcePath = Optional.empty();
+                  }
+                  BuildTarget unflavoredTarget = buildRule.getBuildTarget().withFlavors();
+                  String binaryName = AppleBundle.getBinaryName(unflavoredTarget, Optional.empty());
+                  final boolean codeSignOnCopy = true;
+                  final boolean ignoreIfMissing = false;
+                  Optional<String> newNameAfterCopy = Optional.of(binaryName);
+                  return FileAppleBundlePart.of(
+                      buildRule.getSourcePathToOutput(),
+                      AppleBundleDestination.EXECUTABLES,
+                      contentHashSourcePath,
+                      codeSignOnCopy,
+                      newNameAfterCopy,
+                      ignoreIfMissing);
+                })
+            .collect(ImmutableSet.toImmutableSet()));
   }
 
   /**
