@@ -49,10 +49,6 @@ public abstract class FileAppleBundlePart extends AppleBundlePart
   @AddToRuleKey
   public abstract boolean getIgnoreIfMissing();
 
-  public static FileAppleBundlePart of(SourcePath sourcePath, AppleBundleDestination destination) {
-    return of(sourcePath, destination, Optional.empty(), false, Optional.empty(), false);
-  }
-
   public static FileAppleBundlePart of(
       SourcePath sourcePath,
       AppleBundleDestination destination,

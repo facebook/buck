@@ -56,7 +56,8 @@ public class AppleResourceProcessingTest {
 
     SourcePath path2 = PathSourcePath.of(filesystem, Paths.get("test1"));
     ImmutableList<AppleBundlePart> bundleParts =
-        ImmutableList.of(FileAppleBundlePart.of(path2, AppleBundleDestination.METADATA));
+        ImmutableList.of(
+            FileAppleBundlePart.of(path2, AppleBundleDestination.METADATA, Optional.empty()));
 
     try {
       AppleResourceProcessing.verifyResourceConflicts(
@@ -79,7 +80,8 @@ public class AppleResourceProcessingTest {
 
     SourcePath path2 = PathSourcePath.of(filesystem, Paths.get("test2"));
     ImmutableList<AppleBundlePart> bundleParts =
-        ImmutableList.of(FileAppleBundlePart.of(path2, AppleBundleDestination.METADATA));
+        ImmutableList.of(
+            FileAppleBundlePart.of(path2, AppleBundleDestination.METADATA, Optional.empty()));
 
     try {
       AppleResourceProcessing.verifyResourceConflicts(
@@ -101,7 +103,8 @@ public class AppleResourceProcessingTest {
 
     SourcePath path2 = PathSourcePath.of(filesystem, Paths.get("test1"));
     ImmutableList<AppleBundlePart> bundleParts =
-        ImmutableList.of(FileAppleBundlePart.of(path2, AppleBundleDestination.HEADERS));
+        ImmutableList.of(
+            FileAppleBundlePart.of(path2, AppleBundleDestination.HEADERS, Optional.empty()));
 
     try {
       AppleResourceProcessing.verifyResourceConflicts(

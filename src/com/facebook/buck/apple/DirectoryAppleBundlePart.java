@@ -42,11 +42,6 @@ public abstract class DirectoryAppleBundlePart extends AppleBundlePart
   public abstract boolean getCodesignOnCopy();
 
   public static DirectoryAppleBundlePart of(
-      SourcePath sourcePath, AppleBundleDestination destination) {
-    return of(sourcePath, destination, Optional.empty(), false);
-  }
-
-  public static DirectoryAppleBundlePart of(
       SourcePath sourcePath,
       AppleBundleDestination destination,
       Optional<SourcePath> maybeContentHashSourcePath,

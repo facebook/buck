@@ -1079,25 +1079,31 @@ public class AppleDescriptions {
           .getSourcePathToDryRunOutput()
           .ifPresent(
               sourcePath -> {
-                final boolean codeSignOnCopy = false;
-                final boolean ignoreMissingSource = false;
                 bundlePartsReadyToCopy.add(
                     FileAppleBundlePart.of(
                         sourcePath,
                         AppleBundleDestination.BUNDLEROOT,
-                        Optional.empty(),
-                        codeSignOnCopy,
-                        Optional.empty(),
-                        ignoreMissingSource));
+                        getSourcePathToContentHash(
+                            incrementalBundlingEnabled,
+                            sourcePath,
+                            codeSignPrepRule.getBuildTarget(),
+                            graphBuilder,
+                            projectFilesystem)));
               });
       {
         final boolean codeSignOnCopy = false;
         final boolean ignoreMissingSource = dryRunCodeSigning;
+        SourcePath entitlementsSourcePath = codeSignPrepRule.getSourcePathToEntitlementsOutput();
         bundlePartsReadyToCopy.add(
             FileAppleBundlePart.of(
-                codeSignPrepRule.getSourcePathToEntitlementsOutput(),
+                entitlementsSourcePath,
                 AppleBundleDestination.BUNDLEROOT,
-                Optional.empty(),
+                getSourcePathToContentHash(
+                    incrementalBundlingEnabled,
+                    entitlementsSourcePath,
+                    codeSignPrepRule.getBuildTarget(),
+                    graphBuilder,
+                    projectFilesystem),
                 codeSignOnCopy,
                 Optional.of("BUCK_code_sign_entitlements.plist"),
                 ignoreMissingSource));
@@ -1107,11 +1113,18 @@ public class AppleDescriptions {
         final boolean codeSignOnCopy = false;
         final boolean ignoreIfMissing = dryRunCodeSigning;
         Optional<String> newNameAfterCopy = Optional.empty();
+        SourcePath provisioningProfileSourcePath =
+            codeSignPrepRule.getSourcePathToProvisioningProfile();
         bundlePartsReadyToCopy.add(
             FileAppleBundlePart.of(
-                codeSignPrepRule.getSourcePathToProvisioningProfile(),
+                provisioningProfileSourcePath,
                 AppleBundleDestination.RESOURCES,
-                Optional.empty(),
+                getSourcePathToContentHash(
+                    incrementalBundlingEnabled,
+                    provisioningProfileSourcePath,
+                    codeSignPrepRule.getBuildTarget(),
+                    graphBuilder,
+                    projectFilesystem),
                 codeSignOnCopy,
                 newNameAfterCopy,
                 ignoreIfMissing));
@@ -1130,21 +1143,38 @@ public class AppleDescriptions {
     RelPath infoPlistFileBundlePath;
     {
       AppleBundleDestination destination = AppleBundleDestination.METADATA;
-      bundlePartsReadyToCopy.add(FileAppleBundlePart.of(infoPlistReadyToCopy, destination));
+      bundlePartsReadyToCopy.add(
+          FileAppleBundlePart.of(
+              infoPlistReadyToCopy,
+              destination,
+              getSourcePathToContentHash(
+                  incrementalBundlingEnabled,
+                  infoPlistSourcePath,
+                  buildTarget,
+                  graphBuilder,
+                  projectFilesystem)));
       infoPlistFileBundlePath =
           RelPath.of(destination.getPath(destinations)).resolveRel("Info.plist");
     }
 
     if (unwrappedBinary.getSourcePathToOutput() != null) {
+      SourcePath binarySourcePath = unwrappedBinary.getSourcePathToOutput();
+      Optional<SourcePath> binaryHashSourcePath =
+          getSourcePathToContentHash(
+              incrementalBundlingEnabled,
+              binarySourcePath,
+              unwrappedBinary.getBuildTarget(),
+              graphBuilder,
+              projectFilesystem);
       {
         final boolean codeSignOnCopy = false;
         final boolean ignoreIfMissing = false;
         String binaryName = AppleBundle.getBinaryName(buildTarget, productName);
         bundlePartsReadyToCopy.add(
             FileAppleBundlePart.of(
-                unwrappedBinary.getSourcePathToOutput(),
+                binarySourcePath,
                 AppleBundleDestination.EXECUTABLES,
-                Optional.empty(),
+                binaryHashSourcePath,
                 codeSignOnCopy,
                 Optional.of(binaryName),
                 ignoreIfMissing));
@@ -1158,7 +1188,7 @@ public class AppleDescriptions {
             FileAppleBundlePart.of(
                 unwrappedBinary.getSourcePathToOutput(),
                 AppleBundleDestination.WATCHKITSTUB,
-                Optional.empty(),
+                binaryHashSourcePath,
                 codeSignOnCopy,
                 Optional.of("WK"),
                 ignoreIfMissing));
@@ -1174,7 +1204,12 @@ public class AppleDescriptions {
                       DirectoryAppleBundlePart.of(
                           sourcePath,
                           AppleBundleDestination.FRAMEWORKS,
-                          Optional.empty(),
+                          getSourcePathToContentHash(
+                              incrementalBundlingEnabled,
+                              sourcePath,
+                              buildTarget,
+                              graphBuilder,
+                              projectFilesystem),
                           codeSignOnCopy))
               .collect(ImmutableSet.toImmutableSet()));
     }
