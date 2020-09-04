@@ -35,6 +35,8 @@ import java.io.OutputStream;
 enum JsonDownwardProtocol implements DownwardProtocol {
   INSTANCE;
 
+  private static final String PROTOCOL_NAME = "json";
+
   private final JsonFormat.Parser parser = JsonFormat.parser();
   private final JsonFormat.Printer printer = JsonFormat.printer();
 
@@ -64,6 +66,11 @@ enum JsonDownwardProtocol implements DownwardProtocol {
     Message.Builder builder = getMessageBuilder(eventType);
     parser.merge(json, builder);
     return (T) builder.build();
+  }
+
+  @Override
+  public String getProtocolName() {
+    return PROTOCOL_NAME;
   }
 
   private String readJsonObjectAsString(InputStream inputStream) throws IOException {

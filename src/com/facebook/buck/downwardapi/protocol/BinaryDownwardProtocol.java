@@ -30,6 +30,8 @@ import java.io.OutputStream;
 enum BinaryDownwardProtocol implements DownwardProtocol {
   INSTANCE;
 
+  private static final String PROTOCOL_NAME = "binary";
+
   @Override
   public void write(EventTypeMessage eventType, AbstractMessage message, OutputStream outputStream)
       throws IOException {
@@ -50,6 +52,11 @@ enum BinaryDownwardProtocol implements DownwardProtocol {
   public <T extends AbstractMessage> T readEvent(
       InputStream inputStream, EventTypeMessage.EventType eventType) throws IOException {
     return (T) parseMessage(inputStream, eventType);
+  }
+
+  @Override
+  public String getProtocolName() {
+    return PROTOCOL_NAME;
   }
 
   private AbstractMessage parseMessage(

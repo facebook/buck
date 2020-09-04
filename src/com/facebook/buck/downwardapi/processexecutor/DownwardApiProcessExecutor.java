@@ -258,12 +258,15 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     void run() {
       String namedPipeName = namedPipe.getName();
       try (InputStream inputStream = namedPipe.getInputStream()) {
-        LOG.info("Starting to read events from named pipe: %s", namedPipeName);
+        LOG.info("Trying to establish downward protocol for pipe %s", namedPipeName);
         DownwardProtocol downwardProtocol = null;
         while (!Thread.currentThread().isInterrupted()) {
           try {
             if (downwardProtocol == null) {
               downwardProtocol = DownwardProtocolType.readProtocol(inputStream);
+              LOG.info(
+                  "Starting to read events from named pipe %s with protocol %s",
+                  namedPipeName, downwardProtocol.getProtocolName());
             }
             EventTypeMessage.EventType eventType = downwardProtocol.readEventType(inputStream);
             AbstractMessage event = downwardProtocol.readEvent(inputStream, eventType);

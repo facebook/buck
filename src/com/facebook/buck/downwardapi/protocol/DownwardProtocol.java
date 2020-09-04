@@ -35,4 +35,7 @@ public interface DownwardProtocol {
   /** Reads event correspondent to {@code eventType} from {@code inputStream}. */
   <T extends AbstractMessage> T readEvent(
       InputStream inputStream, EventTypeMessage.EventType eventType) throws IOException;
+
+  /** Returns the name of this protocol. */
+  String getProtocolName();
 }
