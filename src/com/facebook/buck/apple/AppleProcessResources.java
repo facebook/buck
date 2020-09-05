@@ -25,6 +25,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -68,6 +69,10 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
   public static final Flavor FLAVOR = InternalFlavor.of("apple-process-resources");
 
   private static final Logger LOG = Logger.get(AppleProcessResources.class);
+
+  public static final ImmutableList<String> BASE_IBTOOL_FLAGS =
+      ImmutableList.of(
+          "--output-format", "human-readable-text", "--notices", "--warnings", "--errors");
 
   public AppleProcessResources(
       BuildTarget buildTarget,
@@ -318,22 +323,13 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
           addStepsToProcessPlist(stepsBuilder, filesystem, rawFilePath, processedFilePath);
           return true;
         case "storyboard":
-          AppleResourceProcessing.addStoryboardProcessingSteps(
+          addStoryboardProcessingSteps(
               sourcePathResolver,
               rawFilePath.getPath(),
               processedFilePath.getPath(),
               stepsBuilder,
-              ibtoolFlags,
-              isLegacyWatchApp,
-              platform,
-              filesystem,
-              LOG,
-              ibtool,
-              ibtoolModuleFlag,
-              bundleBuildTarget,
-              binaryName,
               cellPath,
-              withDownwardApi);
+              filesystem);
           return true;
         case "xib":
           addStepsToProcessXib(
@@ -366,6 +362,76 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
               PlistProcessStep.OutputFormat.BINARY));
     }
 
+    private void addStoryboardProcessingSteps(
+        SourcePathResolverAdapter resolver,
+        Path sourcePath,
+        Path destinationPath,
+        ImmutableList.Builder<Step> stepsBuilder,
+        RelPath cellPath,
+        ProjectFilesystem projectFilesystem) {
+      ImmutableList<String> modifiedFlags =
+          ImmutableList.<String>builder().addAll(BASE_IBTOOL_FLAGS).addAll(ibtoolFlags).build();
+
+      if (platform.getName().contains("watch") || isLegacyWatchApp) {
+        LOG.debug(
+            "Compiling storyboard %s to storyboardc %s and linking", sourcePath, destinationPath);
+
+        RelPath compiledStoryboardPath =
+            BuildTargetPaths.getScratchPath(projectFilesystem, bundleBuildTarget, "%s.storyboardc");
+
+        stepsBuilder.add(
+            new IbtoolStep(
+                projectFilesystem,
+                ibtool.getEnvironment(resolver),
+                ibtool.getCommandPrefix(resolver),
+                ibtoolModuleFlag ? binaryName : Optional.empty(),
+                ImmutableList.<String>builder()
+                    .addAll(modifiedFlags)
+                    .add("--target-device", "watch", "--compile")
+                    .build(),
+                sourcePath,
+                compiledStoryboardPath.getPath(),
+                cellPath,
+                withDownwardApi));
+
+        stepsBuilder.add(
+            new IbtoolStep(
+                projectFilesystem,
+                ibtool.getEnvironment(resolver),
+                ibtool.getCommandPrefix(resolver),
+                ibtoolModuleFlag ? binaryName : Optional.empty(),
+                ImmutableList.<String>builder()
+                    .addAll(modifiedFlags)
+                    .add("--target-device", "watch", "--link")
+                    .build(),
+                compiledStoryboardPath.getPath(),
+                destinationPath.getParent(),
+                cellPath,
+                withDownwardApi));
+
+      } else {
+        LOG.debug("Compiling storyboard %s to storyboardc %s", sourcePath, destinationPath);
+
+        String compiledStoryboardFilename =
+            Files.getNameWithoutExtension(destinationPath.toString()) + ".storyboardc";
+
+        Path compiledStoryboardPath =
+            destinationPath.getParent().resolve(compiledStoryboardFilename);
+
+        stepsBuilder.add(
+            new IbtoolStep(
+                projectFilesystem,
+                ibtool.getEnvironment(resolver),
+                ibtool.getCommandPrefix(resolver),
+                ibtoolModuleFlag ? binaryName : Optional.empty(),
+                ImmutableList.<String>builder().addAll(modifiedFlags).add("--compile").build(),
+                sourcePath,
+                compiledStoryboardPath,
+                cellPath,
+                withDownwardApi));
+      }
+    }
+
     private void addStepsToProcessXib(
         ImmutableList.Builder<Step> stepsBuilder,
         ProjectFilesystem filesystem,
@@ -383,7 +449,7 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
               ibtool.getCommandPrefix(sourcePathResolver),
               ibtoolModuleFlag ? binaryName : Optional.empty(),
               ImmutableList.<String>builder()
-                  .addAll(AppleResourceProcessing.BASE_IBTOOL_FLAGS)
+                  .addAll(BASE_IBTOOL_FLAGS)
                   .addAll(ibtoolFlags)
                   .addAll(ImmutableList.of("--compile"))
                   .build(),

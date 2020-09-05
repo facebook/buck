@@ -62,14 +62,10 @@ import java.util.stream.Stream;
 
 /** Contains shared logic for adding resource processing steps to apple build rules */
 public class AppleResourceProcessing {
-  public static final ImmutableList<String> BASE_IBTOOL_FLAGS =
-      ImmutableList.of(
-          "--output-format", "human-readable-text", "--notices", "--warnings", "--errors");
-
   private AppleResourceProcessing() {}
 
   /** Add Storyboard processing ibtool steps to a build rule */
-  public static void addStoryboardProcessingSteps(
+  public static void deprecated_addStoryboardProcessingSteps(
       SourcePathResolverAdapter resolver,
       Path sourcePath,
       Path destinationPath,
@@ -86,7 +82,10 @@ public class AppleResourceProcessing {
       RelPath cellPath,
       boolean withDownwardApi) {
     ImmutableList<String> modifiedFlags =
-        ImmutableList.<String>builder().addAll(BASE_IBTOOL_FLAGS).addAll(ibtoolFlags).build();
+        ImmutableList.<String>builder()
+            .addAll(AppleProcessResources.BASE_IBTOOL_FLAGS)
+            .addAll(ibtoolFlags)
+            .build();
 
     if (platform.getName().contains("watch") || isLegacyWatchApp) {
       LOG.debug(
@@ -294,7 +293,7 @@ public class AppleResourceProcessing {
                 PlistProcessStep.OutputFormat.BINARY));
         break;
       case "storyboard":
-        AppleResourceProcessing.addStoryboardProcessingSteps(
+        AppleResourceProcessing.deprecated_addStoryboardProcessingSteps(
             resolver,
             sourcePath,
             destinationPath,
@@ -323,7 +322,7 @@ public class AppleResourceProcessing {
                 ibtool.getCommandPrefix(resolver),
                 ibtoolModuleFlag ? binaryName : Optional.empty(),
                 ImmutableList.<String>builder()
-                    .addAll(AppleResourceProcessing.BASE_IBTOOL_FLAGS)
+                    .addAll(AppleProcessResources.BASE_IBTOOL_FLAGS)
                     .addAll(ibtoolFlags)
                     .addAll(ImmutableList.of("--compile"))
                     .build(),
