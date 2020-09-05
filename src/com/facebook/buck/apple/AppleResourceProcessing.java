@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -38,11 +37,9 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -56,7 +53,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -202,60 +198,6 @@ public class AppleResourceProcessing {
           ProjectFilesystemUtils.relativize(
               projectFilesystem.getRootPath(), context.getBuildCellRootPath()),
           withDownwardApi);
-    }
-  }
-
-  /** Adds the swift stdlib to the bundle if needed */
-  public static void addSwiftStdlibStepIfNeeded(
-      SourcePathResolverAdapter resolver,
-      Path destinationPath,
-      Path bundleRoot,
-      Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier,
-      ImmutableList.Builder<Step> stepsBuilder,
-      boolean isForPackaging,
-      String bundleExtension,
-      boolean copySwiftStdlibToFrameworks,
-      Optional<Tool> swiftStdlibTool,
-      ProjectFilesystem projectFilesystem,
-      BuildTarget buildTarget,
-      Path sdkPath,
-      Tool lipo,
-      Path bundleBinaryPath,
-      AppleBundleDestinations destinations,
-      boolean sliceAppPackageSwiftRuntime,
-      boolean sliceAppBundleSwiftRuntime,
-      boolean withDownwardApi) {
-    // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
-    // are copied over).
-    boolean shouldCopySwiftStdlib =
-        !bundleExtension.equals(AppleBundleExtension.APPEX.fileExtension)
-            && (!bundleExtension.equals(AppleBundleExtension.FRAMEWORK.fileExtension)
-                || copySwiftStdlibToFrameworks);
-
-    if (swiftStdlibTool.isPresent() && shouldCopySwiftStdlib) {
-      String tempDirPattern = isForPackaging ? "__swift_packaging_temp__%s" : "__swift_temp__%s";
-      RelPath tempPath =
-          BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, tempDirPattern);
-
-      stepsBuilder.addAll(MakeCleanDirectoryStep.of(BuildCellRelativePath.of(tempPath)));
-
-      boolean sliceArchitectures =
-          (isForPackaging ? sliceAppPackageSwiftRuntime : sliceAppBundleSwiftRuntime);
-      stepsBuilder.add(
-          new SwiftStdlibStep(
-              projectFilesystem.getRootPath(),
-              tempPath.getPath(),
-              sdkPath,
-              destinationPath,
-              swiftStdlibTool.get().getCommandPrefix(resolver),
-              lipo.getCommandPrefix(resolver),
-              bundleBinaryPath,
-              ImmutableSet.of(
-                  bundleRoot.resolve(destinations.getFrameworksPath()),
-                  bundleRoot.resolve(destinations.getPlugInsPath())),
-              codeSignIdentitySupplier,
-              sliceArchitectures,
-              withDownwardApi));
     }
   }
 
