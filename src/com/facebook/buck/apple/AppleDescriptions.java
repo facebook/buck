@@ -1226,6 +1226,7 @@ public class AppleDescriptions {
             filter);
 
     Optional<SourcePath> maybeProcessedResourcesDir;
+    Optional<SourcePath> maybeProcessedResourcesContentHashesFilePath;
     if (useSeparateRuleToProcessResources) {
       BuildTarget processResourcesTarget =
           stripBundleSpecificFlavors(buildTarget).withAppendedFlavors(AppleProcessResources.FLAVOR);
@@ -1247,10 +1248,15 @@ public class AppleDescriptions {
                           buildTarget,
                           Optional.of(AppleBundle.getBinaryName(buildTarget, productName)),
                           withDownwardApi,
-                          appleCxxPlatform.getAppleSdk().getApplePlatform()));
+                          appleCxxPlatform.getAppleSdk().getApplePlatform(),
+                          destinations,
+                          incrementalBundlingEnabled));
       maybeProcessedResourcesDir = Optional.of(processResources.getSourcePathToOutput());
+      maybeProcessedResourcesContentHashesFilePath =
+          processResources.getSourcePathToContentHashes();
     } else {
       maybeProcessedResourcesDir = Optional.empty();
+      maybeProcessedResourcesContentHashesFilePath = Optional.empty();
     }
 
     Optional<SourcePath> nonProcessedResourcesContentHashesFileSourcePath;
@@ -1328,7 +1334,8 @@ public class AppleDescriptions {
         dryRunCodeSigning,
         codeSignIdentityFingerprint,
         maybeProcessedResourcesDir,
-        nonProcessedResourcesContentHashesFileSourcePath);
+        nonProcessedResourcesContentHashesFileSourcePath,
+        maybeProcessedResourcesContentHashesFilePath);
   }
 
   private static void addExtraBinariesToBundleParts(

@@ -154,6 +154,8 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final Optional<SourcePath> nonProcessedResourcesContentHashesFileSourcePath;
 
+  @AddToRuleKey private final Optional<SourcePath> processedResourcesContentHashesFileSourcePath;
+
   AppleBundle(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -186,7 +188,8 @@ public class AppleBundle extends AbstractBuildRule
       boolean dryRunCodeSigning,
       Optional<SourcePath> maybeCodeSignIdentityFingerprintFile,
       Optional<SourcePath> maybeProcessedResourcesDir,
-      Optional<SourcePath> nonProcessedResourcesContentHashesFileSourcePath) {
+      Optional<SourcePath> nonProcessedResourcesContentHashesFileSourcePath,
+      Optional<SourcePath> processedResourcesContentHashesFileSourcePath) {
     super(buildTarget, projectFilesystem);
     this.buildRuleParams = params;
     this.extension = extension;
@@ -243,6 +246,8 @@ public class AppleBundle extends AbstractBuildRule
     this.infoPlistBundlePath = bundleRoot.resolve(infoPlistPathRelativeToBundle.getPath());
     this.nonProcessedResourcesContentHashesFileSourcePath =
         nonProcessedResourcesContentHashesFileSourcePath;
+    this.processedResourcesContentHashesFileSourcePath =
+        processedResourcesContentHashesFileSourcePath;
   }
 
   private boolean hasBinary() {

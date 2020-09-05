@@ -64,6 +64,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -1888,52 +1889,102 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void nonProcessedResourcesHashesAreComputed() throws Exception {
+  public void resourcesHashesAreComputed() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_resources", tmp);
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
     workspace.addBuckConfigLocalOption("apple", "incremental_bundling_enabled", "true");
+    workspace.addBuckConfigLocalOption("apple", "resource_processing_separate_rule", "true");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path path =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                    filesystem,
-                    AppleDescriptions.stripBundleSpecificFlavors(target)
-                        .withAppendedFlavors(AppleComputeNonProcessedResourcesContentHashes.FLAVOR),
-                    "%s")
-                .resolveRel("non-processed-resources-hashes.json"));
-
-    assertTrue(filesystem.exists(path));
-
-    JsonParser parser = ObjectMappers.createParser(path);
-    Map<String, String> pathToHash =
-        parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
-    assertEquals(2, pathToHash.size());
-
     {
-      StringBuilder hashBuilder = new StringBuilder();
-      Step step =
-          new AppleComputeFileOrDirectoryHashStep(
-              hashBuilder, AbsPath.of(workspace.getPath("Image.png")), filesystem, true, true);
-      step.execute(TestExecutionContext.newInstance());
-      assertEquals(hashBuilder.toString(), pathToHash.get("Image.png"));
+      // Non-processed resources
+
+      Path path =
+          workspace.getPath(
+              BuildTargetPaths.getGenPath(
+                      filesystem,
+                      AppleDescriptions.stripBundleSpecificFlavors(target)
+                          .withAppendedFlavors(
+                              AppleComputeNonProcessedResourcesContentHashes.FLAVOR),
+                      "%s")
+                  .resolveRel("non-processed-resources-hashes.json"));
+
+      assertTrue(filesystem.exists(path));
+
+      JsonParser parser = ObjectMappers.createParser(path);
+      Map<String, String> pathToHash =
+          parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
+
+      assertEquals(2, pathToHash.size());
+
+      {
+        StringBuilder hashBuilder = new StringBuilder();
+        Step step =
+            new AppleComputeFileOrDirectoryHashStep(
+                hashBuilder, AbsPath.of(workspace.getPath("Image.png")), filesystem, true, true);
+        step.execute(TestExecutionContext.newInstance());
+        assertEquals(hashBuilder.toString(), pathToHash.get("Image.png"));
+      }
+
+      {
+        StringBuilder hashBuilder = new StringBuilder();
+        Step step =
+            new AppleComputeFileOrDirectoryHashStep(
+                hashBuilder, AbsPath.of(workspace.getPath("Images")), filesystem, true, true);
+        step.execute(TestExecutionContext.newInstance());
+        assertEquals(hashBuilder.toString(), pathToHash.get("Images"));
+      }
     }
 
     {
-      StringBuilder hashBuilder = new StringBuilder();
-      Step step =
-          new AppleComputeFileOrDirectoryHashStep(
-              hashBuilder, AbsPath.of(workspace.getPath("Images")), filesystem, true, true);
-      step.execute(TestExecutionContext.newInstance());
-      assertEquals(hashBuilder.toString(), pathToHash.get("Images"));
+      // Processed resources
+
+      Path targetDirectoryPath =
+          workspace.getPath(
+              BuildTargetPaths.getGenPath(
+                  filesystem,
+                  AppleDescriptions.stripBundleSpecificFlavors(target)
+                      .withAppendedFlavors(AppleProcessResources.FLAVOR),
+                  "%s"));
+
+      Path hashesFilePath = targetDirectoryPath.resolve("content_hashes.json");
+
+      assertTrue(filesystem.exists(hashesFilePath));
+
+      JsonParser parser = ObjectMappers.createParser(hashesFilePath);
+      Map<String, String> pathToHash =
+          parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
+
+      assertEquals(6, pathToHash.size());
+
+      for (String name :
+          ImmutableList.of(
+              "aa.lproj", "bb.lproj", "cc.lproj", "xx.lproj", "yy.lproj", "zz.lproj")) {
+        StringBuilder hashBuilder = new StringBuilder();
+
+        Path processedFilePath =
+            targetDirectoryPath
+                .resolve("BundleParts")
+                .resolve(
+                    AppleProcessResources.directoryNameWithProcessedFilesForDestination(
+                            AppleBundleDestination.RESOURCES)
+                        .getPath())
+                .resolve(name);
+
+        Step step =
+            new AppleComputeFileOrDirectoryHashStep(
+                hashBuilder, AbsPath.of(processedFilePath), filesystem, true, true);
+        step.execute(TestExecutionContext.newInstance());
+        assertEquals(hashBuilder.toString(), pathToHash.get(name));
+      }
     }
   }
 
   @Test
-  public void nonProcessedResourcesHashesAreNotComputedByDefault() throws Exception {
+  public void resourcesHashesAreNotComputedByDefault() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_resources", tmp);
     workspace.setUp();
@@ -1941,14 +1992,28 @@ public class AppleBundleIntegrationTest {
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path path =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                filesystem,
-                AppleDescriptions.stripBundleSpecificFlavors(target)
-                    .withAppendedFlavors(AppleComputeNonProcessedResourcesContentHashes.FLAVOR),
-                "%s"));
-
-    assertFalse(filesystem.exists(path));
+    {
+      // Non-processed resources
+      Path path =
+          workspace.getPath(
+              BuildTargetPaths.getGenPath(
+                  filesystem,
+                  AppleDescriptions.stripBundleSpecificFlavors(target)
+                      .withAppendedFlavors(AppleComputeNonProcessedResourcesContentHashes.FLAVOR),
+                  "%s"));
+      assertFalse(filesystem.exists(path));
+    }
+    {
+      // Processed resources
+      Path path =
+          workspace.getPath(
+              BuildTargetPaths.getGenPath(
+                      filesystem,
+                      AppleDescriptions.stripBundleSpecificFlavors(target)
+                          .withAppendedFlavors(AppleProcessResources.FLAVOR),
+                      "%s")
+                  .resolve("content_hashes.json"));
+      assertFalse(filesystem.exists(path));
+    }
   }
 }

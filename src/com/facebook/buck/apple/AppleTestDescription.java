@@ -593,7 +593,10 @@ public class AppleTestDescription
                           buildTarget,
                           Optional.empty(),
                           downwardApiConfig.isEnabledForApple(),
-                          appleCxxPlatform.getAppleSdk().getApplePlatform()));
+                          appleCxxPlatform.getAppleSdk().getApplePlatform(),
+                          AppleBundleDestinations.platformDestinations(
+                              appleCxxPlatform.getAppleSdk().getApplePlatform()),
+                          appleConfig.getIncrementalBundlingEnabled()));
       maybeProcessedResourcesDir = Optional.of(processResources.getSourcePathToOutput());
       extraDepsBuilder.add(processResources);
     } else {

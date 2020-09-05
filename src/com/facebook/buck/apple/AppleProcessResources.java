@@ -18,7 +18,9 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -37,12 +39,16 @@ import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
+import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.io.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -76,7 +82,9 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
       BuildTarget bundleBuildTarget,
       Optional<String> binaryName,
       boolean withDownwardApi,
-      ApplePlatform platform) {
+      ApplePlatform platform,
+      AppleBundleDestinations destinations,
+      boolean incrementalBundlingEnabled) {
     super(
         buildTarget,
         projectFilesystem,
@@ -91,7 +99,9 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
             bundleBuildTarget,
             binaryName,
             withDownwardApi,
-            platform));
+            platform,
+            destinations,
+            incrementalBundlingEnabled));
   }
 
   /** Checks if resource should be processed before copying it into bundle */
@@ -123,6 +133,10 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
     return getSourcePath(getBuildable().output);
   }
 
+  public Optional<SourcePath> getSourcePathToContentHashes() {
+    return getBuildable().contentHashesOutput.map(this::getSourcePath);
+  }
+
   /** Internal buildable implementation */
   static class Impl implements Buildable {
 
@@ -132,6 +146,7 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
 
     @AddToRuleKey private final ImmutableSet<SourcePath> variantFiles;
     @AddToRuleKey private final OutputPath output;
+    @AddToRuleKey private final Optional<OutputPath> contentHashesOutput;
     @AddToRuleKey private final ImmutableList<String> ibtoolFlags;
     @AddToRuleKey private final boolean isLegacyWatchApp;
     @AddToRuleKey private final Tool ibtool;
@@ -140,6 +155,7 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
     @AddToRuleKey private final Optional<String> binaryName;
     @AddToRuleKey private final boolean withDownwardApi;
     @AddToRuleKey private final ApplePlatform platform;
+    @AddToRuleKey private final AppleBundleDestinations destinations;
 
     public Impl(
         ImmutableSet<SourcePathWithAppleBundleDestination> resourceFilesMaybeNeedProcessing,
@@ -151,7 +167,9 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
         BuildTarget bundleBuildTarget,
         Optional<String> binaryName,
         boolean withDownwardApi,
-        ApplePlatform platform) {
+        ApplePlatform platform,
+        AppleBundleDestinations destinations,
+        boolean incrementalBundlingEnabled) {
       this.resourceFilesMaybeNeedProcessing = resourceFilesMaybeNeedProcessing;
       this.variantFiles = variantFiles;
       this.ibtoolFlags = ibtoolFlags;
@@ -162,7 +180,12 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
       this.binaryName = binaryName;
       this.withDownwardApi = withDownwardApi;
       this.platform = platform;
+      this.destinations = destinations;
       output = new OutputPath("BundleParts");
+      contentHashesOutput =
+          incrementalBundlingEnabled
+              ? Optional.of(new OutputPath("content_hashes.json"))
+              : Optional.empty();
     }
 
     @Override
@@ -254,6 +277,9 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
                         buildContext.getBuildCellRootPath(), filesystem, outputDirPath)));
           });
       stepsBuilder.addAll(processSteps);
+
+      addStepsToComputeAndPersistHashesIfNeeded(
+          stepsBuilder, outputPathResolver, filesystem, usedDestinations, buildContext);
 
       return stepsBuilder.build();
     }
@@ -365,6 +391,54 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
               compiledNibPath,
               cellPath,
               withDownwardApi));
+    }
+
+    private void addStepsToComputeAndPersistHashesIfNeeded(
+        ImmutableList.Builder<Step> stepsBuilder,
+        OutputPathResolver outputPathResolver,
+        ProjectFilesystem filesystem,
+        Set<AppleBundleDestination> usedDestinations,
+        BuildContext buildContext) {
+      if (!contentHashesOutput.isPresent()) {
+        return;
+      }
+
+      ImmutableSortedMap.Builder<RelPath, String> bundleRootRelativePathToHashBuilder =
+          ImmutableSortedMap.orderedBy(RelPath.comparator());
+
+      usedDestinations.forEach(
+          destination -> {
+            AbsPath outputDirPath =
+                AbsPath.of(buildContext.getBuildCellRootPath())
+                    .resolve(outputPathResolver.resolvePath(output))
+                    .resolve(directoryNameWithProcessedFilesForDestination(destination));
+            ImmutableMap.Builder<RelPath, String> containerDirRelativePathToHashBuilder =
+                ImmutableMap.builder();
+            stepsBuilder.add(
+                new AppleComputeDirectoryFirstLevelContentHashesStep(
+                    outputDirPath, filesystem, containerDirRelativePathToHashBuilder),
+                new AbstractExecutionStep("apple-bundle-memoize-hashes") {
+                  @Override
+                  public StepExecutionResult execute(StepExecutionContext context) {
+                    for (ImmutableMap.Entry<RelPath, String> entry :
+                        containerDirRelativePathToHashBuilder.build().entrySet()) {
+                      bundleRootRelativePathToHashBuilder.put(
+                          RelPath.of(
+                              destination.getPath(destinations).resolve(entry.getKey().getPath())),
+                          entry.getValue());
+                    }
+                    return StepExecutionResults.SUCCESS;
+                  }
+                });
+          });
+
+      Path hashesOutputPath = outputPathResolver.resolvePath(contentHashesOutput.get()).getPath();
+      stepsBuilder.add(
+          new AppleWriteHashPerFileStep(
+              "persist-processed-resources-hashes",
+              bundleRootRelativePathToHashBuilder::build,
+              hashesOutputPath,
+              filesystem));
     }
   }
 }

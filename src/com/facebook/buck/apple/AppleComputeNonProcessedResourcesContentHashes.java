@@ -36,14 +36,9 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.json.ObjectMappers;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.stream.Stream;
 
 /**
@@ -160,23 +155,11 @@ public class AppleComputeNonProcessedResourcesContentHashes
       }
 
       stepsBuilder.add(
-          new AbstractExecutionStep("persist-non-processed-resources-hashes") {
-            @Override
-            public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-              ImmutableMap<RelPath, String> pathToHash = pathToHashBuilder.build();
-              OutputStream outputStream =
-                  filesystem.newFileOutputStream(outputPathResolver.resolvePath(output).getPath());
-              JsonGenerator generator = ObjectMappers.createGenerator(outputStream);
-              generator.writeStartObject();
-              for (Map.Entry<RelPath, String> entry : pathToHash.entrySet()) {
-                generator.writeStringField(entry.getKey().toString(), entry.getValue());
-              }
-              generator.writeEndObject();
-              generator.close();
-              outputStream.close();
-              return StepExecutionResults.SUCCESS;
-            }
-          });
+          new AppleWriteHashPerFileStep(
+              "persist-non-processed-resources-hashes",
+              pathToHashBuilder::build,
+              outputPathResolver.resolvePath(output).getPath(),
+              filesystem));
 
       return stepsBuilder.build();
     }
