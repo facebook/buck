@@ -49,6 +49,8 @@ import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -59,6 +61,9 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -71,6 +76,8 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
+import java.util.Map;
+import java.util.TreeMap;
 import javax.xml.parsers.ParserConfigurationException;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -1878,5 +1885,70 @@ public class AppleBundleIntegrationTest {
     // The apple_binary() has a custom target_sdk_version set to 10.14, so we expect to see it
     // in the Info.plist.
     assertThat(minVersion.toString(), equalTo("10.14"));
+  }
+
+  @Test
+  public void nonProcessedResourcesHashesAreComputed() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_resources", tmp);
+    workspace.setUp();
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
+    workspace.addBuckConfigLocalOption("apple", "incremental_bundling_enabled", "true");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path path =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                    filesystem,
+                    AppleDescriptions.stripBundleSpecificFlavors(target)
+                        .withAppendedFlavors(AppleComputeNonProcessedResourcesContentHashes.FLAVOR),
+                    "%s")
+                .resolveRel("non-processed-resources-hashes.json"));
+
+    assertTrue(filesystem.exists(path));
+
+    JsonParser parser = ObjectMappers.createParser(path);
+    Map<String, String> pathToHash =
+        parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
+    assertEquals(2, pathToHash.size());
+
+    {
+      StringBuilder hashBuilder = new StringBuilder();
+      Step step =
+          new AppleComputeFileOrDirectoryHashStep(
+              hashBuilder, AbsPath.of(workspace.getPath("Image.png")), filesystem, true, true);
+      step.execute(TestExecutionContext.newInstance());
+      assertEquals(hashBuilder.toString(), pathToHash.get("Image.png"));
+    }
+
+    {
+      StringBuilder hashBuilder = new StringBuilder();
+      Step step =
+          new AppleComputeFileOrDirectoryHashStep(
+              hashBuilder, AbsPath.of(workspace.getPath("Images")), filesystem, true, true);
+      step.execute(TestExecutionContext.newInstance());
+      assertEquals(hashBuilder.toString(), pathToHash.get("Images"));
+    }
+  }
+
+  @Test
+  public void nonProcessedResourcesHashesAreNotComputedByDefault() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_resources", tmp);
+    workspace.setUp();
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path path =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem,
+                AppleDescriptions.stripBundleSpecificFlavors(target)
+                    .withAppendedFlavors(AppleComputeNonProcessedResourcesContentHashes.FLAVOR),
+                "%s"));
+
+    assertFalse(filesystem.exists(path));
   }
 }

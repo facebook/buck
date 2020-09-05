@@ -1253,6 +1253,30 @@ public class AppleDescriptions {
       maybeProcessedResourcesDir = Optional.empty();
     }
 
+    Optional<SourcePath> nonProcessedResourcesContentHashesFileSourcePath;
+    if (incrementalBundlingEnabled) {
+      BuildTarget computeNonProcessedResourcesContentHashTarget =
+          stripBundleSpecificFlavors(buildTarget)
+              .withAppendedFlavors(AppleComputeNonProcessedResourcesContentHashes.FLAVOR);
+      AppleComputeNonProcessedResourcesContentHashes computeNonProcessedResourcesContentHashes =
+          (AppleComputeNonProcessedResourcesContentHashes)
+              graphBuilder.computeIfAbsent(
+                  computeNonProcessedResourcesContentHashTarget,
+                  target ->
+                      new AppleComputeNonProcessedResourcesContentHashes(
+                          target,
+                          projectFilesystem,
+                          graphBuilder,
+                          collectedResources,
+                          destinations));
+      nonProcessedResourcesContentHashesFileSourcePath =
+          Optional.of(
+              Objects.requireNonNull(
+                  computeNonProcessedResourcesContentHashes.getSourcePathToOutput()));
+    } else {
+      nonProcessedResourcesContentHashesFileSourcePath = Optional.empty();
+    }
+
     BuildRuleParams bundleParamsWithFlavoredBinaryDep =
         getBundleParamsWithUpdatedDeps(
             params,
@@ -1303,7 +1327,8 @@ public class AppleDescriptions {
         entitlementsReadyForCodeSign,
         dryRunCodeSigning,
         codeSignIdentityFingerprint,
-        maybeProcessedResourcesDir);
+        maybeProcessedResourcesDir,
+        nonProcessedResourcesContentHashesFileSourcePath);
   }
 
   private static void addExtraBinariesToBundleParts(
