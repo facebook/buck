@@ -16,17 +16,8 @@
 
 package com.facebook.buck.intellij.ideabuck.logging;
 
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFile;
-import java.util.Map;
+/** Returns a {@link EventLogger} that can be used for logging. */
+public interface EventLoggerFactory {
 
-public interface EventLogger {
-
-  EventLogger withEventAction(String eventAction);
-
-  EventLogger withProjectFiles(Project project, VirtualFile... virtualFiles);
-
-  EventLogger withExtraData(Map<String, String> extraData);
-
-  void log();
+  EventLogger eventLogger(String eventType);
 }

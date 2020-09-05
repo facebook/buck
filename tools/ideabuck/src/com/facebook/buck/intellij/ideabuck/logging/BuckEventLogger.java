@@ -16,51 +16,25 @@
 
 package com.facebook.buck.intellij.ideabuck.logging;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.extensions.ExtensionPointName;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
 public class BuckEventLogger implements EventLogger {
 
-  private static class EventLoggerHolder {
-    static final BuckEventLogger INSTANCE = new BuckEventLogger();
-  }
-
-  public static BuckEventLogger getInstance() {
-    return EventLoggerHolder.INSTANCE;
-  }
-
-  static final ExtensionPointName<EventLogger> EP_NAME =
-      ExtensionPointName.create("intellij.buck.plugin.EventLogger");
   private List<EventLogger> mLoggers;
   private final Executor mExecutor;
 
-  private BuckEventLogger() {
-    this(EP_NAME.getExtensionList());
-  }
-
-  private BuckEventLogger(List<EventLogger> loggers) {
+  public BuckEventLogger(List<EventLogger> loggers) {
     this(loggers, action -> ApplicationManager.getApplication().executeOnPooledThread(action));
   }
 
-  @VisibleForTesting
   BuckEventLogger(List<EventLogger> loggers, Executor executor) {
     mLoggers = loggers;
     mExecutor = executor;
-  }
-
-  @Override
-  public EventLogger withEventType(String eventType) {
-    for (EventLogger eventLogger : mLoggers) {
-      eventLogger.withEventType(eventType);
-    }
-    return this;
   }
 
   @Override
@@ -72,17 +46,9 @@ public class BuckEventLogger implements EventLogger {
   }
 
   @Override
-  public EventLogger withProject(Project project) {
+  public EventLogger withProjectFiles(Project project, VirtualFile... virtualFiles) {
     for (EventLogger eventLogger : mLoggers) {
-      eventLogger.withProject(project);
-    }
-    return this;
-  }
-
-  @Override
-  public EventLogger withFiles(VirtualFile... virtualFiles) {
-    for (EventLogger eventLogger : mLoggers) {
-      eventLogger.withFiles(virtualFiles);
+      eventLogger.withProjectFiles(project, virtualFiles);
     }
     return this;
   }
@@ -98,7 +64,5 @@ public class BuckEventLogger implements EventLogger {
   @Override
   public void log() {
     mExecutor.execute(() -> mLoggers.forEach(EventLogger::log));
-    // don't allow re-use
-    mLoggers = Collections.emptyList();
   }
 }

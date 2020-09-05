@@ -233,8 +233,9 @@
       <extensionPoint area="IDEA_PROJECT"
           name="BuckAutoDepsSearchableClassNameContributor"
           interface="com.facebook.buck.intellij.ideabuck.autodeps.BuckAutoDepsSearchableClassNameContributor" />
-      <extensionPoint name="EventLogger"
-          interface="com.facebook.buck.intellij.ideabuck.logging.EventLogger" />
+      <extensionPoint name="EventLoggerFactory"
+          interface="com.facebook.buck.intellij.ideabuck.logging.EventLoggerFactory"
+          dynamic="true" />
   </extensionPoints>
 
   <extensions defaultExtensionNs="intellij.buck.plugin">

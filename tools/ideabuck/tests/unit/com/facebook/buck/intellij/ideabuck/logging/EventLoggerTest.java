@@ -30,33 +30,44 @@ public class EventLoggerTest {
 
   @Test
   public void logSyncTest() {
-    TestLogger testLogger = new TestLogger();
-    List<EventLogger> loggers = Arrays.asList(new EventLogger[] {testLogger});
+    TestLoggerFactory testLoggerFactory = new TestLoggerFactory();
+    EventLoggerFactoryProvider eventLoggerFactoryProvider =
+        new EventLoggerFactoryProvider(
+            () -> Arrays.asList(new EventLoggerFactory[] {testLoggerFactory}));
+
+    BuckEventLogger buckEventLogger =
+        eventLoggerFactoryProvider.getBuckEventLogger("", Runnable::run);
 
     String eventAction = "ea";
-    String eventType = "et";
     Project project = EasyMock.createMock(Project.class);
     VirtualFile virtualFile = EasyMock.createMock(VirtualFile.class);
     Map<String, String> extraData = new HashMap<>();
 
-    BuckEventLogger buckEventLogger = new BuckEventLogger(loggers, Runnable::run);
     buckEventLogger
         .withEventAction(eventAction)
-        .withEventType(eventType)
-        .withProject(project)
-        .withFiles(virtualFile)
+        .withProjectFiles(project, virtualFile)
         .withExtraData(extraData)
         .log();
 
-    Assert.assertEquals(eventType, testLogger.eventType);
-    Assert.assertEquals(eventAction, testLogger.eventAction);
-    Assert.assertEquals(project, testLogger.project);
-    Assert.assertEquals(virtualFile, testLogger.virtualFiles.get(0));
-    Assert.assertEquals(extraData, testLogger.extraData);
+    Assert.assertEquals(eventAction, TestLoggerFactory.testEventLogger.eventAction);
+    Assert.assertEquals(project, TestLoggerFactory.testEventLogger.project);
+    Assert.assertEquals(virtualFile, TestLoggerFactory.testEventLogger.virtualFiles.get(0));
+    Assert.assertEquals(extraData, TestLoggerFactory.testEventLogger.extraData);
+  }
+
+  static class TestLoggerFactory implements EventLoggerFactory {
+
+    static final TestLogger testEventLogger = new TestLogger();
+
+    TestLoggerFactory() {}
+
+    @Override
+    public EventLogger eventLogger(String eventType) {
+      return testEventLogger;
+    }
   }
 
   static class TestLogger implements EventLogger {
-    String eventType;
     String eventAction;
     Project project;
     List<VirtualFile> virtualFiles;
@@ -65,25 +76,14 @@ public class EventLoggerTest {
     TestLogger() {}
 
     @Override
-    public EventLogger withEventType(String eventType) {
-      this.eventType = eventType;
-      return this;
-    }
-
-    @Override
     public EventLogger withEventAction(String eventAction) {
       this.eventAction = eventAction;
       return this;
     }
 
     @Override
-    public EventLogger withProject(Project project) {
+    public EventLogger withProjectFiles(Project project, VirtualFile... virtualFiles) {
       this.project = project;
-      return this;
-    }
-
-    @Override
-    public EventLogger withFiles(VirtualFile... virtualFiles) {
       this.virtualFiles = Arrays.asList(virtualFiles);
       return this;
     }
