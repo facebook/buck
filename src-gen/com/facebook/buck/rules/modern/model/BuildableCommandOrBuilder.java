@@ -60,4 +60,14 @@ public interface BuildableCommandOrBuilder extends
 
   java.lang.String getEnvOrThrow(
       java.lang.String key);
+
+  /**
+   * <code>string external_action_class = 3;</code>
+   */
+  java.lang.String getExternalActionClass();
+  /**
+   * <code>string external_action_class = 3;</code>
+   */
+  com.google.protobuf.ByteString
+      getExternalActionClassBytes();
 }

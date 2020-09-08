@@ -18,6 +18,7 @@ private static final long serialVersionUID = 0L;
   }
   private BuildableCommand() {
     args_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    externalActionClass_ = "";
   }
 
   @java.lang.Override
@@ -64,6 +65,12 @@ private static final long serialVersionUID = 0L;
                 EnvDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
             env_.getMutableMap().put(
                 env__.getKey(), env__.getValue());
+            break;
+          }
+          case 26: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            externalActionClass_ = s;
             break;
           }
           default: {
@@ -113,6 +120,7 @@ private static final long serialVersionUID = 0L;
             com.facebook.buck.rules.modern.model.BuildableCommand.class, com.facebook.buck.rules.modern.model.BuildableCommand.Builder.class);
   }
 
+  private int bitField0_;
   public static final int ARGS_FIELD_NUMBER = 1;
   private com.google.protobuf.LazyStringList args_;
   /**
@@ -218,6 +226,40 @@ private static final long serialVersionUID = 0L;
     return map.get(key);
   }
 
+  public static final int EXTERNAL_ACTION_CLASS_FIELD_NUMBER = 3;
+  private volatile java.lang.Object externalActionClass_;
+  /**
+   * <code>string external_action_class = 3;</code>
+   */
+  public java.lang.String getExternalActionClass() {
+    java.lang.Object ref = externalActionClass_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      externalActionClass_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string external_action_class = 3;</code>
+   */
+  public com.google.protobuf.ByteString
+      getExternalActionClassBytes() {
+    java.lang.Object ref = externalActionClass_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      externalActionClass_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -241,6 +283,9 @@ private static final long serialVersionUID = 0L;
         internalGetEnv(),
         EnvDefaultEntryHolder.defaultEntry,
         2);
+    if (!getExternalActionClassBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 3, externalActionClass_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -268,6 +313,9 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, env__);
     }
+    if (!getExternalActionClassBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, externalActionClass_);
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -287,6 +335,8 @@ private static final long serialVersionUID = 0L;
         .equals(other.getArgsList())) return false;
     if (!internalGetEnv().equals(
         other.internalGetEnv())) return false;
+    if (!getExternalActionClass()
+        .equals(other.getExternalActionClass())) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -306,6 +356,8 @@ private static final long serialVersionUID = 0L;
       hash = (37 * hash) + ENV_FIELD_NUMBER;
       hash = (53 * hash) + internalGetEnv().hashCode();
     }
+    hash = (37 * hash) + EXTERNAL_ACTION_CLASS_FIELD_NUMBER;
+    hash = (53 * hash) + getExternalActionClass().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -464,6 +516,8 @@ private static final long serialVersionUID = 0L;
       args_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       bitField0_ = (bitField0_ & ~0x00000001);
       internalGetMutableEnv().clear();
+      externalActionClass_ = "";
+
       return this;
     }
 
@@ -491,6 +545,7 @@ private static final long serialVersionUID = 0L;
     public com.facebook.buck.rules.modern.model.BuildableCommand buildPartial() {
       com.facebook.buck.rules.modern.model.BuildableCommand result = new com.facebook.buck.rules.modern.model.BuildableCommand(this);
       int from_bitField0_ = bitField0_;
+      int to_bitField0_ = 0;
       if (((bitField0_ & 0x00000001) != 0)) {
         args_ = args_.getUnmodifiableView();
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -498,6 +553,8 @@ private static final long serialVersionUID = 0L;
       result.args_ = args_;
       result.env_ = internalGetEnv();
       result.env_.makeImmutable();
+      result.externalActionClass_ = externalActionClass_;
+      result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
     }
@@ -558,6 +615,10 @@ private static final long serialVersionUID = 0L;
       }
       internalGetMutableEnv().mergeFrom(
           other.internalGetEnv());
+      if (!other.getExternalActionClass().isEmpty()) {
+        externalActionClass_ = other.externalActionClass_;
+        onChanged();
+      }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
       return this;
@@ -802,6 +863,75 @@ private static final long serialVersionUID = 0L;
         java.util.Map<java.lang.String, java.lang.String> values) {
       internalGetMutableEnv().getMutableMap()
           .putAll(values);
+      return this;
+    }
+
+    private java.lang.Object externalActionClass_ = "";
+    /**
+     * <code>string external_action_class = 3;</code>
+     */
+    public java.lang.String getExternalActionClass() {
+      java.lang.Object ref = externalActionClass_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        externalActionClass_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string external_action_class = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getExternalActionClassBytes() {
+      java.lang.Object ref = externalActionClass_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        externalActionClass_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string external_action_class = 3;</code>
+     */
+    public Builder setExternalActionClass(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
+      externalActionClass_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string external_action_class = 3;</code>
+     */
+    public Builder clearExternalActionClass() {
+      
+      externalActionClass_ = getDefaultInstance().getExternalActionClass();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string external_action_class = 3;</code>
+     */
+    public Builder setExternalActionClassBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      externalActionClass_ = value;
+      onChanged();
       return this;
     }
     @java.lang.Override

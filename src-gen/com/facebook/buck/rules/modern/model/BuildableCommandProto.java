@@ -36,12 +36,13 @@ public final class BuildableCommandProto {
     java.lang.String[] descriptorData = {
       "\nJsrc/com/facebook/buck/rules/modern/res" +
       "ources/proto/buildable_command.proto\022\tmo" +
-      "dern.v1\"\177\n\020BuildableCommand\022\014\n\004args\030\001 \003(" +
-      "\t\0221\n\003env\030\002 \003(\0132$.modern.v1.BuildableComm" +
-      "and.EnvEntry\032*\n\010EnvEntry\022\013\n\003key\030\001 \001(\t\022\r\n" +
-      "\005value\030\002 \001(\t:\0028\001B?\n$com.facebook.buck.ru" +
-      "les.modern.modelB\025BuildableCommandProtoP" +
-      "\001b\006proto3"
+      "dern.v1\"\236\001\n\020BuildableCommand\022\014\n\004args\030\001 \003" +
+      "(\t\0221\n\003env\030\002 \003(\0132$.modern.v1.BuildableCom" +
+      "mand.EnvEntry\022\035\n\025external_action_class\030\003" +
+      " \001(\t\032*\n\010EnvEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002" +
+      " \001(\t:\0028\001B?\n$com.facebook.buck.rules.mode" +
+      "rn.modelB\025BuildableCommandProtoP\001b\006proto" +
+      "3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -60,7 +61,7 @@ public final class BuildableCommandProto {
     internal_static_modern_v1_BuildableCommand_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_modern_v1_BuildableCommand_descriptor,
-        new java.lang.String[] { "Args", "Env", });
+        new java.lang.String[] { "Args", "Env", "ExternalActionClass", });
     internal_static_modern_v1_BuildableCommand_EnvEntry_descriptor =
       internal_static_modern_v1_BuildableCommand_descriptor.getNestedTypes().get(0);
     internal_static_modern_v1_BuildableCommand_EnvEntry_fieldAccessorTable = new
