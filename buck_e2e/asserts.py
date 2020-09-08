@@ -16,6 +16,6 @@
 from buck_api.buck_result import BuildResult
 
 
-def assert_build_success(result: BuildResult):
+def assert_build_success(result: BuildResult) -> None:
     """Asserts if buck build was succesful"""
     assert result.is_success(), result.get_stderr()

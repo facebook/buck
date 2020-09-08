@@ -17,7 +17,7 @@ import os
 import tempfile
 from functools import wraps
 from pathlib import Path
-from typing import Iterator
+from typing import Callable, Iterator
 
 import pytest
 from buck_api.buck_repo import BuckRepo
@@ -28,18 +28,42 @@ def repo() -> Iterator[BuckRepo]:
     """Returns a BuckRepo for testing"""
     with tempfile.TemporaryDirectory() as temp_dir:
         test_buck_binary = os.environ["TEST_BUCK_BINARY"]
+        # TODO: Change this to use a BuckConfig objects
+        with open(temp_dir + "/.buckconfig", "w") as f1:
+            f1.write("[buildfile]\nname = BUCK.fixture")
         repo = BuckRepo(Path(test_buck_binary), cwd=Path(temp_dir), encoding="utf-8")
         # setup
         yield repo
         # teardown
 
 
-def nobuckd(fn):
+def nobuckd(fn: Callable) -> Callable:
     """Disables buck daemon"""
 
     @wraps(fn)
-    def wrapped(repo, *args, **kwargs):
+    def wrapped(repo: BuckRepo, *args, **kwargs):
         repo.set_buckd(True)
         return fn(repo, *args, **kwargs)
 
     return wrapped
+
+
+def _buck_test_callable(fn: Callable) -> Callable:
+    @pytest.mark.asyncio
+    @wraps(fn)
+    def wrapped(repo: BuckRepo, *inner_args, **kwargs):
+        response = fn(repo, *inner_args, **kwargs)
+        return response
+
+    return wrapped
+
+
+def buck_test(*args, **kwargs) -> Callable:
+    """
+    Defines a buck test.
+
+    data: A string for the project directory that buck will run in. Default is no project.
+    """
+    if len(args) == 1 and callable(args[0]):
+        return _buck_test_callable(args[0])
+    raise NotImplementedError("@buck_test(data) has not been implemented")

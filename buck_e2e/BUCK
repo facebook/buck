@@ -4,13 +4,14 @@ python_library(
     name = "utilities",
     srcs = [
         "asserts.py",
-        "test_repo.py",
+        "repo_workspace.py",
     ],
     visibility = [
         "PUBLIC",
     ],
     deps = [
         "//buck_api:api",
+        "//third-party/py/pytest-asyncio:pytest-asyncio",
     ],
 )
 
@@ -21,11 +22,7 @@ pytest_test(
         "TEST_BUCK_BINARY": "$(location //buck_api/test:test_script.py)",
     },
     resources = ["//buck_api/test:test_script.py"],
-    visibility = [
-        "PUBLIC",
-    ],
     deps = [
         ":utilities",
-        "//third-party/py/pytest-asyncio:pytest-asyncio",
     ],
 )

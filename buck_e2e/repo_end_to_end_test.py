@@ -16,21 +16,22 @@
 from pathlib import Path
 
 import pytest
+from buck_api.buck_repo import BuckRepo
 from buck_api.buck_result import ExitCode
-from buck_e2e import asserts
-from buck_e2e.test_repo import nobuckd, repo  # noqa: F401
+from buck_e2e import asserts, repo_workspace
+from buck_e2e.repo_workspace import buck_test, nobuckd, repo  # noqa: F401
 
 
-@pytest.mark.asyncio
-async def test_repo_build(repo):
+@buck_test
+async def test_repo_build(repo: BuckRepo):
     _create_file(Path(repo.cwd), Path("target_file_success"), 0)
     result = await repo.build("//:target_file_success").wait()
     assert "target_file_success" in result.get_stdout()
     asserts.assert_build_success(result)
 
 
-@pytest.mark.asyncio
-async def test_buckd_toggle_enabled(repo):
+@buck_test
+async def test_buckd_toggle_enabled(repo: BuckRepo):
     _create_file(Path(repo.cwd), Path("target_file_success"), 0)
     result = await repo.build("//:target_file_success").wait()
     assert "target_file_success" in result.get_stdout()
@@ -39,9 +40,9 @@ async def test_buckd_toggle_enabled(repo):
     assert result.get_exit_code() == ExitCode.SUCCESS
 
 
-@pytest.mark.asyncio
-@nobuckd
-async def test_buckd_toggle_disabled(repo):
+@buck_test
+@repo_workspace.nobuckd
+async def test_buckd_toggle_disabled(repo: BuckRepo):
     _create_file(Path(repo.cwd), Path("target_file_success"), 0)
     result = await repo.build("//:target_file_success").wait()
     assert "target_file_success" in result.get_stdout()
@@ -50,16 +51,16 @@ async def test_buckd_toggle_disabled(repo):
     assert result.get_exit_code() == ExitCode.SUCCESS
 
 
-@pytest.mark.asyncio
-@pytest.mark.xfail(raises=AssertionError)
-async def test_repo_build_failure(repo):
+@buck_test
+@pytest.mark.xfail(raises=AssertionError)  # type: ignore
+async def test_repo_build_failure(repo: BuckRepo):
     _create_file(Path(repo.cwd), Path("target_file_failure"), 1)
     result = await repo.build("//:target_file_failure").wait()
     assert "target_file_failure" in result.get_stdout()
     asserts.assert_build_success(result)
 
 
-def _create_file(dirpath: Path, filepath: Path, exitcode: int) -> None:
+def _create_file(dirpath: Path, filepath: Path, exitcode: int):
     """ Writes out a message to a file given the path"""
     with open(dirpath / filepath, "w") as f1:
         target_name = str(filepath)
