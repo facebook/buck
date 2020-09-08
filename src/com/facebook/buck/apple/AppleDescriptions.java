@@ -968,7 +968,7 @@ public class AppleDescriptions {
               return DirectoryContentAppleBundlePart.of(
                   sourcePath,
                   AppleBundleDestination.RESOURCES,
-                  getSourcePathToContentHash(
+                  getSourcePathToContentHashesOfDirectory(
                       incrementalBundlingEnabled,
                       sourcePath,
                       buildRule.getBuildTarget(),
@@ -1397,6 +1397,29 @@ public class AppleDescriptions {
                 target ->
                     new AppleWriteFileHash(
                         target, projectFilesystem, graphBuilder, sourcePath, true));
+    return Optional.of(calculateHash.getSourcePathToOutput());
+  }
+
+  private static Optional<SourcePath> getSourcePathToContentHashesOfDirectory(
+      boolean incrementalBundlingEnabled,
+      SourcePath directorySourcePath,
+      BuildTarget directoryProducingTarget,
+      ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem) {
+    if (!incrementalBundlingEnabled) {
+      return Optional.empty();
+    }
+
+    BuildTarget calculateHashTarget =
+        directoryProducingTarget.withAppendedFlavors(AppleComputeDirectoryContentHashes.FLAVOR);
+
+    AppleComputeDirectoryContentHashes calculateHash =
+        (AppleComputeDirectoryContentHashes)
+            graphBuilder.computeIfAbsent(
+                calculateHashTarget,
+                target ->
+                    new AppleComputeDirectoryContentHashes(
+                        target, projectFilesystem, graphBuilder, directorySourcePath));
     return Optional.of(calculateHash.getSourcePathToOutput());
   }
 
