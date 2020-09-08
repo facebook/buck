@@ -127,7 +127,8 @@ outs = {
   Default output which must be present if the <code>outs</code> arg is present. Otherwise does not apply.
   </p>
   <p>
-  If a rule with <code>outs</code> is consumed without an output label, the default output is returned.
+  If a rule with <code>outs</code> is consumed without an output label, the default output is returned. The
+  default output does not need to be present in any of the named outputs defined in <code>outs</code>.
   </p>
   <p>
       Note that a maximum of one value may be present in this list. For example:
