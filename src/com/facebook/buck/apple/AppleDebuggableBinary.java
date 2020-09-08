@@ -66,11 +66,11 @@ public class AppleDebuggableBinary extends AbstractBuildRule
    */
   static AppleDebuggableBinary createFromUnstrippedBinary(
       ProjectFilesystem filesystem,
-      BuildTarget baseTarget,
+      BuildTarget buildTarget,
       HasAppleDebugSymbolDeps unstrippedBinaryRule) {
     return new AppleDebuggableBinary(
         filesystem,
-        baseTarget.withAppendedFlavors(RULE_FLAVOR, AppleDebugFormat.DWARF.getFlavor()),
+        buildTarget,
         unstrippedBinaryRule,
         Optional.empty(),
         unstrippedBinaryRule.getAppleDebugSymbolDeps());
@@ -82,26 +82,18 @@ public class AppleDebuggableBinary extends AbstractBuildRule
    */
   static AppleDebuggableBinary createWithDsym(
       ProjectFilesystem filesystem,
-      BuildTarget baseTarget,
+      BuildTarget buildTarget,
       BuildRule strippedBinaryRule,
       AppleDsym dsym) {
     return new AppleDebuggableBinary(
-        filesystem,
-        baseTarget.withAppendedFlavors(RULE_FLAVOR, AppleDebugFormat.DWARF_AND_DSYM.getFlavor()),
-        strippedBinaryRule,
-        Optional.of(dsym),
-        Stream.empty());
+        filesystem, buildTarget, strippedBinaryRule, Optional.of(dsym), Stream.empty());
   }
 
   /** Create with no additional runtime deps. */
   static AppleDebuggableBinary createWithoutDebugging(
-      ProjectFilesystem filesystem, BuildTarget baseTarget, BuildRule binaryRule) {
+      ProjectFilesystem filesystem, BuildTarget buildTarget, BuildRule binaryRule) {
     return new AppleDebuggableBinary(
-        filesystem,
-        baseTarget.withAppendedFlavors(RULE_FLAVOR, AppleDebugFormat.NONE.getFlavor()),
-        binaryRule,
-        Optional.empty(),
-        Stream.empty());
+        filesystem, buildTarget, binaryRule, Optional.empty(), Stream.empty());
   }
 
   private AppleDebuggableBinary(

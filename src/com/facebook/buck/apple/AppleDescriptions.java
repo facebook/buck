@@ -650,10 +650,12 @@ public class AppleDescriptions {
     // Target used as the base target of AppleDebuggableBinary.
 
     BuildTarget baseTarget = unstrippedBinaryRule.getBuildTarget();
+    BuildTarget binaryTarget =
+        baseTarget.withAppendedFlavors(AppleDebuggableBinary.RULE_FLAVOR, debugFormat.getFlavor());
     switch (debugFormat) {
       case DWARF:
         return AppleDebuggableBinary.createFromUnstrippedBinary(
-            projectFilesystem, baseTarget, unstrippedBinaryRule);
+            projectFilesystem, binaryTarget, unstrippedBinaryRule);
       case DWARF_AND_DSYM:
         AppleDsym dsym =
             requireAppleDsym(
@@ -666,10 +668,10 @@ public class AppleDescriptions {
                 shouldCacheStrips,
                 withDownwardApi);
         return AppleDebuggableBinary.createWithDsym(
-            projectFilesystem, baseTarget, strippedBinaryRule, dsym);
+            projectFilesystem, binaryTarget, strippedBinaryRule, dsym);
       case NONE:
         return AppleDebuggableBinary.createWithoutDebugging(
-            projectFilesystem, baseTarget, strippedBinaryRule);
+            projectFilesystem, binaryTarget, strippedBinaryRule);
     }
     throw new IllegalStateException("Unhandled debugFormat");
   }
