@@ -1,0 +1,54 @@
+apple_resource(
+    name = "DemoAppResources",
+    dirs = ["Images"],
+    files = glob(["*.png"]),
+    variants = [
+        "aa.lproj/Localizable.strings",
+        "Strings/xx.lproj/Localizable.strings",
+    ],
+)
+
+apple_bundle(
+    name = "DemoApp",
+    binary = ":AppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = [":TestFramework", ":Worker"],
+)
+
+scene_kit_assets(
+    name = "DemoAppSceneKitAssets",
+    path = "DemoApp.scnassets",
+)
+
+core_data_model(
+    name = "DemoAppCoreDataModel",
+    path = "Model.xcdatamodeld",
+)
+
+apple_library(
+    name = "TestLib",
+    srcs = ["empty.c"],
+)
+
+# Framework flavor doesn't work as expected, create a separate bundle instead.
+apple_bundle(
+    name = "TestFramework",
+    binary = ":TestLib#shared",
+    extension = "framework",
+    info_plist = "Dummy-Info.plist",
+)
+
+apple_binary(
+    name = "AppBinary",
+    srcs = ["App/App.m", "App/BuildTrigger.m"],
+    deps = [":DemoAppResources", ":DemoAppSceneKitAssets", ":DemoAppCoreDataModel"],
+)
+
+apple_binary(
+    name = "Worker",
+    srcs = ["Worker/worker.m"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+)

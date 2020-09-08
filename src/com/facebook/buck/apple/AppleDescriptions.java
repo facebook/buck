@@ -1337,7 +1337,8 @@ public class AppleDescriptions {
         codeSignIdentityFingerprint,
         maybeProcessedResourcesDir,
         nonProcessedResourcesContentHashesFileSourcePath,
-        maybeProcessedResourcesContentHashesFilePath);
+        maybeProcessedResourcesContentHashesFilePath,
+        incrementalBundlingEnabled);
   }
 
   private static void addExtraBinariesToBundleParts(

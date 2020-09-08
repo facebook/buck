@@ -22,6 +22,8 @@ import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
@@ -50,7 +52,10 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MoveStep;
@@ -58,7 +63,9 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
@@ -86,6 +93,8 @@ public class AppleBundle extends AbstractBuildRule
   @AddToRuleKey private final Optional<String> productName;
 
   @AddToRuleKey private final Optional<SourcePath> maybeEntitlementsFile;
+
+  @AddToRuleKey private final boolean incrementalBundlingEnabled;
 
   @AddToRuleKey private final BuildRule binary;
 
@@ -190,7 +199,8 @@ public class AppleBundle extends AbstractBuildRule
       Optional<SourcePath> maybeCodeSignIdentityFingerprintFile,
       Optional<SourcePath> maybeProcessedResourcesDir,
       Optional<SourcePath> nonProcessedResourcesContentHashesFileSourcePath,
-      Optional<SourcePath> processedResourcesContentHashesFileSourcePath) {
+      Optional<SourcePath> processedResourcesContentHashesFileSourcePath,
+      boolean incrementalBundlingEnabled) {
     super(buildTarget, projectFilesystem);
     this.buildRuleParams = params;
     this.extension = extension;
@@ -249,6 +259,7 @@ public class AppleBundle extends AbstractBuildRule
         nonProcessedResourcesContentHashesFileSourcePath;
     this.processedResourcesContentHashesFileSourcePath =
         processedResourcesContentHashesFileSourcePath;
+    this.incrementalBundlingEnabled = incrementalBundlingEnabled;
   }
 
   private boolean hasBinary() {
@@ -316,6 +327,16 @@ public class AppleBundle extends AbstractBuildRule
     }
 
     if (maybeProcessedResourcesDir.isPresent()) {
+      if (incrementalBundlingEnabled) {
+        ImmutableSortedMap.Builder<RelPath, String> newContentHashesBuilder =
+            ImmutableSortedMap.orderedBy(RelPath.comparator());
+        Supplier<ImmutableMap<RelPath, String>> newContentHashesSupplier =
+            newContentHashesBuilder::build;
+        addStepsToComputeNewContentHashes(
+            context.getSourcePathResolver(), stepsBuilder, newContentHashesBuilder);
+        appendWriteNewContentHashesStep(
+            stepsBuilder, context, buildableContext, newContentHashesSupplier);
+      }
       AppleResourceProcessing.addStepsToCopyResources(
           context,
           stepsBuilder,
@@ -407,6 +428,173 @@ public class AppleBundle extends AbstractBuildRule
         context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput()).getPath());
 
     return stepsBuilder.build();
+  }
+
+  private void addStepsToComputeNewContentHashes(
+      SourcePathResolverAdapter sourcePathResolver,
+      ImmutableList.Builder<Step> stepsBuilder,
+      ImmutableSortedMap.Builder<RelPath, String> newContentHashesBuilder) {
+
+    List<DirectoryContentAppleBundlePart> directoriesWithContentBundleParts =
+        bundleParts.stream()
+            .filter(p -> p instanceof DirectoryContentAppleBundlePart)
+            .map(p -> (DirectoryContentAppleBundlePart) p)
+            .collect(Collectors.toList());
+
+    directoriesWithContentBundleParts.forEach(
+        bundlePart -> {
+          AbsPath hashesFilePath =
+              sourcePathResolver.getAbsolutePath(
+                  bundlePart
+                      .getContentHashSourcePath()
+                      .orElseThrow(
+                          () ->
+                              new IllegalStateException(
+                                  "Parameter should be present when incremental bundling is enabled")));
+          ImmutableMap.Builder<RelPath, String> hashesBuilder = ImmutableMap.builder();
+          stepsBuilder.add(
+              new AppleReadHashPerFileStep(
+                  "read-container-directories-bundle-part-hashes", hashesFilePath, hashesBuilder));
+          stepsBuilder.add(
+              new AbstractExecutionStep("memoize-container-directories-bundle-part-hashes") {
+                @Override
+                public StepExecutionResult execute(StepExecutionContext context) {
+                  RelPath bundleDestinationPath =
+                      RelPath.of(bundlePart.getDestination().getPath(destinations));
+                  hashesBuilder
+                      .build()
+                      .forEach(
+                          (path, hash) ->
+                              newContentHashesBuilder.put(
+                                  bundleDestinationPath.resolve(path), hash));
+                  return StepExecutionResults.SUCCESS;
+                }
+              });
+        });
+
+    List<FileAppleBundlePart> fileBundleParts =
+        bundleParts.stream()
+            .filter(p -> p instanceof FileAppleBundlePart)
+            .map(p -> (FileAppleBundlePart) p)
+            .collect(Collectors.toList());
+
+    fileBundleParts.forEach(
+        bundlePart -> {
+          AppleBundleComponentCopySpec copySpec =
+              new AppleBundleComponentCopySpec(bundlePart, sourcePathResolver, destinations);
+          appendStepToReadSavedHashFromDisk(
+              stepsBuilder,
+              sourcePathResolver,
+              bundlePart
+                  .getContentHashSourcePath()
+                  .orElseThrow(
+                      () ->
+                          new IllegalStateException(
+                              "Parameter should be present when incremental bundling is enabled")),
+              copySpec.getDestinationPathRelativeToBundleRoot(),
+              newContentHashesBuilder,
+              getProjectFilesystem());
+        });
+
+    List<DirectoryAppleBundlePart> directoryBundleParts =
+        bundleParts.stream()
+            .filter(p -> p instanceof DirectoryAppleBundlePart)
+            .map(p -> (DirectoryAppleBundlePart) p)
+            .collect(Collectors.toList());
+
+    directoryBundleParts.forEach(
+        bundlePart -> {
+          AppleBundleComponentCopySpec copySpec =
+              new AppleBundleComponentCopySpec(bundlePart, sourcePathResolver, destinations);
+          appendStepToReadSavedHashFromDisk(
+              stepsBuilder,
+              sourcePathResolver,
+              bundlePart
+                  .getContentHashSourcePath()
+                  .orElseThrow(
+                      () ->
+                          new IllegalStateException(
+                              "Parameter should be present when incremental bundling is enabled")),
+              copySpec.getDestinationPathRelativeToBundleRoot(),
+              newContentHashesBuilder,
+              getProjectFilesystem());
+        });
+
+    AbsPath processedResourcesContentHashesFilePath =
+        sourcePathResolver.getAbsolutePath(
+            processedResourcesContentHashesFileSourcePath.orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "Parameter should be present when incremental bundling is enabled")));
+
+    stepsBuilder.add(
+        new AppleReadHashPerFileStep(
+            "read-new-processed-resources-hashes",
+            processedResourcesContentHashesFilePath,
+            newContentHashesBuilder));
+
+    AbsPath nonProcessedResourcesContentHashesFilePath =
+        sourcePathResolver.getAbsolutePath(
+            nonProcessedResourcesContentHashesFileSourcePath.orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "Parameter should be present when incremental bundling is enabled")));
+
+    stepsBuilder.add(
+        new AppleReadHashPerFileStep(
+            "read-new-non-processed-resources-hashes",
+            nonProcessedResourcesContentHashesFilePath,
+            newContentHashesBuilder));
+  }
+
+  private static void appendStepToReadSavedHashFromDisk(
+      ImmutableList.Builder<Step> stepsBuilder,
+      SourcePathResolverAdapter sourcePathResolver,
+      SourcePath savedHashFileSourcePath,
+      RelPath toPath,
+      ImmutableSortedMap.Builder<RelPath, String> newContentHashesBuilder,
+      ProjectFilesystem projectFilesystem) {
+    stepsBuilder.add(
+        new AbstractExecutionStep("read-saved-hash-from-disk") {
+          @Override
+          public StepExecutionResult execute(StepExecutionContext context) {
+            AbsPath contentHashFilePath =
+                sourcePathResolver.getAbsolutePath(savedHashFileSourcePath);
+            Optional<String> hash = projectFilesystem.readFileIfItExists(contentHashFilePath);
+            newContentHashesBuilder.put(
+                toPath,
+                hash.orElseThrow(
+                    () ->
+                        new IllegalStateException(
+                            String.format(
+                                "Expected file with content hash to exist %s",
+                                contentHashFilePath))));
+
+            return StepExecutionResults.SUCCESS;
+          }
+        });
+  }
+
+  private void appendWriteNewContentHashesStep(
+      ImmutableList.Builder<Step> stepsBuilder,
+      BuildContext context,
+      BuildableContext buildableContext,
+      Supplier<ImmutableMap<RelPath, String>> contentHashesSupplier) {
+    BuildCellRelativePath contentHashesFilePathRelativeToCell =
+        BuildCellRelativePath.fromCellRelativePath(
+            context.getBuildCellRootPath(), getProjectFilesystem(), getContentHashesFilePath());
+    stepsBuilder.add(RmStep.of(contentHashesFilePathRelativeToCell));
+    stepsBuilder.add(
+        new AppleWriteHashPerFileStep(
+            "persist-apple-bundle-hashes",
+            contentHashesSupplier,
+            getContentHashesFilePath(),
+            getProjectFilesystem()));
+    buildableContext.recordArtifact(getContentHashesFilePath());
+  }
+
+  private Path getContentHashesFilePath() {
+    return bundleRoot.getParent().resolve("content_hashes.json");
   }
 
   private Supplier<CodeSignIdentity> appendStepsToSelectCodeSignIdentity(

@@ -1984,6 +1984,149 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void givenPlatformIsMacOsBundlePartsHashesAreWrittenToDisk()
+      throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_parts_of_every_kind", tmp);
+    workspace.setUp();
+
+    Path buildTriggerPath = Paths.get("App/BuildTrigger.m");
+    filesystem.writeContentsToPath("", buildTriggerPath);
+
+    workspace.addBuckConfigLocalOption("apple", "incremental_bundling_enabled", "true");
+    workspace.addBuckConfigLocalOption("apple", "resource_processing_separate_rule", "true");
+    workspace.addBuckConfigLocalOption("apple", "codesign", "/usr/bin/true");
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#macosx-x86_64,no-debug");
+    Path outputPath = workspace.buildAndReturnOutput(target.toString());
+    Path hashesFilePath = outputPath.resolve("../content_hashes.json");
+    assertTrue("File with hashes should exist", Files.isRegularFile(hashesFilePath));
+
+    JsonParser parser = ObjectMappers.createParser(hashesFilePath);
+    Map<String, String> pathToHash =
+        parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
+
+    ImmutableMap.Builder<String, String> expectedBuilder = ImmutableMap.builder();
+    for (String path :
+        ImmutableList.of(
+            "Contents/Frameworks/TestFramework.framework",
+            "Contents/MacOS/DemoApp",
+            "Contents/MacOS/Worker",
+            "Contents/PkgInfo",
+            "Contents/Resources/DemoApp.scnassets",
+            "Contents/Resources/Image.png",
+            "Contents/Resources/Images",
+            "Contents/Resources/Model.momd",
+            "Contents/Resources/aa.lproj",
+            "Contents/Resources/xx.lproj")) {
+
+      StringBuilder hashBuilder = new StringBuilder();
+      Step step =
+          new AppleComputeFileOrDirectoryHashStep(
+              hashBuilder, AbsPath.of(outputPath.resolve(path)), filesystem, true, true);
+      step.execute(TestExecutionContext.newInstance());
+      expectedBuilder.put(path, hashBuilder.toString());
+    }
+
+    {
+      Path infoPlistOutputDirectoryPath =
+          workspace.getPath(
+              BuildTargetPaths.getGenPath(
+                  filesystem,
+                  AppleDescriptions.stripBundleSpecificFlavors(target)
+                      .withAppendedFlavors(AppleInfoPlist.FLAVOR),
+                  "%s"));
+
+      Path processedFilePath = infoPlistOutputDirectoryPath.resolve("Info.plist");
+
+      StringBuilder hashBuilder = new StringBuilder();
+      Step step =
+          new AppleComputeFileOrDirectoryHashStep(
+              hashBuilder,
+              AbsPath.of(outputPath.resolve(processedFilePath)),
+              filesystem,
+              true,
+              true);
+      step.execute(TestExecutionContext.newInstance());
+      expectedBuilder.put("Contents/Info.plist", hashBuilder.toString());
+    }
+
+    assertEquals(expectedBuilder.build(), pathToHash);
+  }
+
+  @Test
+  public void givenPlatformIsIosBundlePartsHashesAreWrittenToDisk()
+      throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_parts_of_every_kind", tmp);
+    workspace.setUp();
+
+    Path buildTriggerPath = Paths.get("App/BuildTrigger.m");
+    filesystem.writeContentsToPath("", buildTriggerPath);
+
+    workspace.addBuckConfigLocalOption("apple", "incremental_bundling_enabled", "true");
+    workspace.addBuckConfigLocalOption("apple", "resource_processing_separate_rule", "true");
+    workspace.addBuckConfigLocalOption("apple", "codesign", "/usr/bin/true");
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
+    Path outputPath = workspace.buildAndReturnOutput(target.toString());
+    Path hashesFilePath = outputPath.resolve("../content_hashes.json");
+    assertTrue("File with hashes should exist", Files.isRegularFile(hashesFilePath));
+
+    JsonParser parser = ObjectMappers.createParser(hashesFilePath);
+    Map<String, String> pathToHash =
+        parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
+
+    ImmutableMap.Builder<String, String> expectedBuilder = ImmutableMap.builder();
+    for (String path :
+        ImmutableList.of(
+            "Frameworks/TestFramework.framework",
+            "DemoApp",
+            "PkgInfo",
+            "DemoApp.scnassets",
+            "Image.png",
+            "Images",
+            "Model.momd",
+            "aa.lproj",
+            "xx.lproj")) {
+
+      StringBuilder hashBuilder = new StringBuilder();
+      Step step =
+          new AppleComputeFileOrDirectoryHashStep(
+              hashBuilder, AbsPath.of(outputPath.resolve(path)), filesystem, true, true);
+      step.execute(TestExecutionContext.newInstance());
+      expectedBuilder.put(path, hashBuilder.toString());
+    }
+
+    {
+      Path infoPlistOutputDirectoryPath =
+          workspace.getPath(
+              BuildTargetPaths.getGenPath(
+                  filesystem,
+                  AppleDescriptions.stripBundleSpecificFlavors(target)
+                      .withAppendedFlavors(AppleInfoPlist.FLAVOR),
+                  "%s"));
+
+      Path processedFilePath = infoPlistOutputDirectoryPath.resolve("Info.plist");
+
+      StringBuilder hashBuilder = new StringBuilder();
+      Step step =
+          new AppleComputeFileOrDirectoryHashStep(
+              hashBuilder,
+              AbsPath.of(outputPath.resolve(processedFilePath)),
+              filesystem,
+              true,
+              true);
+      step.execute(TestExecutionContext.newInstance());
+      expectedBuilder.put("Info.plist", hashBuilder.toString());
+    }
+
+    assertEquals(expectedBuilder.build(), pathToHash);
+  }
+
+  @Test
   public void resourcesHashesAreNotComputedByDefault() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_resources", tmp);
