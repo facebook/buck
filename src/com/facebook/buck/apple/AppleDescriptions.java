@@ -1151,7 +1151,7 @@ public class AppleDescriptions {
               destination,
               getSourcePathToContentHash(
                   incrementalBundlingEnabled,
-                  infoPlistSourcePath,
+                  infoPlistReadyToCopy,
                   buildTarget,
                   graphBuilder,
                   projectFilesystem)));
