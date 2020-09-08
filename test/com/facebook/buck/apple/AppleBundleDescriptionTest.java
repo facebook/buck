@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -27,6 +28,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.cxx.FrameworkDependencies;
@@ -260,5 +262,35 @@ public class AppleBundleDescriptionTest {
     assertFalse(
         "Querying a bundle's framework dependencies should return empty.",
         graphBuilder.requireMetadata(bundleTarget, FrameworkDependencies.class).isPresent());
+  }
+
+  @Test
+  public void debuggableBinaryRuleCanBeLookedUpInActiongraph() {
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:binary");
+    TargetNode<?> binaryNode = new AppleBinaryBuilder(binaryTarget).build();
+
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//:bundle");
+    TargetNode<?> bundleNode =
+        new AppleBundleBuilder(bundleTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(binaryTarget)
+            .build();
+
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(bundleNode, binaryNode));
+
+    AppleBundle bundle =
+        (AppleBundle)
+            graphBuilder.requireRule(
+                bundleTarget.withFlavors(
+                    FakeAppleRuleDescriptions.DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor(),
+                    AppleDebugFormat.DWARF_AND_DSYM.getFlavor()));
+    BuildRule debuggableBinary =
+        bundle.getBuildDeps().stream()
+            .filter(rule -> rule instanceof AppleDebuggableBinary)
+            .findFirst()
+            .get();
+    assertSame(debuggableBinary, graphBuilder.getRule(debuggableBinary.getBuildTarget()));
   }
 }

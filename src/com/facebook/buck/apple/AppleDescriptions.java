@@ -648,32 +648,45 @@ public class AppleDescriptions {
       boolean shouldCacheStrips,
       boolean withDownwardApi) {
     // Target used as the base target of AppleDebuggableBinary.
-
     BuildTarget baseTarget = unstrippedBinaryRule.getBuildTarget();
-    BuildTarget binaryTarget =
-        baseTarget.withAppendedFlavors(AppleDebuggableBinary.RULE_FLAVOR, debugFormat.getFlavor());
-    switch (debugFormat) {
-      case DWARF:
-        return AppleDebuggableBinary.createFromUnstrippedBinary(
-            projectFilesystem, binaryTarget, unstrippedBinaryRule);
-      case DWARF_AND_DSYM:
-        AppleDsym dsym =
-            requireAppleDsym(
-                buildTarget,
-                projectFilesystem,
-                graphBuilder,
-                unstrippedBinaryRule,
-                cxxPlatformsProvider,
-                appleCxxPlatforms,
-                shouldCacheStrips,
-                withDownwardApi);
-        return AppleDebuggableBinary.createWithDsym(
-            projectFilesystem, binaryTarget, strippedBinaryRule, dsym);
-      case NONE:
-        return AppleDebuggableBinary.createWithoutDebugging(
-            projectFilesystem, binaryTarget, strippedBinaryRule);
-    }
-    throw new IllegalStateException("Unhandled debugFormat");
+
+    return (AppleDebuggableBinary)
+        graphBuilder.computeIfAbsent(
+            // FIXME: we should not be adding build flavors here. It results in some call to
+            // `graphBuilder.requireRule` receiving a rule with a different name from the one it
+            // asked for. Doing it within a `computeIfAbsent` call papers over the issue a bit
+            // because it ensures that the rule can be looked up by either name, but we should
+            // really be creating the `AppleDebuggableBinary` with the `BuildTarget` that is
+            // passed in. We should get the debug format based on what flavors are present, and
+            // either ensuring that every request for a debuggable binary has the
+            // `AppleDebuggableBinary.RULE_FLAVOR` on it (or perhaps eliminating that flavor
+            // entirely).
+            baseTarget.withAppendedFlavors(
+                AppleDebuggableBinary.RULE_FLAVOR, debugFormat.getFlavor()),
+            binaryTarget -> {
+              switch (debugFormat) {
+                case DWARF:
+                  return AppleDebuggableBinary.createFromUnstrippedBinary(
+                      projectFilesystem, binaryTarget, unstrippedBinaryRule);
+                case DWARF_AND_DSYM:
+                  AppleDsym dsym =
+                      requireAppleDsym(
+                          buildTarget,
+                          projectFilesystem,
+                          graphBuilder,
+                          unstrippedBinaryRule,
+                          cxxPlatformsProvider,
+                          appleCxxPlatforms,
+                          shouldCacheStrips,
+                          withDownwardApi);
+                  return AppleDebuggableBinary.createWithDsym(
+                      projectFilesystem, binaryTarget, strippedBinaryRule, dsym);
+                case NONE:
+                  return AppleDebuggableBinary.createWithoutDebugging(
+                      projectFilesystem, binaryTarget, strippedBinaryRule);
+              }
+              throw new IllegalStateException("Unhandled debugFormat");
+            });
   }
 
   private static AppleDsym requireAppleDsym(
