@@ -64,4 +64,6 @@ message BuildableCommand {
  repeated string args = 1;
 
  map<string, string> env = 2;
+
+ string external_action_class = 3;
 }
