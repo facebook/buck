@@ -99,6 +99,7 @@ public class ExternalActionsIntegrationTest {
         BuildableCommand.newBuilder()
             .addAllArgs(ImmutableList.of("test_path"))
             .putAllEnv(ImmutableMap.of())
+            .setExternalActionClass(FakeMkdirExternalAction.class.getName())
             .build();
     try (OutputStream outputStream = new FileOutputStream(buildableCommandFile)) {
       buildableCommand.writeTo(outputStream);
@@ -106,11 +107,7 @@ public class ExternalActionsIntegrationTest {
 
     ImmutableList<String> command =
         ImmutableList.of(
-            "java",
-            "-jar",
-            testBinary.toString(),
-            FakeMkdirExternalAction.class.getName(),
-            buildableCommandFile.getAbsolutePath());
+            "java", "-jar", testBinary.toString(), buildableCommandFile.getAbsolutePath());
 
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()

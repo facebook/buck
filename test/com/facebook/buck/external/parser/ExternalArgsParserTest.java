@@ -40,23 +40,22 @@ public class ExternalArgsParserTest {
   @Test
   public void throwsIfNullArgs() {
     exception.expect(NullPointerException.class);
-    exception.expectMessage("Expected 2 args. Received null args");
+    exception.expectMessage("Expected 1 arg. Received null args");
     new ExternalArgsParser().parse(null);
   }
 
   @Test
-  public void throwsIfNotTwoArgs() {
+  public void throwsIfNotOneArg() {
     exception.expect(IllegalArgumentException.class);
-    exception.expectMessage("Expected 2 args. Received 1");
-    new ExternalArgsParser().parse(new String[] {"one"});
+    exception.expectMessage("Expected 1 arg. Received 2");
+    new ExternalArgsParser().parse(new String[] {"one", "two"});
   }
 
   @Test
   public void throwsIfIOException() {
     exception.expect(IllegalArgumentException.class);
     exception.expectMessage("Cannot read buildable command");
-    new ExternalArgsParser()
-        .parse(new String[] {TestExternalActionClassFoo.class.getName(), "nonexistent_path"});
+    new ExternalArgsParser().parse(new String[] {"nonexistent_path"});
   }
 
   @Test
@@ -64,9 +63,18 @@ public class ExternalArgsParserTest {
     exception.expect(IllegalArgumentException.class);
     exception.expectMessage("Cannot find external actions class: com.facebook.buck.android.foo");
 
+    BuildableCommand buildableCommand =
+        BuildableCommand.newBuilder()
+            .addAllArgs(ImmutableList.of(""))
+            .putAllEnv(ImmutableMap.of())
+            .setExternalActionClass("com.facebook.buck.android.foo")
+            .build();
     File tempFile = temporaryFolder.newFile("tmp_file").toFile();
-    new ExternalArgsParser()
-        .parse(new String[] {"com.facebook.buck.android.foo", tempFile.getAbsolutePath()});
+    try (OutputStream outputStream = new FileOutputStream(tempFile)) {
+      buildableCommand.writeTo(outputStream);
+    }
+
+    new ExternalArgsParser().parse(new String[] {tempFile.getAbsolutePath()});
   }
 
   @Test
@@ -75,6 +83,7 @@ public class ExternalArgsParserTest {
         BuildableCommand.newBuilder()
             .addAllArgs(ImmutableList.of("somefile"))
             .putAllEnv(ImmutableMap.of())
+            .setExternalActionClass(TestExternalActionClassFoo.class.getName())
             .build();
 
     File tempFile = temporaryFolder.newFile("tmp_file").toFile();
@@ -83,11 +92,7 @@ public class ExternalArgsParserTest {
     }
 
     ParsedArgs parsedArgs =
-        new ExternalArgsParser()
-            .parse(
-                new String[] {
-                  TestExternalActionClassFoo.class.getName(), tempFile.getAbsolutePath()
-                });
+        new ExternalArgsParser().parse(new String[] {tempFile.getAbsolutePath()});
 
     assertThat(parsedArgs.getExternalActionClass(), equalTo(TestExternalActionClassFoo.class));
     assertThat(parsedArgs.getBuildableCommand(), equalTo(buildableCommand));

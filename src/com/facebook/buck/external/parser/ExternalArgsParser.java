@@ -35,27 +35,28 @@ import java.io.InputStream;
  * </ol>
  */
 public class ExternalArgsParser {
-  private static final int NUM_EXPECTED_ARGS = 2;
+  private static final int NUM_EXPECTED_ARGS = 1;
 
   /** Returns the {@link ParsedArgs} from the args passed directly to ExternalActionsExecutable. */
   @SuppressWarnings("unchecked")
   public ParsedArgs parse(String[] args) {
-    Preconditions.checkNotNull(args, "Expected %s args. Received null args", NUM_EXPECTED_ARGS);
+    Preconditions.checkNotNull(args, "Expected %s arg. Received null args", NUM_EXPECTED_ARGS);
     Preconditions.checkArgument(
         args.length == NUM_EXPECTED_ARGS,
-        "Expected %s args. Received %s",
+        "Expected %s arg. Received %s",
         NUM_EXPECTED_ARGS,
         args.length);
-    Class<? extends ExternalAction> externalAction;
-    try {
-      externalAction = (Class<? extends ExternalAction>) Class.forName(args[0]);
-    } catch (ClassNotFoundException e) {
-      throw new IllegalArgumentException(
-          String.format("Cannot find external actions class: %s", args[0]), e);
-    }
-    try (InputStream inputStream = new FileInputStream(args[1])) {
+    try (InputStream inputStream = new FileInputStream(args[0])) {
       BuildableCommand buildableCommand = BuildableCommand.parseFrom(inputStream);
-      return ParsedArgs.of(externalAction, buildableCommand);
+      String externalActionClassName = buildableCommand.getExternalActionClass();
+      try {
+        Class<? extends ExternalAction> externalAction =
+            (Class<? extends ExternalAction>) Class.forName(externalActionClassName);
+        return ParsedArgs.of(externalAction, buildableCommand);
+      } catch (ClassNotFoundException e) {
+        throw new IllegalArgumentException(
+            String.format("Cannot find external actions class: %s", externalActionClassName), e);
+      }
     } catch (IOException e) {
       throw new IllegalArgumentException("Cannot read buildable command", e);
     }
