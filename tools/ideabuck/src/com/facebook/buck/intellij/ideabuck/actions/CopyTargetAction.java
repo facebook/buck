@@ -21,6 +21,10 @@ import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpressionStatement;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionTrailer;
+import com.facebook.buck.intellij.ideabuck.logging.EventLogger;
+import com.facebook.buck.intellij.ideabuck.logging.EventLoggerFactoryProvider;
+import com.facebook.buck.intellij.ideabuck.logging.Keys;
+import com.google.common.collect.ImmutableMap;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -57,13 +61,19 @@ public class CopyTargetAction extends AnAction {
   @Override
   public void actionPerformed(AnActionEvent e) {
     final Project project = e.getProject();
+    EventLogger buckEventLogger =
+        EventLoggerFactoryProvider.getInstance()
+            .getBuckEventLogger(Keys.MENU_ITEM)
+            .withEventAction(this.getClass().getSimpleName());
     if (project == null) {
-      fail("The current project is invalid");
+      fail("The current project is invalid", buckEventLogger);
       return;
     }
+    // At this point, we have the project
+    buckEventLogger.withProjectFiles(project, e.getData(CommonDataKeys.VIRTUAL_FILE));
     final VirtualFile buckFile = findBuckFileFromActionEvent(e);
     if (buckFile == null) {
-      fail("Unable to find a BUCK file");
+      fail("Unable to find a BUCK file", buckEventLogger);
       return;
     }
     final BuckTargetPattern buckTargetPattern =
@@ -71,7 +81,10 @@ public class CopyTargetAction extends AnAction {
             .findTargetPatternForVirtualFile(buckFile)
             .orElse(null);
     if (buckTargetPattern == null) {
-      fail("Unable to find a Buck target pattern for " + buckFile.getCanonicalPath());
+      fail(
+          "Unable to find a Buck target pattern for " + buckFile.getCanonicalPath(),
+          buckEventLogger,
+          buckFile);
       return;
     }
     BuckCellManager buckCellManager = BuckCellManager.getInstance(project);
@@ -89,28 +102,45 @@ public class CopyTargetAction extends AnAction {
     if (buckFile.equals(e.getData(CommonDataKeys.VIRTUAL_FILE))) {
       final String targetName = getTargetNameFromActionEvent(e);
       if (targetName != null) {
-        CopyPasteManager.getInstance().setContents(new StringSelection(targetPath + targetName));
+        String target = targetPath + targetName;
+        CopyPasteManager.getInstance().setContents(new StringSelection(target));
+        buckEventLogger
+            .withExtraData(
+                ImmutableMap.of(Keys.BUCK_FILE, buckFile.getCanonicalPath(), Keys.TARGET, target))
+            .log();
       } else {
-        fail("Unable to get the name of the Buck target");
+        fail("Unable to get the name of the Buck target", buckEventLogger, buckFile);
       }
       return;
     }
     final String cellPath = buckTargetPattern.getCellPath().orElse(null);
     if (cellPath == null) {
-      fail("Unable to get the cell path of " + buckTargetPattern);
+      fail("Unable to get the cell path of " + buckTargetPattern, buckEventLogger, buckFile);
       return;
     }
     final String[] parts = cellPath.split("/");
     if (parts.length == 0) {
-      fail("Cell path " + cellPath + " is invalid");
+      fail("Cell path " + cellPath + " is invalid", buckEventLogger, buckFile);
       return;
     }
-
-    CopyPasteManager.getInstance()
-        .setContents(new StringSelection(targetPath + parts[parts.length - 1]));
+    String target = targetPath + parts[parts.length - 1];
+    CopyPasteManager.getInstance().setContents(new StringSelection(target));
+    buckEventLogger
+        .withExtraData(
+            ImmutableMap.of(Keys.BUCK_FILE, buckFile.getCanonicalPath(), Keys.TARGET, target))
+        .log();
   }
 
-  private static void fail(String message) {
+  private static void fail(String message, EventLogger buckEventLogger) {
+    fail(message, buckEventLogger, null);
+  }
+
+  private static void fail(
+      String message, EventLogger buckEventLogger, @Nullable VirtualFile buckFile) {
+    String buckFilePath = buckFile == null ? "null" : buckFile.getCanonicalPath();
+    buckEventLogger
+        .withExtraData(ImmutableMap.of(Keys.ERROR, message, Keys.BUCK_FILE, buckFilePath))
+        .log();
     Messages.showWarningDialog(message, "Failed to Copy Buck Target");
   }
 

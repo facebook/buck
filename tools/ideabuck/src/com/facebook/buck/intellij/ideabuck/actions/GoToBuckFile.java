@@ -17,21 +17,26 @@
 package com.facebook.buck.intellij.ideabuck.actions;
 
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
+import com.facebook.buck.intellij.ideabuck.logging.EventLogger;
+import com.facebook.buck.intellij.ideabuck.logging.EventLoggerFactoryProvider;
+import com.facebook.buck.intellij.ideabuck.logging.Keys;
+import com.google.common.collect.ImmutableMap;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.Navigatable;
+import javax.annotation.Nullable;
 
 /** Go to the build file for the current source file. */
 public class GoToBuckFile extends DumbAwareAction {
 
-  private VirtualFile findBuckFile(Project project) {
+  private VirtualFile findBuckFile(@Nullable Project project, @Nullable VirtualFile currentFile) {
     if (project == null || project.isDefault()) {
       return null;
     }
@@ -39,8 +44,6 @@ public class GoToBuckFile extends DumbAwareAction {
     if (currentEditor == null) {
       return null;
     }
-    VirtualFile currentFile =
-        FileDocumentManager.getInstance().getFile(currentEditor.getDocument());
     if (currentFile == null) {
       return null;
     }
@@ -55,7 +58,8 @@ public class GoToBuckFile extends DumbAwareAction {
   @Override
   public void update(AnActionEvent e) {
     Presentation presentation = e.getPresentation();
-    VirtualFile buckFile = findBuckFile(e.getProject());
+    VirtualFile currentFile = e.getData(CommonDataKeys.VIRTUAL_FILE);
+    VirtualFile buckFile = findBuckFile(e.getProject(), currentFile);
     if (buckFile == null) {
       presentation.setEnabledAndVisible(false);
     } else {
@@ -70,15 +74,34 @@ public class GoToBuckFile extends DumbAwareAction {
     if (project == null) {
       return;
     }
-    VirtualFile buckFile = findBuckFile(project);
+    EventLogger buckEventLogger =
+        EventLoggerFactoryProvider.getInstance()
+            .getBuckEventLogger(Keys.MENU_ITEM)
+            .withEventAction(this.getClass().getSimpleName());
+    VirtualFile currentFile = e.getData(CommonDataKeys.VIRTUAL_FILE);
+    VirtualFile buckFile = findBuckFile(project, currentFile);
+    buckEventLogger.withProjectFiles(project, currentFile);
     if (buckFile != null) {
       final OpenFileDescriptor descriptor = new OpenFileDescriptor(e.getProject(), buckFile);
       // This is for better cursor position.
       final Navigatable n = descriptor.setUseCurrentWindow(false);
       if (!n.canNavigate()) {
+        buckEventLogger
+            .withExtraData(
+                ImmutableMap.of(
+                    Keys.ERROR, "Cannot navigate", Keys.BUCK_FILE, buckFile.getCanonicalPath()))
+            .log();
         return;
       }
       n.navigate(true);
+      buckEventLogger
+          .withExtraData(ImmutableMap.of(Keys.BUCK_FILE, buckFile.getCanonicalPath()))
+          .log();
+    } else {
+      buckEventLogger
+          .withExtraData(
+              ImmutableMap.of(Keys.ERROR, "Unable to find a BUCK file", Keys.BUCK_FILE, "null"))
+          .log();
     }
   }
 }
