@@ -26,6 +26,11 @@ cxx_library(
     exported_headers = ["helper.h"],
 )
 
+cxx_library(
+    name = "stub-lib",
+    srcs = ["stub.c"],
+)
+
 prebuilt_jar(
     name = "junit-jar",
     binary_jar = "junit-4.11.jar",
@@ -58,7 +63,6 @@ java_test(
     srcs = ["JTest.java"],
     cxx_library_whitelist = [
         "//:jlib-native",
-        "//:helper-lib",
     ],
     use_cxx_libraries = True,
     deps = [
@@ -81,7 +85,6 @@ java_test(
     srcs = ["JTestWithPernicious.java"],
     cxx_library_whitelist = [
         "//:jlib-native",
-        "//:helper-lib",
         "//:lib-pernicious",
     ],
     use_cxx_libraries = True,
@@ -99,7 +102,7 @@ java_test(
     srcs = ["JTestWithoutPernicious.java"],
     cxx_library_whitelist = [
         "//:jlib-native",  #delete-1
-        "//:helper-lib",
+        "//:stub-lib",
     ],
     use_cxx_libraries = True,
     deps = [
@@ -108,5 +111,6 @@ java_test(
         ":jlib-native",
         ":junit-jar",
         ":lib-pernicious",
+        ":stub-lib",
     ],
 )

@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -37,6 +38,8 @@ import com.facebook.buck.core.test.rule.HasTestRunner;
 import com.facebook.buck.core.test.rule.TestRunnerSpec;
 import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -155,6 +158,7 @@ public class JavaTestDescription
             params,
             args.getUseCxxLibraries(),
             args.getCxxLibraryWhitelist(),
+            context.getTargetGraph(),
             graphBuilder,
             getUnresolvedCxxPlatform(args, buildTarget.getTargetConfiguration())
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
@@ -347,6 +351,7 @@ public class JavaTestDescription
         BuildRuleParams params,
         Optional<Boolean> useCxxLibraries,
         ImmutableSet<BuildTarget> cxxLibraryWhitelist,
+        TargetGraph targetGraph,
         ActionGraphBuilder graphBuilder,
         CxxPlatform cxxPlatform,
         boolean isBuckLDSymLinkTreeSet) {
@@ -355,9 +360,21 @@ public class JavaTestDescription
             buildNativeLibsSymlinkTreeRule(
                 buildTarget, projectFilesystem, graphBuilder, params, cxxPlatform);
 
-        // If the cxxLibraryWhitelist is present, remove symlinks that were not requested.
+        // If the cxxLibraryWhitelist is present, remove symlinks that were not requested
+        // and also not deps of requested libraries.
         // They could point to old, invalid versions of the library in question.
         if (!cxxLibraryWhitelist.isEmpty()) {
+          ImmutableSet<BuildTarget> requiredCxxTargets;
+          try {
+            requiredCxxTargets =
+                ImmutableSet.copyOf(
+                    new AcyclicDepthFirstPostOrderTraversal<BuildTarget>(
+                            target -> targetGraph.get(target).getDeclaredDeps().iterator())
+                        .traverse(cxxLibraryWhitelist));
+          } catch (CycleException e) {
+            throw new RuntimeException("Target graph should not have cycles", e);
+          }
+
           ImmutableMap.Builder<Path, SourcePath> filteredLinks = ImmutableMap.builder();
           for (Map.Entry<Path, SourcePath> entry : nativeLibsSymlinkTree.getLinks().entrySet()) {
             if (!(entry.getValue() instanceof BuildTargetSourcePath)) {
@@ -365,7 +382,7 @@ public class JavaTestDescription
               continue;
             }
             BuildTargetSourcePath sourcePath = (BuildTargetSourcePath) entry.getValue();
-            if (cxxLibraryWhitelist.contains(sourcePath.getTarget().withFlavors())) {
+            if (requiredCxxTargets.contains(sourcePath.getTarget().withFlavors())) {
               filteredLinks.put(entry.getKey(), entry.getValue());
             }
           }

@@ -103,6 +103,7 @@ public class ScalaTestDescription
             rawParams,
             args.getUseCxxLibraries(),
             args.getCxxLibraryWhitelist(),
+            context.getTargetGraph(),
             graphBuilder,
             getCxxPlatform(buildTarget.getTargetConfiguration())
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
