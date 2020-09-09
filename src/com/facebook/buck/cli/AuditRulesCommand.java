@@ -35,6 +35,7 @@ import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.devtools.build.lib.syntax.NoneType;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -222,7 +223,7 @@ public class AuditRulesCommand extends AbstractCommand {
   }
 
   private static String createDisplayString(String indent, @Nullable Object value) {
-    if (value == null) {
+    if (value == null || value instanceof NoneType) {
       return "None";
     } else if (value instanceof Boolean) {
       return MoreStrings.capitalize(value.toString());
