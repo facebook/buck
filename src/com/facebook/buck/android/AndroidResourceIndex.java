@@ -78,6 +78,7 @@ public class AndroidResourceIndex extends AbstractBuildRuleWithDeclaredAndExtraD
             ImmutableSet.of(),
             false,
             false,
+            false,
             MiniAapt.ResourceCollectionType.ANDROID_RESOURCE_INDEX));
     return steps.build();
   }

@@ -289,6 +289,10 @@ public class AndroidBuckConfig {
     return delegate.getBooleanValue("android", "verify_styles_xml", false);
   }
 
+  public boolean isVerifyingXmlAttrsEnabled() {
+    return delegate.getBooleanValue("android", "verify_xml_attrs", false);
+  }
+
   /**
    * Returns the CPU specific app platform, or the fallback one if set. If neither are set, returns
    * `Optional.empty` instead of a default value so callers can determine the difference between

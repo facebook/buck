@@ -76,6 +76,7 @@ public class AndroidResourceIndexMiniAaptTest {
             ImmutableSet.of(),
             false,
             false,
+            false,
             MiniAapt.ResourceCollectionType.ANDROID_RESOURCE_INDEX);
   }
 

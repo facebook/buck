@@ -214,7 +214,8 @@ public class AndroidResourceDescription
         args.getHasWhitelistedStrings(),
         args.getResourceUnion(),
         androidBuckConfig.isGrayscaleImageProcessingEnabled(),
-        androidBuckConfig.isVerifyingStylesXmlEnabled());
+        androidBuckConfig.isVerifyingStylesXmlEnabled(),
+        androidBuckConfig.isVerifyingXmlAttrsEnabled());
   }
 
   private MappedSymlinkTree createSymlinkTree(

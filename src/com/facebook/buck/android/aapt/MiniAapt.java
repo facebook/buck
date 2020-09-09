@@ -101,6 +101,8 @@ public class MiniAapt implements Step {
   private static final XPathExpression ANDROID_ID_DEFINITION =
       createExpression("//@*[starts-with(., '@+') and " + "not(starts-with(., '@+android:id'))]");
 
+  private static final XPathExpression ALL_ATTRS = createExpression("//@*");
+
   private static final ImmutableMap<String, RType> RESOURCE_TYPES = getResourceTypes();
 
   /**
@@ -127,6 +129,7 @@ public class MiniAapt implements Step {
   private final ResourceCollector resourceCollector;
   private final boolean isGrayscaleImageProcessingEnabled;
   private final boolean isVerifyingStylesXmlEnabled;
+  private final boolean isVerifyingXmlAttrsEnabled;
   private final ResourceCollectionType resourceCollectionType;
 
   public MiniAapt(
@@ -143,6 +146,7 @@ public class MiniAapt implements Step {
         pathsToSymbolsOfDeps,
         /* isGrayscaleImageProcessingEnabled */ false,
         /* isVerifyingStylesXmlEnabled */ false,
+        /* isVerifyingXmlAttrsEnabled */ false,
         ResourceCollectionType.R_DOT_TXT);
   }
 
@@ -154,6 +158,7 @@ public class MiniAapt implements Step {
       ImmutableSet<Path> pathsToSymbolsOfDeps,
       boolean isGrayscaleImageProcessingEnabled,
       boolean isVerifyingStylesXmlEnabled,
+      boolean isVerifyingXmlAttrsEnabled,
       ResourceCollectionType resourceCollectionType) {
     this.resolver = resolver;
     this.filesystem = filesystem;
@@ -162,6 +167,7 @@ public class MiniAapt implements Step {
     this.pathsToSymbolsOfDeps = pathsToSymbolsOfDeps;
     this.isGrayscaleImageProcessingEnabled = isGrayscaleImageProcessingEnabled;
     this.isVerifyingStylesXmlEnabled = isVerifyingStylesXmlEnabled;
+    this.isVerifyingXmlAttrsEnabled = isVerifyingXmlAttrsEnabled;
     this.resourceCollectionType = resourceCollectionType;
 
     switch (resourceCollectionType) {
@@ -609,6 +615,27 @@ public class MiniAapt implements Step {
         RType rType = Objects.requireNonNull(RESOURCE_TYPES.get(rawRType));
 
         references.add(new FakeRDotTxtEntry(IdType.INT, rType, sanitizeName(name)));
+      }
+
+      if (isVerifyingXmlAttrsEnabled) {
+        NodeList allNodes = (NodeList) ALL_ATTRS.evaluate(dom, XPathConstants.NODESET);
+        for (int i = 0; i < allNodes.getLength(); i++) {
+          String nodeName = allNodes.item(i).getNodeName();
+          int colonPosition = nodeName.indexOf(':');
+          if (colonPosition == -1) {
+            continue;
+          }
+
+          String namespace = nodeName.substring(0, colonPosition);
+          if (namespace.equals("xmlns")
+              || namespace.equals("android")
+              || namespace.equals("tools")) {
+            continue;
+          }
+
+          String attrName = nodeName.substring(colonPosition + 1);
+          references.add(new FakeRDotTxtEntry(IdType.INT, RType.ATTR, sanitizeName(attrName)));
+        }
       }
     }
   }

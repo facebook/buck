@@ -106,6 +106,7 @@ public class MiniAaptTest {
             ImmutableSet.of(),
             false,
             true,
+            true,
             MiniAapt.ResourceCollectionType.R_DOT_TXT);
 
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
@@ -127,7 +128,8 @@ public class MiniAaptTest {
             FakeEntry.create(IdType.INT, RType.STRING, "text"),
             FakeEntry.create(IdType.INT, RType.STYLE, "Buck_Theme"),
             FakeEntry.create(IdType.INT, RType.ID, "button2"),
-            FakeEntry.create(IdType.INT, RType.ATTR, "some_attr")));
+            FakeEntry.create(IdType.INT, RType.ATTR, "some_attr"),
+            FakeEntry.create(IdType.INT, RType.ATTR, "attribute")));
   }
 
   @Test
@@ -397,6 +399,7 @@ public class MiniAaptTest {
             ImmutableSet.of(),
             /* isGrayscaleImageProcessingEnabled */ true,
             /* isVerifyingStylesXmlEnabled */ false,
+            /* isVerifyingXmlAttrsEnabled */ false,
             MiniAapt.ResourceCollectionType.R_DOT_TXT);
     aapt.processDrawables(filesystem, Paths.get(grayscaleFilename));
 
@@ -563,7 +566,8 @@ public class MiniAaptTest {
         ImmutableList.of(
             "int string text 0x07010001",
             "int style Buck_Theme 0x07020001",
-            "int id button2 0x07030001");
+            "int id button2 0x07030001",
+            "int attr attribute 0x07040001");
 
     Path depRTxt = Paths.get("dep/R.txt");
     filesystem.writeLinesToPath(rDotTxt, depRTxt);
@@ -576,6 +580,7 @@ public class MiniAaptTest {
             Paths.get("R.txt"),
             ImmutableSet.of(depRTxt),
             false,
+            true,
             true,
             MiniAapt.ResourceCollectionType.R_DOT_TXT);
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
@@ -622,6 +627,7 @@ public class MiniAaptTest {
             Paths.get("R.txt"),
             ImmutableSet.of(depRTxt),
             false,
+            true,
             true,
             MiniAapt.ResourceCollectionType.R_DOT_TXT);
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();

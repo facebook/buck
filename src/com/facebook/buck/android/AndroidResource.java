@@ -112,6 +112,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final boolean isVerifyingStylesXmlEnabled;
 
+  @AddToRuleKey private final boolean isVerifyingXmlAttrsEnabled;
+
   private final ImmutableSortedSet<BuildRule> deps;
 
   private final BuildOutputInitializer<String> buildOutputInitializer;
@@ -152,7 +154,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean hasWhitelistedStrings,
       boolean resourceUnion,
       boolean isGrayscaleImageProcessingEnabled,
-      boolean isVerifyingStylesXmlEnabled) {
+      boolean isVerifyingStylesXmlEnabled,
+      boolean isVerifyingXmlAttrsEnabled) {
     super(
         buildTarget,
         projectFilesystem,
@@ -200,6 +203,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
         };
     this.isGrayscaleImageProcessingEnabled = isGrayscaleImageProcessingEnabled;
     this.isVerifyingStylesXmlEnabled = isVerifyingStylesXmlEnabled;
+    this.isVerifyingXmlAttrsEnabled = isVerifyingXmlAttrsEnabled;
   }
 
   public AndroidResource(
@@ -230,7 +234,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
         hasWhitelistedStrings,
         /* resourceUnion */ false,
         /* isGrayscaleImageProcessingEnabled */ false,
-        /* isVerifyingStylesXmlEnabled */ false);
+        /* isVerifyingStylesXmlEnabled */ false,
+        /* isVerifyingXmlAttrsEnabled */ false);
   }
 
   public AndroidResource(
@@ -248,7 +253,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean hasWhitelistedStrings,
       boolean resourceUnion,
       boolean isGrayscaleImageProcessingEnabled,
-      boolean isVerifyingStylesXmlEnabled) {
+      boolean isVerifyingStylesXmlEnabled,
+      boolean isVerifyingXmlAttrsEnabled) {
     this(
         buildTarget,
         projectFilesystem,
@@ -270,7 +276,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
         hasWhitelistedStrings,
         resourceUnion,
         isGrayscaleImageProcessingEnabled,
-        isVerifyingStylesXmlEnabled);
+        isVerifyingStylesXmlEnabled,
+        isVerifyingXmlAttrsEnabled);
   }
 
   @Override
@@ -350,6 +357,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
             pathsToSymbolsOfDeps,
             isGrayscaleImageProcessingEnabled,
             isVerifyingStylesXmlEnabled,
+            isVerifyingXmlAttrsEnabled,
             ResourceCollectionType.R_DOT_TXT));
     return steps.build();
   }
