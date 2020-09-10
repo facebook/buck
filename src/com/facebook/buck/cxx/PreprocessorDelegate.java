@@ -70,7 +70,8 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
   @AddToRuleKey private final Preprocessor preprocessor;
 
   @AddToRuleKey
-  private final AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathSearchPathFunction;
+  private final AddsToRuleKeyFunction<FrameworkPath, Optional<Path>>
+      frameworkPathSearchPathFunction;
 
   @AddToRuleKey private final HeaderVerification headerVerification;
 
@@ -103,7 +104,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
       PathSourcePath workingDir,
       Preprocessor preprocessor,
       PreprocessorFlags preprocessorFlags,
-      AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
+      AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> frameworkPathSearchPathFunction,
       Optional<CxxIncludePaths> leadingIncludePaths,
       Optional<BuildRule> aggregatedDeps,
       ImmutableSortedSet<String> conflictingHeaderBasenameWhitelist) {
@@ -392,10 +393,10 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
   static class SerializationBehavior implements CustomClassSerialization<PreprocessorDelegate> {
     static final ValueTypeInfo<Preprocessor> PREPROCESSOR_TYPE_INFO =
         ValueTypeInfoFactory.forTypeToken(new TypeToken<Preprocessor>() {});
-    static final ValueTypeInfo<AddsToRuleKeyFunction<FrameworkPath, Path>>
+    static final ValueTypeInfo<AddsToRuleKeyFunction<FrameworkPath, Optional<Path>>>
         FRAMEWORK_PATH_FUNCTION_TYPE_INFO =
             ValueTypeInfoFactory.forTypeToken(
-                new TypeToken<AddsToRuleKeyFunction<FrameworkPath, Path>>() {});
+                new TypeToken<AddsToRuleKeyFunction<FrameworkPath, Optional<Path>>>() {});
     static final ValueTypeInfo<HeaderVerification> HEADER_VERIFICATION_TYPE_INFO =
         ValueTypeInfoFactory.forTypeToken(new TypeToken<HeaderVerification>() {});
     static final ValueTypeInfo<PreprocessorFlags> PREPROCESSOR_FLAGS_TYPE_INFO =
@@ -421,7 +422,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
     public <E extends Exception> PreprocessorDelegate deserialize(ValueCreator<E> deserializer)
         throws E {
       Preprocessor preprocessor = PREPROCESSOR_TYPE_INFO.createNotNull(deserializer);
-      AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathSearchPathFunction =
+      AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> frameworkPathSearchPathFunction =
           FRAMEWORK_PATH_FUNCTION_TYPE_INFO.createNotNull(deserializer);
       HeaderVerification headerVerification =
           HEADER_VERIFICATION_TYPE_INFO.createNotNull(deserializer);

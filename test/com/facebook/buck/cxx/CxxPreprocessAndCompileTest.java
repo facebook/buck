@@ -116,15 +116,15 @@ public class CxxPreprocessAndCompileTest {
   private static final CxxSource.Type DEFAULT_INPUT_TYPE = CxxSource.Type.CXX;
   private static final PathSourcePath DEFAULT_WORKING_DIR =
       FakeSourcePath.of(System.getProperty("user.dir"));
-  private static final AddsToRuleKeyFunction<FrameworkPath, Path>
+  private static final AddsToRuleKeyFunction<FrameworkPath, Optional<Path>>
       DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION = new DefaultFramworkPathSearchPathFunction();
 
   private static class DefaultFramworkPathSearchPathFunction
-      implements AddsToRuleKeyFunction<FrameworkPath, Path> {
+      implements AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> {
 
     @Override
-    public Path apply(FrameworkPath input) {
-      return Paths.get("test", "framework", "path", input.toString());
+    public Optional<Path> apply(FrameworkPath input) {
+      return Optional.of(Paths.get("test", "framework", "path", input.toString()));
     }
   }
 

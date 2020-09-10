@@ -52,7 +52,7 @@ public class SwiftCompile extends SwiftCompileBase {
       ActionGraphBuilder graphBuilder,
       Tool swiftCompiler,
       ImmutableSet<FrameworkPath> frameworks,
-      AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath,
+      AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> frameworkPathToSearchPath,
       Flavor flavor,
       String moduleName,
       Path outputPath,

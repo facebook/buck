@@ -106,9 +106,9 @@ public class CxxCompilationDatabaseTest {
             .build();
 
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> rules = ImmutableSortedSet.naturalOrder();
-    class FrameworkPathFunction implements AddsToRuleKeyFunction<FrameworkPath, Path> {
+    class FrameworkPathFunction implements AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> {
       @Override
-      public Path apply(FrameworkPath input) {
+      public Optional<Path> apply(FrameworkPath input) {
         throw new UnsupportedOperationException("should not be called");
       }
     }

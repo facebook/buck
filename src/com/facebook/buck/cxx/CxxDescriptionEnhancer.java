@@ -718,13 +718,13 @@ public class CxxDescriptionEnhancer {
    * @return a function that transforms the {@link FrameworkPath} to search paths with any embedded
    *     macros expanded.
    */
-  public static AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath(
+  public static AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> frameworkPathToSearchPath(
       CxxPlatform cxxPlatform, SourcePathResolverAdapter resolver) {
     return new FrameworkPathToSearchPathFunction(cxxPlatform, resolver);
   }
 
   private static class FrameworkPathToSearchPathFunction
-      implements AddsToRuleKeyFunction<FrameworkPath, Path> {
+      implements AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> {
     @AddToRuleKey private final AddsToRuleKeyFunction<String, String> translateMacrosFn;
     // TODO(cjhopman): This should be refactored to accept the resolver as an argument.
     @CustomFieldBehavior(SourcePathResolverSerialization.class)
@@ -739,14 +739,14 @@ public class CxxDescriptionEnhancer {
     }
 
     @Override
-    public Path apply(FrameworkPath input) {
+    public Optional<Path> apply(FrameworkPath input) {
       String pathAsString =
           FrameworkPath.getUnexpandedSearchPath(
                   sourcePath -> resolver.getAbsolutePath(sourcePath).getPath(),
                   Functions.identity(),
                   input)
               .toString();
-      return Paths.get(translateMacrosFn.apply(pathAsString));
+      return Optional.of(Paths.get(translateMacrosFn.apply(pathAsString)));
     }
   }
 

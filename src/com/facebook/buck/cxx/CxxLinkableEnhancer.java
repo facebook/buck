@@ -620,7 +620,8 @@ public class CxxLinkableEnhancer {
   }
 
   private static class FrameworkLinkerArgs extends FrameworkPathArg {
-    @AddToRuleKey final AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath;
+    @AddToRuleKey
+    final AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> frameworkPathToSearchPath;
 
     public FrameworkLinkerArgs(
         ImmutableSortedSet<FrameworkPath> allFrameworks,
@@ -636,6 +637,9 @@ public class CxxLinkableEnhancer {
       ImmutableSortedSet<Path> searchPaths =
           frameworkPaths.stream()
               .map(frameworkPathToSearchPath)
+              .filter(Objects::nonNull)
+              .filter(Optional::isPresent)
+              .map(Optional::get)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
       for (Path searchPath : searchPaths) {
         consumer.accept("-F");
@@ -684,7 +688,8 @@ public class CxxLinkableEnhancer {
   }
 
   private static class SharedLibraryLinkArgs extends FrameworkPathArg {
-    @AddToRuleKey final AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath;
+    @AddToRuleKey
+    final AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> frameworkPathToSearchPath;
 
     public SharedLibraryLinkArgs(
         ImmutableSortedSet<FrameworkPath> allLibraries,
@@ -701,6 +706,8 @@ public class CxxLinkableEnhancer {
           frameworkPaths.stream()
               .map(frameworkPathToSearchPath)
               .filter(Objects::nonNull)
+              .filter(Optional::isPresent)
+              .map(Optional::get)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
       for (Path searchPath : searchPaths) {
         consumer.accept("-L");

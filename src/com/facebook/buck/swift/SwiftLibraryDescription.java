@@ -490,7 +490,7 @@ public class SwiftLibraryDescription
     return swiftTarget.orElse(swiftPlatform.getSwiftTarget());
   }
 
-  private static AddsToRuleKeyFunction<FrameworkPath, Path> getFrameworkPathToSearchPath(
+  private static AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> getFrameworkPathToSearchPath(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return CxxDescriptionEnhancer.frameworkPathToSearchPath(
         cxxPlatform, graphBuilder.getSourcePathResolver());

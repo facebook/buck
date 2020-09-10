@@ -544,12 +544,12 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     @AddToRuleKey private final Preprocessor preprocessor;
 
     @AddToRuleKey
-    private final AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath;
+    private final AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> frameworkPathToSearchPath;
 
     CxxPreprocessorFlagsArg(
         PreprocessorFlags ppFlags,
         Preprocessor preprocessor,
-        AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath) {
+        AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> frameworkPathToSearchPath) {
       this.ppFlags = ppFlags;
       this.preprocessor = preprocessor;
       this.frameworkPathToSearchPath = frameworkPathToSearchPath;

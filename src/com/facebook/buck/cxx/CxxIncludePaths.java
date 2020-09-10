@@ -82,7 +82,7 @@ abstract class CxxIncludePaths implements AddsToRuleKey {
   public ImmutableList<String> getFlags(
       SourcePathResolverAdapter pathResolver,
       PathShortener pathShortener,
-      Function<FrameworkPath, Path> frameworkPathTransformer,
+      Function<FrameworkPath, Optional<Path>> frameworkPathTransformer,
       Preprocessor preprocessor) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
@@ -95,6 +95,8 @@ abstract class CxxIncludePaths implements AddsToRuleKey {
             getFPaths().stream()
                 .filter(x -> !x.isSDKROOTFrameworkPath())
                 .map(frameworkPathTransformer)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .map(Object::toString)
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()))));
 
@@ -104,7 +106,7 @@ abstract class CxxIncludePaths implements AddsToRuleKey {
   public CxxToolFlags toToolFlags(
       SourcePathResolverAdapter resolver,
       PathShortener pathShortener,
-      Function<FrameworkPath, Path> frameworkPathTransformer,
+      Function<FrameworkPath, Optional<Path>> frameworkPathTransformer,
       Preprocessor preprocessor) {
     return CxxToolFlags.explicitBuilder()
         .addAllRuleFlags(

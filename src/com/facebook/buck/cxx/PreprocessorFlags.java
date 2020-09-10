@@ -85,7 +85,7 @@ public abstract class PreprocessorFlags implements AddsToRuleKey {
   public CxxToolFlags getIncludePathFlags(
       SourcePathResolverAdapter resolver,
       PathShortener pathShortener,
-      Function<FrameworkPath, Path> frameworkPathTransformer,
+      Function<FrameworkPath, Optional<Path>> frameworkPathTransformer,
       Preprocessor preprocessor) {
     return CxxToolFlags.explicitBuilder()
         .addAllRuleFlags(
@@ -99,7 +99,7 @@ public abstract class PreprocessorFlags implements AddsToRuleKey {
       DebugPathSanitizer sanitizer,
       SourcePathResolverAdapter resolver,
       PathShortener pathShortener,
-      Function<FrameworkPath, Path> frameworkPathTransformer,
+      Function<FrameworkPath, Optional<Path>> frameworkPathTransformer,
       Preprocessor preprocessor) {
     return CxxToolFlags.explicitBuilder()
         .addAllRuleFlags(
@@ -132,7 +132,7 @@ public abstract class PreprocessorFlags implements AddsToRuleKey {
   public CxxToolFlags toToolFlags(
       SourcePathResolverAdapter resolver,
       PathShortener pathShortener,
-      Function<FrameworkPath, Path> frameworkPathTransformer,
+      Function<FrameworkPath, Optional<Path>> frameworkPathTransformer,
       Preprocessor preprocessor,
       Optional<PrecompiledHeaderData> precompiledHeader) {
     return CxxToolFlags.concat(

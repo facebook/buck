@@ -64,14 +64,14 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
   private CxxInferCapture createCaptureRule(
       BuildTarget buildTarget, ProjectFilesystem filesystem, InferBuckConfig inferBuckConfig) {
-    class FrameworkPathFunction implements AddsToRuleKeyFunction<FrameworkPath, Path> {
+    class FrameworkPathFunction implements AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> {
 
       @Override
-      public Path apply(FrameworkPath input) {
-        return Paths.get("test", "framework", "path", input.toString());
+      public Optional<Path> apply(FrameworkPath input) {
+        return Optional.of(Paths.get("test", "framework", "path", input.toString()));
       }
     }
-    AddsToRuleKeyFunction<FrameworkPath, Path> defaultFrameworkPathSearchPathFunction =
+    AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> defaultFrameworkPathSearchPathFunction =
         new FrameworkPathFunction();
 
     SourcePath preprocessor = FakeSourcePath.of(filesystem, "preprocessor");

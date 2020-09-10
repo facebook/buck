@@ -102,7 +102,9 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   @AddToRuleKey private final ImmutableList<? extends Arg> compilerFlags;
 
   @AddToRuleKey private final ImmutableSet<FrameworkPath> frameworks;
-  @AddToRuleKey private final AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath;
+
+  @AddToRuleKey
+  private final AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> frameworkPathToSearchPath;
 
   @AddToRuleKey(stringify = true)
   private final Flavor flavor;
@@ -140,7 +142,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       ActionGraphBuilder graphBuilder,
       Tool swiftCompiler,
       ImmutableSet<FrameworkPath> frameworks,
-      AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath,
+      AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> frameworkPathToSearchPath,
       Flavor flavor,
       String moduleName,
       Path outputPath,
@@ -236,6 +238,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         Streams.concat(frameworks.stream(), cxxDeps.getFrameworkPaths().stream())
             .filter(x -> !x.isSDKROOTFrameworkPath())
             .map(frameworkPathToSearchPath)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
             .flatMap(searchPath -> ImmutableSet.of("-F", searchPath.toString()).stream())
             .iterator());
 
