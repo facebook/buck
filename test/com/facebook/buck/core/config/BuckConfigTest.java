@@ -35,6 +35,7 @@ import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -163,5 +164,39 @@ public class BuckConfigTest {
                 "args_map",
                 Config.DEFAULT_PAIR_SEPARATOR,
                 Config.DEFAULT_KEY_VALUE_SEPARATOR));
+  }
+
+  @Test
+  public void testPrepareConfigForREFilteringSection() throws IOException {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "section0", ImmutableMap.of("key0", "val0"),
+                    "section1", ImmutableMap.of("key1", "val1")))
+            .setNonSerializableREConfigFields(ImmutableMap.of("section0", ImmutableSet.of()))
+            .build();
+
+    assertEquals(
+        ImmutableMap.of("section1", ImmutableMap.of("key1", "val1")),
+        buckConfig.prepareConfigForRE());
+  }
+
+  @Test
+  public void testPrepareConfigForREFilteringFields() throws IOException {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "section0", ImmutableMap.of("key0", "val0", "key1", "val1"),
+                    "section1", ImmutableMap.of("key2", "val2")))
+            .setNonSerializableREConfigFields(ImmutableMap.of("section0", ImmutableSet.of("key0")))
+            .build();
+
+    assertEquals(
+        ImmutableMap.of(
+            "section0", ImmutableMap.of("key1", "val1"),
+            "section1", ImmutableMap.of("key2", "val2")),
+        buckConfig.prepareConfigForRE());
   }
 }

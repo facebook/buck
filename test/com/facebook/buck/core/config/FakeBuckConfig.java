@@ -30,6 +30,7 @@ import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import javax.annotation.Nullable;
 
 /**
@@ -59,6 +60,7 @@ public class FakeBuckConfig {
     private Architecture architecture = Architecture.detect();
     private Platform platform = Platform.detect();
     private int numThreads = -1;
+    private ImmutableMap<String, ImmutableSet<String>> nonSerializableREConfigFields;
 
     public Builder setArchitecture(Architecture architecture) {
       this.architecture = architecture;
@@ -96,6 +98,12 @@ public class FakeBuckConfig {
       return this;
     }
 
+    public Builder setNonSerializableREConfigFields(
+        ImmutableMap<String, ImmutableSet<String>> nonSerializableREConfigFields) {
+      this.nonSerializableREConfigFields = nonSerializableREConfigFields;
+      return this;
+    }
+
     public BuckConfig build() {
       ProjectFilesystem filesystem =
           this.filesystem != null ? this.filesystem : new FakeProjectFilesystem();
@@ -105,14 +113,18 @@ public class FakeBuckConfig {
           DefaultCellPathResolver.create(filesystem.getRootPath(), config);
       UnconfiguredBuildTargetViewFactory buildTargetFactory =
           new ParsingUnconfiguredBuildTargetViewFactory();
-      return new BuckConfig(
-          config,
-          filesystem,
-          architecture,
-          platform,
-          environment,
-          buildTargetFactory,
-          cellPathResolver.getCellNameResolver());
+      BuckConfig buckConfig =
+          new BuckConfig(
+              config,
+              filesystem,
+              architecture,
+              platform,
+              environment,
+              buildTargetFactory,
+              cellPathResolver.getCellNameResolver());
+      buckConfig.setNonSerializableREConfigFields(nonSerializableREConfigFields);
+
+      return buckConfig;
     }
   }
 }

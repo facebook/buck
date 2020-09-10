@@ -42,6 +42,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.AbstractMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -69,6 +70,8 @@ public class BuckConfig {
 
   private final int hashCode;
 
+  private ImmutableMap<String, ImmutableSet<String>> nonSerializableREConfigFields;
+
   public BuckConfig(
       Config config,
       ProjectFilesystem projectFilesystem,
@@ -87,6 +90,15 @@ public class BuckConfig {
 
     this.hashCode = Objects.hashCode(config);
     this.cellNameResolver = cellNameResolver;
+
+    this.nonSerializableREConfigFields = createNonSerializableREConfigFields();
+  }
+
+  private ImmutableMap<String, ImmutableSet<String>> createNonSerializableREConfigFields() {
+    ImmutableMap.Builder<String, ImmutableSet<String>> nonSerializableREConfigFieldsBuilder =
+        ImmutableMap.builder();
+
+    return nonSerializableREConfigFieldsBuilder.build();
   }
 
   /**
@@ -463,6 +475,46 @@ public class BuckConfig {
 
   public Config getConfig() {
     return config;
+  }
+
+  public ImmutableMap<String, ImmutableMap<String, String>> prepareConfigForRE() {
+    return config.getSectionToEntries().entrySet().stream()
+        .filter(
+            section ->
+                !nonSerializableREConfigFields.containsKey(section.getKey())
+                    || !nonSerializableREConfigFields.get(section.getKey()).isEmpty())
+        .map(this::filterConfigFieldsForRE)
+        .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
+
+  private Map.Entry<String, ImmutableMap<String, String>> filterConfigFieldsForRE(
+      Map.Entry<String, ImmutableMap<String, String>> sectionWithFields) {
+    String sectionName = sectionWithFields.getKey();
+    ImmutableMap<String, String> sectionFields = sectionWithFields.getValue();
+    ImmutableMap<String, String> filteredFields =
+        getConfigSectionFieldsMapForRE(sectionFields, sectionName);
+
+    return new AbstractMap.SimpleImmutableEntry<>(sectionName, filteredFields);
+  }
+
+  private ImmutableMap<String, String> getConfigSectionFieldsMapForRE(
+      ImmutableMap<String, String> sectionFields, String sectionName) {
+    if (!nonSerializableREConfigFields.containsKey(sectionName)) {
+      return sectionFields;
+    }
+
+    ImmutableSet<String> nonSerializableREConfigFieldsInSection =
+        nonSerializableREConfigFields.get(sectionName);
+
+    return sectionFields.entrySet().stream()
+        .filter(
+            sectionField -> !nonSerializableREConfigFieldsInSection.contains(sectionField.getKey()))
+        .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
+
+  public void setNonSerializableREConfigFields(
+      ImmutableMap<String, ImmutableSet<String>> nonSerializableREConfigFields) {
+    this.nonSerializableREConfigFields = nonSerializableREConfigFields;
   }
 
   public ProjectFilesystem getFilesystem() {
