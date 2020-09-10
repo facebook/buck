@@ -250,7 +250,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
             preprocessorFlags,
             getIncludes(cxxPlatform, graphBuilder),
             ImmutableList.copyOf(getFrameworks(cxxPlatform, graphBuilder))),
-        CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
+        CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver, false),
         /* leadingIncludePaths */ Optional.empty(),
         Optional.empty(),
         cxxPlatform.getConflictingHeaderBasenameWhitelist());

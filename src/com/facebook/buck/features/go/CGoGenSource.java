@@ -194,7 +194,8 @@ public class CGoGenSource extends AbstractBuildRule {
         ppFlags.toToolFlags(
             resolver,
             PathShortener.identity(),
-            CxxDescriptionEnhancer.frameworkPathToSearchPath(platform.getCxxPlatform(), resolver),
+            CxxDescriptionEnhancer.frameworkPathToSearchPath(
+                platform.getCxxPlatform(), resolver, false),
             preprocessor,
             /* pch */ Optional.empty());
     return MoreIterables.zipAndConcat(Arg.stringify(cxxToolFlags.getAllFlags(), resolver));

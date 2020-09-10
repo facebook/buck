@@ -76,7 +76,7 @@ public class CxxPrecompiledHeaderTest {
                 preprocessorSupportingPch,
                 PreprocessorFlags.builder().build(),
                 CxxDescriptionEnhancer.frameworkPathToSearchPath(
-                    CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder.getSourcePathResolver()),
+                    CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder.getSourcePathResolver(), false),
                 /* leadingIncludePaths */ Optional.empty(),
                 Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
                 ImmutableSortedSet.of()),

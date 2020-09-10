@@ -130,7 +130,8 @@ public class CxxLinkableEnhancer {
             Optional.empty(),
             blacklist,
             linkWholeDeps,
-            immediateLinkableInput);
+            immediateLinkableInput,
+            false);
 
     argsBuilder.addAll(allArgs);
 
@@ -298,7 +299,8 @@ public class CxxLinkableEnhancer {
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSet<BuildTarget> linkWholeDeps,
-      NativeLinkableInput immediateLinkableInput) {
+      NativeLinkableInput immediateLinkableInput,
+      boolean skipSystemFrameworkSearchPaths) {
 
     // Soname should only ever be set when linking a "shared" library.
     Preconditions.checkState(!soname.isPresent() || SONAME_REQUIRED_LINK_TYPES.contains(linkType));
@@ -368,7 +370,8 @@ public class CxxLinkableEnhancer {
           cxxPlatform,
           graphBuilder.getSourcePathResolver(),
           ImmutableSortedSet.copyOf(linkableInput.getLibraries()),
-          argsBuilder);
+          argsBuilder,
+          skipSystemFrameworkSearchPaths);
     }
 
     // Add framework args
@@ -377,7 +380,8 @@ public class CxxLinkableEnhancer {
           cxxPlatform,
           graphBuilder.getSourcePathResolver(),
           ImmutableSortedSet.copyOf(linkableInput.getFrameworks()),
-          argsBuilder);
+          argsBuilder,
+          skipSystemFrameworkSearchPaths);
     }
 
     return argsBuilder.build();
@@ -500,7 +504,8 @@ public class CxxLinkableEnhancer {
             bundleLoader,
             blacklist,
             linkWholeDeps,
-            immediateLinkableInput);
+            immediateLinkableInput,
+            false);
 
     Linker.LinkableDepType runtimeDepType = depType;
     if (cxxRuntimeType.orElse(Linker.CxxRuntimeType.DYNAMIC) == Linker.CxxRuntimeType.STATIC) {
@@ -530,9 +535,12 @@ public class CxxLinkableEnhancer {
       CxxPlatform cxxPlatform,
       SourcePathResolverAdapter resolver,
       ImmutableSortedSet<FrameworkPath> allLibraries,
-      ImmutableList.Builder<Arg> argsBuilder) {
+      ImmutableList.Builder<Arg> argsBuilder,
+      boolean skipSystemFrameworkSearchPaths) {
 
-    argsBuilder.add(new SharedLibraryLinkArgs(allLibraries, cxxPlatform, resolver));
+    argsBuilder.add(
+        new SharedLibraryLinkArgs(
+            allLibraries, cxxPlatform, resolver, skipSystemFrameworkSearchPaths));
 
     // Add all libraries link args
     argsBuilder.add(new FrameworkLibraryLinkArgs(allLibraries));
@@ -542,9 +550,12 @@ public class CxxLinkableEnhancer {
       CxxPlatform cxxPlatform,
       SourcePathResolverAdapter resolver,
       ImmutableSortedSet<FrameworkPath> allFrameworks,
-      ImmutableList.Builder<Arg> argsBuilder) {
+      ImmutableList.Builder<Arg> argsBuilder,
+      boolean skipSystemFrameworkSearchPaths) {
 
-    argsBuilder.add(new FrameworkLinkerArgs(allFrameworks, cxxPlatform, resolver));
+    argsBuilder.add(
+        new FrameworkLinkerArgs(
+            allFrameworks, cxxPlatform, resolver, skipSystemFrameworkSearchPaths));
 
     // Add all framework link args
     argsBuilder.add(frameworksToLinkerArg(allFrameworks));
@@ -626,10 +637,12 @@ public class CxxLinkableEnhancer {
     public FrameworkLinkerArgs(
         ImmutableSortedSet<FrameworkPath> allFrameworks,
         CxxPlatform cxxPlatform,
-        SourcePathResolverAdapter resolver) {
+        SourcePathResolverAdapter resolver,
+        boolean skipSystemFrameworkSearchPaths) {
       super(allFrameworks);
       frameworkPathToSearchPath =
-          CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
+          CxxDescriptionEnhancer.frameworkPathToSearchPath(
+              cxxPlatform, resolver, skipSystemFrameworkSearchPaths);
     }
 
     @Override
@@ -694,10 +707,12 @@ public class CxxLinkableEnhancer {
     public SharedLibraryLinkArgs(
         ImmutableSortedSet<FrameworkPath> allLibraries,
         CxxPlatform cxxPlatform,
-        SourcePathResolverAdapter resolver) {
+        SourcePathResolverAdapter resolver,
+        boolean skipSystemFrameworkSearchPaths) {
       super(allLibraries);
       frameworkPathToSearchPath =
-          CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
+          CxxDescriptionEnhancer.frameworkPathToSearchPath(
+              cxxPlatform, resolver, skipSystemFrameworkSearchPaths);
     }
 
     @Override

@@ -116,6 +116,11 @@ public abstract class CxxSourceRuleFactory {
 
   protected abstract PicType getPicType();
 
+  @Value.Default
+  protected boolean getSkipSystemFrameworkSearchPaths() {
+    return false;
+  }
+
   @Value.Check
   protected void checkPrefixAndPrecompiledHeaderArgs() {
     if (getPrefixHeader().isPresent() && getPrecompiledHeader().isPresent()) {
@@ -197,7 +202,9 @@ public abstract class CxxSourceRuleFactory {
                             getIncludes(),
                             ImmutableList.copyOf(getFrameworks())),
                         CxxDescriptionEnhancer.frameworkPathToSearchPath(
-                            getCxxPlatform(), getPathResolver()),
+                            getCxxPlatform(),
+                            getPathResolver(),
+                            getSkipSystemFrameworkSearchPaths()),
                         /* leadingIncludePaths */ Optional.empty(),
                         Optional.of(aggregatedDeps),
                         getCxxPlatform().getConflictingHeaderBasenameWhitelist());
@@ -916,7 +923,8 @@ public abstract class CxxSourceRuleFactory {
         compilerFlags,
         prefixHeader,
         precompiledHeader,
-        picType);
+        picType,
+        false);
   }
 
   private DebugPathSanitizer getSanitizer() {

@@ -531,7 +531,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
           CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType)
               .resolve(graphBuilder, targetConfiguration),
           CxxDescriptionEnhancer.frameworkPathToSearchPath(
-              cxxPlatform, graphBuilder.getSourcePathResolver()));
+              cxxPlatform, graphBuilder.getSourcePathResolver(), false));
     }
   }
 

@@ -229,7 +229,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
                 resolver,
                 PathShortener.identity(),
                 CxxDescriptionEnhancer.frameworkPathToSearchPath(
-                    platform.getCxxPlatform(), resolver),
+                    platform.getCxxPlatform(), resolver, false),
                 preprocessor,
                 /* pch */ Optional.empty());
     return MoreIterables.zipAndConcat(

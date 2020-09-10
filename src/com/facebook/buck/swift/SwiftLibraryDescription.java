@@ -304,7 +304,7 @@ public class SwiftLibraryDescription
           graphBuilder,
           swiftPlatform.get().getSwiftc(),
           args.getFrameworks(),
-          getFrameworkPathToSearchPath(cxxPlatform, graphBuilder),
+          getFrameworkPathToSearchPath(cxxPlatform, graphBuilder, false),
           cxxPlatform.getFlavor(),
           getModuleName(buildTarget, args, false),
           BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").getPath(),
@@ -470,7 +470,7 @@ public class SwiftLibraryDescription
         graphBuilder,
         swiftPlatform.getSwiftc(),
         args.getFrameworks(),
-        getFrameworkPathToSearchPath(cxxPlatform, graphBuilder),
+        getFrameworkPathToSearchPath(cxxPlatform, graphBuilder, false),
         cxxPlatform.getFlavor(),
         getModuleName(buildTarget, args, false),
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").getPath(),
@@ -491,9 +491,11 @@ public class SwiftLibraryDescription
   }
 
   private static AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> getFrameworkPathToSearchPath(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+      CxxPlatform cxxPlatform,
+      ActionGraphBuilder graphBuilder,
+      boolean skipSystemFrameworkSearchPaths) {
     return CxxDescriptionEnhancer.frameworkPathToSearchPath(
-        cxxPlatform, graphBuilder.getSourcePathResolver());
+        cxxPlatform, graphBuilder.getSourcePathResolver(), skipSystemFrameworkSearchPaths);
   }
 
   private static ImmutableList<Arg> getCompilerFlags(
@@ -532,7 +534,7 @@ public class SwiftLibraryDescription
         graphBuilder,
         swiftPlatform.getSwiftc(),
         args.getFrameworks(),
-        getFrameworkPathToSearchPath(cxxPlatform, graphBuilder),
+        getFrameworkPathToSearchPath(cxxPlatform, graphBuilder, false),
         cxxPlatform.getFlavor(),
         getModuleName(buildTarget, args, false),
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").getPath(),

@@ -719,19 +719,34 @@ public class CxxDescriptionEnhancer {
    *     macros expanded.
    */
   public static AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> frameworkPathToSearchPath(
-      CxxPlatform cxxPlatform, SourcePathResolverAdapter resolver) {
-    return new FrameworkPathToSearchPathFunction(cxxPlatform, resolver);
+      CxxPlatform cxxPlatform,
+      SourcePathResolverAdapter resolver,
+      boolean skipSystemFrameworkSearchPaths) {
+    return new FrameworkPathToSearchPathFunction(
+        cxxPlatform, resolver, skipSystemFrameworkSearchPaths);
   }
 
   private static class FrameworkPathToSearchPathFunction
       implements AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> {
+
+    private static final ImmutableSet<String> SYSTEM_SEARCH_PATHS =
+        ImmutableSet.of(
+            "$SDKROOT/usr/lib",
+            "$SDKROOT/usr/local/lib",
+            "$SDKROOT/Library/Frameworks",
+            "$SDKROOT/System/Library/Frameworks");
+
+    @AddToRuleKey private final boolean skipSystemFrameworkSearchPaths;
     @AddToRuleKey private final AddsToRuleKeyFunction<String, String> translateMacrosFn;
     // TODO(cjhopman): This should be refactored to accept the resolver as an argument.
     @CustomFieldBehavior(SourcePathResolverSerialization.class)
     private final SourcePathResolverAdapter resolver;
 
     public FrameworkPathToSearchPathFunction(
-        CxxPlatform cxxPlatform, SourcePathResolverAdapter resolver) {
+        CxxPlatform cxxPlatform,
+        SourcePathResolverAdapter resolver,
+        boolean skipSystemFrameworkSearchPaths) {
+      this.skipSystemFrameworkSearchPaths = skipSystemFrameworkSearchPaths;
       this.resolver = resolver;
       this.translateMacrosFn =
           new CxxFlags.TranslateMacrosFunction(
@@ -746,6 +761,10 @@ public class CxxDescriptionEnhancer {
                   Functions.identity(),
                   input)
               .toString();
+      if (skipSystemFrameworkSearchPaths && SYSTEM_SEARCH_PATHS.contains(pathAsString)) {
+        return Optional.empty();
+      }
+
       return Optional.of(Paths.get(translateMacrosFn.apply(pathAsString)));
     }
   }
