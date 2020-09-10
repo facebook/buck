@@ -122,6 +122,10 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   public static final Path METADATA_PATH = Paths.get(".buck.metadata");
   private static final String FILE_HASH_VERIFICATION = "hash.verify";
 
+  private static final String BUCK_CONFIG_EXPERIMENTS_SECTION_KEY = "experiments";
+  private static final String BUCK_CONFIG_FILTER_FIELDS_FOR_RE_FLAG_NAME =
+      "filter_buck_config_fields_for_re";
+
   private final InputsMapBuilder inputsMapBuilder;
   private final ImmutableSet<PathMatcher> ignorePaths;
 
@@ -647,9 +651,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
   private static byte[] serializeConfig(BuckConfig config) {
     StringBuilder builder = new StringBuilder();
-    config
-        .getConfig()
-        .getSectionToEntries()
+    getBuckConfigFieldsForSerialization(config)
         .forEach(
             (key, value) -> {
               builder.append(String.format("[%s]\n", key));
@@ -657,6 +659,16 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                   (key1, value1) -> builder.append(String.format("  %s=%s\n", key1, value1)));
             });
     return builder.toString().getBytes(StandardCharsets.UTF_8);
+  }
+
+  private static ImmutableMap<String, ImmutableMap<String, String>>
+      getBuckConfigFieldsForSerialization(BuckConfig config) {
+    if (config.getBooleanValue(
+        BUCK_CONFIG_EXPERIMENTS_SECTION_KEY, BUCK_CONFIG_FILTER_FIELDS_FOR_RE_FLAG_NAME, false)) {
+      return config.prepareConfigForRE();
+    }
+
+    return config.getConfig().getSectionToEntries();
   }
 
   private String relativizePathString(AbsPath prefixRoot, String s) {
