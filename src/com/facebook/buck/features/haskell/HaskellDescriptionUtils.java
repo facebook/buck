@@ -162,7 +162,8 @@ public class HaskellDescriptionUtils {
       Optional<HaskellPackageInfo> packageInfo,
       ImmutableList<String> flags,
       HaskellSources sources,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean skipSystemFrameworkSearchpaths) {
 
     CxxPlatform cxxPlatform = platform.getCxxPlatform();
     ImmutableList<String> additionalFlags =
@@ -185,7 +186,8 @@ public class HaskellDescriptionUtils {
         sources,
         CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.C)
             .resolve(graphBuilder, target.getTargetConfiguration()),
-        withDownwardApi);
+        withDownwardApi,
+        skipSystemFrameworkSearchpaths);
   }
 
   protected static BuildTarget getCompileBuildTarget(
@@ -219,7 +221,8 @@ public class HaskellDescriptionUtils {
       Optional<HaskellPackageInfo> packageInfo,
       ImmutableList<String> flags,
       HaskellSources srcs,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean skipSystemFrameworkSearchpaths) {
 
     return (HaskellCompileRule)
         graphBuilder.computeIfAbsent(
@@ -238,7 +241,8 @@ public class HaskellDescriptionUtils {
                     packageInfo,
                     flags,
                     srcs,
-                    withDownwardApi));
+                    withDownwardApi,
+                    skipSystemFrameworkSearchpaths));
   }
 
   /**
@@ -260,7 +264,8 @@ public class HaskellDescriptionUtils {
       Path outputPath,
       Optional<String> soname,
       boolean hsProfile,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean skipSystemFrameworkSearchpaths) {
 
     Tool linker = platform.getLinker().resolve(graphBuilder, target.getTargetConfiguration());
 
@@ -342,7 +347,8 @@ public class HaskellDescriptionUtils {
                 ImmutableHaskellSources.ofImpl(
                     ImmutableMap.of(
                         HaskellSourceModule.UNUSED, emptyModule.getSourcePathToOutput())),
-                withDownwardApi));
+                withDownwardApi,
+                skipSystemFrameworkSearchpaths));
     BuildTarget emptyArchiveTarget = target.withAppendedFlavors(InternalFlavor.of("empty-archive"));
     Archive emptyArchive =
         graphBuilder.addToIndex(

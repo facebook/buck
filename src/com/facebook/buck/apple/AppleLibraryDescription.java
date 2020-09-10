@@ -421,6 +421,7 @@ public class AppleLibraryDescription
                       cxxPlatform,
                       applePlatform,
                       swiftBuckConfig,
+                      cxxBuckConfig,
                       downwardApiConfig,
                       preprocessorInputs));
             } else if (type.getValue().equals(Type.SWIFT_COMMAND)) {
@@ -434,6 +435,7 @@ public class AppleLibraryDescription
                       cxxPlatform,
                       applePlatform,
                       swiftBuckConfig,
+                      cxxBuckConfig,
                       downwardApiConfig,
                       preprocessorInputs));
             }

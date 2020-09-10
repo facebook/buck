@@ -74,7 +74,8 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude implements AndroidP
       ImmutableList<Arg> sourceFlags,
       ActionGraphBuilder graphBuilder,
       SourcePathResolverAdapter pathResolver,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean skipSystemFrameworkSearchPaths) {
 
     DepsBuilder depsBuilder = new DepsBuilder(graphBuilder);
 
@@ -91,7 +92,12 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude implements AndroidP
     // Now build a new pp-delegate specially for this PCH rule.
     PreprocessorDelegate preprocessorDelegate =
         buildPreprocessorDelegate(
-            cxxPlatform, preprocessor, compilerFlags, graphBuilder, pathResolver);
+            cxxPlatform,
+            preprocessor,
+            compilerFlags,
+            graphBuilder,
+            pathResolver,
+            skipSystemFrameworkSearchPaths);
 
     // Language needs to be part of the key, PCHs built under a different language are incompatible.
     // (Replace `c++` with `cxx`; avoid default scrubbing which would make it the cryptic `c__`.)

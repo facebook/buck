@@ -131,7 +131,7 @@ public class CxxLinkableEnhancer {
             blacklist,
             linkWholeDeps,
             immediateLinkableInput,
-            false);
+            cxxBuckConfig.getSkipSystemFrameworkSearchPaths());
 
     argsBuilder.addAll(allArgs);
 
@@ -505,7 +505,7 @@ public class CxxLinkableEnhancer {
             blacklist,
             linkWholeDeps,
             immediateLinkableInput,
-            false);
+            cxxBuckConfig.getSkipSystemFrameworkSearchPaths());
 
     Linker.LinkableDepType runtimeDepType = depType;
     if (cxxRuntimeType.orElse(Linker.CxxRuntimeType.DYNAMIC) == Linker.CxxRuntimeType.STATIC) {

@@ -94,6 +94,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @AddToRuleKey private final boolean withDownwardApi;
 
+  @AddToRuleKey private final boolean skipSystemFrameworkSearchpaths;
+
   private HaskellCompileRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -107,7 +109,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       Optional<HaskellPackageInfo> packageInfo,
       HaskellSources sources,
       Preprocessor preprocessor,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean skipSystemFrameworkSearchpaths) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.compiler = compiler;
     this.flags = flags;
@@ -119,6 +122,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     this.sources = sources;
     this.preprocessor = preprocessor;
     this.withDownwardApi = withDownwardApi;
+    this.skipSystemFrameworkSearchpaths = skipSystemFrameworkSearchpaths;
   }
 
   public static HaskellCompileRule from(
@@ -135,7 +139,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       Optional<HaskellPackageInfo> packageInfo,
       HaskellSources sources,
       Preprocessor preprocessor,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean skipSystemFrameworkSearchpaths) {
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
         MoreSuppliers.memoize(
             () ->
@@ -157,7 +162,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         packageInfo,
         sources,
         preprocessor,
-        withDownwardApi);
+        withDownwardApi,
+        skipSystemFrameworkSearchpaths);
   }
 
   private Path getObjectDir() {

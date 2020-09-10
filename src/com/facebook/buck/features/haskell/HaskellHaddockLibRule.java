@@ -87,6 +87,8 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
 
   @AddToRuleKey private final boolean withDownwardApi;
 
+  @AddToRuleKey private final boolean skipSystemFrameworkSearchPaths;
+
   private HaskellHaddockLibRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -99,7 +101,8 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
       HaskellPackageInfo packageInfo,
       HaskellPlatform platform,
       Preprocessor preprocessor,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean skipSystemFrameworkSearchPaths) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.srcs = srcs;
     this.haddockTool = haddockTool;
@@ -110,6 +113,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     this.platform = platform;
     this.preprocessor = preprocessor;
     this.withDownwardApi = withDownwardApi;
+    this.skipSystemFrameworkSearchPaths = skipSystemFrameworkSearchPaths;
   }
 
   public static HaskellHaddockLibRule from(
@@ -125,7 +129,8 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
       HaskellPackageInfo packageInfo,
       HaskellPlatform platform,
       Preprocessor preprocessor,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean skipSystemFrameworkSearchPaths) {
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
         MoreSuppliers.memoize(
             () ->
@@ -147,7 +152,8 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
         packageInfo,
         platform,
         preprocessor,
-        withDownwardApi);
+        withDownwardApi,
+        skipSystemFrameworkSearchPaths);
   }
 
   private Path getObjectDir() {
@@ -229,7 +235,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
                 resolver,
                 PathShortener.identity(),
                 CxxDescriptionEnhancer.frameworkPathToSearchPath(
-                    platform.getCxxPlatform(), resolver, false),
+                    platform.getCxxPlatform(), resolver, skipSystemFrameworkSearchPaths),
                 preprocessor,
                 /* pch */ Optional.empty());
     return MoreIterables.zipAndConcat(

@@ -282,7 +282,8 @@ public class HaskellBinaryDescription
                 Optional.empty(),
                 args.getCompilerFlags(),
                 HaskellSources.from(buildTarget, graphBuilder, platform, "srcs", args.getSrcs()),
-                downwardApiConfig.isEnabledForHaskell()));
+                downwardApiConfig.isEnabledForHaskell(),
+                cxxBuckConfig.getSkipSystemFrameworkSearchPaths()));
     linkInputsBuilder.addAll(SourcePathArg.from(compileRule.getObjects()));
 
     ImmutableList<Arg> linkInputs = linkInputsBuilder.build();
@@ -307,7 +308,8 @@ public class HaskellBinaryDescription
             outputPath,
             Optional.empty(),
             args.isEnableProfiling(),
-            downwardApiConfig.isEnabledForHaskell());
+            downwardApiConfig.isEnabledForHaskell(),
+            cxxBuckConfig.getSkipSystemFrameworkSearchPaths());
 
     return new HaskellBinary(
         buildTarget,

@@ -186,7 +186,8 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                             .getCpp()
                             .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
                         platform,
-                        downwardApiConfig.isEnabledForGo()));
+                        downwardApiConfig.isEnabledForGo(),
+                        cxxBuckConfig.getSkipSystemFrameworkSearchPaths()));
 
     // generated c files needs to be compiled and linked into a single object
     // file (equivalent of (_cgo_.o), includes:

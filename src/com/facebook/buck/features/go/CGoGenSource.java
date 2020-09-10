@@ -75,6 +75,7 @@ public class CGoGenSource extends AbstractBuildRule {
   private final ImmutableList<Path> includeDirs;
   private final Preprocessor cpp;
   @AddToRuleKey private final boolean withDownwardApi;
+  @AddToRuleKey private final boolean skipSystemFrameworkSearchPaths;
 
   public CGoGenSource(
       BuildTarget buildTarget,
@@ -88,7 +89,8 @@ public class CGoGenSource extends AbstractBuildRule {
       PreprocessorFlags ppFlags,
       Preprocessor cpp,
       GoPlatform platform,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean skipSystemFrameworkSearchPaths) {
     super(buildTarget, projectFilesystem);
     this.cgoSrcs = cgoSrcs;
     this.cgo = cgo;
@@ -96,6 +98,7 @@ public class CGoGenSource extends AbstractBuildRule {
     this.platform = platform;
     this.preprocessor = preprocessor;
     this.withDownwardApi = withDownwardApi;
+    this.skipSystemFrameworkSearchPaths = skipSystemFrameworkSearchPaths;
     this.genDir = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/gen");
     this.argsFile = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/cgo.argsfile");
     this.ppFlags = ppFlags;
@@ -195,7 +198,7 @@ public class CGoGenSource extends AbstractBuildRule {
             resolver,
             PathShortener.identity(),
             CxxDescriptionEnhancer.frameworkPathToSearchPath(
-                platform.getCxxPlatform(), resolver, false),
+                platform.getCxxPlatform(), resolver, skipSystemFrameworkSearchPaths),
             preprocessor,
             /* pch */ Optional.empty());
     return MoreIterables.zipAndConcat(Arg.stringify(cxxToolFlags.getAllFlags(), resolver));

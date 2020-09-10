@@ -198,6 +198,7 @@ public class AppleBundleIntegrationTest {
     BuildTarget target = workspace.newBuildTarget("//:CatalystDemoApp#maccatalyst-x86_64,no-debug");
     workspace.addBuckConfigLocalOption("apple", "target_triple_enabled", "true");
     workspace.addBuckConfigLocalOption("apple", "use_entitlements_when_adhoc_code_signing", "true");
+    workspace.addBuckConfigLocalOption("cxx", "skip_system_framework_search_paths", "true");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     Path appPath =

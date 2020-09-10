@@ -122,6 +122,10 @@ public class CxxBuckConfig {
 
   private static final String CHECK_GTEST_TEST_LIST = "check_gtest_test_list";
 
+  // TODO(T75117164): This is a temporary flag, remove after successful deployment
+  private static final String SKIP_SYSTEM_FRAMEWORK_SEARCH_PATHS =
+      "skip_system_framework_search_paths";
+
   private static final String OBJCOPY = "objcopy";
   private static final String NM = "nm";
   private static final String STRIP = "strip";
@@ -655,6 +659,11 @@ public class CxxBuckConfig {
     }
 
     return Optional.of(new ProviderBasedUnresolvedCxxPlatform(toolchainTarget.get(), flavor));
+  }
+
+  /** @return Whether to skip inclusion of search paths for system frameworks and libraries. */
+  public boolean getSkipSystemFrameworkSearchPaths() {
+    return delegate.getBooleanValue(cxxSection, SKIP_SYSTEM_FRAMEWORK_SEARCH_PATHS, false);
   }
 
   @BuckStyleValue

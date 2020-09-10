@@ -59,7 +59,8 @@ public class CxxPrefixHeader extends PreInclude {
       ImmutableList<Arg> sourceFlags,
       ActionGraphBuilder graphBuilder,
       SourcePathResolverAdapter pathResolver,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean skipSystemFrameworkSearchPaths) {
 
     DepsBuilder depsBuilder = new DepsBuilder(graphBuilder);
 

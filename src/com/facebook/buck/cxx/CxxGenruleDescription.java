@@ -125,6 +125,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         ImplicitDepsInferringDescription<CxxGenruleDescriptionArg> {
 
   private final ImmutableSet<Flavor> declaredPlatforms;
+  private final boolean skipSystemFrameworkSearchPaths;
 
   public CxxGenruleDescription(
       ToolchainProvider toolchainProvider,
@@ -143,6 +144,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         sandboxExecutionStrategy,
         false);
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
+    this.skipSystemFrameworkSearchPaths = cxxBuckConfig.getSkipSystemFrameworkSearchPaths();
   }
 
   public static boolean wrapsCxxGenrule(SourcePathRuleFinder ruleFinder, SourcePath path) {
@@ -266,9 +268,14 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
                     .collect(ImmutableList.toImmutableList()))));
 
     expanders.add(
-        new CxxPreprocessorFlagsExpander<>(CppFlagsMacro.class, cxxPlatform, CxxSource.Type.C));
+        new CxxPreprocessorFlagsExpander<>(
+            CppFlagsMacro.class, cxxPlatform, CxxSource.Type.C, skipSystemFrameworkSearchPaths));
     expanders.add(
-        new CxxPreprocessorFlagsExpander<>(CxxppFlagsMacro.class, cxxPlatform, CxxSource.Type.CXX));
+        new CxxPreprocessorFlagsExpander<>(
+            CxxppFlagsMacro.class,
+            cxxPlatform,
+            CxxSource.Type.CXX,
+            skipSystemFrameworkSearchPaths));
     expanders.add(
         new ToolExpander<>(
             LdMacro.class,
@@ -300,7 +307,10 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         new ArgExpander<>(CudaFlagsMacro.class, new ShQuoteJoinArg(cxxPlatform.getCudaflags())));
     expanders.add(
         new CxxPreprocessorFlagsExpander<>(
-            CudappFlagsMacro.class, cxxPlatform, CxxSource.Type.CUDA));
+            CudappFlagsMacro.class,
+            cxxPlatform,
+            CxxSource.Type.CUDA,
+            skipSystemFrameworkSearchPaths));
 
     return Optional.of(expanders.build());
   }
@@ -468,12 +478,17 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     private final Class<M> clazz;
     private final CxxPlatform cxxPlatform;
     private final CxxSource.Type sourceType;
+    private final boolean skipSystemFrameworkSearchPaths;
 
     CxxPreprocessorFlagsExpander(
-        Class<M> clazz, CxxPlatform cxxPlatform, CxxSource.Type sourceType) {
+        Class<M> clazz,
+        CxxPlatform cxxPlatform,
+        CxxSource.Type sourceType,
+        boolean skipSystemFrameworkSearchPaths) {
       this.clazz = clazz;
       this.cxxPlatform = cxxPlatform;
       this.sourceType = sourceType;
+      this.skipSystemFrameworkSearchPaths = skipSystemFrameworkSearchPaths;
     }
 
     @Override
@@ -531,7 +546,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
           CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType)
               .resolve(graphBuilder, targetConfiguration),
           CxxDescriptionEnhancer.frameworkPathToSearchPath(
-              cxxPlatform, graphBuilder.getSourcePathResolver(), false));
+              cxxPlatform, graphBuilder.getSourcePathResolver(), skipSystemFrameworkSearchPaths));
     }
   }
 

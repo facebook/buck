@@ -153,7 +153,8 @@ public class HaskellLibraryDescription
         Optional.of(getPackageInfo(platform, buildTarget)),
         args.getCompilerFlags(),
         HaskellSources.from(buildTarget, graphBuilder, platform, "srcs", args.getSrcs()),
-        downwardApiConfig.isEnabledForHaskell());
+        downwardApiConfig.isEnabledForHaskell(),
+        cxxBuckConfig.getSkipSystemFrameworkSearchPaths());
   }
 
   private Archive createStaticLibrary(
@@ -476,7 +477,8 @@ public class HaskellLibraryDescription
             platform,
             CxxSourceTypes.getPreprocessor(platform.getCxxPlatform(), CxxSource.Type.C)
                 .resolve(graphBuilder, baseTarget.getTargetConfiguration()),
-            downwardApiConfig.isEnabledForHaskell()));
+            downwardApiConfig.isEnabledForHaskell(),
+            cxxBuckConfig.getSkipSystemFrameworkSearchPaths()));
   }
 
   private HaskellLinkRule createSharedLibrary(
@@ -520,7 +522,8 @@ public class HaskellLibraryDescription
         outputPath,
         Optional.of(name),
         hsProfile,
-        downwardApiConfig.isEnabledForHaskell());
+        downwardApiConfig.isEnabledForHaskell(),
+        cxxBuckConfig.getSkipSystemFrameworkSearchPaths());
   }
 
   private HaskellLinkRule requireSharedLibrary(

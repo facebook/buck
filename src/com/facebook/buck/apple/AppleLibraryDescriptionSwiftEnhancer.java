@@ -33,6 +33,7 @@ import com.facebook.buck.cxx.ExplicitCxxToolFlags;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
@@ -65,6 +66,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       CxxPlatform platform,
       AppleCxxPlatform applePlatform,
       SwiftBuckConfig swiftBuckConfig,
+      CxxBuckConfig cxxBuckConfig,
       DownwardApiConfig downwardApiConfig,
       ImmutableSet<CxxPreprocessorInput> inputs) {
 
@@ -84,6 +86,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         platform,
         swiftPlatform,
         swiftBuckConfig,
+        cxxBuckConfig,
         downwardApiConfig,
         target,
         graphBuilder,
@@ -149,6 +152,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       CxxPlatform platform,
       AppleCxxPlatform applePlatform,
       SwiftBuckConfig swiftBuckConfig,
+      CxxBuckConfig cxxBuckConfig,
       DownwardApiConfig downwardApiConfig,
       ImmutableSet<CxxPreprocessorInput> inputs) {
 
@@ -160,6 +164,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         platform,
         swiftPlatform,
         swiftBuckConfig,
+        cxxBuckConfig,
         downwardApiConfig,
         target,
         graphBuilder,

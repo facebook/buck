@@ -240,7 +240,8 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       Preprocessor preprocessor,
       CxxToolFlags preprocessorFlags,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolverAdapter pathResolver) {
+      SourcePathResolverAdapter pathResolver,
+      boolean skipSystemFrameworkSearchPaths) {
     return new PreprocessorDelegate(
         cxxPlatform.getHeaderVerification(),
         PathSourcePath.of(getProjectFilesystem(), Paths.get("")),
@@ -250,7 +251,8 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
             preprocessorFlags,
             getIncludes(cxxPlatform, graphBuilder),
             ImmutableList.copyOf(getFrameworks(cxxPlatform, graphBuilder))),
-        CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver, false),
+        CxxDescriptionEnhancer.frameworkPathToSearchPath(
+            cxxPlatform, pathResolver, skipSystemFrameworkSearchPaths),
         /* leadingIncludePaths */ Optional.empty(),
         Optional.empty(),
         cxxPlatform.getConflictingHeaderBasenameWhitelist());
@@ -268,7 +270,8 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<Arg> sourceFlags,
       ActionGraphBuilder graphBuilder,
       SourcePathResolverAdapter pathResolver,
-      boolean withDownwardApi);
+      boolean withDownwardApi,
+      boolean skipSystemFrameworkSearchPaths);
 
   /**
    * Look up or build a precompiled header build rule which this build rule is requesting.

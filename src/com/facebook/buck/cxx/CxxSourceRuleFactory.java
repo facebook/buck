@@ -116,10 +116,7 @@ public abstract class CxxSourceRuleFactory {
 
   protected abstract PicType getPicType();
 
-  @Value.Default
-  protected boolean getSkipSystemFrameworkSearchPaths() {
-    return false;
-  }
+  protected abstract boolean getSkipSystemFrameworkSearchPaths();
 
   @Value.Check
   protected void checkPrefixAndPrecompiledHeaderArgs() {
@@ -757,7 +754,8 @@ public abstract class CxxSourceRuleFactory {
         sourceFlags,
         graphBuilder,
         pathResolver,
-        withDownwardApi);
+        withDownwardApi,
+        getSkipSystemFrameworkSearchPaths());
   }
 
   private CxxDiagnosticExtractionRule createDiagnosticExtractionBuildRule(
@@ -924,7 +922,7 @@ public abstract class CxxSourceRuleFactory {
         prefixHeader,
         precompiledHeader,
         picType,
-        false);
+        cxxBuckConfig.getSkipSystemFrameworkSearchPaths());
   }
 
   private DebugPathSanitizer getSanitizer() {
