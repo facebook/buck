@@ -60,6 +60,28 @@ async def test_repo_build_failure(repo: BuckRepo):
     asserts.assert_build_success(result)
 
 
+@buck_test
+async def test_repo_default_config(repo: BuckRepo):
+    buck_config_path = Path(repo.cwd / ".buckconfig")
+    buck_config_local_path = Path(repo.cwd / ".buckconfig.local")
+    assert buck_config_path.exists()
+    assert buck_config_local_path.exists()
+    assert [line.strip() for line in open(buck_config_path, "r")] == [
+        "[buildfile]",
+        "",
+        "name = BUCK.fixture",
+        "",
+    ]
+    assert [line.strip() for line in open(buck_config_local_path, "r")] == [
+        "[log]",
+        "",
+        "scuba_logging = false",
+        "everstore_log_upload_mode = never",
+        "scribe_offline_enabled = false",
+        "",
+    ]
+
+
 def _create_file(dirpath: Path, filepath: Path, exitcode: int):
     """ Writes out a message to a file given the path"""
     with open(dirpath / filepath, "w") as f1:

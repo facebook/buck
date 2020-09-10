@@ -28,11 +28,13 @@ def repo() -> Iterator[BuckRepo]:
     """Returns a BuckRepo for testing"""
     with tempfile.TemporaryDirectory() as temp_dir:
         test_buck_binary = os.environ["TEST_BUCK_BINARY"]
-        # TODO: Change this to use a BuckConfig objects
-        with open(temp_dir + "/.buckconfig", "w") as f1:
-            f1.write("[buildfile]\nname = BUCK.fixture")
         repo = BuckRepo(Path(test_buck_binary), cwd=Path(temp_dir), encoding="utf-8")
-        # setup
+        with repo.buck_config() as buck_config:
+            buck_config["buildfile"]["name"] = "BUCK.fixture"
+        with repo.buck_config_local() as buck_config_local:
+            buck_config_local["log"]["scuba_logging"] = "false"
+            buck_config_local["log"]["everstore_log_upload_mode"] = "never"
+            buck_config_local["log"]["scribe_offline_enabled"] = "false"
         yield repo
         # teardown
 
