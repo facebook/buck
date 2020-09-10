@@ -98,6 +98,52 @@ public class BuckConfig {
     ImmutableMap.Builder<String, ImmutableSet<String>> nonSerializableREConfigFieldsBuilder =
         ImmutableMap.builder();
 
+    nonSerializableREConfigFieldsBuilder.put("log", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("experiments", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("remoteexecution", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("intellij", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("resources_per_rule", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("dotnet", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("alias", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("ovrsource", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("rule_analysis", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("custom", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("host_features", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("resources", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("rage", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("downward_api", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("ui", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("parser", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("counters", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("eden", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("fs_image", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("clean", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("scuba", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("doctor", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("scribe_event_listener", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("download", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("build_report", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put(
+        "version_control",
+        ImmutableSet.of(
+            "pregenerated_current_revision_id",
+            "pregenerated_base_revision_id",
+            "pregenerated_base_revision_timestamp"));
+    nonSerializableREConfigFieldsBuilder.put(
+        "project",
+        ImmutableSet.of(
+            "ignore",
+            "ide",
+            "build_file_search_method",
+            "allow_symlinks",
+            "glob_handler",
+            "parsing_threads",
+            "enable_build_file_sandboxing",
+            "watchman_cursor",
+            "watch_cells",
+            "track_cell_agnostic_target"));
+
+
     return nonSerializableREConfigFieldsBuilder.build();
   }
 
