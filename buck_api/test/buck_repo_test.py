@@ -220,6 +220,38 @@ async def test_test_failed():
         assert result.is_build_failure()
 
 
+@pytest.mark.asyncio
+def test_buck_configs_context_manager():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        path_of_cwd = Path(temp_dir)
+        test_script = pkg_resources.resource_filename(
+            "buck_api.test.buck_repo_test", "test_script.py"
+        )
+        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
+        buck_config_path = Path(temp_dir) / Path(".buckconfig")
+        assert not buck_config_path.exists()
+        with repo.buck_config() as buck_config:
+            buck_config["a"]["b"] = "c"
+        assert buck_config_path.exists()
+        assert [line.strip() for line in open(buck_config_path, "r")] == [
+            "[a]",
+            "",
+            "b = c",
+            "",
+        ]
+        buck_config_local_path = Path(temp_dir) / Path(".buckconfig.local")
+        assert not buck_config_local_path.exists()
+        with repo.buck_config_local() as buck_config_local:
+            buck_config_local["a"]["c"] = "d"
+        assert buck_config_local_path.exists()
+        assert [line.strip() for line in open(buck_config_local_path, "r")] == [
+            "[a]",
+            "",
+            "c = d",
+            "",
+        ]
+
+
 def _create_directory(dirpath: Path, dirname: Path) -> Path:
     """ Creates a directiroy in the given path"""
     output = dirpath / dirname

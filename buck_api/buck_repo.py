@@ -15,9 +15,11 @@
 
 import os
 from asyncio import subprocess
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Awaitable, Optional, Tuple
+from typing import Awaitable, DefaultDict, Dict, Iterator, Optional, Tuple
 
+from buck_api.buck_config import BuckConfig
 from buck_api.buck_process import BuckProcess
 from buck_api.buck_result import BuckResult, BuildResult, TestResult
 
@@ -34,11 +36,35 @@ class BuckRepo:
         assert self.cwd.exists(), str(self.cwd)
         self.encoding = encoding
         self.set_buckd(False)
+        self._buck_config: Optional[BuckConfig] = None
+        self._buck_config_local: Optional[BuckConfig] = None
         ######################################
         #  path_to_buck is the absolute path
         ######################################
 
-    def set_buckd(self, toggle: bool):
+    @contextmanager
+    def buck_config(self) -> Iterator[DefaultDict[str, Dict[str, str]]]:
+        """
+        A context manager that yields .buckconfig configs as a dictionary
+        On close, the configs are saved to .buckconfig file.
+        """
+        if self._buck_config is None:
+            self._buck_config = BuckConfig(self.cwd / Path(".buckconfig"))
+        with self._buck_config.modify() as config:
+            yield config
+
+    @contextmanager
+    def buck_config_local(self) -> Iterator[DefaultDict[str, Dict[str, str]]]:
+        """
+        A context manager that yields .buckconfig.local configs as a dictionary
+        On close, the configs are saved to .buckconfig.local file.
+        """
+        if self._buck_config_local is None:
+            self._buck_config_local = BuckConfig(self.cwd / Path(".buckconfig.local"))
+        with self._buck_config_local.modify() as config:
+            yield config
+
+    def set_buckd(self, toggle: bool) -> None:
         """
         Setting buckd env to value of toggle.
         toggle can be 0 for enabled and 1 for disabled
