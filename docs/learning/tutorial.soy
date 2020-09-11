@@ -47,6 +47,8 @@
       <td><span><strong>Platform:</strong></span></td>
       <td>
         <a href="javascript:void(0);" class="button-android" onclick="display('platform', 'android')">Android</a>
+        <a href="javascript:void(0);" class="button-macos" onclick="display('platform', 'macos')">MacOS</a>
+        <a href="javascript:void(0);" class="button-linuxos" onclick="display('platform', 'linuxos')">Linux</a>
       </td>
     </tr>
     <tr>
@@ -61,12 +63,13 @@
       <td>
         <a href="javascript:void(0);" class="button-java" onclick="display('language', 'java')">Java</a>
         <a href="javascript:void(0);" class="button-kotlin" onclick="display('language', 'kotlin')">Kotlin</a>
+        <a href="javascript:void(0);" class="button-rust" onclick="display('language', 'rust')">Rust</a>
       </td>
     </tr>
   </table>
 </div>
 
-<span><block class="mac linux android java kotlin" /></span>
+<span><block class="macos mac linuxos linux android java kotlin rust" /></span>
 <h2>Path Setup</h2>
 
 <p>
@@ -83,7 +86,7 @@ sudo ln -s ${PWD}/bin/buckd /usr/bin/buckd
 <h2>Create Project</h2>
 
 <p>
-  We are going to build a sample Android application. We should start our project in an empty directory, so create a new one and navigate to it:
+  We are going to build a sample application. We should start our project in an empty directory, so create a new one and navigate to it:
 </p>
 
 {literal}<pre>
@@ -99,8 +102,9 @@ cd ~/my-first-buck-project/
 
 <h2>Compile Your Code</h2>
 
+<span><block class="mac linux android java kotlin" /></span>
 <p>
-  Android applications are typically written in Javai and kotlin, so the first thing we will do is to configure Buck to compile code against the Android API. To do so, Buck needs to know where your Android SDK is. Assuming that your Android SDK is installed in <code>~/android-sdk</code>, run the following command to set a <code>ANDROID_SDK</code> environment variable that tells Buck where to find your Android SDK:
+  Android applications are typically written in Java and kotlin, so the first thing we will do is to configure Buck to compile code against the Android API. To do so, Buck needs to know where your Android SDK is. Assuming that your Android SDK is installed in <code>~/android-sdk</code>, run the following command to set a <code>ANDROID_SDK</code> environment variable that tells Buck where to find your Android SDK:
 </p>
 
 {literal}<pre>
@@ -190,6 +194,78 @@ echo "android_library(
 </p>
 
 <pre>buck build{sp}//kotlin/com/example/activity:activity</pre>
+
+<p>
+<blockquote>
+  Buck generates its output in the <code>buck-out</code> directory, so this is a good time to specify <code>buck-out</code> as something that should be ignored by your version control system.
+</blockquote>
+</p>
+
+<span><block class="mac linux linuxos macos kotlin rust " /></span>
+<p>
+  First, we create rust source files and directories:
+</p>
+{literal}<pre>
+mkdir -p src/front_of_house
+echo "mod front_of_house;
+
+pub use crate::front_of_house::hosting;
+pub use crate::front_of_house::serving;
+
+fn main() {
+    hosting::add_to_waitlist();
+    hosting::seat_at_table();
+    serving::take_order();
+    serving::serve_order();
+    serving::take_payment();
+}" > src/main.rs
+
+echo "pub mod hosting;
+pub mod serving;" > src/front_of_house.rs
+
+echo "pub fn add_to_waitlist() {
+    println!(\"Added to watinglist.\");
+}
+
+pub fn seat_at_table() {
+    println!(\"Seated at table.\");
+}" > src/front_of_house/hosting.rs
+
+echo "pub fn take_order() {
+    println!(\"Ordered.\");
+}
+
+pub fn serve_order() {
+    println!(\"Order served.\");
+}
+
+pub fn take_payment() {
+    println!(\"Payment done.\");
+} > src/front_of_house/serving.rs
+</pre>{/literal}
+
+<p>
+  Now we need a build file that defines a build rule to compile this Java code, so we create an <code><a href="rule/rust_binary.html">rust_binary()</a></code> rule in <code>BUCK</code>:
+{literal}<pre>
+echo "rust_binary(
+    name = 'restaurant',
+    srcs = glob(
+        ['src/**/*.rs'],
+    ),
+)" >BUCK
+</pre>{/literal}
+</p>
+
+<p>
+Now we can build our rust code using Buck:
+</p>
+
+<pre>buck build{sp}:restaurant</pre>
+
+<p>
+And run the sample:
+</p>
+<pre>buck run{sp}:restaurant</pre>
 
 <p>
 <blockquote>
