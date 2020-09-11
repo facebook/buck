@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import java.util.Optional;
 
 /** Type describing if and how codesign tool should be run when assembling the bundle */
 public enum AppleCodeSignType {
@@ -26,7 +27,12 @@ public enum AppleCodeSignType {
   ;
 
   /** Detect needed code sign type */
-  public static AppleCodeSignType signTypeForBundle(ApplePlatform platform, String extension) {
+  public static AppleCodeSignType signTypeForBundle(
+      ApplePlatform platform, String extension, Optional<AppleCodeSignType> override) {
+    if (override.isPresent()) {
+      return override.get();
+    }
+
     boolean isCodeSignNeeded =
         ApplePlatform.needsCodeSign(platform.getName())
             // .framework bundles will be code-signed when they're copied into the containing

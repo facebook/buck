@@ -425,7 +425,8 @@ public class AppleBinaryDescription
         downwardApiConfig.isEnabledForApple(),
         args.getTargetSdkVersion(),
         appleConfig.getResourceProcessingSeparateRuleFlag(),
-        appleConfig.getIncrementalBundlingEnabled());
+        appleConfig.getIncrementalBundlingEnabled(),
+        appleConfig.getCodeSignTypeOverride());
   }
 
   private BuildRule createBinary(

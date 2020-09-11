@@ -545,6 +545,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
         .orElse(false);
   }
 
+  public Optional<AppleCodeSignType> getCodeSignTypeOverride() {
+    return delegate.getEnum(APPLE_SECTION, "codesign_type_override", AppleCodeSignType.class);
+  }
+
   public boolean shouldUseModernBuildSystem() {
     return delegate.getBooleanValue(APPLE_SECTION, "use_modern_build_system", true);
   }

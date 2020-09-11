@@ -773,7 +773,8 @@ public class AppleDescriptions {
       boolean withDownwardApi,
       Optional<String> minimumOSVersion,
       boolean useSeparateRuleToProcessResources,
-      boolean incrementalBundlingEnabled) {
+      boolean incrementalBundlingEnabled,
+      Optional<AppleCodeSignType> codeSignTypeOverride) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             graphBuilder,
@@ -1059,7 +1060,9 @@ public class AppleDescriptions {
 
     AppleCodeSignType codeSignType =
         AppleCodeSignType.signTypeForBundle(
-            appleCxxPlatform.getAppleSdk().getApplePlatform(), unwrappedExtension);
+            appleCxxPlatform.getAppleSdk().getApplePlatform(),
+            unwrappedExtension,
+            codeSignTypeOverride);
 
     Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier;
     SourcePath infoPlistReadyToCopy;

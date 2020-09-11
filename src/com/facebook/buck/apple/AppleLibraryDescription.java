@@ -574,7 +574,8 @@ public class AppleLibraryDescription
         downwardApiConfig.isEnabledForApple(),
         args.getTargetSdkVersion(),
         appleConfig.getResourceProcessingSeparateRuleFlag(),
-        appleConfig.getIncrementalBundlingEnabled());
+        appleConfig.getIncrementalBundlingEnabled(),
+        appleConfig.getCodeSignTypeOverride());
   }
 
   /**

@@ -78,6 +78,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import javax.xml.parsers.ParserConfigurationException;
 import org.hamcrest.Matchers;
@@ -185,10 +186,17 @@ public class AppleBundleIntegrationTest {
     workspace.getBuildLog().assertTargetBuiltLocally(target);
   }
 
+  private static void setCommonCatalystBuckConfigLocalOptions(ProjectWorkspace workspace)
+      throws IOException {
+    workspace.addBuckConfigLocalOption("apple", "target_triple_enabled", "true");
+    workspace.addBuckConfigLocalOption("apple", "use_entitlements_when_adhoc_code_signing", "true");
+    workspace.addBuckConfigLocalOption("cxx", "skip_system_framework_search_paths", "true");
+  }
+
   @Test
   public void simpleApplicationBundleCatalyst()
       throws IOException, PropertyListFormatException, ParserConfigurationException, SAXException,
-          ParseException {
+          ParseException, InterruptedException {
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -196,9 +204,7 @@ public class AppleBundleIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget("//:CatalystDemoApp#maccatalyst-x86_64,no-debug");
-    workspace.addBuckConfigLocalOption("apple", "target_triple_enabled", "true");
-    workspace.addBuckConfigLocalOption("apple", "use_entitlements_when_adhoc_code_signing", "true");
-    workspace.addBuckConfigLocalOption("cxx", "skip_system_framework_search_paths", "true");
+    setCommonCatalystBuckConfigLocalOptions(workspace);
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     Path appPath =
@@ -217,6 +223,45 @@ public class AppleBundleIntegrationTest {
     assertNull(plist.get("LSRequiresIPhoneOS"));
     assertNull(plist.get("MinimumOSVersion"));
     assertNotNull(plist.get("LSMinimumSystemVersion"));
+
+    Optional<String> maybeSignatureOutput =
+        workspace.runCommand("codesign", "-d", "-v", appPath.toString()).getStderr();
+    assertTrue(maybeSignatureOutput.isPresent());
+    assertThat(maybeSignatureOutput.get(), not(containsString("code object is not signed at all")));
+    assertThat(maybeSignatureOutput.get(), containsString("Signature=adhoc"));
+  }
+
+  @Test
+  public void simpleApplicationBundleCatalystWithoutCodeSigning()
+      throws IOException, InterruptedException {
+    assumeTrue(
+        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSXCATALYST));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_no_debug", tmp);
+    workspace.setUp();
+
+    BuildTarget target = workspace.newBuildTarget("//:CatalystDemoApp#maccatalyst-x86_64,no-debug");
+    setCommonCatalystBuckConfigLocalOptions(workspace);
+    workspace.addBuckConfigLocalOption("apple", "codesign_type_override", "skip");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path appPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve(target.getShortName() + ".app"));
+
+    assertTrue(Files.exists(appPath));
+
+    Optional<String> maybeSignatureOutput =
+        workspace.runCommand("codesign", "-d", "-v", appPath.toString()).getStderr();
+    assertTrue(maybeSignatureOutput.isPresent());
+    assertThat(maybeSignatureOutput.get(), containsString("code object is not signed at all"));
+    assertThat(maybeSignatureOutput.get(), not(containsString("Signature=adhoc")));
   }
 
   @Test

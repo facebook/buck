@@ -385,7 +385,8 @@ public class AppleTestDescription
                         downwardApiConfig.isEnabledForApple(),
                         args.getTargetSdkVersion(),
                         appleConfig.getResourceProcessingSeparateRuleFlag(),
-                        appleConfig.getIncrementalBundlingEnabled()));
+                        appleConfig.getIncrementalBundlingEnabled(),
+                        appleConfig.getCodeSignTypeOverride()));
 
     Optional<SourcePath> xctool =
         getXctool(projectFilesystem, params, targetConfiguration, graphBuilder);
