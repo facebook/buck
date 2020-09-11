@@ -381,11 +381,12 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
                 public StepExecutionResult execute(StepExecutionContext executionContext) {
                   AbsPath outputPath = filesystem.getRootPath().resolve(resolvedOutput);
                   if (!Files.exists(outputPath.getPath())) {
-                    LOG.warn(
+                    LOG.error(
                         new NoSuchFileException(outputPath.toString()),
                         "Compile step was successful but output file: "
                             + outputPath.toString()
                             + " does not exist.");
+                    return StepExecutionResults.ERROR;
                   }
                   return StepExecutionResults.SUCCESS;
                 }
