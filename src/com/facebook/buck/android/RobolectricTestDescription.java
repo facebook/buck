@@ -303,6 +303,11 @@ public class RobolectricTestDescription
                         graphBuilder
                             .getSourcePathResolver()
                             .getAbsolutePath(aaptOutputInfo.getPrimaryResourcesApkPath())
+                            .toString(),
+                        "android_merged_manifest",
+                        graphBuilder
+                            .getSourcePathResolver()
+                            .getAbsolutePath(robolectricManifest)
                             .toString())));
 
         graphBuilder.addToIndex(unitTestOptions.get());
