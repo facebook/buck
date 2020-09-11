@@ -33,6 +33,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.test.config.TestBuckConfig;
@@ -45,19 +46,22 @@ public class AndroidInstrumentationTestDescription
     implements DescriptionWithTargetGraph<AndroidInstrumentationTestDescriptionArg>,
         ImplicitDepsInferringDescription<AndroidInstrumentationTestDescriptionArg> {
 
+  private final JavaBuckConfig javaBuckConfig;
   private final TestBuckConfig testBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final ConcurrentHashMap<ProjectFilesystem, ConcurrentHashMap<String, PackagedResource>>
       resourceSupplierCache;
-  private final Function<TargetConfiguration, JavaOptions> javaOptions;
+  private final Function<TargetConfiguration, JavaOptions> javaOptionsForTests;
 
   public AndroidInstrumentationTestDescription(
+      JavaBuckConfig javaBuckConfig,
       TestBuckConfig testBuckConfig,
       DownwardApiConfig downwardApiConfig,
       ToolchainProvider toolchainProvider) {
+    this.javaBuckConfig = javaBuckConfig;
     this.testBuckConfig = testBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
-    this.javaOptions = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
+    this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
     this.resourceSupplierCache = new ConcurrentHashMap<>();
   }
 
@@ -93,7 +97,7 @@ public class AndroidInstrumentationTestDescription
         (HasInstallableApk) apk,
         args.getLabels(),
         args.getContacts(),
-        javaOptions
+        javaOptionsForTests
             .apply(buildTarget.getTargetConfiguration())
             .getJavaRuntimeLauncher(
                 context.getActionGraphBuilder(), buildTarget.getTargetConfiguration()),
@@ -104,7 +108,8 @@ public class AndroidInstrumentationTestDescription
         getRelativePackagedResource(projectFilesystem, "kxml2.jar"),
         getRelativePackagedResource(projectFilesystem, "guava.jar"),
         getRelativePackagedResource(projectFilesystem, "android-tools-common.jar"),
-        downwardApiConfig.isEnabledForAndroid());
+        downwardApiConfig.isEnabledForAndroid(),
+        javaBuckConfig.getJavaForTestsVersion());
   }
 
   /**
@@ -131,7 +136,7 @@ public class AndroidInstrumentationTestDescription
       AndroidInstrumentationTestDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javaOptions
+    javaOptionsForTests
         .apply(buildTarget.getTargetConfiguration())
         .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }

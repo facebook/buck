@@ -63,6 +63,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -98,6 +99,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   private final PackagedResource guavaJar;
   private final PackagedResource toolsCommonJar;
   private final boolean withDownwardApi;
+  private final OptionalInt javaForTestsVersion;
 
   protected AndroidInstrumentationTest(
       BuildTarget buildTarget,
@@ -113,7 +115,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       PackagedResource kxml2Jar,
       PackagedResource guavaJar,
       PackagedResource toolsCommonJar,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      OptionalInt javaForTestsVersion) {
     super(buildTarget, projectFilesystem, params);
     this.androidPlatformTarget = androidPlatformTarget;
     this.apk = apk;
@@ -126,6 +129,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     this.guavaJar = guavaJar;
     this.toolsCommonJar = toolsCommonJar;
     this.withDownwardApi = withDownwardApi;
+    this.javaForTestsVersion = javaForTestsVersion;
   }
 
   private static AndroidDevice getSingleDevice(AndroidDevicesHelper adbHelper) {
@@ -299,6 +303,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             .setDebugEnabled(debugEnabled)
             .setTestRunner(testRunner)
             .setTestRunnerClasspath(TESTRUNNER_CLASSES)
+            .setTestRunnerJavaVersion(javaForTestsVersion)
             .setDdmlibJarPath(ddmlib)
             .setTestFilter(classFilterArg)
             .setKxmlJarPath(kxml2)

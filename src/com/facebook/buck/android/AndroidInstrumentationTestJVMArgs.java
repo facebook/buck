@@ -23,10 +23,13 @@ import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 @BuckStyleValueWithBuilder
@@ -82,29 +85,37 @@ abstract class AndroidInstrumentationTestJVMArgs {
   /** @return The filesystem path to the compiled Buck test runner classes. */
   abstract Path getTestRunnerClasspath();
 
+  /** @return The version of Java used for the test runner. */
+  abstract OptionalInt getTestRunnerJavaVersion();
+
   abstract ImmutableMap<String, String> getEnvironmentOverrides();
 
   public void formatCommandLineArgsToList(
-      ProjectFilesystem filesystem, ImmutableList.Builder<String> args) {
-    // NOTE(agallagher): These propbably don't belong here, but buck integration tests need
-    // to find the test runner classes, so propagate these down via the relevant properties.
-    args.add(String.format("-Dbuck.testrunner_classes=%s", getTestRunnerClasspath()));
+      ProjectFilesystem filesystem,
+      ImmutableList.Builder<String> args,
+      Supplier<Path> classpathArgfile) {
+    if (!shouldUseClasspathArgfile()) {
+      // NOTE(agallagher): These propbably don't belong here, but buck integration tests need
+      // to find the test runner classes, so propagate these down via the relevant properties.
+      args.add(
+          String.format(
+              "-D%s=%s",
+              FileClassPathRunner.TESTRUNNER_CLASSES_PROPERTY, getTestRunnerClasspath()));
+    }
 
     if (getDeviceSerial().isPresent()) {
       args.add(String.format("-Dbuck.device.id=%s", getDeviceSerial().get()));
     }
 
-    args.add(
-        "-classpath",
-        getTestRunnerClasspath()
-            + File.pathSeparator
-            + this.getDdmlibJarPath()
-            + File.pathSeparator
-            + this.getKxmlJarPath()
-            + File.pathSeparator
-            + this.getGuavaJarPath()
-            + File.pathSeparator
-            + this.getAndroidToolsCommonJarPath());
+    if (shouldUseClasspathArgfile()) {
+      // Java 9+ supports argfiles for commandline arguments. We leverage this when we know we're
+      // launching a version of Java that supports this, as classloader changes in Java 9 preclude
+      // use from using the approach we use for Java 8-.
+      args.add("@" + filesystem.resolve(classpathArgfile.get()));
+    } else {
+      args.add("-classpath", getClasspathContents());
+    }
+
     args.add(FileClassPathRunner.class.getName());
     args.add(INSTRUMENTATION_TEST_RUNNER);
 
@@ -174,5 +185,39 @@ abstract class AndroidInstrumentationTestJVMArgs {
               JacocoConstants.JACOCO_EXEC_COVERAGE_FILE);
       args.add("--code-coverage-output-file", codeCoverageOutputFile);
     }
+  }
+
+  /** Whether or not we should use an argfile for the classpath when invoking Java. */
+  public boolean shouldUseClasspathArgfile() {
+    return getTestRunnerJavaVersion().isPresent() && getTestRunnerJavaVersion().getAsInt() >= 9;
+  }
+
+  /** Writes an argfile for the classpath to a file, which is supported in Java 9+. */
+  public void writeClasspathArgfile(ProjectFilesystem filesystem, Path argfile) throws IOException {
+    StringBuilder builder = new StringBuilder();
+    builder.append("-classpath");
+    builder.append(System.lineSeparator());
+    builder.append('"');
+    builder.append(escapePathForArgfile(getClasspathContents()));
+    builder.append('"');
+    builder.append(System.lineSeparator());
+
+    filesystem.writeContentsToPath(builder.toString(), argfile);
+  }
+
+  private String escapePathForArgfile(String path) {
+    return path.replace("\\", "\\\\");
+  }
+
+  private String getClasspathContents() {
+    return getTestRunnerClasspath()
+        + File.pathSeparator
+        + this.getDdmlibJarPath()
+        + File.pathSeparator
+        + this.getKxmlJarPath()
+        + File.pathSeparator
+        + this.getGuavaJarPath()
+        + File.pathSeparator
+        + this.getAndroidToolsCommonJarPath();
   }
 }

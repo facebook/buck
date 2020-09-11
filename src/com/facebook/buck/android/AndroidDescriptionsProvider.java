@@ -106,7 +106,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             androidBuckConfig,
             downwardApiConfig),
         new AndroidInstrumentationTestDescription(
-            testBuckConfig, downwardApiConfig, toolchainProvider),
+            javaConfig, testBuckConfig, downwardApiConfig, toolchainProvider),
         new AndroidLibraryDescription(
             javaConfig, downwardApiConfig, defaultAndroidCompilerFactory, toolchainProvider),
         new AndroidPrebuiltAarDescription(toolchainProvider, androidBuckConfig, downwardApiConfig),
