@@ -141,8 +141,6 @@ public class AppleVFSOverlayBuildRule extends ModernBuildRule<AppleVFSOverlayBui
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                         throws IOException {
-                      System.out.println(file.toAbsolutePath().toString());
-
                       Path key =
                           Paths.get(
                               placeholderPathString,

@@ -330,23 +330,37 @@ public class AppleLibraryDescription
                     .orElseThrow(IllegalArgumentException::new)
                     .resolve(graphBuilder, buildTarget.getTargetConfiguration());
 
+            Path placeholderPath =
+                AppleVFSOverlayBuildRule.getPlaceHolderPath(projectFilesystem, buildTarget);
+
+            boolean shouldCreatePrivateHeaderSymlinks =
+                args.getXcodePrivateHeadersSymlinks()
+                    .orElse(cxxPlatform.getPrivateHeadersSymlinksEnabled());
+
+            HeaderMode headerMode =
+                args.isModular()
+                    ? HeaderMode.SYMLINK_TREE_WITH_MODULEMAP
+                    : CxxDescriptionEnhancer.getHeaderModeForPlatform(
+                        graphBuilder,
+                        buildTarget.getTargetConfiguration(),
+                        cxxPlatform,
+                        shouldCreatePrivateHeaderSymlinks);
+
             BuildTarget headerModeSymlinkTarget =
                 buildTarget.withFlavors(
                     cxxPlatform.getFlavor(),
                     Type.EXPORTED_HEADERS.getFlavor(),
-                    HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor());
+                    headerMode.getFlavor());
 
-            HeaderSymlinkTreeWithModuleMap headerModeSymlinkRule =
-                (HeaderSymlinkTreeWithModuleMap) graphBuilder.requireRule(headerModeSymlinkTarget);
-            Path placeholderPath =
-                AppleVFSOverlayBuildRule.getPlaceHolderPath(projectFilesystem, buildTarget);
+            HeaderSymlinkTree headerSymlinkRule =
+                (HeaderSymlinkTree) graphBuilder.requireRule(headerModeSymlinkTarget);
 
             AppleVFSOverlayBuildRule vfsRule =
                 new AppleVFSOverlayBuildRule(
                     buildTarget,
                     projectFilesystem,
                     graphBuilder,
-                    headerModeSymlinkRule.getRootSourcePath(),
+                    headerSymlinkRule.getRootSourcePath(),
                     placeholderPath.toString());
 
             return Optional.of(vfsRule);
