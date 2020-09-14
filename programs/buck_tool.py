@@ -15,6 +15,7 @@
 from __future__ import print_function
 
 import contextlib
+import datetime
 import errno
 import glob
 import json
@@ -34,6 +35,7 @@ from collections import namedtuple
 from subprocess import CalledProcessError, check_output
 
 from ng import NailgunConnection, NailgunException
+from programs.buck_project import BuckProject, NoBuckConfigFoundException
 from programs.file_locks import exclusive_lock
 from programs.subprocutils import which
 from programs.timing import monotonic_time_nanos
@@ -1235,9 +1237,25 @@ class BuckTool(object):
 
 
 
+def print_stack_on_signal(_, frame):
+    try:
+        outdir = BuckProject.from_current_dir().get_buck_out_log_dir()
+    except NoBuckConfigFoundException:
+        outdir = tempfile.gettempdir()
+    now = datetime.datetime.now().strftime("%Y-%m-%d.%H-%M-%S.%f")
+    filename = os.path.join(outdir, "%s_stacktrace" % now)
+    try:
+        with open(filename, "w") as f:
+            traceback.print_stack(frame, file=f)
+    except OSError:
+        pass
+    # print to stderr as well
+    traceback.print_stack(frame)
+
+
 def install_signal_handlers():
     if os.name == "posix":
-        signal.signal(signal.SIGUSR1, lambda sig, frame: traceback.print_stack(frame))
+        signal.signal(signal.SIGUSR1, print_stack_on_signal)
 
 
 def platform_path(path):

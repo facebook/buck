@@ -13,9 +13,15 @@
 # limitations under the License.
 
 import os
+import signal
 import unittest
 
-from programs.buck_tool import BuckToolException, CommandLineArgs, MovableTemporaryFile
+from programs.buck_project import BuckProject
+from programs.buck_tool import (
+    CommandLineArgs,
+    MovableTemporaryFile,
+    install_signal_handlers,
+)
 
 
 class TestCommandLineArgs(unittest.TestCase):
@@ -193,6 +199,23 @@ class TestMovableTemporaryFile(unittest.TestCase):
             self.assertTrue(os.path.exists(path))
             os.unlink(path)
         self.assertFalse(os.path.exists(path))
+
+
+class TestModuleLevelFunctions(unittest.TestCase):
+    def test_signal_handler(self):
+        install_signal_handlers()
+        if os.name == "posix":
+            # Could raise exception NoBuckConfigFoundException but
+            # such test doesn't make sense in the first place.
+            outdir = BuckProject.from_current_dir().get_buck_out_log_dir()
+            l0 = [x for x in os.listdir(outdir) if x.endswith("_stacktrace")]
+            os.kill(os.getpid(), signal.SIGUSR1)
+            l1 = [x for x in os.listdir(outdir) if x.endswith("_stacktrace")]
+            newtrace = list(set(l0) ^ set(l1))
+            self.assertEqual(len(newtrace), 1)
+            tracefile = os.path.join(outdir, newtrace[0])
+            self.assertTrue(os.path.isfile(tracefile))
+            self.assertTrue(os.path.getsize(tracefile) > 0)
 
 
 if __name__ == "__main__":
