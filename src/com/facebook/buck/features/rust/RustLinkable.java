@@ -63,7 +63,7 @@ interface RustLinkable {
   ImmutableMap<String, SourcePath> getRustSharedLibraries(RustPlatform rustPlatform);
 
   /** @return the dependencies of this {@link RustLinkable}. */
-  Iterable<BuildRule> getRustLinakbleDeps(RustPlatform rustPlatform);
+  Iterable<BuildRule> getRustLinkableDeps(RustPlatform rustPlatform);
 
   /**
    * Return the linkage style for this linkable.

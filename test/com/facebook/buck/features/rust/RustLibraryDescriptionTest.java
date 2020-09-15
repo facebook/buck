@@ -80,7 +80,7 @@ public class RustLibraryDescriptionTest {
     RustLibrary depB = (RustLibrary) graphBuilder.requireRule(depBBuilder.getTarget());
     RustLibrary rule = (RustLibrary) graphBuilder.requireRule(ruleBuilder.getTarget());
     assertThat(
-        rule.getRustLinakbleDeps(RustTestUtils.DEFAULT_PLATFORM),
+        rule.getRustLinkableDeps(RustTestUtils.DEFAULT_PLATFORM),
         Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));
   }
 }

@@ -370,7 +370,7 @@ public class RustLibraryDescription
       }
 
       @Override
-      public Iterable<BuildRule> getRustLinakbleDeps(RustPlatform rustPlatform) {
+      public Iterable<BuildRule> getRustLinkableDeps(RustPlatform rustPlatform) {
         return allDeps.get(graphBuilder, rustPlatform.getCxxPlatform());
       }
 
@@ -411,7 +411,7 @@ public class RustLibraryDescription
           public Iterable<BuildRule> visit(BuildRule rule) {
             if (rule instanceof RustLinkable) {
               // Rust rule - we just want to visit the children
-              return ((RustLinkable) rule).getRustLinakbleDeps(rustPlatform);
+              return ((RustLinkable) rule).getRustLinkableDeps(rustPlatform);
             }
             if (rule instanceof NativeLinkableGroup) {
               nativedeps.add((NativeLinkableGroup) rule);

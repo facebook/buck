@@ -260,13 +260,13 @@ public class RustCompileUtils {
     new AbstractBreadthFirstTraversal<BuildRule>(
         RichStream.from(ruledeps)
             .filter(RustLinkable.class)
-            .flatMap(r -> RichStream.from(r.getRustLinakbleDeps(rustPlatform)))
+            .flatMap(r -> RichStream.from(r.getRustLinkableDeps(rustPlatform)))
             .collect(ImmutableList.toImmutableList())) {
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) {
         Iterable<BuildRule> deps = ImmutableSortedSet.of();
         if (rule instanceof RustLinkable) {
-          deps = ((RustLinkable) rule).getRustLinakbleDeps(rustPlatform);
+          deps = ((RustLinkable) rule).getRustLinkableDeps(rustPlatform);
 
           addDependencyArgs(
               rule, rustPlatform, crateType, depArgs, revAliasMap, rustDepType, Optional.empty());
@@ -286,7 +286,7 @@ public class RustCompileUtils {
               (Function<? super BuildRule, Optional<Iterable<? extends BuildRule>>>)
                   r ->
                       r instanceof RustLinkable
-                          ? Optional.of(((RustLinkable) r).getRustLinakbleDeps(rustPlatform))
+                          ? Optional.of(((RustLinkable) r).getRustLinkableDeps(rustPlatform))
                           : Optional.empty());
 
       ImmutableList<Arg> nativeArgs =
@@ -538,7 +538,7 @@ public class RustCompileUtils {
                           r ->
                               r instanceof RustLinkable
                                   ? Optional.of(
-                                      ((RustLinkable) r).getRustLinakbleDeps(rustPlatform))
+                                      ((RustLinkable) r).getRustLinkableDeps(rustPlatform))
                                   : Optional.empty()));
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
@@ -660,7 +660,7 @@ public class RustCompileUtils {
           RustLinkable rustLinkable = (RustLinkable) rule;
 
           if (!rustLinkable.isProcMacro()) {
-            deps = rustLinkable.getRustLinakbleDeps(rustPlatform);
+            deps = rustLinkable.getRustLinkableDeps(rustPlatform);
 
             if (!forceRlib
                 && rustLinkable.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC) {

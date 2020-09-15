@@ -63,7 +63,7 @@ public class PrebuiltRustLibraryDescriptionTest {
     PrebuiltRustLibrary rule =
         (PrebuiltRustLibrary) graphBuilder.requireRule(ruleBuilder.getTarget());
     assertThat(
-        rule.getRustLinakbleDeps(RustTestUtils.DEFAULT_PLATFORM),
+        rule.getRustLinkableDeps(RustTestUtils.DEFAULT_PLATFORM),
         Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));
   }
 }

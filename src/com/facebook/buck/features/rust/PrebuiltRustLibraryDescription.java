@@ -92,7 +92,7 @@ public class PrebuiltRustLibraryDescription
       }
 
       @Override
-      public Iterable<BuildRule> getRustLinakbleDeps(RustPlatform rustPlatform) {
+      public Iterable<BuildRule> getRustLinkableDeps(RustPlatform rustPlatform) {
         return allDeps.get(context.getActionGraphBuilder(), rustPlatform.getCxxPlatform());
       }
     };
