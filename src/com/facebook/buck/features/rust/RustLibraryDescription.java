@@ -52,6 +52,7 @@ import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionPropagator;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -91,7 +92,7 @@ public class RustLibraryDescription
     return RustLibraryDescriptionArg.class;
   }
 
-  private RustCompileRule requireBuild(
+  private RustCompileRule requireLibraryBuild(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
@@ -218,7 +219,7 @@ public class RustLibraryDescription
       Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
           getRustcArgsEnv.apply(platform);
 
-      return requireBuild(
+      return requireLibraryBuild(
           buildTarget,
           projectFilesystem,
           graphBuilder,
@@ -308,7 +309,7 @@ public class RustLibraryDescription
               getRustcArgsEnv.apply(rustPlatform);
 
           BuildRule rule =
-              requireBuild(
+              requireLibraryBuild(
                   buildTarget,
                   projectFilesystem,
                   graphBuilder,
@@ -356,8 +357,10 @@ public class RustLibraryDescription
           Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
               getRustcArgsEnv.apply(rustPlatform);
 
+          Verify.verify(!isProcMacro(), "proc macros are never in shared libraries");
+
           BuildRule sharedLibraryBuildRule =
-              requireBuild(
+              requireLibraryBuild(
                   buildTarget,
                   projectFilesystem,
                   graphBuilder,
@@ -384,11 +387,13 @@ public class RustLibraryDescription
           return allDeps.get(graphBuilder, rustPlatform.getCxxPlatform());
         }
 
-        // NativeLinkable
+        // Implementations for NativeLinkable
 
         @Override
         public NativeLinkable getNativeLinkable(
             CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+          Verify.verify(!isProcMacro(), "proc macros are never native linkable");
+
           return linkableCache.get(
               cxxPlatform,
               () -> {
@@ -437,7 +442,13 @@ public class RustLibraryDescription
               if (rule instanceof RustLinkable) {
                 RustLinkable rl = (RustLinkable) rule;
 
-                return rl.getRustLinkableDeps(rustPlatform);
+                // Rust rule - we just want to visit the children
+                if (rl.isProcMacro()) {
+                  // but just leave procmacros out of it entirely
+                  return ImmutableList.of();
+                } else {
+                  return rl.getRustLinkableDeps(rustPlatform);
+                }
               }
               if (rule instanceof NativeLinkableGroup) {
                 nativedeps.add((NativeLinkableGroup) rule);
@@ -458,6 +469,8 @@ public class RustLibraryDescription
             ActionGraphBuilder graphBuilder,
             TargetConfiguration targetConfiguration) {
           CrateType crateType;
+
+          Verify.verify(!isProcMacro(), "proc macros are never native linkable");
 
           switch (depType) {
             case SHARED:
@@ -483,7 +496,7 @@ public class RustLibraryDescription
               getRustcArgsEnv.apply(rustPlatform);
 
           BuildRule rule =
-              requireBuild(
+              requireLibraryBuild(
                   buildTarget,
                   projectFilesystem,
                   graphBuilder,
@@ -510,6 +523,8 @@ public class RustLibraryDescription
 
         private ImmutableMap<String, SourcePath> getSharedLibrariesHelper(
             CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+          Verify.verify(!isProcMacro(), "proc macros are never in shared libraries");
+
           ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
           String sharedLibrarySoname =
               CrateType.DYLIB.filenameFor(getBuildTarget(), crate, cxxPlatform);
@@ -523,7 +538,7 @@ public class RustLibraryDescription
               getRustcArgsEnv.apply(rustPlatform);
 
           BuildRule sharedLibraryBuildRule =
-              requireBuild(
+              requireLibraryBuild(
                   buildTarget,
                   projectFilesystem,
                   graphBuilder,

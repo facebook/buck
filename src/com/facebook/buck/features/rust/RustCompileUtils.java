@@ -92,23 +92,90 @@ import javax.annotation.Nullable;
 public class RustCompileUtils {
   private RustCompileUtils() {}
 
+  /** Add a RustCompileRule to the graphBuilder if it isn't already present */
+  public static RustCompileRule requireBuild(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder graphBuilder,
+      RustPlatform rustPlatform,
+      RustBuckConfig rustConfig,
+      DownwardApiConfig downwardApiConfig,
+      ImmutableSortedMap<String, Arg> environment,
+      ImmutableList<Arg> extraFlags,
+      ImmutableList<Arg> extraLinkerFlags,
+      Iterable<Arg> linkerInputs,
+      String crateName,
+      CrateType crateType,
+      Optional<String> edition,
+      LinkableDepType depType,
+      ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
+      String rootModule,
+      boolean forceRlib,
+      boolean preferStatic,
+      Iterable<BuildRule> deps,
+      ImmutableMap<String, BuildTarget> depsAliases,
+      Optional<String> incremental) {
+
+    return (RustCompileRule)
+        graphBuilder.computeIfAbsent(
+            getCompileBuildTarget(buildTarget, rustPlatform.getCxxPlatform(), crateType),
+            target ->
+                createBuild(
+                    target,
+                    crateName,
+                    projectFilesystem,
+                    graphBuilder,
+                    rustPlatform,
+                    rustConfig,
+                    downwardApiConfig,
+                    environment,
+                    extraFlags,
+                    extraLinkerFlags,
+                    linkerInputs,
+                    crateType,
+                    edition,
+                    depType,
+                    true,
+                    mappedSources,
+                    rootModule,
+                    forceRlib,
+                    preferStatic,
+                    deps,
+                    depsAliases,
+                    incremental));
+  }
+
   protected static BuildTarget getCompileBuildTarget(
       BuildTarget target, CxxPlatform cxxPlatform, CrateType crateType) {
     return target.withFlavors(cxxPlatform.getFlavor(), crateType.getFlavor());
   }
 
-  // Construct a RustCompileRule with:
-  // - all sources
-  // - rustc
-  // - linker
-  // - rustc optim / feature / cfg / user-specified flags
-  // - linker args
-  // - `--extern <crate>=<rlibpath>` for direct dependencies
-  // - `-L dependency=<dir>` for transitive dependencies
-  // - `-C relocation-model=pic/static/default/dynamic-no-pic` according to flavor
-  // - `--emit metadata` if flavor is "check"
-  // - `-Zsave-analysis` if flavor is "save-analysis"
-  // - `--crate-type lib/rlib/dylib/cdylib/staticlib` according to flavor
+  /** Return true if the rule is for something that's RustLinkable, but not a proc macro */
+  public static boolean nonProcMacroRustLinkable(BuildRule rule) {
+    if (rule instanceof RustLinkable) {
+      RustLinkable linkable = (RustLinkable) rule;
+      return !linkable.isProcMacro();
+    }
+    return false;
+  }
+
+  /**
+   * Construct a RustCompileRule with:
+   *
+   * <ul>
+   *   <li>all sources
+   *   <li>rustc
+   *   <li>linker
+   *   <li>rustc optim / feature / cfg / user-specified flags
+   *   <li>linker args
+   *   <li>`--extern <crate>=<rlibpath>` for direct dependencies
+   *   <li>`-L dependency=<dir>` for transitive dependencies
+   *   <li>`-C relocation-model=pic/static/default/dynamic-no-pic` according to flavor
+   *   <li>`--emit metadata` if flavor is "check"
+   *   <li>`-Zsave-analysis` if flavor is "save-analysis"
+   *   <li>`--crate-type lib/rlib/dylib/cdylib/staticlib` according to flavor
+   * </ul>
+   */
   private static RustCompileRule createBuild(
       BuildTarget target,
       String crateName,
@@ -259,15 +326,23 @@ public class RustCompileUtils {
     // Second pass - indirect deps
     new AbstractBreadthFirstTraversal<BuildRule>(
         RichStream.from(ruledeps)
-            .filter(RustLinkable.class)
+            .filter(RustLinkable.class::isInstance)
+            .map(r -> (RustLinkable) r)
             .flatMap(r -> RichStream.from(r.getRustLinkableDeps(rustPlatform)))
             .collect(ImmutableList.toImmutableList())) {
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) {
         Iterable<BuildRule> deps = ImmutableSortedSet.of();
-        if (rule instanceof RustLinkable) {
-          deps = ((RustLinkable) rule).getRustLinkableDeps(rustPlatform);
 
+        if (rule instanceof RustLinkable) {
+          RustLinkable rl = (RustLinkable) rule;
+
+          if (!rl.isProcMacro()) {
+            // Only keep adding transitive deps for non-proc-macro dependencies
+            deps = ((RustLinkable) rule).getRustLinkableDeps(rustPlatform);
+          }
+
+          // Add an indirect dependency for this rule.
           addDependencyArgs(
               rule, rustPlatform, crateType, depArgs, revAliasMap, rustDepType, Optional.empty());
         }
@@ -284,10 +359,7 @@ public class RustCompileUtils {
           NativeLinkableGroups.getNativeLinkableRoots(
               ruledeps,
               (Function<? super BuildRule, Optional<Iterable<? extends BuildRule>>>)
-                  r ->
-                      r instanceof RustLinkable
-                          ? Optional.of(((RustLinkable) r).getRustLinkableDeps(rustPlatform))
-                          : Optional.empty());
+                  r -> rustNativeRootsPassthrough(r, rustPlatform));
 
       ImmutableList<Arg> nativeArgs =
           NativeLinkables.getTransitiveNativeLinkableInput(
@@ -336,6 +408,29 @@ public class RustCompileUtils {
         downwardApiConfig.isEnabledForRust());
   }
 
+  // Helper for NativeLinkableGroups.getNativeLinkableRoots to get the C++ dependencies of a Rust
+  // rule, while excluding any proc macros (since they're never a candidate for native linking).
+  //
+  // Return Option.empty() if this is a rule we should consider a root.
+  // Return Option.of(deps) to pass through this rule and move to its leaves.
+  // Procmacros are passthrough, but we don't care about their deps.
+  private static Optional<Iterable<? extends BuildRule>> rustNativeRootsPassthrough(
+      BuildRule rule, RustPlatform rustPlatform) {
+    Optional<Iterable<? extends BuildRule>> ret = Optional.empty();
+
+    if (rule instanceof RustLinkable) {
+      RustLinkable rl = (RustLinkable) rule;
+      Iterable<BuildRule> deps = ImmutableList.of();
+
+      if (!rl.isProcMacro()) {
+        deps = rl.getRustLinkableDeps(rustPlatform);
+      }
+      ret = Optional.of(deps);
+    }
+
+    return ret;
+  }
+
   private static void addDependencyArgs(
       BuildRule rule,
       RustPlatform rustPlatform,
@@ -357,58 +452,6 @@ public class RustCompileUtils {
                 ((RustLinkable) rule)
                     .getLinkerArg(directDependent, crateType, rustPlatform, rustDepType, alias))
         .forEach(depArgs::add);
-  }
-
-  public static RustCompileRule requireBuild(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      ActionGraphBuilder graphBuilder,
-      RustPlatform rustPlatform,
-      RustBuckConfig rustConfig,
-      DownwardApiConfig downwardApiConfig,
-      ImmutableSortedMap<String, Arg> environment,
-      ImmutableList<Arg> extraFlags,
-      ImmutableList<Arg> extraLinkerFlags,
-      Iterable<Arg> linkerInputs,
-      String crateName,
-      CrateType crateType,
-      Optional<String> edition,
-      LinkableDepType depType,
-      ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
-      String rootModule,
-      boolean forceRlib,
-      boolean preferStatic,
-      Iterable<BuildRule> deps,
-      ImmutableMap<String, BuildTarget> depsAliases,
-      Optional<String> incremental) {
-
-    return (RustCompileRule)
-        graphBuilder.computeIfAbsent(
-            getCompileBuildTarget(buildTarget, rustPlatform.getCxxPlatform(), crateType),
-            target ->
-                createBuild(
-                    target,
-                    crateName,
-                    projectFilesystem,
-                    graphBuilder,
-                    rustPlatform,
-                    rustConfig,
-                    downwardApiConfig,
-                    environment,
-                    extraFlags,
-                    extraLinkerFlags,
-                    linkerInputs,
-                    crateType,
-                    edition,
-                    depType,
-                    true,
-                    mappedSources,
-                    rootModule,
-                    forceRlib,
-                    preferStatic,
-                    deps,
-                    depsAliases,
-                    incremental));
   }
 
   public static Linker.LinkableDepType getLinkStyle(
@@ -535,11 +578,7 @@ public class RustCompileUtils {
                           graphBuilder,
                           cxxPlatform,
                           deps,
-                          r ->
-                              r instanceof RustLinkable
-                                  ? Optional.of(
-                                      ((RustLinkable) r).getRustLinkableDeps(rustPlatform))
-                                  : Optional.empty()));
+                          r -> rustNativeRootsPassthrough(r, rustPlatform)));
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
@@ -656,16 +695,14 @@ public class RustCompileUtils {
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) {
         Iterable<BuildRule> deps = ImmutableSet.of();
-        if (rule instanceof RustLinkable) {
+        if (nonProcMacroRustLinkable(rule)) {
           RustLinkable rustLinkable = (RustLinkable) rule;
 
-          if (!rustLinkable.isProcMacro()) {
-            deps = rustLinkable.getRustLinkableDeps(rustPlatform);
+          deps = rustLinkable.getRustLinkableDeps(rustPlatform);
 
-            if (!forceRlib
-                && rustLinkable.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC) {
-              libs.putAll(rustLinkable.getRustSharedLibraries(rustPlatform));
-            }
+          if (!forceRlib
+              && rustLinkable.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC) {
+            libs.putAll(rustLinkable.getRustSharedLibraries(rustPlatform));
           }
         }
         return deps;
@@ -711,8 +748,8 @@ public class RustCompileUtils {
   /**
    * Returns the path to the root module source, and the complete set of sources. The sources are
    * always turned into a map, though unmapped sources are mapped to Optional.empty(). The root
-   * module is what's passed to rustc as a parameter, and may not exist until the symlinking phase
-   * happens.
+   * module is what's passed to rustc as the input source file, and may not exist until the
+   * symlinking phase happens.
    */
   static Pair<String, ImmutableSortedMap<SourcePath, Optional<String>>> getRootModuleAndSources(
       ProjectFilesystem projectFilesystem,
