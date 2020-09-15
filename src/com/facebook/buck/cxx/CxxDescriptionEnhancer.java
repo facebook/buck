@@ -100,6 +100,9 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -1097,7 +1100,7 @@ public class CxxDescriptionEnhancer {
       Path linkOutput,
       ImmutableList<StringWithMacros> linkerFlags,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags) {
-    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+    List<Arg> lFlagArgs = new ArrayList<>();
 
     // Build up the linker flags, which support macro expansion.
     {
@@ -1115,7 +1118,19 @@ public class CxxDescriptionEnhancer {
               linkerFlags, platformLinkerFlags, cxxPlatform)
           .stream()
           .map(macrosConverter::convert)
-          .forEach(argsBuilder::add);
+          .forEach(lFlagArgs::add);
+    }
+
+    // The placement of the -l option is significant, if any, they should be added after input
+    // file args.
+    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+    Iterator<Arg> iter = lFlagArgs.listIterator();
+    while (iter.hasNext()) {
+      Arg arg = iter.next();
+      if (!arg.toString().startsWith("-l")){
+        argsBuilder.add(arg);
+        iter.remove();
+      }
     }
 
     // Special handling for dynamically linked binaries with rpath support
@@ -1154,6 +1169,14 @@ public class CxxDescriptionEnhancer {
                 })
             .collect(ImmutableList.toImmutableList());
     argsBuilder.addAll(FileListableLinkerInputArg.from(objectArgs));
+
+    // According to man page of g++, "the placement of the -l option is significant".
+    // "It makes a difference where in the command you write this option; the linker searches and
+    // processes libraries and object files in the order they are specified.  Thus, foo.o -lz bar.o
+    // searches library z after file foo.o but before bar.o.  If bar.o refers to functions in
+    // z, those functions may not be loaded."
+    // Add "-l" options after objectArgs
+    argsBuilder.addAll(lFlagArgs);
 
     return argsBuilder.build();
   }
