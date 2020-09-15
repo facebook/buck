@@ -77,8 +77,7 @@ public class SwiftPlatformFactory {
       }
     }
 
-    ImmutableList<Path> linkPaths =
-        SwiftSdkLayoutType.getLinkPaths(sdk, sdkPaths, sdk.getApplePlatform().getPlatformName());
+    ImmutableList<Path> linkPaths = SwiftSdkLayoutType.getLinkPaths(sdk, sdkPaths);
     for (Path linkPath : linkPaths) {
       if (Files.isDirectory(linkPath)) {
         LOG.debug("Found swift link path at %s", linkPath);

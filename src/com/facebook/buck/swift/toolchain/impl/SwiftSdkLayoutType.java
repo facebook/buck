@@ -55,8 +55,8 @@ public enum SwiftSdkLayoutType {
   }
 
   /** Given the SDK layout and version, return the correct list of lib directory paths */
-  public static ImmutableList<Path> getLinkPaths(
-      AppleSdk sdk, AppleSdkPaths sdkPaths, String swiftName) {
+  public static ImmutableList<Path> getLinkPaths(AppleSdk sdk, AppleSdkPaths sdkPaths) {
+    String swiftName = sdk.getApplePlatform().getExternalName();
     SwiftSdkLayoutType layoutType = of(sdk, sdkPaths);
     ArrayList<Path> paths = new ArrayList<Path>();
     LOG.debug("Swift layout type is %s", layoutType);
