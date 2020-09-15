@@ -29,11 +29,10 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.cxx.WriteTestListToFileStep;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
@@ -145,6 +144,9 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
               getExecutableCommand(OutputLabel.defaultLabel())
                   .getCommandPrefix(buildContext.getSourcePathResolver()),
               buildContext.getBuildCellRootPath(),
+              ProjectFilesystemUtils.relativize(
+                  getProjectFilesystem().getRootPath(), buildContext.getBuildCellRootPath()),
+              getPathToTestList(),
               withDownwardApi));
     }
     return builder.build();
@@ -286,46 +288,5 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
   private TestResultSummary reportNotExecutedTest(String testCaseName, String testName) {
     return new TestResultSummary(
         testCaseName, testName, ResultType.FAILURE, 0, "Test wasn't run", "", "", "");
-  }
-
-  private class WriteTestListToFileStep extends ShellStep {
-    private ImmutableList<String> command;
-
-    public WriteTestListToFileStep(
-        ImmutableList<String> testCommand, Path workingDirectory, boolean withDownwardApi) {
-      super(workingDirectory, withDownwardApi);
-      this.command = testCommand;
-    }
-
-    @Override
-    protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
-      return ImmutableList.<String>builder().addAll(command).add("--gtest_list_tests").build();
-    }
-
-    @Override
-    public StepExecutionResult execute(StepExecutionContext context)
-        throws IOException, InterruptedException {
-
-      StepExecutionResult result = super.execute(context);
-      if (!result.isSuccess()) {
-        return result;
-      }
-
-      // DefaultProcessExecutor used in the super class adds ANSI codes to stdout
-      // there's no easy way to disable this behavior, so we have to clean it up here
-      String testsList = removeANSI(getStdout());
-      getProjectFilesystem().writeContentsToPath(testsList, getPathToTestList());
-
-      return StepExecutionResults.SUCCESS;
-    }
-
-    private String removeANSI(String text) {
-      return text.replaceAll("\u001b\\[\\d+m", "");
-    }
-
-    @Override
-    public String getShortName() {
-      return "Write Test List To A File";
-    }
   }
 }

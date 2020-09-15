@@ -1,0 +1,16 @@
+java_library(
+    name = "cxx_steps",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/...",
+        "//test/com/facebook/buck/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/build/execution/context:context",
+        "//src/com/facebook/buck/core/filesystems:filesystems",
+        "//src/com/facebook/buck/io/filesystem/impl:impl",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/step/isolatedsteps/shell:shell_steps",
+        "//third-party/java/guava:guava",
+    ],
+)
