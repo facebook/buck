@@ -6,23 +6,23 @@
     "linux": {
       "scheme": "manifold",
       "bucket": "buck_cli",
-      "path": "tree/buckv1-cli/5060aefe7a8de262c05ad71a628517a5f2081316/java8:linux",
+      "path": "tree/buckv1-cli/7c86b1bc42d0b6f7af6b7c91d0d2cff7af6cc12e/java8:linux",
       "api_key": "buck_cli-key",
-      "etag": "-7694901214650737100"
+      "etag": "6892018008453099438"
     },
     "macos": {
       "scheme": "manifold",
       "bucket": "buck_cli",
-      "path": "tree/buckv1-cli/5060aefe7a8de262c05ad71a628517a5f2081316/java8:macos",
+      "path": "tree/buckv1-cli/7c86b1bc42d0b6f7af6b7c91d0d2cff7af6cc12e/java8:macos",
       "api_key": "buck_cli-key",
-      "etag": "-7694901214650737100"
+      "etag": "6892018008453099438"
     },
     "windows": {
       "scheme": "manifold",
       "bucket": "buck_cli",
-      "path": "tree/buckv1-cli/5060aefe7a8de262c05ad71a628517a5f2081316/java8:windows",
+      "path": "tree/buckv1-cli/7c86b1bc42d0b6f7af6b7c91d0d2cff7af6cc12e/java8:windows",
       "api_key": "buck_cli-key",
-      "etag": "-7694901214650737100"
+      "etag": "6892018008453099438"
     }
   }
 }
