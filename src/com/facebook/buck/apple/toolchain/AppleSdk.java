@@ -18,6 +18,7 @@ package com.facebook.buck.apple.toolchain;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import org.immutables.value.Value;
@@ -42,6 +43,12 @@ public abstract class AppleSdk {
   public abstract Optional<String> getTargetTriplePlatformName();
 
   public abstract Optional<String> getTargetTripleABI();
+
+  /**
+   * This is the prefix path for iOS for Catalyst, it's the IOS_UNZIPPERED_TWIN_PREFIX_PATH field
+   * from the SDK settings plist.
+   */
+  public abstract Optional<Path> getMobileTwinPrefixPath();
 
   /**
    * Specifies the UI framework family to be used when calling actool. Detected from

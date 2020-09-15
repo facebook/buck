@@ -44,7 +44,7 @@ public enum SwiftSdkLayoutType {
     if (compareWithXcode11(sdk) < 0) {
       return PRE_XCODE_11;
     } else if (compareWithXcode11(sdk) == 0) {
-      if (Files.isDirectory(getSwiftRuntimePathFromSdk(sdkPaths))) {
+      if (Files.isDirectory(getPrimarySwiftRuntimePathFromSdk(sdkPaths))) {
         return XCODE_11;
       } else {
         return XCODE_11_HYBRID;
@@ -62,7 +62,7 @@ public enum SwiftSdkLayoutType {
     LOG.debug("Swift layout type is %s", layoutType);
     switch (layoutType) {
       case XCODE_11:
-        paths.add(getSwiftRuntimePathFromSdk(sdkPaths));
+        paths.addAll(getAllSwiftRuntimePathsFromSdk(sdk, sdkPaths));
         for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
           paths.add(
               Paths.get(getSwiftRuntimePathFromToolchain(toolchainPath).toString(), swiftName));
@@ -79,7 +79,30 @@ public enum SwiftSdkLayoutType {
     return ImmutableList.copyOf(paths);
   }
 
-  private static Path getSwiftRuntimePathFromSdk(AppleSdkPaths sdkPaths) {
+  private static ImmutableList<Path> getAllSwiftRuntimePathsFromSdk(
+      AppleSdk sdk, AppleSdkPaths sdkPaths) {
+    ImmutableList.Builder<Path> paths = ImmutableList.builder();
+    sdk.getMobileTwinPrefixPath()
+        .ifPresent(
+            twinPrefix -> {
+              // Drop any leading / to ensure we deal with a relative prefix
+              Path relativeTwinPrefix =
+                  twinPrefix.isAbsolute()
+                      ? Paths.get(twinPrefix.toString().substring(1))
+                      : twinPrefix;
+              Path runtimePath =
+                  sdkPaths.getSdkPath().resolve(relativeTwinPrefix).resolve("usr/lib/swift");
+              paths.add(runtimePath);
+            });
+
+    // NB: The primary runtime path is deliberately added after the twin prefix because the former
+    //     provides overrides for certain modules (e.g., MapKit).
+    paths.add(getPrimarySwiftRuntimePathFromSdk(sdkPaths));
+
+    return paths.build();
+  }
+
+  private static Path getPrimarySwiftRuntimePathFromSdk(AppleSdkPaths sdkPaths) {
     return Paths.get(sdkPaths.getSdkPath().toString(), "usr/lib/swift");
   }
 

@@ -417,6 +417,11 @@ public class AppleSdkDiscovery {
     ImmutableList<String> systemHeaderSearchPaths =
         expandAdditionalSearchPaths(buildSettings, "SYSTEM_HEADER_SEARCH_PATHS", variableMap);
 
+    if (variableMap.containsKey("$(IOS_UNZIPPERED_TWIN_PREFIX_PATH)")) {
+      Path prefixPath = Paths.get(variableMap.get("$(IOS_UNZIPPERED_TWIN_PREFIX_PATH)"));
+      sdkBuilder.setMobileTwinPrefixPath(prefixPath);
+    }
+
     sdkBuilder
         .addAllAdditionalSystemFrameworkSearchPaths(systemFrameworkSearchPaths)
         .addAllAdditionalLibrarySearchPaths(libSearchPaths)
