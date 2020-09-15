@@ -51,7 +51,7 @@ public class BuckCompletionContributor extends CompletionContributor {
           "source_under_test",
           "test_library_project_dir",
           "contacts",
-          "excludes",
+          "exclude",
           "main",
           "javadoc_url",
           "store",
