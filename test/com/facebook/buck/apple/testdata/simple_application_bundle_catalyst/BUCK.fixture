@@ -19,4 +19,12 @@ apple_binary(
         "*.h",
     ]),
     preprocessor_flags = ["-fobjc-arc"],
+    deps = [":Analytics"],
+)
+
+apple_library(
+    name = "Analytics",
+    srcs = glob(["*.swift"]),
+    modular = True,
+    swift_version = "5",
 )

@@ -66,6 +66,16 @@ public abstract class AppleCompilerTargetTriple implements AddsToRuleKey {
         architecture, vendor, platformName, abi, Optional.of(targetSdkVersion));
   }
 
+  public static AppleCompilerTargetTriple ofVersionedABI(
+      String architecture,
+      String vendor,
+      String platformName,
+      Optional<String> abi,
+      String targetSdkVersion) {
+    return ImmutableAppleCompilerTargetTriple.ofImpl(
+        architecture, vendor, platformName, abi, Optional.of(targetSdkVersion));
+  }
+
   public static AppleCompilerTargetTriple ofUnversionedABI(
       String architecture, String vendor, String platformName, Optional<String> abi) {
     return ImmutableAppleCompilerTargetTriple.ofImpl(

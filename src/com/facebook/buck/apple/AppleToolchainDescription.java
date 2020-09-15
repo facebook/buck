@@ -129,11 +129,8 @@ public class AppleToolchainDescription
             .build();
 
     AppleCompilerTargetTriple swiftTarget =
-        AppleCompilerTargetTriple.of(
-            args.getArchitecture(),
-            "apple",
-            applePlatform.getSwiftName().orElse(applePlatform.getName()),
-            args.getMinVersion());
+        AppleLibraryDescriptionSwiftEnhancer.createSwiftTargetTriple(
+            args.getArchitecture(), sdk, args.getMinVersion());
     Optional<SwiftPlatform> swiftPlatform =
         swiftToolchainRule
             .map(SwiftToolchainBuildRule.class::cast)

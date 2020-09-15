@@ -18,6 +18,8 @@
 
 #import <MapKit/MapKit.h>
 
+#import <Analytics/Analytics-Swift.h>
+
 @interface AppDelegate ()
 
 @end
@@ -30,6 +32,7 @@
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window addSubview:[MKMapView new]];
     [self.window makeKeyAndVisible];
+    [Analytics new];
     // Override point for customization after application launch.
     return YES;
 }

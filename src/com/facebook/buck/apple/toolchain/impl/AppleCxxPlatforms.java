@@ -22,6 +22,7 @@ import com.dd.plist.NSString;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.AppleConfig;
+import com.facebook.buck.apple.AppleLibraryDescriptionSwiftEnhancer;
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
@@ -488,16 +489,12 @@ public class AppleCxxPlatforms {
             cxxBuckConfig.getPrivateHeadersSymlinksEnabled(),
             PicType.PIC);
 
-    ApplePlatform applePlatform = targetSdk.getApplePlatform();
     ImmutableList.Builder<Path> swiftOverrideSearchPathBuilder = ImmutableList.builder();
     AppleSdkPaths.Builder swiftSdkPathsBuilder = AppleSdkPaths.builder().from(sdkPaths);
     Optional<SwiftPlatform> swiftPlatform =
         getSwiftPlatform(
-            AppleCompilerTargetTriple.of(
-                targetArchitecture,
-                "apple",
-                applePlatform.getSwiftName().orElse(applePlatform.getName()),
-                minVersion),
+            AppleLibraryDescriptionSwiftEnhancer.createSwiftTargetTriple(
+                targetArchitecture, targetSdk, minVersion),
             version,
             targetSdk,
             swiftSdkPathsBuilder.build(),

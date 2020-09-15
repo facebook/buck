@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -322,5 +323,16 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       BuildTarget target, CxxPlatform cxxPlatform) {
     return target.withFlavors(
         AppleLibraryDescription.Type.SWIFT_COMMAND.getFlavor(), cxxPlatform.getFlavor());
+  }
+
+  /** Creates a target triple to be used to compile Swift code. */
+  public static AppleCompilerTargetTriple createSwiftTargetTriple(
+      String architecture, AppleSdk appleSdk, String targetSdkVersion) {
+    String vendor = appleSdk.getTargetTripleVendor().orElse("apple");
+    String fallbackPlatformName =
+        appleSdk.getApplePlatform().getSwiftName().orElse(appleSdk.getApplePlatform().getName());
+    String platformName = appleSdk.getTargetTriplePlatformName().orElse(fallbackPlatformName);
+    return AppleCompilerTargetTriple.ofVersionedABI(
+        architecture, vendor, platformName, appleSdk.getTargetTripleABI(), targetSdkVersion);
   }
 }

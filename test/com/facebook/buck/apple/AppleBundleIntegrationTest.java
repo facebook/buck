@@ -191,6 +191,7 @@ public class AppleBundleIntegrationTest {
     workspace.addBuckConfigLocalOption("apple", "target_triple_enabled", "true");
     workspace.addBuckConfigLocalOption("apple", "use_entitlements_when_adhoc_code_signing", "true");
     workspace.addBuckConfigLocalOption("cxx", "skip_system_framework_search_paths", "true");
+    workspace.addBuckConfigLocalOption("apple", "maccatalyst_target_sdk_version", "13.0");
   }
 
   @Test
