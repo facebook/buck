@@ -17,7 +17,8 @@
 set -x
 set -euo pipefail
 
-BUCK_ROOT=$(git rev-parse --show-toplevel)
+SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+BUCK_ROOT="$(dirname "$SCRIPTS_DIR")"
 BUCK_FBXCTEST_DIR=$BUCK_ROOT/test/com/facebook/buck/apple/testdata/fbxctest
 
 rm -rf $BUCK_FBXCTEST_DIR/{Frameworks,bin,lib}
@@ -33,8 +34,8 @@ XCTOOL_LIB_DIR=$(ls -d build/*/*/Products/Release/lib)
 cp -r $XCTOOL_LIB_DIR $BUCK_FBXCTEST_DIR
 popd
 
-git clone https://github.com/facebook/FBSimulatorControl
-pushd FBSimulatorControl
+git clone https://github.com/facebook/idb
+pushd idb
 ./build.sh fbxctest build
 cp build/Build/Products/Debug/fbxctest $BUCK_FBXCTEST_DIR/bin
 
