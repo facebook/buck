@@ -200,7 +200,7 @@ public class AppleBundleIntegrationTest {
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            this, "simple_application_bundle_no_debug", tmp);
+            this, "simple_application_bundle_catalyst", tmp);
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget("//:CatalystDemoApp#maccatalyst-x86_64,no-debug");
@@ -239,7 +239,7 @@ public class AppleBundleIntegrationTest {
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            this, "simple_application_bundle_no_debug", tmp);
+            this, "simple_application_bundle_catalyst", tmp);
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget("//:CatalystDemoApp#maccatalyst-x86_64,no-debug");
