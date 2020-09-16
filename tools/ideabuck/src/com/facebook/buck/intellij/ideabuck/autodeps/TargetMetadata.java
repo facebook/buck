@@ -19,6 +19,7 @@ package com.facebook.buck.intellij.ideabuck.autodeps;
 import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
+import com.facebook.buck.intellij.ideabuck.util.BuckVisibilityUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -82,10 +83,7 @@ public class TargetMetadata {
   }
 
   boolean isVisibleTo(BuckTarget target) {
-    if (visibility == null) {
-      return true;
-    }
-    return visibility.stream().anyMatch(pattern -> pattern.matches(target));
+    return BuckVisibilityUtil.isVisibleTo(target, visibility);
   }
 
   boolean hasDependencyOn(BuckTarget target) {

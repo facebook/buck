@@ -129,6 +129,12 @@
           text="Copy Buck Target"
           description="Copy the Buck target of the current class"/>
       <add-to-group anchor="after" group-id="EditorPopupMenu" relative-to-action="EditorToggleColumnMode"/>
+      <action
+          id="buck.CheckVisibility"
+          class="com.facebook.buck.intellij.ideabuck.actions.BuckVisibilityAction"
+          text="Check Buck Target Visibility"
+          description="Check visibility of buck target"/>
+        <add-to-group anchor="after" group-id="EditorPopupMenu" relative-to-action="EditorToggleColumnMode"/>
     </group>
 
     <group id="buck.ToolbarActions">
