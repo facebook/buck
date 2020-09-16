@@ -107,6 +107,43 @@ async def test_build_failed():
 
 
 @pytest.mark.asyncio
+async def test_run():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        path_of_cwd = Path(temp_dir)
+        test_script = pkg_resources.resource_filename(
+            "buck_api.test.buck_repo_test", "test_script.py"
+        )
+        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
+        _create_file(path_of_cwd, "target_file_success", 0)
+        result = await repo.run("//:target_file_success").wait()
+        assert list(
+            (path_of_cwd / "buck-out").iterdir()
+        ), "run should have generated outputs in buck-out"
+        assert "run" in result.get_stdout()
+        assert "target_file_success" in result.get_stdout()
+        assert result.is_success()
+
+
+@pytest.mark.asyncio
+async def test_run_failed():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        path_of_cwd = Path(temp_dir)
+        test_script = pkg_resources.resource_filename(
+            "buck_api.test.buck_repo_test", "test_script.py"
+        )
+        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
+
+        # testing failures
+        _create_file(path_of_cwd, "target_file_build_failure", 1)
+        result = await repo.run("//:target_file_build_failure").wait()
+        assert result.is_success()
+
+        _create_file(path_of_cwd, "target_file_failure", 13)
+        result = await repo.build("//:target_file_failure").wait()
+        assert result.is_failure()
+
+
+@pytest.mark.asyncio
 async def test_clean():
     with tempfile.TemporaryDirectory() as temp_dir:
         path_of_cwd = Path(temp_dir)

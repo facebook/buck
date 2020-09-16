@@ -53,6 +53,26 @@ def run_build(remain_args):
             sys.exit(int(target_file.readlines()[-1]))
 
 
+def run_run(remain_args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("target")
+    args = parser.parse_args(remain_args)
+    clean_target = Path(args.target.replace(":", "/").strip("/"))
+    assert "..." not in str(clean_target)
+    # creating a path to a buck-out directory in a temp directory
+    conf_dir = hashlib.md5(str(args.target).encode()).hexdigest()
+    output = Path("buck-out", "gen") / Path(conf_dir) / clean_target
+    os.makedirs(output.parent)
+    with open(output, "w") as f1:
+        f1.write("Hello, World!")
+    if os.environ["NO_BUCKD"] != "1":
+        buckd_sock = Path(".buckd/sock")
+        os.makedirs(buckd_sock.parent, exist_ok=True)
+        with open(buckd_sock, "w") as sock:
+            sock.write("buck daemon exists")
+    print("run", clean_target)
+
+
 def print_target_to_build_location(show_output, clean_target, target, output):
     if show_output:
         # if target is a folder walk through the folder and create a file for each folder
@@ -132,6 +152,7 @@ FUNCTION_MAP = {
     "build": run_build,
     "clean": run_clean,
     "kill": run_kill,
+    "run": run_run,
     "test": run_test,
 }
 

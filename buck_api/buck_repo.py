@@ -88,6 +88,17 @@ class BuckRepo:
             encoding=self.encoding,
         )
 
+    def run(self, *argv: str) -> BuckProcess[BuckResult]:
+        """
+        Returns a BuckProcess with BuckResult type using a process
+        created with the build command and any
+        additional arguments
+        """
+        awaitable_process = self._run_buck_command("run", *argv)
+        return BuckProcess(
+            awaitable_process, result_type=BuckResult, encoding=self.encoding
+        )
+
     def clean(self, *argv: str) -> BuckProcess[BuckResult]:
         """
         Returns a BuckProcess with BuckResult type using a process
