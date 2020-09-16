@@ -70,6 +70,14 @@ class BuckResult:
         self.stdout = stdout
         self.stderr = stderr
 
+    def is_success(self) -> bool:
+        """ Returns if a Buck Result is successful"""
+        return self.get_exit_code() == ExitCode.SUCCESS
+
+    def is_failure(self) -> bool:
+        """Returns if a Buck Result fails for any reason"""
+        return self.get_exit_code() != ExitCode.SUCCESS
+
     def get_exit_code(self) -> ExitCode:
         """ Returns the exit code of a Buck Result when it exits """
         return ExitCode(self.process.returncode)
@@ -99,14 +107,6 @@ class BuildResult(BuckResult):
         self.args = argv[0]
         self.cwd = cwd
         super().__init__(process, stdout, stderr, encoding)
-
-    def is_success(self) -> bool:
-        """ Returns if a Build Result is successful"""
-        return self.get_exit_code() == ExitCode.SUCCESS
-
-    def is_failure(self) -> bool:
-        """Returns if a Build Result fails for any reason"""
-        return self.get_exit_code() != ExitCode.SUCCESS
 
     def is_build_failure(self) -> bool:
         """Returns if a Build Result fails because of a build failue only"""
