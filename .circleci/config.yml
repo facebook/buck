@@ -969,6 +969,8 @@ jobs:
             url=https://www.python.org/ftp/python/2.7.17/python-2.7.17-macosx10.9.pkg
             curl -R -L -O $url
             sudo installer -pkg python-2.7.17-macosx10.9.pkg -target /
+            # 2to3 causes python3 installation to fail, delete it.
+            rm -f /usr/local/bin/2to3
       - run:
           <<: *install_python
       - run:
