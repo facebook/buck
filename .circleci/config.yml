@@ -7,7 +7,7 @@ install_dlang: &install_dlang
   name: Install Dlang
   command: |
     if [ "${PLATFORM}" == "macos" ]; then
-      // gpg depends on the latest git, re-install it.
+      # gpg depends on the latest git, re-install it.
       brew remove -f git
       brew install git
       brew install gpg
