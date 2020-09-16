@@ -19,28 +19,19 @@ package com.facebook.buck.intellij.ideabuck.actions;
 import com.facebook.buck.intellij.ideabuck.api.BuckCellManager;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpressionStatement;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionTrailer;
 import com.facebook.buck.intellij.ideabuck.logging.EventLogger;
 import com.facebook.buck.intellij.ideabuck.logging.EventLoggerFactoryProvider;
 import com.facebook.buck.intellij.ideabuck.logging.Keys;
+import com.facebook.buck.intellij.ideabuck.util.BuckActionUtils;
 import com.google.common.collect.ImmutableMap;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
-import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.ide.CopyPasteManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.util.PsiTreeUtil;
 import java.awt.datatransfer.StringSelection;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -50,9 +41,9 @@ public class CopyTargetAction extends AnAction {
 
   @Override
   public void update(AnActionEvent e) {
-    VirtualFile buckFile = findBuckFileFromActionEvent(e);
+    VirtualFile buckFile = BuckActionUtils.findBuckFileFromActionEvent(e);
     if (buckFile != null && buckFile.equals(e.getData(CommonDataKeys.VIRTUAL_FILE))) {
-      e.getPresentation().setEnabledAndVisible(isActionEventInRuleBody(e));
+      e.getPresentation().setEnabledAndVisible(BuckActionUtils.isActionEventInRuleBody(e));
     } else {
       e.getPresentation().setEnabledAndVisible(buckFile != null);
     }
@@ -71,7 +62,7 @@ public class CopyTargetAction extends AnAction {
     }
     // At this point, we have the project
     buckEventLogger.withProjectFiles(project, e.getData(CommonDataKeys.VIRTUAL_FILE));
-    final VirtualFile buckFile = findBuckFileFromActionEvent(e);
+    final VirtualFile buckFile = BuckActionUtils.findBuckFileFromActionEvent(e);
     if (buckFile == null) {
       fail("Unable to find a BUCK file", buckEventLogger);
       return;
@@ -100,7 +91,7 @@ public class CopyTargetAction extends AnAction {
       targetPath = "//" + targetPath.split("//")[1];
     }
     if (buckFile.equals(e.getData(CommonDataKeys.VIRTUAL_FILE))) {
-      final String targetName = getTargetNameFromActionEvent(e);
+      final String targetName = BuckActionUtils.getTargetNameFromActionEvent(e);
       if (targetName != null) {
         String target = targetPath + targetName;
         CopyPasteManager.getInstance().setContents(new StringSelection(target));
@@ -142,51 +133,5 @@ public class CopyTargetAction extends AnAction {
         .withExtraData(ImmutableMap.of(Keys.ERROR, message, Keys.BUCK_FILE, buckFilePath))
         .log();
     Messages.showWarningDialog(message, "Failed to Copy Buck Target");
-  }
-
-  @Nullable
-  private static PsiElement getPsiElementFromActionEvent(AnActionEvent e) {
-    PsiFile psiFile = e.getData(CommonDataKeys.PSI_FILE);
-    Caret caret = e.getData(CommonDataKeys.CARET);
-    return (psiFile == null || caret == null) ? null : psiFile.findElementAt(caret.getOffset());
-  }
-
-  private static Collection<BuckFunctionTrailer> getBuckFunctionTrailersFromActionEvent(
-      AnActionEvent e) {
-    PsiElement element = getPsiElementFromActionEvent(e);
-    if (element == null) {
-      return Collections.emptyList();
-    }
-    BuckExpressionStatement expressionStatement =
-        PsiTreeUtil.getParentOfType(element, BuckExpressionStatement.class);
-    if (expressionStatement == null) {
-      return Collections.emptyList();
-    }
-    return PsiTreeUtil.findChildrenOfType(expressionStatement, BuckFunctionTrailer.class);
-  }
-
-  private static boolean isActionEventInRuleBody(AnActionEvent e) {
-    return getBuckFunctionTrailersFromActionEvent(e).stream()
-        .anyMatch(buckFunctionTrailer -> buckFunctionTrailer.getName() != null);
-  }
-
-  @Nullable
-  private static String getTargetNameFromActionEvent(AnActionEvent e) {
-    return getBuckFunctionTrailersFromActionEvent(e).stream()
-        .map(BuckFunctionTrailer::getName)
-        .filter(Objects::nonNull)
-        .findFirst()
-        .orElse(null);
-  }
-
-  @Nullable
-  private static VirtualFile findBuckFileFromActionEvent(AnActionEvent e) {
-    if (e.getProject() == null) {
-      return null;
-    }
-    return Optional.ofNullable(e.getData(CommonDataKeys.VIRTUAL_FILE))
-        .flatMap(
-            file -> BuckTargetLocator.getInstance(e.getProject()).findBuckFileForVirtualFile(file))
-        .orElse(null);
   }
 }
