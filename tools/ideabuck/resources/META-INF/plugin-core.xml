@@ -108,6 +108,12 @@
     <postFormatProcessor implementation="com.facebook.buck.intellij.ideabuck.format.BuildifierPostFormatProcessor"/>
 
     <postStartupActivity implementation="com.facebook.buck.intellij.ideabuck.format.BuildifierAutoFormatter" />
+    <localInspection
+      displayName="Buck dependency visbility inspection"
+      groupName="Buck"
+      hasStaticDescription="true"
+      implementationClass="com.facebook.buck.intellij.ideabuck.inspection.BuckDepVisibilityInspection"
+      enabledByDefault="true"/>
   </extensions>
 
   <actions>
