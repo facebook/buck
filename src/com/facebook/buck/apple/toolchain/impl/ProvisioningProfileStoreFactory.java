@@ -75,7 +75,7 @@ public class ProvisioningProfileStoreFactory implements ToolchainFactory<Provisi
                                     executor, readCommand, file);
                             profilesBuilder.add(profile);
                           } catch (IOException | IllegalArgumentException e) {
-                            LOG.error(e, "Ignoring invalid or malformed .mobileprovision file");
+                            LOG.error(e, "Ignoring invalid or malformed provisioning file");
                           } catch (InterruptedException e) {
                             throw new IOException(e);
                           }
@@ -88,9 +88,9 @@ public class ProvisioningProfileStoreFactory implements ToolchainFactory<Provisi
                 LOG.debug(e, "The folder containing provisioning profile was not found.");
               } catch (IOException e) {
                 if (e.getCause() instanceof InterruptedException) {
-                  LOG.error(e, "Interrupted while searching for mobileprovision files");
+                  LOG.error(e, "Interrupted while searching for provisioning files");
                 } else {
-                  LOG.error(e, "Error while searching for mobileprovision files");
+                  LOG.error(e, "Error while searching for provisioning files");
                 }
               }
               return profilesBuilder.build();
@@ -99,6 +99,6 @@ public class ProvisioningProfileStoreFactory implements ToolchainFactory<Provisi
 
   private static boolean isProvisioningProfile(Path path) {
     String pathString = path.toString();
-    return pathString.endsWith(".mobileprovision");
+    return pathString.endsWith(".mobileprovision") || pathString.endsWith(".provisionprofile");
   }
 }
