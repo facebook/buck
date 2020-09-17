@@ -342,7 +342,8 @@ public class TestCommand extends BuildCommand {
       Iterable<String> command,
       Iterable<TestRule> testRules,
       BuildContext buildContext,
-      boolean isTtyForExternalTestRunnerEnabled)
+      boolean isTtyForExternalTestRunnerEnabled,
+      String clientId)
       throws InterruptedException, IOException {
     Optional<TestRule> nonExternalTestRunnerRule =
         StreamSupport.stream(testRules.spliterator(), /* parallel */ true)
@@ -431,11 +432,15 @@ public class TestCommand extends BuildCommand {
     AbsPath repositoryRoot = filesystem.getRootPath();
     Path rootPath = repositoryRoot.getPath();
 
+    ImmutableMap<String, String> environmentVariables =
+        ImmutableMap.<String, String>builder()
+            .putAll(params.getEnvironment())
+            .put("BUCK_CLIENT_ID", clientId)
+            .build();
+
     if (isTtyForExternalTestRunnerEnabled && commandArgsFile != null) {
       ImmutableList<String> commandWithArgs =
           ImmutableList.<String>builder().addAll(command).addAll(withDashArguments).build();
-      ImmutableMap<String, String> environmentVariables =
-          ImmutableMap.<String, String>builder().putAll(params.getEnvironment()).build();
       BuckRunSpec runSpec =
           BuckRunSpec.of(
               commandWithArgs,
@@ -459,7 +464,7 @@ public class TestCommand extends BuildCommand {
           ProcessExecutorParams.builder()
               .addAllCommand(command)
               .addAllCommand(withDashArguments)
-              .setEnvironment(params.getEnvironment())
+              .setEnvironment(environmentVariables)
               .setDirectory(rootPath);
       ProcessExecutorParams processExecutorParams = builder.build();
 
@@ -747,7 +752,8 @@ public class TestCommand extends BuildCommand {
                 externalTestRunner.get(),
                 testRules,
                 buildContext,
-                testBuckConfig.isTtyForExternalTestRunnerEnabled());
+                testBuckConfig.isTtyForExternalTestRunnerEnabled(),
+                testBuckConfig.getClientId());
           }
           return runTestsInternal(
               params,

@@ -390,4 +390,21 @@ public class ExternalTestRunnerIntegrationTest {
     byte[] allBytes = Files.readAllBytes(Paths.get(commandArgsFileLocation));
     assertThat(allBytes.length, is(equalTo(0)));
   }
+
+  @Test
+  public void passesBuckClientIdAsEnvironmentVariable() {
+    // sh_test doesn't support Windows
+    assumeFalse(isWindowsOs);
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "-c",
+            "client.id=test123",
+            "-c",
+            "test.external_runner=" + workspace.getPath("external_runner_echo_env.py"),
+            "//:pass");
+    result.assertSuccess();
+
+    assertTrue(result.getStdout().contains("BUCK_CLIENT_ID=test123"));
+  }
 }

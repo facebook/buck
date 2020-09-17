@@ -122,4 +122,8 @@ public abstract class TestBuckConfig implements ConfigView<BuckConfig> {
   public boolean isBuildingFilteredTestsEnabled() {
     return getDelegate().getBooleanValue("test", "build_filtered_tests", false);
   }
+
+  public String getClientId() {
+    return getDelegate().getValue("client", "id").orElse("buck");
+  }
 }
