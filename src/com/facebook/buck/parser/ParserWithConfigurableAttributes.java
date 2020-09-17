@@ -148,7 +148,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
                     cell,
                     buildTarget.getUnconfiguredBuildTarget(),
                     dependencyStack.child(buildTarget)));
-    return getTargetFromManifest(state, cell, targetNode, dependencyStack, buildFileManifest);
+    return getTargetFromManifest(state, owningCell, targetNode, dependencyStack, buildFileManifest);
   }
 
   @Override
@@ -167,7 +167,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     return Futures.transform(
         buildFileManifestFuture,
         buildFileManifest ->
-            getTargetFromManifest(state, cell, targetNode, dependencyStack, buildFileManifest),
+            getTargetFromManifest(
+                state, owningCell, targetNode, dependencyStack, buildFileManifest),
         MoreExecutors.directExecutor());
   }
 

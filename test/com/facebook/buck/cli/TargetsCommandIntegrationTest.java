@@ -740,10 +740,8 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult crosscell_result =
         secondary.runBuckCommand("targets", "--show-target-hash", "primary//:cxxbinary");
-    // Expected: command should succeed.
-    // Actual: it fails to find `config/BUCK`
-    crosscell_result.assertFailure();
-    // parseAndVerifyTargetsAndHashes(crosscell_result.getStdout(), "primary//:cxxbinary");
+    crosscell_result.assertSuccess();
+    parseAndVerifyTargetsAndHashes(crosscell_result.getStdout(), "primary//:cxxbinary");
   }
 
   @Test
