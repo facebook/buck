@@ -1,0 +1,16 @@
+platform(
+    name = "base",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+config_setting(
+    name = "config",
+    values = {
+        "user.my_config": "value",
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+)

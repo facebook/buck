@@ -1,0 +1,7 @@
+cxx_library(
+    name = "cxxlib",
+    srcs = glob(["*.cpp"]),
+    compiler_flags = ["-g"],
+    exported_headers = glob(["*.hpp"]),
+    visibility = ["PUBLIC"],
+)

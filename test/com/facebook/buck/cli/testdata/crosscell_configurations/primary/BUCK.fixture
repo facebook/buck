@@ -1,0 +1,13 @@
+cxx_binary(
+    name = "cxxbinary",
+    srcs = glob(["*.cpp"]),
+    compiler_flags = ["-g"],
+    preprocessor_flags = select({
+        "//config:config": [],
+        "DEFAULT": [],
+    }),
+    default_target_platform = "//config:base",
+    deps = [
+        "secondary//:cxxlib",
+    ],
+)

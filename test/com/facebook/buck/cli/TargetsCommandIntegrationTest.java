@@ -712,6 +712,41 @@ public class TargetsCommandIntegrationTest {
   }
 
   @Test
+  public void testCrosscellTargetHash() throws IOException {
+    ProjectWorkspace primary =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "crosscell_configurations/primary", tmp.newFolder());
+    primary.setUp();
+    ProjectWorkspace secondary =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "crosscell_configurations/secondary", tmp.newFolder());
+    secondary.setUp();
+    TestDataHelper.overrideBuckconfig(
+        primary,
+        ImmutableMap.of(
+            "repositories",
+            ImmutableMap.of(
+                "primary", ".", "secondary", secondary.getPath(".").normalize().toString())));
+    TestDataHelper.overrideBuckconfig(
+        secondary,
+        ImmutableMap.of(
+            "repositories",
+            ImmutableMap.of(
+                "primary", primary.getPath(".").normalize().toString(), "secondary", ".")));
+
+    ProcessResult result = primary.runBuckCommand("targets", "--show-target-hash", "//:cxxbinary");
+    result.assertSuccess();
+    parseAndVerifyTargetsAndHashes(result.getStdout(), "//:cxxbinary");
+
+    ProcessResult crosscell_result =
+        secondary.runBuckCommand("targets", "--show-target-hash", "primary//:cxxbinary");
+    // Expected: command should succeed.
+    // Actual: it fails to find `config/BUCK`
+    crosscell_result.assertFailure();
+    // parseAndVerifyTargetsAndHashes(crosscell_result.getStdout(), "primary//:cxxbinary");
+  }
+
+  @Test
   public void testConfigurationRulesIncludedInShowTargetHash() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
