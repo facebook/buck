@@ -68,7 +68,7 @@ public class ProvisioningProfileStoreFactory implements ToolchainFactory<Provisi
                       @Override
                       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                           throws IOException {
-                        if (file.toString().endsWith(".mobileprovision")) {
+                        if (isProvisioningProfile(file)) {
                           try {
                             ProvisioningProfileMetadata profile =
                                 ProvisioningProfileMetadataFactory.fromProvisioningProfilePath(
@@ -95,5 +95,10 @@ public class ProvisioningProfileStoreFactory implements ToolchainFactory<Provisi
               }
               return profilesBuilder.build();
             }));
+  }
+
+  private static boolean isProvisioningProfile(Path path) {
+    String pathString = path.toString();
+    return pathString.endsWith(".mobileprovision");
   }
 }
