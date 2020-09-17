@@ -575,6 +575,38 @@ public class AppleBundleIntegrationTest {
     assertTrue(checkCodeSigning(appPath));
   }
 
+  @Test
+  public void simpleApplicationBundleForMacCatalystWithProvisioningProfile()
+      throws IOException, InterruptedException {
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_mac_catalyst", tmp);
+    workspace.addBuckConfigLocalOption("apple", "codesign_type_override", "distribution");
+    setCommonCatalystBuckConfigLocalOptions(workspace);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp#maccatalyst-x86_64,no-debug");
+    ProcessResult result =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    result.assertSuccess();
+
+    Path appPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve(target.getShortName() + ".app"));
+
+    Path provisioningProfilePath = appPath.resolve("Contents/embedded.provisionprofile");
+    assertTrue(Files.exists(provisioningProfilePath));
+
+    assertTrue(checkCodeSigning(appPath));
+  }
+
   // Legacy method -- specifying entitlments file via info_plist_substitutions
   @Test
   public void simpleApplicationBundleWithCodeSigningAndEntitlementsUsingInfoPlistSubstitutions()

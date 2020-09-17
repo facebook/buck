@@ -139,7 +139,7 @@ public class AppleCodeSignPreparation extends ModernBuildRule<AppleCodeSignPrepa
       entitlementsOutput = new OutputPath("Entitlements.plist");
       provisioningProfileOutput =
           new OutputPath(
-              AppleProvisioningProfileUtilities.getProvisioningProfileFileNameInBundle());
+              AppleProvisioningProfileUtilities.getProvisioningProfileFileNameInBundle(platform));
       this.provisioningProfileStore = provisioningProfileStore;
       this.codeSignIdentitiesSupplier = codeSignIdentitiesSupplier;
     }

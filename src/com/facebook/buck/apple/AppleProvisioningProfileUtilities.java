@@ -16,18 +16,29 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.ApplePlatform;
+
 /** Utilities related to provisioning profiles on Apple platforms. */
 public class AppleProvisioningProfileUtilities {
 
   private AppleProvisioningProfileUtilities() {}
 
   /** Returns the name of the provisioning profile in the final .app bundle. */
-  public static String getProvisioningProfileFileNameInBundle() {
-    return "embedded.mobileprovision";
+  public static String getProvisioningProfileFileNameInBundle(ApplePlatform applePlatform) {
+    if (applePlatform.getType().isDesktop()) {
+      return "embedded.provisionprofile";
+    } else {
+      return "embedded.mobileprovision";
+    }
   }
 
   /** Returns the destination of the provisioning profile */
-  public static AppleBundleDestination getProvisioningProfileBundleDestination() {
-    return AppleBundleDestination.RESOURCES;
+  public static AppleBundleDestination getProvisioningProfileBundleDestination(
+      ApplePlatform applePlatform) {
+    if (applePlatform.getType().isDesktop()) {
+      return AppleBundleDestination.METADATA;
+    } else {
+      return AppleBundleDestination.RESOURCES;
+    }
   }
 }

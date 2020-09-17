@@ -45,6 +45,25 @@ public enum ApplePlatformType {
     return false;
   }
 
+  /** Returns whether the platform represents a desktop platform (i.e., running on macOS). */
+  public boolean isDesktop() {
+    switch (this) {
+      case MAC:
+      case MAC_CATALYST:
+        return true;
+      case IOS_DEVICE:
+      case IOS_SIMULATOR:
+      case WATCH_DEVICE:
+      case WATCH_SIMULATOR:
+      case TV_DEVICE:
+      case TV_SIMULATOR:
+      case UNKNOWN:
+        break;
+    }
+
+    return false;
+  }
+
   public static ApplePlatformType of(String platformName) {
     if (platformName.contains("osx")) {
       return ApplePlatformType.MAC;
