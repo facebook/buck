@@ -6,6 +6,7 @@ python_library(
         "//third-party/py/pytest:pytest",
     ],
     deps = [
+        "//third-party/py/pytest/dependencies:atomicwrites-1.3.0",
         "//third-party/py/pytest/dependencies:attrs-19.3.0",
         "//third-party/py/pytest/dependencies:colorama-0.4.3",
         "//third-party/py/pytest/dependencies:importlib_metadata-1.6.0",

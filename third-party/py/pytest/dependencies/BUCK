@@ -1,4 +1,10 @@
 prebuilt_python_library(
+    name = "atomicwrites-1.3.0",
+    binary_src = "atomicwrites-1.3.0-py36-none-platform007.whl",
+    visibility = ["//third-party/py/pytest/..."],
+)
+
+prebuilt_python_library(
     name = "py-1.8.1",
     binary_src = "py-1.8.1-py2.py3-none-any.whl",
     visibility = ["//third-party/py/pytest/..."],
