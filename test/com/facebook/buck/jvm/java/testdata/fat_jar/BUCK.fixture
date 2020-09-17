@@ -98,3 +98,25 @@ java_library(
         ":lib",
     ],
 )
+
+genrule(
+    name = "standin_for_native_bin",
+    cmd = "echo success > $OUT",
+    out = "standin_for_native_bin",
+)
+
+java_library(
+    name = "lib-with-runtime-deps",
+    srcs = [],
+    runtime_deps = [":standin_for_native_bin"],
+    resources = ["print_lib_path.py"],
+)
+
+java_binary(
+    name = "bin-fat-with-runtime-deps",
+    main_class = "Lib",
+    deps = [
+        ":lib",
+        ":lib-with-runtime-deps",
+    ],
+)

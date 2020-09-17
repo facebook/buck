@@ -255,6 +255,21 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
     }
   }
 
+  @Test
+  public void testRuntimeDepsForFatJar() throws IOException {
+    setUpProjectWorkspaceForScenario("fat_jar");
+    workspace.enableDirCache();
+    workspace.runBuckBuild("//:bin-fat-with-runtime-deps").assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:standin_for_native_bin");
+
+    // Now clean and try to rebuild, we should get a dircache hit on the top-level rule
+    workspace.runBuckCommand("clean", "--keep-cache");
+    workspace.runBuckBuild("//:bin-fat-with-runtime-deps").assertSuccess();
+    workspace.getBuildLog().assertTargetWasFetchedFromCache("//:bin-fat-with-runtime-deps");
+    // But the runtime dep should still get fetched from cache
+    workspace.getBuildLog().assertTargetWasFetchedFromCache("//:standin_for_native_bin");
+  }
+
   private void setUpProjectWorkspaceForScenario(String scenario) throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
     workspace.setUp();
