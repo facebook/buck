@@ -17,16 +17,15 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.label.Label;
+import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 
 /**
- * Create caches for {@link com.google.devtools.build.lib.cmdline.Label} objects in the Skylark
- * Parser
+ * Create caches for {@link com.facebook.buck.core.model.label.Label} objects in the Skylark Parser
  */
 public class LabelCache {
   private LabelCache() {}

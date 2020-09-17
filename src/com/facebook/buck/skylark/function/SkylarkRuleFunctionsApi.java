@@ -16,10 +16,10 @@
 
 package com.facebook.buck.skylark.function;
 
+import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.rules.providers.impl.UserDefinedProvider;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
-import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.StarlarkFunction;

@@ -16,10 +16,10 @@
 
 package com.facebook.buck.core.starlark.rule.names;
 
+import com.facebook.buck.core.model.label.Label;
+import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import javax.annotation.Nullable;
 
 /**

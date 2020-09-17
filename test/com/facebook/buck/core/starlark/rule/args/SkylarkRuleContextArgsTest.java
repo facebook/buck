@@ -19,13 +19,13 @@ package com.facebook.buck.core.starlark.rule.args;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
+import com.facebook.buck.core.model.label.Label;
+import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
 import com.facebook.buck.core.rules.actions.lib.args.ExecCompatibleCommandLineBuilder;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;

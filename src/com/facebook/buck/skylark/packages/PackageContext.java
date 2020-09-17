@@ -16,11 +16,11 @@
 
 package com.facebook.buck.skylark.packages;
 
+import com.facebook.buck.core.model.label.PackageIdentifier;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.skylark.io.Globber;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.events.EventHandler;
 import java.util.Map;
 

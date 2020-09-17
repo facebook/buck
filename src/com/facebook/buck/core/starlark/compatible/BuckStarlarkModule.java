@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.starlark.compatible;
 
+import com.facebook.buck.core.model.label.Label;
 import com.google.common.base.Preconditions;
-import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 

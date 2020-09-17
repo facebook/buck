@@ -17,13 +17,13 @@
 package com.facebook.buck.parser.implicit;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.label.Label;
+import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import java.util.Arrays;
 import java.util.Map;
 import org.immutables.value.Value;

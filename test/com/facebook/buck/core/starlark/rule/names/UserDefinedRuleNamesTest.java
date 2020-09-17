@@ -22,10 +22,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.model.label.Label;
+import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import org.junit.Test;
 
 public class UserDefinedRuleNamesTest {

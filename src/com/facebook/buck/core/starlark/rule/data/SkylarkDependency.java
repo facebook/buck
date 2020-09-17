@@ -17,10 +17,10 @@
 package com.facebook.buck.core.starlark.rule.data;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.label.Label;
+import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.SkylarkIndexable;

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.skylark.parser.context;
 
+import com.facebook.buck.core.model.label.Label;
+import com.facebook.buck.core.model.label.RepositoryName;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 
 /** Dummy repo mapping for Buck. */

@@ -21,9 +21,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
-import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.syntax.EvalException;
 import org.junit.Rule;
 import org.junit.Test;

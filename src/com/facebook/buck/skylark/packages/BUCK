@@ -5,6 +5,7 @@ java_immutables_library(
     srcs = glob(["*.java"]),
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/model/label:label",
         "//src/com/facebook/buck/core/path:path",
         "//src/com/facebook/buck/skylark/io:io",
         "//third-party/java/bazel:bazel",

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// Copyright 2016 The Bazel Authors. All rights reserved.
+// Copyright 2015 The Bazel Authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,24 +28,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.facebook.buck.core.starlark.compatible;
+package com.facebook.buck.core.model.label;
 
-import com.facebook.buck.core.model.label.Label;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.StarlarkValue;
-
-/**
- * {@link StarlarkValue}s that need special handling when they are exported from an extension file.
- * For example, rule definitions receive their name at the end of the execution of the .bzl file.
- */
-public interface StarlarkExportable extends StarlarkValue {
-
-  /** Is this value already exported? */
-  boolean isExported();
-
-  /**
-   * Notify the value that it is exported from {@code extensionLabel} extension with name {@code
-   * exportedName}.
-   */
-  void export(Label extensionLabel, String exportedName) throws EvalException;
+/** Thrown by the parsing methods to indicate a bad label. */
+public class LabelSyntaxException extends Exception {
+  public LabelSyntaxException(String message) {
+    super(message);
+  }
 }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.starlark.rule;
 
-import com.google.devtools.build.lib.cmdline.Label;
+import com.facebook.buck.core.model.label.Label;
 import com.google.devtools.build.lib.syntax.StarlarkValue;
 import net.starlark.java.annot.StarlarkBuiltin;
 import net.starlark.java.annot.StarlarkMethod;

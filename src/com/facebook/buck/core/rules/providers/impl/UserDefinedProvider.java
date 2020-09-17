@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.providers.impl;
 
+import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.starlark.compatible.StarlarkExportable;
 import com.facebook.buck.util.MoreIterables;
@@ -23,7 +24,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
@@ -44,8 +44,8 @@ import javax.annotation.Nullable;
  * values, rather than normal java/guava classes. In the future type restriction may also be
  * allowed.
  *
- * <p>NOTE: Until {@link #export(Label, String)} is called, many methods (especially ones that get
- * the user defined name of the class) are not safe to call.
+ * <p>NOTE: Until {@link #export(com.facebook.buck.core.model.label.Label, String)} is called, many
+ * methods (especially ones that get the user defined name of the class) are not safe to call.
  */
 public class UserDefinedProvider extends BaseFunction
     implements Provider<UserDefinedProviderInfo>, StarlarkValue, StarlarkExportable {

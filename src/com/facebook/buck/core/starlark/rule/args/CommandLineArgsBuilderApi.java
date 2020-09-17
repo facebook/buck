@@ -18,8 +18,8 @@ package com.facebook.buck.core.starlark.rule.args;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsApi;
-import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkValue;

@@ -4,6 +4,7 @@ standard_java_test(
     name = "args",
     deps = [
         "//src/com/facebook/buck/core/artifact:artifact",
+        "//src/com/facebook/buck/core/model/label:label",
         "//src/com/facebook/buck/core/starlark/rule/args:args",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//third-party/java/bazel:bazel",

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.model.label.Label;
 import com.google.common.base.Preconditions;
-import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.Optional;
 

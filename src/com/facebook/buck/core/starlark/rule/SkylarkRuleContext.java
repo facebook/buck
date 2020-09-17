@@ -17,9 +17,9 @@
 package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.syntax.Printer;
 
 /** The context passed to user defined rules' implementation functions */

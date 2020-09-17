@@ -19,6 +19,7 @@ package com.facebook.buck.core.starlark.knowntypes;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
 import com.facebook.buck.core.starlark.rule.SkylarkDescription;
@@ -28,7 +29,6 @@ import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
-import com.google.devtools.build.lib.cmdline.Label;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 
