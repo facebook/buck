@@ -137,7 +137,9 @@ public class AppleCodeSignPreparation extends ModernBuildRule<AppleCodeSignPrepa
       dryRunOutput =
           isDryRun ? Optional.of(new OutputPath("BUCK_pp_dry_run.plist")) : Optional.empty();
       entitlementsOutput = new OutputPath("Entitlements.plist");
-      provisioningProfileOutput = new OutputPath("embedded.mobileprovision");
+      provisioningProfileOutput =
+          new OutputPath(
+              AppleProvisioningProfileUtilities.getProvisioningProfileFileNameInBundle());
       this.provisioningProfileStore = provisioningProfileStore;
       this.codeSignIdentitiesSupplier = codeSignIdentitiesSupplier;
     }

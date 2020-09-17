@@ -1131,12 +1131,14 @@ public class AppleDescriptions {
         final boolean codeSignOnCopy = false;
         final boolean ignoreIfMissing = dryRunCodeSigning;
         Optional<String> newNameAfterCopy = Optional.empty();
+        AppleBundleDestination dest =
+            AppleProvisioningProfileUtilities.getProvisioningProfileBundleDestination();
         SourcePath provisioningProfileSourcePath =
             codeSignPrepRule.getSourcePathToProvisioningProfile();
         bundlePartsReadyToCopy.add(
             FileAppleBundlePart.of(
                 provisioningProfileSourcePath,
-                AppleBundleDestination.RESOURCES,
+                dest,
                 getSourcePathToContentHash(
                     incrementalBundlingEnabled,
                     provisioningProfileSourcePath,
