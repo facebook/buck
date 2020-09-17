@@ -84,7 +84,11 @@ public enum CrateType {
   }
 
   private static String dylib_filename(BuildTarget target, String crate, CxxPlatform plat) {
-    return hashed_filename(target, "lib", crate, plat.getSharedLibraryExtension());
+    return hashed_filename(
+        target,
+        plat.getSharedLibraryExtension().equals("dll") ? "" : "lib",
+        crate,
+        plat.getSharedLibraryExtension());
   }
 
   // Crate type as passed to `rustc --crate-type=`
