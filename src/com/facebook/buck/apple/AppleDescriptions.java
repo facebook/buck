@@ -1108,7 +1108,7 @@ public class AppleDescriptions {
                             graphBuilder,
                             projectFilesystem)));
               });
-      {
+      if (dryRunCodeSigning) {
         final boolean codeSignOnCopy = false;
         final boolean ignoreMissingSource = dryRunCodeSigning;
         SourcePath entitlementsSourcePath = codeSignPrepRule.getSourcePathToEntitlementsOutput();

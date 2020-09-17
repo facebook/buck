@@ -429,6 +429,32 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void simpleApplicationBundleWithoutDryRunCodeSigning() throws Exception {
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_with_codesigning", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "dry_run_code_signing", "false");
+    workspace.addBuckConfigLocalOption("apple", "codesign_type_override", "distribution");
+
+    BuildTarget target =
+        workspace.newBuildTarget("//:DemoAppWithFramework#iphoneos-arm64,no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path appPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve(target.getShortName() + ".app"));
+    Path codeSignResultsPath = appPath.resolve("BUCK_code_sign_entitlements.plist");
+    assertFalse(Files.exists(codeSignResultsPath));
+  }
+
+  @Test
   public void simpleApplicationBundleWithDryRunCodeSigning() throws Exception {
     assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
 
