@@ -28,8 +28,8 @@
     {param content}
 
 <p>
-The root of your {call buck.key_concepts_link}{param rendered_text: 'project' /}{/call} must
-contain a configuration file named <code>.buckconfig</code>.
+The root of your {call buck.key_concepts_link}{param rendered_text: 'project' /}{/call} must 
+contain a configuration file named <code>.buckconfig</code>. 
 Before executing, Buck reads this file to incorporate any customizations
 it specifies.
 </p>
@@ -38,8 +38,8 @@ it specifies.
 <h2>Performance impact of Buck configuration changes</h2>
 
 <p>
-Changes to Buck's configuration can&mdash;temporarily&mdash;degrade
-Buck's performance because of how they affect Buck's parsing and caching
+Changes to Buck's configuration can&mdash;temporarily&mdash;degrade 
+Buck's performance because of how they affect Buck's parsing and caching 
 behavior.
 </p>
 
@@ -55,7 +55,7 @@ Also, because configuration settings are sometimes included in the cache
 keys that Buck uses in its caching system, changes to Buck's
 configuration can invalidate previously-built artifacts in Buck's
 caches. If this occurs, Buck rebuilds those artifacts, which can impact
-your build time.
+your build time.  
 </p>
 
 
@@ -63,7 +63,7 @@ your build time.
 
 <p>
 The <code>.buckconfig</code> file uses the
-{sp}<a href="http://en.wikipedia.org/wiki/INI_file">INI file format</a>.
+{sp}<a href="http://en.wikipedia.org/wiki/INI_file">INI file format</a>. 
 That is, it is divided into <em>sections</em> where each section
 contains a collection of key <em>names</em> and key <em>values</em>.
 The <code>.buckconfig</code> implementation supports some modifications
@@ -98,7 +98,7 @@ does not issue a warning or error</em>.
 </p>
 
 <p>
-Note that sometimes you might need to define your own custom sections,
+Note that sometimes you might need to define your own custom sections, 
 such as for platform flavors for <a href="#cxx">C++</a> or <a href="#python">Python</a>.
 These scenarios are examples of when you should be careful not to
 introduce the dot character in section names.
@@ -106,18 +106,18 @@ introduce the dot character in section names.
 
 <p>
 This constraint is because Buck uses the dot character to delimit
-section names and key names in other contexts such as
-the <code>--config</code> command-line parameter. For information
-about <code>--config</code>, see
+section names and key names in other contexts such as 
+the <code>--config</code> command-line parameter. For information 
+about <code>--config</code>, see 
 the {call buck.cmd_link}{param name: 'common_parameters' /}{param rendered_text: '<strong>Common Parameters</strong>' /}{/call} topic.
 </p>
 
 <h2>Character encoding</h2>
 
 <p>
-To ensure that any character can be encoded in a <code>.buckconfig</code> key
+To ensure that any character can be encoded in a <code>.buckconfig</code> key 
 value, you can use escape sequences to encode characters that would
-otherwise be problematic.
+otherwise be problematic. 
 </p>
 
 <p>
@@ -146,7 +146,7 @@ The following escape sequences are supported.
 <h2>Key values as lists</h2>
 
 <p>
-Although the standard INI format supports only key values that represent
+Although the standard INI format supports only key values that represent 
 a single item, Buck supports key values that represent a list of items.
 The syntax is to separate the items in the list using the space (<code>0x20</code>) character.
 For example, a key value for the list of command-line flags to be passed
@@ -164,9 +164,9 @@ flags = -foo -bar -baz -qux
 
 <p>
 When a key value is parsed as a list instead of a single item,
-the separator character is interpreted as a separator only when it
-occurs <em>outside of double quotes</em>. For example, if <code>flags</code> is
-a key value interpreted as a list of items separated by spaces, then
+the separator character is interpreted as a separator only when it 
+occurs <em>outside of double quotes</em>. For example, if <code>flags</code> is 
+a key value interpreted as a list of items separated by spaces, then 
 </p>
 
 <p>
@@ -175,11 +175,11 @@ a key value interpreted as a list of items separated by spaces, then
 flags = -foo "-bar \u0429"
 {/literal}
 </pre>
-</p>
+</p>                                   
 
 <p>
-results in the two strings: <code>foo</code> and <code>-bar &#1065;</code>;
-the space character between <code>-bar</code> and <code>\u0429</code> is
+results in the two strings: <code>foo</code> and <code>-bar &#1065;</code>; 
+the space character between <code>-bar</code> and <code>\u0429</code> is 
 not interpreted as a separator.
 </p>
 
@@ -187,8 +187,8 @@ not interpreted as a separator.
 <h2>Transclusion of values from one key to another</h2>
 
 <p>
-Values from other keys can be transcluded into the current key using
-the following syntax inside the current key value.
+Values from other keys can be transcluded into the current key using 
+the following syntax inside the current key value. 
 </p>
 
 <p>
@@ -200,7 +200,7 @@ $(config &lt;section&gt;.&lt;field&gt;)
 </p>
 
 <p>
-For example, to use the {call buckconfig.go_vendor_path /} in
+For example, to use the {call buckconfig.go_vendor_path /} in 
 a custom setting:
 </p>
 
@@ -216,8 +216,8 @@ custom_value = $(config go.vendor_path)
 <h2>Comments</h2>
 
 <p>
-In addition to the semicolon (<code>;</code>),
-you can use the pound sign (<code>#</code>),
+In addition to the semicolon (<code>;</code>), 
+you can use the pound sign (<code>#</code>), 
 as a comment character in <code>.buckconfig</code>.
 </p>
 
@@ -225,11 +225,11 @@ as a comment character in <code>.buckconfig</code>.
 <h2>.buckconfig.local</h2>
 
 <p>
-The root of your {call buck.key_concepts_link}{param rendered_text: 'project' /}{/call} may
-contain a second configuration file named <code>.buckconfig.local</code>. Its format is
+The root of your {call buck.key_concepts_link}{param rendered_text: 'project' /}{/call} may 
+contain a second configuration file named <code>.buckconfig.local</code>. Its format is 
 the same as that of <code>.buckconfig</code>, but settings in <code>.buckconfig.local</code>{sp}
 override those in <code>.buckconfig</code>. In practice, <code>.buckconfig</code> is a
-version-controlled file that contains settings that are applicable to all team members,
+version-controlled file that contains settings that are applicable to all team members, 
 whereas <code>.buckconfig.local</code> is excluded from version control to allow users to define
 personal settings, such as personal aliases.
 </p>
@@ -238,7 +238,7 @@ personal settings, such as personal aliases.
 <h2>Other initialization files</h2>
 
 <p>
-In addition to the <code>.buckconfig</code> and <code>.buckconfig.local</code> files in
+In addition to the <code>.buckconfig</code> and <code>.buckconfig.local</code> files in 
 the project root, Buck reads configuration settings from the following additional locations, some of
 which are actually directories:</p>
 
@@ -270,14 +270,14 @@ configuration file, provided that it adheres to <code>.buckconfig</code> syntax.
 </p>
 
 <p>
-Note that a <code>.buckconfig.d</code> directory is distinct from the
-similarly-named <code>.buckd</code> directory which is used by
+Note that a <code>.buckconfig.d</code> directory is distinct from the 
+similarly-named <code>.buckd</code> directory which is used by 
 the {sp}{call buck.concept_link}{param page: 'buckd' /}{param name: 'Buck Daemon (<code>buckd</code>)' /}{/call}{sp}.
 </p>
 
 <p>
 For a description of how Buck resolves collisions between settings in
-these configuration files, see the
+these configuration files, see the 
 section {call buckconfig.section_concept_link}{param id:'config-precedence' /}{param rendered_text: 'Precedence of Buck configuration specifications' /}{/call}
 below.
 </p>
@@ -285,22 +285,22 @@ below.
 <h2>Command-line control of configuration</h2>
 
 <p>
-In addition to the above configuration files, Buck supports specifying
-additional configuration files from the Buck command line using
+In addition to the above configuration files, Buck supports specifying 
+additional configuration files from the Buck command line using 
 the <code>--config-file</code> parameter.
 </p>
 
 <p>
-You can also specify configuration settings <em>individually</em> on
+You can also specify configuration settings <em>individually</em> on 
 the Buck command line using the <code>--config</code> (<code>-c</code>) parameter.
-Furthermore, you can aggregate these settings into <em>flag files</em> using
+Furthermore, you can aggregate these settings into <em>flag files</em> using 
 the <code>--flagfile</code> parameter. A flag file provides similar
 functionality to a configuration file but uses a different syntax.
 Flag files are sometimes called <em>mode files</em> or <em>at</em> (<code>@</code>) files.
 </p>
 
 <p>
-For more information about the <code>--config-file</code> and <code>--flagfile</code> parameters,
+For more information about the <code>--config-file</code> and <code>--flagfile</code> parameters, 
 see the {call buck.cmd_link}{param name: 'common_parameters' /}{param
 rendered_text: '<strong>Common Parameters</strong>' /}{/call} topic.
 </p>
@@ -310,7 +310,7 @@ rendered_text: '<strong>Common Parameters</strong>' /}{/call} topic.
 
 <p>
 The following list shows the order of precedence for how Buck interprets
-its configuration specifications. Settings specified using a method closer
+its configuration specifications. Settings specified using a method closer 
 to the top of the list have higher precedence and will override those lower
 on the list. For example, the <code>.buckconfig</code> file in the project directory
 overrides a <code>.buckconfig</code> file in the user's <code>HOME</code> directory.
@@ -318,7 +318,7 @@ overrides a <code>.buckconfig</code> file in the user's <code>HOME</code> direct
 
 <ol>
 <li>
-Configuration specified on the command line using <code>--config</code> (<code>-c</code>), <code>--config-file</code> and <code>--flagfile</code>.
+Configuration specified on the command line using <code>--config</code> (<code>-c</code>), <code>--config-file</code> and <code>--flagfile</code>. 
 Configuration specified later on the command line overrides configuration specified earlier.
 </li>
 <li><code>.buckconfig.local</code> in the project directory.</li>
@@ -332,8 +332,8 @@ Configuration specified later on the command line overrides configuration specif
 
 <p>
 Files in a <code>.buckconfig.d</code> (<code>buckconfig.d</code>) directory have precedence
-according to the lexicographical order of their file names.
-Files <em>later</em> in the lexicographical order have precedence
+according to the lexicographical order of their file names. 
+Files <em>later</em> in the lexicographical order have precedence 
 over files earlier in that order.
 </p>
 
@@ -343,11 +343,11 @@ over files earlier in that order.
 <p>
 Any of the configuration files that we've discussed so far can also
 include by reference other files that contain configuration information.
-These included files can contain complete <code>.buckconfig</code> sections
+These included files can contain complete <code>.buckconfig</code> sections 
 or they can contain a group of key name/value pairs that constitute part
-of a section. In this second use case, you'll need to ensure that
-the <em>included</em> file is referenced beneath the appropriate section
-in the <em>including</em> file. Because of this additional complexity,
+of a section. In this second use case, you'll need to ensure that 
+the <em>included</em> file is referenced beneath the appropriate section 
+in the <em>including</em> file. Because of this additional complexity, 
 we recommend that you include only files that contain complete sections.
 </p>
 
@@ -371,12 +371,12 @@ The syntax to include a file is
 <p>
 where <em>path-to-included-file</em> is either a relative path from the
 including file (recommended) or an absolute path from the root of the
-file system.
+file system.  
 </p>
 
 <p>
 You can also specify that the file should be included only if it exists
-by prefixing with a question mark (<code>?</code>).
+by prefixing with a question mark (<code>?</code>). 
 </p>
 
 <p>
@@ -388,17 +388,17 @@ by prefixing with a question mark (<code>?</code>).
 </p>
 
 <p>
-If you use this prefix, it is not an error condition if the file does
-not exist; Buck just silently continues to process the rest of the
+If you use this prefix, it is not an error condition if the file does 
+not exist; Buck just silently continues to process the rest of the 
 configuration file.
 </p>
 
 <p>
 In the following example, the <code>.buckconfig</code> file includes
 the file <code>cxx-other-platform.include</code> which exists in the
-subdirectory <code>cxx-other-platform</code>.
-The <code>.buckconfig</code> file will also include the
-file <code>future-platform</code> from the directory <code>future-platform.include</code> if
+subdirectory <code>cxx-other-platform</code>. 
+The <code>.buckconfig</code> file will also include the 
+file <code>future-platform</code> from the directory <code>future-platform.include</code> if 
 that file exists.
 </p>
 
@@ -591,13 +591,13 @@ $ buck targets --resolve-alias app#src_jar
     </p>
 
     <ul>
-      <li><code>ANDROID_SDK</code></li>
-      <li><code>ANDROID_HOME</code></li>
+      <li><code>ANDROID_SDK</code></li> 
+      <li><code>ANDROID_HOME</code></li> 
     </ul>
 
     <p>
       Note that Buck gives precedence to the values of these environment
-      variables&mdash;in the order in which they are listed above&mdash;over
+      variables&mdash;in the order in which they are listed above&mdash;over 
       the value of this property in <code>.buckconfig</code>.
     </p>
   {/param}
@@ -858,7 +858,7 @@ man xcodebuild
 </p>
 
 <p>
-and then use <code>/</code> to search for the string <code>Destinations</code>.
+and then use <code>/</code> to search for the string <code>Destinations</code>. 
 </p>
 
   {/param}
@@ -1036,7 +1036,7 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
 <pre>
 {literal}
 #
-# Use a limit of 50 MB.
+# Use a limit of 50 MB. 
 #
 artifact_cache_size_limit = 52428800
 {/literal}
@@ -1050,13 +1050,13 @@ artifact_cache_size_limit = 52428800
     </p>
 
     <p>
-      <strong>Note:</strong> This value sets an upper bound on artifact
-      size for all values of {call buckconfig.cache_mode /}.
-      The parameter {call buckconfig.cache_http_max_store_size /} sets
-      an artifact size limit <em>only</em> for distributed cache modes
+      <strong>Note:</strong> This value sets an upper bound on artifact 
+      size for all values of {call buckconfig.cache_mode /}.  
+      The parameter {call buckconfig.cache_http_max_store_size /} sets 
+      an artifact size limit <em>only</em> for distributed cache modes 
       (<code>http</code> and <code>thrift_over_http</code>).
-      Therefore, it is not meaningful to set a value
-      for <code>http_max_store_size</code> which is larger
+      Therefore, it is not meaningful to set a value 
+      for <code>http_max_store_size</code> which is larger 
       than the value of <code>artifact_cache_size_limit</code>.
     </p>
 
@@ -1265,8 +1265,8 @@ artifact_cache_size_limit = 52428800
     This section configures build artifact caching. Caching can be
     configured to use the local filesystem, an SQLite database, or a
     remote distributed cache that can be shared among developers.
-    Caching is disabled by default.
-    The{sp} {call buckconfig.cache_mode /} setting&mdash;described below&mdash;determines
+    Caching is disabled by default. 
+    The{sp} {call buckconfig.cache_mode /} setting&mdash;described below&mdash;determines 
     which properties are relevant to the caching configuration; other
     properties are ignored by Buck.
   {/param}
@@ -1308,14 +1308,14 @@ artifact_cache_size_limit = 52428800
     <ul>
     <li>
       <p>
-        An absolute path in your local file system, such
+        An absolute path in your local file system, such 
         as <code>/Volumes/mySSD/cache</code>.
       </p>
     </li>
 
     <li>
       <p>
-        A path relative to your home directory, that
+        A path relative to your home directory, that 
         uses <a href="https://www.gnu.org/software/bash/manual/html_node/Tilde-Expansion.html">tilde (<code>~</code>) expansion</a>.
         such as <code>~/local/cache</code>.
       </p>
@@ -1323,8 +1323,8 @@ artifact_cache_size_limit = 52428800
 
     <li>
       <p>
-        A path that is relative to the root of your Buck project, such
-        as <strong><code>{call buck.buck_out_link /}/cache</code></strong>,
+        A path that is relative to the root of your Buck project, such 
+        as <strong><code>{call buck.buck_out_link /}/cache</code></strong>, 
         which is the <strong>default</strong>.
       </p>
     </li>
@@ -1398,7 +1398,7 @@ artifact_cache_size_limit = 52428800
   {param name: 'serve_local_cache' /}
   {param example_value: 'false' /}
   {param description}
-    Make the directory-based cache available to other hosts on the network
+    Make the directory-based cache available to other hosts on the network 
     via Buck's HTTP server (enabled under{sp} {call buckconfig.httpserver /}).
     <p>
       {call buckconfig.cache_mode /} must contain <code>dir</code>.
@@ -1424,8 +1424,8 @@ artifact_cache_size_limit = 52428800
   {param name: 'http_url' /}
   {param example_value: 'http://localhost:8080' /}
   {param description}
-    The URL to use to contact the cache when using http-based caching.
-    Buck communicates with the server using
+    The URL to use to contact the cache when using http-based caching.  
+    Buck communicates with the server using 
     a <a href="{ROOT}concept/http_cache_api.html">simple API</a>.
     <p>
       {call buckconfig.cache_mode /} must contain <code>http</code>.
@@ -1456,7 +1456,7 @@ artifact_cache_size_limit = 52428800
     <p>
       {call buckconfig.cache_mode /} must contain <code>http</code>.
     </p>
-  {/param}
+  {/param}             
 {/call}
 
 {call buckconfig.entry}
@@ -1533,8 +1533,8 @@ artifact_cache_size_limit = 52428800
   {param name: 'http_max_concurrent_writes' /}
   {param example_value: '1' /}
   {param description}
-    The number of writer threads to use to upload to the http cache when using http-based caching.
-    The default is{sp} <code>1</code>.  Note that when using multiple http caches (see below),
+    The number of writer threads to use to upload to the http cache when using http-based caching.  
+    The default is{sp} <code>1</code>.  Note that when using multiple http caches (see below), 
     the writer thread pool is shared between them all.
     <p>
       {call buckconfig.cache_mode /} must contain <code>http</code>.
@@ -1548,7 +1548,7 @@ artifact_cache_size_limit = 52428800
   {param example_value: '1800' /}
   {param description}
     The length of time to wait after the build completes for any remaining http cache uploads to
-    complete before forcefully shutting down the writer thread pool when using http-based caching.
+    complete before forcefully shutting down the writer thread pool when using http-based caching.  
     The default is{sp} <code>1800</code> (30 minutes).
     <p>
       {call buckconfig.cache_mode /} must contain <code>http</code>.
@@ -1673,7 +1673,7 @@ artifact_cache_size_limit = 52428800
   {param name: 'hybrid_thrift_endpoint' /}
   {param example_value: '/hybrid_endpoint' /}
   {param description}
-  The HTTP endpoint to call if using {call buck.concept_link}{param page:'http_cache_api' /}{param name:'Thrift over HTTP Cache API' /}{param navid:'thrift_http' /}{/call}.
+  The HTTP endpoint to call if using {call buck.concept_link}{param page:'http_cache_api' /}{param name:'Thrift over HTTP Cache API' /}{param navid:'thrift_http' /}{/call}. 
     <p>
       {call buckconfig.cache_mode /} must contain <code>thrift_over_http</code>.
     </p>
@@ -1685,7 +1685,7 @@ artifact_cache_size_limit = 52428800
   {param name: 'sqlite_inlined_size' /}
   {param example_value: '10kB' /}
   {param description}
-    The maximum size for artifacts to be inlined.
+    The maximum size for artifacts to be inlined.  
     The default size is 40B.
     <p>
       {call buckconfig.cache_mode /} must contain <code>sqlite</code>.
@@ -2032,12 +2032,12 @@ $ buck build //big:expensive-rule            # Action Graph is reused.</pre>
 
     <h4>C/C++ platform flavors in <code>.buckconfig</code></h4>
     <p>
-      Buck enables you to create additional platform <em>flavors</em> for
+      Buck enables you to create additional platform <em>flavors</em> for 
       C/C++ in <code>.buckconfig</code>. A platform flavor groups together a set of
       configuration parameters, which you can then reference at build time.
     </p>
     <p>
-      To create a new C/C++ platform flavor, add a section with the header
+      To create a new C/C++ platform flavor, add a section with the header 
     </p>
 
 <p>
@@ -2049,14 +2049,14 @@ $ buck build //big:expensive-rule            # Action Graph is reused.</pre>
 </p>
 
     <p>
-      to <code>.buckconfig</code>.
+      to <code>.buckconfig</code>. 
     </p>
 
     <p>
-      If you invoke Buck with the specified <em>flavor</em> appended
-      to the {sp}{call buck.build_target /}, Buck uses the values in
+      If you invoke Buck with the specified <em>flavor</em> appended 
+      to the {sp}{call buck.build_target /}, Buck uses the values in 
       this section instead of those in {sp}<code>[cxx]</code>.
-      For example, to build with the values
+      For example, to build with the values 
       in {sp}<code>[cxx#my-custom-flavor]</code> instead of <code>[cxx]</code>,
       you could invoke Buck using the following command:
     </p>
@@ -2070,12 +2070,12 @@ $ buck build app#my-custom-flavor
 </p>
 
     <p>
-      You can also use these platform flavors, in the <code>platform_*</code> arguments
+      You can also use these platform flavors, in the <code>platform_*</code> arguments 
       of the {call buck.cxx_binary /} and {call buck.cxx_library /} rules.
     </p>
 
     <p>
-      The <a href="https://github.com/fbsamples/bucksamples/tree/master/hello-buck-cxx">Buck sample for C++</a> demonstrates
+      The <a href="https://github.com/fbsamples/bucksamples/tree/master/hello-buck-cxx">Buck sample for C++</a> demonstrates 
       how to use a custom platform flavor.
     </p>
 
@@ -2347,7 +2347,7 @@ cxx_library(
   {param name: 'should_remap_host_platform' /}
   {param description}
     <p>
-      Specifies whether the <code>default</code> flavor should be remapped to the value of
+      Specifies whether the <code>default</code> flavor should be remapped to the value of 
       the {call buckconfig.cxx_host_platform /} configuration parameter.
     </p>
 
@@ -2368,8 +2368,8 @@ cxx_library(
       Because Buck is designed for cross-platform development, Buck
       normally ignores the host platform when building a target. For
       example, Buck normally builds the same Linux target irrespective
-      of whether Buck itself is running on, say, Linux or macOS.
-      The <code>should_remap_host_platform</code> configuration parameter
+      of whether Buck itself is running on, say, Linux or macOS. 
+      The <code>should_remap_host_platform</code> configuration parameter 
       enables you to change Buck's behavior so that Buck's target
       platform is the host platform on which Buck is running.
     </p>
@@ -2382,8 +2382,8 @@ cxx_library(
   {param name: 'host_platform' /}
   {param description}
     <p>
-      Specifies the host platform to use
-      if {call buckconfig.cxx_should_remap_host_platform /} is <code>true</code>.
+      Specifies the host platform to use 
+      if {call buckconfig.cxx_should_remap_host_platform /} is <code>true</code>.  
     </p>
 
     <p>
@@ -2437,8 +2437,8 @@ or the value could be a custom platform flavor:
 
 
     <p>
-      If <code>[cxx].should_remap_host_platform</code> is
-      unset&mdash;or explicitly set to <code>false</code>&mdash;then
+      If <code>[cxx].should_remap_host_platform</code> is 
+      unset&mdash;or explicitly set to <code>false</code>&mdash;then 
       Buck ignores the value of <code>host_platform</code></a>{sp}.
     </p>
 
@@ -2999,7 +2999,7 @@ or the value could be a custom platform flavor:
 {call buckconfig.section}
   {param name: 'incompatible' /}
   {param description}
-    This section controls features of buck that are in the process of being deprecated.
+    This section controls features of buck that are in the process of being deprecated. 
   {/param}
 {/call}
 
@@ -3477,7 +3477,7 @@ or the value could be a custom platform flavor:
   {param name: 'build_details_commands' /}
   {param example_value: 'build, test, install, query, targets' /}
   {param description}
-    If <a href="#log.build_details_template"><code>build_details_template</code></a> is provided,
+    If <a href="#log.build_details_template"><code>build_details_template</code></a> is provided, 
     Buck prints the specified string to the console for each of the specified list of
     commands. This can be useful for ensuring that users do not have too much information
     provided, but allows configuring log-heavy environments like CI systems to output more
@@ -3633,13 +3633,13 @@ your <code>.buckjavaargs</code> file</a>:
     <p>
       The version of the NDK that Buck should use to build native code.
       Buck searches for this version in the subdirectories beneath the
-      directory specified by either the <code>ANDROID_NDK_REPOSITORY</code> environment
+      directory specified by either the <code>ANDROID_NDK_REPOSITORY</code> environment 
       variable or the value of the {call buckconfig.ndk_ndk_repository_path /} property.
       Buck prefers an exact match, and otherwise accepts a prefix match.
     </p>
 
     <p>
-      NDKs with a version prior to <code>r11</code> store their version
+      NDKs with a version prior to <code>r11</code> store their version 
       in the file <code>RELEASE.TXT</code>. For example, in version r10c this
       file contains <code>r10c (64-bit)</code>. In this case, you would
       use <code>r10c</code> for the value of <code>ndk_version</code>.
@@ -3656,7 +3656,7 @@ your <code>.buckjavaargs</code> file</a>:
 
     <p>
       NDKs with a version after <code>r11</code> use a different format
-      for their version and store their version in the <code>Pkg.Revision</code> property
+      for their version and store their version in the <code>Pkg.Revision</code> property 
       of the file <code>source.properties</code>.  For example, this is the content of
       that file for version r13b:
     </p>
@@ -3679,7 +3679,7 @@ Pkg.Revision = 13.1.3345770
 <pre>
 {literal}
 [ndk]
-  ndk_version = 13.1.3345770
+  ndk_version = 13.1.3345770 
 {/literal}
 </pre>
 </p>
@@ -3702,13 +3702,13 @@ Pkg.Revision = 13.1.3345770
     </p>
 
     <ul>
-      <li><code>ANDROID_NDK</code></li>
-      <li><code>NDK_HOME</code></li>
+      <li><code>ANDROID_NDK</code></li> 
+      <li><code>NDK_HOME</code></li> 
     </ul>
 
     <p>
       Note that Buck gives precedence to the values of these environment
-      variables&mdash;in the order in which they are listed above&mdash;over
+      variables&mdash;in the order in which they are listed above&mdash;over 
       the value of this property in <code>.buckconfig</code>.
     </p>
   {/param}
@@ -3726,17 +3726,17 @@ Pkg.Revision = 13.1.3345770
     </p>
 
     <p>
-      Setting this property has the same effect as if you had set
+      Setting this property has the same effect as if you had set 
       the <code>ANDROID_NDK_REPOSITORY</code> environment variable to the
       same value. However, Buck gives precedence to the value of this
       environment variables over the value of this property in
       <code>.buckconfig</code>.
     </p>
     <p>
-      Buck selects which NDK to use based on the value of
+      Buck selects which NDK to use based on the value of 
       the {call buckconfig.ndk_ndk_version /} property.
-      Currently, if you do not specify a value for <code>ndk.ndk_version</code>,
-      Buck selects the most-recent NDK.  However, you should not rely on this
+      Currently, if you do not specify a value for <code>ndk.ndk_version</code>, 
+      Buck selects the most-recent NDK.  However, you should not rely on this 
       behavior as it could change in a future release.
     </p>
   {/param}
@@ -3838,9 +3838,9 @@ Pkg.Revision = 13.1.3345770
   {param name: 'cxx_runtime_type' /}
   {param example_value: 'dynamic' /}
   {param description}
-    When compiling {call buck.cxx_library /} rules, this specifies how libraries
-    are intended to be linked with the runtime. If this is <code>static</code>,
-    then the C/C++ runtime library will not be packaged in the APK.
+    When compiling {call buck.cxx_library /} rules, this specifies how libraries 
+    are intended to be linked with the runtime. If this is <code>static</code>, 
+    then the C/C++ runtime library will not be packaged in the APK.     
     Possible values are:
     <ul>
       <li><code>dynamic</code> (default)</li>
@@ -4114,7 +4114,7 @@ Pkg.Revision = 13.1.3345770
   {param description}
     <p>
       Configures how the <code>buck project</code> command responds if an
-      instance of Apple's Xcode IDE is running.
+      instance of Apple's Xcode IDE is running. 
     </p>
 
 <p>
@@ -4148,7 +4148,7 @@ Pkg.Revision = 13.1.3345770
     <p>
       To specify that Buck should respond in a way that is different
       than the <code>.buckconfig</code> setting, use the
-      <code>--config</code> command-line option.
+      <code>--config</code> command-line option. 
     <p>
 
 <pre>
@@ -4159,7 +4159,7 @@ buck project --config project.ide_force_kill=always
 </p>
 
     <p>
-      For more information about the <code>--config</code> option, see
+      For more information about the <code>--config</code> option, see 
       the {call buck.cmd_link}{param name: 'common_parameters' /}{param rendered_text: '<strong>Common Parameters</strong>' /}{/call} topic.
     </p>
 
@@ -4292,7 +4292,7 @@ buck project --config project.ide_force_kill=always
       configuration parameters, which you can then reference at build time.
     </p>
     <p>
-      To create a new Python platform flavor, add a section with the header
+      To create a new Python platform flavor, add a section with the header 
     </p>
 
 <p>
@@ -4304,11 +4304,11 @@ buck project --config project.ide_force_kill=always
 </p>
 
     <p>
-      to <code>.buckconfig</code>.
-      If you invoke Buck with the specified <em>flavor</em> appended
-      to the {sp}{call buck.build_target /}, Buck uses the values in
+      to <code>.buckconfig</code>. 
+      If you invoke Buck with the specified <em>flavor</em> appended 
+      to the {sp}{call buck.build_target /}, Buck uses the values in 
       this section instead of those in {sp}<code>[python]</code>.
-      For example, to build with the values
+      For example, to build with the values 
       in {sp}<code>[python#py3]</code> instead of <code>[python]</code>,
       you could invoke Buck using the following command:
     </p>
@@ -4324,13 +4324,13 @@ $ buck build app#py3
     <p>
       This is useful if, for example, you have both Python 2 and Python 3 code in
       your project and need to differentiate between them by changing the
-      value of the {sp}{call buckconfig.python_interpreter /}.
+      value of the {sp}{call buckconfig.python_interpreter /}. 
     </p>
 
     <p>
-    You can also use these platform flavors, in the <code>platform</code> argument of
-    the {call buck.ruleLink}{param name : 'python_binary' /}{/call} rule,
-    and in the <code>platform_sources</code> and <code>platform_resources</code> arguments
+    You can also use these platform flavors, in the <code>platform</code> argument of 
+    the {call buck.ruleLink}{param name : 'python_binary' /}{/call} rule, 
+    and in the <code>platform_sources</code> and <code>platform_resources</code> arguments 
     of the {call buck.ruleLink}{param name : 'python_library' /}{/call} rule.
     </p>
 
@@ -4514,7 +4514,7 @@ python -c "import platform; print( platform.python_version() )"
 
   <p>
     Lists the cells that constitute the Buck project. Buck builds that are
-    part of this project&mdash;that is, which use this <code>.buckconfig</code>&mdash;can
+    part of this project&mdash;that is, which use this <code>.buckconfig</code>&mdash;can 
     access the cells specified in this section.
   </p>
 
@@ -4529,9 +4529,9 @@ python -c "import platform; print( platform.python_version() )"
 </p>
 
   <p>
-    The string on the left-hand side of the equals sign is the <em>alias</em> for
+    The string on the left-hand side of the equals sign is the <em>alias</em> for 
     the cell. The string on the right-hand side of the equals sign is
-    the path to the cell from the directory that contains
+    the path to the cell from the directory that contains 
     this <code>.buckconfig</code> file.
   </p>
 
@@ -4549,7 +4549,7 @@ buck = .
 </p>
 
   <p>
-    You can view the contents of this section using
+    You can view the contents of this section using 
     the {call buck.cmd_link}{param name: 'audit' /}{param rendered_text: '<code>buck audit cell</code>' /}{/call} command.
   </p>
 
@@ -4560,7 +4560,7 @@ buck = .
   </p>
 
   <p>
-    For more information about the relationship between Buck projects, cells, and repositories, see
+    For more information about the relationship between Buck projects, cells, and repositories, see 
     the {call buck.key_concepts_link}{param rendered_text: 'Key Concepts' /}{/call} topic.
   </p>
 
@@ -5067,7 +5067,7 @@ buck = .
     to invoke ProGuard. This overrides the default ProGuard JAR file that would have been
     picked up from the Android SDK. Here is an example setting:
   {/param}
-  {param example_value : 'proguard/proguard.jar' /}
+  {param example_value : 'proguard/proguard-fork.jar' /}
 {/call}
 
 {call buckconfig.entry}
@@ -5147,7 +5147,7 @@ buck = .
   {param name: 'relativize_targets_to_working_directory' /}
   {param example_value: 'false' /}
   {param description}
-    Determines whether {call buck.build_target_pattern /}s provided on the command line
+    Determines whether {call buck.build_target_pattern /}s provided on the command line 
     are relativized to the current working directory. For example, if <code>buck build bar/...</code>
     is run from the <code>foo</code> subdirectory of the project, the pattern
     <code>//foo/bar/...</code> is built instead. If set to <code>false</code>, <code>//bar/...</code>
