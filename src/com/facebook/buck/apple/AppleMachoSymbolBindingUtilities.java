@@ -17,11 +17,16 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.objectfile.MachoDyldInfoCommand;
 import com.facebook.buck.cxx.toolchain.objectfile.MachoDyldInfoCommandReader;
 import com.facebook.buck.cxx.toolchain.objectfile.MachoExportTrieNode;
 import com.facebook.buck.cxx.toolchain.objectfile.MachoExportTrieReader;
+import com.facebook.buck.cxx.toolchain.objectfile.Machos;
 import com.facebook.buck.util.nio.ByteBufferUnmapper;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -32,9 +37,40 @@ import java.util.Optional;
 /** Utilities related to symbols in Mach-O executables. */
 public class AppleMachoSymbolBindingUtilities {
 
-  /** Computes the intersection of the input symbols and the exported symbols of a dylib. */
-  public static ImmutableList<String> computeExportedSymbolIntersection(
-      ImmutableList<String> allSymbols, AbsPath dylibPath) throws IOException {
+  private static final Logger LOG = Logger.get(AppleMachoSymbolBindingUtilities.class);
+
+  private static final AppleMachoSymbolBindingUtilities UTILITIES =
+      new AppleMachoSymbolBindingUtilities();
+
+  // This is a two-level map from dylibPath -> Mach-O UUID -> Export Trie. Aa two-level map is
+  // specifically used as it allows us to set a limit on the 2nd level cache, so it will perform
+  // automatic cache eviction on a _per dylib_ basis.
+  private final LoadingCache<AbsPath, LoadingCache<String, Optional<MachoExportTrieNode>>>
+      trieCache;
+
+  private AppleMachoSymbolBindingUtilities() {
+    this.trieCache =
+        CacheBuilder.newBuilder()
+            .build(
+                CacheLoader.from(
+                    dylibPath -> {
+                      return CacheBuilder.newBuilder()
+                          // Setting the maximum size to 1 means that we will only ever keep the
+                          // current
+                          // Mach-O export trie for any dylib. Effectively, for each incremental
+                          // build,
+                          // we will be recomputing the export trie for a dylib at most once.
+                          .maximumSize(1)
+                          .build(CacheLoader.from(unusedUuid -> tryReadingExportTrie(dylibPath)));
+                    }));
+  }
+
+  Optional<MachoExportTrieNode> getExportTrie(AbsPath dylibPath) throws IOException {
+    Optional<String> maybeUuid = Machos.getMachoUuid(dylibPath);
+    return maybeUuid.flatMap(uuid -> trieCache.getUnchecked(dylibPath).getUnchecked(uuid));
+  }
+
+  private static Optional<MachoExportTrieNode> tryReadingExportTrie(AbsPath dylibPath) {
     try (FileChannel file = FileChannel.open(dylibPath.getPath(), StandardOpenOption.READ)) {
       try (ByteBufferUnmapper unmapper =
           ByteBufferUnmapper.createUnsafe(
@@ -52,15 +88,26 @@ public class AppleMachoSymbolBindingUtilities {
                   dyldCommand.getExportInfoOffset(),
                   dyldCommand.getExportInfoSize());
 
-          if (maybeRootNode.isPresent()) {
-            // containsSymbol() operates on an immutable trie, so the filtering can be parallel.
-            return allSymbols
-                .parallelStream()
-                .filter(symbol -> maybeRootNode.get().containsSymbol(symbol))
-                .collect(ImmutableList.toImmutableList());
-          }
+          return maybeRootNode;
         }
       }
+    } catch (IOException e) {
+      LOG.error(e, String.format("Could not read Mach-O export trie at %s", dylibPath.toString()));
+    }
+
+    return Optional.empty();
+  }
+
+  /** Computes the intersection of the input symbols and the exported symbols of a dylib. */
+  public static ImmutableList<String> computeExportedSymbolIntersection(
+      ImmutableList<String> allSymbols, AbsPath dylibPath) throws IOException {
+    Optional<MachoExportTrieNode> maybeRootNode = UTILITIES.getExportTrie(dylibPath);
+    if (maybeRootNode.isPresent()) {
+      // containsSymbol() operates on an immutable trie, so the filtering can be parallel.
+      return allSymbols
+          .parallelStream()
+          .filter(symbol -> maybeRootNode.get().containsSymbol(symbol))
+          .collect(ImmutableList.toImmutableList());
     }
 
     return ImmutableList.of();
