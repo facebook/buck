@@ -195,8 +195,12 @@ public class RustLibraryDescription
       CrateType crateType;
 
       Linker.LinkableDepType depType;
+      RustPlatform rustPlatform =
+          RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args)
+              .resolve(graphBuilder, buildTarget.getTargetConfiguration());
 
       if (args.getProcMacro()) {
+        // XXX Do we care about overriding platform with proc-macro one?
         crateType = CrateType.PROC_MACRO;
       } else {
         crateType = type.get().getValue().getCrateType();
@@ -212,18 +216,14 @@ public class RustLibraryDescription
         }
       }
 
-      RustPlatform platform =
-          RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args)
-              .resolve(graphBuilder, buildTarget.getTargetConfiguration());
-
       Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
-          getRustcArgsEnv.apply(platform);
+          getRustcArgsEnv.apply(rustPlatform);
 
       return requireLibraryBuild(
           buildTarget,
           projectFilesystem,
           graphBuilder,
-          platform,
+          rustPlatform,
           rustBuckConfig,
           downwardApiConfig,
           argenv.getSecond(),
@@ -235,7 +235,7 @@ public class RustLibraryDescription
           args.getEdition(),
           depType,
           args,
-          allDeps.get(graphBuilder, platform.getCxxPlatform()),
+          allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
           args.getNamedDeps());
     } else {
       // Common case - we're being invoked to satisfy some other rule's dependency.
@@ -271,6 +271,12 @@ public class RustLibraryDescription
           // otherwise completely recompute it from the depType for all the normal crate types.
           if (isProcMacro()) {
             crateType = CrateType.PROC_MACRO;
+
+            // Always link a proc-macro's deps statically
+            depType = Linker.LinkableDepType.STATIC_PIC;
+
+            // Use the rustc plugin platform if one is defined
+            rustPlatform = rustPlatform.getRustcPluginPlatform().orElse(rustPlatform);
           } else if (wantCrateType.isCheck() || wantCrateType.isDoc()) {
             crateType = CrateType.CHECK;
           } else {

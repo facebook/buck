@@ -19,10 +19,12 @@ package com.facebook.buck.features.rust;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider.Type;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
@@ -30,15 +32,27 @@ import com.google.common.collect.ImmutableList;
 
 public class RustTestUtils {
 
+  static ImmutableRustPlatform.Builder makeRustPlatform() {
+    return ImmutableRustPlatform.builder()
+        .setRustCompiler(new ConstantToolProvider(new CommandTool.Builder().build()))
+        .setRustdoc(new ConstantToolProvider(new CommandTool.Builder().build()))
+        .setLinker(new ConstantToolProvider(new CommandTool.Builder().build()))
+        .setLinkerProvider(
+            new DefaultLinkerProvider(
+                Type.GNU, new ConstantToolProvider(new CommandTool.Builder().build()), true));
+  }
+
+  public static Flavor PLUGIN_FLAVOR = InternalFlavor.of("rustc-plugin");
+
+  public static CxxPlatform CXX_PLUGIN_PLATFORM =
+      CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(PLUGIN_FLAVOR);
+  public static RustPlatform RUST_PLUGIN_PLATFORM =
+      makeRustPlatform().setCxxPlatform(CXX_PLUGIN_PLATFORM).build();
+
   public static final RustPlatform DEFAULT_PLATFORM =
-      ImmutableRustPlatform.builder()
-          .setRustCompiler(new ConstantToolProvider(new CommandTool.Builder().build()))
-          .setRustdoc(new ConstantToolProvider(new CommandTool.Builder().build()))
-          .setLinker(new ConstantToolProvider(new CommandTool.Builder().build()))
-          .setLinkerProvider(
-              new DefaultLinkerProvider(
-                  Type.GNU, new ConstantToolProvider(new CommandTool.Builder().build()), true))
+      makeRustPlatform()
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+          .setRustcPluginPlatform(RUST_PLUGIN_PLATFORM)
           .build();
 
   public static final FlavorDomain<UnresolvedRustPlatform> DEFAULT_PLATFORMS =

@@ -24,6 +24,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -395,6 +396,7 @@ public class RustCompileUtils {
         target,
         projectFilesystem,
         filename,
+        rustPlatform,
         compiler,
         rustPlatform.getLinkerProvider().resolve(graphBuilder, target.getTargetConfiguration()),
         args.build(),
@@ -478,15 +480,20 @@ public class RustCompileUtils {
 
   /** Gets the {@link UnresolvedRustPlatform} for a target. */
   public static UnresolvedRustPlatform getRustPlatform(
-      RustToolchain rustToolchain, BuildTarget target, HasDefaultPlatform hasDefaultPlatform) {
+      RustToolchain rustToolchain, FlavorSet flavors, HasDefaultPlatform hasDefaultPlatform) {
     return rustToolchain
         .getRustPlatforms()
-        .getValue(target)
+        .getValue(flavors)
         .orElse(
             hasDefaultPlatform
                 .getDefaultPlatform()
                 .map(flavor -> rustToolchain.getRustPlatforms().getValue(flavor))
                 .orElseGet(rustToolchain::getDefaultRustPlatform));
+  }
+
+  public static UnresolvedRustPlatform getRustPlatform(
+      RustToolchain rustToolchain, BuildTarget target, HasDefaultPlatform hasDefaultPlatform) {
+    return getRustPlatform(rustToolchain, target.getFlavors(), hasDefaultPlatform);
   }
 
   static Iterable<BuildTarget> getPlatformParseTimeDeps(

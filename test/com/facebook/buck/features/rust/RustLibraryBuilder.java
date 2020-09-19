@@ -21,8 +21,11 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -33,20 +36,30 @@ public class RustLibraryBuilder
         RustLibraryDescription,
         RustLibrary> {
 
-  private RustLibraryBuilder(RustLibraryDescription description, BuildTarget target) {
-    super(description, target);
+  private RustLibraryBuilder(
+      RustLibraryDescription description,
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
+      ToolchainProvider toolchainProvider) {
+    super(description, target, projectFilesystem, toolchainProvider);
   }
 
-  public static RustLibraryBuilder from(String target) {
+  public static RustLibraryBuilder from(String target, ToolchainProvider toolchainProvider) {
     DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(FakeBuckConfig.empty());
     return new RustLibraryBuilder(
         new RustLibraryDescription(
-            new ToolchainProviderBuilder()
-                .withToolchain(RustToolchain.DEFAULT_NAME, RustTestUtils.DEFAULT_TOOLCHAIN)
-                .build(),
-            FakeRustConfig.FAKE_RUST_CONFIG,
-            downwardApiConfig),
-        BuildTargetFactory.newInstance(target));
+            toolchainProvider, FakeRustConfig.FAKE_RUST_CONFIG, downwardApiConfig),
+        BuildTargetFactory.newInstance(target),
+        new FakeProjectFilesystem(),
+        toolchainProvider);
+  }
+
+  public static RustLibraryBuilder from(String target) {
+    return from(
+        target,
+        new ToolchainProviderBuilder()
+            .withToolchain(RustToolchain.DEFAULT_NAME, RustTestUtils.DEFAULT_TOOLCHAIN)
+            .build());
   }
 
   public RustLibraryBuilder setSrcs(ImmutableSortedSet<SourcePath> srcs) {
@@ -62,6 +75,11 @@ public class RustLibraryBuilder
   public RustLibraryBuilder setPlatformDeps(
       PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps) {
     getArgForPopulating().setPlatformDeps(platformDeps);
+    return this;
+  }
+
+  public RustLibraryBuilder setProcMacro(boolean procMacro) {
+    getArgForPopulating().setProcMacro(procMacro);
     return this;
   }
 }

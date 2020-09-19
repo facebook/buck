@@ -35,15 +35,15 @@ public class RustToolchainFactory implements ToolchainFactory<RustToolchain> {
       ToolchainCreationContext context,
       TargetConfiguration toolchainTargetConfiguration) {
 
-    CxxPlatformsProvider cxxPlatformsProviderFactory =
+    CxxPlatformsProvider cxxPlatformsProvider =
         toolchainProvider.getByName(
             CxxPlatformsProvider.DEFAULT_NAME,
             toolchainTargetConfiguration,
             CxxPlatformsProvider.class);
     FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
-        cxxPlatformsProviderFactory.getUnresolvedCxxPlatforms();
+        cxxPlatformsProvider.getUnresolvedCxxPlatforms();
     UnresolvedCxxPlatform defaultCxxPlatform =
-        cxxPlatformsProviderFactory.getDefaultUnresolvedCxxPlatform();
+        cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform();
 
     RustPlatformFactory platformFactory =
         ImmutableRustPlatformFactory.ofImpl(context.getBuckConfig(), context.getExecutableFinder());
@@ -55,10 +55,11 @@ public class RustToolchainFactory implements ToolchainFactory<RustToolchain> {
                 // TODO: Allow overlaying flavor-specific section configuration.
                 .map(
                     cxxPlatform ->
-                        platformFactory.getPlatform(
-                            cxxPlatform.getFlavor().getName(),
-                            cxxPlatform,
-                            context.getProcessExecutor()))
+                        (UnresolvedRustPlatform)
+                            platformFactory.getPlatform(
+                                cxxPlatform.getFlavor().getName(),
+                                cxxPlatformsProvider,
+                                context.getProcessExecutor()))
                 .toImmutableList());
     UnresolvedRustPlatform defaultRustPlatform =
         rustPlatforms.getValue(defaultCxxPlatform.getFlavor());

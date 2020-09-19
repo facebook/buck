@@ -44,6 +44,7 @@ public class RustBuckConfig {
   private static final String RUSTC_INCREMENTAL = "incremental";
   private static final String DEFAULT_EDITION = "default_edition";
   private static final String EXTERN_LOCATIONS = "extern_locations";
+  private static final String RUSTC_PLUGIN_PLATFORM = "rustc_plugin_platform";
 
   enum RemapSrcPaths {
     NO, // no path remapping
@@ -80,9 +81,13 @@ public class RustBuckConfig {
     return Optional.empty();
   }
 
+  private static String platformSection(String platform) {
+    return SECTION + '#' + platform;
+  }
+
   private ImmutableList<String> getFlags(String platform, String field, char delim) {
-    return delegate.getValue(SECTION + '#' + platform, field).isPresent()
-        ? delegate.getListWithoutComments(SECTION + '#' + platform, field, delim)
+    return delegate.getValue(platformSection(platform), field).isPresent()
+        ? delegate.getListWithoutComments(platformSection(platform), field, delim)
         : delegate.getListWithoutComments(SECTION, field, delim);
   }
 
@@ -92,7 +97,7 @@ public class RustBuckConfig {
 
   private Optional<ToolProvider> getRustTool(String platform, String field) {
     return firstOf(
-        () -> delegate.getView(ToolConfig.class).getToolProvider(SECTION + '#' + platform, field),
+        () -> delegate.getView(ToolConfig.class).getToolProvider(platformSection(platform), field),
         () -> delegate.getView(ToolConfig.class).getToolProvider(SECTION, field));
   }
 
@@ -102,6 +107,18 @@ public class RustBuckConfig {
 
   public Optional<ToolProvider> getRustdoc(String platform) {
     return getRustTool(platform, "rustdoc");
+  }
+
+  /**
+   * Get platform name suitable for building rustc plugins/procedual macros. This platform is
+   * configured to be compatible with the way rustc itself was built - same architecture, compiler
+   * flags, etc.
+   *
+   * @param platform for which we're getting the corresponding plugin platform
+   * @return Plugin platform name,
+   */
+  public Optional<String> getRustcPluginPlatform(String platform) {
+    return delegate.getValue(platformSection(platform), RUSTC_PLUGIN_PLATFORM);
   }
 
   /**
@@ -178,7 +195,7 @@ public class RustBuckConfig {
     return firstOf(
         () ->
             delegate.getEnum(
-                SECTION + '#' + platform, "linker_platform", LinkerProvider.Type.class),
+                platformSection(platform), "linker_platform", LinkerProvider.Type.class),
         () -> delegate.getEnum(SECTION, "linker_platform", LinkerProvider.Type.class));
   }
 
@@ -250,7 +267,7 @@ public class RustBuckConfig {
    */
   Optional<String> getIncremental(String platform) {
     return firstOf(
-        () -> delegate.getValue(SECTION + "#" + platform, RUSTC_INCREMENTAL),
+        () -> delegate.getValue(platformSection(platform), RUSTC_INCREMENTAL),
         () -> delegate.getValue(SECTION, RUSTC_INCREMENTAL));
   }
 

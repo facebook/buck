@@ -57,6 +57,7 @@ import java.util.Optional;
 
 /** Generate a rustc command line with all appropriate dependencies in place. */
 public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
+  private final RustPlatform rustPlatform;
 
   /**
    * Work out how to invoke the Rust compiler, rustc.
@@ -81,6 +82,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
       String filename,
+      RustPlatform rustPlatform,
       Tool compiler,
       Linker linker,
       ImmutableList<Arg> args,
@@ -110,6 +112,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
             remapSrcPaths,
             xcrunSdkPath,
             withDownwardApi));
+    this.rustPlatform = rustPlatform;
   }
 
   public static RustCompileRule from(
@@ -117,6 +120,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       String filename,
+      RustPlatform rustPlatform,
       Tool compiler,
       Linker linker,
       ImmutableList<Arg> args,
@@ -133,6 +137,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         projectFilesystem,
         ruleFinder,
         filename,
+        rustPlatform,
         compiler,
         linker,
         args,
@@ -144,6 +149,10 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         remapSrcPaths,
         xcrunSdkPath,
         withDownwardApi);
+  }
+
+  public RustPlatform getRustPlatform() {
+    return rustPlatform;
   }
 
   protected static RelPath getOutputDir(BuildTarget target, ProjectFilesystem filesystem) {

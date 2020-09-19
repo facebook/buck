@@ -19,6 +19,7 @@ package com.facebook.buck.features.rust;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
@@ -26,6 +27,7 @@ import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
@@ -52,27 +54,31 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
   private static final Path RUSTDOC = Paths.get("rustdoc");
 
   private final RustBuckConfig rustBuckConfig;
-  private final String name;
+  private final String platformName;
   private final ToolProvider rustCompiler;
   private final ToolProvider rustdoc;
   private final Optional<ToolProvider> linkerOverride;
   private final UnresolvedCxxPlatform unresolvedCxxPlatform;
   private final @Nullable ProcessExecutor processExecutor;
+  private final Optional<ConfigBasedUnresolvedRustPlatform> unresolvedPluginPlatform;
 
   private static final Logger LOG = Logger.get(RustBuckConfig.class);
 
   ConfigBasedUnresolvedRustPlatform(
-      String name,
+      String platformName,
       BuckConfig buckConfig,
       ExecutableFinder executableFinder,
-      UnresolvedCxxPlatform unresolvedCxxPlatform,
+      CxxPlatformsProvider cxxPlatformsProvider,
+      RustPlatformFactory platformFactory,
       @Nullable ProcessExecutor processExecutor) {
     this.rustBuckConfig = new RustBuckConfig(buckConfig);
-    this.name = name;
-    this.unresolvedCxxPlatform = unresolvedCxxPlatform;
+    this.platformName = platformName;
+    this.unresolvedCxxPlatform =
+        cxxPlatformsProvider.getUnresolvedCxxPlatforms().getValue(InternalFlavor.of(platformName));
+
     this.rustCompiler =
         rustBuckConfig
-            .getRustCompiler(name)
+            .getRustCompiler(platformName)
             .orElseGet(
                 () -> {
                   HashedFileTool tool =
@@ -86,7 +92,7 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
 
     this.rustdoc =
         rustBuckConfig
-            .getRustdoc(name)
+            .getRustdoc(platformName)
             .orElseGet(
                 () -> {
                   HashedFileTool tool =
@@ -97,13 +103,24 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
                                       RUSTDOC, buckConfig.getEnvironment())));
                   return new ConstantToolProvider(tool);
                 });
-    this.linkerOverride = rustBuckConfig.getRustLinker(name);
+    this.linkerOverride = rustBuckConfig.getRustLinker(platformName);
     this.processExecutor = processExecutor;
+
+    this.unresolvedPluginPlatform =
+        rustBuckConfig
+            .getRustcPluginPlatform(platformName)
+            .map(
+                plugPlat ->
+                    platformFactory.getPlatform(plugPlat, cxxPlatformsProvider, processExecutor));
   }
 
   @Override
   public RustPlatform resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
     CxxPlatform cxxPlatform = unresolvedCxxPlatform.resolve(resolver, targetConfiguration);
+
+    Optional<RustPlatform> pluginPlatform =
+        unresolvedPluginPlatform.map(plugPlat -> plugPlat.resolve(resolver, targetConfiguration));
+
     LinkerProvider linkerProvider =
         linkerOverride
             .map(
@@ -111,43 +128,45 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
                     (LinkerProvider)
                         new DefaultLinkerProvider(
                             rustBuckConfig
-                                .getLinkerPlatform(name)
+                                .getLinkerPlatform(platformName)
                                 .orElse(cxxPlatform.getLd().getType()),
                             tp,
                             true))
             .orElseGet(cxxPlatform::getLd);
+
     ImmutableRustPlatform.Builder builder =
         ImmutableRustPlatform.builder()
             .setRustCompiler(rustCompiler)
             .setRustdoc(rustdoc)
             .addAllRustLibraryFlags(
-                rustBuckConfig.getRustcLibraryFlags(name).stream()
+                rustBuckConfig.getRustcLibraryFlags(platformName).stream()
                     .map(StringArg::of)
                     .collect(ImmutableList.toImmutableList()))
             .addAllRustBinaryFlags(
-                rustBuckConfig.getRustcBinaryFlags(name).stream()
+                rustBuckConfig.getRustcBinaryFlags(platformName).stream()
                     .map(StringArg::of)
                     .collect(ImmutableList.toImmutableList()))
             .addAllRustTestFlags(
-                rustBuckConfig.getRustcTestFlags(name).stream()
+                rustBuckConfig.getRustcTestFlags(platformName).stream()
                     .map(StringArg::of)
                     .collect(ImmutableList.toImmutableList()))
             .addAllRustCheckFlags(
-                rustBuckConfig.getRustcCheckFlags(name).stream()
+                rustBuckConfig.getRustcCheckFlags(platformName).stream()
                     .map(StringArg::of)
                     .collect(ImmutableList.toImmutableList()))
             .addAllRustDocFlags(
-                rustBuckConfig.getRustDocFlags(name).stream()
+                rustBuckConfig.getRustDocFlags(platformName).stream()
                     .map(StringArg::of)
                     .collect(ImmutableList.toImmutableList()))
             .setLinker(linkerOverride)
             .setLinkerProvider(linkerProvider)
             .addAllLinkerArgs(
-                rustBuckConfig.getLinkerFlags(name).stream()
+                rustBuckConfig.getLinkerFlags(platformName).stream()
                     .map(StringArg::of)
                     .collect(ImmutableList.toImmutableList()))
             .setCxxPlatform(cxxPlatform)
-            .setXcrunSdkPath(computeXcrunSdkPath(cxxPlatform.getFlavor()));
+            .setXcrunSdkPath(computeXcrunSdkPath(cxxPlatform.getFlavor()))
+            .setRustcPluginPlatform(pluginPlatform);
 
     if (!linkerOverride.isPresent()) {
       builder.addAllLinkerArgs(cxxPlatform.getLdflags());
@@ -161,14 +180,22 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
     return unresolvedCxxPlatform.getFlavor();
   }
 
-  @Override
-  public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-    Builder<BuildTarget> deps =
-        ImmutableList.<BuildTarget>builder()
-            .addAll(unresolvedCxxPlatform.getParseTimeDeps(targetConfiguration));
+  private void addParseTimeDeps(
+      Builder<BuildTarget> deps, TargetConfiguration targetConfiguration) {
+    deps.addAll(unresolvedCxxPlatform.getParseTimeDeps(targetConfiguration));
     deps.addAll(rustCompiler.getParseTimeDeps(targetConfiguration));
     deps.addAll(rustdoc.getParseTimeDeps(targetConfiguration));
     linkerOverride.ifPresent(l -> deps.addAll(l.getParseTimeDeps(targetConfiguration)));
+  }
+
+  @Override
+  public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
+    Builder<BuildTarget> deps = ImmutableList.<BuildTarget>builder();
+
+    addParseTimeDeps(deps, targetConfiguration);
+    unresolvedPluginPlatform.ifPresent(
+        plugPlat -> plugPlat.addParseTimeDeps(deps, targetConfiguration));
+
     return deps.build();
   }
 

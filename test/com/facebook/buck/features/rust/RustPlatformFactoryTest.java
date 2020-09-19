@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.AllExistingProjectFilesystem;
@@ -53,7 +52,7 @@ public class RustPlatformFactoryTest {
             new AlwaysFoundExecutableFinder());
     RustPlatform platform =
         factory
-            .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, null)
+            .getPlatform("default", RustAssumptions.getCxxPlatformsProvider(), null)
             .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         platform

@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.util.ProcessExecutor.Result;
@@ -34,13 +35,18 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 
 abstract class RustAssumptions {
+  public static CxxPlatformsProvider getCxxPlatformsProvider() {
+    return CxxPlatformsProvider.of(
+        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS);
+  }
+
   public static void assumeRustIsConfigured() {
     assumeFalse(Platform.detect() == Platform.WINDOWS);
 
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     RustPlatform rustPlatform =
         ImmutableRustPlatformFactory.ofImpl(FakeBuckConfig.empty(), new ExecutableFinder())
-            .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, null)
+            .getPlatform("default", getCxxPlatformsProvider(), null)
             .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE);
     Throwable exception = null;
     try {
@@ -59,7 +65,7 @@ abstract class RustAssumptions {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     RustPlatform rustPlatform =
         ImmutableRustPlatformFactory.ofImpl(FakeBuckConfig.empty(), new ExecutableFinder())
-            .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, null)
+            .getPlatform("default", getCxxPlatformsProvider(), null)
             .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE);
     ImmutableList<String> rustc =
         rustPlatform
@@ -76,7 +82,7 @@ abstract class RustAssumptions {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     RustPlatform rustPlatform =
         ImmutableRustPlatformFactory.ofImpl(FakeBuckConfig.empty(), new ExecutableFinder())
-            .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, null)
+            .getPlatform("default", getCxxPlatformsProvider(), null)
             .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE);
     ImmutableList<String> rustc =
         rustPlatform

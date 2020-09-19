@@ -237,6 +237,7 @@ public class RustCompileTest {
           new FakeProjectFilesystem(),
           ruleFinder,
           String.format("lib%s.rlib", target.getShortName()),
+          RustTestUtils.DEFAULT_PLATFORM,
           fakeTool(),
           fakeLinker(),
           Stream.of("--crate-name", target.getShortName(), "--crate-type", "rlib")

@@ -18,7 +18,7 @@ package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.util.ProcessExecutor;
 import javax.annotation.Nullable;
@@ -31,9 +31,11 @@ public abstract class RustPlatformFactory {
   abstract ExecutableFinder getExecutableFinder();
 
   /** @return a {@link RustPlatform} from the given config subsection name. */
-  public UnresolvedRustPlatform getPlatform(
-      String name, UnresolvedCxxPlatform cxxPlatform, @Nullable ProcessExecutor processExecutor) {
+  public ConfigBasedUnresolvedRustPlatform getPlatform(
+      String name,
+      CxxPlatformsProvider cxxPlatformsProvider,
+      @Nullable ProcessExecutor processExecutor) {
     return new ConfigBasedUnresolvedRustPlatform(
-        name, getBuckConfig(), getExecutableFinder(), cxxPlatform, processExecutor);
+        name, getBuckConfig(), getExecutableFinder(), cxxPlatformsProvider, this, processExecutor);
   }
 }

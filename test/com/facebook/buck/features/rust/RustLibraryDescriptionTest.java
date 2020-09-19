@@ -30,6 +30,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.cxx.CxxGenruleBuilder;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
@@ -82,5 +83,30 @@ public class RustLibraryDescriptionTest {
     assertThat(
         rule.getRustLinkableDeps(RustTestUtils.DEFAULT_PLATFORM),
         Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));
+  }
+
+  @Test
+  public void pluginPlatform() {
+    RustLibraryBuilder procMacroBuilder =
+        RustLibraryBuilder.from("//:proc-macro")
+            .setProcMacro(true)
+            .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("lib.rs")));
+    RustLibraryBuilder libBuilder =
+        RustLibraryBuilder.from("//:lib#default,rlib")
+            .setDeps(ImmutableSortedSet.of(procMacroBuilder.getTarget()))
+            .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("lib.rs")));
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(procMacroBuilder.build(), libBuilder.build());
+
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    RustCompileRule rule = (RustCompileRule) graphBuilder.requireRule(libBuilder.getTarget());
+
+    assertThat(
+        RichStream.from(rule.getBuildDeps())
+            .filter(RustCompileRule.class::isInstance)
+            .map(dep -> ((RustCompileRule) dep).getRustPlatform().getFlavor())
+            .toImmutableSet(),
+        Matchers.hasItems(RustTestUtils.PLUGIN_FLAVOR));
   }
 }

@@ -92,4 +92,10 @@ interface RustPlatform extends FlavorConvertible {
   CxxPlatform getCxxPlatform();
 
   Optional<Path> getXcrunSdkPath();
+
+  /**
+   * Get the corresponding platform for compiling rustc plugins/proc-macros. If there isn't one
+   * defined, then the caller should use this platform instance.
+   */
+  Optional<RustPlatform> getRustcPluginPlatform();
 }
