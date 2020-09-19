@@ -356,7 +356,8 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     for (Path output : outputs) {
       // Don't delete paths that are invalid now; leave it to the Buildable to handle this.
       if (!isValidOutputPath(filesystem, output)
-          || MostFiles.shouldSkipDeletingPath(output, excludedFullPaths)) {
+          || (!excludedFullPaths.isEmpty()
+              && MostFiles.shouldSkipDeletingPath(filesystem.resolve(output), excludedFullPaths))) {
         continue;
       }
 

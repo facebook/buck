@@ -221,6 +221,8 @@ public final class MostFiles {
    * "/a/f/g, then the function returns {@code false}.
    */
   public static boolean shouldSkipDeletingPath(Path path, ImmutableSet<Path> excludedPaths) {
+    Preconditions.checkArgument(path.isAbsolute());
+
     if (excludedPaths.contains(path)) {
       return true;
     }
@@ -281,7 +283,7 @@ public final class MostFiles {
               public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                   throws IOException {
                 try {
-                  if (!shouldSkipDeletingPath(file, excludedPaths)) {
+                  if (!shouldSkipDeletingPath(file.toAbsolutePath(), excludedPaths)) {
                     Files.delete(file);
                   } else {
                     skipDeletingParentsOf.accept(file);
@@ -303,7 +305,7 @@ public final class MostFiles {
                           && dir.equals(path))
                       && !nonEmptyDirectories.contains(dir)) {
                     try {
-                      if (!shouldSkipDeletingPath(dir, excludedPaths)) {
+                      if (!shouldSkipDeletingPath(dir.toAbsolutePath(), excludedPaths)) {
                         Files.delete(dir);
                       } else {
                         skipDeletingParentsOf.accept(dir);
