@@ -89,6 +89,9 @@ public class AppleMachoSymbolBindingUtilities {
                   dyldCommand.getExportInfoSize());
 
           return maybeRootNode;
+        } else {
+          LOG.error(
+              "Could not read Mach-O DYLD_INFO_COMMAND for dylib at path: ", dylibPath.toString());
         }
       }
     } catch (IOException e) {
@@ -98,18 +101,20 @@ public class AppleMachoSymbolBindingUtilities {
     return Optional.empty();
   }
 
-  /** Computes the intersection of the input symbols and the exported symbols of a dylib. */
-  public static ImmutableList<String> computeExportedSymbolIntersection(
+  /**
+   * Computes the intersection of the input symbols and the exported symbols of a dylib. An empty
+   * optional is returned if there's a failure in reading the exported symbols.
+   */
+  public static Optional<ImmutableList<String>> computeExportedSymbolIntersection(
       ImmutableList<String> allSymbols, AbsPath dylibPath) throws IOException {
     Optional<MachoExportTrieNode> maybeRootNode = UTILITIES.getExportTrie(dylibPath);
-    if (maybeRootNode.isPresent()) {
-      // containsSymbol() operates on an immutable trie, so the filtering can be parallel.
-      return allSymbols
-          .parallelStream()
-          .filter(symbol -> maybeRootNode.get().containsSymbol(symbol))
-          .collect(ImmutableList.toImmutableList());
-    }
 
-    return ImmutableList.of();
+    return maybeRootNode.map(
+        rootNode ->
+            allSymbols
+                .parallelStream()
+                // containsSymbol() operates on an immutable trie, so the filtering can be parallel.
+                .filter(symbol -> rootNode.containsSymbol(symbol))
+                .collect(ImmutableList.toImmutableList()));
   }
 }

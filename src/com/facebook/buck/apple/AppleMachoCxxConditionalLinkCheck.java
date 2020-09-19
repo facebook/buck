@@ -396,14 +396,16 @@ public class AppleMachoCxxConditionalLinkCheck extends AbstractExecutionStep {
     // Compute candidate symbol binding using the information from the current dylibs and compare
     // against the same computation from the previous link.
 
-    ImmutableMap<String, ImmutableList<String>> changedDylibsCandidateBoundSymbols =
+    Optional<ImmutableMap<String, ImmutableList<String>>> maybeChangedDylibsCandidateBoundSymbols =
         AppleMachoConditionalLinkWriteInfo.computeCandidateBoundSymbols(
             relinkInfo.getExecutableBoundSymbols(), changedDylibPaths.build(), filesystem);
+
     ImmutableMap<String, ImmutableList<String>> previousCandidateBoundSymbols =
         relinkInfo.getCandidateBoundSymbols();
 
-    if (boundSymbolSetsAreEqual(
-        changedDylibsCandidateBoundSymbols, previousCandidateBoundSymbols)) {
+    if (maybeChangedDylibsCandidateBoundSymbols.isPresent()
+        && boundSymbolSetsAreEqual(
+            maybeChangedDylibsCandidateBoundSymbols.get(), previousCandidateBoundSymbols)) {
       // Relinking can be skipped as there's no movement of bound symbols within the dylibs,
       // need to update info with the latest input file hashes +
       AppleCxxConditionalLinkInfo updatedInfo =

@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -141,23 +140,26 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
         computeBoundSymbolsToDependentLibraries(uuidAndBindSymbols.getSecond());
 
     ImmutableList<RelPath> dylibPaths = dylibPathsBuilder.build();
-    ImmutableMap<String, ImmutableList<String>> candidateSymbols =
+    Optional<ImmutableMap<String, ImmutableList<String>>> maybeCandidateSymbols =
         computeCandidateBoundSymbols(allBindSymbolNames, dylibPaths, filesystem);
 
-    ImmutableList<String> dylibs =
-        dylibPaths.stream().map(path -> path.toString()).collect(ImmutableList.toImmutableList());
-
-    return Optional.of(
-        AppleCxxConditionalLinkInfo.of(
-            uuidAndBindSymbols.getFirst(),
-            inputPathToHashMapBuilder.build(),
-            argfileHash,
-            filelistHash,
-            allBindSymbolNames,
-            dylibs,
-            candidateSymbols,
-            environment,
-            commandPrefix));
+    return maybeCandidateSymbols.map(
+        candidateSymbols -> {
+          ImmutableList<String> dylibs =
+              dylibPaths.stream()
+                  .map(path -> path.toString())
+                  .collect(ImmutableList.toImmutableList());
+          return AppleCxxConditionalLinkInfo.of(
+              uuidAndBindSymbols.getFirst(),
+              inputPathToHashMapBuilder.build(),
+              argfileHash,
+              filelistHash,
+              allBindSymbolNames,
+              dylibs,
+              candidateSymbols,
+              environment,
+              commandPrefix);
+        });
   }
 
   /**
@@ -223,9 +225,10 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
 
   /**
    * For each dylib, computes the intersection between {@code allBoundSymbols} and the exported
-   * symbols in the dylib.
+   * symbols in the dylib. If an empty optional is returned, it means that the exported symbols of
+   * at least one of the dylibs could not be determined.
    */
-  public static ImmutableMap<String, ImmutableList<String>> computeCandidateBoundSymbols(
+  public static Optional<ImmutableMap<String, ImmutableList<String>>> computeCandidateBoundSymbols(
       ImmutableList<String> allBoundSymbols,
       ImmutableList<RelPath> dylibPaths,
       ProjectFilesystem filesystem) {
@@ -236,17 +239,24 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
         .parallelStream()
         .map(
             dylibPath -> {
-              ImmutableList<String> candidateSymbols;
+              Optional<ImmutableList<String>> candidateSymbols;
               try {
                 candidateSymbols =
                     AppleMachoSymbolBindingUtilities.computeExportedSymbolIntersection(
                         allBoundSymbols, filesystem.resolve(dylibPath));
               } catch (IOException e) {
-                throw new HumanReadableException(
-                    "Failed to compute exported symbol intersection with %s", dylibPath.toString());
+                LOG.error(
+                    e,
+                    String.format(
+                        "Failed to compute exported symbol intersection with %s",
+                        dylibPath.toString()));
+                candidateSymbols = Optional.empty();
               }
-              return new Pair<>(dylibPath, candidateSymbols);
+
+              return candidateSymbols.map(symbols -> new Pair<>(dylibPath, symbols));
             })
+        .filter(Optional::isPresent)
+        .map(Optional::get)
         .forEachOrdered(
             pair -> {
               RelPath dylibPath = pair.getFirst();
@@ -254,7 +264,15 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
               candidateSymbolsBuilder.put(dylibPath.toString(), candidateSymbols);
             });
 
-    return candidateSymbolsBuilder.build();
+    ImmutableMap<String, ImmutableList<String>> dylibsToSymbolsMap =
+        candidateSymbolsBuilder.build();
+    if (dylibsToSymbolsMap.size() != dylibsToSymbolsMap.size()) {
+      // Reading candidate symbols for a particular dylib must have failed, so we need to signal
+      // the failure appropriately so the higher levels can either error out or fallback.
+      return Optional.empty();
+    }
+
+    return Optional.of(dylibsToSymbolsMap);
   }
 
   /** Reads the Mach-O UUID from an executable. */
