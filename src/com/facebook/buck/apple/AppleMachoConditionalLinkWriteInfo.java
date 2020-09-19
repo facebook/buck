@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -227,17 +228,31 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
   public static ImmutableMap<String, ImmutableList<String>> computeCandidateBoundSymbols(
       ImmutableList<String> allBoundSymbols,
       ImmutableList<RelPath> dylibPaths,
-      ProjectFilesystem filesystem)
-      throws IOException {
+      ProjectFilesystem filesystem) {
     ImmutableMap.Builder<String, ImmutableList<String>> candidateSymbolsBuilder =
         ImmutableMap.builder();
 
-    for (RelPath dylibPath : dylibPaths) {
-      ImmutableList<String> candidateSymbols =
-          AppleMachoSymbolBindingUtilities.computeExportedSymbolIntersection(
-              allBoundSymbols, filesystem.resolve(dylibPath));
-      candidateSymbolsBuilder.put(dylibPath.toString(), candidateSymbols);
-    }
+    dylibPaths
+        .parallelStream()
+        .map(
+            dylibPath -> {
+              ImmutableList<String> candidateSymbols;
+              try {
+                candidateSymbols =
+                    AppleMachoSymbolBindingUtilities.computeExportedSymbolIntersection(
+                        allBoundSymbols, filesystem.resolve(dylibPath));
+              } catch (IOException e) {
+                throw new HumanReadableException(
+                    "Failed to compute exported symbol intersection with %s", dylibPath.toString());
+              }
+              return new Pair<>(dylibPath, candidateSymbols);
+            })
+        .forEachOrdered(
+            pair -> {
+              RelPath dylibPath = pair.getFirst();
+              ImmutableList<String> candidateSymbols = pair.getSecond();
+              candidateSymbolsBuilder.put(dylibPath.toString(), candidateSymbols);
+            });
 
     return candidateSymbolsBuilder.build();
   }
