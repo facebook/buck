@@ -61,7 +61,9 @@ public class AppleMachoSymbolBindingUtilities {
                           // build,
                           // we will be recomputing the export trie for a dylib at most once.
                           .maximumSize(1)
-                          .build(CacheLoader.from(unusedUuid -> tryReadingExportTrie(dylibPath)));
+                          .build(
+                              CacheLoader.from(
+                                  dylibUuid -> tryReadingExportTrie(dylibPath, dylibUuid)));
                     }));
   }
 
@@ -70,7 +72,8 @@ public class AppleMachoSymbolBindingUtilities {
     return maybeUuid.flatMap(uuid -> trieCache.getUnchecked(dylibPath).getUnchecked(uuid));
   }
 
-  private static Optional<MachoExportTrieNode> tryReadingExportTrie(AbsPath dylibPath) {
+  private static Optional<MachoExportTrieNode> tryReadingExportTrie(
+      AbsPath dylibPath, String uuid) {
     try (FileChannel file = FileChannel.open(dylibPath.getPath(), StandardOpenOption.READ)) {
       try (ByteBufferUnmapper unmapper =
           ByteBufferUnmapper.createUnsafe(
@@ -88,6 +91,8 @@ public class AppleMachoSymbolBindingUtilities {
                   dyldCommand.getExportInfoOffset(),
                   dyldCommand.getExportInfoSize());
 
+          LOG.info(
+              "Computed export trie for dylib with UUID '%s' at: '%s'", uuid, dylibPath.toString());
           return maybeRootNode;
         } else {
           LOG.error(
