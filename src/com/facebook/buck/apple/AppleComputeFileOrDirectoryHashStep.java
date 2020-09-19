@@ -19,22 +19,18 @@ package com.facebook.buck.apple;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.cxx.toolchain.objectfile.Machos;
-import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
-import java.nio.channels.FileChannel;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 
@@ -139,7 +135,7 @@ public class AppleComputeFileOrDirectoryHashStep extends AbstractExecutionStep {
 
   private String computeFileHashString(AbsPath filePath) throws IOException {
     if (useMachoUuid) {
-      Optional<String> maybeUuid = getMachoUuid(filePath);
+      Optional<String> maybeUuid = Machos.getMachoUuid(filePath);
       if (maybeUuid.isPresent()) {
         return "uuid:" + maybeUuid.get();
       }
@@ -149,31 +145,5 @@ public class AppleComputeFileOrDirectoryHashStep extends AbstractExecutionStep {
     // In order to guarantee no collisions between Mach-O and non-Mach-O files,
     // we namespace them with a suitable prefix.
     return (useMachoUuid ? "sha1:" : "") + sha1;
-  }
-
-  private static Optional<String> getMachoUuid(AbsPath path) throws IOException {
-    try (FileChannel file = FileChannel.open(path.getPath(), StandardOpenOption.READ)) {
-      if (!Machos.isMacho(file)) {
-        return Optional.empty();
-      }
-
-      try (ByteBufferUnmapper unmapper =
-          ByteBufferUnmapper.createUnsafe(
-              file.map(FileChannel.MapMode.READ_ONLY, 0, file.size()))) {
-
-        try {
-          Optional<byte[]> maybeUuid = Machos.getUuidIfPresent(unmapper.getByteBuffer());
-          if (maybeUuid.isPresent()) {
-            String hexBytes = ObjectFileScrubbers.bytesToHex(maybeUuid.get(), true);
-            return Optional.of(hexBytes);
-          }
-        } catch (Machos.MachoException e) {
-          // Even though it's a Mach-O file, we failed to read it safely
-          throw new RuntimeException("Internal Mach-O file parsing failure");
-        }
-
-        return Optional.empty();
-      }
-    }
   }
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.objectfile;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.util.ObjectFileCommonModificationDate;
 import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import com.google.common.base.Preconditions;
@@ -27,6 +28,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -65,6 +67,36 @@ public class Machos {
   private static final int NO_VALUE_MARKER = -1;
 
   private Machos() {}
+
+  /**
+   * Extracts the UUID from a Mach-O file, if the file at the given path is not a Mach-O file, it
+   * returns an empty optional.
+   */
+  public static Optional<String> getMachoUuid(AbsPath path) throws IOException {
+    try (FileChannel file = FileChannel.open(path.getPath(), StandardOpenOption.READ)) {
+      if (!Machos.isMacho(file)) {
+        return Optional.empty();
+      }
+
+      try (ByteBufferUnmapper unmapper =
+          ByteBufferUnmapper.createUnsafe(
+              file.map(FileChannel.MapMode.READ_ONLY, 0, file.size()))) {
+
+        try {
+          Optional<byte[]> maybeUuid = Machos.getUuidIfPresent(unmapper.getByteBuffer());
+          if (maybeUuid.isPresent()) {
+            String hexBytes = ObjectFileScrubbers.bytesToHex(maybeUuid.get(), true);
+            return Optional.of(hexBytes);
+          }
+        } catch (Machos.MachoException e) {
+          // Even though it's a Mach-O file, we failed to read it safely
+          throw new RuntimeException("Internal Mach-O file parsing failure");
+        }
+
+        return Optional.empty();
+      }
+    }
+  }
 
   /**
    * Returns the UUID of the Mach-O file, if present. If it's not a Mach-O file, it throws a {@link
