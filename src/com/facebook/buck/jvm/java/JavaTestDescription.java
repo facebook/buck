@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -65,9 +66,11 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -369,7 +372,7 @@ public class JavaTestDescription
             requiredCxxTargets =
                 ImmutableSet.copyOf(
                     new AcyclicDepthFirstPostOrderTraversal<BuildTarget>(
-                            target -> targetGraph.get(target).getDeclaredDeps().iterator())
+                            target -> getAllDeps(targetGraph.get(target)))
                         .traverse(cxxLibraryWhitelist));
           } catch (CycleException e) {
             throw new RuntimeException("Target graph should not have cycles", e);
@@ -455,5 +458,10 @@ public class JavaTestDescription
                           : ImmutableList.of())
                   : Optional.empty());
     }
+  }
+
+  private static Iterator<BuildTarget> getAllDeps(TargetNode<?> targetNode) {
+    return Iterators.concat(
+        targetNode.getDeclaredDeps().iterator(), targetNode.getExtraDeps().iterator());
   }
 }
