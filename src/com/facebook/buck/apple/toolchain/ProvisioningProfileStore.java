@@ -81,18 +81,21 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
     return Optional.empty();
   }
 
-  private static boolean matchesOrArrayIsSubsetOf(@Nullable NSObject lhs, @Nullable NSObject rhs) {
-    if (lhs == null) {
-      return (rhs == null);
+  private static boolean matchesOrArrayIsSubsetOf(
+      @Nullable NSObject expectedEntitlementsPlistValue,
+      @Nullable NSObject actualProvisioningProfileValue) {
+    if (expectedEntitlementsPlistValue == null) {
+      return (actualProvisioningProfileValue == null);
     }
 
-    if (lhs instanceof NSArray && rhs instanceof NSArray) {
-      List<NSObject> lhsList = Arrays.asList(((NSArray) lhs).getArray());
-      List<NSObject> rhsList = Arrays.asList(((NSArray) rhs).getArray());
+    if (expectedEntitlementsPlistValue instanceof NSArray
+        && actualProvisioningProfileValue instanceof NSArray) {
+      List<NSObject> lhsList = Arrays.asList(((NSArray) expectedEntitlementsPlistValue).getArray());
+      List<NSObject> rhsList = Arrays.asList(((NSArray) actualProvisioningProfileValue).getArray());
       return rhsList.containsAll(lhsList);
     }
 
-    return lhs.equals(rhs);
+    return expectedEntitlementsPlistValue.equals(actualProvisioningProfileValue);
   }
 
   private String getStringFromNSObject(@Nullable NSObject obj) {
