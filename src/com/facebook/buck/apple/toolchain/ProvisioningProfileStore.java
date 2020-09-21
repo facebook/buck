@@ -82,10 +82,20 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
   }
 
   private static boolean matchesOrArrayIsSubsetOf(
+      String entitlementName,
       @Nullable NSObject expectedEntitlementsPlistValue,
-      @Nullable NSObject actualProvisioningProfileValue) {
+      @Nullable NSObject actualProvisioningProfileValue,
+      ApplePlatform platform) {
     if (expectedEntitlementsPlistValue == null) {
       return (actualProvisioningProfileValue == null);
+    }
+
+    if (actualProvisioningProfileValue == null
+        && platform.getType().isDesktop()
+        && entitlementName.startsWith("com.apple.security")) {
+      // For macOS apps, including Catalyst, the provisioning profile would _not_ have entries for
+      // the sandbox entitlements, so any value matches.
+      return true;
     }
 
     if (expectedEntitlementsPlistValue instanceof NSArray
@@ -191,7 +201,8 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
           for (Entry<String, NSObject> entry : entitlementsDict.entrySet()) {
             NSObject profileEntitlement = profileEntitlements.get(entry.getKey());
             if (!(FORCE_INCLUDE_ENTITLEMENTS.contains(entry.getKey())
-                || matchesOrArrayIsSubsetOf(entry.getValue(), profileEntitlement))) {
+                || matchesOrArrayIsSubsetOf(
+                    entry.getKey(), entry.getValue(), profileEntitlement, platform))) {
               match = false;
               String profileEntitlementString = getStringFromNSObject(profileEntitlement);
               String entryValueString = getStringFromNSObject(entry.getValue());
