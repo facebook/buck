@@ -3167,7 +3167,8 @@ public class ProjectGenerator {
               new VFSOverlay(
                   ImmutableSortedMap.of(
                       absoluteModuleRoot.resolve("module.modulemap").getPath(),
-                      absoluteModuleRoot.resolve("objc.modulemap").getPath()));
+                      absoluteModuleRoot.resolve("objc.modulemap").getPath()),
+                  projectFilesystem);
 
           projectFilesystem.writeContentsToPath(
               vfsOverlay.render(),
@@ -3189,7 +3190,8 @@ public class ProjectGenerator {
             new VFSOverlay(
                 ImmutableSortedMap.of(
                     absoluteModuleRoot.resolve("module.modulemap").getPath(),
-                    absoluteModuleRoot.resolve("testing.modulemap").getPath()));
+                    absoluteModuleRoot.resolve("testing.modulemap").getPath()),
+                projectFilesystem);
 
         projectFilesystem.writeContentsToPath(
             vfsOverlay.render(),

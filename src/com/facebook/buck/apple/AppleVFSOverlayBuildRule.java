@@ -153,7 +153,7 @@ public class AppleVFSOverlayBuildRule extends ModernBuildRule<AppleVFSOverlayBui
                   };
 
               Files.walkFileTree(underlyingAbsPath.getPath(), fileVisitor);
-              VFSOverlay vfsOverlay = new VFSOverlay(vfsBuilder.build());
+              VFSOverlay vfsOverlay = new VFSOverlay(vfsBuilder.build(), filesystem);
               try {
                 String render = vfsOverlay.render();
                 filesystem.createParentDirs(yamlRelPath.getPath());
