@@ -73,13 +73,25 @@ class BuckRepo:
         child_environment["NO_BUCKD"] = str(int(toggle))
         self.buckd_env = child_environment
 
-    def build(self, *argv: str) -> BuckProcess[BuildResult]:
+    def _get_cwd(self, rel_cwd: Optional[Path]) -> Path:
+        if rel_cwd is None:
+            return self.cwd
+        abs_cwd = self.cwd / rel_cwd
+        assert abs_cwd.exists()
+        return abs_cwd
+
+    def build(
+        self, *argv: str, rel_cwd: Optional[Path] = None
+    ) -> BuckProcess[BuildResult]:
         """
         Returns a BuckProcess with BuildResult type using a process
         created with the build command and any
         additional arguments
+
+        rel_cwd: Optional Path specifying the workding directive to run
+        the command relative to the root.
         """
-        awaitable_process = self._run_buck_command("build", *argv)
+        awaitable_process = self._run_buck_command("build", *argv, rel_cwd=rel_cwd)
         return BuckProcess(
             awaitable_process,
             result_type=lambda proc, stdin, stdout, encoding: BuildResult(
@@ -88,46 +100,66 @@ class BuckRepo:
             encoding=self.encoding,
         )
 
-    def run(self, *argv: str) -> BuckProcess[BuckResult]:
+    def run(
+        self, *argv: str, rel_cwd: Optional[Path] = None
+    ) -> BuckProcess[BuckResult]:
         """
         Returns a BuckProcess with BuckResult type using a process
         created with the build command and any
         additional arguments
+
+        rel_cwd: Optional Path specifying the workding directive to run
+        the command relative to the root.
         """
-        awaitable_process = self._run_buck_command("run", *argv)
+        awaitable_process = self._run_buck_command("run", *argv, rel_cwd=rel_cwd)
         return BuckProcess(
             awaitable_process, result_type=BuckResult, encoding=self.encoding
         )
 
-    def clean(self, *argv: str) -> BuckProcess[BuckResult]:
+    def clean(
+        self, *argv: str, rel_cwd: Optional[Path] = None
+    ) -> BuckProcess[BuckResult]:
         """
         Returns a BuckProcess with BuckResult type using a process
         created with the clean command and any
         additional arguments
+
+        rel_cwd: Optional Path specifying the workding directive to run
+        the command relative to the root.
         """
-        awaitable_process = self._run_buck_command("clean", *argv)
+        awaitable_process = self._run_buck_command("clean", *argv, rel_cwd=rel_cwd)
         return BuckProcess(
             awaitable_process, result_type=BuckResult, encoding=self.encoding
         )
 
-    def kill(self) -> BuckProcess[BuckResult]:
+    def kill(self, rel_cwd: Optional[Path] = None) -> BuckProcess[BuckResult]:
         """
         Returns a BuckProcess with BuckResult type using a process
         created with the kill command
+
+        rel_cwd: Optional Path specifying the workding directive to run
+        the command relative to the root.
         """
-        awaitable_process = self._run_buck_command("kill")
+        awaitable_process = self._run_buck_command("kill", rel_cwd=rel_cwd)
         return BuckProcess(
             awaitable_process, result_type=BuckResult, encoding=self.encoding
         )
 
-    def test(self, *argv: str) -> BuckProcess[TestResult]:
+    def test(
+        self, *argv: str, rel_cwd: Optional[Path] = None
+    ) -> BuckProcess[TestResult]:
         """
         Returns a BuckProcess with TestResult type using a process
         created with the test command and any
         additional arguments
+
+        rel_cwd: Optional Path specifying the workding directive to run
+        the command relative to the root.
         """
         xml_flag, test_output_file = self._create_xml_file()
-        awaitable_process = self._run_buck_command("test", *argv, xml_flag)
+        awaitable_process = self._run_buck_command(
+            "test", *argv, xml_flag, rel_cwd=rel_cwd
+        )
         return BuckProcess(
             awaitable_process,
             result_type=lambda proc, stdin, stdout, encoding: TestResult(
@@ -136,7 +168,9 @@ class BuckRepo:
             encoding=self.encoding,
         )
 
-    def _run_buck_command(self, cmd: str, *argv: str) -> Awaitable[subprocess.Process]:
+    def _run_buck_command(
+        self, cmd: str, *argv: str, rel_cwd: Optional[Path]
+    ) -> Awaitable[subprocess.Process]:
         """
         Returns a process created from the execuable path,
         command and any additional arguments
@@ -144,7 +178,7 @@ class BuckRepo:
         awaitable_process = subprocess.create_subprocess_exec(
             str(self.path_to_buck),
             cmd,
-            cwd=self.cwd,
+            cwd=self._get_cwd(rel_cwd),
             env=self.buckd_env,
             *argv,
             stdout=subprocess.PIPE,

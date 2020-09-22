@@ -107,6 +107,29 @@ async def test_build_failed():
 
 
 @pytest.mark.asyncio
+async def test_build_with_rel_cwd():
+    with tempfile.TemporaryDirectory() as outer_dir, tempfile.TemporaryDirectory(
+        dir=outer_dir
+    ) as inner_dir:
+        outer = Path(outer_dir)
+        inner = Path(inner_dir)
+        test_script = pkg_resources.resource_filename(
+            "buck_api.test.buck_repo_test", "test_script.py"
+        )
+        repo = BuckRepo(Path(test_script), cwd=outer, encoding="utf-8")
+        _create_file(inner, "target_file_success", 0)
+        result = await repo.build(
+            "//:target_file_success", rel_cwd=inner.relative_to(outer)
+        ).wait()
+        # For actual buck, the path would be outer / "buck-out".
+        assert list(
+            (inner / "buck-out").iterdir()
+        ), "build should have generated outputs in buck-out"
+        assert "target_file_success" in result.get_stdout()
+        assert result.is_success()
+
+
+@pytest.mark.asyncio
 async def test_run():
     with tempfile.TemporaryDirectory() as temp_dir:
         path_of_cwd = Path(temp_dir)
