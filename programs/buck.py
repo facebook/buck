@@ -71,17 +71,17 @@ def killall_buck(reporter):
         return ExitCode.COMMANDLINE_ERROR
 
     for line in os.popen("jps -l"):
-        split = line.split()
-        if len(split) == 1:
-            # Java processes which are launched not as `java Main`
-            # (e. g. `idea`) are shown with only PID without
-            # main class name.
-            continue
+        split = line.strip().split()
         if len(split) != 2:
-            raise Exception("cannot parse a line in jps -l outout: " + repr(line))
-        pid = int(split[0])
+            logging.warning("skipping irregular format line in jps -l: %s", repr(line))
+            continue
         name = split[1]
         if name != "com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper":
+            continue
+        try:
+            pid = int(split[0])
+        except ValueError:
+            logging.warning("skipping irregular format line in jps -l: %s", repr(line))
             continue
 
         os.kill(pid, signal.SIGTERM)
