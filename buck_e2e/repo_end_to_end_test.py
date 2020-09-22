@@ -15,10 +15,9 @@
 
 from pathlib import Path
 
-import pytest
 from buck_api.buck_repo import BuckRepo
 from buck_api.buck_result import ExitCode
-from buck_e2e import asserts, repo_workspace
+from buck_e2e import repo_workspace
 from buck_e2e.repo_workspace import buck_test, nobuckd, repo  # noqa: F401
 
 
@@ -27,7 +26,7 @@ async def test_repo_build(repo: BuckRepo):
     _create_file(Path(repo.cwd), Path("target_file_success"), 0)
     result = await repo.build("//:target_file_success").wait()
     assert "target_file_success" in result.get_stdout()
-    asserts.assert_build_success(result)
+    assert result.is_success()
 
 
 @buck_test
@@ -35,7 +34,7 @@ async def test_buckd_toggle_enabled(repo: BuckRepo):
     _create_file(Path(repo.cwd), Path("target_file_success"), 0)
     result = await repo.build("//:target_file_success").wait()
     assert "target_file_success" in result.get_stdout()
-    asserts.assert_build_success(result)
+    assert result.is_success()
     assert (Path(repo.cwd) / ".buckd").exists(), "buck daemon should exist"
     assert result.get_exit_code() == ExitCode.SUCCESS
 
@@ -46,18 +45,17 @@ async def test_buckd_toggle_disabled(repo: BuckRepo):
     _create_file(Path(repo.cwd), Path("target_file_success"), 0)
     result = await repo.build("//:target_file_success").wait()
     assert "target_file_success" in result.get_stdout()
-    asserts.assert_build_success(result)
+    assert result.is_success()
     assert not (Path(repo.cwd) / ".buckd").exists(), "buck daemon should not exist"
     assert result.get_exit_code() == ExitCode.SUCCESS
 
 
 @buck_test
-@pytest.mark.xfail(raises=AssertionError)  # type: ignore
 async def test_repo_build_failure(repo: BuckRepo):
     _create_file(Path(repo.cwd), Path("target_file_failure"), 1)
     result = await repo.build("//:target_file_failure").wait()
     assert "target_file_failure" in result.get_stdout()
-    asserts.assert_build_success(result)
+    assert result.is_failure()
 
 
 @buck_test

@@ -17,20 +17,19 @@ from pathlib import Path
 
 from buck_api.buck_repo import BuckRepo
 from buck_api.buck_result import ExitCode
-from buck_e2e import asserts
 from buck_e2e.repo_workspace import buck_test, nobuckd, repo  # noqa F401
 
 
 @buck_test(data="testdata/cli/run/simple_bin")
 async def test_repo_build(repo: BuckRepo):
     result = await repo.build("testdata/cli/run/simple_bin:main").wait()
-    asserts.assert_build_success(result)
+    assert result.is_success()
 
 
 @buck_test(data="testdata/cli/run/simple_bin")
 @nobuckd
 async def test_buckd_toggle_disabled(repo: BuckRepo):
     result = await repo.build("testdata/cli/run/simple_bin:main").wait()
-    asserts.assert_build_success(result)
+    assert result.is_success()
     assert not (Path(repo.cwd) / ".buckd").exists(), "buck daemon should not exist"
     assert result.get_exit_code() == ExitCode.SUCCESS
