@@ -2,13 +2,11 @@ java_library(
     name = "utils",
     srcs = glob(["*.java"]),
     visibility = [
-        "//src/com/facebook/buck/external/...",
-        "//test/com/facebook/buck/external/...",
+        "PUBLIC",
     ],
     deps = [
         "//src-gen:buildable-command-model",
         "//src/com/facebook/buck/external/model:model",
-        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//third-party/java/guava:guava",
     ],

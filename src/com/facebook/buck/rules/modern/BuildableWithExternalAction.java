@@ -17,9 +17,13 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.external.model.ExternalAction;
+import com.facebook.buck.external.model.ParsedArgs;
+import com.facebook.buck.external.utils.BuildStepsRetriever;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -27,15 +31,39 @@ import com.google.common.collect.ImmutableList;
  * separate process.
  */
 public abstract class BuildableWithExternalAction implements Buildable {
+
+  private final boolean shouldExecuteInSeparateProcess;
+
+  public BuildableWithExternalAction(boolean shouldExecuteInSeparateProcess) {
+    this.shouldExecuteInSeparateProcess = shouldExecuteInSeparateProcess;
+  }
+
   @Override
+  @SuppressWarnings("unchecked")
   public final ImmutableList<Step> getBuildSteps(
       BuildContext buildContext,
       ProjectFilesystem filesystem,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
-    // TODO(irenewchen): Stub! Implement BuildableCommandExecutionStep, which wraps
-    // getBuildableCommand, and return that step here
-    return null;
+    BuildableCommand buildableCommand =
+        getBuildableCommand(filesystem, outputPathResolver, buildContext);
+    if (shouldExecuteInSeparateProcess) {
+      // TODO(irenewchen): Stub! Implement BuildableCommandExecutionStep, which wraps
+      // getBuildableCommand, and return that step here
+      return ImmutableList.of();
+    }
+    String externalActionClassName = buildableCommand.getExternalActionClass();
+    try {
+      Class<? extends ExternalAction> externalActionClass =
+          (Class<? extends ExternalAction>) Class.forName(externalActionClassName);
+      ImmutableList<IsolatedStep> steps =
+          BuildStepsRetriever.getStepsForBuildable(
+              ParsedArgs.of(externalActionClass, buildableCommand));
+      return steps.stream().map(step -> (Step) step).collect(ImmutableList.toImmutableList());
+    } catch (ClassNotFoundException e) {
+      throw new IllegalArgumentException(
+          String.format("Cannot find external actions class: %s", externalActionClassName), e);
+    }
   }
 
   /**
