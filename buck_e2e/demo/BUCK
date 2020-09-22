@@ -1,0 +1,15 @@
+load("//tools/build_rules:python_rules.bzl", "pytest_test")
+
+pytest_test(
+    name = "test_demo_repo",
+    srcs = ["test_demo_repo.py"],
+    env = {
+        "TEST_BUCK_BINARY": "$(location //programs:buck)",
+    },
+    resources = [
+        "//test/com/facebook/buck/testutil/endtoend:testdata",
+    ],
+    deps = [
+        "//buck_e2e:utilities",
+    ],
+)

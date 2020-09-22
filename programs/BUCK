@@ -227,7 +227,7 @@ python_binary(
     build_args = interpreter_override_args(),
     main = "buck.py",
     visibility = [
-        "//demo/...",
+        "//buck_e2e/...",
         "//scripts/...",
         "//test/...",
         "//tools/...",

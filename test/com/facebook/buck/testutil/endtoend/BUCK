@@ -46,3 +46,9 @@ java_test(
         "//third-party/java/junit:junit",
     ],
 )
+
+export_file(
+    name = "testdata",
+    src = "testdata",
+    visibility = ["//buck_e2e/..."],
+)
