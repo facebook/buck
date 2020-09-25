@@ -41,6 +41,7 @@ import com.facebook.buck.worker.WorkerProcessIdentity;
 import com.facebook.buck.worker.WorkerProcessParams;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
+import com.facebook.buck.worker.WorkerProcessPoolSync;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -103,7 +104,7 @@ public class WorkerShellStepTest {
       ImmutableMap<String, String> startupEnv,
       String jobArgs,
       int maxWorkers) {
-    return createJobParams(startupCommand, startupEnv, jobArgs, maxWorkers, null, null);
+    return createJobParams(startupCommand, startupEnv, jobArgs, maxWorkers, false, null, null);
   }
 
   private WorkerJobParams createJobParams(
@@ -111,6 +112,7 @@ public class WorkerShellStepTest {
       ImmutableMap<String, String> startupEnv,
       String jobArgs,
       int maxWorkers,
+      boolean isAsync,
       @Nullable String persistentWorkerKey,
       @Nullable HashCode workerHash) {
     return WorkerJobParams.of(
@@ -120,6 +122,7 @@ public class WorkerShellStepTest {
             startupCommand,
             startupEnv,
             maxWorkers,
+            isAsync,
             persistentWorkerKey == null || workerHash == null
                 ? Optional.empty()
                 : Optional.of(WorkerProcessIdentity.of(persistentWorkerKey, workerHash))));
@@ -139,7 +142,7 @@ public class WorkerShellStepTest {
   private ExecutionContext createExecutionContextWith(
       ImmutableMap<String, WorkerJobResult> jobArgs, int poolCapacity) {
     WorkerProcessPool workerProcessPool =
-        new WorkerProcessPool(
+        new WorkerProcessPoolSync(
             poolCapacity,
             Hashing.sha1().hashString(fakeWorkerStartupCommand, Charsets.UTF_8),
             () -> new FakeWorkerProcess(jobArgs));
@@ -148,7 +151,7 @@ public class WorkerShellStepTest {
     workerProcessMap.put(fakeWorkerStartupCommand, workerProcessPool);
 
     WorkerProcessPool persistentWorkerProcessPool =
-        new WorkerProcessPool(
+        new WorkerProcessPoolSync(
             poolCapacity,
             Hashing.sha1().hashString(fakePersistentWorkerStartupCommand, Charsets.UTF_8),
             () -> new FakeWorkerProcess(jobArgs));

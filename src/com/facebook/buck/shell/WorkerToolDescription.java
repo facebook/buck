@@ -154,6 +154,7 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
         graphBuilder,
         tool,
         maxWorkers,
+        args.getAsync().orElse(false),
         args.getPersistent()
             .orElse(buckConfig.getBooleanValue(CONFIG_SECTION, CONFIG_PERSISTENT_KEY, false)));
   }
@@ -197,5 +198,7 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
     Optional<Integer> getMaxWorkersPerThreadPercent();
 
     Optional<Boolean> getPersistent();
+
+    Optional<Boolean> getAsync();
   }
 }

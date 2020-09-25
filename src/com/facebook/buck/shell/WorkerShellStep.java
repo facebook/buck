@@ -28,7 +28,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.worker.WorkerJobParams;
 import com.facebook.buck.worker.WorkerJobResult;
 import com.facebook.buck.worker.WorkerProcessPool;
-import com.facebook.buck.worker.WorkerProcessPool.BorrowedWorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
@@ -80,11 +79,13 @@ public class WorkerShellStep implements Step {
     WorkerJobParams paramsToUse = getWorkerJobParamsToUse(context.getPlatform());
     WorkerProcessPool pool =
         factory.getWorkerProcessPool(context, paramsToUse.getWorkerProcessParams());
-    WorkerJobResult result;
-    try (BorrowedWorkerProcess process = pool.borrowWorkerProcess()) {
-      result = process.submitJob(getExpandedJobArgs(context)).get();
+    WorkerJobResult result = null;
+    try {
+      result = pool.submitJob(getExpandedJobArgs(context)).get();
     } catch (ExecutionException e) {
-      Throwables.throwIfUnchecked(e);
+      if (e.getCause() != null) {
+        Throwables.throwIfUnchecked(e.getCause());
+      }
       throw new RuntimeException(e);
     }
 

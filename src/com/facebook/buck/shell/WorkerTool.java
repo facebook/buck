@@ -34,4 +34,6 @@ public interface WorkerTool extends AddsToRuleKey {
   boolean isPersistent();
 
   HashCode getInstanceKey();
+
+  boolean isAsync();
 }

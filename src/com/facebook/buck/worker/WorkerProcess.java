@@ -41,7 +41,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.ThreadSafe;
 
+@ThreadSafe
 public class WorkerProcess implements Closeable {
 
   private static final Logger LOG = Logger.get(WorkerProcess.class);
