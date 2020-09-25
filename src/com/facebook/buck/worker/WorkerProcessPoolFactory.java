@@ -99,7 +99,7 @@ public class WorkerProcessPoolFactory {
       context.postEvent(
           ConsoleEvent.warning(
               "There are two 'worker_tool' targets declared with the same command (%s), but "
-                  + "different 'async' settings. Consolidate these workers to avoid this warning.",
+                  + "different 'solo_async' settings. Consolidate these workers to avoid this warning.",
               key));
     }
 

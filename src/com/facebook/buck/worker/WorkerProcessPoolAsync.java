@@ -19,7 +19,9 @@ package com.facebook.buck.worker;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
+import java.util.concurrent.Semaphore;
 import javax.annotation.Nullable;
 
 public class WorkerProcessPoolAsync implements WorkerProcessPool {
@@ -27,6 +29,7 @@ public class WorkerProcessPoolAsync implements WorkerProcessPool {
   private final HashCode poolHash;
   private final int maxRequests;
   private final ThrowingSupplier<WorkerProcess, IOException> startWorkerProcess;
+  private final Semaphore concurrencyLimiter;
   @Nullable private WorkerProcess workerProcess;
 
   public WorkerProcessPoolAsync(
@@ -36,6 +39,7 @@ public class WorkerProcessPoolAsync implements WorkerProcessPool {
     this.poolHash = poolHash;
     this.maxRequests = maxRequests;
     this.startWorkerProcess = startWorkerProcess;
+    this.concurrencyLimiter = new Semaphore(maxRequests <= 0 ? Integer.MAX_VALUE : maxRequests);
   }
 
   @Override
@@ -56,7 +60,16 @@ public class WorkerProcessPoolAsync implements WorkerProcessPool {
         workerProcess = startWorkerProcess.get();
       }
     }
-    return workerProcess.submitJob(expandedJobArgs);
+
+    concurrencyLimiter.acquire();
+    try {
+      ListenableFuture<WorkerJobResult> result = workerProcess.submitJob(expandedJobArgs);
+      result.addListener(concurrencyLimiter::release, MoreExecutors.directExecutor());
+      return result;
+    } catch (Throwable t) {
+      concurrencyLimiter.release();
+      throw t;
+    }
   }
 
   @Override

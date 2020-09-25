@@ -21,8 +21,10 @@ import com.facebook.buck.util.concurrent.LinkedBlockingStack;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.Closeable;
 import java.io.IOException;
@@ -64,20 +66,24 @@ public class WorkerProcessPoolSync implements Closeable, WorkerProcessPool {
 
   @Override
   public ListenableFuture<WorkerJobResult> submitJob(String expandedJobArgs)
-      throws IOException, InterruptedException {
-    SettableFuture<WorkerJobResult> result = SettableFuture.create();
+      throws InterruptedException {
+    BorrowedWorkerProcess process = borrowWorkerProcess();
     try {
-      try (BorrowedWorkerProcess process = borrowWorkerProcess()) {
-        // Keep the worker process burrowed.
-        result.set(process.submitJob(expandedJobArgs).get());
-      }
-    } catch (InterruptedException t) {
-      throw t;
+      ListenableFuture<WorkerJobResult> result = process.submitJob(expandedJobArgs);
+      result.addListener(process::close, MoreExecutors.directExecutor());
+      process = null;
+      return result;
     } catch (Throwable t) {
-      result.setException(t);
-    }
+      Throwables.throwIfUnchecked(t);
 
-    return result;
+      SettableFuture<WorkerJobResult> result = SettableFuture.create();
+      result.setException(t);
+      return result;
+    } finally {
+      if (process != null) {
+        process.close();
+      }
+    }
   }
 
   /**

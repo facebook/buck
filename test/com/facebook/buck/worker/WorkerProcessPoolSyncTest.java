@@ -373,7 +373,7 @@ public class WorkerProcessPoolSyncTest {
       int maxWorkers, ThrowingSupplier<WorkerProcess, IOException> startWorkerProcess) {
     return new WorkerProcessPoolSync(
         maxWorkers,
-        Hashing.sha1().hashLong(0),
+        Hashing.sha256().hashLong(0),
         () -> {
           WorkerProcess workerProcess = startWorkerProcess.get();
           workerProcess.ensureLaunchAndHandshake();

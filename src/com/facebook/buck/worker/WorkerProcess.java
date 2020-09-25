@@ -284,15 +284,11 @@ public class WorkerProcess implements Closeable {
     try {
       while (!watchdogShutdownSignal.await(5, TimeUnit.SECONDS)) {
         if (!readerThread.isAlive()) {
-          HashSet<Integer> keys = new HashSet<>(commandExitCodes.keySet());
-          for (Integer key : keys) {
-            SettableFuture<Integer> result = commandExitCodes.remove(key);
-            if (result != null) {
-              result.setException(new RuntimeException("Worker process error"));
-            }
-          }
+          failAllFutures();
         }
       }
+
+      failAllFutures();
     } catch (Throwable t) {
       LOG.error(t, "Worker Process Watchdog thread error!");
       Throwables.throwIfUnchecked(t);
@@ -301,6 +297,16 @@ public class WorkerProcess implements Closeable {
       // Kill it with fire.
       while (readerThread.isAlive()) {
         readerThread.interrupt();
+      }
+    }
+  }
+
+  private void failAllFutures() {
+    HashSet<Integer> keys = new HashSet<>(commandExitCodes.keySet());
+    for (Integer key : keys) {
+      SettableFuture<Integer> result = commandExitCodes.remove(key);
+      if (result != null) {
+        result.setException(new RuntimeException("Worker process error"));
       }
     }
   }

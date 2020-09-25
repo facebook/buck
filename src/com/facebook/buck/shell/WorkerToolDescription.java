@@ -124,6 +124,8 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
       builder.addEnv(e.getKey(), macrosConverter.convert(e.getValue()));
     }
 
+    boolean async = args.getSoloAsync().orElse(false);
+
     Preconditions.checkArgument(
         !(args.getMaxWorkers().isPresent() && args.getMaxWorkersPerThreadPercent().isPresent()),
         "max_workers and max_workers_per_thread_percent must not be used together.");
@@ -154,7 +156,7 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
         graphBuilder,
         tool,
         maxWorkers,
-        args.getAsync().orElse(false),
+        async,
         args.getPersistent()
             .orElse(buckConfig.getBooleanValue(CONFIG_SECTION, CONFIG_PERSISTENT_KEY, false)));
   }
@@ -199,6 +201,6 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
 
     Optional<Boolean> getPersistent();
 
-    Optional<Boolean> getAsync();
+    Optional<Boolean> getSoloAsync();
   }
 }

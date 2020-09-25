@@ -112,6 +112,16 @@ public class WorkerToolRuleIntegrationTest {
   }
 
   @Test
+  public void testAsyncWorkerToolRules() throws Exception {
+    BuildTarget target1 = workspace.newBuildTarget("//:async-test0");
+    BuildTarget target2 = workspace.newBuildTarget("//:async-test1");
+
+    workspace
+        .runBuckBuild(target1.getFullyQualifiedName(), target2.getFullyQualifiedName())
+        .assertSuccess();
+  }
+
+  @Test
   public void testPersistentWorkerToolReusesProcess() throws Exception {
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     BuildTarget target1 = workspace.newBuildTarget("//:test6");
