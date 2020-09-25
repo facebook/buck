@@ -20,13 +20,30 @@ import java.io.Closeable;
 import java.io.IOException;
 
 public interface WorkerProcessProtocol {
+  class CommandResponse {
+    private final int commandId;
+    private final int exitCode;
+
+    public CommandResponse(int commandId, int exitCode) {
+      this.commandId = commandId;
+      this.exitCode = exitCode;
+    }
+
+    public int getExitCode() {
+      return exitCode;
+    }
+
+    public int getCommandId() {
+      return commandId;
+    }
+  }
 
   interface CommandSender extends Closeable {
     void handshake(int messageId) throws IOException;
 
     void send(int messageId, WorkerProcessCommand command) throws IOException;
 
-    int receiveCommandResponse(int messageID) throws IOException;
+    CommandResponse receiveNextCommandResponse() throws IOException;
 
     /** Instructs the CommandReceiver to shut itself down. */
     @Override

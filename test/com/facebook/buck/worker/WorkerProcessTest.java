@@ -43,6 +43,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,7 +57,7 @@ public class WorkerProcessTest {
   }
 
   @Test
-  public void testSubmitAndWaitForJob() throws IOException {
+  public void testJob() throws IOException, ExecutionException, InterruptedException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path tmpPath = Files.createTempDirectory("tmp").toAbsolutePath().normalize();
     Path argsPath = Paths.get(tmpPath.toString(), "0.args");
@@ -72,19 +73,18 @@ public class WorkerProcessTest {
     try (WorkerProcess process =
         new WorkerProcess(
             new FakeProcessExecutor(), createDummyParams(), filesystem, workerStdErr, tmpPath)) {
-      process.setProtocol(
+      process.launchForTesting(
           new FakeWorkerProcessProtocol.FakeCommandSender() {
             @Override
-            public int receiveCommandResponse(int messageID) throws IOException {
-              // simulate the external tool and write the stdout and stderr files
+            public void send(int messageId, WorkerProcessCommand command) throws IOException {
               filesystem.writeContentsToPath(stdout.get(), stdoutPath);
               filesystem.writeContentsToPath(stderr.get(), stderrPath);
-              return super.receiveCommandResponse(messageID);
+              super.send(messageId, command);
             }
           });
 
       WorkerJobResult expectedResult = WorkerJobResult.of(exitCode, stdout, stderr);
-      assertThat(process.submitAndWaitForJob(jobArgs), Matchers.equalTo(expectedResult));
+      assertThat(process.submitJob(jobArgs).get(), Matchers.equalTo(expectedResult));
       assertThat(filesystem.readFileIfItExists(argsPath).get(), Matchers.equalTo(jobArgs));
     }
   }
@@ -101,7 +101,7 @@ public class WorkerProcessTest {
             new FakeProjectFilesystem(),
             Paths.get("stderr"),
             Paths.get("tmp").toAbsolutePath().normalize())) {
-      process.setProtocol(protocol);
+      process.launchForTesting(protocol);
 
       assertFalse(protocol.isClosed());
       process.close();

@@ -22,6 +22,7 @@ import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -207,8 +208,8 @@ public class WorkerProcessPool implements Closeable {
      *
      * @throws IOException
      */
-    public WorkerJobResult submitAndWaitForJob(String expandedJobArgs) throws IOException {
-      return get().submitAndWaitForJob(expandedJobArgs);
+    public ListenableFuture<WorkerJobResult> submitJob(String expandedJobArgs) throws IOException {
+      return get().submitJob(expandedJobArgs);
     }
 
     @VisibleForTesting

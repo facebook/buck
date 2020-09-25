@@ -31,10 +31,12 @@ import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPool.BorrowedWorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 public class WorkerShellStep implements Step {
@@ -80,7 +82,10 @@ public class WorkerShellStep implements Step {
         factory.getWorkerProcessPool(context, paramsToUse.getWorkerProcessParams());
     WorkerJobResult result;
     try (BorrowedWorkerProcess process = pool.borrowWorkerProcess()) {
-      result = process.submitAndWaitForJob(getExpandedJobArgs(context));
+      result = process.submitJob(getExpandedJobArgs(context)).get();
+    } catch (ExecutionException e) {
+      Throwables.throwIfUnchecked(e);
+      throw new RuntimeException(e);
     }
 
     Verbosity verbosity = context.getVerbosity();
