@@ -43,7 +43,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -306,14 +305,14 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
     public final long duration;
     public final BuildRuleKeys ruleKeys;
     public final Optional<HashCode> outputHash;
-    public final SortedSet<BuildRule> deps;
+    public final Iterable<BuildRule> deps;
 
     public RuleInfo(
         int id,
         long duration,
         BuildRuleKeys ruleKeys,
         Optional<HashCode> outputHash,
-        SortedSet<BuildRule> deps) {
+        Iterable<BuildRule> deps) {
       this.id = id;
       this.duration = duration;
       this.ruleKeys = ruleKeys;

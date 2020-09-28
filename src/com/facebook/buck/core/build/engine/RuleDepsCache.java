@@ -18,15 +18,14 @@ package com.facebook.buck.core.build.engine;
 
 import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rules.BuildRule;
-import java.util.SortedSet;
 
 public interface RuleDepsCache {
 
-  SortedSet<BuildRule> get(BuildRule rule);
+  Iterable<BuildRule> get(BuildRule rule);
 
   /**
    * @param buildEngineAction an action for the build engine that we want the deps for
    * @return the actions the given action depends on for build
    */
-  SortedSet<BuildEngineAction> get(BuildEngineAction buildEngineAction);
+  Iterable<BuildEngineAction> get(BuildEngineAction buildEngineAction);
 }

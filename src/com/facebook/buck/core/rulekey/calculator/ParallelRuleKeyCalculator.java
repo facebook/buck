@@ -33,7 +33,6 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiFunction;
 
@@ -92,7 +91,7 @@ public class ParallelRuleKeyCalculator<T> {
     ListenableFuture<List<T>> depKeys =
         Futures.transformAsync(
             Futures.immediateFuture(ruleDepsCache.get(rule)),
-            (SortedSet<BuildRule> deps) -> {
+            (Iterable<BuildRule> deps) -> {
               List<ListenableFuture<T>> depKeys1 =
                   new ArrayList<>(SortedSets.sizeEstimate(rule.getBuildDeps()));
               for (BuildRule dep : deps) {

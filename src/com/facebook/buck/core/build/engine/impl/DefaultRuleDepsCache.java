@@ -22,17 +22,15 @@ import com.facebook.buck.core.build.engine.RuleDepsCache;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.util.collect.SortedSets;
-import com.facebook.buck.util.stream.RichStream;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.util.Map;
-import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** A cache of rule deps. */
 public class DefaultRuleDepsCache implements RuleDepsCache {
-  private final Map<BuildRule, SortedSet<BuildRule>> allDepsCache;
-  private final Map<BuildRule, SortedSet<BuildRule>> runtimeDepsCache;
+  private final Map<BuildRule, Iterable<BuildRule>> allDepsCache;
+  private final Map<BuildRule, Iterable<BuildRule>> runtimeDepsCache;
   private final BuildRuleResolver resolver;
   private final BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver;
 
@@ -45,32 +43,34 @@ public class DefaultRuleDepsCache implements RuleDepsCache {
   }
 
   @Override
-  public SortedSet<BuildRule> get(BuildRule rule) {
+  public Iterable<BuildRule> get(BuildRule rule) {
     return allDepsCache.computeIfAbsent(rule, this::computeDeps);
   }
 
-  private SortedSet<BuildRule> computeDeps(BuildRule rule) {
-    return SortedSets.union(rule.getBuildDeps(), getRuntimeDeps(rule));
+  private Iterable<BuildRule> computeDeps(BuildRule rule) {
+    return Iterables.concat(rule.getBuildDeps(), getRuntimeDeps(rule));
   }
 
-  private SortedSet<BuildRule> getRuntimeDeps(BuildRule rule) {
+  private Iterable<BuildRule> getRuntimeDeps(BuildRule rule) {
     return runtimeDepsCache.computeIfAbsent(rule, this::computeRuntimeDeps);
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public SortedSet<BuildEngineAction> get(BuildEngineAction buildEngineAction) {
-    return (SortedSet<BuildEngineAction>)
-        (SortedSet<? extends BuildEngineAction>)
+  public Iterable<BuildEngineAction> get(BuildEngineAction buildEngineAction) {
+    return (Iterable<BuildEngineAction>)
+        (Iterable<? extends BuildEngineAction>)
             get(actionToBuildRuleResolver.resolve(buildEngineAction));
   }
 
-  private SortedSet<BuildRule> computeRuntimeDeps(BuildRule rule) {
+  private Iterable<BuildRule> computeRuntimeDeps(BuildRule rule) {
     if (!(rule instanceof HasRuntimeDeps)) {
-      return ImmutableSortedSet.of();
+      return ImmutableSet.of();
     }
 
-    return resolver.getAllRules(
-        RichStream.from(((HasRuntimeDeps) rule).getRuntimeDeps(resolver)).toOnceIterable());
+    return ((HasRuntimeDeps) rule)
+        .getRuntimeDeps(resolver)
+        .map(resolver::getRule)
+        .collect(ImmutableSet.toImmutableSet());
   }
 }

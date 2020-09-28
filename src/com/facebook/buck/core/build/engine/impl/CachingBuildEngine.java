@@ -61,6 +61,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -433,7 +434,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return Futures.transformAsync(
         Futures.immediateFuture(ruleDeps.get(rule)),
         deps -> {
-          List<ListenableFuture<?>> results1 = new ArrayList<>(SortedSets.sizeEstimate(deps));
+          List<ListenableFuture<?>> results1 = new ArrayList<>(Iterables.size(deps));
           for (BuildRule dep : deps) {
             if (seen.add(dep)) {
               results1.add(walkRule(dep, seen));

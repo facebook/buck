@@ -19,16 +19,15 @@ package com.facebook.buck.core.build.stats;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.google.common.collect.ImmutableList;
-import java.util.SortedSet;
 
 /** Some build rule diagnostic data. */
 public class BuildRuleDiagnosticData {
 
-  public final SortedSet<BuildRule> deps;
+  public final Iterable<BuildRule> deps;
   public final ImmutableList<RuleKeyDiagnostics.Result<?, ?>> diagnosticKeys;
 
   public BuildRuleDiagnosticData(
-      SortedSet<BuildRule> deps, ImmutableList<RuleKeyDiagnostics.Result<?, ?>> diagnosticKeys) {
+      Iterable<BuildRule> deps, ImmutableList<RuleKeyDiagnostics.Result<?, ?>> diagnosticKeys) {
     this.deps = deps;
     this.diagnosticKeys = diagnosticKeys;
   }
