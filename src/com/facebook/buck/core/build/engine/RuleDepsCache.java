@@ -24,17 +24,9 @@ public interface RuleDepsCache {
 
   SortedSet<BuildRule> get(BuildRule rule);
 
-  SortedSet<BuildRule> getRuntimeDeps(BuildRule rule);
-
   /**
    * @param buildEngineAction an action for the build engine that we want the deps for
    * @return the actions the given action depends on for build
    */
   SortedSet<BuildEngineAction> get(BuildEngineAction buildEngineAction);
-
-  /**
-   * @param buildEngineAction an action for the build engine that we want the deps for
-   * @return the actions the given action depends on for executing the binary resulting from build
-   */
-  SortedSet<BuildEngineAction> getRuntimeDeps(BuildEngineAction buildEngineAction);
 }

@@ -53,8 +53,7 @@ public class DefaultRuleDepsCache implements RuleDepsCache {
     return SortedSets.union(rule.getBuildDeps(), getRuntimeDeps(rule));
   }
 
-  @Override
-  public SortedSet<BuildRule> getRuntimeDeps(BuildRule rule) {
+  private SortedSet<BuildRule> getRuntimeDeps(BuildRule rule) {
     return runtimeDepsCache.computeIfAbsent(rule, this::computeRuntimeDeps);
   }
 
@@ -64,14 +63,6 @@ public class DefaultRuleDepsCache implements RuleDepsCache {
     return (SortedSet<BuildEngineAction>)
         (SortedSet<? extends BuildEngineAction>)
             get(actionToBuildRuleResolver.resolve(buildEngineAction));
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public SortedSet<BuildEngineAction> getRuntimeDeps(BuildEngineAction buildEngineAction) {
-    return (SortedSet<BuildEngineAction>)
-        (SortedSet<? extends BuildEngineAction>)
-            getRuntimeDeps(actionToBuildRuleResolver.resolve(buildEngineAction));
   }
 
   private SortedSet<BuildRule> computeRuntimeDeps(BuildRule rule) {
