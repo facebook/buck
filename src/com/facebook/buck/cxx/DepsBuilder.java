@@ -22,19 +22,19 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.args.Arg;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableSet;
 
 /** Builder suitable for generating the dependency list of a build rule. */
 // TODO(cjhopman): Delete this.
 public class DepsBuilder {
-  private final ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
+  private final ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
   private final SourcePathRuleFinder ruleFinder;
 
   public DepsBuilder(SourcePathRuleFinder ruleFinder) {
     this.ruleFinder = ruleFinder;
   }
 
-  public ImmutableSortedSet<BuildRule> build() {
+  public ImmutableSet<BuildRule> build() {
     return builder.build();
   }
 

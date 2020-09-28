@@ -553,7 +553,7 @@ public abstract class CxxSourceRuleFactory {
                   return new CxxInferCapture(
                       target,
                       getProjectFilesystem(),
-                      depsBuilder.build(),
+                      ImmutableSortedSet.copyOf(depsBuilder.build()),
                       ppFlags,
                       cFlags,
                       source.getPath(),

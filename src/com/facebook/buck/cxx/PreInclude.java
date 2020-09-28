@@ -322,7 +322,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
                   canPrecompile,
                   target,
                   getProjectFilesystem(),
-                  depsBuilder.build(),
+                  ImmutableSortedSet.copyOf(depsBuilder.build()),
                   output.getPath(),
                   preprocessorDelegate,
                   compilerDelegate,
