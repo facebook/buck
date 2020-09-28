@@ -1,8 +1,12 @@
+import io
 import operator
 import os
 import queue
 import sys
 import textwrap
+from typing import Any
+from typing import Dict
+from typing import Tuple
 from typing import Union
 
 import py
@@ -13,6 +17,7 @@ from _pytest._code.code import ExceptionChainRepr
 from _pytest._code.code import ExceptionInfo
 from _pytest._code.code import FormattedExcinfo
 from _pytest._io import TerminalWriter
+from _pytest.compat import TYPE_CHECKING
 from _pytest.pytester import LineMatcher
 
 try:
@@ -21,6 +26,9 @@ except ImportError:
     invalidate_import_caches = None
 else:
     invalidate_import_caches = getattr(importlib, "invalidate_caches", None)
+
+if TYPE_CHECKING:
+    from _pytest._code.code import _TracebackStyle
 
 
 @pytest.fixture
@@ -39,10 +47,11 @@ def test_excinfo_simple() -> None:
     assert info.type == ValueError
 
 
-def test_excinfo_from_exc_info_simple():
+def test_excinfo_from_exc_info_simple() -> None:
     try:
         raise ValueError
     except ValueError as e:
+        assert e.__traceback__ is not None
         info = _pytest._code.ExceptionInfo.from_exc_info((type(e), e, e.__traceback__))
     assert info.type == ValueError
 
@@ -120,24 +129,28 @@ class TestTraceback_f_g_h:
         assert s.endswith("raise ValueError")
 
     def test_traceback_entry_getsource_in_construct(self):
-        source = _pytest._code.Source(
-            """\
-            def xyz():
-                try:
-                    raise ValueError
-                except somenoname:
-                    pass
-            xyz()
-            """
-        )
+        def xyz():
+            try:
+                raise ValueError
+            except somenoname:  # type: ignore[name-defined] # noqa: F821
+                pass  # pragma: no cover
+
         try:
-            exec(source.compile())
+            xyz()
         except NameError:
-            tb = _pytest._code.ExceptionInfo.from_current().traceback
-            print(tb[-1].getsource())
-            s = str(tb[-1].getsource())
-            assert s.startswith("def xyz():\n    try:")
-            assert s.strip().endswith("except somenoname:")
+            excinfo = _pytest._code.ExceptionInfo.from_current()
+        else:
+            assert False, "did not raise NameError"
+
+        tb = excinfo.traceback
+        source = tb[-1].getsource()
+        assert source is not None
+        assert source.deindent().lines == [
+            "def xyz():",
+            "    try:",
+            "        raise ValueError",
+            "    except somenoname:  # type: ignore[name-defined] # noqa: F821",
+        ]
 
     def test_traceback_cut(self):
         co = _pytest._code.Code(f)
@@ -238,7 +251,7 @@ class TestTraceback_f_g_h:
         def f(n: int) -> None:
             try:
                 do_stuff()
-            except:  # noqa
+            except BaseException:
                 reraise_me()
 
         excinfo = pytest.raises(RuntimeError, f, 8)
@@ -316,25 +329,25 @@ def test_excinfo_exconly():
     assert msg.endswith("world")
 
 
-def test_excinfo_repr_str():
-    excinfo = pytest.raises(ValueError, h)
-    assert repr(excinfo) == "<ExceptionInfo ValueError() tblen=4>"
-    assert str(excinfo) == "<ExceptionInfo ValueError() tblen=4>"
+def test_excinfo_repr_str() -> None:
+    excinfo1 = pytest.raises(ValueError, h)
+    assert repr(excinfo1) == "<ExceptionInfo ValueError() tblen=4>"
+    assert str(excinfo1) == "<ExceptionInfo ValueError() tblen=4>"
 
     class CustomException(Exception):
         def __repr__(self):
             return "custom_repr"
 
-    def raises():
+    def raises() -> None:
         raise CustomException()
 
-    excinfo = pytest.raises(CustomException, raises)
-    assert repr(excinfo) == "<ExceptionInfo custom_repr tblen=2>"
-    assert str(excinfo) == "<ExceptionInfo custom_repr tblen=2>"
+    excinfo2 = pytest.raises(CustomException, raises)
+    assert repr(excinfo2) == "<ExceptionInfo custom_repr tblen=2>"
+    assert str(excinfo2) == "<ExceptionInfo custom_repr tblen=2>"
 
 
-def test_excinfo_for_later():
-    e = ExceptionInfo.for_later()
+def test_excinfo_for_later() -> None:
+    e = ExceptionInfo[BaseException].for_later()
     assert "for raises" in repr(e)
     assert "for raises" in str(e)
 
@@ -365,7 +378,7 @@ def test_excinfo_no_python_sourcecode(tmpdir):
     for item in excinfo.traceback:
         print(item)  # XXX: for some reason jinja.Template.render is printed in full
         item.source  # shouldn't fail
-        if item.path.basename == "test.txt":
+        if isinstance(item.path, py.path.local) and item.path.basename == "test.txt":
             assert str(item.source) == "{{ h()}}:"
 
 
@@ -412,7 +425,7 @@ def test_match_raises_error(testdir):
     result = testdir.runpytest()
     assert result.ret != 0
 
-    exc_msg = "Pattern '[[]123[]]+' does not match 'division by zero'"
+    exc_msg = "Regex pattern '[[]123[]]+' does not match 'division by zero'."
     result.stdout.fnmatch_lines(["E * AssertionError: {}".format(exc_msg)])
     result.stdout.no_fnmatch_line("*__tracebackhide__ = True*")
 
@@ -438,16 +451,6 @@ class TestFormattedExcinfo:
 
         return importasmod
 
-    def excinfo_from_exec(self, source):
-        source = _pytest._code.Source(source).strip()
-        try:
-            exec(source.compile())
-        except KeyboardInterrupt:
-            raise
-        except:  # noqa
-            return _pytest._code.ExceptionInfo.from_current()
-        assert 0, "did not raise"
-
     def test_repr_source(self):
         pr = FormattedExcinfo()
         source = _pytest._code.Source(
@@ -462,20 +465,31 @@ class TestFormattedExcinfo:
         assert lines[0] == "|   def f(x):"
         assert lines[1] == "        pass"
 
-    def test_repr_source_excinfo(self):
+    def test_repr_source_excinfo(self) -> None:
         """ check if indentation is right """
-        pr = FormattedExcinfo()
-        excinfo = self.excinfo_from_exec(
-            """
-                def f():
-                    assert 0
-                f()
-        """
-        )
+        try:
+
+            def f():
+                1 / 0
+
+            f()
+
+        except BaseException:
+            excinfo = _pytest._code.ExceptionInfo.from_current()
+        else:
+            assert False, "did not raise"
+
         pr = FormattedExcinfo()
         source = pr._getentrysource(excinfo.traceback[-1])
+        assert source is not None
         lines = pr.get_source(source, 1, excinfo)
-        assert lines == ["    def f():", ">       assert 0", "E       AssertionError"]
+        for line in lines:
+            print(line)
+        assert lines == [
+            "    def f():",
+            ">       1 / 0",
+            "E       ZeroDivisionError: division by zero",
+        ]
 
     def test_repr_source_not_existing(self):
         pr = FormattedExcinfo()
@@ -521,17 +535,18 @@ raise ValueError()
         assert repr.reprtraceback.reprentries[0].lines[0] == ">   ???"
         assert repr.chain[0][0].reprentries[0].lines[0] == ">   ???"
 
-    def test_repr_local(self):
+    def test_repr_local(self) -> None:
         p = FormattedExcinfo(showlocals=True)
         loc = {"y": 5, "z": 7, "x": 3, "@x": 2, "__builtins__": {}}
         reprlocals = p.repr_locals(loc)
+        assert reprlocals is not None
         assert reprlocals.lines
         assert reprlocals.lines[0] == "__builtins__ = <builtins>"
         assert reprlocals.lines[1] == "x          = 3"
         assert reprlocals.lines[2] == "y          = 5"
         assert reprlocals.lines[3] == "z          = 7"
 
-    def test_repr_local_with_error(self):
+    def test_repr_local_with_error(self) -> None:
         class ObjWithErrorInRepr:
             def __repr__(self):
                 raise NotImplementedError
@@ -539,11 +554,12 @@ raise ValueError()
         p = FormattedExcinfo(showlocals=True, truncate_locals=False)
         loc = {"x": ObjWithErrorInRepr(), "__builtins__": {}}
         reprlocals = p.repr_locals(loc)
+        assert reprlocals is not None
         assert reprlocals.lines
         assert reprlocals.lines[0] == "__builtins__ = <builtins>"
         assert "[NotImplementedError() raised in repr()]" in reprlocals.lines[1]
 
-    def test_repr_local_with_exception_in_class_property(self):
+    def test_repr_local_with_exception_in_class_property(self) -> None:
         class ExceptionWithBrokenClass(Exception):
             # Type ignored because it's bypassed intentionally.
             @property  # type: ignore
@@ -557,23 +573,26 @@ raise ValueError()
         p = FormattedExcinfo(showlocals=True, truncate_locals=False)
         loc = {"x": ObjWithErrorInRepr(), "__builtins__": {}}
         reprlocals = p.repr_locals(loc)
+        assert reprlocals is not None
         assert reprlocals.lines
         assert reprlocals.lines[0] == "__builtins__ = <builtins>"
         assert "[ExceptionWithBrokenClass() raised in repr()]" in reprlocals.lines[1]
 
-    def test_repr_local_truncated(self):
+    def test_repr_local_truncated(self) -> None:
         loc = {"l": [i for i in range(10)]}
         p = FormattedExcinfo(showlocals=True)
         truncated_reprlocals = p.repr_locals(loc)
+        assert truncated_reprlocals is not None
         assert truncated_reprlocals.lines
         assert truncated_reprlocals.lines[0] == "l          = [0, 1, 2, 3, 4, 5, ...]"
 
         q = FormattedExcinfo(showlocals=True, truncate_locals=False)
         full_reprlocals = q.repr_locals(loc)
+        assert full_reprlocals is not None
         assert full_reprlocals.lines
         assert full_reprlocals.lines[0] == "l          = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]"
 
-    def test_repr_tracebackentry_lines(self, importasmod):
+    def test_repr_tracebackentry_lines(self, importasmod) -> None:
         mod = importasmod(
             """
             def func1():
@@ -601,11 +620,12 @@ raise ValueError()
         assert not lines[4:]
 
         loc = repr_entry.reprfileloc
+        assert loc is not None
         assert loc.path == mod.__file__
         assert loc.lineno == 3
         # assert loc.message == "ValueError: hello"
 
-    def test_repr_tracebackentry_lines2(self, importasmod, tw_mock):
+    def test_repr_tracebackentry_lines2(self, importasmod, tw_mock) -> None:
         mod = importasmod(
             """
             def func1(m, x, y, z):
@@ -617,6 +637,7 @@ raise ValueError()
         entry = excinfo.traceback[-1]
         p = FormattedExcinfo(funcargs=True)
         reprfuncargs = p.repr_args(entry)
+        assert reprfuncargs is not None
         assert reprfuncargs.args[0] == ("m", repr("m" * 90))
         assert reprfuncargs.args[1] == ("x", "5")
         assert reprfuncargs.args[2] == ("y", "13")
@@ -624,13 +645,14 @@ raise ValueError()
 
         p = FormattedExcinfo(funcargs=True)
         repr_entry = p.repr_traceback_entry(entry)
+        assert repr_entry.reprfuncargs is not None
         assert repr_entry.reprfuncargs.args == reprfuncargs.args
         repr_entry.toterminal(tw_mock)
         assert tw_mock.lines[0] == "m = " + repr("m" * 90)
         assert tw_mock.lines[1] == "x = 5, y = 13"
         assert tw_mock.lines[2] == "z = " + repr("z" * 120)
 
-    def test_repr_tracebackentry_lines_var_kw_args(self, importasmod, tw_mock):
+    def test_repr_tracebackentry_lines_var_kw_args(self, importasmod, tw_mock) -> None:
         mod = importasmod(
             """
             def func1(x, *y, **z):
@@ -642,17 +664,19 @@ raise ValueError()
         entry = excinfo.traceback[-1]
         p = FormattedExcinfo(funcargs=True)
         reprfuncargs = p.repr_args(entry)
+        assert reprfuncargs is not None
         assert reprfuncargs.args[0] == ("x", repr("a"))
         assert reprfuncargs.args[1] == ("y", repr(("b",)))
         assert reprfuncargs.args[2] == ("z", repr({"c": "d"}))
 
         p = FormattedExcinfo(funcargs=True)
         repr_entry = p.repr_traceback_entry(entry)
+        assert repr_entry.reprfuncargs
         assert repr_entry.reprfuncargs.args == reprfuncargs.args
         repr_entry.toterminal(tw_mock)
         assert tw_mock.lines[0] == "x = 'a', y = ('b',), z = {'c': 'd'}"
 
-    def test_repr_tracebackentry_short(self, importasmod):
+    def test_repr_tracebackentry_short(self, importasmod) -> None:
         mod = importasmod(
             """
             def func1():
@@ -667,6 +691,7 @@ raise ValueError()
         lines = reprtb.lines
         basename = py.path.local(mod.__file__).basename
         assert lines[0] == "    func1()"
+        assert reprtb.reprfileloc is not None
         assert basename in str(reprtb.reprfileloc.path)
         assert reprtb.reprfileloc.lineno == 5
 
@@ -676,6 +701,7 @@ raise ValueError()
         lines = reprtb.lines
         assert lines[0] == '    raise ValueError("hello")'
         assert lines[1] == "E   ValueError: hello"
+        assert reprtb.reprfileloc is not None
         assert basename in str(reprtb.reprfileloc.path)
         assert reprtb.reprfileloc.lineno == 3
 
@@ -715,7 +741,7 @@ raise ValueError()
         reprtb = p.repr_traceback(excinfo)
         assert len(reprtb.reprentries) == 3
 
-    def test_traceback_short_no_source(self, importasmod, monkeypatch):
+    def test_traceback_short_no_source(self, importasmod, monkeypatch) -> None:
         mod = importasmod(
             """
             def func1():
@@ -728,7 +754,7 @@ raise ValueError()
         from _pytest._code.code import Code
 
         monkeypatch.setattr(Code, "path", "bogus")
-        excinfo.traceback[0].frame.code.path = "bogus"
+        excinfo.traceback[0].frame.code.path = "bogus"  # type: ignore[misc]
         p = FormattedExcinfo(style="short")
         reprtb = p.repr_traceback_entry(excinfo.traceback[-2])
         lines = reprtb.lines
@@ -741,7 +767,7 @@ raise ValueError()
         assert last_lines[0] == '    raise ValueError("hello")'
         assert last_lines[1] == "E   ValueError: hello"
 
-    def test_repr_traceback_and_excinfo(self, importasmod):
+    def test_repr_traceback_and_excinfo(self, importasmod) -> None:
         mod = importasmod(
             """
             def f(x):
@@ -752,7 +778,8 @@ raise ValueError()
         )
         excinfo = pytest.raises(ValueError, mod.entry)
 
-        for style in ("long", "short"):
+        styles = ("long", "short")  # type: Tuple[_TracebackStyle, ...]
+        for style in styles:
             p = FormattedExcinfo(style=style)
             reprtb = p.repr_traceback(excinfo)
             assert len(reprtb.reprentries) == 2
@@ -764,10 +791,11 @@ raise ValueError()
 
             assert repr.chain[0][0]
             assert len(repr.chain[0][0].reprentries) == len(reprtb.reprentries)
+            assert repr.reprcrash is not None
             assert repr.reprcrash.path.endswith("mod.py")
             assert repr.reprcrash.message == "ValueError: 0"
 
-    def test_repr_traceback_with_invalid_cwd(self, importasmod, monkeypatch):
+    def test_repr_traceback_with_invalid_cwd(self, importasmod, monkeypatch) -> None:
         mod = importasmod(
             """
             def f(x):
@@ -786,7 +814,9 @@ raise ValueError()
 
         def raiseos():
             nonlocal raised
-            if sys._getframe().f_back.f_code.co_name == "checked_call":
+            upframe = sys._getframe().f_back
+            assert upframe is not None
+            if upframe.f_code.co_name == "checked_call":
                 # Only raise with expected calls, but not via e.g. inspect for
                 # py38-windows.
                 raised += 1
@@ -830,7 +860,7 @@ raise ValueError()
         assert tw_mock.lines[-1] == "content"
         assert tw_mock.lines[-2] == ("-", "title")
 
-    def test_repr_excinfo_reprcrash(self, importasmod):
+    def test_repr_excinfo_reprcrash(self, importasmod) -> None:
         mod = importasmod(
             """
             def entry():
@@ -839,6 +869,7 @@ raise ValueError()
         )
         excinfo = pytest.raises(ValueError, mod.entry)
         repr = excinfo.getrepr()
+        assert repr.reprcrash is not None
         assert repr.reprcrash.path.endswith("mod.py")
         assert repr.reprcrash.lineno == 3
         assert repr.reprcrash.message == "ValueError"
@@ -863,7 +894,7 @@ raise ValueError()
             assert reprtb.extraline == "!!! Recursion detected (same locals & position)"
             assert str(reprtb)
 
-    def test_reprexcinfo_getrepr(self, importasmod):
+    def test_reprexcinfo_getrepr(self, importasmod) -> None:
         mod = importasmod(
             """
             def f(x):
@@ -874,14 +905,15 @@ raise ValueError()
         )
         excinfo = pytest.raises(ValueError, mod.entry)
 
-        for style in ("short", "long", "no"):
+        styles = ("short", "long", "no")  # type: Tuple[_TracebackStyle, ...]
+        for style in styles:
             for showlocals in (True, False):
                 repr = excinfo.getrepr(style=style, showlocals=showlocals)
                 assert repr.reprtraceback.style == style
 
                 assert isinstance(repr, ExceptionChainRepr)
-                for repr in repr.chain:
-                    assert repr[0].style == style
+                for r in repr.chain:
+                    assert r[0].style == style
 
     def test_reprexcinfo_unicode(self):
         from _pytest._code.code import TerminalRepr
@@ -1015,32 +1047,39 @@ raise ValueError()
     @pytest.mark.parametrize(
         "reproptions",
         [
-            {
-                "style": style,
-                "showlocals": showlocals,
-                "funcargs": funcargs,
-                "tbfilter": tbfilter,
-            }
-            for style in ("long", "short", "no")
+            pytest.param(
+                {
+                    "style": style,
+                    "showlocals": showlocals,
+                    "funcargs": funcargs,
+                    "tbfilter": tbfilter,
+                },
+                id="style={},showlocals={},funcargs={},tbfilter={}".format(
+                    style, showlocals, funcargs, tbfilter
+                ),
+            )
+            for style in ["long", "short", "line", "no", "native", "value", "auto"]
             for showlocals in (True, False)
             for tbfilter in (True, False)
             for funcargs in (True, False)
         ],
     )
-    def test_format_excinfo(self, importasmod, reproptions):
-        mod = importasmod(
-            """
-            def g(x):
-                raise ValueError(x)
-            def f():
-                g(3)
-        """
-        )
-        excinfo = pytest.raises(ValueError, mod.f)
-        tw = TerminalWriter(stringio=True)
+    def test_format_excinfo(self, reproptions: Dict[str, Any]) -> None:
+        def bar():
+            assert False, "some error"
+
+        def foo():
+            bar()
+
+        # using inline functions as opposed to importasmod so we get source code lines
+        # in the tracebacks (otherwise getinspect doesn't find the source code).
+        with pytest.raises(AssertionError) as excinfo:
+            foo()
+        file = io.StringIO()
+        tw = TerminalWriter(file=file)
         repr = excinfo.getrepr(**reproptions)
         repr.toterminal(tw)
-        assert tw.stringio.getvalue()
+        assert file.getvalue()
 
     def test_traceback_repr_style(self, importasmod, tw_mock):
         mod = importasmod(
@@ -1255,11 +1294,12 @@ raise ValueError()
         getattr(excinfo.value, attr).__traceback__ = None
 
         r = excinfo.getrepr()
-        tw = TerminalWriter(stringio=True)
+        file = io.StringIO()
+        tw = TerminalWriter(file=file)
         tw.hasmarkup = False
         r.toterminal(tw)
 
-        matcher = LineMatcher(tw.stringio.getvalue().splitlines())
+        matcher = LineMatcher(file.getvalue().splitlines())
         matcher.fnmatch_lines(
             [
                 "ValueError: invalid value",

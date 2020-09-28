@@ -1,9 +1,9 @@
 """
 python version compatibility code
 """
+import enum
 import functools
 import inspect
-import io
 import os
 import re
 import sys
@@ -13,7 +13,6 @@ from inspect import signature
 from typing import Any
 from typing import Callable
 from typing import Generic
-from typing import IO
 from typing import Optional
 from typing import overload
 from typing import Tuple
@@ -34,14 +33,22 @@ else:
 
 
 if TYPE_CHECKING:
-    from typing import Type  # noqa: F401 (used in type string)
+    from typing import NoReturn
+    from typing import Type
+    from typing_extensions import Final
 
 
 _T = TypeVar("_T")
 _S = TypeVar("_S")
 
 
-NOTSET = object()
+# fmt: off
+# Singleton type for NOTSET, as described in:
+# https://www.python.org/dev/peps/pep-0484/#support-for-singleton-types-in-unions
+class NotSetType(enum.Enum):
+    token = 0
+NOTSET = NotSetType.token  # type: Final # noqa: E305
+# fmt: on
 
 MODULE_NOT_FOUND_ERROR = (
     "ModuleNotFoundError" if sys.version_info[:2] >= (3, 6) else "ImportError"
@@ -343,49 +350,6 @@ def safe_isclass(obj: object) -> bool:
         return False
 
 
-COLLECT_FAKEMODULE_ATTRIBUTES = (
-    "Collector",
-    "Module",
-    "Function",
-    "Instance",
-    "Session",
-    "Item",
-    "Class",
-    "File",
-    "_fillfuncargs",
-)
-
-
-def _setup_collect_fakemodule() -> None:
-    from types import ModuleType
-    import pytest
-
-    # Types ignored because the module is created dynamically.
-    pytest.collect = ModuleType("pytest.collect")  # type: ignore
-    pytest.collect.__all__ = []  # type: ignore  # used for setns
-    for attr_name in COLLECT_FAKEMODULE_ATTRIBUTES:
-        setattr(pytest.collect, attr_name, getattr(pytest, attr_name))  # type: ignore
-
-
-class CaptureIO(io.TextIOWrapper):
-    def __init__(self) -> None:
-        super().__init__(io.BytesIO(), encoding="UTF-8", newline="", write_through=True)
-
-    def getvalue(self) -> str:
-        assert isinstance(self.buffer, io.BytesIO)
-        return self.buffer.getvalue().decode("UTF-8")
-
-
-class CaptureAndPassthroughIO(CaptureIO):
-    def __init__(self, other: IO) -> None:
-        self._other = other
-        super().__init__()
-
-    def write(self, s) -> int:
-        super().write(s)
-        return self._other.write(s)
-
-
 if sys.version_info < (3, 5, 2):
 
     def overload(f):  # noqa: F811
@@ -426,3 +390,50 @@ else:
                 return self
             value = instance.__dict__[self.func.__name__] = self.func(instance)
             return value
+
+
+# Sometimes an algorithm needs a dict which yields items in the order in which
+# they were inserted when iterated. Since Python 3.7, `dict` preserves
+# insertion order. Since `dict` is faster and uses less memory than
+# `OrderedDict`, prefer to use it if possible.
+if sys.version_info >= (3, 7):
+    order_preserving_dict = dict
+else:
+    from collections import OrderedDict
+
+    order_preserving_dict = OrderedDict
+
+
+# Perform exhaustiveness checking.
+#
+# Consider this example:
+#
+#     MyUnion = Union[int, str]
+#
+#     def handle(x: MyUnion) -> int {
+#         if isinstance(x, int):
+#             return 1
+#         elif isinstance(x, str):
+#             return 2
+#         else:
+#             raise Exception('unreachable')
+#
+# Now suppose we add a new variant:
+#
+#     MyUnion = Union[int, str, bytes]
+#
+# After doing this, we must remember ourselves to go and update the handle
+# function to handle the new variant.
+#
+# With `assert_never` we can do better:
+#
+#     // throw new Error('unreachable');
+#     return assert_never(x)
+#
+# Now, if we forget to handle the new variant, the type-checker will emit a
+# compile-time error, instead of the runtime error we would have gotten
+# previously.
+#
+# This also work for Enums (if you use `is` to compare) and Literals.
+def assert_never(value: "NoReturn") -> "NoReturn":
+    assert False, "Unhandled value: {} ({})".format(value, type(value).__name__)

@@ -151,7 +151,7 @@ marked ``smtp_connection`` fixture function.  Running the test looks like this:
 
     $ pytest test_smtpsimple.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 1 item
@@ -179,7 +179,7 @@ In the failure traceback we see that the test function was called with a
 function.  The test function fails on our deliberate ``assert 0``.  Here is
 the exact protocol used by ``pytest`` to call the test function this way:
 
-1. pytest :ref:`finds <test discovery>` the ``test_ehlo`` because
+1. pytest :ref:`finds <test discovery>` the test ``test_ehlo`` because
    of the ``test_`` prefix.  The test function needs a function argument
    named ``smtp_connection``.  A matching fixture function is discovered by
    looking for a fixture-marked function named ``smtp_connection``.
@@ -244,8 +244,8 @@ and `pytest-datafiles <https://pypi.org/project/pytest-datafiles/>`__.
 
 .. _smtpshared:
 
-Scope: sharing a fixture instance across tests in a class, module or session
-----------------------------------------------------------------------------
+Scope: sharing fixtures across classes, modules, packages or session
+--------------------------------------------------------------------
 
 .. regendoc:wipe
 
@@ -303,7 +303,7 @@ inspect what is going on and can now run the tests:
 
     $ pytest test_module.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 2 items
@@ -356,29 +356,23 @@ instance, you can simply declare it:
         # all tests needing it
         ...
 
-Finally, the ``class`` scope will invoke the fixture once per test *class*.
+
+Fixture scopes
+^^^^^^^^^^^^^^
+
+Fixtures are created when first requested by a test, and are destroyed based on their ``scope``:
+
+* ``function``: the default scope, the fixture is destroyed at the end of the test.
+* ``class``: the fixture is destroyed during teardown of the last test in the class.
+* ``module``: the fixture is destroyed during teardown of the last test in the module.
+* ``package``: the fixture is destroyed during teardown of the last test in the package.
+* ``session``: the fixture is destroyed at the end of the test session.
 
 .. note::
 
-    Pytest will only cache one instance of a fixture at a time.
-    This means that when using a parametrized fixture, pytest may invoke a fixture more than once in the given scope.
-
-
-``package`` scope (experimental)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-
-In pytest 3.7 the ``package`` scope has been introduced. Package-scoped fixtures
-are finalized when the last test of a *package* finishes.
-
-.. warning::
-    This functionality is considered **experimental** and may be removed in future
-    versions if hidden corner-cases or serious problems with this functionality
-    are discovered after it gets more usage in the wild.
-
-    Use this new feature sparingly and please make sure to report any issues you find.
-
+    Pytest only caches one instance of a fixture at a time, which
+    means that when using a parametrized fixture, pytest may invoke a fixture more than once in
+    the given scope.
 
 .. _dynamic scope:
 
@@ -415,7 +409,7 @@ Order: Higher-scoped fixtures are instantiated first
 
 
 
-Within a function request for features, fixture of higher-scopes (such as ``session``) are instantiated first than
+Within a function request for fixtures, those of higher-scopes (such as ``session``) are instantiated before
 lower-scoped fixtures (such as ``function`` or ``class``). The relative order of fixtures of same scope follows
 the declared order in the test function and honours dependencies between fixtures. Autouse fixtures will be
 instantiated before explicitly used fixtures.
@@ -665,6 +659,37 @@ Running it:
 voila! The ``smtp_connection`` fixture function picked up our mail server name
 from the module namespace.
 
+.. _`using-markers`:
+
+Using markers to pass data to fixtures
+-------------------------------------------------------------
+
+Using the :py:class:`request <FixtureRequest>` object, a fixture can also access
+markers which are applied to a test function. This can be useful to pass data
+into a fixture from a test:
+
+.. code-block:: python
+
+    import pytest
+
+
+    @pytest.fixture
+    def fixt(request):
+        marker = request.node.get_closest_marker("fixt_data")
+        if marker is None:
+            # Handle missing marker in some way...
+            data = None
+        else:
+            data = marker.args[0]
+
+        # Do something with the data
+        return data
+
+
+    @pytest.mark.fixt_data(42)
+    def test_fixt(fixt):
+        assert fixt == 42
+
 .. _`fixture-factory`:
 
 Factories as fixtures
@@ -828,7 +853,7 @@ be used with ``-k`` to select specific cases to run, and they will
 also identify the specific case when one is failing.  Running pytest
 with ``--collect-only`` will show the generated IDs.
 
-Numbers, strings, booleans and None will have their usual string
+Numbers, strings, booleans and ``None`` will have their usual string
 representation used in the test ID. For other objects, pytest will
 make a string based on the argument name.  It is possible to customise
 the string used in a test ID for a certain fixture value by using the
@@ -867,7 +892,7 @@ the string used in a test ID for a certain fixture value by using the
 The above shows how ``ids`` can be either a list of strings to use or
 a function which will be called with the fixture value and then
 has to return a string to use.  In the latter case if the function
-return ``None`` then pytest's auto-generated ID will be used.
+returns ``None`` then pytest's auto-generated ID will be used.
 
 Running the above tests results in the following test IDs being used:
 
@@ -875,10 +900,11 @@ Running the above tests results in the following test IDs being used:
 
    $ pytest --collect-only
    =========================== test session starts ============================
-   platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+   platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
    cachedir: $PYTHON_PREFIX/.pytest_cache
    rootdir: $REGENDOC_TMPDIR
    collected 10 items
+
    <Module test_anothersmtp.py>
      <Function test_showhelo[smtp.gmail.com]>
      <Function test_showhelo[mail.python.org]>
@@ -925,7 +951,7 @@ Running this test will *skip* the invocation of ``data_set`` with value ``2``:
 
     $ pytest test_fixture_marks.py -v
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y -- $PYTHON_PREFIX/bin/python
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y -- $PYTHON_PREFIX/bin/python
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collecting ... collected 3 items
@@ -975,7 +1001,7 @@ Here we declare an ``app`` fixture which receives the previously defined
 
     $ pytest -v test_appsetup.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y -- $PYTHON_PREFIX/bin/python
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y -- $PYTHON_PREFIX/bin/python
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collecting ... collected 2 items
@@ -1055,7 +1081,7 @@ Let's run the tests in verbose mode and with looking at the print-output:
 
     $ pytest -v -s test_module.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y -- $PYTHON_PREFIX/bin/python
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y -- $PYTHON_PREFIX/bin/python
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collecting ... collected 8 items
@@ -1181,15 +1207,12 @@ You can specify multiple fixtures like this:
     def test():
         ...
 
-and you may specify fixture usage at the test module level, using
-a generic feature of the mark mechanism:
+and you may specify fixture usage at the test module level using :globalvar:`pytestmark`:
 
 .. code-block:: python
 
     pytestmark = pytest.mark.usefixtures("cleandir")
 
-Note that the assigned variable *must* be called ``pytestmark``, assigning e.g.
-``foomark`` will not activate the fixtures.
 
 It is also possible to put fixtures required by all tests in your project
 into an ini-file:

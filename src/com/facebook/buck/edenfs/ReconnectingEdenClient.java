@@ -85,7 +85,7 @@ final class ReconnectingEdenClient implements EdenClient {
   }
 
   @Override
-  public List<SHA1Result> getSHA1(String mountPoint, List<String> paths)
+  public List<SHA1Result> getSHA1(byte[] mountPoint, List<byte[]> paths)
       throws IOException, TException, EdenError {
     try {
       return attemptGetSHA1(mountPoint, paths);
@@ -96,8 +96,8 @@ final class ReconnectingEdenClient implements EdenClient {
     return attemptGetSHA1(mountPoint, paths);
   }
 
-  private List<SHA1Result> attemptGetSHA1(String mountPoint, List<String> paths)
-      throws IOException, TException {
+  private List<SHA1Result> attemptGetSHA1(byte[] mountPoint, List<byte[]> paths)
+      throws IOException, TException, EdenError {
     List<SHA1Result> sha1s = getConnectedClient().getSHA1(mountPoint, paths);
     lastSuccessfulRequest = clock.currentTimeMillis();
     return sha1s;

@@ -122,6 +122,8 @@ public class CxxBuckConfig {
 
   private static final String CHECK_GTEST_TEST_LIST = "check_gtest_test_list";
 
+  private static final String PREFIX_MAP_FORMAT = "prefix_map_format";
+
   // TODO(T75117164): This is a temporary flag, remove after successful deployment
   private static final String SKIP_SYSTEM_FRAMEWORK_SEARCH_PATHS =
       "skip_system_framework_search_paths";
@@ -629,6 +631,10 @@ public class CxxBuckConfig {
 
   public BuckConfig getDelegate() {
     return delegate;
+  }
+
+  public Optional<String> getPrefixMapFormat() {
+    return delegate.getValue(cxxSection, PREFIX_MAP_FORMAT);
   }
 
   /**

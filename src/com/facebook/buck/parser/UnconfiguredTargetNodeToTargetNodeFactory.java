@@ -42,7 +42,6 @@ import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.parser.config.ParserConfig;
-import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -168,8 +167,6 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
               configurationDeps,
               unconfiguredTargetNode.getAttributes(),
               compatibleWith);
-    } catch (CoerceFailedException e) {
-      throw new HumanReadableException(e, dependencyStack, e.getMessage());
     }
 
     target.getTargetConfiguration().getConfigurationTarget().ifPresent(configurationDeps::add);

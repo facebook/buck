@@ -1,25 +1,28 @@
 import io
 import os
 import sys
+from typing import Generator
 from typing import TextIO
 
 import pytest
+from _pytest.config import Config
+from _pytest.config.argparsing import Parser
+from _pytest.nodes import Item
 from _pytest.store import StoreKey
 
 
 fault_handler_stderr_key = StoreKey[TextIO]()
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: Parser) -> None:
     help = (
         "Dump the traceback of all threads if a test takes "
-        "more than TIMEOUT seconds to finish.\n"
-        "Not available on Windows."
+        "more than TIMEOUT seconds to finish."
     )
     parser.addini("faulthandler_timeout", help, default=0.0)
 
 
-def pytest_configure(config):
+def pytest_configure(config: Config) -> None:
     import faulthandler
 
     if not faulthandler.is_enabled():
@@ -47,14 +50,14 @@ class FaultHandlerHooks:
     """Implements hooks that will actually install fault handler before tests execute,
     as well as correctly handle pdb and internal errors."""
 
-    def pytest_configure(self, config):
+    def pytest_configure(self, config: Config) -> None:
         import faulthandler
 
         stderr_fd_copy = os.dup(self._get_stderr_fileno())
         config._store[fault_handler_stderr_key] = open(stderr_fd_copy, "w")
         faulthandler.enable(file=config._store[fault_handler_stderr_key])
 
-    def pytest_unconfigure(self, config):
+    def pytest_unconfigure(self, config: Config) -> None:
         import faulthandler
 
         faulthandler.disable()
@@ -80,8 +83,8 @@ class FaultHandlerHooks:
     def get_timeout_config_value(config):
         return float(config.getini("faulthandler_timeout") or 0.0)
 
-    @pytest.hookimpl(hookwrapper=True)
-    def pytest_runtest_protocol(self, item):
+    @pytest.hookimpl(hookwrapper=True, trylast=True)
+    def pytest_runtest_protocol(self, item: Item) -> Generator[None, None, None]:
         timeout = self.get_timeout_config_value(item.config)
         stderr = item.config._store[fault_handler_stderr_key]
         if timeout > 0 and stderr is not None:
@@ -96,7 +99,7 @@ class FaultHandlerHooks:
             yield
 
     @pytest.hookimpl(tryfirst=True)
-    def pytest_enter_pdb(self):
+    def pytest_enter_pdb(self) -> None:
         """Cancel any traceback dumping due to timeout before entering pdb.
         """
         import faulthandler
@@ -104,7 +107,7 @@ class FaultHandlerHooks:
         faulthandler.cancel_dump_traceback_later()
 
     @pytest.hookimpl(tryfirst=True)
-    def pytest_exception_interact(self):
+    def pytest_exception_interact(self) -> None:
         """Cancel any traceback dumping due to an interactive exception being
         raised.
         """

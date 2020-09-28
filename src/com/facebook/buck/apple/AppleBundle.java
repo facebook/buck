@@ -58,6 +58,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.types.Pair;
@@ -77,6 +78,7 @@ import java.util.SortedSet;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nonnull;
 
 /**
  * Creates a bundle: a directory containing files and subdirectories, described by an Info.plist.
@@ -310,10 +312,17 @@ public class AppleBundle extends AbstractBuildRule
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
 
-    stepsBuilder.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot)));
+    Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier =
+        getPreviousBuildHashesSupplier(context, stepsBuilder);
+
+    if (incrementalBundlingEnabled) {
+      createBundleRootDirectory(context, stepsBuilder);
+    } else {
+      stepsBuilder.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot)));
+    }
 
     if (hasBinary()) {
       appendCopyDsymStep(stepsBuilder, buildableContext, context);
@@ -337,6 +346,10 @@ public class AppleBundle extends AbstractBuildRule
         appendWriteNewContentHashesStep(
             stepsBuilder, context, buildableContext, newContentHashesSupplier);
       }
+
+      Optional<Supplier<ImmutableMap<RelPath, String>>> maybeNewContentHashesSupplier =
+          getCurrentBuildHashesSupplier(context, buildableContext, stepsBuilder);
+
       AppleResourceProcessing.addStepsToCopyResources(
           context,
           stepsBuilder,
@@ -346,7 +359,9 @@ public class AppleBundle extends AbstractBuildRule
           bundleRoot,
           destinations,
           getProjectFilesystem(),
-          maybeProcessedResourcesDir.get());
+          maybeProcessedResourcesDir.get(),
+          oldContentHashesSupplier,
+          maybeNewContentHashesSupplier);
     } else {
       AppleResourceProcessing.deprecated_addStepsToCopyResources(
           context,
@@ -428,6 +443,62 @@ public class AppleBundle extends AbstractBuildRule
         context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput()).getPath());
 
     return stepsBuilder.build();
+  }
+
+  @Nonnull
+  private Optional<Supplier<ImmutableMap<RelPath, String>>> getCurrentBuildHashesSupplier(
+      BuildContext context,
+      BuildableContext buildableContext,
+      ImmutableList.Builder<Step> stepsBuilder) {
+    if (incrementalBundlingEnabled) {
+      ImmutableSortedMap.Builder<RelPath, String> newContentHashesBuilder =
+          ImmutableSortedMap.orderedBy(RelPath.comparator());
+      Optional<Supplier<ImmutableMap<RelPath, String>>> maybeNewContentHashesSupplier =
+          Optional.of(newContentHashesBuilder::build);
+      addStepsToComputeNewContentHashes(
+          context.getSourcePathResolver(), stepsBuilder, newContentHashesBuilder);
+      appendWriteNewContentHashesStep(
+          stepsBuilder, context, buildableContext, maybeNewContentHashesSupplier.get());
+      return maybeNewContentHashesSupplier;
+    } else {
+      return Optional.empty();
+    }
+  }
+
+  private void createBundleRootDirectory(
+      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
+    BuildCellRelativePath bundleRootPath =
+        BuildCellRelativePath.fromCellRelativePath(
+            context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot);
+    if (incrementalBundlingEnabled) {
+      stepsBuilder.add(MkdirStep.of(bundleRootPath));
+    } else {
+      stepsBuilder.addAll(MakeCleanDirectoryStep.of(bundleRootPath));
+    }
+  }
+
+  @Nonnull
+  private Supplier<ImmutableMap<RelPath, String>> getPreviousBuildHashesSupplier(
+      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
+    ImmutableMap.Builder<RelPath, String> oldContentHashesBuilder = ImmutableMap.builder();
+    Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier =
+        oldContentHashesBuilder::build;
+    if (incrementalBundlingEnabled) {
+      appendReadExistingContentHashesStep(
+          stepsBuilder,
+          AbsPath.of(context.getBuildCellRootPath().resolve(getContentHashesFilePath())),
+          oldContentHashesBuilder);
+    }
+    return oldContentHashesSupplier;
+  }
+
+  private void appendReadExistingContentHashesStep(
+      ImmutableList.Builder<Step> stepsBuilder,
+      AbsPath contentHashesFilePath,
+      ImmutableMap.Builder<RelPath, String> bundlePartPathToHash) {
+    stepsBuilder.add(
+        new AppleBundleContentHashesReadStep(
+            getProjectFilesystem(), contentHashesFilePath, bundlePartPathToHash));
   }
 
   private void addStepsToComputeNewContentHashes(

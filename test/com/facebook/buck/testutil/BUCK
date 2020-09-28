@@ -56,6 +56,7 @@ java_library(
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/util/timing:testutil",
+        "//third-party/java/easymock:easymock",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",
         "//third-party/java/immutables:immutables",

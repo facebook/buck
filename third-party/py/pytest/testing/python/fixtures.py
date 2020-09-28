@@ -3,7 +3,7 @@ import textwrap
 
 import pytest
 from _pytest import fixtures
-from _pytest.fixtures import FixtureLookupError
+from _pytest.config import ExitCode
 from _pytest.fixtures import FixtureRequest
 from _pytest.pathlib import Path
 from _pytest.pytester import get_public_names
@@ -110,7 +110,7 @@ class TestFillFixtures:
     def test_funcarg_basic(self, testdir):
         testdir.copy_example()
         item = testdir.getitem(Path("test_funcarg_basic.py"))
-        fixtures.fillfixtures(item)
+        item._request._fillfixtures()
         del item.funcargs["request"]
         assert len(get_public_names(item.funcargs)) == 2
         assert item.funcargs["some"] == "test_func"
@@ -654,7 +654,7 @@ class TestRequestBasic:
         )
         req = item._request
 
-        with pytest.raises(FixtureLookupError):
+        with pytest.raises(pytest.FixtureLookupError):
             req.getfixturevalue("notexists")
         val = req.getfixturevalue("something")
         assert val == 1
@@ -664,7 +664,7 @@ class TestRequestBasic:
         assert val2 == 2
         val2 = req.getfixturevalue("other")  # see about caching
         assert val2 == 2
-        pytest._fillfuncargs(item)
+        item._request._fillfixtures()
         assert item.funcargs["something"] == 1
         assert len(get_public_names(item.funcargs)) == 2
         assert "request" in item.funcargs
@@ -681,7 +681,7 @@ class TestRequestBasic:
         """
         )
         item.session._setupstate.prepare(item)
-        pytest._fillfuncargs(item)
+        item._request._fillfixtures()
         # successively check finalization calls
         teardownlist = item.getparent(pytest.Module).obj.teardownlist
         ss = item.session._setupstate
@@ -1315,7 +1315,7 @@ class TestFixtureUsages:
 
             DB_INITIALIZED = None
 
-            @pytest.yield_fixture(scope="session", autouse=True)
+            @pytest.fixture(scope="session", autouse=True)
             def db():
                 global DB_INITIALIZED
                 DB_INITIALIZED = True
@@ -1894,7 +1894,9 @@ class TestAutouseManagement:
         reprec = testdir.inline_run("-v", "-s", confcut)
         reprec.assertoutcome(passed=8)
         config = reprec.getcalls("pytest_unconfigure")[0].config
-        values = config.pluginmanager._getconftestmodules(p)[0].values
+        values = config.pluginmanager._getconftestmodules(p, importmode="prepend")[
+            0
+        ].values
         assert values == ["fin_a1", "fin_a2", "fin_b1", "fin_b2"] * 2
 
     def test_scope_ordering(self, testdir):
@@ -2958,8 +2960,7 @@ class TestFixtureMarker:
             """
             import pytest
 
-            @pytest.yield_fixture(params=[object(), object()],
-                                  ids=['alpha', 'beta'])
+            @pytest.fixture(params=[object(), object()], ids=['alpha', 'beta'])
             def fix(request):
                  yield request.param
 
@@ -3799,7 +3800,7 @@ class TestScopeOrdering:
         request = FixtureRequest(items[0])
         assert request.fixturenames == "m1 f1".split()
 
-    def test_func_closure_with_native_fixtures(self, testdir, monkeypatch):
+    def test_func_closure_with_native_fixtures(self, testdir, monkeypatch) -> None:
         """Sanity check that verifies the order returned by the closures and the actual fixture execution order:
         The execution order may differ because of fixture inter-dependencies.
         """
@@ -3849,9 +3850,8 @@ class TestScopeOrdering:
         )
         testdir.runpytest()
         # actual fixture execution differs: dependent fixtures must be created first ("my_tmpdir")
-        assert (
-            pytest.FIXTURE_ORDER == "s1 my_tmpdir_factory p1 m1 my_tmpdir f1 f2".split()
-        )
+        FIXTURE_ORDER = pytest.FIXTURE_ORDER  # type: ignore[attr-defined]
+        assert FIXTURE_ORDER == "s1 my_tmpdir_factory p1 m1 my_tmpdir f1 f2".split()
 
     def test_func_closure_module(self, testdir):
         testdir.makepyfile(
@@ -4155,11 +4155,11 @@ def test_fixture_named_request(testdir):
     )
 
 
-def test_fixture_duplicated_arguments():
+def test_fixture_duplicated_arguments() -> None:
     """Raise error if there are positional and keyword arguments for the same parameter (#1682)."""
     with pytest.raises(TypeError) as excinfo:
 
-        @pytest.fixture("session", scope="session")
+        @pytest.fixture("session", scope="session")  # type: ignore[call-overload]
         def arg(arg):
             pass
 
@@ -4169,14 +4169,37 @@ def test_fixture_duplicated_arguments():
         "Use only keyword arguments."
     )
 
+    with pytest.raises(TypeError) as excinfo:
 
-def test_fixture_with_positionals():
+        @pytest.fixture(  # type: ignore[call-overload]
+            "function",
+            ["p1"],
+            True,
+            ["id1"],
+            "name",
+            scope="session",
+            params=["p1"],
+            autouse=True,
+            ids=["id1"],
+            name="name",
+        )
+        def arg2(request):
+            pass
+
+    assert (
+        str(excinfo.value)
+        == "The fixture arguments are defined as positional and keyword: scope, params, autouse, ids, name. "
+        "Use only keyword arguments."
+    )
+
+
+def test_fixture_with_positionals() -> None:
     """Raise warning, but the positionals should still works (#1682)."""
     from _pytest.deprecated import FIXTURE_POSITIONAL_ARGUMENTS
 
     with pytest.warns(pytest.PytestDeprecationWarning) as warnings:
 
-        @pytest.fixture("function", [0], True)
+        @pytest.fixture("function", [0], True)  # type: ignore[call-overload]
         def fixture_with_positionals():
             pass
 
@@ -4185,6 +4208,18 @@ def test_fixture_with_positionals():
     assert fixture_with_positionals._pytestfixturefunction.scope == "function"
     assert fixture_with_positionals._pytestfixturefunction.params == (0,)
     assert fixture_with_positionals._pytestfixturefunction.autouse
+
+
+def test_fixture_with_too_many_positionals() -> None:
+    with pytest.raises(TypeError) as excinfo:
+
+        @pytest.fixture("function", [0], True, ["id"], "name", "extra")  # type: ignore[call-overload]
+        def fixture_with_positionals():
+            pass
+
+    assert (
+        str(excinfo.value) == "fixture() takes 5 positional arguments but 6 were given"
+    )
 
 
 def test_indirect_fixture_does_not_break_scope(testdir):
@@ -4291,3 +4326,23 @@ def test_fixture_arg_ordering(testdir):
     )
     result = testdir.runpytest("-vv", str(p1))
     assert result.ret == 0
+
+
+def test_yield_fixture_with_no_value(testdir):
+    testdir.makepyfile(
+        """
+        import pytest
+        @pytest.fixture(name='custom')
+        def empty_yield():
+            if False:
+                yield
+
+        def test_fixt(custom):
+            pass
+        """
+    )
+    expected = "E               ValueError: custom did not yield a value"
+    result = testdir.runpytest()
+    result.assert_outcomes(errors=1)
+    result.stdout.fnmatch_lines([expected])
+    assert result.ret == ExitCode.TESTS_FAILED

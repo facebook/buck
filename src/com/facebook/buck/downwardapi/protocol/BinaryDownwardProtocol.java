@@ -25,6 +25,7 @@ import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import javax.annotation.Nullable;
 
 /** Binary implementation of Downward API Protocol. */
 enum BinaryDownwardProtocol implements DownwardProtocol {
@@ -43,15 +44,25 @@ enum BinaryDownwardProtocol implements DownwardProtocol {
   }
 
   @Override
+  @Nullable
   public EventTypeMessage.EventType readEventType(InputStream inputStream) throws IOException {
-    return EventTypeMessage.parseDelimitedFrom(inputStream).getEventType();
+    EventTypeMessage eventTypeMessage = EventTypeMessage.parseDelimitedFrom(inputStream);
+    if (eventTypeMessage == null) {
+      return null;
+    }
+    return eventTypeMessage.getEventType();
   }
 
   @SuppressWarnings("unchecked")
   @Override
+  @Nullable
   public <T extends AbstractMessage> T readEvent(
       InputStream inputStream, EventTypeMessage.EventType eventType) throws IOException {
-    return (T) parseMessage(inputStream, eventType);
+    AbstractMessage message = parseMessage(inputStream, eventType);
+    if (message == null) {
+      return null;
+    }
+    return (T) message;
   }
 
   @Override

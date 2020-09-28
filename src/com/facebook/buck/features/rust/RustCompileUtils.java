@@ -71,6 +71,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multimaps;
@@ -80,7 +81,6 @@ import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -102,7 +102,7 @@ public class RustCompileUtils {
       RustBuckConfig rustConfig,
       DownwardApiConfig downwardApiConfig,
       ImmutableSortedMap<String, Arg> environment,
-      ImmutableList<Arg> extraFlags,
+      ImmutableList<Arg> extraRustcFlags,
       ImmutableList<Arg> extraLinkerFlags,
       Iterable<Arg> linkerInputs,
       String crateName,
@@ -130,7 +130,7 @@ public class RustCompileUtils {
                     rustConfig,
                     downwardApiConfig,
                     environment,
-                    extraFlags,
+                    extraRustcFlags,
                     extraLinkerFlags,
                     linkerInputs,
                     crateType,
@@ -158,6 +158,48 @@ public class RustCompileUtils {
       return !linkable.isProcMacro();
     }
     return false;
+  }
+
+  public static Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> getRustcFlagsAndEnv(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
+      RustPlatform rustPlatform,
+      ImmutableList<StringArg> ruleFlags,
+      RustCommonArgs args) {
+
+    StringWithMacrosConverter converter =
+        RustCompileUtils.getMacroExpander(context, buildTarget, rustPlatform.getCxxPlatform());
+
+    ImmutableList.Builder<Arg> rustcArgs = ImmutableList.builder();
+
+    RustCompileUtils.addFeatures(buildTarget, args.getFeatures(), rustcArgs);
+    RustCompileUtils.addTargetTripleForFlavor(rustPlatform.getFlavor(), rustcArgs);
+    rustcArgs.addAll(ruleFlags);
+    args.getRustcFlags().forEach(arg -> rustcArgs.add(converter.convert(arg)));
+
+    ImmutableSortedMap<String, Arg> env =
+        ImmutableSortedMap.copyOf(Maps.transformValues(args.getEnv(), converter::convert));
+
+    return new Pair<>(rustcArgs.build(), env);
+  }
+
+  public static ImmutableList<Arg> getLinkerFlags(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
+      RustPlatform rustPlatform,
+      RustLinkableArgs args) {
+
+    StringWithMacrosConverter converter =
+        RustCompileUtils.getMacroExpander(context, buildTarget, rustPlatform.getCxxPlatform());
+
+    ImmutableList.Builder<Arg> builder = new ImmutableList.Builder<>();
+
+    args.getLinkerFlags().forEach(arg -> builder.add(converter.convert(arg)));
+    args.getPlatformLinkerFlags()
+        .getMatchingValues(rustPlatform.getFlavor().toString())
+        .forEach(platargs -> platargs.forEach(arg -> builder.add(converter.convert(arg))));
+
+    return builder.build();
   }
 
   /**
@@ -197,12 +239,14 @@ public class RustCompileUtils {
       String rootModule,
       boolean forceRlib,
       boolean preferStatic,
-      Iterable<BuildRule> ruledeps,
+      Iterable<BuildRule> depRules,
       ImmutableMap<String, BuildTarget> depsAliases,
       Optional<String> incremental) {
-    CxxPlatform cxxPlatform = rustPlatform.getCxxPlatform();
+    ImmutableList.Builder<Arg> args = ImmutableList.builder();
+    ImmutableList.Builder<Arg> depArgs = ImmutableList.builder();
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
 
+    CxxPlatform cxxPlatform = rustPlatform.getCxxPlatform();
     String filename = crateType.filenameFor(target, crateName, cxxPlatform);
 
     // Use the C linker configuration for CDYLIB
@@ -211,13 +255,9 @@ public class RustCompileUtils {
       linkerArgs.addAll(StringArg.from(linker.soname(filename)));
     }
 
-    Stream.concat(rustPlatform.getLinkerArgs().stream(), extraLinkerFlags.stream())
-        .forEach(linkerArgs::add);
-
+    linkerArgs.addAll(rustPlatform.getLinkerArgs());
+    linkerArgs.addAll(extraLinkerFlags);
     linkerArgs.addAll(linkerInputs);
-
-    ImmutableList.Builder<Arg> args = ImmutableList.builder();
-    ImmutableList.Builder<Arg> depArgs = ImmutableList.builder();
 
     String relocModel;
     if (crateType.isPic()) {
@@ -226,33 +266,24 @@ public class RustCompileUtils {
       relocModel = "static";
     }
 
-    Stream<StringArg> flavorArgs;
+    args.add(StringArg.of("--crate-name=" + crateName));
+    args.add(StringArg.of("--crate-type=" + crateType));
+    args.add(StringArg.of("-Crelocation-model=" + relocModel));
+    args.addAll(extraFlags);
+
+    args.add(StringArg.of("--edition=" + edition.orElse(rustConfig.getEdition())));
+
     if (crateType.isCheck()) {
       args.add(StringArg.of("--emit=metadata"));
-      flavorArgs = rustPlatform.getRustCheckFlags().stream();
+      args.addAll(rustPlatform.getRustCheckFlags());
     } else if (crateType.isDoc()) {
-      flavorArgs = rustPlatform.getRustDocFlags().stream();
-    } else {
-      flavorArgs = Stream.of();
+      args.addAll(rustPlatform.getRustDocFlags());
     }
 
     if (crateType.isSaveAnalysis()) {
       // This is an unstable option - not clear what the path to stabilization is.
       args.add(StringArg.of("-Zsave-analysis"));
     }
-
-    Stream.of(
-            Stream.of(
-                    String.format("--crate-name=%s", crateName),
-                    String.format("--crate-type=%s", crateType),
-                    String.format("-Crelocation-model=%s", relocModel))
-                .map(StringArg::of),
-            extraFlags.stream(),
-            flavorArgs)
-        .flatMap(x -> x)
-        .forEach(args::add);
-
-    args.add(StringArg.of(String.format("--edition=%s", edition.orElse(rustConfig.getEdition()))));
 
     if (incremental.isPresent()) {
       Path path =
@@ -265,7 +296,7 @@ public class RustCompileUtils {
       for (Flavor f : target.getFlavors().getSet()) {
         path = path.resolve(f.getName());
       }
-      args.add(StringArg.of(String.format("-Cincremental=%s", path)));
+      args.add(StringArg.of("-Cincremental=" + path));
     }
 
     LinkableDepType rustDepType;
@@ -310,26 +341,18 @@ public class RustCompileUtils {
     // but Arg isn't comparable, so we can't put it in a Set.
 
     // First pass - direct deps
-    RichStream.from(ruledeps)
-        .filter(RustLinkable.class::isInstance)
-        .forEach(
-            rule -> {
-              addDependencyArgs(
-                  rule,
-                  rustPlatform,
-                  crateType,
-                  depArgs,
-                  revAliasMap,
-                  rustDepType,
-                  Optional.of(target));
-            });
+    for (BuildRule rule : depRules) {
+      if (rule instanceof RustLinkable) {
+        addDependencyArgs(
+            rule, rustPlatform, crateType, depArgs, revAliasMap, rustDepType, Optional.of(target));
+      }
+    }
 
     // Second pass - indirect deps
     new AbstractBreadthFirstTraversal<BuildRule>(
-        RichStream.from(ruledeps)
+        RichStream.from(depRules)
             .filter(RustLinkable.class::isInstance)
-            .map(r -> (RustLinkable) r)
-            .flatMap(r -> RichStream.from(r.getRustLinkableDeps(rustPlatform)))
+            .flatMap(r -> RichStream.from(((RustLinkable) r).getRustLinkableDeps(rustPlatform)))
             .collect(ImmutableList.toImmutableList())) {
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) {
@@ -358,7 +381,7 @@ public class RustCompileUtils {
       // Get the topologically sorted native linkables.
       ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
           NativeLinkableGroups.getNativeLinkableRoots(
-              ruledeps,
+              depRules,
               (Function<? super BuildRule, Optional<Iterable<? extends BuildRule>>>)
                   r -> rustNativeRootsPassthrough(r, rustPlatform));
 
@@ -520,8 +543,8 @@ public class RustCompileUtils {
       Optional<String> edition,
       ImmutableSortedSet<String> features,
       ImmutableSortedMap<String, Arg> environment,
-      Iterator<Arg> rustcFlags,
-      Iterator<Arg> linkerFlags,
+      ImmutableList<Arg> rustcFlags,
+      ImmutableList<Arg> linkerFlags,
       LinkableDepType linkStyle,
       boolean rpath,
       ImmutableSortedSet<SourcePath> sources,

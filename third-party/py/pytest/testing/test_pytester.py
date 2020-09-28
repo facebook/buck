@@ -443,7 +443,7 @@ def test_testdir_subprocess_via_runpytest_arg(testdir) -> None:
 
 
 def test_unicode_args(testdir) -> None:
-    result = testdir.runpytest("-k", "💩")
+    result = testdir.runpytest("-k", "אבג")
     assert result.ret == ExitCode.NO_TESTS_COLLECTED
 
 
@@ -484,20 +484,20 @@ def test_linematcher_with_nonlist() -> None:
 
     lm = LineMatcher([])
     with pytest.raises(TypeError, match="invalid type for lines2: set"):
-        lm.fnmatch_lines(set())  # type: ignore[arg-type]  # noqa: F821
+        lm.fnmatch_lines(set())  # type: ignore[arg-type]
     with pytest.raises(TypeError, match="invalid type for lines2: dict"):
-        lm.fnmatch_lines({})  # type: ignore[arg-type]  # noqa: F821
+        lm.fnmatch_lines({})  # type: ignore[arg-type]
     with pytest.raises(TypeError, match="invalid type for lines2: set"):
-        lm.re_match_lines(set())  # type: ignore[arg-type]  # noqa: F821
+        lm.re_match_lines(set())  # type: ignore[arg-type]
     with pytest.raises(TypeError, match="invalid type for lines2: dict"):
-        lm.re_match_lines({})  # type: ignore[arg-type]  # noqa: F821
+        lm.re_match_lines({})  # type: ignore[arg-type]
     with pytest.raises(TypeError, match="invalid type for lines2: Source"):
-        lm.fnmatch_lines(Source())  # type: ignore[arg-type]  # noqa: F821
+        lm.fnmatch_lines(Source())  # type: ignore[arg-type]
     lm.fnmatch_lines([])
     lm.fnmatch_lines(())
     lm.fnmatch_lines("")
-    assert lm._getlines({}) == {}  # type: ignore[arg-type,comparison-overlap]  # noqa: F821
-    assert lm._getlines(set()) == set()  # type: ignore[arg-type,comparison-overlap]  # noqa: F821
+    assert lm._getlines({}) == {}  # type: ignore[arg-type,comparison-overlap]
+    assert lm._getlines(set()) == set()  # type: ignore[arg-type,comparison-overlap]
     assert lm._getlines(Source()) == []
     assert lm._getlines(Source("pass\npass")) == ["pass", "pass"]
 
@@ -679,19 +679,30 @@ def test_popen_default_stdin_stderr_and_stdin_None(testdir) -> None:
     # stdout, stderr default to pipes,
     # stdin can be None to not close the pipe, avoiding
     # "ValueError: flush of closed file" with `communicate()`.
+    #
+    # Wraps the test to make it not hang when run with "-s".
     p1 = testdir.makepyfile(
-        """
+        '''
         import sys
-        print(sys.stdin.read())  # empty
-        print('stdout')
-        sys.stderr.write('stderr')
-        """
+
+        def test_inner(testdir):
+            p1 = testdir.makepyfile(
+                """
+                import sys
+                print(sys.stdin.read())  # empty
+                print('stdout')
+                sys.stderr.write('stderr')
+                """
+            )
+            proc = testdir.popen([sys.executable, str(p1)], stdin=None)
+            stdout, stderr = proc.communicate(b"ignored")
+            assert stdout.splitlines() == [b"", b"stdout"]
+            assert stderr.splitlines() == [b"stderr"]
+            assert proc.returncode == 0
+        '''
     )
-    proc = testdir.popen([sys.executable, str(p1)], stdin=None)
-    stdout, stderr = proc.communicate(b"ignored")
-    assert stdout.splitlines() == [b"", b"stdout"]
-    assert stderr.splitlines() == [b"stderr"]
-    assert proc.returncode == 0
+    result = testdir.runpytest("-p", "pytester", str(p1))
+    assert result.ret == 0
 
 
 def test_spawn_uses_tmphome(testdir) -> None:
@@ -752,9 +763,38 @@ def test_testdir_outcomes_with_multiple_errors(testdir):
     """
     )
     result = testdir.runpytest(str(p1))
-    result.assert_outcomes(error=2)
+    result.assert_outcomes(errors=2)
 
-    assert result.parseoutcomes() == {"error": 2}
+    assert result.parseoutcomes() == {"errors": 2}
+
+
+def test_parse_summary_line_always_plural():
+    """Parsing summaries always returns plural nouns (#6505)"""
+    lines = [
+        "some output 1",
+        "some output 2",
+        "======= 1 failed, 1 passed, 1 warning, 1 error in 0.13s ====",
+        "done.",
+    ]
+    assert pytester.RunResult.parse_summary_nouns(lines) == {
+        "errors": 1,
+        "failed": 1,
+        "passed": 1,
+        "warnings": 1,
+    }
+
+    lines = [
+        "some output 1",
+        "some output 2",
+        "======= 1 failed, 1 passed, 2 warnings, 2 errors in 0.13s ====",
+        "done.",
+    ]
+    assert pytester.RunResult.parse_summary_nouns(lines) == {
+        "errors": 2,
+        "failed": 1,
+        "passed": 1,
+        "warnings": 2,
+    }
 
 
 def test_makefile_joins_absolute_path(testdir: Testdir) -> None:

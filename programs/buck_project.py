@@ -65,12 +65,46 @@ def makedirs(path):
         raise
 
 
-def _is_eden(path):
-    return os.path.isdir(os.path.join(path, ".eden", "root"))
+class NotAnEdenRepo(Exception):
+    pass
 
 
-def _find_eden_root(project_root):
-    return os.readlink(os.path.join(project_root, ".eden", "root"))
+def _is_eden(dirpath):
+    if sys.platform == "win32":
+        try:
+            _find_eden_root(dirpath)
+            return True
+        except NotAnEdenRepo:
+            return False
+    else:
+        return os.path.islink(os.path.join(dirpath, ".eden", "root"))
+
+
+def _find_eden_root(dirpath):
+    if sys.platform == "win32":
+        dirpath = os.path.abspath(dirpath)
+
+        while True:
+            doteden = os.path.join(dirpath, ".eden", "config")
+            if os.path.isfile(doteden):
+                return dirpath
+
+            dothg = os.path.join(dirpath, ".hg")
+            dotgit = os.path.join(dirpath, ".git")
+
+            if (
+                os.path.isdir(dothg)
+                or os.path.isdir(dotgit)
+                or os.path.ismount(dirpath)
+            ):
+                raise NotAnEdenRepo()
+
+            dirpath = os.path.dirname(dirpath)
+    else:
+        try:
+            return os.readlink(os.path.join(dirpath, ".eden", "root"))
+        except OSError:
+            raise NotAnEdenRepo()
 
 
 def _add_eden_bindmount(eden_root, path):

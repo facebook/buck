@@ -21,6 +21,7 @@ import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import javax.annotation.Nullable;
 
 /** Downward API Protocol interface. */
 public interface DownwardProtocol {
@@ -30,9 +31,11 @@ public interface DownwardProtocol {
       throws IOException;
 
   /** Reads {@code EventTypeMessage.EventType} from {@code inputStream}. */
+  @Nullable
   EventTypeMessage.EventType readEventType(InputStream inputStream) throws IOException;
 
   /** Reads event correspondent to {@code eventType} from {@code inputStream}. */
+  @Nullable
   <T extends AbstractMessage> T readEvent(
       InputStream inputStream, EventTypeMessage.EventType eventType) throws IOException;
 

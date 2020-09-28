@@ -3,12 +3,11 @@ import pprint
 import sys
 import textwrap
 
-import py
-
 import pytest
 from _pytest.config import ExitCode
 from _pytest.main import _in_venv
 from _pytest.main import Session
+from _pytest.pathlib import symlink_or_skip
 from _pytest.pytester import Testdir
 
 
@@ -42,10 +41,10 @@ class TestCollector:
 
         for fn in fn1, fn2, fn3:
             assert isinstance(fn, pytest.Function)
-            assert fn != 3  # type: ignore[comparison-overlap]  # noqa: F821
+            assert fn != 3  # type: ignore[comparison-overlap]
             assert fn != modcol
-            assert fn != [1, 2, 3]  # type: ignore[comparison-overlap]  # noqa: F821
-            assert [1, 2, 3] != fn  # type: ignore[comparison-overlap]  # noqa: F821
+            assert fn != [1, 2, 3]  # type: ignore[comparison-overlap]
+            assert [1, 2, 3] != fn  # type: ignore[comparison-overlap]
             assert modcol != fn
 
         assert testdir.collect_by_name(modcol, "doesnotexist") is None
@@ -53,8 +52,8 @@ class TestCollector:
     def test_getparent(self, testdir):
         modcol = testdir.getmodulecol(
             """
-            class TestClass(object):
-                 def test_foo():
+            class TestClass:
+                 def test_foo(self):
                      pass
         """
         )
@@ -283,7 +282,7 @@ class TestPrunetraceback:
             """
             import pytest
             def pytest_collect_file(path, parent):
-                return MyFile(path, parent)
+                return MyFile.from_parent(fspath=path, parent=parent)
             class MyError(Exception):
                 pass
             class MyFile(pytest.File):
@@ -402,7 +401,7 @@ class TestCustomConftests:
                 pass
             def pytest_collect_file(path, parent):
                 if path.ext == ".py":
-                    return MyModule(path, parent)
+                    return MyModule.from_parent(fspath=path, parent=parent)
         """
         )
         testdir.mkdir("sub")
@@ -420,7 +419,7 @@ class TestCustomConftests:
                 pass
             def pytest_collect_file(path, parent):
                 if path.ext == ".py":
-                    return MyModule1(path, parent)
+                    return MyModule1.from_parent(fspath=path, parent=parent)
         """
         )
         conf1.move(sub1.join(conf1.basename))
@@ -431,7 +430,7 @@ class TestCustomConftests:
                 pass
             def pytest_collect_file(path, parent):
                 if path.ext == ".py":
-                    return MyModule2(path, parent)
+                    return MyModule2.from_parent(fspath=path, parent=parent)
         """
         )
         conf2.move(sub2.join(conf2.basename))
@@ -538,10 +537,10 @@ class TestSession:
                     return # ok
             class SpecialFile(pytest.File):
                 def collect(self):
-                    return [SpecialItem(name="check", parent=self)]
+                    return [SpecialItem.from_parent(name="check", parent=self)]
             def pytest_collect_file(path, parent):
                 if path.basename == %r:
-                    return SpecialFile(fspath=path, parent=parent)
+                    return SpecialFile.from_parent(fspath=path, parent=parent)
         """
             % p.basename
         )
@@ -634,13 +633,14 @@ class TestSession:
 
 
 class Test_getinitialnodes:
-    def test_global_file(self, testdir, tmpdir):
+    def test_global_file(self, testdir, tmpdir) -> None:
         x = tmpdir.ensure("x.py")
         with tmpdir.as_cwd():
             config = testdir.parseconfigure(x)
         col = testdir.getnode(config, x)
         assert isinstance(col, pytest.Module)
         assert col.name == "x.py"
+        assert col.parent is not None
         assert col.parent.parent is None
         for col in col.listchain():
             assert col.config is config
@@ -761,18 +761,23 @@ def test_matchnodes_two_collections_same_file(testdir):
         class Plugin2(object):
             def pytest_collect_file(self, path, parent):
                 if path.ext == ".abc":
-                    return MyFile2(path, parent)
+                    return MyFile2.from_parent(fspath=path, parent=parent)
 
         def pytest_collect_file(path, parent):
             if path.ext == ".abc":
-                return MyFile1(path, parent)
+                return MyFile1.from_parent(fspath=path, parent=parent)
 
-        class MyFile1(pytest.Item, pytest.File):
-            def runtest(self):
-                pass
+        class MyFile1(pytest.File):
+            def collect(self):
+                yield Item1.from_parent(name="item1", parent=self)
+
         class MyFile2(pytest.File):
             def collect(self):
-                return [Item2("hello", parent=self)]
+                yield Item2.from_parent(name="item2", parent=self)
+
+        class Item1(pytest.Item):
+            def runtest(self):
+                pass
 
         class Item2(pytest.Item):
             def runtest(self):
@@ -783,7 +788,7 @@ def test_matchnodes_two_collections_same_file(testdir):
     result = testdir.runpytest()
     assert result.ret == 0
     result.stdout.fnmatch_lines(["*2 passed*"])
-    res = testdir.runpytest("%s::hello" % p.basename)
+    res = testdir.runpytest("%s::item2" % p.basename)
     res.stdout.fnmatch_lines(["*1 passed*"])
 
 
@@ -1004,7 +1009,7 @@ def test_collect_init_tests(testdir):
     result.stdout.fnmatch_lines(
         [
             "collected 2 items",
-            "<Package *",
+            "<Package tests>",
             "  <Module __init__.py>",
             "    <Function test_init>",
             "  <Module test_foo.py>",
@@ -1015,7 +1020,7 @@ def test_collect_init_tests(testdir):
     result.stdout.fnmatch_lines(
         [
             "collected 2 items",
-            "<Package *",
+            "<Package tests>",
             "  <Module __init__.py>",
             "    <Function test_init>",
             "  <Module test_foo.py>",
@@ -1027,7 +1032,7 @@ def test_collect_init_tests(testdir):
     result.stdout.fnmatch_lines(
         [
             "collected 2 items",
-            "<Package */tests>",
+            "<Package tests>",
             "  <Module __init__.py>",
             "    <Function test_init>",
             "  <Module test_foo.py>",
@@ -1039,7 +1044,7 @@ def test_collect_init_tests(testdir):
     result.stdout.fnmatch_lines(
         [
             "collected 2 items",
-            "<Package */tests>",
+            "<Package tests>",
             "  <Module __init__.py>",
             "    <Function test_init>",
             "  <Module test_foo.py>",
@@ -1048,12 +1053,12 @@ def test_collect_init_tests(testdir):
     )
     result = testdir.runpytest("./tests/test_foo.py", "--collect-only")
     result.stdout.fnmatch_lines(
-        ["<Package */tests>", "  <Module test_foo.py>", "    <Function test_foo>"]
+        ["<Package tests>", "  <Module test_foo.py>", "    <Function test_foo>"]
     )
     result.stdout.no_fnmatch_line("*test_init*")
     result = testdir.runpytest("./tests/__init__.py", "--collect-only")
     result.stdout.fnmatch_lines(
-        ["<Package */tests>", "  <Module __init__.py>", "    <Function test_init>"]
+        ["<Package tests>", "  <Module __init__.py>", "    <Function test_init>"]
     )
     result.stdout.no_fnmatch_line("*test_foo*")
 
@@ -1163,29 +1168,21 @@ def test_collect_pyargs_with_testpaths(testdir, monkeypatch):
     result.stdout.fnmatch_lines(["*1 passed in*"])
 
 
-@pytest.mark.skipif(
-    not hasattr(py.path.local, "mksymlinkto"),
-    reason="symlink not available on this platform",
-)
 def test_collect_symlink_file_arg(testdir):
-    """Test that collecting a direct symlink, where the target does not match python_files works (#4325)."""
+    """Collect a direct symlink works even if it does not match python_files (#4325)."""
     real = testdir.makepyfile(
         real="""
         def test_nodeid(request):
-            assert request.node.nodeid == "real.py::test_nodeid"
+            assert request.node.nodeid == "symlink.py::test_nodeid"
         """
     )
     symlink = testdir.tmpdir.join("symlink.py")
-    symlink.mksymlinkto(real)
+    symlink_or_skip(real, symlink)
     result = testdir.runpytest("-v", symlink)
-    result.stdout.fnmatch_lines(["real.py::test_nodeid PASSED*", "*1 passed in*"])
+    result.stdout.fnmatch_lines(["symlink.py::test_nodeid PASSED*", "*1 passed in*"])
     assert result.ret == 0
 
 
-@pytest.mark.skipif(
-    not hasattr(py.path.local, "mksymlinkto"),
-    reason="symlink not available on this platform",
-)
 def test_collect_symlink_out_of_tree(testdir):
     """Test collection of symlink via out-of-tree rootdir."""
     sub = testdir.tmpdir.join("sub")
@@ -1203,7 +1200,7 @@ def test_collect_symlink_out_of_tree(testdir):
 
     out_of_tree = testdir.tmpdir.join("out_of_tree").ensure(dir=True)
     symlink_to_sub = out_of_tree.join("symlink_to_sub")
-    symlink_to_sub.mksymlinkto(sub)
+    symlink_or_skip(sub, symlink_to_sub)
     sub.chdir()
     result = testdir.runpytest("-vs", "--rootdir=%s" % sub, symlink_to_sub)
     result.stdout.fnmatch_lines(
@@ -1269,22 +1266,19 @@ def test_collect_pkg_init_only(testdir):
     result.stdout.fnmatch_lines(["sub/__init__.py::test_init PASSED*", "*1 passed in*"])
 
 
-@pytest.mark.skipif(
-    not hasattr(py.path.local, "mksymlinkto"),
-    reason="symlink not available on this platform",
-)
 @pytest.mark.parametrize("use_pkg", (True, False))
 def test_collect_sub_with_symlinks(use_pkg, testdir):
+    """Collection works with symlinked files and broken symlinks"""
     sub = testdir.mkdir("sub")
     if use_pkg:
         sub.ensure("__init__.py")
-    sub.ensure("test_file.py").write("def test_file(): pass")
+    sub.join("test_file.py").write("def test_file(): pass")
 
     # Create a broken symlink.
-    sub.join("test_broken.py").mksymlinkto("test_doesnotexist.py")
+    symlink_or_skip("test_doesnotexist.py", sub.join("test_broken.py"))
 
     # Symlink that gets collected.
-    sub.join("test_symlink.py").mksymlinkto("test_file.py")
+    symlink_or_skip("test_file.py", sub.join("test_symlink.py"))
 
     result = testdir.runpytest("-v", str(sub))
     result.stdout.fnmatch_lines(
@@ -1353,3 +1347,83 @@ def test_fscollector_from_parent(tmpdir, request):
         parent=request.session, fspath=tmpdir / "foo", x=10
     )
     assert collector.x == 10
+
+
+class TestImportModeImportlib:
+    def test_collect_duplicate_names(self, testdir):
+        """--import-mode=importlib can import modules with same names that are not in packages."""
+        testdir.makepyfile(
+            **{
+                "tests_a/test_foo.py": "def test_foo1(): pass",
+                "tests_b/test_foo.py": "def test_foo2(): pass",
+            }
+        )
+        result = testdir.runpytest("-v", "--import-mode=importlib")
+        result.stdout.fnmatch_lines(
+            [
+                "tests_a/test_foo.py::test_foo1 *",
+                "tests_b/test_foo.py::test_foo2 *",
+                "* 2 passed in *",
+            ]
+        )
+
+    def test_conftest(self, testdir):
+        """Directory containing conftest modules are not put in sys.path as a side-effect of
+        importing them."""
+        tests_dir = testdir.tmpdir.join("tests")
+        testdir.makepyfile(
+            **{
+                "tests/conftest.py": "",
+                "tests/test_foo.py": """
+                import sys
+                def test_check():
+                    assert r"{tests_dir}" not in sys.path
+                """.format(
+                    tests_dir=tests_dir
+                ),
+            }
+        )
+        result = testdir.runpytest("-v", "--import-mode=importlib")
+        result.stdout.fnmatch_lines(["* 1 passed in *"])
+
+    def setup_conftest_and_foo(self, testdir):
+        """Setup a tests folder to be used to test if modules in that folder can be imported
+        due to side-effects of --import-mode or not."""
+        testdir.makepyfile(
+            **{
+                "tests/conftest.py": "",
+                "tests/foo.py": """
+                    def foo(): return 42
+                """,
+                "tests/test_foo.py": """
+                    def test_check():
+                        from foo import foo
+                        assert foo() == 42
+                """,
+            }
+        )
+
+    def test_modules_importable_as_side_effect(self, testdir):
+        """In import-modes `prepend` and `append`, we are able to import modules from folders
+        containing conftest.py files due to the side effect of changing sys.path."""
+        self.setup_conftest_and_foo(testdir)
+        result = testdir.runpytest("-v", "--import-mode=prepend")
+        result.stdout.fnmatch_lines(["* 1 passed in *"])
+
+    def test_modules_not_importable_as_side_effect(self, testdir):
+        """In import-mode `importlib`, modules in folders containing conftest.py are not
+        importable, as don't change sys.path or sys.modules as side effect of importing
+        the conftest.py file.
+        """
+        self.setup_conftest_and_foo(testdir)
+        result = testdir.runpytest("-v", "--import-mode=importlib")
+        exc_name = (
+            "ModuleNotFoundError" if sys.version_info[:2] > (3, 5) else "ImportError"
+        )
+        result.stdout.fnmatch_lines(
+            [
+                "*{}: No module named 'foo'".format(exc_name),
+                "tests?test_foo.py:2: {}".format(exc_name),
+                "* 1 failed in *",
+            ]
+        )

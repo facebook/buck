@@ -220,7 +220,8 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       Cell rootCell,
       FileHashLoader fileHasher,
       ImmutableSet<PathMatcher> ignorePaths,
-      ConsoleParams consoleParams) {
+      ConsoleParams consoleParams,
+      boolean sanitizeBuckConfig) {
     this.consoleParams = consoleParams;
     this.ignorePaths = ignorePaths;
     ImmutableSet<CanonicalCellName> cellNames = getCellNames(rootCell);
@@ -303,7 +304,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                 RelPath configPath = getPrefixRelativeCellPath(cellName).resolveRel(".buckconfig");
                 BuckConfig buckConfig =
                     rootCell.getCellProvider().getCellByCanonicalCellName(cellName).getBuckConfig();
-                byte[] bytes = serializeConfig(buckConfig);
+                byte[] bytes = serializeConfig(buckConfig, sanitizeBuckConfig);
                 Digest digest = protocol.computeDigest(bytes);
                 filesBuilder.add(
                     new RequiredFile(
@@ -649,9 +650,9 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     return cellPathPrefix.relativize(cellResolver.getNewCellPathResolver().getCellPath(name));
   }
 
-  private static byte[] serializeConfig(BuckConfig config) {
+  private static byte[] serializeConfig(BuckConfig config, boolean sanitizeBuckConfig) {
     StringBuilder builder = new StringBuilder();
-    getBuckConfigFieldsForSerialization(config)
+    getBuckConfigFieldsForSerialization(config, sanitizeBuckConfig)
         .forEach(
             (key, value) -> {
               builder.append(String.format("[%s]\n", key));
@@ -662,9 +663,13 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   }
 
   private static ImmutableMap<String, ImmutableMap<String, String>>
-      getBuckConfigFieldsForSerialization(BuckConfig config) {
-    if (config.getBooleanValue(
-        BUCK_CONFIG_EXPERIMENTS_SECTION_KEY, BUCK_CONFIG_FILTER_FIELDS_FOR_RE_FLAG_NAME, false)) {
+      getBuckConfigFieldsForSerialization(BuckConfig config, boolean sanitizeBuckConfig) {
+    // TODO: remove the GK flag
+    if (sanitizeBuckConfig
+        || config.getBooleanValue(
+            BUCK_CONFIG_EXPERIMENTS_SECTION_KEY,
+            BUCK_CONFIG_FILTER_FIELDS_FOR_RE_FLAG_NAME,
+            false)) {
       return config.prepareConfigForRE();
     }
 

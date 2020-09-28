@@ -112,7 +112,8 @@ public class ModernBuildRuleRemoteExecutionHelperTest {
               public void set(Path path, HashCode hashCode) {}
             },
             ImmutableSet.of(),
-            ConsoleParams.of(false, Verbosity.STANDARD_INFORMATION));
+            ConsoleParams.of(false, Verbosity.STANDARD_INFORMATION),
+            false);
   }
 
   public static class SimpleBuildable implements Buildable {

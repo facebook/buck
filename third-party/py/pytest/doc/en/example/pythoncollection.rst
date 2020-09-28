@@ -115,15 +115,13 @@ Changing naming conventions
 
 You can configure different naming conventions by setting
 the :confval:`python_files`, :confval:`python_classes` and
-:confval:`python_functions` configuration options.
+:confval:`python_functions` in your :ref:`configuration file <config file formats>`.
 Here is an example:
 
 .. code-block:: ini
 
     # content of pytest.ini
     # Example 1: have pytest look for "check" instead of "test"
-    # can also be defined in tox.ini or setup.cfg file, although the section
-    # name in setup.cfg files should be "tool:pytest"
     [pytest]
     python_files = check_*.py
     python_classes = Check
@@ -149,10 +147,11 @@ The test collection would look like this:
 
     $ pytest --collect-only
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
-    rootdir: $REGENDOC_TMPDIR, inifile: pytest.ini
+    rootdir: $REGENDOC_TMPDIR, configfile: pytest.ini
     collected 2 items
+
     <Module check_myapp.py>
       <Class CheckMyApp>
           <Function simple_check>
@@ -165,8 +164,7 @@ You can check for multiple glob patterns by adding a space between the patterns:
 .. code-block:: ini
 
     # Example 2: have pytest look for files with "test" and "example"
-    # content of pytest.ini, tox.ini, or setup.cfg file (replace "pytest"
-    # with "tool:pytest" for setup.cfg)
+    # content of pytest.ini
     [pytest]
     python_files = test_*.py example_*.py
 
@@ -211,10 +209,11 @@ You can always peek at the collection tree without running tests like this:
 
     . $ pytest --collect-only pythoncollection.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
-    rootdir: $REGENDOC_TMPDIR, inifile: pytest.ini
+    rootdir: $REGENDOC_TMPDIR, configfile: pytest.ini
     collected 3 items
+
     <Module CWD/pythoncollection.py>
       <Function test_function>
       <Class TestClass>
@@ -292,15 +291,15 @@ file will be left out:
 
     $ pytest --collect-only
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
-    rootdir: $REGENDOC_TMPDIR, inifile: pytest.ini
+    rootdir: $REGENDOC_TMPDIR, configfile: pytest.ini
     collected 0 items
 
     ========================== no tests ran in 0.12s ===========================
 
 It's also possible to ignore files based on Unix shell-style wildcards by adding
-patterns to ``collect_ignore_glob``.
+patterns to :globalvar:`collect_ignore_glob`.
 
 The following example ``conftest.py`` ignores the file ``setup.py`` and in
 addition all files that end with ``*_py2.py`` when executed with a Python 3

@@ -257,6 +257,11 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
     return cacheable;
   }
 
+  @VisibleForTesting
+  ImmutableList<SourcePath> getInputs() {
+    return getBuildable().inputs;
+  }
+
   @Override
   public SourcePath getSourcePathToOutput() {
     return getSourcePath(getBuildable().output);

@@ -17,7 +17,7 @@ from asyncio import subprocess
 
 import pytest
 from buck_api.buck_process import BuckProcess
-from buck_api.buck_result import BuckResult
+from buck_api.buck_result import BuckResult, ExitCode
 
 
 @pytest.mark.asyncio
@@ -31,20 +31,10 @@ async def test_wait():
 
 
 @pytest.mark.asyncio
-async def test_get_out():
+async def test_interrupt():
     awaitable_process = subprocess.create_subprocess_shell(
-        "echo hello", stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        "sleep 10", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     bp = BuckProcess(awaitable_process, BuckResult, "utf-8")
-    stdout = await bp.get_stdout()
-    assert (await stdout.readline()).decode("utf-8") == "hello\n"
-
-
-@pytest.mark.asyncio
-async def test_get_err():
-    awaitable_process = subprocess.create_subprocess_shell(
-        '>&2 echo "hello"', stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    bp = BuckProcess(awaitable_process, BuckResult, "utf-8")
-    stderr = await bp.get_stderr()
-    assert (await stderr.readline()).decode("utf-8") == "hello\n"
+    br = await bp.interrupt()
+    assert br.get_exit_code() == ExitCode.SIGNAL_INTERRUPT

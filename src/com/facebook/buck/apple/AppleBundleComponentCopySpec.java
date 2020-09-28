@@ -37,6 +37,13 @@ public class AppleBundleComponentCopySpec {
   private final boolean ignoreIfMissing;
 
   public AppleBundleComponentCopySpec(
+      AbsPath sourcePath, RelPath destinationPathRelativeToBundleRoot, boolean ignoreIfMissing) {
+    this.sourcePath = sourcePath;
+    this.destinationPathRelativeToBundleRoot = destinationPathRelativeToBundleRoot;
+    this.ignoreIfMissing = ignoreIfMissing;
+  }
+
+  public AppleBundleComponentCopySpec(
       SourcePathWithAppleBundleDestination pathWithDestination,
       SourcePathResolverAdapter sourcePathResolver,
       AppleBundleDestinations destinations) {
@@ -105,17 +112,23 @@ public class AppleBundleComponentCopySpec {
     return new AbstractExecutionStep("copy-apple-bundle-component") {
       @Override
       public StepExecutionResult execute(StepExecutionContext stepContext) throws IOException {
-        if (ignoreIfMissing && !projectFilesystem.exists(sourcePath.getPath())) {
-          return StepExecutionResults.SUCCESS;
-        }
-        boolean isDirectory = projectFilesystem.isDirectory(sourcePath);
-        Path toPath = bundleRootPath.resolve(destinationPathRelativeToBundleRoot.getPath());
-        projectFilesystem.copy(
-            sourcePath.getPath(),
-            isDirectory ? toPath.getParent() : toPath,
-            isDirectory ? CopySourceMode.DIRECTORY_AND_CONTENTS : CopySourceMode.FILE);
+        performCopy(projectFilesystem, bundleRootPath);
         return StepExecutionResults.SUCCESS;
       }
     };
+  }
+
+  /** Perform actual copy according to the spec. */
+  public void performCopy(ProjectFilesystem projectFilesystem, Path bundleRootPath)
+      throws IOException {
+    if (ignoreIfMissing && !projectFilesystem.exists(sourcePath.getPath())) {
+      return;
+    }
+    boolean isDirectory = projectFilesystem.isDirectory(sourcePath);
+    Path toPath = bundleRootPath.resolve(destinationPathRelativeToBundleRoot.getPath());
+    projectFilesystem.copy(
+        sourcePath.getPath(),
+        isDirectory ? toPath.getParent() : toPath,
+        isDirectory ? CopySourceMode.DIRECTORY_AND_CONTENTS : CopySourceMode.FILE);
   }
 }

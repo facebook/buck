@@ -119,6 +119,36 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
   }
 
   /**
+   * Write all global symbols given in {@code symbolFiles} into a version script under the `global`
+   * section.
+   *
+   * @param target the name given to the {@link BuildRule} which creates the version script.
+   * @param symbolFiles
+   * @return the list of arguments which pass the version script containing the global symbols to
+   *     link.
+   */
+  @Override
+  public ImmutableList<Arg> createGlobalSymbolsLinkerArgs(
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams baseParams,
+      ActionGraphBuilder graphBuilder,
+      BuildTarget target,
+      ImmutableList<? extends SourcePath> symbolFiles) {
+    GlobalSymbolsVersionScript rule =
+        graphBuilder.addToIndex(
+            new GlobalSymbolsVersionScript(
+                target,
+                projectFilesystem,
+                baseParams
+                    .withDeclaredDeps(
+                        ImmutableSortedSet.copyOf(graphBuilder.filterBuildRuleInputs(symbolFiles)))
+                    .withoutExtraDeps(),
+                symbolFiles));
+    return ImmutableList.of(
+        StringArg.of("-Wl,--version-script"), SourcePathArg.of(rule.getSourcePathToOutput()));
+  }
+
+  /**
    * Write all undefined symbols given in {@code symbolFiles} into a linker script wrapped in
    * `EXTERN` commands.
    *
@@ -185,14 +215,11 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
     return true;
   }
 
-  // Write all symbols to a linker script, using the `EXTERN` command to mark them as undefined
-  // symbols.
-  private static class UndefinedSymbolsLinkerScript
-      extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+  private abstract static class SymbolsScript extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     @AddToRuleKey private final Iterable<? extends SourcePath> symbolFiles;
 
-    public UndefinedSymbolsLinkerScript(
+    public SymbolsScript(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
@@ -201,15 +228,19 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
       this.symbolFiles = symbolFiles;
     }
 
-    private RelPath getLinkerScript() {
-      return BuildTargetPaths.getGenPath(
-          getProjectFilesystem(), getBuildTarget(), "%s/linker_script.txt");
+    abstract String getScriptType();
+
+    abstract List<String> mapSymbols(Set<String> symbols);
+
+    private RelPath getScript() {
+      String format = String.format("%%s/%s_script.txt", getScriptType());
+      return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), format);
     }
 
     @Override
     public ImmutableList<Step> getBuildSteps(
         BuildContext context, BuildableContext buildableContext) {
-      RelPath linkerScript = getLinkerScript();
+      RelPath linkerScript = getScript();
       buildableContext.recordArtifact(linkerScript.getPath());
       return ImmutableList.of(
           MkdirStep.of(
@@ -231,10 +262,7 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
                     throw new RuntimeException(e);
                   }
                 }
-                List<String> lines = new ArrayList<>();
-                for (String symbol : symbols) {
-                  lines.add(String.format("EXTERN(\"%s\")", symbol));
-                }
+                List<String> lines = mapSymbols(symbols);
                 return Joiner.on(System.lineSeparator()).join(lines);
               },
               linkerScript.getPath(),
@@ -243,7 +271,65 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
 
     @Override
     public SourcePath getSourcePathToOutput() {
-      return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getLinkerScript());
+      return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getScript());
+    }
+  }
+
+  // Write all symbols to a linker script, using the `EXTERN` command to mark them as undefined
+  // symbols.
+  private static class UndefinedSymbolsLinkerScript extends SymbolsScript {
+
+    public UndefinedSymbolsLinkerScript(
+        BuildTarget buildTarget,
+        ProjectFilesystem projectFilesystem,
+        BuildRuleParams buildRuleParams,
+        Iterable<? extends SourcePath> symbolFiles) {
+      super(buildTarget, projectFilesystem, buildRuleParams, symbolFiles);
+    }
+
+    @Override
+    String getScriptType() {
+      return "linker";
+    }
+
+    @Override
+    List<String> mapSymbols(Set<String> symbols) {
+      List<String> mapped = new ArrayList<>();
+      for (String symbol : symbols) {
+        mapped.add(String.format("EXTERN(\"%s\")", symbol));
+      }
+      return mapped;
+    }
+  }
+
+  // Write all symbols to a version script, under the `global` section to mark them as exported
+  // symbols.
+  private static class GlobalSymbolsVersionScript extends SymbolsScript {
+
+    public GlobalSymbolsVersionScript(
+        BuildTarget buildTarget,
+        ProjectFilesystem projectFilesystem,
+        BuildRuleParams buildRuleParams,
+        Iterable<? extends SourcePath> symbolFiles) {
+      super(buildTarget, projectFilesystem, buildRuleParams, symbolFiles);
+    }
+
+    @Override
+    String getScriptType() {
+      return "version";
+    }
+
+    @Override
+    List<String> mapSymbols(Set<String> symbols) {
+      List<String> mapped = new ArrayList<>();
+      mapped.add("{");
+      mapped.add("  global:");
+      for (String symbol : symbols) {
+        mapped.add(String.format("  \"%s\";", symbol));
+      }
+      mapped.add("  local: *;");
+      mapped.add("};");
+      return mapped;
     }
   }
 }

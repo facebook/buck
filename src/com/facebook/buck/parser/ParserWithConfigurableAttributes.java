@@ -264,7 +264,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
         }
         convertedAttributes.put(attributeName, resolvedAttribute);
       } catch (CoerceFailedException e) {
-        throw new HumanReadableException(e, dependencyStack, e.getMessage());
+        throw e.withAttrResolutionContext(
+            attributeName, buildTarget.toStringWithConfiguration(), dependencyStack);
       } catch (HumanReadableException e) {
         throw new HumanReadableException(
             e,

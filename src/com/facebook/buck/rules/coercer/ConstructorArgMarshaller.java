@@ -87,6 +87,5 @@ public interface ConstructorArgMarshaller {
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       Map<ParamName, ?> attributes,
-      LabelledAnySelectable compatibleWith)
-      throws CoerceFailedException;
+      LabelledAnySelectable compatibleWith);
 }

@@ -80,6 +80,10 @@ class BuckResult:
 
     def get_exit_code(self) -> ExitCode:
         """ Returns the exit code of a Buck Result when it exits """
+        # See https://docs.python.org/3/library/subprocess.html#subprocess.Popen.returncode
+        # for negative return code.
+        if self.process.returncode < 0:
+            return ExitCode(128 - self.process.returncode)
         return ExitCode(self.process.returncode)
 
     def get_stderr(self) -> str:

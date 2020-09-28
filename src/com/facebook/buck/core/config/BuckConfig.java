@@ -123,6 +123,8 @@ public class BuckConfig {
     nonSerializableREConfigFieldsBuilder.put("scribe_event_listener", ImmutableSet.of());
     nonSerializableREConfigFieldsBuilder.put("download", ImmutableSet.of());
     nonSerializableREConfigFieldsBuilder.put("build_report", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("cache", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("modern_build_rule", ImmutableSet.of());
     nonSerializableREConfigFieldsBuilder.put(
         "version_control",
         ImmutableSet.of(

@@ -37,18 +37,31 @@ import java.util.stream.Stream;
  * that the output only contains references to the mapped-to paths (i.e. the fake paths).
  */
 public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
+  public static final String DEFAULT_PREFIX_MAP_FORMAT = "-fdebug-prefix-map=%s=%s";
+
   @AddToRuleKey private final String fakeCompilationDirectory;
 
   @CustomFieldBehavior(OtherSerialization.class)
   private final ImmutableBiMap<Path, String> other;
 
+  @AddToRuleKey private final String prefixMapFormat;
+
+  public PrefixMapDebugPathSanitizer(
+      String fakeCompilationDirectory,
+      ImmutableBiMap<Path, String> other,
+      boolean useUnixPathSeparator,
+      String prefixMapFormat) {
+    super(useUnixPathSeparator);
+    this.fakeCompilationDirectory = fakeCompilationDirectory;
+    this.other = other;
+    this.prefixMapFormat = prefixMapFormat;
+  }
+
   public PrefixMapDebugPathSanitizer(
       String fakeCompilationDirectory,
       ImmutableBiMap<Path, String> other,
       boolean useUnixPathSeparator) {
-    super(useUnixPathSeparator);
-    this.fakeCompilationDirectory = fakeCompilationDirectory;
-    this.other = other;
+    this(fakeCompilationDirectory, other, useUnixPathSeparator, DEFAULT_PREFIX_MAP_FORMAT);
   }
 
   public PrefixMapDebugPathSanitizer(
@@ -131,7 +144,7 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
     if (fakePath.isEmpty()) {
       realPathStr += "/";
     }
-    return String.format("-fdebug-prefix-map=%s=%s", realPathStr, fakePath);
+    return String.format(prefixMapFormat, realPathStr, fakePath);
   }
 
   @Override

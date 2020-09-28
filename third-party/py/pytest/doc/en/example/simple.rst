@@ -3,6 +3,50 @@
 Basic patterns and examples
 ==========================================================
 
+How to change command line options defaults
+-------------------------------------------
+
+It can be tedious to type the same series of command line options
+every time you use ``pytest``.  For example, if you always want to see
+detailed info on skipped and xfailed tests, as well as have terser "dot"
+progress output, you can write it into a configuration file:
+
+.. code-block:: ini
+
+    # content of pytest.ini
+    [pytest]
+    addopts = -ra -q
+
+
+Alternatively, you can set a ``PYTEST_ADDOPTS`` environment variable to add command
+line options while the environment is in use:
+
+.. code-block:: bash
+
+    export PYTEST_ADDOPTS="-v"
+
+Here's how the command-line is built in the presence of ``addopts`` or the environment variable:
+
+.. code-block:: text
+
+    <pytest.ini:addopts> $PYTEST_ADDOPTS <extra command-line arguments>
+
+So if the user executes in the command-line:
+
+.. code-block:: bash
+
+    pytest -m slow
+
+The actual command line executed is:
+
+.. code-block:: bash
+
+    pytest -ra -q -v -m slow
+
+Note that as usual for other command-line applications, in case of conflicting options the last one wins, so the example
+above will show verbose output because ``-v`` overwrites ``-q``.
+
+
 .. _request example:
 
 Pass different values to a test function, depending on command line options
@@ -131,7 +175,7 @@ directory with the above conftest.py:
 
     $ pytest
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 0 items
@@ -196,7 +240,7 @@ and when running it will see a skipped "slow" test:
 
     $ pytest -rs    # "-rs" means report details on the little 's'
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 2 items
@@ -213,7 +257,7 @@ Or run it including the ``slow`` marked test:
 
     $ pytest --runslow
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 2 items
@@ -222,8 +266,10 @@ Or run it including the ``slow`` marked test:
 
     ============================ 2 passed in 0.12s =============================
 
+.. _`__tracebackhide__`:
+
 Writing well integrated assertion helpers
---------------------------------------------------
+-----------------------------------------
 
 .. regendoc:wipe
 
@@ -355,7 +401,7 @@ which will add the string to the test header accordingly:
 
     $ pytest
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     project deps: mylib-1.1
     rootdir: $REGENDOC_TMPDIR
@@ -384,7 +430,7 @@ which will add info only when run with "--v":
 
     $ pytest -v
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y -- $PYTHON_PREFIX/bin/python
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y -- $PYTHON_PREFIX/bin/python
     cachedir: $PYTHON_PREFIX/.pytest_cache
     info1: did you know that ...
     did you?
@@ -399,7 +445,7 @@ and nothing when run plainly:
 
     $ pytest
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 0 items
@@ -439,14 +485,14 @@ Now we can profile which test functions execute the slowest:
 
     $ pytest --durations=3
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 3 items
 
     test_some_are_slow.py ...                                            [100%]
 
-    ========================= slowest 3 test durations =========================
+    =========================== slowest 3 durations ============================
     0.30s call     test_some_are_slow.py::test_funcslow2
     0.20s call     test_some_are_slow.py::test_funcslow1
     0.10s call     test_some_are_slow.py::test_funcfast
@@ -545,7 +591,7 @@ If we run this:
 
     $ pytest -rx
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 4 items
@@ -629,7 +675,7 @@ We can run this:
 
     $ pytest
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 7 items
@@ -748,7 +794,7 @@ and run them:
 
     $ pytest test_module.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 2 items
@@ -855,7 +901,7 @@ and run it:
 
     $ pytest -s test_module.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 3 items
@@ -908,9 +954,9 @@ information.
 
 Sometimes a test session might get stuck and there might be no easy way to figure out
 which test got stuck, for example if pytest was run in quiet mode (``-q``) or you don't have access to the console
-output. This is particularly a problem if the problem helps only sporadically, the famous "flaky" kind of tests.
+output. This is particularly a problem if the problem happens only sporadically, the famous "flaky" kind of tests.
 
-``pytest`` sets a ``PYTEST_CURRENT_TEST`` environment variable when running tests, which can be inspected
+``pytest`` sets the :envvar:`PYTEST_CURRENT_TEST` environment variable when running tests, which can be inspected
 by process monitoring utilities or libraries like `psutil <https://pypi.org/project/psutil/>`_ to discover which
 test got stuck if necessary:
 
@@ -924,8 +970,8 @@ test got stuck if necessary:
             print(f'pytest process {pid} running: {environ["PYTEST_CURRENT_TEST"]}')
 
 During the test session pytest will set ``PYTEST_CURRENT_TEST`` to the current test
-:ref:`nodeid <nodeids>` and the current stage, which can be ``setup``, ``call``
-and ``teardown``.
+:ref:`nodeid <nodeids>` and the current stage, which can be ``setup``, ``call``,
+or ``teardown``.
 
 For example, when running a single test function named ``test_foo`` from ``foo_module.py``,
 ``PYTEST_CURRENT_TEST`` will be set to:

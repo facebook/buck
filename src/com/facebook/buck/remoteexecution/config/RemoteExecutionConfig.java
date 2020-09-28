@@ -129,6 +129,9 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
   // Should retry to reschedule OOMed action on a larger worker
   public static final String TRY_LARGER_WORKER_ON_OOM = "try_larger_worker_on_oom";
 
+  // Should the buckconfig be sanitized for RE
+  public static final String SANITAIZE_BUCKCONFIG = "sanitize_buckconfig";
+
   // Should retry actions locally if action exit code is returned and is not 0.
   public static final String IS_LOCAL_FALLBACK_ENABLED_FOR_COMPLETED_ACTION_KEY =
       "is_local_fallback_enabled_for_completed_actions";
@@ -505,6 +508,10 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   public String getReSessionLabel() {
     return getValue(RE_SESSION_LABEL_KEY).orElse("");
+  }
+
+  public boolean sanitizeBuckConfig() {
+    return getDelegate().getBooleanValue(SECTION, SANITAIZE_BUCKCONFIG, false);
   }
 
   /** Provides an auxiliary tag used for capturing any custom configurations. */

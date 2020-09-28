@@ -21,6 +21,8 @@ import static com.facebook.buck.features.rust.RustCompileUtils.ruleToCrateName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
+import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -48,7 +50,6 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionPropagator;
@@ -58,7 +59,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -68,6 +69,7 @@ import org.immutables.value.Value;
 public class RustLibraryDescription
     implements DescriptionWithTargetGraph<RustLibraryDescriptionArg>,
         ImplicitDepsInferringDescription<RustLibraryDescription.AbstractRustLibraryDescriptionArg>,
+        ImplicitFlavorsInferringDescription,
         Flavored,
         VersionPropagator<RustLibraryDescriptionArg> {
 
@@ -162,23 +164,9 @@ public class RustLibraryDescription
 
     Function<RustPlatform, Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>>>
         getRustcArgsEnv =
-            rustPlatform -> {
-              StringWithMacrosConverter converter =
-                  RustCompileUtils.getMacroExpander(
-                      context, buildTarget, rustPlatform.getCxxPlatform());
-
-              ImmutableList.Builder<Arg> rustcArgs = ImmutableList.builder();
-              RustCompileUtils.addFeatures(buildTarget, args.getFeatures(), rustcArgs);
-              RustCompileUtils.addTargetTripleForFlavor(rustPlatform.getFlavor(), rustcArgs);
-              rustcArgs.addAll(rustPlatform.getRustLibraryFlags());
-              rustcArgs.addAll(args.getRustcFlags().stream().map(converter::convert).iterator());
-
-              ImmutableSortedMap<String, Arg> env =
-                  ImmutableSortedMap.copyOf(
-                      Maps.transformValues(args.getEnv(), converter::convert));
-
-              return new Pair<>(rustcArgs.build(), env);
-            };
+            rustPlatform ->
+                RustCompileUtils.getRustcFlagsAndEnv(
+                    context, buildTarget, rustPlatform, rustPlatform.getRustLibraryFlags(), args);
 
     String crate = args.getCrate().orElse(ruleToCrateName(buildTarget.getShortName()));
 
@@ -599,6 +587,26 @@ public class RustLibraryDescription
   private RustToolchain getRustToolchain(TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
         RustToolchain.DEFAULT_NAME, toolchainTargetConfiguration, RustToolchain.class);
+  }
+
+  @Override
+  public ImmutableSortedSet<Flavor> addImplicitFlavors(
+      ImmutableSortedSet<Flavor> argDefaultFlavors,
+      TargetConfiguration toolchainTargetConfiguration) {
+    ImmutableMap<String, Flavor> libraryDefaults =
+        rustBuckConfig.getDefaultFlavorsForRuleType(DescriptionCache.getRuleType(this));
+
+    ImmutableSortedSet.Builder<Flavor> flavors = ImmutableSortedSet.naturalOrder();
+
+    // Type flavor.
+    Optional<Flavor> typeFlavor = LIBRARY_TYPE.getFlavor(argDefaultFlavors);
+    if (!typeFlavor.isPresent()) {
+      typeFlavor =
+          Optional.ofNullable(libraryDefaults.get(RustBuckConfig.DEFAULT_FLAVOR_LIBRARY_TYPE));
+    }
+    typeFlavor.ifPresent(flavors::add);
+
+    return flavors.build();
   }
 
   @RuleArg

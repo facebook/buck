@@ -66,14 +66,8 @@ public enum CrateType {
       (target, crate, plat) -> hashed_filename(target, "lib", crate, "rlib")),
   DYLIB("dylib", RustDescriptionEnhancer.RFDYLIB, CrateType::dylib_filename),
   CDYLIB("cdylib", CxxDescriptionEnhancer.SHARED_FLAVOR, CrateType::dylib_filename),
-  STATIC(
-      "staticlib",
-      CxxDescriptionEnhancer.STATIC_FLAVOR,
-      (target, n, p) -> hashed_filename(target, "lib", n, p.getStaticLibraryExtension())),
-  STATIC_PIC(
-      "staticlib",
-      CxxDescriptionEnhancer.STATIC_PIC_FLAVOR,
-      (target, n, p) -> hashed_filename(target, "lib", n, p.getStaticLibraryExtension())),
+  STATIC("staticlib", CxxDescriptionEnhancer.STATIC_FLAVOR, CrateType::staticlib_filename),
+  STATIC_PIC("staticlib", CxxDescriptionEnhancer.STATIC_PIC_FLAVOR, CrateType::staticlib_filename),
   PROC_MACRO("proc-macro", RustDescriptionEnhancer.RFPROC_MACRO, CrateType::dylib_filename),
   ;
 
@@ -81,6 +75,14 @@ public enum CrateType {
       BuildTarget target, String prefix, String crate, String ext) {
     String hash = RustCompileUtils.hashForTarget(target);
     return String.format("%s%s-%s.%s", prefix, crate, hash, ext);
+  }
+
+  private static String staticlib_filename(BuildTarget target, String crate, CxxPlatform plat) {
+    return hashed_filename(
+        target,
+        plat.getStaticLibraryExtension().equals("lib") ? "" : "lib",
+        crate,
+        plat.getStaticLibraryExtension());
   }
 
   private static String dylib_filename(BuildTarget target, String crate, CxxPlatform plat) {

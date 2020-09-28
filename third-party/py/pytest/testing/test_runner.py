@@ -423,27 +423,6 @@ class TestExecutionNonForked(BaseFunctionalTests):
             assert False, "did not raise"
 
 
-class TestExecutionForked(BaseFunctionalTests):
-    pytestmark = pytest.mark.skipif("not hasattr(os, 'fork')")
-
-    def getrunner(self):
-        # XXX re-arrange this test to live in pytest-xdist
-        boxed = pytest.importorskip("xdist.boxed")
-        return boxed.forked_run_report
-
-    def test_suicide(self, testdir) -> None:
-        reports = testdir.runitem(
-            """
-            def test_func():
-                import os
-                os.kill(os.getpid(), 15)
-        """
-        )
-        rep = reports[0]
-        assert rep.failed
-        assert rep.when == "???"
-
-
 class TestSessionReports:
     def test_collect_result(self, testdir) -> None:
         col = testdir.getmodulecol(
@@ -486,27 +465,27 @@ def test_report_extra_parameters(reporttype: "Type[reports.BaseReport]") -> None
 
 
 def test_callinfo() -> None:
-    ci = runner.CallInfo.from_call(lambda: 0, "123")
-    assert ci.when == "123"
+    ci = runner.CallInfo.from_call(lambda: 0, "collect")
+    assert ci.when == "collect"
     assert ci.result == 0
     assert "result" in repr(ci)
-    assert repr(ci) == "<CallInfo when='123' result: 0>"
-    assert str(ci) == "<CallInfo when='123' result: 0>"
+    assert repr(ci) == "<CallInfo when='collect' result: 0>"
+    assert str(ci) == "<CallInfo when='collect' result: 0>"
 
-    ci = runner.CallInfo.from_call(lambda: 0 / 0, "123")
-    assert ci.when == "123"
-    assert not hasattr(ci, "result")
-    assert repr(ci) == "<CallInfo when='123' excinfo={!r}>".format(ci.excinfo)
-    assert str(ci) == repr(ci)
-    assert ci.excinfo
+    ci2 = runner.CallInfo.from_call(lambda: 0 / 0, "collect")
+    assert ci2.when == "collect"
+    assert not hasattr(ci2, "result")
+    assert repr(ci2) == "<CallInfo when='collect' excinfo={!r}>".format(ci2.excinfo)
+    assert str(ci2) == repr(ci2)
+    assert ci2.excinfo
 
     # Newlines are escaped.
     def raise_assertion():
         assert 0, "assert_msg"
 
-    ci = runner.CallInfo.from_call(raise_assertion, "call")
-    assert repr(ci) == "<CallInfo when='call' excinfo={!r}>".format(ci.excinfo)
-    assert "\n" not in repr(ci)
+    ci3 = runner.CallInfo.from_call(raise_assertion, "call")
+    assert repr(ci3) == "<CallInfo when='call' excinfo={!r}>".format(ci3.excinfo)
+    assert "\n" not in repr(ci3)
 
 
 # design question: do we want general hooks in python files?
@@ -527,9 +506,10 @@ def test_runtest_in_module_ordering(testdir) -> None:
             @pytest.fixture
             def mylist(self, request):
                 return request.function.mylist
-            def pytest_runtest_call(self, item, __multicall__):
+            @pytest.hookimpl(hookwrapper=True)
+            def pytest_runtest_call(self, item):
                 try:
-                    __multicall__.execute()
+                    (yield).get_result()
                 except ValueError:
                     pass
             def test_hello1(self, mylist):
@@ -554,8 +534,8 @@ def test_outcomeexception_passes_except_Exception() -> None:
     with pytest.raises(outcomes.OutcomeException):
         try:
             raise outcomes.OutcomeException("test")
-        except Exception:
-            raise NotImplementedError()
+        except Exception as e:
+            raise NotImplementedError from e
 
 
 def test_pytest_exit() -> None:
@@ -904,7 +884,7 @@ def test_store_except_info_on_error() -> None:
                 raise IndexError("TEST")
 
     try:
-        runner.pytest_runtest_call(ItemMightRaise())
+        runner.pytest_runtest_call(ItemMightRaise())  # type: ignore[arg-type]
     except IndexError:
         pass
     # Check that exception info is stored on sys
@@ -915,7 +895,7 @@ def test_store_except_info_on_error() -> None:
 
     # The next run should clear the exception info stored by the previous run
     ItemMightRaise.raise_error = False
-    runner.pytest_runtest_call(ItemMightRaise())
+    runner.pytest_runtest_call(ItemMightRaise())  # type: ignore[arg-type]
     assert not hasattr(sys, "last_type")
     assert not hasattr(sys, "last_value")
     assert not hasattr(sys, "last_traceback")
@@ -971,6 +951,33 @@ class TestReportContents:
         rep = reports[1]
         assert rep.longreprtext == ""
 
+    def test_longreprtext_skip(self, testdir) -> None:
+        """TestReport.longreprtext can handle non-str ``longrepr`` attributes (#7559)"""
+        reports = testdir.runitem(
+            """
+            import pytest
+            def test_func():
+                pytest.skip()
+            """
+        )
+        _, call_rep, _ = reports
+        assert isinstance(call_rep.longrepr, tuple)
+        assert "Skipped" in call_rep.longreprtext
+
+    def test_longreprtext_collect_skip(self, testdir) -> None:
+        """CollectReport.longreprtext can handle non-str ``longrepr`` attributes (#7559)"""
+        testdir.makepyfile(
+            """
+            import pytest
+            pytest.skip(allow_module_level=True)
+            """
+        )
+        rec = testdir.inline_run()
+        calls = rec.getcalls("pytest_collectreport")
+        _, call = calls
+        assert isinstance(call.report.longrepr, tuple)
+        assert "Skipped" in call.report.longreprtext
+
     def test_longreprtext_failure(self, testdir) -> None:
         reports = testdir.runitem(
             """
@@ -1022,6 +1029,17 @@ class TestReportContents:
         rep = reports[1]
         assert rep.capstdout == ""
         assert rep.capstderr == ""
+
+    def test_longrepr_type(self, testdir) -> None:
+        reports = testdir.runitem(
+            """
+            import pytest
+            def test_func():
+                pytest.fail(pytrace=False)
+        """
+        )
+        rep = reports[1]
+        assert isinstance(rep.longrepr, _pytest._code.code.ExceptionRepr)
 
 
 def test_outcome_exception_bad_msg() -> None:

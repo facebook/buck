@@ -7,7 +7,7 @@ pytest-2.3: reasoning for fixture/funcarg evolution
 
 **Target audience**: Reading this document requires basic knowledge of
 python testing, xUnit setup methods and the (previous) basic pytest
-funcarg mechanism, see https://docs.pytest.org/en/latest/historical-notes.html#funcargs-and-pytest-funcarg.
+funcarg mechanism, see https://docs.pytest.org/en/stable/historical-notes.html#funcargs-and-pytest-funcarg.
 If you are new to pytest, then you can simply ignore this
 section and read the other sections.
 
@@ -170,7 +170,7 @@ several problems:
 
 1. in distributed testing the master process would setup test resources
    that are never needed because it only co-ordinates the test run
-   activities of the slave processes.
+   activities of the worker processes.
 
 2. if you only perform a collection (with "--collect-only")
    resource-setup will still be executed.

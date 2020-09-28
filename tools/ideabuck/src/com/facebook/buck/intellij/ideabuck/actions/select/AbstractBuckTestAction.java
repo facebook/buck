@@ -66,7 +66,7 @@ public abstract class AbstractBuckTestAction extends AnAction {
       presentation.setIcon(BuckIcons.DEBUG_BUCK_TEST);
     } else {
       verb = "Run";
-      presentation.setIcon(BuckIcons.RUN_BUCK_TEST);
+      presentation.setIcon(BuckIcons.BUILD_RUN_TEST);
     }
     if (psiMethod != null) {
       presentation.setText(verb + " '" + truncateName(psiMethod.getName()) + "()' with Buck");

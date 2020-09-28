@@ -78,8 +78,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       Map<ParamName, ?> attributes,
-      LabelledAnySelectable compatibleWith)
-      throws CoerceFailedException {
+      LabelledAnySelectable compatibleWith) {
 
     ParamsInfo allParamInfo = constructorArgDescriptor.getParamsInfo();
 
@@ -88,81 +87,86 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
 
     Object builder = constructorArgDescriptor.getBuilderFactory().get();
     for (ParamInfo<?> info : allParamInfo.getParamInfosSorted()) {
-      Object attribute = attributes.get(info.getName());
-      if (attribute == null) {
-        /**
-         * For any implicit attributes that were missing, grab their default values from the
-         * parameter map. The two places that this can happen are:
-         *
-         * <p>- The parser omitted the value because it was 'None'.
-         *
-         * <p>- The value is '_' prefixed. As that value is defined at rule definition time and not
-         * unique for each target, we do not serialize it in the RawTargetNode, and instead use the
-         * single in-memory value.
-         */
-        Object implicitPreCoercionValue = info.getImplicitPreCoercionValue();
-        if (implicitPreCoercionValue != null) {
-          attribute =
-              info.getTypeCoercer()
-                  .coerceToUnconfigured(
-                      cellNameResolver,
-                      filesystem,
-                      buildTarget.getCellRelativeBasePath().getPath(),
-                      implicitPreCoercionValue);
-        }
+      try {
+        Object attribute = attributes.get(info.getName());
         if (attribute == null) {
-          continue;
+          /**
+           * For any implicit attributes that were missing, grab their default values from the
+           * parameter map. The two places that this can happen are:
+           *
+           * <p>- The parser omitted the value because it was 'None'.
+           *
+           * <p>- The value is '_' prefixed. As that value is defined at rule definition time and
+           * not unique for each target, we do not serialize it in the RawTargetNode, and instead
+           * use the single in-memory value.
+           */
+          Object implicitPreCoercionValue = info.getImplicitPreCoercionValue();
+          if (implicitPreCoercionValue != null) {
+            attribute =
+                info.getTypeCoercer()
+                    .coerceToUnconfigured(
+                        cellNameResolver,
+                        filesystem,
+                        buildTarget.getCellRelativeBasePath().getPath(),
+                        implicitPreCoercionValue);
+          }
+          if (attribute == null) {
+            continue;
+          }
         }
-      }
-      Object attributeValue;
+        Object attributeValue;
 
-      TargetConfiguration paramTargetConfiguration =
-          info.execConfiguration() ? hostConfiguration : buildTarget.getTargetConfiguration();
+        TargetConfiguration paramTargetConfiguration =
+            info.execConfiguration() ? hostConfiguration : buildTarget.getTargetConfiguration();
 
-      if (info.splitConfiguration()
-          && targetConfigurationTransformer.needsTransformation(
-              paramTargetConfiguration, dependencyStack)) {
-        Preconditions.checkState(
-            info.getTypeCoercer().supportsConcatenation(),
-            "coercer must support concatenation to do split configuration: " + info.getName());
-        attributeValue =
-            createAttributeWithConfigurationTransformation(
-                cellNameResolver,
-                filesystem,
-                selectorListResolver,
-                targetConfigurationTransformer,
-                configurationContext,
-                platformResolver,
-                buildTarget,
-                hostConfiguration,
-                dependencyStack,
-                paramTargetConfiguration,
-                configurationDeps,
-                (ParamInfo<Object>) info,
-                (TypeCoercer<Object, Object>) info.getTypeCoercer(),
-                isConfigurationRule,
-                attribute,
-                compatibleWith);
-      } else {
-        attributeValue =
-            createAttribute(
-                cellNameResolver,
-                filesystem,
-                selectorListResolver,
-                configurationContext,
-                buildTarget,
-                dependencyStack,
-                paramTargetConfiguration,
-                hostConfiguration,
-                configurationDeps,
-                (ParamInfo<Object>) info,
-                (TypeCoercer<Object, Object>) info.getTypeCoercer(),
-                isConfigurationRule,
-                attribute,
-                compatibleWith);
-      }
-      if (attributeValue != null) {
-        info.setCoercedValue(builder, attributeValue);
+        if (info.splitConfiguration()
+            && targetConfigurationTransformer.needsTransformation(
+                paramTargetConfiguration, dependencyStack)) {
+          Preconditions.checkState(
+              info.getTypeCoercer().supportsConcatenation(),
+              "coercer must support concatenation to do split configuration: " + info.getName());
+          attributeValue =
+              createAttributeWithConfigurationTransformation(
+                  cellNameResolver,
+                  filesystem,
+                  selectorListResolver,
+                  targetConfigurationTransformer,
+                  configurationContext,
+                  platformResolver,
+                  buildTarget,
+                  hostConfiguration,
+                  dependencyStack,
+                  paramTargetConfiguration,
+                  configurationDeps,
+                  (ParamInfo<Object>) info,
+                  (TypeCoercer<Object, Object>) info.getTypeCoercer(),
+                  isConfigurationRule,
+                  attribute,
+                  compatibleWith);
+        } else {
+          attributeValue =
+              createAttribute(
+                  cellNameResolver,
+                  filesystem,
+                  selectorListResolver,
+                  configurationContext,
+                  buildTarget,
+                  dependencyStack,
+                  paramTargetConfiguration,
+                  hostConfiguration,
+                  configurationDeps,
+                  (ParamInfo<Object>) info,
+                  (TypeCoercer<Object, Object>) info.getTypeCoercer(),
+                  isConfigurationRule,
+                  attribute,
+                  compatibleWith);
+        }
+        if (attributeValue != null) {
+          info.setCoercedValue(builder, attributeValue);
+        }
+      } catch (CoerceFailedException e) {
+        throw e.withAttrResolutionContext(
+            info.getName(), buildTarget.toStringWithConfiguration(), dependencyStack);
       }
     }
     T dto = constructorArgDescriptor.build(builder, buildTarget);

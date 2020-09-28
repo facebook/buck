@@ -11,6 +11,12 @@ prebuilt_jar(
         "//test/com/facebook/buck/edenfs/...",
     ],
     deps = [
+        ":eden-config-thrift-bindings",
         "//third-party/java/fbthrift:fbthrift",
     ],
+)
+
+prebuilt_jar(
+    name = "eden-config-thrift-bindings",
+    binary_jar = "eden_config.jar",
 )

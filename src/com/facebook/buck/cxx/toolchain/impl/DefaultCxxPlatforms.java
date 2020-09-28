@@ -116,7 +116,14 @@ public class DefaultCxxPlatforms {
         defaultLinker = defaultCxxFrontend;
         linkerType = LinkerProvider.Type.GNU;
         archiver = new GnuArchiver(getHashedFileTool(cxxBuckConfig, "ar", DEFAULT_AR, env));
-        compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
+        compilerSanitizer =
+            new PrefixMapDebugPathSanitizer(
+                ".",
+                ImmutableBiMap.of(),
+                false,
+                cxxBuckConfig
+                    .getPrefixMapFormat()
+                    .orElse(PrefixMapDebugPathSanitizer.DEFAULT_PREFIX_MAP_FORMAT));
         binaryExtension = Optional.empty();
         ranlib =
             Optional.of(
@@ -134,7 +141,14 @@ public class DefaultCxxPlatforms {
         defaultLinker = defaultCxxFrontend;
         linkerType = LinkerProvider.Type.DARWIN;
         archiver = new BsdArchiver(getHashedFileTool(cxxBuckConfig, "ar", DEFAULT_AR, env));
-        compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
+        compilerSanitizer =
+            new PrefixMapDebugPathSanitizer(
+                ".",
+                ImmutableBiMap.of(),
+                false,
+                cxxBuckConfig
+                    .getPrefixMapFormat()
+                    .orElse(PrefixMapDebugPathSanitizer.DEFAULT_PREFIX_MAP_FORMAT));
         binaryExtension = Optional.empty();
         ranlib =
             Optional.of(
@@ -160,7 +174,14 @@ public class DefaultCxxPlatforms {
             new WindowsArchiver(
                 getHashedFileTool(
                     cxxBuckConfig, DEFAULT_WINDOWS_LIB, Paths.get(DEFAULT_WINDOWS_LIB), env));
-        compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
+        compilerSanitizer =
+            new PrefixMapDebugPathSanitizer(
+                ".",
+                ImmutableBiMap.of(),
+                false,
+                cxxBuckConfig
+                    .getPrefixMapFormat()
+                    .orElse(PrefixMapDebugPathSanitizer.DEFAULT_PREFIX_MAP_FORMAT));
         binaryExtension = Optional.of("exe");
         defaultToolType = Optional.of(CxxToolProvider.Type.WINDOWS);
         ranlib = Optional.empty();
@@ -176,7 +197,14 @@ public class DefaultCxxPlatforms {
         defaultLinker = defaultCxxFrontend;
         linkerType = LinkerProvider.Type.GNU;
         archiver = new BsdArchiver(getHashedFileTool(cxxBuckConfig, "ar", DEFAULT_AR, env));
-        compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
+        compilerSanitizer =
+            new PrefixMapDebugPathSanitizer(
+                ".",
+                ImmutableBiMap.of(),
+                false,
+                cxxBuckConfig
+                    .getPrefixMapFormat()
+                    .orElse(PrefixMapDebugPathSanitizer.DEFAULT_PREFIX_MAP_FORMAT));
         binaryExtension = Optional.empty();
         ranlib =
             Optional.of(

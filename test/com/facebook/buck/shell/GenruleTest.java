@@ -1017,7 +1017,8 @@ public class GenruleTest {
               public void set(Path path, HashCode hashCode) {}
             },
             ImmutableSet.of(),
-            ConsoleParams.of(false, Verbosity.STANDARD_INFORMATION));
+            ConsoleParams.of(false, Verbosity.STANDARD_INFORMATION),
+            false);
 
     assertFalse(mbrHelper.supportsRemoteExecution(genrule));
   }

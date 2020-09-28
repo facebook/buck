@@ -23,7 +23,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.Channels;
+import java.nio.channels.ClosedChannelException;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.concurrent.NotThreadSafe;
 
 /** Named pipe implementation based on {@code RandomAccessFile}. */
 abstract class POSIXClientNamedPipeBase extends BaseNamedPipe {
@@ -38,25 +42,42 @@ abstract class POSIXClientNamedPipeBase extends BaseNamedPipe {
     }
   }
 
-  /** Wrapper class around {@link RandomAccessFile} */
+  /**
+   * Wrapper class around an instance of {@link RandomAccessFile}. Multiple input and output streams
+   * may be open to the underlying {@link RandomAccessFile} concurrently.
+   *
+   * <p>Note that after calling {@link #close()}, the streams already obtained may throw {@link
+   * ClosedChannelException} upon further operations (e.g. reads or writes). Users are expected to
+   * to synchronize between {@link #close()} and further operations.
+   */
+  @NotThreadSafe
   protected static class RandomAccessFileWrapper implements Closeable {
 
     final RandomAccessFile randomAccessFile;
+    private final Collection<Closeable> closeables;
 
     RandomAccessFileWrapper(String path, String mode) throws IOException {
       this.randomAccessFile = new RandomAccessFile(path, mode);
+      closeables = ConcurrentHashMap.newKeySet();
     }
 
     InputStream getInputStream() {
-      return Channels.newInputStream(randomAccessFile.getChannel());
+      InputStream inputStream = Channels.newInputStream(randomAccessFile.getChannel());
+      closeables.add(inputStream);
+      return inputStream;
     }
 
     OutputStream getOutputStream() {
-      return Channels.newOutputStream(randomAccessFile.getChannel());
+      OutputStream outputStream = Channels.newOutputStream(randomAccessFile.getChannel());
+      closeables.add(outputStream);
+      return outputStream;
     }
 
     @Override
     public void close() throws IOException {
+      for (Closeable closeable : closeables) {
+        closeable.close();
+      }
       randomAccessFile.close();
     }
   }

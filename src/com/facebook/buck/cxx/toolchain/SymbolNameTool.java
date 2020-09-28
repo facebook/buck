@@ -45,6 +45,22 @@ public interface SymbolNameTool {
       BuildTarget target,
       Iterable<? extends SourcePath> linkerInputs);
 
+  /**
+   * Creates a {@link BuildRule} which extracts all global (defined and undefined) symbols from the
+   * given inputs.
+   *
+   * @param target the name to use when creating the rule which extracts the symbols.
+   * @return a {@link SourcePath} referring to a file containing all global symbols, one per line,
+   *     in the given inputs.
+   */
+  SourcePath creatGlobalSymbolsFile(
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams baseParams,
+      ActionGraphBuilder graphBuilder,
+      TargetConfiguration targetConfiguration,
+      BuildTarget target,
+      Iterable<? extends SourcePath> linkerInputs);
+
   /** @return any dependencies required at parse time to support the provided tool. */
   Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration);
 }

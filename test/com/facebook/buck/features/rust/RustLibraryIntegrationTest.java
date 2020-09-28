@@ -84,6 +84,20 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
+  public void rustLibraryImplicitCheck() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckBuild("--config", "defaults.rust_library.type=check", "//messenger:messenger")
+        .assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//messenger:messenger#check,default");
+    workspace.resetBuildLogFile();
+  }
+
+  @Test
   public void rustLibraryCheckWarning() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);

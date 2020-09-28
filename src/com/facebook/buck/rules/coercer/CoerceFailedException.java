@@ -16,6 +16,9 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.reflect.TypeToken;
 import java.lang.reflect.Type;
 
@@ -45,5 +48,20 @@ public class CoerceFailedException extends Exception {
   public static CoerceFailedException simple(
       Object object, TypeToken<?> resultType, String detail) {
     return simple(object, resultType.getType(), detail);
+  }
+
+  /**
+   * Convert this exception to {@link com.facebook.buck.core.exceptions.HumanReadableException} with
+   * added attr name.
+   */
+  public HumanReadableException withAttrResolutionContext(
+      ParamName paramName, String buildTarget, DependencyStack dependencyStack) {
+    return new HumanReadableException(
+        this,
+        dependencyStack,
+        "When resolving attribute %s of %s: %s",
+        paramName.getSnakeCase(),
+        buildTarget,
+        this.getMessage());
   }
 }

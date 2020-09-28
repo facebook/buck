@@ -160,10 +160,11 @@ objects, they are still using the default pytest representation:
 
     $ pytest test_time.py --collect-only
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 8 items
+
     <Module test_time.py>
       <Function test_timedistance_v0[a0-b0-expected0]>
       <Function test_timedistance_v0[a1-b1-expected1]>
@@ -224,7 +225,7 @@ this is a fully self-contained example which you can run with:
 
     $ pytest test_scenarios.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 4 items
@@ -239,10 +240,11 @@ If you just collect tests you'll also nicely see 'advanced' and 'basic' as varia
 
     $ pytest --collect-only test_scenarios.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 4 items
+
     <Module test_scenarios.py>
       <Class TestSampleWithScenarios>
           <Function test_demo1[basic]>
@@ -317,10 +319,11 @@ Let's first see how it looks like at collection time:
 
     $ pytest test_backends.py --collect-only
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 2 items
+
     <Module test_backends.py>
       <Function test_db_initialized[d1]>
       <Function test_db_initialized[d2]>
@@ -350,6 +353,30 @@ And then when we run the test:
     1 failed, 1 passed in 0.12s
 
 The first invocation with ``db == "DB1"`` passed while the second with ``db == "DB2"`` failed.  Our ``db`` fixture function has instantiated each of the DB values during the setup phase while the ``pytest_generate_tests`` generated two according calls to the ``test_db_initialized`` during the collection phase.
+
+Indirect parametrization
+---------------------------------------------------
+
+Using the ``indirect=True`` parameter when parametrizing a test allows to
+parametrize a test with a fixture receiving the values before passing them to a
+test:
+
+.. code-block:: python
+
+    import pytest
+
+
+    @pytest.fixture
+    def fixt(request):
+        return request.param * 3
+
+
+    @pytest.mark.parametrize("fixt", ["a", "b"], indirect=True)
+    def test_indirect(fixt):
+        assert len(fixt) == 3
+
+This can be used, for example, to do more expensive setup at test run time in
+the fixture, rather than having to run those setup steps at collection time.
 
 .. regendoc:wipe
 
@@ -389,16 +416,16 @@ The result of this test will be successful:
 
 .. code-block:: pytest
 
-    $ pytest test_indirect_list.py --collect-only
+    $ pytest -v test_indirect_list.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y -- $PYTHON_PREFIX/bin/python
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
-    collected 1 item
-    <Module test_indirect_list.py>
-      <Function test_indirect[a-b]>
+    collecting ... collected 1 item
 
-    ========================== no tests ran in 0.12s ===========================
+    test_indirect_list.py::test_indirect[a-b] PASSED                     [100%]
+
+    ============================ 1 passed in 0.12s =============================
 
 .. regendoc:wipe
 
@@ -483,8 +510,8 @@ Running it results in some skips if we don't have all the python interpreters in
    . $ pytest -rs -q multipython.py
    ssssssssssss...ssssssssssss                                          [100%]
    ========================= short test summary info ==========================
-   SKIPPED [12] $REGENDOC_TMPDIR/CWD/multipython.py:29: 'python3.5' not found
-   SKIPPED [12] $REGENDOC_TMPDIR/CWD/multipython.py:29: 'python3.7' not found
+   SKIPPED [12] multipython.py:29: 'python3.5' not found
+   SKIPPED [12] multipython.py:29: 'python3.7' not found
    3 passed, 24 skipped in 0.12s
 
 Indirect parametrization of optional implementations/imports
@@ -545,7 +572,7 @@ If you run this with reporting for skips enabled:
 
     $ pytest -rs test_module.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 2 items
@@ -553,7 +580,7 @@ If you run this with reporting for skips enabled:
     test_module.py .s                                                    [100%]
 
     ========================= short test summary info ==========================
-    SKIPPED [1] $REGENDOC_TMPDIR/conftest.py:12: could not import 'opt2': No module named 'opt2'
+    SKIPPED [1] conftest.py:12: could not import 'opt2': No module named 'opt2'
     ======================= 1 passed, 1 skipped in 0.12s =======================
 
 You'll see that we don't have an ``opt2`` module and thus the second test run
@@ -607,7 +634,7 @@ Then run ``pytest`` with verbose mode and with only the ``basic`` marker:
 
     $ pytest -v -m basic
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y -- $PYTHON_PREFIX/bin/python
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y -- $PYTHON_PREFIX/bin/python
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collecting ... collected 14 items / 11 deselected / 3 selected

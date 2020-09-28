@@ -83,6 +83,8 @@
 
     <runLineMarkerContributor language="JAVA"
       implementationClass="com.facebook.buck.intellij.ideabuck.actions.select.SelectedTestRunLineMarkerContributor"/>
+    <runLineMarkerContributor language="Buck"
+      implementationClass="com.facebook.buck.intellij.ideabuck.actions.select.SelectedBuckLineMarkerContributor"/>
     <additionalTextAttributes scheme="Default" file="colorSchemes/BuckDefault.xml"/>
     <additionalTextAttributes scheme="Darcula" file="colorSchemes/BuckDarcula.xml"/>
 
@@ -130,10 +132,15 @@
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift P"/>
       </action>
       <action
-          id="buck.CopyTarget"
-          class="com.facebook.buck.intellij.ideabuck.actions.CopyTargetAction"
-          text="Copy Buck Target"
-          description="Copy the Buck target of the current class"/>
+        id="buck.CopyTarget"
+        class="com.facebook.buck.intellij.ideabuck.actions.CopyTargetAction"
+        text="Copy Buck Target"
+        description="Copy the Buck target of the current class"/>
+      <action
+        id="buck.ExpandBuckMacro"
+        class="com.facebook.buck.intellij.ideabuck.actions.BuckExpandMacroAction"
+        text="View Expanded Buck Macros"
+        description="Show full Buck macro expansion"/>
       <add-to-group anchor="after" group-id="EditorPopupMenu" relative-to-action="EditorToggleColumnMode"/>
     </group>
 

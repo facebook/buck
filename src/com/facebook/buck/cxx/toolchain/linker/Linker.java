@@ -140,6 +140,24 @@ public interface Linker extends Tool {
       BuildTarget target,
       ImmutableList<? extends SourcePath> symbolFiles);
 
+  /**
+   * Generate a necessary linker arguments to propagate global symbols to a link command. May need
+   * to create a {@link BuildRule}, in which case, {@code target} will be used as its name.
+   *
+   * @param target the name to give any {@link BuildRule} that needs to be created to facilitate
+   *     generating the arguments,
+   * @param symbolFiles the symbols files, each listing global symbols, one per line, to add to the
+   *     link.
+   * @return the list of linker arguments needed to propagate the list of global symbols to the link
+   *     command.
+   */
+  ImmutableList<Arg> createGlobalSymbolsLinkerArgs(
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams baseParams,
+      ActionGraphBuilder graphBuilder,
+      BuildTarget target,
+      ImmutableList<? extends SourcePath> symbolFiles);
+
   Iterable<Arg> getSharedLibFlag();
 
   Iterable<String> outputArgs(String path);

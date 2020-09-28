@@ -25,22 +25,17 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
-import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.test.rule.HasTestRunner;
 import com.facebook.buck.core.test.rule.TestRunnerSpec;
 import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -61,19 +56,18 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.test.config.TestBuckConfig;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import java.nio.file.Path;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.logging.Level;
 import org.immutables.value.Value;
@@ -161,7 +155,6 @@ public class JavaTestDescription
             params,
             args.getUseCxxLibraries(),
             args.getCxxLibraryWhitelist(),
-            context.getTargetGraph(),
             graphBuilder,
             getUnresolvedCxxPlatform(args, buildTarget.getTargetConfiguration())
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
@@ -354,52 +347,18 @@ public class JavaTestDescription
         BuildRuleParams params,
         Optional<Boolean> useCxxLibraries,
         ImmutableSet<BuildTarget> cxxLibraryWhitelist,
-        TargetGraph targetGraph,
         ActionGraphBuilder graphBuilder,
         CxxPlatform cxxPlatform,
         boolean isBuckLDSymLinkTreeSet) {
       if (useCxxLibraries.orElse(false)) {
         MappedSymlinkTree nativeLibsSymlinkTree =
             buildNativeLibsSymlinkTreeRule(
-                buildTarget, projectFilesystem, graphBuilder, params, cxxPlatform);
-
-        // If the cxxLibraryWhitelist is present, remove symlinks that were not requested
-        // and also not deps of requested libraries.
-        // They could point to old, invalid versions of the library in question.
-        if (!cxxLibraryWhitelist.isEmpty()) {
-          ImmutableSet<BuildTarget> requiredCxxTargets;
-          try {
-            requiredCxxTargets =
-                ImmutableSet.copyOf(
-                    new AcyclicDepthFirstPostOrderTraversal<BuildTarget>(
-                            target -> getAllDeps(targetGraph.get(target)))
-                        .traverse(cxxLibraryWhitelist));
-          } catch (CycleException e) {
-            throw new RuntimeException("Target graph should not have cycles", e);
-          }
-
-          ImmutableMap.Builder<Path, SourcePath> filteredLinks = ImmutableMap.builder();
-          for (Map.Entry<Path, SourcePath> entry : nativeLibsSymlinkTree.getLinks().entrySet()) {
-            if (!(entry.getValue() instanceof BuildTargetSourcePath)) {
-              // Could consider including these, but I don't know of any examples.
-              continue;
-            }
-            BuildTargetSourcePath sourcePath = (BuildTargetSourcePath) entry.getValue();
-            if (requiredCxxTargets.contains(sourcePath.getTarget().withFlavors())) {
-              filteredLinks.put(entry.getKey(), entry.getValue());
-            }
-          }
-          nativeLibsSymlinkTree =
-              new MappedSymlinkTree(
-                  "java_test_native_libs",
-                  nativeLibsSymlinkTree.getBuildTarget(),
-                  nativeLibsSymlinkTree.getProjectFilesystem(),
-                  nativeLibsSymlinkTree
-                      .getProjectFilesystem()
-                      .relativize(nativeLibsSymlinkTree.getRoot())
-                      .getPath(),
-                  filteredLinks.build());
-        }
+                buildTarget,
+                projectFilesystem,
+                graphBuilder,
+                params.getBuildDeps(),
+                cxxLibraryWhitelist,
+                cxxPlatform);
 
         graphBuilder.addToIndex(nativeLibsSymlinkTree);
         updatedParams =
@@ -439,29 +398,31 @@ public class JavaTestDescription
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         ActionGraphBuilder graphBuilder,
-        BuildRuleParams buildRuleParams,
+        SortedSet<BuildRule> buildDeps,
+        ImmutableSet<BuildTarget> cxxLibraryWhitelist,
         CxxPlatform cxxPlatform) {
+      Set<BuildRule> roots = buildDeps;
       // TODO(cjhopman): The behavior of this doesn't really make sense. This should use a
       // packageable interface and some sort of proper logic for finding native libraries. Currently
       // this includes native libraries contained within the second-order dependency set only.
-      return CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
-          buildTarget,
-          projectFilesystem,
-          graphBuilder,
-          cxxPlatform,
-          buildRuleParams.getBuildDeps(),
+      Function<BuildRule, Optional<Iterable<? extends BuildRule>>> passthroughFunc =
           r ->
               r instanceof JavaLibrary
                   ? Optional.of(
-                      buildRuleParams.getBuildDeps().contains(r)
+                      buildDeps.contains(r)
                           ? ((JavaLibrary) r).getDepsForTransitiveClasspathEntries()
                           : ImmutableList.of())
-                  : Optional.empty());
-    }
-  }
+                  : Optional.empty();
 
-  private static Iterator<BuildTarget> getAllDeps(TargetNode<?> targetNode) {
-    return Iterators.concat(
-        targetNode.getDeclaredDeps().iterator(), targetNode.getExtraDeps().iterator());
+      // If a whitelist is specified, use it as the roots, and don't pass through Java rules.
+      if (!cxxLibraryWhitelist.isEmpty()) {
+        passthroughFunc = r -> Optional.empty();
+        roots =
+            RichStream.from(cxxLibraryWhitelist).map(graphBuilder::requireRule).toImmutableSet();
+      }
+
+      return CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
+          buildTarget, projectFilesystem, graphBuilder, cxxPlatform, roots, passthroughFunc);
+    }
   }
 }

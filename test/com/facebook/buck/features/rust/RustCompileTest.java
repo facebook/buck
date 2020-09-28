@@ -190,6 +190,16 @@ public class RustCompileTest {
       }
 
       @Override
+      public ImmutableList<Arg> createGlobalSymbolsLinkerArgs(
+          ProjectFilesystem projectFilesystem,
+          BuildRuleParams baseParams,
+          ActionGraphBuilder graphBuilder,
+          BuildTarget target,
+          ImmutableList<? extends SourcePath> symbolFiles) {
+        return null;
+      }
+
+      @Override
       public Iterable<Arg> getSharedLibFlag() {
         return null;
       }

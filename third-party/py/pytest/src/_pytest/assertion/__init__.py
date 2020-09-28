@@ -3,6 +3,7 @@ support for presenting detailed information in failing assertions.
 """
 import sys
 from typing import Any
+from typing import Generator
 from typing import List
 from typing import Optional
 
@@ -13,12 +14,14 @@ from _pytest.assertion.rewrite import assertstate_key
 from _pytest.compat import TYPE_CHECKING
 from _pytest.config import Config
 from _pytest.config import hookimpl
+from _pytest.config.argparsing import Parser
+from _pytest.nodes import Item
 
 if TYPE_CHECKING:
     from _pytest.main import Session
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: Parser) -> None:
     group = parser.getgroup("debugconfig")
     group.addoption(
         "--assert",
@@ -27,11 +30,12 @@ def pytest_addoption(parser):
         choices=("rewrite", "plain"),
         default="rewrite",
         metavar="MODE",
-        help="""Control assertion debugging tools.  'plain'
-                            performs no assertion debugging.  'rewrite'
-                            (the default) rewrites assert statements in
-                            test modules on import to provide assert
-                            expression information.""",
+        help=(
+            "Control assertion debugging tools.\n"
+            "'plain' performs no assertion debugging.\n"
+            "'rewrite' (the default) rewrites assert statements in test modules"
+            " on import to provide assert expression information."
+        ),
     )
     parser.addini(
         "enable_assertion_pass_hook",
@@ -42,7 +46,7 @@ def pytest_addoption(parser):
     )
 
 
-def register_assert_rewrite(*names) -> None:
+def register_assert_rewrite(*names: str) -> None:
     """Register one or more module names to be rewritten on import.
 
     This function will make sure that this module or all modules inside
@@ -71,27 +75,27 @@ def register_assert_rewrite(*names) -> None:
 class DummyRewriteHook:
     """A no-op import hook for when rewriting is disabled."""
 
-    def mark_rewrite(self, *names):
+    def mark_rewrite(self, *names: str) -> None:
         pass
 
 
 class AssertionState:
     """State for the assertion plugin."""
 
-    def __init__(self, config, mode):
+    def __init__(self, config: Config, mode) -> None:
         self.mode = mode
         self.trace = config.trace.root.get("assertion")
         self.hook = None  # type: Optional[rewrite.AssertionRewritingHook]
 
 
-def install_importhook(config):
+def install_importhook(config: Config) -> rewrite.AssertionRewritingHook:
     """Try to install the rewrite hook, raise SystemError if it fails."""
     config._store[assertstate_key] = AssertionState(config, "rewrite")
     config._store[assertstate_key].hook = hook = rewrite.AssertionRewritingHook(config)
     sys.meta_path.insert(0, hook)
     config._store[assertstate_key].trace("installed rewrite import hook")
 
-    def undo():
+    def undo() -> None:
         hook = config._store[assertstate_key].hook
         if hook is not None and hook in sys.meta_path:
             sys.meta_path.remove(hook)
@@ -111,17 +115,18 @@ def pytest_collection(session: "Session") -> None:
 
 
 @hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_protocol(item):
+def pytest_runtest_protocol(item: Item) -> Generator[None, None, None]:
     """Setup the pytest_assertrepr_compare and pytest_assertion_pass hooks
 
-    The newinterpret and rewrite modules will use util._reprcompare if
+    The rewrite module will use util._reprcompare if
     it exists to use custom reporting via the
     pytest_assertrepr_compare hook.  This sets up this custom
     comparison for the test.
     """
 
-    def callbinrepr(op, left, right):
-        # type: (str, object, object) -> Optional[str]
+    ihook = item.ihook
+
+    def callbinrepr(op, left: object, right: object) -> Optional[str]:
         """Call the pytest_assertrepr_compare hook and prepare the result
 
         This uses the first result from the hook and then ensures the
@@ -136,7 +141,7 @@ def pytest_runtest_protocol(item):
         The result can be formatted by util.format_explanation() for
         pretty printing.
         """
-        hook_result = item.ihook.pytest_assertrepr_compare(
+        hook_result = ihook.pytest_assertrepr_compare(
             config=item.config, op=op, left=left, right=right
         )
         for new_expl in hook_result:
@@ -152,12 +157,10 @@ def pytest_runtest_protocol(item):
     saved_assert_hooks = util._reprcompare, util._assertion_pass
     util._reprcompare = callbinrepr
 
-    if item.ihook.pytest_assertion_pass.get_hookimpls():
+    if ihook.pytest_assertion_pass.get_hookimpls():
 
-        def call_assertion_pass_hook(lineno, orig, expl):
-            item.ihook.pytest_assertion_pass(
-                item=item, lineno=lineno, orig=orig, expl=expl
-            )
+        def call_assertion_pass_hook(lineno: int, orig: str, expl: str) -> None:
+            ihook.pytest_assertion_pass(item=item, lineno=lineno, orig=orig, expl=expl)
 
         util._assertion_pass = call_assertion_pass_hook
 
@@ -166,7 +169,7 @@ def pytest_runtest_protocol(item):
     util._reprcompare, util._assertion_pass = saved_assert_hooks
 
 
-def pytest_sessionfinish(session):
+def pytest_sessionfinish(session: "Session") -> None:
     assertstate = session.config._store.get(assertstate_key, None)
     if assertstate:
         if assertstate.hook is not None:

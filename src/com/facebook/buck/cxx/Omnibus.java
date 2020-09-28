@@ -521,6 +521,34 @@ public class Omnibus {
             ImmutableList.of(undefinedSymbolsFile));
   }
 
+  private static ImmutableList<Arg> createGlobalSymbolsArgs(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      ActionGraphBuilder graphBuilder,
+      CxxPlatform cxxPlatform,
+      Iterable<? extends SourcePath> linkerInputs) {
+    SourcePath globalSymbolsFile =
+        cxxPlatform
+            .getSymbolNameTool()
+            .creatGlobalSymbolsFile(
+                projectFilesystem,
+                params,
+                graphBuilder,
+                buildTarget.getTargetConfiguration(),
+                buildTarget.withAppendedFlavors(InternalFlavor.of("omnibus-global-symbols-file")),
+                linkerInputs);
+    return cxxPlatform
+        .getLd()
+        .resolve(graphBuilder, buildTarget.getTargetConfiguration())
+        .createGlobalSymbolsLinkerArgs(
+            projectFilesystem,
+            params,
+            graphBuilder,
+            buildTarget.withAppendedFlavors(InternalFlavor.of("omnibus-global-symbols-args")),
+            ImmutableList.of(globalSymbolsFile));
+  }
+
   // Create a build rule to link the giant merged omnibus library described by the given spec.
   private static OmnibusLibrary createOmnibus(
       BuildTarget buildTarget,
@@ -553,6 +581,31 @@ public class Omnibus {
                       shouldCreateDummyRoot(linkTarget) ? getDummyRootTarget(target) : target))
               .getSourcePathToOutput());
     }
+    // For roots that aren't dependencies of nodes in the body,
+    // we extract their global (defined and undefined) symbols to add to the link,
+    // so that they can be exported in the merged library.
+    List<SourcePath> globalSymbolSources = new ArrayList<>();
+    for (BuildTarget target : spec.getRoots().keySet()) {
+      NativeLinkTarget linkTarget = Objects.requireNonNull(spec.getRoots().get(target));
+      globalSymbolSources.add(
+          graphBuilder
+              .requireRule(
+                  getRootTarget(
+                      buildTarget,
+                      shouldCreateDummyRoot(linkTarget) ? getDummyRootTarget(target) : target))
+              .getSourcePathToOutput());
+    }
+    // Similarly, extract global symbols from excluded nodes,
+    // omitting static libraries.
+    for (NativeLinkable nativeLinkable : spec.getExcluded().values()) {
+      if (nativeLinkable.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC) {
+        for (Map.Entry<String, SourcePath> ent :
+            nativeLinkable.getSharedLibraries(graphBuilder).entrySet()) {
+          globalSymbolSources.add(ent.getValue());
+        }
+      }
+    }
+
     argsBuilder.addAll(
         createUndefinedSymbolsArgs(
             buildTarget,
@@ -561,6 +614,15 @@ public class Omnibus {
             graphBuilder,
             cxxPlatform,
             undefinedSymbolsOnlyRoots));
+
+    argsBuilder.addAll(
+        createGlobalSymbolsArgs(
+            buildTarget,
+            projectFilesystem,
+            params,
+            graphBuilder,
+            cxxPlatform,
+            globalSymbolSources));
 
     // Resolve all `NativeLinkableInput`s in parallel, before using them below.
     ImmutableList<? extends NativeLinkable> deps =

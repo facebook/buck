@@ -35,27 +35,19 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
-import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.rust.RustBinaryDescription.Type;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.rules.macros.StringWithMacrosConverter;
-import com.facebook.buck.versions.HasVersionUniverse;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.stream.Stream;
-import org.immutables.value.Value;
 
 public class RustTestDescription
     implements DescriptionWithTargetGraph<RustTestDescriptionArg>,
@@ -108,13 +100,19 @@ public class RustTestDescription
                 getRustToolchain(buildTarget.getTargetConfiguration()), buildTarget, args)
             .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
 
-    StringWithMacrosConverter converter =
-        RustCompileUtils.getMacroExpander(context, buildTarget, rustPlatform.getCxxPlatform());
+    ImmutableList.Builder<StringArg> testFlags = new ImmutableList.Builder<>();
+    testFlags.addAll(rustPlatform.getRustTestFlags());
+    if (args.isFramework()) {
+      testFlags.add(StringArg.of("--test"));
+    }
 
-    Stream<Arg> testarg = args.isFramework() ? Stream.of(StringArg.of("--test")) : Stream.empty();
+    Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> flagsAndEnv =
+        RustCompileUtils.getRustcFlagsAndEnv(
+            context, buildTarget, rustPlatform, testFlags.build(), args);
 
-    ImmutableSortedMap<String, Arg> envs =
-        ImmutableSortedMap.copyOf(Maps.transformValues(args.getEnv(), converter::convert));
+    ImmutableList<Arg> linkerFlags =
+        RustCompileUtils.getLinkerFlags(context, buildTarget, rustPlatform, args);
+
     BinaryWrapperRule testExeBuild =
         (BinaryWrapperRule)
             graphBuilder.computeIfAbsent(
@@ -131,20 +129,9 @@ public class RustTestDescription
                         args.getCrate(),
                         args.getEdition(),
                         args.getFeatures(),
-                        envs,
-                        Stream.of(
-                                testarg,
-                                rustPlatform.getRustTestFlags().stream().map(x -> (Arg) x),
-                                args.getRustcFlags().stream().map(converter::convert))
-                            .flatMap(x -> x)
-                            .iterator(),
-                        Iterators.concat(
-                            args.getLinkerFlags().stream().map(converter::convert).iterator(),
-                            Iterators.concat(
-                                args.getPlatformLinkerFlags()
-                                    .getMatchingValues(rustPlatform.getFlavor().toString()).stream()
-                                    .map(l -> l.stream().map(converter::convert).iterator())
-                                    .iterator())),
+                        flagsAndEnv.getSecond(), // rustc environment
+                        flagsAndEnv.getFirst(), // rustc flags
+                        linkerFlags,
                         RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle()),
                         args.isRpath(),
                         args.getSrcs(),
@@ -164,7 +151,7 @@ public class RustTestDescription
         buildTarget,
         projectFilesystem,
         testParams,
-        envs,
+        flagsAndEnv.getSecond(), // environment
         testExeBuild,
         args.getLabels(),
         args.getContacts(),
@@ -198,25 +185,5 @@ public class RustTestDescription
   }
 
   @RuleArg
-  interface AbstractRustTestDescriptionArg extends RustCommonArgs, HasVersionUniverse {
-
-    ImmutableList<StringWithMacros> getLinkerFlags();
-
-    @Value.Default
-    default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPlatformLinkerFlags() {
-      return PatternMatchedCollection.of();
-    }
-
-    Optional<Linker.LinkableDepType> getLinkStyle();
-
-    @Value.Default
-    default boolean isRpath() {
-      return true;
-    }
-
-    @Value.Default
-    default boolean isFramework() {
-      return true;
-    }
-  }
+  interface AbstractRustTestDescriptionArg extends RustLinkableArgs {}
 }

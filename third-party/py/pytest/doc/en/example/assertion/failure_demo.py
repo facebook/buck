@@ -1,4 +1,3 @@
-import _pytest._code
 import pytest
 from pytest import raises
 
@@ -167,7 +166,7 @@ class TestRaises:
         raises(TypeError, int, s)
 
     def test_raises_doesnt(self):
-        raises(IOError, int, "3")
+        raises(OSError, int, "3")
 
     def test_raise(self):
         raise ValueError("demo error")
@@ -197,7 +196,7 @@ def test_dynamic_compile_shows_nicely():
     name = "abc-123"
     spec = importlib.util.spec_from_loader(name, loader=None)
     module = importlib.util.module_from_spec(spec)
-    code = _pytest._code.compile(src, name, "exec")
+    code = compile(src, name, "exec")
     exec(code, module.__dict__)
     sys.modules[name] = module
     module.foo()

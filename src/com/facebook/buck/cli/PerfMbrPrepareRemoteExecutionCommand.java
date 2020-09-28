@@ -162,7 +162,8 @@ public class PerfMbrPrepareRemoteExecutionCommand
               public void set(Path path, HashCode hashCode) {}
             },
             config.getStrategyConfig().getIgnorePaths(),
-            ConsoleParams.of(console.getAnsi().isAnsiTerminal(), console.getVerbosity()));
+            ConsoleParams.of(console.getAnsi().isAnsiTerminal(), console.getVerbosity()),
+            config.sanitizeBuckConfig());
     int maxPendingUploads = config.getStrategyConfig().getMaxConcurrentPendingUploads();
     JobLimiter uploadsLimiter = new JobLimiter(maxPendingUploads);
 

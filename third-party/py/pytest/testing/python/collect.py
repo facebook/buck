@@ -1,11 +1,13 @@
-import os
 import sys
 import textwrap
+from typing import Any
+from typing import Dict
 
 import _pytest._code
 import pytest
 from _pytest.config import ExitCode
 from _pytest.nodes import Collector
+from _pytest.pytester import Testdir
 
 
 class TestModule:
@@ -106,11 +108,10 @@ class TestModule:
         assert result.ret == 2
 
         stdout = result.stdout.str()
-        for name in ("_pytest", os.path.join("py", "_path")):
-            if verbose == 2:
-                assert name in stdout
-            else:
-                assert name not in stdout
+        if verbose == 2:
+            assert "_pytest" in stdout
+        else:
+            assert "_pytest" not in stdout
 
     def test_show_traceback_import_error_unicode(self, testdir):
         """Check test modules collected which raise ImportError with unicode messages
@@ -293,9 +294,11 @@ class TestFunction:
         def func2():
             pass
 
-        f1 = self.make_function(testdir, name="name", args=(1,), callobj=func1)
+        f1 = self.make_function(testdir, name="name", callobj=func1)
         assert f1 == f1
-        f2 = self.make_function(testdir, name="name", callobj=func2)
+        f2 = self.make_function(
+            testdir, name="name", callobj=func2, originalname="foobar"
+        )
         assert f1 != f2
 
     def test_repr_produces_actual_test_id(self, testdir):
@@ -659,20 +662,47 @@ class TestFunction:
         result = testdir.runpytest()
         result.stdout.fnmatch_lines(["* 3 passed in *"])
 
-    def test_function_original_name(self, testdir):
+    def test_function_originalname(self, testdir: Testdir) -> None:
         items = testdir.getitems(
             """
             import pytest
+
             @pytest.mark.parametrize('arg', [1,2])
             def test_func(arg):
                 pass
+
+            def test_no_param():
+                pass
         """
         )
-        assert [x.originalname for x in items] == ["test_func", "test_func"]
+        originalnames = []
+        for x in items:
+            assert isinstance(x, pytest.Function)
+            originalnames.append(x.originalname)
+        assert originalnames == [
+            "test_func",
+            "test_func",
+            "test_no_param",
+        ]
+
+    def test_function_with_square_brackets(self, testdir: Testdir) -> None:
+        """Check that functions with square brackets don't cause trouble."""
+        p1 = testdir.makepyfile(
+            """
+            locals()["test_foo[name]"] = lambda: None
+            """
+        )
+        result = testdir.runpytest("-v", str(p1))
+        result.stdout.fnmatch_lines(
+            [
+                "test_function_with_square_brackets.py::test_foo[[]name[]] PASSED *",
+                "*= 1 passed in *",
+            ]
+        )
 
 
 class TestSorting:
-    def test_check_equality(self, testdir):
+    def test_check_equality(self, testdir) -> None:
         modcol = testdir.getmodulecol(
             """
             def test_pass(): pass
@@ -694,10 +724,10 @@ class TestSorting:
         assert fn1 != fn3
 
         for fn in fn1, fn2, fn3:
-            assert fn != 3
+            assert fn != 3  # type: ignore[comparison-overlap]
             assert fn != modcol
-            assert fn != [1, 2, 3]
-            assert [1, 2, 3] != fn
+            assert fn != [1, 2, 3]  # type: ignore[comparison-overlap]
+            assert [1, 2, 3] != fn  # type: ignore[comparison-overlap]
             assert modcol != fn
 
     def test_allow_sane_sorting_for_decorators(self, testdir):
@@ -732,7 +762,7 @@ class TestConftestCustomization:
                 pass
             def pytest_pycollect_makemodule(path, parent):
                 if path.basename == "test_xyz.py":
-                    return MyModule(path, parent)
+                    return MyModule.from_parent(fspath=path, parent=parent)
         """
         )
         testdir.makepyfile("def test_some(): pass")
@@ -806,7 +836,7 @@ class TestConftestCustomization:
                 pass
             def pytest_pycollect_makeitem(collector, name, obj):
                 if name == "some":
-                    return MyFunction(name, collector)
+                    return MyFunction.from_parent(name=name, parent=collector)
         """
         )
         testdir.makepyfile("def some(): pass")
@@ -843,7 +873,7 @@ class TestConftestCustomization:
 
             def pytest_collect_file(path, parent):
                 if path.ext == ".narf":
-                    return Module(path, parent)"""
+                    return Module.from_parent(fspath=path, parent=parent)"""
         )
         testdir.makefile(
             ".narf",
@@ -980,7 +1010,7 @@ class TestTracebackCutting:
         assert "INTERNALERROR>" not in out
         result.stdout.fnmatch_lines(["*ValueError: fail me*", "* 1 error in *"])
 
-    def test_filter_traceback_generated_code(self):
+    def test_filter_traceback_generated_code(self) -> None:
         """test that filter_traceback() works with the fact that
         _pytest._code.code.Code.path attribute might return an str object.
         In this case, one of the entries on the traceback was produced by
@@ -991,17 +1021,18 @@ class TestTracebackCutting:
         from _pytest.python import filter_traceback
 
         try:
-            ns = {}
+            ns = {}  # type: Dict[str, Any]
             exec("def foo(): raise ValueError", ns)
             ns["foo"]()
         except ValueError:
             _, _, tb = sys.exc_info()
 
-        tb = _pytest._code.Traceback(tb)
-        assert isinstance(tb[-1].path, str)
-        assert not filter_traceback(tb[-1])
+        assert tb is not None
+        traceback = _pytest._code.Traceback(tb)
+        assert isinstance(traceback[-1].path, str)
+        assert not filter_traceback(traceback[-1])
 
-    def test_filter_traceback_path_no_longer_valid(self, testdir):
+    def test_filter_traceback_path_no_longer_valid(self, testdir) -> None:
         """test that filter_traceback() works with the fact that
         _pytest._code.code.Code.path attribute might return an str object.
         In this case, one of the files in the traceback no longer exists.
@@ -1023,10 +1054,11 @@ class TestTracebackCutting:
         except ValueError:
             _, _, tb = sys.exc_info()
 
+        assert tb is not None
         testdir.tmpdir.join("filter_traceback_entry_as_str.py").remove()
-        tb = _pytest._code.Traceback(tb)
-        assert isinstance(tb[-1].path, str)
-        assert filter_traceback(tb[-1])
+        traceback = _pytest._code.Traceback(tb)
+        assert isinstance(traceback[-1].path, str)
+        assert filter_traceback(traceback[-1])
 
 
 class TestReportInfo:
@@ -1225,7 +1257,7 @@ def test_syntax_error_with_non_ascii_chars(testdir):
     result.stdout.fnmatch_lines(["*ERROR collecting*", "*SyntaxError*", "*1 error in*"])
 
 
-def test_collecterror_with_fulltrace(testdir):
+def test_collect_error_with_fulltrace(testdir):
     testdir.makepyfile("assert 0")
     result = testdir.runpytest("--fulltrace")
     result.stdout.fnmatch_lines(
@@ -1233,15 +1265,12 @@ def test_collecterror_with_fulltrace(testdir):
             "collected 0 items / 1 error",
             "",
             "*= ERRORS =*",
-            "*_ ERROR collecting test_collecterror_with_fulltrace.py _*",
-            "",
-            "*/_pytest/python.py:*: ",
-            "_ _ _ _ _ _ _ _ *",
+            "*_ ERROR collecting test_collect_error_with_fulltrace.py _*",
             "",
             ">   assert 0",
             "E   assert 0",
             "",
-            "test_collecterror_with_fulltrace.py:1: AssertionError",
+            "test_collect_error_with_fulltrace.py:1: AssertionError",
             "*! Interrupted: 1 error during collection !*",
         ]
     )

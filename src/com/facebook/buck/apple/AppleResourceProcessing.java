@@ -38,8 +38,10 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -53,6 +55,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -309,7 +312,7 @@ public class AppleResourceProcessing {
         dirRoot,
         destinations,
         projectFilesystem);
-    addStepsToCopyContentOfDirectories(
+    deprecated_addStepsToCopyContentOfDirectories(
         context.getSourcePathResolver(),
         stepsBuilder,
         resources,
@@ -356,7 +359,9 @@ public class AppleResourceProcessing {
       Path dirRoot,
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem,
-      SourcePath processedResourcesDir) {
+      SourcePath processedResourcesDir,
+      Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
+      Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
     addStepsToCreateDirectoriesWhereBundlePartsAreCopied(
         context, stepsBuilder, resources, bundleParts, dirRoot, destinations, projectFilesystem);
     addStepsToCopyContentOfDirectories(
@@ -366,7 +371,9 @@ public class AppleResourceProcessing {
         bundleParts,
         dirRoot,
         destinations,
-        projectFilesystem);
+        projectFilesystem,
+        oldContentHashesSupplier,
+        newContentHashesSupplier);
     addStepsToCopyProcessedResources(
         context.getSourcePathResolver(),
         stepsBuilder,
@@ -451,7 +458,7 @@ public class AppleResourceProcessing {
     }
   }
 
-  private static void addStepsToCopyContentOfDirectories(
+  private static void deprecated_addStepsToCopyContentOfDirectories(
       SourcePathResolverAdapter sourcePathResolver,
       ImmutableList.Builder<Step> stepsBuilder,
       AppleBundleResources resources,
@@ -485,6 +492,98 @@ public class AppleResourceProcessing {
               bundleDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
+  }
+
+  private static void addStepsToCopyContentOfDirectories(
+      SourcePathResolverAdapter sourcePathResolver,
+      ImmutableList.Builder<Step> stepsBuilder,
+      AppleBundleResources resources,
+      ImmutableList<AppleBundlePart> bundleParts,
+      Path dirRoot,
+      AppleBundleDestinations destinations,
+      ProjectFilesystem projectFilesystem,
+      Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
+      Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
+
+    List<DirectoryContentAppleBundlePart> directoriesWithContentBundleParts =
+        bundleParts.stream()
+            .filter(p -> p instanceof DirectoryContentAppleBundlePart)
+            .map(p -> (DirectoryContentAppleBundlePart) p)
+            .collect(Collectors.toList());
+
+    List<SourcePathWithAppleBundleDestination> directoriesWithContent =
+        Stream.concat(
+                resources.getDirsContainingResourceDirs().stream(),
+                directoriesWithContentBundleParts.stream()
+                    .map(
+                        p ->
+                            SourcePathWithAppleBundleDestination.of(
+                                p.getSourcePath(), p.getDestination())))
+            .collect(Collectors.toList());
+
+    stepsBuilder.add(
+        new AbstractExecutionStep("apple-bundle-copy-directories-content") {
+          @Override
+          public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+
+            for (SourcePathWithAppleBundleDestination dirWithDestination : directoriesWithContent) {
+              RelPath destinationDirectoryPath =
+                  RelPath.of(dirWithDestination.getDestination().getPath(destinations));
+              AbsPath resolvedSourcePath =
+                  sourcePathResolver.getAbsolutePath(dirWithDestination.getSourcePath());
+
+              ImmutableSet.Builder<Path> pathsToDeleteBuilder = ImmutableSet.builder();
+              ImmutableSet.Builder<AppleBundleComponentCopySpec> copySpecsBuilder =
+                  ImmutableSet.builder();
+
+              for (String fileName :
+                  Objects.requireNonNull(new File(resolvedSourcePath.toUri()).list())) {
+
+                RelPath toPathRelativeToBundleRoot = destinationDirectoryPath.resolveRel(fileName);
+                if (newContentHashesSupplier.isPresent()) {
+                  String oldHash = oldContentHashesSupplier.get().get(toPathRelativeToBundleRoot);
+                  String newHash =
+                      newContentHashesSupplier.get().get().get(toPathRelativeToBundleRoot);
+                  Preconditions.checkState(
+                      newHash != null,
+                      "Expecting a hash to be computed when incremental bundling is enabled");
+                  if (oldHash != null && oldHash.equals(newHash)) {
+                    continue;
+                  }
+                  pathsToDeleteBuilder.add(dirRoot.resolve(toPathRelativeToBundleRoot.getPath()));
+                }
+                AbsPath fromPath = resolvedSourcePath.resolve(fileName);
+                copySpecsBuilder.add(
+                    new AppleBundleComponentCopySpec(fromPath, toPathRelativeToBundleRoot, false));
+              }
+
+              pathsToDeleteBuilder
+                  .build()
+                  .parallelStream()
+                  .forEach(
+                      path -> {
+                        try {
+                          projectFilesystem.deleteRecursivelyIfExists(path);
+                        } catch (IOException exception) {
+                          throw new RuntimeException(exception.getMessage());
+                        }
+                      });
+
+              copySpecsBuilder
+                  .build()
+                  .parallelStream()
+                  .forEach(
+                      spec -> {
+                        try {
+                          spec.performCopy(projectFilesystem, dirRoot);
+                        } catch (IOException exception) {
+                          throw new RuntimeException(exception.getMessage());
+                        }
+                      });
+            }
+            return StepExecutionResults.SUCCESS;
+          }
+        });
   }
 
   private static void addStepsToCopyProcessedResources(

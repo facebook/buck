@@ -148,26 +148,7 @@ def assertrepr_compare(config, op: str, left: Any, right: Any) -> Optional[List[
     explanation = None
     try:
         if op == "==":
-            if istext(left) and istext(right):
-                explanation = _diff_text(left, right, verbose)
-            else:
-                if issequence(left) and issequence(right):
-                    explanation = _compare_eq_sequence(left, right, verbose)
-                elif isset(left) and isset(right):
-                    explanation = _compare_eq_set(left, right, verbose)
-                elif isdict(left) and isdict(right):
-                    explanation = _compare_eq_dict(left, right, verbose)
-                elif type(left) == type(right) and (isdatacls(left) or isattrs(left)):
-                    type_fn = (isdatacls, isattrs)
-                    explanation = _compare_eq_cls(left, right, verbose, type_fn)
-                elif verbose > 0:
-                    explanation = _compare_eq_verbose(left, right)
-                if isiterable(left) and isiterable(right):
-                    expl = _compare_eq_iterable(left, right, verbose)
-                    if explanation is not None:
-                        explanation.extend(expl)
-                    else:
-                        explanation = expl
+            explanation = _compare_eq_any(left, right, verbose)
         elif op == "not in":
             if istext(left) and istext(right):
                 explanation = _notin_text(left, right, verbose)
@@ -185,6 +166,28 @@ def assertrepr_compare(config, op: str, left: Any, right: Any) -> Optional[List[
         return None
 
     return [summary] + explanation
+
+
+def _compare_eq_any(left: Any, right: Any, verbose: int = 0) -> List[str]:
+    explanation = []
+    if istext(left) and istext(right):
+        explanation = _diff_text(left, right, verbose)
+    else:
+        if issequence(left) and issequence(right):
+            explanation = _compare_eq_sequence(left, right, verbose)
+        elif isset(left) and isset(right):
+            explanation = _compare_eq_set(left, right, verbose)
+        elif isdict(left) and isdict(right):
+            explanation = _compare_eq_dict(left, right, verbose)
+        elif type(left) == type(right) and (isdatacls(left) or isattrs(left)):
+            type_fn = (isdatacls, isattrs)
+            explanation = _compare_eq_cls(left, right, verbose, type_fn)
+        elif verbose > 0:
+            explanation = _compare_eq_verbose(left, right)
+        if isiterable(left) and isiterable(right):
+            expl = _compare_eq_iterable(left, right, verbose)
+            explanation.extend(expl)
+    return explanation
 
 
 def _diff_text(left: str, right: str, verbose: int = 0) -> List[str]:
@@ -421,6 +424,7 @@ def _compare_eq_cls(
             field.name for field in all_fields if getattr(field, ATTRS_EQ_FIELD)
         ]
 
+    indent = "  "
     same = []
     diff = []
     for field in fields_to_check:
@@ -430,6 +434,8 @@ def _compare_eq_cls(
             diff.append(field)
 
     explanation = []
+    if same or diff:
+        explanation += [""]
     if same and verbose < 2:
         explanation.append("Omitting %s identical items, use -vv to show" % len(same))
     elif same:
@@ -437,9 +443,18 @@ def _compare_eq_cls(
         explanation += pprint.pformat(same).splitlines()
     if diff:
         explanation += ["Differing attributes:"]
+        explanation += pprint.pformat(diff).splitlines()
         for field in diff:
+            field_left = getattr(left, field)
+            field_right = getattr(right, field)
             explanation += [
-                ("%s: %r != %r") % (field, getattr(left, field), getattr(right, field))
+                "",
+                "Drill down into differing attribute %s:" % field,
+                ("%s%s: %r != %r") % (indent, field, field_left, field_right),
+            ]
+            explanation += [
+                indent + line
+                for line in _compare_eq_any(field_left, field_right, verbose)
             ]
     return explanation
 

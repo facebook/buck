@@ -13,6 +13,7 @@ from .pathlib import LOCK_TIMEOUT
 from .pathlib import make_numbered_dir
 from .pathlib import make_numbered_dir_with_cleanup
 from .pathlib import Path
+from _pytest.config import Config
 from _pytest.fixtures import FixtureRequest
 from _pytest.monkeypatch import MonkeyPatch
 
@@ -45,7 +46,7 @@ class TempPathFactory:
             given_basetemp=config.option.basetemp, trace=config.trace.get("tmpdir")
         )
 
-    def _ensure_relative_to_basetemp(self, basename: str):
+    def _ensure_relative_to_basetemp(self, basename: str) -> str:
         basename = os.path.normpath(basename)
         if (self.getbasetemp() / basename).resolve().parent != self.getbasetemp():
             raise ValueError(
@@ -60,8 +61,8 @@ class TempPathFactory:
             Directory base name, must be a relative path.
 
         :param numbered:
-            If True, ensure the directory is unique by adding a number
-            prefix greater than any existing one: ``basename="foo"`` and ``numbered=True``
+            If ``True``, ensure the directory is unique by adding a numbered
+            suffix greater than any existing one: ``basename="foo-"`` and ``numbered=True``
             means that this function will create directories named ``"foo-0"``,
             ``"foo-1"``, ``"foo-2"`` and so on.
 
@@ -118,7 +119,7 @@ class TempdirFactory:
         """
         return py.path.local(self._tmppath_factory.mktemp(basename, numbered).resolve())
 
-    def getbasetemp(self):
+    def getbasetemp(self) -> py.path.local:
         """backward compat wrapper for ``_tmppath_factory.getbasetemp``"""
         return py.path.local(self._tmppath_factory.getbasetemp().resolve())
 
@@ -135,7 +136,7 @@ def get_user() -> Optional[str]:
         return None
 
 
-def pytest_configure(config) -> None:
+def pytest_configure(config: Config) -> None:
     """Create a TempdirFactory and attach it to the config object.
 
     This is to comply with existing plugins which expect the handler to be
@@ -175,7 +176,7 @@ def _mk_tmp(request: FixtureRequest, factory: TempPathFactory) -> Path:
 
 
 @pytest.fixture
-def tmpdir(tmp_path):
+def tmpdir(tmp_path: Path) -> py.path.local:
     """Return a temporary directory path object
     which is unique to each test function invocation,
     created as a sub directory of the base temporary

@@ -347,13 +347,10 @@ public class BuckTargetPattern {
     return Objects.hashCode(cellName, cellPath, suffix, ruleName);
   }
 
-  @Override
-  public String toString() {
+  /** Returns a string that represents the target pattern without the cell name */
+  public String getCellQualifiedName() {
     StringBuilder sb = new StringBuilder();
     if (cellPath != null) {
-      if (cellName != null) {
-        sb.append(cellName);
-      }
       sb.append("//").append(cellPath);
     }
     if (suffix != null) {
@@ -365,5 +362,19 @@ public class BuckTargetPattern {
       }
     }
     return sb.toString();
+  }
+
+  /** Returns the full string that represents the target pattern */
+  public String getFullyQualifiedName() {
+    StringBuilder sb = new StringBuilder();
+    if (cellPath != null && cellName != null) {
+      sb.append(cellName);
+    }
+    return sb.append(getCellQualifiedName()).toString();
+  }
+
+  @Override
+  public String toString() {
+    return getFullyQualifiedName();
   }
 }

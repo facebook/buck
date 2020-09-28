@@ -30,7 +30,7 @@ public class CoercionIntegrationTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
-  public void errorProducesDependencyStack() throws Exception {
+  public void errorProducesAttrNameAndDependency() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
     workspace.setUp();
@@ -39,7 +39,7 @@ public class CoercionIntegrationTest {
     assertThat(
         processResult.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
-            "cannot coerce '1' to com.google.common.collect.ImmutableList<com.facebook.buck.core.sourcepath.SourcePath>\n"
+            "When resolving attribute srcs of //:a: cannot coerce '1' to com.google.common.collect.ImmutableList<com.facebook.buck.core.sourcepath.SourcePath>\n"
                 + "    At //:a (builtin//platform:unconfigured)\n"
                 + "    At //:b (builtin//platform:unconfigured)"));
   }

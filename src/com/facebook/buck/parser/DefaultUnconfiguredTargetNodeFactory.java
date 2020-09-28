@@ -158,7 +158,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
                 attrValue);
       }
     } catch (CoerceFailedException e) {
-      throw new HumanReadableException(e, dependencyStack, e.getMessage());
+      throw e.withAttrResolutionContext(attrName, buildTarget.toString(), dependencyStack);
     }
   }
 
@@ -225,7 +225,8 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
                     target.getCellRelativeBasePath().getPath(),
                     rawDefaultTargetPlatform));
       } catch (CoerceFailedException e) {
-        throw new HumanReadableException(dependencyStack, e.getMessage(), e);
+        throw e.withAttrResolutionContext(
+            CommonParamNames.DEFAULT_TARGET_PLATFORM, target.toString(), dependencyStack);
       }
     }
 
@@ -241,7 +242,8 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
                 target.getCellRelativeBasePath().getPath(),
                 rawCompatibleWith);
       } catch (CoerceFailedException e) {
-        throw new HumanReadableException(dependencyStack, e.getMessage(), e);
+        throw e.withAttrResolutionContext(
+            CommonParamNames.COMPATIBLE_WITH, target.toString(), dependencyStack);
       }
     }
 

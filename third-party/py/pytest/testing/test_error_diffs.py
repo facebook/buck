@@ -233,7 +233,11 @@ if sys.version_info[:2] >= (3, 7):
                 E         Matching attributes:
                 E         ['b']
                 E         Differing attributes:
-                E         a: 1 != 2
+                E         ['a']
+                E         Drill down into differing attribute a:
+                E           a: 1 != 2
+                E           +1
+                E           -2
                 """,
                 id="Compare data classes",
             ),
@@ -257,7 +261,11 @@ if sys.version_info[:2] >= (3, 7):
                 E         Matching attributes:
                 E         ['a']
                 E         Differing attributes:
-                E         b: 'spam' != 'eggs'
+                E         ['b']
+                E         Drill down into differing attribute b:
+                E           b: 'spam' != 'eggs'
+                E           - eggs
+                E           + spam
                 """,
                 id="Compare attrs classes",
             ),
@@ -267,7 +275,7 @@ if sys.version_info[:2] >= (3, 7):
 
 @pytest.mark.parametrize("code, expected", TESTCASES)
 def test_error_diff(code, expected, testdir):
-    expected = [l.lstrip() for l in expected.splitlines()]
+    expected = [line.lstrip() for line in expected.splitlines()]
     p = testdir.makepyfile(code)
     result = testdir.runpytest(p, "-vv")
     result.stdout.fnmatch_lines(expected)

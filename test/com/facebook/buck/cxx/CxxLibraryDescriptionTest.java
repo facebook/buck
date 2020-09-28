@@ -65,6 +65,7 @@ import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PicType;
+import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -92,6 +93,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -1429,6 +1431,39 @@ public class CxxLibraryDescriptionTest {
             String.format(
                 "-flag=%s",
                 graphBuilder.getSourcePathResolver().getAbsolutePath(publicHeaders.getRoot()))));
+  }
+
+  @Test
+  public void customPrefixMapFormat() {
+    CxxLibraryBuilder libraryBuilder =
+        new CxxLibraryBuilder(
+                BuildTargetFactory.newInstance("//:lib"),
+                new CxxBuckConfig(FakeBuckConfig.builder().build()),
+                FlavorDomain.of(
+                    "C/C++ Platforms",
+                    new StaticUnresolvedCxxPlatform(
+                        CxxPlatformUtils.DEFAULT_PLATFORM.withCompilerDebugPathSanitizer(
+                            new PrefixMapDebugPathSanitizer(
+                                ".", ImmutableBiMap.of(), false, "-ffile-prefix-map=%s=%s")))))
+            .setHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryBuilder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    Archive archiveRule =
+        (Archive)
+            graphBuilder.requireRule(
+                libraryBuilder
+                    .getTarget()
+                    .withAppendedFlavors(
+                        CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR,
+                        CxxDescriptionEnhancer.STATIC_FLAVOR));
+    CxxPreprocessAndCompile compileRule =
+        (CxxPreprocessAndCompile) graphBuilder.getRule(archiveRule.getInputs().get(0)).get();
+    MatcherAssert.assertThat(
+        compileRule.getCommand(
+            FakeBuildContext.NOOP_CONTEXT.withSourcePathResolver(
+                graphBuilder.getSourcePathResolver())),
+        hasItem(containsString("-ffile-prefix-map=")));
   }
 
   /**

@@ -1,3 +1,4 @@
+import re
 import sys
 from types import FrameType
 from unittest import mock
@@ -6,6 +7,7 @@ import pytest
 from _pytest._code import Code
 from _pytest._code import ExceptionInfo
 from _pytest._code import Frame
+from _pytest._code import Source
 from _pytest._code.code import ExceptionChainRepr
 from _pytest._code.code import ReprFuncArgs
 
@@ -67,7 +69,7 @@ def test_getstatement_empty_fullsource() -> None:
 
     f = Frame(func())
     with mock.patch.object(f.code.__class__, "fullsource", None):
-        assert f.statement == ""
+        assert f.statement == Source("")
 
 
 def test_code_from_func() -> None:
@@ -168,6 +170,15 @@ class TestTracebackEntry:
         assert source is not None
         assert len(source) == 6
         assert "assert False" in source[5]
+
+    def test_tb_entry_str(self):
+        try:
+            assert False
+        except AssertionError:
+            exci = ExceptionInfo.from_current()
+        pattern = r"  File '.*test_code.py':\d+ in test_tb_entry_str\n  assert False"
+        entry = str(exci.traceback[0])
+        assert re.match(pattern, entry)
 
 
 class TestReprFuncArgs:

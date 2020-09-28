@@ -8,7 +8,7 @@ can change the pattern by issuing:
 
 .. code-block:: bash
 
-    pytest --doctest-glob='*.rst'
+    pytest --doctest-glob="*.rst"
 
 on the command line. ``--doctest-glob`` can be given multiple times in the command-line.
 
@@ -29,7 +29,7 @@ then you can just invoke ``pytest`` directly:
 
     $ pytest
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 1 item
@@ -58,7 +58,7 @@ and functions, including from test modules:
 
     $ pytest --doctest-modules
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 2 items
@@ -206,7 +206,11 @@ It is possible to use fixtures using the ``getfixture`` helper:
     >>> ...
     >>>
 
-Also, :ref:`usefixtures` and :ref:`autouse` fixtures are supported
+Note that the fixture needs to be defined in a place visible by pytest, for example a `conftest.py`
+file or plugin; normal python files containing docstrings are not normally scanned for fixtures
+unless explicitly configured by :confval:`python_files`.
+
+Also, the :ref:`usefixtures <usefixtures>` mark and fixtures marked as :ref:`autouse <autouse>` are supported
 when executing text doctest files.
 
 

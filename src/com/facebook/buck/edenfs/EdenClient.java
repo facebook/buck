@@ -31,7 +31,7 @@ import java.util.List;
  */
 public interface EdenClient {
 
-  List<SHA1Result> getSHA1(String mountPoint, List<String> paths)
+  List<SHA1Result> getSHA1(byte[] mountPoint, List<byte[]> paths)
       throws IOException, TException, EdenError;
 
   List<MountInfo> listMounts() throws EdenError, IOException, TException;

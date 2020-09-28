@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 
+/** Common parameters for all Rust rules */
 public interface RustCommonArgs
     extends BuildRuleArg, HasNamedDeclaredDeps, HasSrcs, HasDefaultPlatform {
   @Value.NaturalOrder

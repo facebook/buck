@@ -62,7 +62,7 @@ abstract class KotlinBuckTestAction(val testClass: KtClass, private val debug: B
             "Debug"
           }
           false -> {
-            e.presentation.icon = BuckIcons.RUN_BUCK_TEST
+            e.presentation.icon = BuckIcons.BUILD_RUN_TEST
             "Run"
           }
         }

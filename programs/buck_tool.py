@@ -522,45 +522,6 @@ class BuckTool(object):
         except ValueError:
             return args
 
-    def _handle_buck_fix_args(self, argv, post_run_files):
-        additional_args = ["--command-args-file", post_run_files.command_args_file]
-        insert_idx = 1
-        # Cover the case where someone runs `buck --isolation_prefix foo`, which would
-        # make the first arg `--config`, not a subcommand
-        if len(argv) and argv[0].startswith("--"):
-            insert_idx = 0
-
-        ret = argv[:insert_idx] + additional_args + argv[insert_idx:]
-        return ret
-
-    def _add_args(self, argv, args, post_run_files):
-
-        """
-        Add new arguments to the end of arguments string
-        But before optional arguments to test runner ("--")
-        """
-        if len(args) == 0:
-            return self._handle_buck_fix_args(argv, post_run_files)
-
-        try:
-            pos = argv.index("--")
-        except ValueError:
-            # "--" not found, just add to the end of the list
-            pos = len(argv)
-
-        return self._handle_buck_fix_args(
-            argv[:pos] + args + argv[pos:], post_run_files
-        )
-
-    def _add_args_from_env(self, argv, post_run_files):
-        """
-        Implicitly add command line arguments based on environmental variables. This is a bad
-        practice and should be considered for infrastructure / debugging purposes only
-        """
-        args = []
-
-        return self._add_args(argv, args, post_run_files)
-
     def _run_with_nailgun(self, java_path, argv, env, post_run_files):
         """
         Run the command using nailgun.  If the daemon is busy, block until it becomes free.
@@ -575,9 +536,10 @@ class BuckTool(object):
                 ) as c:
                     now = int(round(time.time() * 1000))
                     env["BUCK_PYTHON_SPACE_INIT_TIME"] = str(now - self._init_timestamp)
+                    env["BUCK_POST_RUN_FILES"] = post_run_files.command_args_file
                     exit_code = c.send_command(
                         "com.facebook.buck.cli.MainWithNailgun",
-                        self._add_args_from_env(argv, post_run_files),
+                        argv,
                         env=env,
                         cwd=self._buck_project.root,
                     )
@@ -639,9 +601,10 @@ class BuckTool(object):
         )
         command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
         command.append("com.facebook.buck.cli.MainWithoutNailgun")
-        command.extend(self._add_args_from_env(argv, post_run_files))
+        command.extend(argv)
         now = int(round(time.time() * 1000))
         env["BUCK_PYTHON_SPACE_INIT_TIME"] = str(now - self._init_timestamp)
+        env["BUCK_POST_RUN_FILES"] = post_run_files.command_args_file
         with Tracing("buck", args={"command": command}):
             return subprocess.call(
                 command, cwd=self._buck_project.root, env=env, executable=java_path

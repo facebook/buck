@@ -7,12 +7,12 @@ import platform
 import re
 import subprocess
 import sys
-import time
 import traceback
 from fnmatch import fnmatch
 from io import StringIO
 from typing import Callable
 from typing import Dict
+from typing import Generator
 from typing import Iterable
 from typing import List
 from typing import Optional
@@ -22,19 +22,24 @@ from typing import Union
 from weakref import WeakKeyDictionary
 
 import py
+from iniconfig import IniConfig
 
 import pytest
+from _pytest import timing
 from _pytest._code import Source
-from _pytest.capture import MultiCapture
-from _pytest.capture import SysCapture
+from _pytest.capture import _get_multicapture
 from _pytest.compat import TYPE_CHECKING
 from _pytest.config import _PluggyPlugin
+from _pytest.config import Config
 from _pytest.config import ExitCode
+from _pytest.config import PytestPluginManager
+from _pytest.config.argparsing import Parser
 from _pytest.fixtures import FixtureRequest
 from _pytest.main import Session
 from _pytest.monkeypatch import MonkeyPatch
 from _pytest.nodes import Collector
 from _pytest.nodes import Item
+from _pytest.pathlib import make_numbered_dir
 from _pytest.pathlib import Path
 from _pytest.python import Module
 from _pytest.reports import TestReport
@@ -51,7 +56,7 @@ IGNORE_PAM = [  # filenames added when obtaining details about the current user
 ]
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: Parser) -> None:
     parser.addoption(
         "--lsof",
         action="store_true",
@@ -76,7 +81,7 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_configure(config):
+def pytest_configure(config: Config) -> None:
     if config.getvalue("lsof"):
         checker = LsofFdLeakChecker()
         if checker.matching_platform():
@@ -90,21 +95,16 @@ def pytest_configure(config):
 
 
 class LsofFdLeakChecker:
-    def get_open_files(self):
-        out = self._exec_lsof()
-        open_files = self._parse_lsof_output(out)
-        return open_files
+    def get_open_files(self) -> List[Tuple[str, str]]:
+        out = subprocess.run(
+            ("lsof", "-Ffn0", "-p", str(os.getpid())),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            check=True,
+            universal_newlines=True,
+        ).stdout
 
-    def _exec_lsof(self):
-        pid = os.getpid()
-        # py3: use subprocess.DEVNULL directly.
-        with open(os.devnull, "wb") as devnull:
-            return subprocess.check_output(
-                ("lsof", "-Ffn0", "-p", str(pid)), stderr=devnull
-            ).decode()
-
-    def _parse_lsof_output(self, out):
-        def isopen(line):
+        def isopen(line: str) -> bool:
             return line.startswith("f") and (
                 "deleted" not in line
                 and "mem" not in line
@@ -126,16 +126,16 @@ class LsofFdLeakChecker:
 
         return open_files
 
-    def matching_platform(self):
+    def matching_platform(self) -> bool:
         try:
-            subprocess.check_output(("lsof", "-v"))
+            subprocess.run(("lsof", "-v"), check=True)
         except (OSError, subprocess.CalledProcessError):
             return False
         else:
             return True
 
     @pytest.hookimpl(hookwrapper=True, tryfirst=True)
-    def pytest_runtest_protocol(self, item):
+    def pytest_runtest_protocol(self, item: Item) -> Generator[None, None, None]:
         lines1 = self.get_open_files()
         yield
         if hasattr(sys, "pypy_version_info"):
@@ -145,16 +145,17 @@ class LsofFdLeakChecker:
         new_fds = {t[0] for t in lines2} - {t[0] for t in lines1}
         leaked_files = [t for t in lines2 if t[0] in new_fds]
         if leaked_files:
-            error = []
-            error.append("***** %s FD leakage detected" % len(leaked_files))
-            error.extend([str(f) for f in leaked_files])
-            error.append("*** Before:")
-            error.extend([str(f) for f in lines1])
-            error.append("*** After:")
-            error.extend([str(f) for f in lines2])
-            error.append(error[0])
-            error.append("*** function %s:%s: %s " % item.location)
-            error.append("See issue #2366")
+            error = [
+                "***** %s FD leakage detected" % len(leaked_files),
+                *(str(f) for f in leaked_files),
+                "*** Before:",
+                *(str(f) for f in lines1),
+                "*** After:",
+                *(str(f) for f in lines2),
+                "***** %s FD leakage detected" % len(leaked_files),
+                "*** function %s:%s: %s " % item.location,
+                "See issue #2366",
+            ]
             item.warn(pytest.PytestWarning("\n".join(error)))
 
 
@@ -210,7 +211,7 @@ class HookRecorder:
 
     """
 
-    def __init__(self, pluginmanager) -> None:
+    def __init__(self, pluginmanager: PytestPluginManager) -> None:
         self._pluginmanager = pluginmanager
         self.calls = []  # type: List[ParsedCall]
 
@@ -357,21 +358,38 @@ class HookRecorder:
 
 @pytest.fixture
 def linecomp() -> "LineComp":
+    """
+    A :class: `LineComp` instance for checking that an input linearly
+    contains a sequence of strings.
+    """
     return LineComp()
 
 
 @pytest.fixture(name="LineMatcher")
 def LineMatcher_fixture(request: FixtureRequest) -> "Type[LineMatcher]":
+    """
+    A reference to the :class: `LineMatcher`.
+
+    This is instantiable with a list of lines (without their trailing newlines).
+    This is useful for testing large texts, such as the output of commands.
+    """
     return LineMatcher
 
 
 @pytest.fixture
-def testdir(request: FixtureRequest, tmpdir_factory) -> "Testdir":
+def testdir(request: FixtureRequest, tmpdir_factory: TempdirFactory) -> "Testdir":
+    """
+    A :class: `TestDir` instance, that can be used to run and test pytest itself.
+
+    It is particularly useful for testing plugins. It is similar to the `tmpdir` fixture
+    but provides methods which aid in testing pytest itself.
+
+    """
     return Testdir(request, tmpdir_factory)
 
 
 @pytest.fixture
-def _sys_snapshot():
+def _sys_snapshot() -> Generator[None, None, None]:
     snappaths = SysPathsSnapshot()
     snapmods = SysModulesSnapshot()
     yield
@@ -380,7 +398,7 @@ def _sys_snapshot():
 
 
 @pytest.fixture
-def _config_for_test():
+def _config_for_test() -> Generator[Config, None, None]:
     from _pytest.config import get_config
 
     config = get_config()
@@ -395,19 +413,7 @@ rex_outcome = re.compile(r"(\d+) (\w+)")
 
 
 class RunResult:
-    """The result of running a command.
-
-    Attributes:
-
-    :ivar ret: the return value
-    :ivar outlines: list of lines captured from stdout
-    :ivar errlines: list of lines captured from stderr
-    :ivar stdout: :py:class:`LineMatcher` of stdout, use ``stdout.str()`` to
-       reconstruct stdout or the commonly used ``stdout.fnmatch_lines()``
-       method
-    :ivar stderr: :py:class:`LineMatcher` of stderr
-    :ivar duration: duration in seconds
-    """
+    """The result of running a command."""
 
     def __init__(
         self,
@@ -418,13 +424,23 @@ class RunResult:
     ) -> None:
         try:
             self.ret = pytest.ExitCode(ret)  # type: Union[int, ExitCode]
+            """the return value"""
         except ValueError:
             self.ret = ret
         self.outlines = outlines
+        """list of lines captured from stdout"""
         self.errlines = errlines
+        """list of lines captured from stderr"""
         self.stdout = LineMatcher(outlines)
+        """:class:`LineMatcher` of stdout.
+
+        Use e.g. :func:`stdout.str() <LineMatcher.str()>` to reconstruct stdout, or the commonly used
+        :func:`stdout.fnmatch_lines() <LineMatcher.fnmatch_lines()>` method.
+        """
         self.stderr = LineMatcher(errlines)
+        """:class:`LineMatcher` of stderr"""
         self.duration = duration
+        """duration in seconds"""
 
     def __repr__(self) -> str:
         return (
@@ -433,28 +449,47 @@ class RunResult:
         )
 
     def parseoutcomes(self) -> Dict[str, int]:
-        """Return a dictionary of outcomestring->num from parsing the terminal
+        """Return a dictionary of outcome noun -> count from parsing the terminal
         output that the test process produced.
 
+        The returned nouns will always be in plural form::
+
+            ======= 1 failed, 1 passed, 1 warning, 1 error in 0.13s ====
+
+        Will return ``{"failed": 1, "passed": 1, "warnings": 1, "errors": 1}``
         """
-        for line in reversed(self.outlines):
+        return self.parse_summary_nouns(self.outlines)
+
+    @classmethod
+    def parse_summary_nouns(cls, lines) -> Dict[str, int]:
+        """Extracts the nouns from a pytest terminal summary line.
+
+        It always returns the plural noun for consistency::
+
+            ======= 1 failed, 1 passed, 1 warning, 1 error in 0.13s ====
+
+        Will return ``{"failed": 1, "passed": 1, "warnings": 1, "errors": 1}``
+        """
+        for line in reversed(lines):
             if rex_session_duration.search(line):
                 outcomes = rex_outcome.findall(line)
                 ret = {noun: int(count) for (count, noun) in outcomes}
                 break
         else:
             raise ValueError("Pytest terminal summary report not found")
-        if "errors" in ret:
-            assert "error" not in ret
-            ret["error"] = ret.pop("errors")
-        return ret
+
+        to_plural = {
+            "warning": "warnings",
+            "error": "errors",
+        }
+        return {to_plural.get(k, k): v for k, v in ret.items()}
 
     def assert_outcomes(
         self,
         passed: int = 0,
         skipped: int = 0,
         failed: int = 0,
-        error: int = 0,
+        errors: int = 0,
         xpassed: int = 0,
         xfailed: int = 0,
     ) -> None:
@@ -468,7 +503,7 @@ class RunResult:
             "passed": d.get("passed", 0),
             "skipped": d.get("skipped", 0),
             "failed": d.get("failed", 0),
-            "error": d.get("error", 0),
+            "errors": d.get("errors", 0),
             "xpassed": d.get("xpassed", 0),
             "xfailed": d.get("xfailed", 0),
         }
@@ -476,7 +511,7 @@ class RunResult:
             "passed": passed,
             "skipped": skipped,
             "failed": failed,
-            "error": error,
+            "errors": errors,
             "xpassed": xpassed,
             "xfailed": xfailed,
         }
@@ -492,7 +527,7 @@ class CwdSnapshot:
 
 
 class SysModulesSnapshot:
-    def __init__(self, preserve: Optional[Callable[[str], bool]] = None):
+    def __init__(self, preserve: Optional[Callable[[str], bool]] = None) -> None:
         self.__preserve = preserve
         self.__saved = dict(sys.modules)
 
@@ -571,13 +606,13 @@ class Testdir:
         # Do not use colors for inner runs by default.
         mp.setenv("PY_COLORS", "0")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<Testdir {!r}>".format(self.tmpdir)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.tmpdir)
 
-    def finalize(self):
+    def finalize(self) -> None:
         """Clean up global state artifacts.
 
         Some methods modify the global interpreter state and this tries to
@@ -590,7 +625,7 @@ class Testdir:
         self._cwd_snapshot.restore()
         self.monkeypatch.undo()
 
-    def __take_sys_modules_snapshot(self):
+    def __take_sys_modules_snapshot(self) -> SysModulesSnapshot:
         # some zope modules used by twisted-related tests keep internal state
         # and can't be deleted; we had some trouble in the past with
         # `zope.interface` for example
@@ -599,13 +634,13 @@ class Testdir:
 
         return SysModulesSnapshot(preserve=preserve_module)
 
-    def make_hook_recorder(self, pluginmanager):
+    def make_hook_recorder(self, pluginmanager: PytestPluginManager) -> HookRecorder:
         """Create a new :py:class:`HookRecorder` for a PluginManager."""
         pluginmanager.reprec = reprec = HookRecorder(pluginmanager)
         self.request.addfinalizer(reprec.finish_recording)
         return reprec
 
-    def chdir(self):
+    def chdir(self) -> None:
         """Cd into the temporary directory.
 
         This is done automatically upon instantiation.
@@ -613,7 +648,7 @@ class Testdir:
         """
         self.tmpdir.chdir()
 
-    def _makefile(self, ext, lines, files, encoding="utf-8"):
+    def _makefile(self, ext: str, lines, files, encoding: str = "utf-8"):
         items = list(files.items())
 
         def to_text(s):
@@ -628,14 +663,14 @@ class Testdir:
         for basename, value in items:
             p = self.tmpdir.join(basename).new(ext=ext)
             p.dirpath().ensure_dir()
-            source = Source(value)
-            source = "\n".join(to_text(line) for line in source.lines)
+            source_ = Source(value)
+            source = "\n".join(to_text(line) for line in source_.lines)
             p.write(source.strip().encode(encoding), "wb")
             if ret is None:
                 ret = p
         return ret
 
-    def makefile(self, ext, *args, **kwargs):
+    def makefile(self, ext: str, *args: str, **kwargs):
         r"""Create new file(s) in the testdir.
 
         :param str ext: The extension the file(s) should use, including the dot, e.g. `.py`.
@@ -664,20 +699,57 @@ class Testdir:
         """Write a tox.ini file with 'source' as contents."""
         return self.makefile(".ini", tox=source)
 
-    def getinicfg(self, source):
+    def getinicfg(self, source) -> IniConfig:
         """Return the pytest section from the tox.ini config file."""
         p = self.makeini(source)
-        return py.iniconfig.IniConfig(p)["pytest"]
+        return IniConfig(p)["pytest"]
+
+    def makepyprojecttoml(self, source):
+        """Write a pyproject.toml file with 'source' as contents.
+
+        .. versionadded:: 6.0
+        """
+        return self.makefile(".toml", pyproject=source)
 
     def makepyfile(self, *args, **kwargs):
-        """Shortcut for .makefile() with a .py extension."""
+        r"""Shortcut for .makefile() with a .py extension.
+        Defaults to the test name with a '.py' extension, e.g test_foobar.py, overwriting
+        existing files.
+
+        Examples:
+
+        .. code-block:: python
+
+            def test_something(testdir):
+                # initial file is created test_something.py
+                testdir.makepyfile("foobar")
+                # to create multiple files, pass kwargs accordingly
+                testdir.makepyfile(custom="foobar")
+                # at this point, both 'test_something.py' & 'custom.py' exist in the test directory
+
+        """
         return self._makefile(".py", args, kwargs)
 
     def maketxtfile(self, *args, **kwargs):
-        """Shortcut for .makefile() with a .txt extension."""
+        r"""Shortcut for .makefile() with a .txt extension.
+        Defaults to the test name with a '.txt' extension, e.g test_foobar.txt, overwriting
+        existing files.
+
+        Examples:
+
+        .. code-block:: python
+
+            def test_something(testdir):
+                # initial file is created test_something.txt
+                testdir.maketxtfile("foobar")
+                # to create multiple files, pass kwargs accordingly
+                testdir.maketxtfile(custom="foobar")
+                # at this point, both 'test_something.txt' & 'custom.txt' exist in the test directory
+
+        """
         return self._makefile(".txt", args, kwargs)
 
-    def syspathinsert(self, path=None):
+    def syspathinsert(self, path=None) -> None:
         """Prepend a directory to sys.path, defaults to :py:attr:`tmpdir`.
 
         This is undone automatically when this object dies at the end of each
@@ -688,11 +760,11 @@ class Testdir:
 
         self.monkeypatch.syspath_prepend(str(path))
 
-    def mkdir(self, name):
+    def mkdir(self, name) -> py.path.local:
         """Create a new (sub)directory."""
         return self.tmpdir.mkdir(name)
 
-    def mkpydir(self, name):
+    def mkpydir(self, name) -> py.path.local:
         """Create a new python package.
 
         This creates a (sub)directory with an empty ``__init__.py`` file so it
@@ -703,7 +775,7 @@ class Testdir:
         p.ensure("__init__.py")
         return p
 
-    def copy_example(self, name=None):
+    def copy_example(self, name=None) -> py.path.local:
         """Copy file from project's directory into the testdir.
 
         :param str name: The name of the file to copy.
@@ -755,7 +827,7 @@ class Testdir:
 
     Session = Session
 
-    def getnode(self, config, arg):
+    def getnode(self, config: Config, arg):
         """Return the collection node of a file.
 
         :param config: :py:class:`_pytest.config.Config` instance, see
@@ -790,7 +862,7 @@ class Testdir:
         config.hook.pytest_sessionfinish(session=session, exitstatus=ExitCode.OK)
         return res
 
-    def genitems(self, colitems):
+    def genitems(self, colitems: Sequence[Union[Item, Collector]]) -> List[Item]:
         """Generate all test items from a collection node.
 
         This recurses into the collection node and returns a list of all the
@@ -798,7 +870,7 @@ class Testdir:
 
         """
         session = colitems[0].session
-        result = []
+        result = []  # type: List[Item]
         for colitem in colitems:
             result.extend(session.genitems(colitem))
         return result
@@ -891,7 +963,7 @@ class Testdir:
             rec = []
 
             class Collect:
-                def pytest_configure(x, config):
+                def pytest_configure(x, config: Config) -> None:
                     rec.append(self.make_hook_recorder(config.pluginmanager))
 
             plugins.append(Collect())
@@ -903,7 +975,7 @@ class Testdir:
                 class reprec:  # type: ignore
                     pass
 
-            reprec.ret = ret
+            reprec.ret = ret  # type: ignore[attr-defined]
 
             # typically we reraise keyboard interrupts from the child run
             # because it's our user requesting interruption of the testing
@@ -924,8 +996,8 @@ class Testdir:
 
         if syspathinsert:
             self.syspathinsert()
-        now = time.time()
-        capture = MultiCapture(Capture=SysCapture)
+        now = timing.time()
+        capture = _get_multicapture("sys")
         capture.start_capturing()
         try:
             try:
@@ -953,7 +1025,7 @@ class Testdir:
             sys.stderr.write(err)
 
         res = RunResult(
-            reprec.ret, out.splitlines(), err.splitlines(), time.time() - now
+            reprec.ret, out.splitlines(), err.splitlines(), timing.time() - now
         )
         res.reprec = reprec  # type: ignore
         return res
@@ -979,7 +1051,7 @@ class Testdir:
             args.append("--basetemp=%s" % self.tmpdir.dirpath("basetemp"))
         return args
 
-    def parseconfig(self, *args):
+    def parseconfig(self, *args) -> Config:
         """Return a new pytest Config instance from given commandline args.
 
         This invokes the pytest bootstrapping code in _pytest.config to create
@@ -995,14 +1067,14 @@ class Testdir:
 
         import _pytest.config
 
-        config = _pytest.config._prepareconfig(args, self.plugins)
+        config = _pytest.config._prepareconfig(args, self.plugins)  # type: ignore[arg-type]
         # we don't know what the test will do with this half-setup config
         # object and thus we make sure it gets unconfigured properly in any
         # case (otherwise capturing could still be active, for example)
         self.request.addfinalizer(config._ensure_unconfigure)
         return config
 
-    def parseconfigure(self, *args):
+    def parseconfigure(self, *args) -> Config:
         """Return a new pytest configured Config instance.
 
         This returns a new :py:class:`_pytest.config.Config` instance like
@@ -1012,7 +1084,7 @@ class Testdir:
         config._do_configure()
         return config
 
-    def getitem(self, source, funcname="test_func"):
+    def getitem(self, source, funcname: str = "test_func") -> Item:
         """Return the test item for a test function.
 
         This writes the source to a python file and runs pytest's collection on
@@ -1033,7 +1105,7 @@ class Testdir:
             funcname, source, items
         )
 
-    def getitems(self, source):
+    def getitems(self, source) -> List[Item]:
         """Return all test items collected from the module.
 
         This writes the source to a python file and runs pytest's collection on
@@ -1043,7 +1115,7 @@ class Testdir:
         modcol = self.getmodulecol(source)
         return self.genitems([modcol])
 
-    def getmodulecol(self, source, configargs=(), withinit=False):
+    def getmodulecol(self, source, configargs=(), withinit: bool = False):
         """Return the module collection node for ``source``.
 
         This writes ``source`` to a file using :py:meth:`makepyfile` and then
@@ -1120,13 +1192,17 @@ class Testdir:
 
         popen = subprocess.Popen(cmdargs, stdout=stdout, stderr=stderr, **kw)
         if stdin is Testdir.CLOSE_STDIN:
+            assert popen.stdin is not None
             popen.stdin.close()
         elif isinstance(stdin, bytes):
+            assert popen.stdin is not None
             popen.stdin.write(stdin)
 
         return popen
 
-    def run(self, *cmdargs, timeout=None, stdin=CLOSE_STDIN) -> RunResult:
+    def run(
+        self, *cmdargs, timeout: Optional[float] = None, stdin=CLOSE_STDIN
+    ) -> RunResult:
         """Run a command with arguments.
 
         Run a process using subprocess.Popen saving the stdout and stderr.
@@ -1154,7 +1230,7 @@ class Testdir:
         f1 = open(str(p1), "w", encoding="utf8")
         f2 = open(str(p2), "w", encoding="utf8")
         try:
-            now = time.time()
+            now = timing.time()
             popen = self.popen(
                 cmdargs,
                 stdin=stdin,
@@ -1165,7 +1241,7 @@ class Testdir:
             if isinstance(stdin, bytes):
                 popen.stdin.close()
 
-            def handle_timeout():
+            def handle_timeout() -> None:
                 __tracebackhide__ = True
 
                 timeout_message = (
@@ -1187,8 +1263,8 @@ class Testdir:
         finally:
             f1.close()
             f2.close()
-        f1 = open(str(p1), "r", encoding="utf8")
-        f2 = open(str(p2), "r", encoding="utf8")
+        f1 = open(str(p1), encoding="utf8")
+        f2 = open(str(p2), encoding="utf8")
         try:
             out = f1.read().splitlines()
             err = f2.read().splitlines()
@@ -1201,7 +1277,7 @@ class Testdir:
             ret = ExitCode(ret)
         except ValueError:
             pass
-        return RunResult(ret, out, err, time.time() - now)
+        return RunResult(ret, out, err, timing.time() - now)
 
     def _dump_lines(self, lines, fp):
         try:
@@ -1210,7 +1286,7 @@ class Testdir:
         except UnicodeEncodeError:
             print("couldn't print to {} because of encoding".format(fp))
 
-    def _getpytestargs(self):
+    def _getpytestargs(self) -> Tuple[str, ...]:
         return sys.executable, "-mpytest"
 
     def runpython(self, script) -> RunResult:
@@ -1225,7 +1301,7 @@ class Testdir:
         """Run python -c "command", return a :py:class:`RunResult`."""
         return self.run(sys.executable, "-c", command)
 
-    def runpytest_subprocess(self, *args, timeout=None) -> RunResult:
+    def runpytest_subprocess(self, *args, timeout: Optional[float] = None) -> RunResult:
         """Run pytest as a subprocess with given arguments.
 
         Any plugins added to the :py:attr:`plugins` list will be added using the
@@ -1241,9 +1317,7 @@ class Testdir:
         Returns a :py:class:`RunResult`.
         """
         __tracebackhide__ = True
-        p = py.path.local.make_numbered_dir(
-            prefix="runpytest-", keep=None, rootdir=self.tmpdir
-        )
+        p = make_numbered_dir(root=Path(str(self.tmpdir)), prefix="runpytest-")
         args = ("--basetemp=%s" % p,) + args
         plugins = [x for x in self.plugins if isinstance(x, str)]
         if plugins:

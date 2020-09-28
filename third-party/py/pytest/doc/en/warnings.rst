@@ -28,7 +28,7 @@ Running pytest now produces this output:
 
     $ pytest test_show_warnings.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 1 item
@@ -40,7 +40,7 @@ Running pytest now produces this output:
       $REGENDOC_TMPDIR/test_show_warnings.py:5: UserWarning: api v1, should use functions from v2
         warnings.warn(UserWarning("api v1, should use functions from v2"))
 
-    -- Docs: https://docs.pytest.org/en/latest/warnings.html
+    -- Docs: https://docs.pytest.org/en/stable/warnings.html
     ======================= 1 passed, 1 warning in 0.12s =======================
 
 The ``-W`` flag can be passed to control which warnings will be displayed or even turn
@@ -117,7 +117,7 @@ Filters applied using a mark take precedence over filters passed on the command 
 by the ``filterwarnings`` ini option.
 
 You may apply a filter to all tests of a class by using the ``filterwarnings`` mark as a class
-decorator or to all tests in a module by setting the ``pytestmark`` variable:
+decorator or to all tests in a module by setting the :globalvar:`pytestmark` variable:
 
 .. code-block:: python
 
@@ -381,8 +381,6 @@ custom error message.
 Internal pytest warnings
 ------------------------
 
-
-
 pytest may generate its own warnings in some situations, such as improper usage or deprecated features.
 
 For example, pytest will emit a warning if it encounters a class that matches :confval:`python_classes` but also
@@ -407,7 +405,7 @@ defines an ``__init__`` constructor, as this prevents the class from being insta
       $REGENDOC_TMPDIR/test_pytest_warnings.py:1: PytestCollectionWarning: cannot collect test class 'Test' because it has a __init__ constructor (from: test_pytest_warnings.py)
         class Test:
 
-    -- Docs: https://docs.pytest.org/en/latest/warnings.html
+    -- Docs: https://docs.pytest.org/en/stable/warnings.html
     1 warning in 0.12s
 
 These warnings might be filtered using the same builtin mechanisms used to filter other types of warnings.
@@ -415,22 +413,4 @@ These warnings might be filtered using the same builtin mechanisms used to filte
 Please read our :ref:`backwards-compatibility` to learn how we proceed about deprecating and eventually removing
 features.
 
-The following warning types are used by pytest and are part of the public API:
-
-.. autoclass:: pytest.PytestWarning
-
-.. autoclass:: pytest.PytestAssertRewriteWarning
-
-.. autoclass:: pytest.PytestCacheWarning
-
-.. autoclass:: pytest.PytestCollectionWarning
-
-.. autoclass:: pytest.PytestConfigWarning
-
-.. autoclass:: pytest.PytestDeprecationWarning
-
-.. autoclass:: pytest.PytestExperimentalApiWarning
-
-.. autoclass:: pytest.PytestUnhandledCoroutineWarning
-
-.. autoclass:: pytest.PytestUnknownMarkWarning
+The full list of warnings is listed in :ref:`the reference documentation <warnings ref>`.

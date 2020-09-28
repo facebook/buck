@@ -2,11 +2,10 @@ import pytest
 from _pytest.config import ExitCode
 
 
-def test_version(testdir, pytestconfig):
+def test_version_verbose(testdir, pytestconfig):
     testdir.monkeypatch.delenv("PYTEST_DISABLE_PLUGIN_AUTOLOAD")
-    result = testdir.runpytest("--version")
+    result = testdir.runpytest("--version", "--version")
     assert result.ret == 0
-    # p = py.path.local(py.__file__).dirpath()
     result.stderr.fnmatch_lines(
         ["*pytest*{}*imported from*".format(pytest.__version__)]
     )
@@ -14,18 +13,64 @@ def test_version(testdir, pytestconfig):
         result.stderr.fnmatch_lines(["*setuptools registered plugins:", "*at*"])
 
 
+def test_version_less_verbose(testdir, pytestconfig):
+    testdir.monkeypatch.delenv("PYTEST_DISABLE_PLUGIN_AUTOLOAD")
+    result = testdir.runpytest("--version")
+    assert result.ret == 0
+    # p = py.path.local(py.__file__).dirpath()
+    result.stderr.fnmatch_lines(["pytest {}".format(pytest.__version__)])
+
+
 def test_help(testdir):
     result = testdir.runpytest("--help")
     assert result.ret == 0
     result.stdout.fnmatch_lines(
         """
-        *-v*verbose*
+          -m MARKEXPR           only run tests matching given mark expression.
+                                For example: -m 'mark1 and not mark2'.
+        reporting:
+          --durations=N *
         *setup.cfg*
         *minversion*
         *to see*markers*pytest --markers*
         *to see*fixtures*pytest --fixtures*
     """
     )
+
+
+def test_none_help_param_raises_exception(testdir):
+    """Tests a None help param raises a TypeError.
+    """
+    testdir.makeconftest(
+        """
+        def pytest_addoption(parser):
+            parser.addini("test_ini", None, default=True, type="bool")
+    """
+    )
+    result = testdir.runpytest("--help")
+    result.stderr.fnmatch_lines(
+        ["*TypeError: help argument cannot be None for test_ini*"]
+    )
+
+
+def test_empty_help_param(testdir):
+    """Tests an empty help param is displayed correctly.
+    """
+    testdir.makeconftest(
+        """
+        def pytest_addoption(parser):
+            parser.addini("test_ini", "", default=True, type="bool")
+    """
+    )
+    result = testdir.runpytest("--help")
+    assert result.ret == 0
+    lines = [
+        "  required_plugins (args):",
+        "                        plugins that must be present for pytest to run*",
+        "  test_ini (bool):*",
+        "environment variables:",
+    ]
+    result.stdout.fnmatch_lines(lines, consecutive=True)
 
 
 def test_hookvalidation_unknown(testdir):

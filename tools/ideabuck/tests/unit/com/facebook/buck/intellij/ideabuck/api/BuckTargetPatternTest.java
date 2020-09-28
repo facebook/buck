@@ -75,6 +75,23 @@ public class BuckTargetPatternTest {
   }
 
   @Test
+  public void parseFullyQualifiedPatternThatIsABuckTargetAndCheckCellQualifiedName() {
+    BuckTargetPattern pattern = assertCanParse("cell//path/to/module:rule");
+
+    assertOptionalEquals("cell", pattern.getCellName());
+    assertOptionalEquals("path/to/module", pattern.getCellPath());
+    assertOptionalEquals(":rule", pattern.getSuffix());
+    assertOptionalEquals("rule", pattern.getRuleName());
+    checkAsBuckTarget(pattern);
+
+    assertEquals(pattern.getCellQualifiedName(), "//path/to/module:rule");
+    assertTrue(pattern.isAbsolute());
+    assertFalse(pattern.isPackageRelative());
+    assertFalse(pattern.isPackageMatching());
+    assertFalse(pattern.isRecursivePackageMatching());
+  }
+
+  @Test
   public void parseFullyQualifiedPatternWithImpliedRuleName() {
     BuckTargetPattern pattern = assertCanParse("cell//path/to/module");
     assertOptionalEquals("cell", pattern.getCellName());

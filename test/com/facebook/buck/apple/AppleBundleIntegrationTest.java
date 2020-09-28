@@ -80,6 +80,7 @@ import java.text.ParseException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -2229,6 +2230,56 @@ public class AppleBundleIntegrationTest {
     }
 
     assertEquals(expectedBuilder.build(), pathToHash);
+  }
+
+  @Test
+  public void
+      givenContainingDirectoryContentIsChanged_whenIncrementalBuildIsPerformed_thenOnlyChangedElementsAreCopiedToBundle()
+          throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_parts_of_every_kind", tmp);
+    workspace.setUp();
+
+    workspace.addBuckConfigLocalOption("apple", "incremental_bundling_enabled", "true");
+    workspace.addBuckConfigLocalOption("apple", "resource_processing_separate_rule", "true");
+    workspace.addBuckConfigLocalOption("apple", "codesign", "/usr/bin/true");
+
+    Path buildTriggerPath = Paths.get("App/BuildTrigger.m");
+    filesystem.writeContentsToPath("", buildTriggerPath);
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#macosx-x86_64,no-debug");
+    Path outputPath = workspace.buildAndReturnOutput(target.toString());
+    Path hashesFilePath = outputPath.resolve("../content_hashes.json");
+    assertTrue("File with hashes should exist", Files.isRegularFile(hashesFilePath));
+
+    JsonParser parser = ObjectMappers.createParser(hashesFilePath);
+    Map<String, String> pathToHash =
+        parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
+
+    RelPath shouldNotBeCopiedPath = RelPath.get("Contents/Resources/Model.momd");
+    RelPath shouldBeCopiedPath = RelPath.get("Contents/Resources/DemoApp.scnassets");
+
+    Map<RelPath, String> amendedPathToHash =
+        pathToHash.entrySet().stream()
+            .collect(Collectors.toMap(e -> RelPath.get(e.getKey()), Map.Entry::getValue));
+    amendedPathToHash.put(shouldBeCopiedPath, "");
+
+    filesystem.deleteFileAtPath(hashesFilePath);
+    filesystem.deleteRecursivelyIfExists(outputPath.resolve(shouldBeCopiedPath.getPath()));
+    filesystem.deleteRecursivelyIfExists(outputPath.resolve(shouldNotBeCopiedPath.getPath()));
+
+    (new AppleWriteHashPerFileStep(
+            "dummy", () -> ImmutableMap.copyOf(amendedPathToHash), hashesFilePath, filesystem))
+        .execute(TestExecutionContext.newInstance());
+
+    filesystem.deleteFileAtPath(buildTriggerPath);
+    filesystem.writeContentsToPath("int i = 1;", buildTriggerPath);
+
+    workspace.buildAndReturnOutput(target.toString());
+
+    assertTrue(filesystem.exists(outputPath.resolve(shouldBeCopiedPath.getPath())));
+    assertFalse(filesystem.exists(outputPath.resolve(shouldNotBeCopiedPath.getPath())));
   }
 
   @Test

@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from asyncio import StreamReader, subprocess
+import signal
+from asyncio import subprocess
 from typing import Awaitable, Callable, Generic, TypeVar
 
 
@@ -33,33 +34,17 @@ class BuckProcess(Generic[T]):
         self._result_type = result_type
         self._encoding = encoding
 
-    async def wait(self) -> T:
-        """ Returns a BuckResult with a finished process """
-        process = await self._awaitable_process
+    async def _get_result(self, process: subprocess.Process) -> T:
         stdout, stderr = await process.communicate()
         return self._result_type(process, stdout, stderr, self._encoding)
 
-    async def get_stderr(self) -> StreamReader:
-        """ Returns the standard error of the Buck Process instance. """
+    async def wait(self) -> T:
+        """ Returns a BuckResult with a finished process """
         process = await self._awaitable_process
-        assert process.stderr is not None
-        return process.stderr  # type: ignore
-        ###################################################################
-        # Exception is thrown if stderr is None, but should never
-        # return None with expectation that stderr=asyncio.subprocess.PIPE
-        # when creating a subprocess.Process
-        ###################################################################
+        return await self._get_result(process)
 
-    async def get_stdout(self) -> StreamReader:
-        """
-        Returns the standard error that is redirected into
-        standard output of the Buck Process instance.
-        """
+    async def interrupt(self) -> T:
+        """ Sends SIGINT, and returns a BuckResult with an interrupted process """
         process = await self._awaitable_process
-        assert process.stdout is not None
-        return process.stdout  # type: ignore
-        ###################################################################
-        # Exception is thrown if stdout is None, but should never
-        # return None with expectation that stdout=asyncio.subprocess.PIPE
-        # when creating a subprocess.Process
-        ###################################################################
+        process.send_signal(signal.SIGINT)
+        return await self._get_result(process)

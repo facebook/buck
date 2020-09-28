@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -38,7 +39,7 @@ public class EdenMount {
   private final EdenClientPool pool;
 
   /** Value of the mountPoint argument to use when communicating with Eden via the Thrift API. */
-  private final String mountPoint;
+  private final Path mountPoint;
 
   /** Root of the Buck project of interest that is contained by this {@link EdenMount}. */
   private final Path projectRoot;
@@ -61,7 +62,7 @@ public class EdenMount {
         mountPoint,
         projectRoot);
     this.pool = pool;
-    this.mountPoint = mountPoint.toString();
+    this.mountPoint = mountPoint;
     this.projectRoot = projectRoot;
     this.prefix = mountPoint.relativize(projectRoot);
   }
@@ -93,7 +94,10 @@ public class EdenMount {
   /** @param entry is a path that is relative to {@link #getProjectRoot()}. */
   public Sha1HashCode getSha1(Path entry) throws EdenError, IOException, TException {
     List<SHA1Result> results =
-        pool.getClient().getSHA1(mountPoint, ImmutableList.of(normalizePathArg(entry)));
+        pool.getClient()
+            .getSHA1(
+                mountPoint.toString().getBytes(StandardCharsets.UTF_8),
+                ImmutableList.of(normalizePathArg(entry)));
     SHA1Result result = Iterables.getOnlyElement(results);
     if (result.getSetField() == SHA1Result.SHA1) {
       return Sha1HashCode.fromBytes(result.getSha1());
@@ -122,8 +126,8 @@ public class EdenMount {
    * @param entry is a path that is relative to {@link #getProjectRoot()}.
    * @return a path that is relative to {@link #mountPoint}.
    */
-  private String normalizePathArg(Path entry) {
-    return prefix.resolve(entry).toString();
+  private byte[] normalizePathArg(Path entry) {
+    return prefix.resolve(entry).toString().getBytes(StandardCharsets.UTF_8);
   }
 
   @Override

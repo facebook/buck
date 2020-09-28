@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService;
 
@@ -39,7 +38,6 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
-import com.facebook.buck.core.exceptions.ThrowableCauseIterable;
 import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -151,7 +149,6 @@ import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
 import com.facebook.buck.remoteexecution.event.listener.RemoteExecutionConsoleLineProvider;
 import com.facebook.buck.remoteexecution.event.listener.RemoteExecutionEventListener;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
-import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
 import com.facebook.buck.remoteexecution.util.RemoteExecutionUtil;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -174,7 +171,6 @@ import com.facebook.buck.support.cli.args.BuckArgsMethods;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.support.cli.config.BuckConfigWriter;
 import com.facebook.buck.support.cli.config.CliConfig;
-import com.facebook.buck.support.exceptions.handler.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.support.fix.BuckFixSpec;
 import com.facebook.buck.support.fix.FixBuckConfig;
 import com.facebook.buck.support.jvm.GCNotificationEventEmitter;
@@ -192,8 +188,6 @@ import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.DuplicatingConsole;
-import com.facebook.buck.util.ErrorLogger;
-import com.facebook.buck.util.ErrorLogger.LogImpl;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.PkillProcessManager;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
@@ -237,6 +231,7 @@ import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -478,7 +473,24 @@ public final class MainRunner {
   void runMainThenExit(String[] args, long initTimestamp) {
 
     ExitCode exitCode = ExitCode.SUCCESS;
-
+    // TODO(cjhopman): This is a bit crazy. We depend on some random other place to setup the
+    // parsedRootConfig field, and just hope that we can read it here.
+    Supplier<HumanReadableExceptionAugmentor> augmentor =
+        Suppliers.memoize(
+            () -> {
+              try {
+                return new HumanReadableExceptionAugmentor(
+                    parsedRootConfig
+                        .map(buckConfig -> buckConfig.getView(ErrorHandlingBuckConfig.class))
+                        .map(ErrorHandlingBuckConfig::getErrorMessageAugmentations)
+                        .orElse(ImmutableMap.of()));
+              } catch (HumanReadableException e) {
+                printConsole.printErrorText(e.getHumanReadableErrorMessage());
+                return new HumanReadableExceptionAugmentor(ImmutableMap.of());
+              }
+            });
+    MainExceptionProcessor exceptionProcessor =
+        new MainExceptionProcessor(buildId, printConsole, augmentor);
     try (LogdProvider logdProvider =
         new LogdProvider(BuckConstant.IS_LOGD_ENABLED, buildId.toString())) {
       LogStreamFactory logStreamFactory =
@@ -496,70 +508,26 @@ public final class MainRunner {
               logStreamFactory,
               watchmanFreshInstanceAction,
               initTimestamp,
-              ImmutableList.copyOf(args));
+              ImmutableList.copyOf(args),
+              exceptionProcessor);
     } catch (Throwable t) {
-      try {
-        HumanReadableExceptionAugmentor augmentor;
-        try {
-          augmentor =
-              new HumanReadableExceptionAugmentor(
-                  parsedRootConfig
-                      .map(buckConfig -> buckConfig.getView(ErrorHandlingBuckConfig.class))
-                      .map(ErrorHandlingBuckConfig::getErrorMessageAugmentations)
-                      .orElse(ImmutableMap.of()));
-        } catch (HumanReadableException e) {
-          printConsole.printErrorText(e.getHumanReadableErrorMessage());
-          augmentor = new HumanReadableExceptionAugmentor(ImmutableMap.of());
-        }
-        ErrorLogger logger =
-            new ErrorLogger(
-                new LogImpl() {
-                  @Override
-                  public void logUserVisible(String message) {
-                    printConsole.printFailure(message);
-                  }
-
-                  @Override
-                  public void logUserVisibleInternalError(String message) {
-                    printConsole.printFailure(
-                        linesToText("Buck encountered an internal error", message));
-                  }
-
-                  @Override
-                  public void logVerbose(Throwable e) {
-                    String message = "Command failed:";
-                    if (e instanceof InterruptedException
-                        || e instanceof ClosedByInterruptException) {
-                      message = "Command was interrupted:";
-                    }
-                    LOG.warn(e, message);
-                  }
-                },
-                augmentor);
-        logger.logException(t);
-
-        if (MultiThreadedBlobUploader.CorruptArtifactException.isCause(ThrowableCauseIterable.of(t))
-            && stackedFileHashCache.isPresent()) {
-          LOG.error(
-              "Command failed due to CorruptArtifactException."
-                  + "\nThis indicates something outside of buck's control has modified files in an unexpected way."
-                  + "\nThe hash for file %s was invalid."
-                  + "\nPurging file hash caches. Try re-running the build.",
-              (MultiThreadedBlobUploader.CorruptArtifactException.getDescription(
-                      ThrowableCauseIterable.of(t)))
-                  .orElse(""));
-          stackedFileHashCache.get().invalidateAll();
-        }
-      } catch (Throwable ignored) {
-        // In some very rare cases error processing may error itself
-        // One example is logger implementation to throw while trying to log the error message
-        // Even for this case, we want proper exit code to be emitted, so we print the original
-        // exception to stderr as a last resort
-        System.err.println(t.getMessage());
-        t.printStackTrace();
-      }
-      exitCode = ExceptionHandlerRegistryFactory.create().handleException(t);
+      // While most exceptions will have been converted to an ExitCode in runMainWithExitCode, there
+      // are some edge cases that will still propagate exceptions here (for example command
+      // setup/teardown exceptions).
+      exitCode = exceptionProcessor.processThrowable(t);
     } finally {
+      // If we processed a CorruptArtifactException, purge the cache.
+      if (stackedFileHashCache.isPresent()
+          && exceptionProcessor.corruptArtifactExceptionDescription != null) {
+        LOG.error(
+            "Command failed due to CorruptArtifactException."
+                + "\nThis indicates something outside of buck's control has modified files in an unexpected way."
+                + "\nThe hash for file %s was invalid."
+                + "\nPurging file hash caches. Try re-running the build.",
+            exceptionProcessor.corruptArtifactExceptionDescription);
+        stackedFileHashCache.get().invalidateAll();
+      }
+
       LOG.debug("Done.");
       LogConfig.flushLogs();
       // Exit explicitly so that non-daemon threads (of which we use many) don't
@@ -645,14 +613,16 @@ public final class MainRunner {
    * @param logStreamFactory log stream factory implementation depending on whether logd is enabled
    * @param initTimestamp Value of System.nanoTime() when process got main()/nailMain() invoked.
    * @param unexpandedCommandLineArgs command line arguments
+   * @param exceptionProcessor exception processor for eager exception handling
    * @return an ExitCode representing the result of the command
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
   public ExitCode runMainWithExitCode(
       LogStreamFactory logStreamFactory,
-      WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
+      FreshInstanceAction watchmanFreshInstanceAction,
       long initTimestamp,
-      ImmutableList<String> unexpandedCommandLineArgs)
+      ImmutableList<String> unexpandedCommandLineArgs,
+      ExceptionProcessor exceptionProcessor)
       throws Exception {
 
     // Set initial exitCode value to FATAL. This will eventually get reassigned unless an exception
@@ -1463,10 +1433,21 @@ public final class MainRunner {
                     parserAndCaches.getVersionedTargetGraphCache().getCacheStats()));
           }
         } catch (Exception e) {
+          // Capture the exception for use by autofix below.
           exceptionForFix = Optional.of(e);
+          // Process the exception early. The outermost runMainThenExit will also process any
+          // exception propagated up to it, but exception processing does logging and it's useful to
+          // get that as soon as possible.
+          // TODO(cjhopman): Getting errors during the build would be even better, we could
+          // consider making log_build_errors_inline enabled by default. No integrations have
+          // actually done that, though, so the experience isn't good, or they don't know about
+          // it, or there's some other problem with it.
+          // exitCode = exceptionProcessor.processException(e);
           throw e;
         } finally {
           if (exitCode != ExitCode.SUCCESS) {
+            // TODO(pjameson): Why is this here and not at the outermost error handling (i.e. why
+            // isn't it in the exception processor?).
             handleAutoFix(
                 filesystem,
                 printConsole,

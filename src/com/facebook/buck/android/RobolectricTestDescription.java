@@ -350,7 +350,6 @@ public class RobolectricTestDescription
             params,
             args.getUseCxxLibraries(),
             args.getCxxLibraryWhitelist(),
-            context.getTargetGraph(),
             graphBuilder,
             getCxxPlatform(args, buildTarget.getTargetConfiguration())
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),

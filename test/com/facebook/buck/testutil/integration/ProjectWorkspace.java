@@ -548,7 +548,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
                 new FileOutputStreamFactory(),
                 WatchmanWatcher.FreshInstanceAction.NONE,
                 System.nanoTime(),
-                ImmutableList.copyOf(args));
+                ImmutableList.copyOf(args),
+                t -> {
+                  throw t;
+                });
       } catch (Throwable t) {
         logger.logException(t);
         exitCode =

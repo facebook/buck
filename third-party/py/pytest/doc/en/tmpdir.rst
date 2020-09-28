@@ -41,7 +41,7 @@ Running this would result in a passed test except for the last
 
     $ pytest test_tmp_path.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 1 item
@@ -114,7 +114,7 @@ Running this would result in a passed test except for the last
 
     $ pytest test_tmpdir.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 1 item
@@ -192,8 +192,13 @@ You can override the default temporary directory setting like this:
 
     pytest --basetemp=mydir
 
-When distributing tests on the local machine, ``pytest`` takes care to
-configure a basetemp directory for the sub processes such that all temporary
+.. warning::
+
+    The contents of ``mydir`` will be completely removed, so make sure to use a directory
+    for that purpose only.
+
+When distributing tests on the local machine using ``pytest-xdist``, care is taken to
+automatically configure a basetemp directory for the sub processes such that all temporary
 data lands below a single per-test run basetemp directory.
 
 .. _`py.path.local`: https://py.readthedocs.io/en/latest/path.html

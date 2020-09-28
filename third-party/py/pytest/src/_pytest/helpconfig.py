@@ -2,11 +2,17 @@
 import os
 import sys
 from argparse import Action
+from typing import List
+from typing import Optional
+from typing import Union
 
 import py
 
 import pytest
+from _pytest.config import Config
+from _pytest.config import ExitCode
 from _pytest.config import PrintHelp
+from _pytest.config.argparsing import Parser
 
 
 class HelpAction(Action):
@@ -36,13 +42,16 @@ class HelpAction(Action):
             raise PrintHelp
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: Parser) -> None:
     group = parser.getgroup("debugconfig")
     group.addoption(
         "--version",
         "-V",
-        action="store_true",
-        help="display pytest version and information about plugins.",
+        action="count",
+        default=0,
+        dest="version",
+        help="display pytest version and information about plugins."
+        "When given twice, also display information about plugins.",
     )
     group._addoption(
         "-h",
@@ -57,7 +66,7 @@ def pytest_addoption(parser):
         dest="plugins",
         default=[],
         metavar="name",
-        help="early-load given plugin module name or entry point (multi-allowed). "
+        help="early-load given plugin module name or entry point (multi-allowed).\n"
         "To avoid loading of plugins, use the `no:` prefix, e.g. "
         "`no:doctest`.",
     )
@@ -87,7 +96,7 @@ def pytest_addoption(parser):
 @pytest.hookimpl(hookwrapper=True)
 def pytest_cmdline_parse():
     outcome = yield
-    config = outcome.get_result()
+    config = outcome.get_result()  # type: Config
     if config.option.debug:
         path = os.path.abspath("pytestdebug.log")
         debugfile = open(path, "w")
@@ -106,7 +115,7 @@ def pytest_cmdline_parse():
         undo_tracing = config.pluginmanager.enable_tracing()
         sys.stderr.write("writing pytestdebug information to %s\n" % path)
 
-        def unset_tracing():
+        def unset_tracing() -> None:
             debugfile.close()
             sys.stderr.write("wrote pytestdebug information to %s\n" % debugfile.name)
             config.trace.root.setwriter(None)
@@ -115,20 +124,23 @@ def pytest_cmdline_parse():
         config.add_cleanup(unset_tracing)
 
 
-def showversion(config):
-    sys.stderr.write(
-        "This is pytest version {}, imported from {}\n".format(
-            pytest.__version__, pytest.__file__
+def showversion(config: Config) -> None:
+    if config.option.version > 1:
+        sys.stderr.write(
+            "This is pytest version {}, imported from {}\n".format(
+                pytest.__version__, pytest.__file__
+            )
         )
-    )
-    plugininfo = getpluginversioninfo(config)
-    if plugininfo:
-        for line in plugininfo:
-            sys.stderr.write(line + "\n")
+        plugininfo = getpluginversioninfo(config)
+        if plugininfo:
+            for line in plugininfo:
+                sys.stderr.write(line + "\n")
+    else:
+        sys.stderr.write("pytest {}\n".format(pytest.__version__))
 
 
-def pytest_cmdline_main(config):
-    if config.option.version:
+def pytest_cmdline_main(config: Config) -> Optional[Union[int, ExitCode]]:
+    if config.option.version > 0:
         showversion(config)
         return 0
     elif config.option.help:
@@ -136,9 +148,10 @@ def pytest_cmdline_main(config):
         showhelp(config)
         config._ensure_unconfigure()
         return 0
+    return None
 
 
-def showhelp(config):
+def showhelp(config: Config) -> None:
     import textwrap
 
     reporter = config.pluginmanager.get_plugin("terminalreporter")
@@ -157,6 +170,8 @@ def showhelp(config):
         help, type, default = config._parser._inidict[name]
         if type is None:
             type = "string"
+        if help is None:
+            raise TypeError("help argument cannot be None for {}".format(name))
         spec = "{} ({}):".format(name, type)
         tw.write("  %s" % spec)
         spec_len = len(spec)
@@ -178,9 +193,10 @@ def showhelp(config):
             tw.write(" " * (indent_len - spec_len - 2))
             wrapped = textwrap.wrap(help, columns - indent_len, break_on_hyphens=False)
 
-            tw.line(wrapped[0])
-            for line in wrapped[1:]:
-                tw.line(indent + line)
+            if wrapped:
+                tw.line(wrapped[0])
+                for line in wrapped[1:]:
+                    tw.line(indent + line)
 
     tw.line()
     tw.line("environment variables:")
@@ -211,7 +227,7 @@ def showhelp(config):
 conftest_options = [("pytest_plugins", "list of plugin names to load")]
 
 
-def getpluginversioninfo(config):
+def getpluginversioninfo(config: Config) -> List[str]:
     lines = []
     plugininfo = config.pluginmanager.list_plugin_distinfo()
     if plugininfo:
@@ -223,7 +239,7 @@ def getpluginversioninfo(config):
     return lines
 
 
-def pytest_report_header(config):
+def pytest_report_header(config: Config) -> List[str]:
     lines = []
     if config.option.debug or config.option.traceconfig:
         lines.append(

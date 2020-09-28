@@ -17,12 +17,17 @@
 package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -45,6 +50,8 @@ public class RustBuckConfig {
   private static final String DEFAULT_EDITION = "default_edition";
   private static final String EXTERN_LOCATIONS = "extern_locations";
   private static final String RUSTC_PLUGIN_PLATFORM = "rustc_plugin_platform";
+
+  public static final String DEFAULT_FLAVOR_LIBRARY_TYPE = "type";
 
   enum RemapSrcPaths {
     NO, // no path remapping
@@ -255,6 +262,18 @@ public class RustBuckConfig {
    */
   boolean getPreferStaticLibs() {
     return delegate.getBooleanValue(SECTION, PREFER_STATIC_LIBS, false);
+  }
+
+  /**
+   * Get default flavor map for a specific type of rule.
+   *
+   * @param rule type
+   * @return map of default flavors
+   */
+  public ImmutableMap<String, Flavor> getDefaultFlavorsForRuleType(RuleType type) {
+    return ImmutableMap.copyOf(
+        Maps.transformValues(
+            delegate.getEntriesForSection("defaults." + type.getName()), InternalFlavor::of));
   }
 
   /**

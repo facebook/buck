@@ -23,6 +23,7 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.DeepMatcher;
 import com.facebook.buck.testutil.PathNormalizer;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
@@ -33,6 +34,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,7 +52,12 @@ public class EdenMountTest {
     HashCode hash = HashCode.fromString("2b8b815229aa8a61e483fb4ba0588b8b6c491890");
     SHA1Result sha1Result = new SHA1Result();
     sha1Result.setSha1(hash.asBytes());
-    expect(thriftClient.getSHA1("/home/mbolin/src/buck", ImmutableList.of("LICENSE")))
+
+    expect(
+            thriftClient.getSHA1(
+                DeepMatcher.deepMatch("/home/mbolin/src/buck".getBytes(StandardCharsets.UTF_8)),
+                DeepMatcher.deepMatch(
+                    ImmutableList.of("LICENSE".getBytes(StandardCharsets.UTF_8)))))
         .andReturn(ImmutableList.of(sha1Result));
     replay(thriftClient);
 

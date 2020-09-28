@@ -245,6 +245,16 @@ public class DarwinLinker extends DelegatingTool
   }
 
   @Override
+  public ImmutableList<Arg> createGlobalSymbolsLinkerArgs(
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams baseParams,
+      ActionGraphBuilder graphBuilder,
+      BuildTarget target,
+      ImmutableList<? extends SourcePath> symbolFiles) {
+    return ImmutableList.of(new ExportedSymbolsArg(symbolFiles));
+  }
+
+  @Override
   public Iterable<String> getNoAsNeededSharedLibsFlags() {
     return ImmutableList.of();
   }
@@ -280,18 +290,22 @@ public class DarwinLinker extends DelegatingTool
   }
 
   /**
-   * An {@link Arg} which reads undefined symbols from files and propagates them to the Darwin
-   * linker via the `-u` argument.
+   * An {@link Arg} which reads symbols from files and propagates them to the Darwin linker via the
+   * argument returned by {@link SymbolsArg#getLinkerArgument()}.
    *
-   * <p>NOTE: this is prone to overrunning command line argument limits, but it's not clear of
-   * another way to do this (perhaps other than creating a dummy object file whose symbol table only
-   * contains the undefined symbols listed in the symbol files).
+   * <p>NOTE: this is prone to overrunning command line argument limits.
    */
-  private static class UndefinedSymbolsArg implements Arg {
+  private abstract static class SymbolsArg implements Arg {
     @AddToRuleKey private final ImmutableList<? extends SourcePath> symbolFiles;
 
-    public UndefinedSymbolsArg(ImmutableList<? extends SourcePath> symbolFiles) {
+    public SymbolsArg(ImmutableList<? extends SourcePath> symbolFiles) {
       this.symbolFiles = symbolFiles;
+    }
+
+    abstract String getLinkerArgument();
+
+    String getSymbolPrefix() {
+      return "";
     }
 
     // Open all the symbol files and read in all undefined symbols, passing them to linker using the
@@ -310,7 +324,7 @@ public class DarwinLinker extends DelegatingTool
         throw new RuntimeException(e);
       }
       for (String symbol : symbols) {
-        Linkers.iXlinker("-u", symbol).forEach(consumer);
+        Linkers.iXlinker(getLinkerArgument(), getSymbolPrefix() + symbol).forEach(consumer);
       }
     }
 
@@ -324,16 +338,69 @@ public class DarwinLinker extends DelegatingTool
       if (this == other) {
         return true;
       }
-      if (!(other instanceof UndefinedSymbolsArg)) {
+      if (!(other instanceof SymbolsArg)) {
         return false;
       }
-      UndefinedSymbolsArg symbolsArg = (UndefinedSymbolsArg) other;
+      SymbolsArg symbolsArg = (SymbolsArg) other;
       return Objects.equals(symbolFiles, symbolsArg.symbolFiles);
     }
 
     @Override
     public int hashCode() {
       return Objects.hash(symbolFiles);
+    }
+  }
+
+  /**
+   * An {@link Arg} which reads undefined symbols from files and propagates them to the Darwin
+   * linker via the `-u` argument.
+   *
+   * <p>NOTE: this is prone to overrunning command line argument limits, but it's not clear of
+   * another way to do this (perhaps other than creating a dummy object file whose symbol table only
+   * contains the undefined symbols listed in the symbol files).
+   */
+  private static class UndefinedSymbolsArg extends SymbolsArg {
+
+    public UndefinedSymbolsArg(ImmutableList<? extends SourcePath> symbolFiles) {
+      super(symbolFiles);
+    }
+
+    @Override
+    String getLinkerArgument() {
+      return "-u";
+    }
+  }
+
+  /**
+   * An {@link Arg} which reads global symbols from files and propagates them to the Darwin linker
+   * via the `-exported_symbol` argument.
+   *
+   * <p>NOTE: this is prone to overrunning command line argument limits, and
+   * `-exported_symbols_list` argument should be leveraged to pass all symbols at once.
+   */
+  private static class ExportedSymbolsArg extends SymbolsArg {
+
+    public ExportedSymbolsArg(ImmutableList<? extends SourcePath> symbolFiles) {
+      super(symbolFiles);
+    }
+
+    @Override
+    String getLinkerArgument() {
+      return "-exported_symbol";
+    }
+
+    /**
+     * *
+     *
+     * <p>NOTE: `-exported_symbol` fails with an undefined symbol error when it is passed a symbol
+     * that does not exist. Using a wildcard prefix * fixes this. But, it may over-export some
+     * symbols, especially with C linkage.
+     *
+     * @return A wildcard prefix for each symbol
+     */
+    @Override
+    String getSymbolPrefix() {
+      return "*";
     }
   }
 }

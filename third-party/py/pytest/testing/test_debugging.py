@@ -50,7 +50,7 @@ def custom_pdb_calls():
         def interaction(self, *args):
             called.append("interaction")
 
-    _pytest._CustomPdb = _CustomPdb
+    _pytest._CustomPdb = _CustomPdb  # type: ignore
     return called
 
 
@@ -73,9 +73,9 @@ def custom_debugger_hook():
             print("**CustomDebugger**")
             called.append("set_trace")
 
-    _pytest._CustomDebugger = _CustomDebugger
+    _pytest._CustomDebugger = _CustomDebugger  # type: ignore
     yield called
-    del _pytest._CustomDebugger
+    del _pytest._CustomDebugger  # type: ignore
 
 
 class TestPDB:
@@ -341,6 +341,15 @@ class TestPDB:
 
         child.sendeof()
         self.flush(child)
+
+    def test_pdb_prevent_ConftestImportFailure_hiding_exception(self, testdir):
+        testdir.makepyfile("def test_func(): pass")
+        sub_dir = testdir.tmpdir.join("ns").ensure_dir()
+        sub_dir.join("conftest").new(ext=".py").write("import unknown")
+        sub_dir.join("test_file").new(ext=".py").write("def test_func(): pass")
+
+        result = testdir.runpytest_subprocess("--pdb", ".")
+        result.stdout.fnmatch_lines(["-> import unknown"])
 
     def test_pdb_interaction_capturing_simple(self, testdir):
         p1 = testdir.makepyfile(
@@ -886,7 +895,7 @@ class TestDebuggingBreakpoints:
         if sys.version_info >= (3, 7):
             assert SUPPORTS_BREAKPOINT_BUILTIN is True
         if sys.version_info.major == 3 and sys.version_info.minor == 5:
-            assert SUPPORTS_BREAKPOINT_BUILTIN is False
+            assert SUPPORTS_BREAKPOINT_BUILTIN is False  # type: ignore[comparison-overlap]
 
     @pytest.mark.skipif(
         not SUPPORTS_BREAKPOINT_BUILTIN, reason="Requires breakpoint() builtin"

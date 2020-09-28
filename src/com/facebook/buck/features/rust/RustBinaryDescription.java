@@ -36,21 +36,14 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.rules.macros.StringWithMacrosConverter;
-import com.facebook.buck.versions.HasVersionUniverse;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.stream.Stream;
-import org.immutables.value.Value;
 
 public class RustBinaryDescription
     implements DescriptionWithTargetGraph<RustBinaryDescriptionArg>,
@@ -102,8 +95,12 @@ public class RustBinaryDescription
         RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args)
             .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
 
-    StringWithMacrosConverter converter =
-        RustCompileUtils.getMacroExpander(context, buildTarget, rustPlatform.getCxxPlatform());
+    Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> flagsAndEnv =
+        RustCompileUtils.getRustcFlagsAndEnv(
+            context, buildTarget, rustPlatform, rustPlatform.getRustBinaryFlags(), args);
+
+    ImmutableList<Arg> linkerFlags =
+        RustCompileUtils.getLinkerFlags(context, buildTarget, rustPlatform, args);
 
     return RustCompileUtils.createBinaryBuildRule(
         buildTarget,
@@ -116,20 +113,9 @@ public class RustBinaryDescription
         args.getCrate(),
         args.getEdition(),
         args.getFeatures(),
-        ImmutableSortedMap.copyOf(Maps.transformValues(args.getEnv(), converter::convert)),
-        Stream.of(
-                rustPlatform.getRustBinaryFlags().stream(),
-                args.getRustcFlags().stream().map(converter::convert))
-            .flatMap(x -> x)
-            .map(x -> (Arg) x)
-            .iterator(),
-        Iterators.concat(
-            args.getLinkerFlags().stream().map(converter::convert).iterator(),
-            Iterators.concat(
-                args.getPlatformLinkerFlags().getMatchingValues(rustPlatform.getFlavor().toString())
-                    .stream()
-                    .map(l -> l.stream().map(converter::convert).iterator())
-                    .iterator())),
+        flagsAndEnv.getSecond(), // rustc environment
+        flagsAndEnv.getFirst(), // rustc flags
+        linkerFlags,
         linkStyle,
         args.isRpath(),
         args.getSrcs(),
@@ -216,20 +202,5 @@ public class RustBinaryDescription
   }
 
   @RuleArg
-  interface AbstractRustBinaryDescriptionArg extends RustCommonArgs, HasTests, HasVersionUniverse {
-
-    ImmutableList<StringWithMacros> getLinkerFlags();
-
-    @Value.Default
-    default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPlatformLinkerFlags() {
-      return PatternMatchedCollection.of();
-    }
-
-    Optional<Linker.LinkableDepType> getLinkStyle();
-
-    @Value.Default
-    default boolean isRpath() {
-      return true;
-    }
-  }
+  interface AbstractRustBinaryDescriptionArg extends RustLinkableArgs, HasTests {}
 }

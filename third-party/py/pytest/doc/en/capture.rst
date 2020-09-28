@@ -83,7 +83,7 @@ of the failing function and hide the other one:
 
     $ pytest
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 2 items
@@ -145,8 +145,7 @@ The return value from ``readouterr`` changed to a ``namedtuple`` with two attrib
 
 If the code under test writes non-textual data, you can capture this using
 the ``capsysbinary`` fixture which instead returns ``bytes`` from
-the ``readouterr`` method.  The ``capfsysbinary`` fixture is currently only
-available in python 3.
+the ``readouterr`` method.
 
 
 

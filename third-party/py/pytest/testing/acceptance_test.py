@@ -1,6 +1,5 @@
 import os
 import sys
-import textwrap
 import types
 
 import attr
@@ -9,6 +8,8 @@ import py
 import pytest
 from _pytest.compat import importlib_metadata
 from _pytest.config import ExitCode
+from _pytest.pathlib import symlink_or_skip
+from _pytest.pytester import Testdir
 
 
 def prepend_pythonpath(*dirs):
@@ -146,7 +147,8 @@ class TestGeneralUsage:
         else:
             assert loaded == ["myplugin1", "myplugin2", "mycov"]
 
-    def test_assertion_magic(self, testdir):
+    @pytest.mark.parametrize("import_mode", ["prepend", "append", "importlib"])
+    def test_assertion_rewrite(self, testdir, import_mode):
         p = testdir.makepyfile(
             """
             def test_this():
@@ -154,7 +156,7 @@ class TestGeneralUsage:
                 assert x
         """
         )
-        result = testdir.runpytest(p)
+        result = testdir.runpytest(p, "--import-mode={}".format(import_mode))
         result.stdout.fnmatch_lines([">       assert x", "E       assert 0"])
         assert result.ret == 1
 
@@ -221,7 +223,7 @@ class TestGeneralUsage:
             "E   {}: No module named 'qwerty'".format(exc_name),
         ]
 
-    @pytest.mark.filterwarnings("always::pytest.PytestDeprecationWarning")
+    @pytest.mark.filterwarnings("ignore::pytest.PytestDeprecationWarning")
     def test_early_skip(self, testdir):
         testdir.mkdir("xyz")
         testdir.makeconftest(
@@ -265,29 +267,6 @@ class TestGeneralUsage:
         assert result.ret != 0
         assert "should be seen" in result.stdout.str()
 
-    @pytest.mark.skipif(
-        not hasattr(py.path.local, "mksymlinkto"),
-        reason="symlink not available on this platform",
-    )
-    def test_chdir(self, testdir):
-        testdir.tmpdir.join("py").mksymlinkto(py._pydir)
-        p = testdir.tmpdir.join("main.py")
-        p.write(
-            textwrap.dedent(
-                """\
-                import sys, os
-                sys.path.insert(0, '')
-                import py
-                print(py.__file__)
-                print(py.__path__)
-                os.chdir(os.path.dirname(os.getcwd()))
-                print(py.log)
-                """
-            )
-        )
-        result = testdir.runpython(p)
-        assert not result.ret
-
     def test_issue109_sibling_conftests_not_loaded(self, testdir):
         sub1 = testdir.mkdir("sub1")
         sub2 = testdir.mkdir("sub2")
@@ -323,10 +302,10 @@ class TestGeneralUsage:
                     pass
             class MyCollector(pytest.File):
                 def collect(self):
-                    return [MyItem(name="xyz", parent=self)]
+                    return [MyItem.from_parent(name="xyz", parent=self)]
             def pytest_collect_file(path, parent):
                 if path.basename.startswith("conftest"):
-                    return MyCollector(path, parent)
+                    return MyCollector.from_parent(fspath=path, parent=parent)
         """
         )
         result = testdir.runpytest(c.basename + "::" + "xyz")
@@ -463,7 +442,7 @@ class TestGeneralUsage:
         p = testdir.makepyfile(
             """
             def raise_error(obj):
-                raise IOError('source code not available')
+                raise OSError('source code not available')
 
             import inspect
             inspect.getsourcelines = raise_error
@@ -602,14 +581,15 @@ class TestInvocationVariants:
         assert res.ret == 0
         res.stdout.fnmatch_lines(["*1 passed*"])
 
-    def test_equivalence_pytest_pytest(self):
-        assert pytest.main == py.test.cmdline.main
+    def test_equivalence_pytest_pydottest(self) -> None:
+        # Type ignored because `py.test` is not and will not be typed.
+        assert pytest.main == py.test.cmdline.main  # type: ignore[attr-defined]
 
-    def test_invoke_with_invalid_type(self):
+    def test_invoke_with_invalid_type(self) -> None:
         with pytest.raises(
             TypeError, match="expected to be a list of strings, got: '-h'"
         ):
-            pytest.main("-h")
+            pytest.main("-h")  # type: ignore[arg-type]
 
     def test_invoke_with_path(self, tmpdir, capsys):
         retcode = pytest.main(tmpdir)
@@ -761,19 +741,9 @@ class TestInvocationVariants:
 
     def test_cmdline_python_package_symlink(self, testdir, monkeypatch):
         """
-        test --pyargs option with packages with path containing symlink can
-        have conftest.py in their package (#2985)
+        --pyargs with packages with path containing symlink can have conftest.py in
+        their package (#2985)
         """
-        # dummy check that we can actually create symlinks: on Windows `os.symlink` is available,
-        # but normal users require special admin privileges to create symlinks.
-        if sys.platform == "win32":
-            try:
-                os.symlink(
-                    str(testdir.tmpdir.ensure("tmpfile")),
-                    str(testdir.tmpdir.join("tmpfile2")),
-                )
-            except OSError as e:
-                pytest.skip(str(e.args[0]))
         monkeypatch.delenv("PYTHONDONTWRITEBYTECODE", raising=False)
 
         dirname = "lib"
@@ -789,13 +759,13 @@ class TestInvocationVariants:
             "import pytest\n@pytest.fixture\ndef a_fixture():pass"
         )
 
-        d_local = testdir.mkdir("local")
-        symlink_location = os.path.join(str(d_local), "lib")
-        os.symlink(str(d), symlink_location, target_is_directory=True)
+        d_local = testdir.mkdir("symlink_root")
+        symlink_location = d_local / "lib"
+        symlink_or_skip(d, symlink_location, target_is_directory=True)
 
         # The structure of the test directory is now:
         # .
-        # ├── local
+        # ├── symlink_root
         # │   └── lib -> ../lib
         # └── lib
         #     └── foo
@@ -806,32 +776,23 @@ class TestInvocationVariants:
         #             └── test_bar.py
 
         # NOTE: the different/reversed ordering is intentional here.
-        search_path = ["lib", os.path.join("local", "lib")]
+        search_path = ["lib", os.path.join("symlink_root", "lib")]
         monkeypatch.setenv("PYTHONPATH", prepend_pythonpath(*search_path))
         for p in search_path:
             monkeypatch.syspath_prepend(p)
 
         # module picked up in symlink-ed directory:
-        # It picks up local/lib/foo/bar (symlink) via sys.path.
+        # It picks up symlink_root/lib/foo/bar (symlink) via sys.path.
         result = testdir.runpytest("--pyargs", "-v", "foo.bar")
         testdir.chdir()
         assert result.ret == 0
-        if hasattr(py.path.local, "mksymlinkto"):
-            result.stdout.fnmatch_lines(
-                [
-                    "lib/foo/bar/test_bar.py::test_bar PASSED*",
-                    "lib/foo/bar/test_bar.py::test_other PASSED*",
-                    "*2 passed*",
-                ]
-            )
-        else:
-            result.stdout.fnmatch_lines(
-                [
-                    "*lib/foo/bar/test_bar.py::test_bar PASSED*",
-                    "*lib/foo/bar/test_bar.py::test_other PASSED*",
-                    "*2 passed*",
-                ]
-            )
+        result.stdout.fnmatch_lines(
+            [
+                "symlink_root/lib/foo/bar/test_bar.py::test_bar PASSED*",
+                "symlink_root/lib/foo/bar/test_bar.py::test_other PASSED*",
+                "*2 passed*",
+            ]
+        )
 
     def test_cmdline_python_package_not_exists(self, testdir):
         result = testdir.runpytest("--pyargs", "tpkgwhatv")
@@ -895,41 +856,46 @@ class TestInvocationVariants:
 
 class TestDurations:
     source = """
-        import time
-        frag = 0.002
+        from _pytest import timing
         def test_something():
             pass
         def test_2():
-            time.sleep(frag*5)
+            timing.sleep(0.010)
         def test_1():
-            time.sleep(frag)
+            timing.sleep(0.002)
         def test_3():
-            time.sleep(frag*10)
+            timing.sleep(0.020)
     """
 
-    def test_calls(self, testdir):
+    def test_calls(self, testdir, mock_timing):
         testdir.makepyfile(self.source)
-        result = testdir.runpytest("--durations=10")
+        result = testdir.runpytest_inprocess("--durations=10")
         assert result.ret == 0
+
         result.stdout.fnmatch_lines_random(
             ["*durations*", "*call*test_3*", "*call*test_2*"]
         )
+
         result.stdout.fnmatch_lines(
-            ["(0.00 durations hidden.  Use -vv to show these durations.)"]
+            ["(8 durations < 0.005s hidden.  Use -vv to show these durations.)"]
         )
 
-    def test_calls_show_2(self, testdir):
+    def test_calls_show_2(self, testdir, mock_timing):
+
         testdir.makepyfile(self.source)
-        result = testdir.runpytest("--durations=2")
+        result = testdir.runpytest_inprocess("--durations=2")
         assert result.ret == 0
+
         lines = result.stdout.get_lines_after("*slowest*durations*")
         assert "4 passed" in lines[2]
 
-    def test_calls_showall(self, testdir):
+    def test_calls_showall(self, testdir, mock_timing):
         testdir.makepyfile(self.source)
-        result = testdir.runpytest("--durations=0")
+        result = testdir.runpytest_inprocess("--durations=0")
         assert result.ret == 0
-        for x in "23":
+
+        tested = "3"
+        for x in tested:
             for y in ("call",):  # 'setup', 'call', 'teardown':
                 for line in result.stdout.lines:
                     if ("test_%s" % x) in line and y in line:
@@ -937,10 +903,11 @@ class TestDurations:
                 else:
                     raise AssertionError("not found {} {}".format(x, y))
 
-    def test_calls_showall_verbose(self, testdir):
+    def test_calls_showall_verbose(self, testdir, mock_timing):
         testdir.makepyfile(self.source)
-        result = testdir.runpytest("--durations=0", "-vv")
+        result = testdir.runpytest_inprocess("--durations=0", "-vv")
         assert result.ret == 0
+
         for x in "123":
             for y in ("call",):  # 'setup', 'call', 'teardown':
                 for line in result.stdout.lines:
@@ -949,52 +916,53 @@ class TestDurations:
                 else:
                     raise AssertionError("not found {} {}".format(x, y))
 
-    def test_with_deselected(self, testdir):
+    def test_with_deselected(self, testdir, mock_timing):
         testdir.makepyfile(self.source)
-        result = testdir.runpytest("--durations=2", "-k test_2")
+        result = testdir.runpytest_inprocess("--durations=2", "-k test_3")
         assert result.ret == 0
-        result.stdout.fnmatch_lines(["*durations*", "*call*test_2*"])
 
-    def test_with_failing_collection(self, testdir):
+        result.stdout.fnmatch_lines(["*durations*", "*call*test_3*"])
+
+    def test_with_failing_collection(self, testdir, mock_timing):
         testdir.makepyfile(self.source)
         testdir.makepyfile(test_collecterror="""xyz""")
-        result = testdir.runpytest("--durations=2", "-k test_1")
+        result = testdir.runpytest_inprocess("--durations=2", "-k test_1")
         assert result.ret == 2
+
         result.stdout.fnmatch_lines(["*Interrupted: 1 error during collection*"])
         # Collection errors abort test execution, therefore no duration is
         # output
         result.stdout.no_fnmatch_line("*duration*")
 
-    def test_with_not(self, testdir):
+    def test_with_not(self, testdir, mock_timing):
         testdir.makepyfile(self.source)
-        result = testdir.runpytest("-k not 1")
+        result = testdir.runpytest_inprocess("-k not 1")
         assert result.ret == 0
 
 
-class TestDurationWithFixture:
+class TestDurationsWithFixture:
     source = """
         import pytest
-        import time
-        frag = 0.01
+        from _pytest import timing
 
         @pytest.fixture
         def setup_fixt():
-            time.sleep(frag)
+            timing.sleep(2)
 
         def test_1(setup_fixt):
-            time.sleep(frag)
+            timing.sleep(5)
     """
 
-    def test_setup_function(self, testdir):
+    def test_setup_function(self, testdir, mock_timing):
         testdir.makepyfile(self.source)
-        result = testdir.runpytest("--durations=10")
+        result = testdir.runpytest_inprocess("--durations=10")
         assert result.ret == 0
 
         result.stdout.fnmatch_lines_random(
             """
             *durations*
-            * setup *test_1*
-            * call *test_1*
+            5.00s call *test_1*
+            2.00s setup *test_1*
         """
         )
 
@@ -1192,6 +1160,9 @@ def test_usage_error_code(testdir):
 
 @pytest.mark.filterwarnings("default")
 def test_warn_on_async_function(testdir):
+    # In the below we .close() the coroutine only to avoid
+    # "RuntimeWarning: coroutine 'test_2' was never awaited"
+    # which messes with other tests.
     testdir.makepyfile(
         test_async="""
         async def test_1():
@@ -1199,7 +1170,9 @@ def test_warn_on_async_function(testdir):
         async def test_2():
             pass
         def test_3():
-            return test_2()
+            coro = test_2()
+            coro.close()
+            return coro
     """
     )
     result = testdir.runpytest()
@@ -1308,7 +1281,25 @@ def test_tee_stdio_captures_and_live_prints(testdir):
     result.stderr.fnmatch_lines(["*@this is stderr@*"])
 
     # now ensure the output is in the junitxml
-    with open(os.path.join(testdir.tmpdir.strpath, "output.xml"), "r") as f:
+    with open(os.path.join(testdir.tmpdir.strpath, "output.xml")) as f:
         fullXml = f.read()
     assert "@this is stdout@\n" in fullXml
     assert "@this is stderr@\n" in fullXml
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows raises `OSError: [Errno 22] Invalid argument` instead",
+)
+def test_no_brokenpipeerror_message(testdir: Testdir) -> None:
+    """Ensure that the broken pipe error message is supressed.
+
+    In some Python versions, it reaches sys.unraisablehook, in others
+    a BrokenPipeError exception is propagated, but either way it prints
+    to stderr on shutdown, so checking nothing is printed is enough.
+    """
+    popen = testdir.popen((*testdir._getpytestargs(), "--help"))
+    popen.stdout.close()
+    ret = popen.wait()
+    assert popen.stderr.read() == b""
+    assert ret == 1

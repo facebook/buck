@@ -31,7 +31,7 @@ you will see the return value of the function call:
 
     $ pytest test_assert1.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 1 item
@@ -98,7 +98,7 @@ and if you need to have access to the actual exception info you may use:
             f()
         assert "maximum recursion" in str(excinfo.value)
 
-``excinfo`` is a ``ExceptionInfo`` instance, which is a wrapper around
+``excinfo`` is an ``ExceptionInfo`` instance, which is a wrapper around
 the actual exception raised.  The main attributes of interest are
 ``.type``, ``.value`` and ``.traceback``.
 
@@ -188,7 +188,7 @@ if you run this module:
 
     $ pytest test_assert2.py
     =========================== test session starts ============================
-    platform linux -- Python 3.x.y, pytest-5.x.y, py-1.x.y, pluggy-0.x.y
+    platform linux -- Python 3.x.y, pytest-6.x.y, py-1.x.y, pluggy-0.x.y
     cachedir: $PYTHON_PREFIX/.pytest_cache
     rootdir: $REGENDOC_TMPDIR
     collected 1 item
@@ -294,8 +294,6 @@ Assertion introspection details
 -------------------------------
 
 
-
-
 Reporting details about a failing assertion is achieved by rewriting assert
 statements before they are run.  Rewritten assert statements put introspection
 information into the assertion failure message.  ``pytest`` only rewrites test
@@ -303,7 +301,7 @@ modules directly discovered by its test collection process, so **asserts in
 supporting modules which are not themselves test modules will not be rewritten**.
 
 You can manually enable assertion rewriting for an imported module by calling
-`register_assert_rewrite <https://docs.pytest.org/en/latest/writing_plugins.html#assertion-rewriting>`_
+`register_assert_rewrite <https://docs.pytest.org/en/stable/writing_plugins.html#assertion-rewriting>`_
 before you import it (a good place to do that is in your root ``conftest.py``).
 
 For further information, Benjamin Peterson wrote up `Behind the scenes of pytest's new assertion rewriting <http://pybites.blogspot.com/2011/07/behind-scenes-of-pytests-new-assertion.html>`_.
@@ -342,15 +340,3 @@ If this is the case you have two options:
   ``PYTEST_DONT_REWRITE`` to its docstring.
 
 * Disable rewriting for all modules by using ``--assert=plain``.
-
-
-
-   Add assert rewriting as an alternate introspection technique.
-
-
-   Introduce the ``--assert`` option. Deprecate ``--no-assert`` and
-   ``--nomagic``.
-
-
-   Removes the ``--no-assert`` and ``--nomagic`` options.
-   Removes the ``--assert=reinterp`` option.

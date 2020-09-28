@@ -251,6 +251,15 @@ public class BuckArgsMethods {
   }
 
   @VisibleForTesting
+  protected static void handleBuckFixArgs(
+      List<String> args, ImmutableMap<String, String> clientEnvironment) {
+    if (clientEnvironment.containsKey("BUCK_POST_RUN_FILES")) {
+      args.add("--command-args-file");
+      args.add(clientEnvironment.get("BUCK_POST_RUN_FILES"));
+    }
+  }
+
+  @VisibleForTesting
   protected static void handleIsolationArgs(List<String> args) {
     int isolationPrefixIndex = args.indexOf("--isolation_prefix");
 
@@ -311,6 +320,7 @@ public class BuckArgsMethods {
     addArgsFromEnv(args, clientEnvironment);
     adjustHelpArgs(args);
     handleIsolationArgs(args);
+    handleBuckFixArgs(args, clientEnvironment);
 
     return ImmutableList.<String>builderWithExpectedSize(args.size() + passThroughArgs.size())
         .addAll(args)

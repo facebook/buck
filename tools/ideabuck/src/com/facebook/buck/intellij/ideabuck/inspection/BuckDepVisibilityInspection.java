@@ -31,6 +31,7 @@ import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
@@ -62,7 +63,8 @@ public class BuckDepVisibilityInspection extends LocalInspectionTool {
     public static final Set<String> SUPPORTED_PARAMETER_NAMES =
         new HashSet<>(
             Arrays.asList("deps", "exported_deps", "provided_deps", "exported_provided_deps"));
-    private static final String DEP_VISIBILITY_FIX_DESCRIPTION = "Buck dep not visible";
+    private static final String DEP_VISIBILITY_FIX_DESCRIPTION =
+        "Not visible to specified Buck dep";
     private static final ProblemHighlightType DEP_VISIBILITY_FIX_HIGHLIGHT_TYPE =
         ProblemHighlightType.GENERIC_ERROR;
     private final ProblemsHolder mHolder;
@@ -90,12 +92,20 @@ public class BuckDepVisibilityInspection extends LocalInspectionTool {
       if (depTargetBuckFile == null) {
         return;
       }
-      BuckVisibilityState buckVisibilityState =
-          getVisibilityState(project, buckTargetLocator, depTargetBuckFile, depTargetPattern);
+      Pair<BuckVisibilityState, BuckListMaker> visibilityStateListPair =
+          getVisibilityStateWithList(
+              project, buckTargetLocator, depTargetBuckFile, depTargetPattern);
+      BuckVisibilityState buckVisibilityState = visibilityStateListPair.getFirst();
+      BuckListMaker buckListMaker = visibilityStateListPair.getSecond();
       if (buckVisibilityState.getVisibility(parentTargetPattern.asBuckTarget().orElse(null))
-          == BuckVisibilityState.VisibleState.NOT_VISIBLE) {
+              == BuckVisibilityState.VisibleState.NOT_VISIBLE
+          && buckListMaker != null) {
         mHolder.registerProblem(
-            buckString, DEP_VISIBILITY_FIX_DESCRIPTION, DEP_VISIBILITY_FIX_HIGHLIGHT_TYPE);
+            buckString,
+            DEP_VISIBILITY_FIX_DESCRIPTION,
+            DEP_VISIBILITY_FIX_HIGHLIGHT_TYPE,
+            new BuckInsertTargetToVisibilityQuickFix(
+                parentTargetPattern, depTargetPattern, buckListMaker));
       }
     }
 
@@ -137,7 +147,7 @@ public class BuckDepVisibilityInspection extends LocalInspectionTool {
       return buckTargetLocator.resolve(buckFile, buckTargetPattern).orElse(null);
     }
 
-    private static BuckVisibilityState getVisibilityState(
+    private static Pair<BuckVisibilityState, BuckListMaker> getVisibilityStateWithList(
         Project project,
         BuckTargetLocator buckTargetLocator,
         VirtualFile buckFile,
@@ -147,7 +157,7 @@ public class BuckDepVisibilityInspection extends LocalInspectionTool {
           BuckPsiUtils.findTargetInPsiTree(psiFile, buckTargetPattern.getRuleName().orElse(null));
       // If build rule can't be found, assume visibility cannot be determined
       if (buckFunctionTrailer == null) {
-        return new BuckVisibilityState(BuckVisibilityState.VisibleState.UNKNOWN);
+        return new Pair<>(new BuckVisibilityState(BuckVisibilityState.VisibleState.UNKNOWN), null);
       }
       // Find the list of deps listed under visibility
       BuckArgument visibilityArgument =
@@ -157,34 +167,40 @@ public class BuckDepVisibilityInspection extends LocalInspectionTool {
               .orElse(null);
       // Visibility wasn't found, assume visibility limited to package
       if (visibilityArgument == null) {
-        return new BuckVisibilityState(
-            Collections.singletonList(buckTargetPattern.asPackageMatchingPattern()));
+        return new Pair<>(
+            new BuckVisibilityState(
+                Collections.singletonList(buckTargetPattern.asPackageMatchingPattern())),
+            null);
       }
       BuckListMaker visibilityListMaker =
           PsiTreeUtil.findChildOfType(visibilityArgument, BuckListMaker.class);
       if (visibilityListMaker == null) {
-        return new BuckVisibilityState(BuckVisibilityState.VisibleState.UNKNOWN);
+        return new Pair<>(new BuckVisibilityState(BuckVisibilityState.VisibleState.UNKNOWN), null);
       }
       List<String> visibilities =
           visibilityListMaker.getExpressionListOrComprehension().getExpressionList().stream()
               .map(BuckExpression::getStringValue)
               .collect(Collectors.toList());
       if (visibilities.contains(null)) {
-        return new BuckVisibilityState(BuckVisibilityState.VisibleState.UNKNOWN);
+        return new Pair<>(
+            new BuckVisibilityState(BuckVisibilityState.VisibleState.UNKNOWN), visibilityListMaker);
       }
       if (visibilities.contains("PUBLIC")) {
-        return new BuckVisibilityState(BuckVisibilityState.VisibleState.VISIBLE);
+        return new Pair<>(
+            new BuckVisibilityState(BuckVisibilityState.VisibleState.VISIBLE), visibilityListMaker);
       }
       // Convert the raw target strings into BuckTargetPatterns
-      return new BuckVisibilityState(
-          visibilities.stream()
-              .map(
-                  v ->
-                      BuckTargetPattern.parse(v)
-                          .flatMap(p -> buckTargetLocator.resolve(buckFile, p))
-                          .orElse(null))
-              .filter(Objects::nonNull)
-              .collect(Collectors.toList()));
+      return new Pair<>(
+          new BuckVisibilityState(
+              visibilities.stream()
+                  .map(
+                      v ->
+                          BuckTargetPattern.parse(v)
+                              .flatMap(p -> buckTargetLocator.resolve(buckFile, p))
+                              .orElse(null))
+                  .filter(Objects::nonNull)
+                  .collect(Collectors.toList())),
+          visibilityListMaker);
     }
   }
 }

@@ -26,11 +26,13 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.MountInfo;
+import com.facebook.eden.thrift.MountState;
 import com.facebook.thrift.TException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -57,8 +59,14 @@ public class EdenClientTest {
   public void getMountInfosDelegatesToThriftClient() throws EdenError, IOException, TException {
     List<MountInfo> mountInfos =
         ImmutableList.of(
-            new MountInfo("/home/mbolin/src/buck", /* edenClientPath */ ""),
-            new MountInfo("/home/mbolin/src/eden", /* edenClientPath */ ""));
+            new MountInfo(
+                "/home/mbolin/src/buck".getBytes(StandardCharsets.UTF_8), /* edenClientPath */
+                new byte[0],
+                MountState.RUNNING),
+            new MountInfo(
+                "/home/mbolin/src/eden".getBytes(StandardCharsets.UTF_8), /* edenClientPath */
+                new byte[0],
+                MountState.RUNNING));
     expect(thriftClient.listMounts()).andReturn(mountInfos);
     replay(thriftClient);
     assertEquals(mountInfos, pool.getClient().listMounts());

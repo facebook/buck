@@ -159,7 +159,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                 rootCell,
                 fileHasher,
                 strategyConfig.getIgnorePaths(),
-                consoleParams),
+                consoleParams,
+                remoteExecutionConfig.sanitizeBuckConfig()),
             workerRequirementsProvider,
             MoreExecutors.listeningDecorator(
                 MostExecutors.newMultiThreadExecutor("remote-exec", strategyConfig.getThreads())),

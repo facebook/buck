@@ -5,6 +5,12 @@ prebuilt_python_library(
 )
 
 prebuilt_python_library(
+    name = "iniconfig-1.0.1",
+    binary_src = "iniconfig-1.0.1-py3-none-any.whl",
+    visibility = ["//third-party/py/pytest/..."],
+)
+
+prebuilt_python_library(
     name = "py-1.8.1",
     binary_src = "py-1.8.1-py2.py3-none-any.whl",
     visibility = ["//third-party/py/pytest/..."],

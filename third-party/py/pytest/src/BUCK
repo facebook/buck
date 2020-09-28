@@ -10,6 +10,7 @@ python_library(
         "//third-party/py/pytest/dependencies:attrs-19.3.0",
         "//third-party/py/pytest/dependencies:colorama-0.4.3",
         "//third-party/py/pytest/dependencies:importlib_metadata-1.6.0",
+        "//third-party/py/pytest/dependencies:iniconfig-1.0.1",
         "//third-party/py/pytest/dependencies:more_itertools-8.3.0",
         "//third-party/py/pytest/dependencies:packaging-20.4",
         "//third-party/py/pytest/dependencies:pluggy-1.8.1",

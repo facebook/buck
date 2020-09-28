@@ -37,6 +37,7 @@ import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.cxx.toolchain.MachoDylibStubParams;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
+import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.SymbolNameTool;
@@ -47,6 +48,7 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -263,7 +265,11 @@ public class CxxPlatforms {
         defaultPlatform.getStaticLibraryExtension(),
         defaultPlatform.getObjectFileExtension(),
         defaultPlatform.getSharedLibraryInterfaceParams(),
-        defaultPlatform.getCompilerDebugPathSanitizer(),
+        config
+            .getPrefixMapFormat()
+            .<DebugPathSanitizer>map(
+                format -> new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of(), false, format))
+            .orElse(defaultPlatform.getCompilerDebugPathSanitizer()),
         defaultPlatform.getFlagMacros(),
         defaultPlatform.getBinaryExtension(),
         defaultPlatform.getHeaderVerification(),

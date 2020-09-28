@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
@@ -31,8 +32,11 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -42,6 +46,7 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.python.PythonBuckConfig.PackageStyle;
 import com.facebook.buck.features.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.testutil.ProcessResult;
@@ -70,8 +75,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.hamcrest.comparator.ComparatorMatcherBuilder;
 import org.junit.Assert;
@@ -220,6 +228,69 @@ public class PythonBinaryIntegrationTest {
     assumeThatNativeLibsAreSupported();
     ProcessResult result = workspace.runBuckCommand("run", ":bin-with-native-libs").assertSuccess();
     assertThat(result.getStdout(), containsString("HELLO WORLD"));
+  }
+
+  @Test
+  public void linkerAndVersionScriptsExist() throws Exception {
+    assumeThatNativeLibsAreSupported();
+    assumeThat(nativeLinkStrategy, is(NativeLinkStrategy.MERGED));
+
+    BuildTarget target = BuildTargetFactory.newInstance(":bin-with-native-libs");
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    // Verify that the linker and version scripts exist
+    RelPath linkerScriptPath =
+        BuildTargetPaths.getGenPath(
+            filesystem,
+            target.withAppendedFlavors(InternalFlavor.of("omnibus-undefined-symbols-args")),
+            "%s/linker_script.txt");
+    RelPath versionScriptPath =
+        BuildTargetPaths.getGenPath(
+            filesystem,
+            target.withAppendedFlavors(InternalFlavor.of("omnibus-global-symbols-args")),
+            "%s/version_script.txt");
+    MatcherAssert.assertThat(
+        String.format("%s does not exist", linkerScriptPath),
+        Files.exists(workspace.getPath(linkerScriptPath)),
+        equalTo(true));
+    MatcherAssert.assertThat(
+        String.format("%s does not exist", versionScriptPath),
+        Files.exists(workspace.getPath(versionScriptPath)),
+        equalTo(true));
+
+    // Verify that the linker script contains "bar"
+    List<String> linkerScriptLines = filesystem.readLines(workspace.getPath(linkerScriptPath));
+    linkerScriptLines.contains("EXTERN(\"bar\")");
+    // Verify that the version script contains "bar" under the global section
+    List<String> versionScriptLines = filesystem.readLines(workspace.getPath(versionScriptPath));
+    int indexOfGlobal = versionScriptLines.indexOf("  global:");
+    int indexOfLocal = versionScriptLines.indexOf("  local: *;");
+    int indexOfSymbol = versionScriptLines.indexOf("  \"bar\";");
+    assertTrue(indexOfGlobal < indexOfSymbol);
+    assertTrue(indexOfLocal > indexOfSymbol);
+
+    // Verify that the linker and version scripts are passed to the linker as args
+    Path linkerArgsPath =
+        workspace.getPath(
+            BuildTargetPaths.getScratchPath(
+                filesystem,
+                target.withAppendedFlavors(InternalFlavor.of("omnibus")),
+                "%s/linker.argsfile"));
+    MatcherAssert.assertThat(
+        String.format("%s does not exist", linkerArgsPath),
+        Files.exists(workspace.getPath(linkerArgsPath)),
+        equalTo(true));
+    List<String> linkerArgsLines = filesystem.readLines(linkerArgsPath);
+    assertNotSame(
+        -1,
+        Collections.indexOfSubList(
+            linkerArgsLines,
+            ImmutableList.of(
+                linkerScriptPath.toString(),
+                "-Wl,--version-script",
+                versionScriptPath.toString())));
   }
 
   @Test

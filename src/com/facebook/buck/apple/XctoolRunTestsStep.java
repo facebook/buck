@@ -543,8 +543,8 @@ class XctoolRunTestsStep implements Step {
           InputStreamReader esr =
               new InputStreamReader(launchedProcess.getStderr(), StandardCharsets.UTF_8);
           BufferedReader ebr = new BufferedReader(esr)) {
-        XctoolOutputParsing.streamOutputFromReader(br, listTestsOnlyHandler);
         stderr = CharStreams.toString(ebr).trim();
+        XctoolOutputParsing.streamOutputFromReader(br, listTestsOnlyHandler);
         listTestsResult = processExecutor.waitForLaunchedProcess(launchedProcess).getExitCode();
       }
 

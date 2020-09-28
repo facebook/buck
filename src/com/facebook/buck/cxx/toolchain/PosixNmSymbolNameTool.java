@@ -101,17 +101,44 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
   }
 
   @Override
+  public SourcePath creatGlobalSymbolsFile(
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams baseParams,
+      ActionGraphBuilder graphBuilder,
+      TargetConfiguration targetConfiguration,
+      BuildTarget target,
+      Iterable<? extends SourcePath> linkerInputs) {
+    Tool nm = this.nm.resolve(graphBuilder, targetConfiguration);
+    GlobalSymbolsFile rule =
+        graphBuilder.addToIndex(
+            new GlobalSymbolsFile(
+                target,
+                projectFilesystem,
+                baseParams
+                    .withDeclaredDeps(
+                        ImmutableSortedSet.<BuildRule>naturalOrder()
+                            .addAll(BuildableSupport.getDepsCollection(nm, graphBuilder))
+                            .addAll(graphBuilder.filterBuildRuleInputs(linkerInputs))
+                            .build())
+                    .withoutExtraDeps(),
+                nm,
+                linkerInputs,
+                withDownwardApi));
+    return rule.getSourcePathToOutput();
+  }
+
+  @Override
   public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
     return nm.getParseTimeDeps(targetConfiguration);
   }
 
-  private static class UndefinedSymbolsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+  private abstract static class SymbolsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     @AddToRuleKey private final Tool nm;
     @AddToRuleKey private final Iterable<? extends SourcePath> inputs;
     @AddToRuleKey private final boolean withDownwardApi;
 
-    public UndefinedSymbolsFile(
+    public SymbolsFile(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
@@ -124,15 +151,19 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
       this.withDownwardApi = withDownwardApi;
     }
 
-    private RelPath getUndefinedSymbolsPath() {
-      return BuildTargetPaths.getGenPath(
-          getProjectFilesystem(), getBuildTarget(), "%s/undefined_symbols.txt");
+    abstract String getSymbolsType();
+
+    abstract ImmutableList<String> getAdditionalCommandArgs();
+
+    private RelPath getSymbolsPath() {
+      String format = String.format("%%s/%s_symbols.txt", getSymbolsType());
+      return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), format);
     }
 
     @Override
     public ImmutableList<Step> getBuildSteps(
         BuildContext context, BuildableContext buildableContext) {
-      RelPath output = getUndefinedSymbolsPath();
+      RelPath output = getSymbolsPath();
 
       // Cache the symbols file.
       buildableContext.recordArtifact(output.getPath());
@@ -160,10 +191,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                     .add("-A")
                     // Generate output in a portable output format.
                     .add("-P")
-                    // Only list external symbols.
-                    .add("-g")
-                    // Only list undefined symbols.
-                    .add("-u")
+                    .addAll(getAdditionalCommandArgs())
                     .addAll(
                         StreamSupport.stream(inputs.spliterator(), false)
                             .map(context.getSourcePathResolver()::getAbsolutePath)
@@ -173,12 +201,13 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
 
             @Override
             public String getIsolatedStepDescription(IsolatedExecutionContext context) {
-              return "Use POSIX nm to read undefined symbols and write them to a file";
+              return String.format(
+                  "Use POSIX nm to read %s symbols and write them to a file", getSymbolsType());
             }
 
             @Override
             public String getShortName() {
-              return "generate-undefined-symbols";
+              return String.format("generate-%s-symbols", getSymbolsType());
             }
 
             @Override
@@ -230,7 +259,61 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
 
     @Override
     public SourcePath getSourcePathToOutput() {
-      return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getUndefinedSymbolsPath());
+      return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getSymbolsPath());
+    }
+  }
+
+  private static class UndefinedSymbolsFile extends SymbolsFile {
+
+    public UndefinedSymbolsFile(
+        BuildTarget buildTarget,
+        ProjectFilesystem projectFilesystem,
+        BuildRuleParams buildRuleParams,
+        Tool nm,
+        Iterable<? extends SourcePath> inputs,
+        boolean withDownwardApi) {
+      super(buildTarget, projectFilesystem, buildRuleParams, nm, inputs, withDownwardApi);
+    }
+
+    @Override
+    String getSymbolsType() {
+      return "undefined";
+    }
+
+    @Override
+    ImmutableList<String> getAdditionalCommandArgs() {
+      return ImmutableList.<String>builder()
+          // Only list external symbols.
+          .add("-g")
+          // Only list undefined symbols.
+          .add("-u")
+          .build();
+    }
+  }
+
+  private static class GlobalSymbolsFile extends SymbolsFile {
+
+    public GlobalSymbolsFile(
+        BuildTarget buildTarget,
+        ProjectFilesystem projectFilesystem,
+        BuildRuleParams buildRuleParams,
+        Tool nm,
+        Iterable<? extends SourcePath> inputs,
+        boolean withDownwardApi) {
+      super(buildTarget, projectFilesystem, buildRuleParams, nm, inputs, withDownwardApi);
+    }
+
+    @Override
+    String getSymbolsType() {
+      return "global";
+    }
+
+    @Override
+    ImmutableList<String> getAdditionalCommandArgs() {
+      return ImmutableList.<String>builder()
+          // Only list external symbols.
+          .add("-g")
+          .build();
     }
   }
 }

@@ -135,6 +135,16 @@ public class WindowsLinker extends DelegatingTool implements Linker, HasImportLi
   }
 
   @Override
+  public ImmutableList<Arg> createGlobalSymbolsLinkerArgs(
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams baseParams,
+      ActionGraphBuilder graphBuilder,
+      BuildTarget target,
+      ImmutableList<? extends SourcePath> symbolFiles) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public Iterable<String> getNoAsNeededSharedLibsFlags() {
     return ImmutableList.of();
   }

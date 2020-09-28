@@ -170,7 +170,10 @@ public class DaemonIntegrationTest {
                 new FileOutputStreamFactory(),
                 WatchmanWatcher.FreshInstanceAction.NONE,
                 System.nanoTime(),
-                ImmutableList.copyOf(args));
+                ImmutableList.copyOf(args),
+                t -> {
+                  throw t;
+                });
         assertEquals("Unexpected exit code.", expectedExitCode, exitCode);
       } catch (InterruptedException e) {
         fail("Should not throw exception.");
