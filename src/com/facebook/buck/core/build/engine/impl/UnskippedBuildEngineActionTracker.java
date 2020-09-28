@@ -73,8 +73,9 @@ public class UnskippedBuildEngineActionTracker {
     acquireReference(action);
     if (action instanceof HasRuntimeDeps) {
       // Add references to rule's runtime deps since they cannot be skipped now.
-      ruleResolver
-          .getAllRules(((HasRuntimeDeps) action).getRuntimeDeps(ruleResolver)::iterator)
+      ((HasRuntimeDeps) action)
+          .getRuntimeDeps(ruleResolver)
+          .map(ruleResolver::getRule)
           .forEach(this::acquireReference);
     }
 
