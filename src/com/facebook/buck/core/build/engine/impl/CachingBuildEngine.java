@@ -47,10 +47,12 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.TopLevelRuleKeyCalculatedEvent;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.collect.SortedSets;
 import com.facebook.buck.util.concurrent.MoreFutures;
@@ -336,7 +338,12 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   private void registerTopLevelRule(BuildRule rule, BuckEventBus eventBus) {
-    unskippedRulesTracker.ifPresent(tracker -> tracker.registerTopLevelRule(rule, eventBus));
+    unskippedRulesTracker.ifPresent(
+        tracker -> {
+          try (Scope scope = LeafEvents.scope(eventBus, "register-top-level-rule")) {
+            tracker.registerTopLevelRule(rule, eventBus);
+          }
+        });
   }
 
   private void markRuleAsUsed(BuildRule rule, BuckEventBus eventBus) {
