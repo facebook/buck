@@ -16,116 +16,16 @@
 
 package com.facebook.buck.intellij.ideabuck.impl;
 
+import com.facebook.buck.intellij.ideabuck.PlatformTestCaseWithBuckCells;
 import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
-import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
-import com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider;
-import com.google.common.collect.Lists;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.testFramework.PlatformTestCase;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /** Integration test for {@link BuckTargetLocatorImpl}. */
-public class BuckTargetLocatorImplTest extends PlatformTestCase {
-
-  private Project project;
-  private BuckCellSettingsProvider buckCellSettingsProvider;
-  private BuckCell defaultCell;
-  private BuckTargetLocator buckTargetLocator;
-  private VirtualFile tempDir;
-
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    tempDir = getTempDir().createTempVDir();
-    project = getProject();
-    buckCellSettingsProvider = BuckCellSettingsProvider.getInstance(project);
-    defaultCell = setDefaultCell(null, null, null);
-    buckTargetLocator = BuckTargetLocator.getInstance(project);
-  }
-
-  // Helper methods
-
-  @NotNull
-  private <T> T unwrap(Optional<T> optional) {
-    T t = optional.orElse(null);
-    assertNotNull(t);
-    return t;
-  }
-
-  private <T> void assertOptionalEquals(T expected, Optional<T> actual) {
-    assertEquals(expected, actual.orElse(null));
-  }
-
-  public BuckCell createCell(
-      @Nullable String name, @Nullable String tempRelativePath, @Nullable String buildfileName) {
-    BuckCell cell = new BuckCell();
-    if (name != null) {
-      cell = cell.withName(name);
-    }
-    if (tempRelativePath != null) {
-      cell = cell.withRoot(Paths.get(tempDir.getPath()).resolve(tempRelativePath).toString());
-    }
-    if (buildfileName != null) {
-      cell = cell.withBuildFileName(buildfileName);
-    }
-    return cell;
-  }
-
-  public BuckCell setDefaultCell(
-      @Nullable String name, @Nullable String tempRelativePath, String buildfileName) {
-    BuckCell cell = createCell(name, tempRelativePath, buildfileName);
-    buckCellSettingsProvider.setCells(Collections.singletonList(cell));
-    return cell;
-  }
-
-  public BuckCell addCell(String name, String tempRelativePath, String buildfileName) {
-    BuckCell cell = createCell(name, tempRelativePath, buildfileName);
-    List<BuckCell> cells = Lists.newArrayList(buckCellSettingsProvider.getCells());
-    cells.add(cell);
-    buckCellSettingsProvider.setCells(cells);
-    return cell;
-  }
-
-  private Path createFile(BuckCell cell, String cellRelativePath) {
-    try {
-      String basePath = project.getBasePath();
-      String root = cell.getRoot().replace("$PROJECT_DIR$", basePath);
-      Path path = Paths.get(root).resolve(cellRelativePath);
-      path.getParent().toFile().mkdirs();
-      try (FileWriter writer = new FileWriter(path.toFile())) {
-        writer.write("Test:" + getName());
-      }
-      return path;
-    } catch (IOException e) {
-      fail("Failed to create test file: " + e.getMessage());
-      throw new RuntimeException("Failed");
-    }
-  }
-
-  private Path createFileInDefaultCell(String defaultCellRelativePath) {
-    return createFile(defaultCell, defaultCellRelativePath);
-  }
-
-  private VirtualFile asVirtualFile(@Nullable Path expectedPath) {
-    if (expectedPath == null) {
-      return null;
-    }
-    return project.getBaseDir().getFileSystem().refreshAndFindFileByPath(expectedPath.toString());
-  }
-
-  // Actual tests start here
-
+public class BuckTargetLocatorImplTest extends PlatformTestCaseWithBuckCells {
   // Test findPathForTarget and findVirtualFileForTarget together
 
   private void checkFindTarget(String targetString, Path expected) {
