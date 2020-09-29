@@ -26,6 +26,7 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckVisitor;
 import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.facebook.buck.intellij.ideabuck.visibility.BuckVisibilityState;
+import com.google.common.annotations.VisibleForTesting;
 import com.intellij.codeInspection.LocalInspectionTool;
 import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemHighlightType;
@@ -109,8 +110,9 @@ public class BuckDepVisibilityInspection extends LocalInspectionTool {
       }
     }
 
+    @VisibleForTesting
     @Nullable
-    private static BuckTargetPattern getParentBuckTargetPattern(
+    static BuckTargetPattern getParentBuckTargetPattern(
         BuckTargetLocator buckTargetLocator, PsiElement psiElement) {
       BuckFunctionTrailer buckFunctionTrailer =
           PsiTreeUtil.getParentOfType(psiElement, BuckFunctionTrailer.class);
@@ -128,8 +130,9 @@ public class BuckDepVisibilityInspection extends LocalInspectionTool {
       return BuckTargetPattern.parse(targetPath + targetName).orElse(null);
     }
 
+    @VisibleForTesting
     @Nullable
-    private static BuckTargetPattern getBuckTargetPatternFromBuckString(
+    static BuckTargetPattern getBuckTargetPatternFromBuckString(
         BuckTargetLocator buckTargetLocator, BuckString buckString) {
       VirtualFile buckFile = buckString.getContainingFile().getVirtualFile();
       // The parameter name should be one of the values from SUPPORTED_PARAMETER_NAMES
@@ -147,7 +150,8 @@ public class BuckDepVisibilityInspection extends LocalInspectionTool {
       return buckTargetLocator.resolve(buckFile, buckTargetPattern).orElse(null);
     }
 
-    private static Pair<BuckVisibilityState, BuckListMaker> getVisibilityStateWithList(
+    @VisibleForTesting
+    static Pair<BuckVisibilityState, BuckListMaker> getVisibilityStateWithList(
         Project project,
         BuckTargetLocator buckTargetLocator,
         VirtualFile buckFile,
