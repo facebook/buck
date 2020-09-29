@@ -85,7 +85,7 @@ def _buck_test_not_callable(module: str, data: str) -> Callable:
         @wraps(fn)
         def wrapped(repo: BuckRepo, *inner_args, **kwargs):
             src = Path(pkg_resources.resource_filename(module, data))
-            tgt = Path(repo.cwd) / Path(data)
+            tgt = Path(repo.cwd)
             os.makedirs(tgt, exist_ok=True)
             _copytree(src, tgt)
             response = fn(repo, *inner_args, **kwargs)
