@@ -36,6 +36,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -43,6 +44,7 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.CleanBuildShutdownException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.timing.Clock;
@@ -217,10 +219,13 @@ public class Build implements Closeable {
                 .collect(ImmutableSet.toImmutableSet()));
 
     // Calculate and post the number of rules that need to built.
-    int numRules = buildEngine.getNumRulesToBuild(rulesToBuild);
-    getExecutionContext()
-        .getBuckEventBus()
-        .post(BuildEvent.ruleCountCalculated(targetsToBuild, numRules));
+    try (Scope scope =
+        LeafEvents.scope(getExecutionContext().getBuckEventBus(), "count-num-rules-to-build")) {
+      int numRules = buildEngine.getNumRulesToBuild(rulesToBuild);
+      getExecutionContext()
+          .getBuckEventBus()
+          .post(BuildEvent.ruleCountCalculated(targetsToBuild, numRules));
+    }
     return rulesToBuild;
   }
 
