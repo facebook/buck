@@ -22,6 +22,8 @@ import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.ThrowableCauseIterable;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.log.ErrorLogRecord;
+import com.facebook.buck.log.memory.MemoryHandler;
 import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
 import com.facebook.buck.support.exceptions.handler.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.util.Console;
@@ -29,6 +31,8 @@ import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ExitCode;
 import java.nio.channels.ClosedByInterruptException;
 import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import javax.annotation.Nullable;
 
 /** The exception processor used by normal command in MainRunner. */
@@ -86,6 +90,18 @@ class MainExceptionProcessor implements ExceptionProcessor {
                     message = "Command was interrupted:";
                   }
                   LOG.warn(e, message);
+
+                  // Manually create and log error record with the correct BuildId
+                  LogRecord record = new LogRecord(Level.SEVERE, message);
+                  record.setThrown(e);
+                  record.setLoggerName(MainRunner.class.getName());
+                  ErrorLogRecord errorLogRecord =
+                      ErrorLogRecord.builder()
+                          .setRecord(record)
+                          .setBuildUuid(buildId.toString())
+                          .build();
+
+                  MemoryHandler.logErrorLogRecord(errorLogRecord);
                 }
               },
               augmentor.get());

@@ -17,10 +17,13 @@
 package com.facebook.buck.log.memory;
 
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.log.ErrorLogRecord;
 import com.facebook.buck.log.LogFormatter;
 import com.facebook.buck.slb.NoHealthyServersException;
+import com.facebook.buck.util.network.ScribeLogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -145,8 +148,42 @@ public class MemoryHandler extends Handler {
         }
       }
     }
+    if (recordsToLog != null) {
+      logRecords(recordsToLog);
+    }
   }
 
+  private void logRecords(List<LogRecord> recordsToLog) {
+    List<String> logs = new ArrayList<>();
+    LogRecord triggerRecord = recordsToLog.get(recordsToLog.size() - 1);
+    for (LogRecord record : recordsToLog) {
+      String formattedRecord = getFormatter().format(record);
+      logs.add(formattedRecord);
+    }
+    ImmutableList<String> contextLogs = ImmutableList.copyOf(logs);
+    ErrorLogRecord errorLogRecord =
+        ErrorLogRecord.builder()
+            .setRecord(Objects.requireNonNull(triggerRecord))
+            .setLogs(contextLogs)
+            .build();
+    logErrorLogRecord(errorLogRecord);
+    if (errorLogRecord.getMessage().contains("OutOfMemory")) {
+      ErrorLogRecord oomRecord =
+          ErrorLogRecord.builder().from(errorLogRecord).setCategory("OutOfMemory").build();
+      logErrorLogRecord(oomRecord);
+    }
+  }
+
+  /**
+   * Send the {@link ErrorLogRecord} to {@link ScribeLogger}.
+   *
+   * @param errorLogRecord
+   */
+  public static void logErrorLogRecord(ErrorLogRecord errorLogRecord) {
+    // Mark errorLogRecord as used (even in stripped case).
+    errorLogRecord.getClass().getClassLoader();
+
+  }
 
   @Override
   public void flush() {}
