@@ -7,7 +7,7 @@
     "contents" : [ {
       "type" : "file",
       "name" : "module.modulemap",
-      "external-contents" : "%s"
+      "external-contents" : "/real/path/overlayed.modulemap"
     } ]
   } ]
 }

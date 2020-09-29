@@ -7,11 +7,11 @@
     "contents" : [ {
       "type" : "file",
       "name" : "module.modulemap",
-      "external-contents" : "%s"
+      "external-contents" : "/real/path/overlayed.modulemap"
     }, {
       "type" : "file",
       "name" : "umbrella.h",
-      "external-contents" : "%s"
+      "external-contents" : "/real/path/umbrella/umbrella.h"
     } ]
   } ]
 }

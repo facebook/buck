@@ -6,11 +6,8 @@ java_test(
     resources = glob(["testdata/**"]),
     deps = [
         "//src/com/facebook/buck/apple/clang:clang",
-        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/io/file:testutil",
-        "//test/com/facebook/buck/io/filesystem:testutil",
-        "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/util:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",

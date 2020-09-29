@@ -16,8 +16,6 @@
 
 package com.facebook.buck.apple.clang;
 
-import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.types.Pair;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -49,8 +47,6 @@ public class VFSOverlay {
   @JsonProperty("case-sensitive")
   private final boolean case_sensitive = false;
 
-  private final ProjectFilesystem filesystem;
-
   @JsonProperty("roots")
   private ImmutableList<VirtualDirectory> computeRoots() {
     Multimap<Path, Pair<Path, Path>> byParent = MultimapBuilder.hashKeys().hashSetValues().build();
@@ -71,9 +67,8 @@ public class VFSOverlay {
 
   private final ImmutableSortedMap<Path, Path> overlays;
 
-  public VFSOverlay(ImmutableSortedMap<Path, Path> overlays, ProjectFilesystem filesystem) {
+  public VFSOverlay(ImmutableSortedMap<Path, Path> overlays) {
     this.overlays = overlays;
-    this.filesystem = filesystem;
   }
 
   public String render() throws IOException {
@@ -107,7 +102,7 @@ public class VFSOverlay {
     @JsonProperty private final Path name;
 
     @JsonProperty("external-contents")
-    private final RelPath realPath;
+    private final Path realPath;
 
     public VirtualFile(Path name, Path realPath) {
       Preconditions.checkState(
@@ -116,7 +111,7 @@ public class VFSOverlay {
               + "external contents field. Only absolute paths are currently supported.",
           realPath);
       this.name = name;
-      this.realPath = filesystem.relativize(realPath);
+      this.realPath = realPath;
     }
   }
 }
