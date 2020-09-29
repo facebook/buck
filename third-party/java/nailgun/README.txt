@@ -1,7 +1,8 @@
-nailgun-server-1.0.0.jar and nailgun-server-1.0.0-sources.jar were
-built from https://github.com/facebook/nailgun
+Repository: https://github.com/facebook/nailgun
+URL: https://search.maven.org/artifact/com.facebook/nailgun-server/1.0.1/jar
+Version: 1.0.1
 
-To regenerate these jars:
+Build Instructions:
 
  0) install maven (brew install maven)
  1) git clone https://github.com/facebook/nailgun
