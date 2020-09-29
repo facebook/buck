@@ -1,8 +1,19 @@
+python_library(
+    name = "touch-lib",
+    srcs = ["touch.py"],
+)
+
+python_binary(
+    name = "touch",
+    deps = [":touch-lib"],
+    main_module = "touch",
+)
+
 genrule(
     name = "bar",
     out = "bar",
-    bash = "touch $OUT",
-    cmd_exe = "echo \"\" > %OUT%",
+    bash = "$(exe :touch) $OUT",
+    cmd_exe = "$(exe :touch) %OUT%",
 )
 
 genrule(
@@ -16,8 +27,8 @@ genrule(
         ],
     },
     default_outs = ["baz"],
-    bash = "touch $OUT/bar && touch $OUT/baz",
-    cmd_exe = "(echo something)>%OUT%\\bar && (echo something)>%OUT%\\baz",
+    bash = "$(exe :touch) $OUT/bar && $(exe :touch) $OUT/baz",
+    cmd_exe = "$(exe :touch) %OUT%\\bar && $(exe :touch) %OUT%\\baz",
 )
 
 genrule(
@@ -30,8 +41,8 @@ genrule(
             "baz",
         ],
     },
-    bash = "touch $OUT/bar && touch $OUT/baz",
-    cmd_exe = "(echo something)>%OUT%\\bar && (echo something)>%OUT%\\baz",
+    bash = "$(exe :touch) $OUT/bar && $(exe :touch) $OUT/baz",
+    cmd_exe = "$(exe :touch) %OUT%\\bar && $(exe :touch) %OUT%\\baz",
 )
 
 genrule(
@@ -40,8 +51,8 @@ genrule(
         ":bar",
     ],
     out = "foo",
-    cmd = "touch $OUT",
-    cmd_exe = "echo \"\" > %OUT%",
+    cmd = "$(exe :touch) $OUT",
+    cmd_exe = "$(exe :touch) %OUT%",
 )
 
 genrule(
@@ -50,8 +61,8 @@ genrule(
         ":bar",
     ],
     out = "example",
-    cmd = "touch \"$OUT\"",
-    cmd_exe = "echo \"\" > \"%OUT%\"",
+    cmd = "$(exe :touch) \"$OUT\"",
+    cmd_exe = "$(exe :touch) \"%OUT%\"",
 )
 
 platform(
@@ -65,6 +76,6 @@ genrule(
     ],
     default_target_platform = ":pl",
     out = "foo",
-    cmd = "touch $OUT",
-    cmd_exe = "echo \"\" > %OUT%",
+    cmd = "$(exe :touch) $OUT",
+    cmd_exe = "$(exe :touch) %OUT%",
 )

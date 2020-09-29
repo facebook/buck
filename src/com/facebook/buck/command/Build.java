@@ -44,7 +44,6 @@ import com.facebook.buck.util.CleanBuildShutdownException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.Threads;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Preconditions;
@@ -163,8 +162,7 @@ public class Build implements Closeable {
       ProjectFilesystem filesystem = cell.getFilesystem();
       BuckPaths configuredPaths = filesystem.getBuckPaths();
       if (!configuredPaths.getConfiguredBuckOut().equals(configuredPaths.getBuckOut())
-          && buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink()
-          && Platform.detect() != Platform.WINDOWS) {
+          && buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink()) {
         BuckPaths unconfiguredPaths =
             configuredPaths.withConfiguredBuckOut(
                 RelPath.of(configuredPaths.getBuckOut().getPath()));

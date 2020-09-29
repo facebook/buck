@@ -16,12 +16,10 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.util.environment.Platform.WINDOWS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
@@ -52,7 +50,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ThriftRuleKeyDeserializer;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.MoreFiles;
 import java.io.IOException;
@@ -81,7 +78,10 @@ public class BuildCommandIntegrationTest {
     workspace.runBuckBuild("--just-build", "//:bar", "//:foo", "//:ex ample").assertSuccess();
     assertThat(
         workspace.getBuildLog().getAllTargets(),
-        Matchers.contains(BuildTargetFactory.newInstance("//:bar")));
+        Matchers.contains(
+            BuildTargetFactory.newInstance("//:bar"),
+            BuildTargetFactory.newInstance("//:touch"),
+            BuildTargetFactory.newInstance("//:touch-lib")));
   }
 
   @Test
@@ -94,7 +94,10 @@ public class BuildCommandIntegrationTest {
     // The entire "//:bar" rule is built, not just the artifacts associated with "//:bar[label]"
     assertThat(
         workspace.getBuildLog().getAllTargets(),
-        Matchers.contains(BuildTargetFactory.newInstance("//:bar")));
+        Matchers.contains(
+            BuildTargetFactory.newInstance("//:bar"),
+            BuildTargetFactory.newInstance("//:touch"),
+            BuildTargetFactory.newInstance("//:touch-lib")));
   }
 
   @Test
@@ -106,7 +109,10 @@ public class BuildCommandIntegrationTest {
         .assertSuccess();
     assertThat(
         workspace.getBuildLog().getAllTargets(),
-        Matchers.contains(BuildTargetFactory.newInstance("//:bar")));
+        Matchers.contains(
+            BuildTargetFactory.newInstance("//:bar"),
+            BuildTargetFactory.newInstance("//:touch"),
+            BuildTargetFactory.newInstance("//:touch-lib")));
   }
 
   @Test
@@ -235,8 +241,6 @@ public class BuildCommandIntegrationTest {
 
   @Test
   public void configuredBuckoutSymlinkinSubdirWorksWithoutCells() throws IOException {
-    assumeFalse(Platform.detect() == WINDOWS);
-
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
     ProcessResult runBuckResult =
