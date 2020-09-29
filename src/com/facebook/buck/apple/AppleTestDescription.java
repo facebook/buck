@@ -384,7 +384,6 @@ public class AppleTestDescription
                         swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
                         downwardApiConfig.isEnabledForApple(),
                         args.getTargetSdkVersion(),
-                        appleConfig.getResourceProcessingSeparateRuleFlag(),
                         appleConfig.getIncrementalBundlingEnabled(),
                         appleConfig.getCodeSignTypeOverride()));
 
@@ -570,39 +569,33 @@ public class AppleTestDescription
     ImmutableSortedSet.Builder<BuildRule> extraDepsBuilder = ImmutableSortedSet.naturalOrder();
     extraDepsBuilder.addAll(transitiveStaticLibraryDependencies);
 
-    Optional<SourcePath> maybeProcessedResourcesDir;
-    if (appleConfig.getResourceProcessingSeparateRuleFlag()) {
-      BuildTarget processResourcesTarget =
-          buildTarget
-              .withoutFlavors(SUPPORTED_FLAVORS)
-              .withAppendedFlavors(AppleProcessResources.FLAVOR);
-      AppleProcessResources processResources =
-          (AppleProcessResources)
-              graphBuilder.computeIfAbsent(
-                  processResourcesTarget,
-                  target ->
-                      new AppleProcessResources(
-                          target,
-                          projectFilesystem,
-                          graphBuilder,
-                          collectedResources.getResourceFiles(),
-                          collectedResources.getResourceVariantFiles(),
-                          ImmutableList.of(),
-                          false,
-                          appleCxxPlatform.getIbtool(),
-                          false,
-                          buildTarget,
-                          Optional.empty(),
-                          downwardApiConfig.isEnabledForApple(),
-                          appleCxxPlatform.getAppleSdk().getApplePlatform(),
-                          AppleBundleDestinations.platformDestinations(
-                              appleCxxPlatform.getAppleSdk().getApplePlatform()),
-                          appleConfig.getIncrementalBundlingEnabled()));
-      maybeProcessedResourcesDir = Optional.of(processResources.getSourcePathToOutput());
-      extraDepsBuilder.add(processResources);
-    } else {
-      maybeProcessedResourcesDir = Optional.empty();
-    }
+    BuildTarget processResourcesTarget =
+        buildTarget
+            .withoutFlavors(SUPPORTED_FLAVORS)
+            .withAppendedFlavors(AppleProcessResources.FLAVOR);
+    AppleProcessResources processResources =
+        (AppleProcessResources)
+            graphBuilder.computeIfAbsent(
+                processResourcesTarget,
+                target ->
+                    new AppleProcessResources(
+                        target,
+                        projectFilesystem,
+                        graphBuilder,
+                        collectedResources.getResourceFiles(),
+                        collectedResources.getResourceVariantFiles(),
+                        ImmutableList.of(),
+                        false,
+                        appleCxxPlatform.getIbtool(),
+                        false,
+                        buildTarget,
+                        Optional.empty(),
+                        downwardApiConfig.isEnabledForApple(),
+                        appleCxxPlatform.getAppleSdk().getApplePlatform(),
+                        AppleBundleDestinations.platformDestinations(
+                            appleCxxPlatform.getAppleSdk().getApplePlatform()),
+                        appleConfig.getIncrementalBundlingEnabled()));
+    extraDepsBuilder.add(processResources);
 
     BuildRuleParams newParams = params.withExtraDeps(extraDepsBuilder.build());
 
@@ -615,7 +608,7 @@ public class AppleTestDescription
         appleCxxPlatform,
         depBuildRuleSourcePaths,
         downwardApiConfig.isEnabledForApple(),
-        maybeProcessedResourcesDir);
+        processResources.getSourcePathToOutput());
   }
 
   private ImmutableSortedSet<BuildRule> collectTransitiveStaticLibraries(

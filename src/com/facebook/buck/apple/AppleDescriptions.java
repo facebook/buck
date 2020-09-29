@@ -772,7 +772,6 @@ public class AppleDescriptions {
       boolean sliceAppBundleSwiftRuntime,
       boolean withDownwardApi,
       Optional<String> minimumOSVersion,
-      boolean useSeparateRuleToProcessResources,
       boolean incrementalBundlingEnabled,
       Optional<AppleCodeSignType> codeSignTypeOverride) {
     AppleCxxPlatform appleCxxPlatform =
@@ -1246,39 +1245,29 @@ public class AppleDescriptions {
             RecursiveDependenciesMode.COPYING,
             filter);
 
-    Optional<SourcePath> maybeProcessedResourcesDir;
-    Optional<SourcePath> maybeProcessedResourcesContentHashesFilePath;
-    if (useSeparateRuleToProcessResources) {
-      BuildTarget processResourcesTarget =
-          stripBundleSpecificFlavors(buildTarget).withAppendedFlavors(AppleProcessResources.FLAVOR);
-      AppleProcessResources processResources =
-          (AppleProcessResources)
-              graphBuilder.computeIfAbsent(
-                  processResourcesTarget,
-                  target ->
-                      new AppleProcessResources(
-                          target,
-                          projectFilesystem,
-                          graphBuilder,
-                          collectedResources.getResourceFiles(),
-                          collectedResources.getResourceVariantFiles(),
-                          ibtoolFlagsUnwrapped,
-                          AppleBundleSupport.isLegacyWatchApp(unwrappedExtension, unwrappedBinary),
-                          appleCxxPlatform.getIbtool(),
-                          ibtoolModuleFlag.orElse(false),
-                          buildTarget,
-                          Optional.of(AppleBundle.getBinaryName(buildTarget, productName)),
-                          withDownwardApi,
-                          appleCxxPlatform.getAppleSdk().getApplePlatform(),
-                          destinations,
-                          incrementalBundlingEnabled));
-      maybeProcessedResourcesDir = Optional.of(processResources.getSourcePathToOutput());
-      maybeProcessedResourcesContentHashesFilePath =
-          processResources.getSourcePathToContentHashes();
-    } else {
-      maybeProcessedResourcesDir = Optional.empty();
-      maybeProcessedResourcesContentHashesFilePath = Optional.empty();
-    }
+    BuildTarget processResourcesTarget =
+        stripBundleSpecificFlavors(buildTarget).withAppendedFlavors(AppleProcessResources.FLAVOR);
+    AppleProcessResources processResources =
+        (AppleProcessResources)
+            graphBuilder.computeIfAbsent(
+                processResourcesTarget,
+                target ->
+                    new AppleProcessResources(
+                        target,
+                        projectFilesystem,
+                        graphBuilder,
+                        collectedResources.getResourceFiles(),
+                        collectedResources.getResourceVariantFiles(),
+                        ibtoolFlagsUnwrapped,
+                        AppleBundleSupport.isLegacyWatchApp(unwrappedExtension, unwrappedBinary),
+                        appleCxxPlatform.getIbtool(),
+                        ibtoolModuleFlag.orElse(false),
+                        buildTarget,
+                        Optional.of(AppleBundle.getBinaryName(buildTarget, productName)),
+                        withDownwardApi,
+                        appleCxxPlatform.getAppleSdk().getApplePlatform(),
+                        destinations,
+                        incrementalBundlingEnabled));
 
     Optional<SourcePath> nonProcessedResourcesContentHashesFileSourcePath;
     if (incrementalBundlingEnabled) {
@@ -1344,8 +1333,6 @@ public class AppleDescriptions {
         verifyResources,
         codesignFlags,
         codesignAdhocIdentity,
-        ibtoolModuleFlag,
-        ibtoolFlagsUnwrapped,
         codesignTimeout,
         copySwiftStdlibToFrameworks,
         sliceAppPackageSwiftRuntime,
@@ -1354,9 +1341,9 @@ public class AppleDescriptions {
         entitlementsReadyForCodeSign,
         dryRunCodeSigning,
         codeSignIdentityFingerprint,
-        maybeProcessedResourcesDir,
+        processResources.getSourcePathToOutput(),
         nonProcessedResourcesContentHashesFileSourcePath,
-        maybeProcessedResourcesContentHashesFilePath,
+        processResources.getSourcePathToContentHashes(),
         incrementalBundlingEnabled);
   }
 

@@ -89,9 +89,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String ENABLE_PROJECT_V2_SWIFT_INDEXING_FIX =
       "enable_project_v2_swift_indexing_fix";
 
-  private static final String RESOURCE_PROCESSING_SEPARATE_RULE =
-      "resource_processing_separate_rule";
-
   // TODO(T71539769): This is a temporary flag, remove after successful deployment
   private static final String TARGET_TRIPLE_ENABLED = "target_triple_enabled";
 
@@ -590,10 +587,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean getEnableProjectV2SwiftIndexingFix() {
     return delegate.getBooleanValue(APPLE_SECTION, ENABLE_PROJECT_V2_SWIFT_INDEXING_FIX, false);
-  }
-
-  public boolean getResourceProcessingSeparateRuleFlag() {
-    return delegate.getBooleanValue(APPLE_SECTION, RESOURCE_PROCESSING_SEPARATE_RULE, false);
   }
 
   public boolean getTargetTripleEnabled() {

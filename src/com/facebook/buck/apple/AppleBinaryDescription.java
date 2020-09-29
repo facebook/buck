@@ -424,7 +424,6 @@ public class AppleBinaryDescription
         swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
         downwardApiConfig.isEnabledForApple(),
         args.getTargetSdkVersion(),
-        appleConfig.getResourceProcessingSeparateRuleFlag(),
         appleConfig.getIncrementalBundlingEnabled(),
         appleConfig.getCodeSignTypeOverride());
   }

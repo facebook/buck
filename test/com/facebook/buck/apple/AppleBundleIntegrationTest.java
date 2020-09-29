@@ -1340,13 +1340,7 @@ public class AppleBundleIntegrationTest {
             this, "app_bundle_with_compiled_resources", tmp);
     workspace.setUp();
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
-    workspace
-        .runBuckCommand(
-            "build",
-            target.getFullyQualifiedName(),
-            "--config",
-            "apple.resource_processing_separate_rule=true")
-        .assertSuccess();
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
@@ -2002,7 +1996,6 @@ public class AppleBundleIntegrationTest {
 
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
     workspace.addBuckConfigLocalOption("apple", "incremental_bundling_enabled", "true");
-    workspace.addBuckConfigLocalOption("apple", "resource_processing_separate_rule", "true");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     {
@@ -2101,7 +2094,6 @@ public class AppleBundleIntegrationTest {
     filesystem.writeContentsToPath("", buildTriggerPath);
 
     workspace.addBuckConfigLocalOption("apple", "incremental_bundling_enabled", "true");
-    workspace.addBuckConfigLocalOption("apple", "resource_processing_separate_rule", "true");
     workspace.addBuckConfigLocalOption("apple", "codesign", "/usr/bin/true");
 
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#macosx-x86_64,no-debug");
@@ -2173,7 +2165,6 @@ public class AppleBundleIntegrationTest {
     filesystem.writeContentsToPath("", buildTriggerPath);
 
     workspace.addBuckConfigLocalOption("apple", "incremental_bundling_enabled", "true");
-    workspace.addBuckConfigLocalOption("apple", "resource_processing_separate_rule", "true");
     workspace.addBuckConfigLocalOption("apple", "codesign", "/usr/bin/true");
 
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
@@ -2242,7 +2233,6 @@ public class AppleBundleIntegrationTest {
     workspace.setUp();
 
     workspace.addBuckConfigLocalOption("apple", "incremental_bundling_enabled", "true");
-    workspace.addBuckConfigLocalOption("apple", "resource_processing_separate_rule", "true");
     workspace.addBuckConfigLocalOption("apple", "codesign", "/usr/bin/true");
 
     Path buildTriggerPath = Paths.get("App/BuildTrigger.m");

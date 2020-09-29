@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
@@ -53,14 +52,12 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
   private static final String CODE_BASENAME = "code";
 
   private final Path aggregationRoot;
-  private static final Logger LOG = Logger.get(AppleBundle.class);
   @AddToRuleKey private final ImmutableList<SourcePath> staticLibDeps;
   @AddToRuleKey private final AppleBundleResources resources;
   @AddToRuleKey private final ApplePlatform applePlatform;
   @AddToRuleKey private final Tool libTool;
-  @AddToRuleKey private final Tool ibTool;
   @AddToRuleKey private final boolean withDownwardApi;
-  @AddToRuleKey private final Optional<SourcePath> processedResourceDir;
+  @AddToRuleKey private final SourcePath processedResourceDir;
 
   AppleTestAggregatedDependencies(
       BuildTarget buildTarget,
@@ -71,13 +68,12 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
       AppleCxxPlatform appleCxxPlatform,
       ImmutableList<SourcePath> staticLibDeps,
       boolean withDownwardApi,
-      Optional<SourcePath> processedResourceDir) {
+      SourcePath processedResourceDir) {
     super(buildTarget, projectFilesystem, params);
     this.aggregationRoot = aggregationRoot;
     this.resources = resources;
     this.applePlatform = appleCxxPlatform.getAppleSdk().getApplePlatform();
     this.libTool = appleCxxPlatform.getLibtool();
-    this.ibTool = appleCxxPlatform.getIbtool();
     this.staticLibDeps = ImmutableList.copyOf(staticLibDeps);
     this.withDownwardApi = withDownwardApi;
     this.processedResourceDir = processedResourceDir;
@@ -106,39 +102,18 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), codeDir)));
 
-    if (processedResourceDir.isPresent()) {
-      AppleResourceProcessing.addStepsToCopyResources(
-          context,
-          stepsBuilder,
-          codeSignOnCopyPathsBuilder,
-          resources,
-          ImmutableList.of(),
-          resourcesDir,
-          AppleBundleDestinations.platformDestinations(applePlatform),
-          getProjectFilesystem(),
-          processedResourceDir.get(),
-          ImmutableMap::of,
-          Optional.empty());
-    } else {
-      AppleResourceProcessing.deprecated_addStepsToCopyResources(
-          context,
-          stepsBuilder,
-          codeSignOnCopyPathsBuilder,
-          resources,
-          ImmutableList.of(),
-          resourcesDir,
-          AppleBundleDestinations.platformDestinations(applePlatform),
-          getProjectFilesystem(),
-          ImmutableList.of(),
-          false,
-          applePlatform,
-          LOG,
-          ibTool,
-          false,
-          getBuildTarget(),
-          Optional.empty(),
-          withDownwardApi);
-    }
+    AppleResourceProcessing.addStepsToCopyResources(
+        context,
+        stepsBuilder,
+        codeSignOnCopyPathsBuilder,
+        resources,
+        ImmutableList.of(),
+        resourcesDir,
+        AppleBundleDestinations.platformDestinations(applePlatform),
+        getProjectFilesystem(),
+        processedResourceDir,
+        ImmutableMap::of,
+        Optional.empty());
 
     if (staticLibDeps.size() > 0) {
       RelPath argsFile =

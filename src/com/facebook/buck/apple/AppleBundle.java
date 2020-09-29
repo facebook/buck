@@ -43,7 +43,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
-import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.NativeTestable;
@@ -86,7 +85,6 @@ import javax.annotation.Nonnull;
 public class AppleBundle extends AbstractBuildRule
     implements NativeTestable, BuildRuleWithBinary, HasRuntimeDeps, BinaryBuildRule {
 
-  private static final Logger LOG = Logger.get(AppleBundle.class);
   public static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
   private static final String CODE_SIGN_DRY_RUN_ARGS_FILE = "BUCK_code_sign_args.plist";
 
@@ -109,8 +107,6 @@ public class AppleBundle extends AbstractBuildRule
   @AddToRuleKey private final AppleBundleResources resources;
 
   @AddToRuleKey private final ImmutableList<AppleBundlePart> bundleParts;
-
-  @AddToRuleKey private final Tool ibtool;
 
   @AddToRuleKey private final ImmutableSortedSet<BuildTarget> tests;
 
@@ -142,9 +138,6 @@ public class AppleBundle extends AbstractBuildRule
   private final Path binaryPath;
   private final Path bundleBinaryPath;
 
-  private final boolean ibtoolModuleFlag;
-  private final ImmutableList<String> ibtoolFlags;
-
   private final boolean cacheable;
   private final boolean verifyResources;
 
@@ -162,7 +155,7 @@ public class AppleBundle extends AbstractBuildRule
 
   private final Path infoPlistBundlePath;
 
-  @AddToRuleKey private final Optional<SourcePath> maybeProcessedResourcesDir;
+  @AddToRuleKey private final SourcePath processedResourcesDir;
 
   @AddToRuleKey private final Optional<SourcePath> nonProcessedResourcesContentHashesFileSourcePath;
 
@@ -189,8 +182,6 @@ public class AppleBundle extends AbstractBuildRule
       boolean verifyResources,
       ImmutableList<String> codesignFlags,
       Optional<String> codesignIdentity,
-      Optional<Boolean> ibtoolModuleFlag,
-      ImmutableList<String> ibtoolFlags,
       Duration codesignTimeout,
       boolean copySwiftStdlibToFrameworks,
       boolean sliceAppPackageSwiftRuntime,
@@ -199,7 +190,7 @@ public class AppleBundle extends AbstractBuildRule
       Optional<SourcePath> maybeEntitlementsFile,
       boolean dryRunCodeSigning,
       Optional<SourcePath> maybeCodeSignIdentityFingerprintFile,
-      Optional<SourcePath> maybeProcessedResourcesDir,
+      SourcePath processedResourcesDir,
       Optional<SourcePath> nonProcessedResourcesContentHashesFileSourcePath,
       Optional<SourcePath> processedResourcesContentHashesFileSourcePath,
       boolean incrementalBundlingEnabled) {
@@ -215,7 +206,6 @@ public class AppleBundle extends AbstractBuildRule
     this.destinations = destinations;
     this.resources = resources;
     this.bundleParts = bundleParts;
-    this.ibtool = appleCxxPlatform.getIbtool();
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
     this.bundleRoot =
         getBundleRoot(getProjectFilesystem(), getBuildTarget(), this.binaryName, this.extension);
@@ -228,11 +218,9 @@ public class AppleBundle extends AbstractBuildRule
     this.verifyResources = verifyResources;
     this.codesignFlags = codesignFlags;
     this.codesignIdentitySubjectName = codesignIdentity;
-    this.ibtoolModuleFlag = ibtoolModuleFlag.orElse(false);
-    this.ibtoolFlags = ibtoolFlags;
     this.dryRunCodeSigning = dryRunCodeSigning;
     this.maybeCodeSignIdentityFingerprintFile = maybeCodeSignIdentityFingerprintFile;
-    this.maybeProcessedResourcesDir = maybeProcessedResourcesDir;
+    this.processedResourcesDir = processedResourcesDir;
 
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
 
@@ -335,70 +323,32 @@ public class AppleBundle extends AbstractBuildRule
           resources, bundleParts, context.getSourcePathResolver(), destinations);
     }
 
-    if (maybeProcessedResourcesDir.isPresent()) {
-      if (incrementalBundlingEnabled) {
-        ImmutableSortedMap.Builder<RelPath, String> newContentHashesBuilder =
-            ImmutableSortedMap.orderedBy(RelPath.comparator());
-        Supplier<ImmutableMap<RelPath, String>> newContentHashesSupplier =
-            newContentHashesBuilder::build;
-        addStepsToComputeNewContentHashes(
-            context.getSourcePathResolver(), stepsBuilder, newContentHashesBuilder);
-        appendWriteNewContentHashesStep(
-            stepsBuilder, context, buildableContext, newContentHashesSupplier);
-      }
-
-      Optional<Supplier<ImmutableMap<RelPath, String>>> maybeNewContentHashesSupplier =
-          getCurrentBuildHashesSupplier(context, buildableContext, stepsBuilder);
-
-      AppleResourceProcessing.addStepsToCopyResources(
-          context,
-          stepsBuilder,
-          codeSignOnCopyPathsBuilder,
-          resources,
-          bundleParts,
-          bundleRoot,
-          destinations,
-          getProjectFilesystem(),
-          maybeProcessedResourcesDir.get(),
-          oldContentHashesSupplier,
-          maybeNewContentHashesSupplier);
-    } else {
-      AppleResourceProcessing.deprecated_addStepsToCopyResources(
-          context,
-          stepsBuilder,
-          codeSignOnCopyPathsBuilder,
-          resources,
-          bundleParts,
-          bundleRoot,
-          destinations,
-          getProjectFilesystem(),
-          ibtoolFlags,
-          isLegacyWatchApp,
-          platform,
-          LOG,
-          ibtool,
-          ibtoolModuleFlag,
-          getBuildTarget(),
-          Optional.of(binaryName),
-          withDownwardApi);
-
-      AppleResourceProcessing.deprecated_addVariantFileProcessingSteps(
-          resources,
-          context,
-          bundleRoot,
-          destinations,
-          stepsBuilder,
-          getProjectFilesystem(),
-          ibtoolFlags,
-          isLegacyWatchApp,
-          platform,
-          LOG,
-          ibtool,
-          ibtoolModuleFlag,
-          getBuildTarget(),
-          Optional.of(binaryName),
-          withDownwardApi);
+    if (incrementalBundlingEnabled) {
+      ImmutableSortedMap.Builder<RelPath, String> newContentHashesBuilder =
+          ImmutableSortedMap.orderedBy(RelPath.comparator());
+      Supplier<ImmutableMap<RelPath, String>> newContentHashesSupplier =
+          newContentHashesBuilder::build;
+      addStepsToComputeNewContentHashes(
+          context.getSourcePathResolver(), stepsBuilder, newContentHashesBuilder);
+      appendWriteNewContentHashesStep(
+          stepsBuilder, context, buildableContext, newContentHashesSupplier);
     }
+
+    Optional<Supplier<ImmutableMap<RelPath, String>>> maybeNewContentHashesSupplier =
+        getCurrentBuildHashesSupplier(context, buildableContext, stepsBuilder);
+
+    AppleResourceProcessing.addStepsToCopyResources(
+        context,
+        stepsBuilder,
+        codeSignOnCopyPathsBuilder,
+        resources,
+        bundleParts,
+        bundleRoot,
+        destinations,
+        getProjectFilesystem(),
+        processedResourcesDir,
+        oldContentHashesSupplier,
+        maybeNewContentHashesSupplier);
 
     if (codeSignType != AppleCodeSignType.SKIP) {
       Supplier<CodeSignIdentity> codeSignIdentitySupplier =

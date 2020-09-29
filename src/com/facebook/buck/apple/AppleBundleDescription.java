@@ -236,7 +236,6 @@ public class AppleBundleDescription
         swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
         downwardApiConfig.isEnabledForApple(),
         minOSVersion,
-        appleConfig.getResourceProcessingSeparateRuleFlag(),
         appleConfig.getIncrementalBundlingEnabled(),
         appleConfig.getCodeSignTypeOverride());
   }
