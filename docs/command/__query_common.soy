@@ -941,6 +941,13 @@ first finds the transitive closure of <code>//foo:bar</code>,
 and then lists all the tests associated with the targets in this transitive closure.
 </p>
 
+<p>
+Note that <code>testsof</code> works by looking
+for the <code>tests = [ ... ]</code> argument. If the <code>tests</code> argument
+is not present on a particular type of rule, <code>testsof</code> is expected to
+return empty results.
+</p>
+
 {$extras|noAutoescape}
 
 {/template}
