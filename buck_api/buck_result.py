@@ -16,6 +16,7 @@
 import xml.etree.ElementTree as ET
 from asyncio import subprocess
 from enum import Enum, auto
+from pathlib import Path
 from typing import Dict, List
 
 
@@ -167,10 +168,14 @@ class TestResult(BuckResult):
         stdout: bytes,
         stderr: bytes,
         encoding: str,
-        test_output_file: str,
+        test_output_file: Path,
     ) -> None:
-        self.test_root = ET.parse(test_output_file).getroot()
         super().__init__(process, stdout, stderr, encoding)
+        self.test_root = (
+            ET.parse(str(test_output_file)).getroot()
+            if test_output_file.exists()
+            else None
+        )
 
     def is_success(self) -> bool:
         """ Returns if a Test Result is successful"""
@@ -190,6 +195,8 @@ class TestResult(BuckResult):
 
     def get_tests(self) -> List[TestResultSummary]:
         """Returns a list of test result summaries"""
+        if not self.test_root:
+            return []
         test_list = []
         for tests in self.test_root:
             for testresult in tests.iter("testresult"):

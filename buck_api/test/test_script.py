@@ -127,25 +127,26 @@ def run_test(remain_args):
     target_name = data[0].rstrip("\n")
     status = data[1].rstrip("\n")
     result_type = data[2].rstrip("\n")
-    exitcode = data[3]
-    # creating xml file structure
-    data = ET.Element("tests")
-    test = ET.SubElement(data, "test")
-    test1 = ET.SubElement(test, "testresult")
-    test1.set("name", "test1")
-    test.set("name", target_name)
-    test1.set("status", status)
-    test1.set("type", result_type)
-    mydata = ET.tostring(data).decode("utf-8")
-    # creating a path to a xml file for test output
-    test_output_file = Path(args.xml.replace("--xml ", ""))
-    os.makedirs(test_output_file.parent, exist_ok=True)
-    with open(test_output_file, "w") as f2:
-        f2.write(mydata)
+    exitcode = int(data[3])
     print(args)
-    print(mydata)
+    if exitcode != 1:
+        # creating xml file structure
+        data = ET.Element("tests")
+        test = ET.SubElement(data, "test")
+        test1 = ET.SubElement(test, "testresult")
+        test1.set("name", "test1")
+        test.set("name", target_name)
+        test1.set("status", status)
+        test1.set("type", result_type)
+        test_output_xml = ET.tostring(data).decode("utf-8")
+        # creating a path to a xml file for test output
+        test_output_file = Path(args.xml.replace("--xml ", ""))
+        os.makedirs(test_output_file.parent, exist_ok=True)
+        with open(test_output_file, "w") as f2:
+            f2.write(test_output_xml)
+        print(test_output_xml)
     with open(target, "r") as target_file:
-        sys.exit(int(exitcode))
+        sys.exit(exitcode)
 
 
 FUNCTION_MAP = {
