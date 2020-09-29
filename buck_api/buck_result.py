@@ -177,14 +177,6 @@ class TestResult(BuckResult):
             else None
         )
 
-    def is_success(self) -> bool:
-        """ Returns if a Test Result is successful"""
-        return self.get_exit_code() == ExitCode.SUCCESS
-
-    def is_failure(self) -> bool:
-        """Returns if a Test Result fails for any reason"""
-        return self.get_exit_code() != ExitCode.SUCCESS
-
     def is_test_failure(self) -> bool:
         """Returns if a Test Result fails because of a test failure only"""
         return self.get_exit_code() == ExitCode.TEST_ERROR
