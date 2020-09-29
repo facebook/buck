@@ -2351,7 +2351,6 @@ public class ProjectGenerator {
                         bundleExtension -> {
                           switch (bundleExtension) {
                             case APP:
-                            case APPEX:
                             case PLUGIN:
                             case BUNDLE:
                             case XCTEST:
@@ -2362,6 +2361,7 @@ public class ProjectGenerator {
                               // a Swift runtime, so it must get bundled to ensure they run.
                               return true;
 
+                            case APPEX:
                             case FRAMEWORK:
                             case DSYM:
                               return false;
