@@ -1442,8 +1442,7 @@ public final class MainRunner {
           // consider making log_build_errors_inline enabled by default. No integrations have
           // actually done that, though, so the experience isn't good, or they don't know about
           // it, or there's some other problem with it.
-          // exitCode = exceptionProcessor.processException(e);
-          throw e;
+          exitCode = exceptionProcessor.processException(e);
         } finally {
           if (exitCode != ExitCode.SUCCESS) {
             // TODO(pjameson): Why is this here and not at the outermost error handling (i.e. why
