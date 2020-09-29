@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.external.utils;
+package com.facebook.buck.step.buildables;
 
-import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.external.model.ExternalAction;
+import com.facebook.buck.rules.modern.model.BuildableCommand;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.google.common.collect.ImmutableList;
 
-/** Constants used by external steps executing binary. */
-public class ExternalBinaryBuckConstants {
+/** Dummy {@link ExternalAction} for testing purposes. */
+public class FakeExternalAction implements ExternalAction {
 
-  private ExternalBinaryBuckConstants() {}
-
-  /**
-   * The path to the root cell associated with the current rule. See {@link
-   * IsolatedExecutionContext#getRuleCellRoot()}.
-   */
-  public static final String ENV_RULE_CELL_ROOT = "BUCK_RULE_CELL_ROOT";
+  @Override
+  public ImmutableList<IsolatedStep> getSteps(BuildableCommand buildableCommand) {
+    return ImmutableList.of();
+  }
 }

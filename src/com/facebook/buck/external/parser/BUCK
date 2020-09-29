@@ -10,8 +10,8 @@ java_immutables_library(
     deps = [
         "//src-gen:buildable-command-model",
         "//src/com/facebook/buck/downwardapi/utils:utils",
+        "//src/com/facebook/buck/external/constants:constants",
         "//src/com/facebook/buck/external/model:model",
-        "//src/com/facebook/buck/external/utils:utils",
         "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//third-party/java/guava:guava",

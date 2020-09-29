@@ -1,0 +1,10 @@
+java_library(
+    name = "constants",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
+    ],
+)

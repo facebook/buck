@@ -26,7 +26,7 @@ import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.StepEvent;
-import com.facebook.buck.external.utils.ExternalBinaryBuckConstants;
+import com.facebook.buck.external.constants.ExternalBinaryBuckConstants;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;

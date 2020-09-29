@@ -20,7 +20,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.downwardapi.utils.DownwardApiConstants;
-import com.facebook.buck.external.utils.ExternalBinaryBuckConstants;
+import com.facebook.buck.external.constants.ExternalBinaryBuckConstants;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
