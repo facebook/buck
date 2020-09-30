@@ -16,9 +16,8 @@
 
 package com.facebook.buck.intellij.ideabuck.configurations;
 
-import com.facebook.buck.intellij.ideabuck.api.BuckCellManager;
-import com.facebook.buck.intellij.ideabuck.config.BuckExecutableDetector;
 import com.facebook.buck.intellij.ideabuck.config.BuckExecutableSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.tool.BuckTool;
 import com.intellij.execution.BeforeRunTaskProvider;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.process.ProcessEvent;
@@ -75,13 +74,6 @@ public class BuckCommandBeforeRunTaskProvider
         .map(BuckExecutableSettingsProvider::getInstance)
         .map(BuckExecutableSettingsProvider::resolveBuckExecutable)
         .map(Paths::get);
-  }
-
-  private Optional<Path> getDefaultCellPath() {
-    return Optional.of(myProject)
-        .map(BuckCellManager::getInstance)
-        .flatMap(BuckCellManager::getDefaultCell)
-        .map(BuckCellManager.Cell::getRootPath);
   }
 
   @Override
@@ -164,24 +156,7 @@ public class BuckCommandBeforeRunTaskProvider
 
   @Nonnull
   private Tool createToolForTask(BuckCommandBeforeRunTask task) {
-    // Using copyFrom() as a hacky workaround for the visibility issue
-    // that Tool doesn't expose the setters setName() or setUseConsole().
-    Tool tool =
-        new Tool() {
-          @Override
-          public boolean isUseConsole() {
-            return true;
-          }
-
-          @Override
-          public String getName() {
-            return "buck " + String.join(" ", task.getArguments());
-          }
-        };
-    tool.copyFrom(tool);
-    getDefaultCellPath().ifPresent(path -> tool.setWorkingDirectory(path.toString()));
-    tool.setProgram(
-        getBuckExecutable().map(Path::toString).orElse(BuckExecutableDetector.DEFAULT_BUCK_NAME));
+    BuckTool tool = new BuckTool("buck " + String.join(" ", task.getArguments()), true, myProject);
     tool.setParameters(String.join(" ", task.getArguments()));
     return tool;
   }
