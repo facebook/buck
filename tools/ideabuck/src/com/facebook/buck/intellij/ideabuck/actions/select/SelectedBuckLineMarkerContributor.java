@@ -24,8 +24,11 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.BuckDotTrailer;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionTrailer;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckIdentifier;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckStatement;
+import com.facebook.buck.intellij.ideabuck.tool.BuckTool;
 import com.intellij.execution.lineMarker.RunLineMarkerContributor;
 import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
@@ -76,6 +79,34 @@ public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor 
     if (target == null) {
       return null;
     }
-    return new Info(BuckIcons.BUILD_RUN_TEST, new AnAction[] {}, it -> "Build this target");
+    return new Info(
+        BuckIcons.BUILD_RUN_TEST,
+        new AnAction[] {new FixedBuckRunAction(target)},
+        it -> "Build this target");
+  }
+
+  private static class FixedBuckRunAction extends AnAction {
+    private final BuckTarget target;
+
+    FixedBuckRunAction(BuckTarget target) {
+      this.target = target;
+    }
+
+    @Override
+    public void update(AnActionEvent e) {
+      e.getPresentation().setText("Build This Target with Buck");
+      e.getPresentation().setEnabled(true);
+    }
+
+    @Override
+    public void actionPerformed(AnActionEvent e) {
+      Project project = e.getProject();
+      if (project == null) {
+        return;
+      }
+      BuckTool tool = new BuckTool("buck build " + target, true, project);
+      tool.setParameters("build " + target.toString());
+      tool.execute(null, e.getDataContext(), 0, null);
+    }
   }
 }
