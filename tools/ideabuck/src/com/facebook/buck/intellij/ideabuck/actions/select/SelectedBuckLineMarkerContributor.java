@@ -25,10 +25,13 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionTrailer;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckIdentifier;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckStatement;
 import com.facebook.buck.intellij.ideabuck.tool.BuckTool;
+import com.google.common.collect.ImmutableList;
 import com.intellij.execution.lineMarker.RunLineMarkerContributor;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -42,6 +45,8 @@ import org.jetbrains.annotations.Nullable;
 
 /** Line markers for a Buck file, with actions available for appropriate Buck targets. */
 public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor {
+  private static List<String> RUNNABLE_TARGET_TYPES =
+      ImmutableList.of("cxx_binary", "java_binary", "sh_binary");
 
   @Nullable
   @Override
@@ -87,6 +92,9 @@ public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor 
     if (isTestTargetType(targetType)) {
       actions.add(new FixedBuckRunAction(FixedBuckRunAction.TEST_COMMAND, target));
     }
+    if (isRunnableTargetType(targetType)) {
+      actions.add(new FixedBuckRunAction(FixedBuckRunAction.RUN_COMMAND, target, true));
+    }
     return new Info(
         BuckIcons.BUILD_RUN_TEST, actions.toArray(new AnAction[0]), it -> "Build/Test this target");
   }
@@ -95,15 +103,26 @@ public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor 
     return targetType.endsWith("test");
   }
 
+  private static boolean isRunnableTargetType(String targetType) {
+    return RUNNABLE_TARGET_TYPES.contains(targetType);
+  }
+
   private static class FixedBuckRunAction extends AnAction {
     public static final String BUILD_COMMAND = "build";
     public static final String TEST_COMMAND = "test";
+    public static final String RUN_COMMAND = "run";
     private final String commandType;
     private final BuckTarget target;
+    private final boolean shouldGetAdditionalParams;
 
     FixedBuckRunAction(String commandType, BuckTarget target) {
+      this(commandType, target, false);
+    }
+
+    FixedBuckRunAction(String commandType, BuckTarget target, boolean shouldGetAdditionalParams) {
       this.commandType = commandType;
       this.target = target;
+      this.shouldGetAdditionalParams = shouldGetAdditionalParams;
     }
 
     @Override
@@ -118,8 +137,17 @@ public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor 
       if (project == null) {
         return;
       }
-      BuckTool tool = new BuckTool("buck " + commandType + " " + target, true, project);
-      tool.setParameters(commandType + " " + target);
+      String params =
+          shouldGetAdditionalParams
+              ? Messages.showInputDialog(
+                  project,
+                  "Input extra parameters for your Buck command",
+                  "Additional Params",
+                  IconLoader.getIcon("/icons/buck_icon.png"))
+              : "";
+      BuckTool tool =
+          new BuckTool("buck " + commandType + " " + target + " " + params, true, project);
+      tool.setParameters(commandType + " " + target + " " + params);
       tool.execute(null, e.getDataContext(), 0, null);
     }
   }
