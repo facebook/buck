@@ -29,10 +29,13 @@ import com.intellij.execution.lineMarker.RunLineMarkerContributor;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,7 +52,7 @@ public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor 
         && PsiTreeUtil.getParentOfType(psiElement, BuckDotTrailer.class) == null) {
       BuckStatement buckStatement = PsiTreeUtil.getParentOfType(psiElement, BuckStatement.class);
       if (buckStatement != null) {
-        return createInfo(getBuckTarget(buckStatement));
+        return createInfo(psiElement.getText(), getBuckTarget(buckStatement));
       }
     }
     return null;
@@ -75,26 +78,37 @@ public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor 
         .orElse(null);
   }
 
-  private Info createInfo(@Nullable BuckTarget target) {
+  private Info createInfo(String targetType, @Nullable BuckTarget target) {
     if (target == null) {
       return null;
     }
+    List<AnAction> actions = new ArrayList<>();
+    actions.add(new FixedBuckRunAction(FixedBuckRunAction.BUILD_COMMAND, target));
+    if (isTestTargetType(targetType)) {
+      actions.add(new FixedBuckRunAction(FixedBuckRunAction.TEST_COMMAND, target));
+    }
     return new Info(
-        BuckIcons.BUILD_RUN_TEST,
-        new AnAction[] {new FixedBuckRunAction(target)},
-        it -> "Build this target");
+        BuckIcons.BUILD_RUN_TEST, actions.toArray(new AnAction[0]), it -> "Build/Test this target");
+  }
+
+  private static boolean isTestTargetType(String targetType) {
+    return targetType.endsWith("test");
   }
 
   private static class FixedBuckRunAction extends AnAction {
+    public static final String BUILD_COMMAND = "build";
+    public static final String TEST_COMMAND = "test";
+    private final String commandType;
     private final BuckTarget target;
 
-    FixedBuckRunAction(BuckTarget target) {
+    FixedBuckRunAction(String commandType, BuckTarget target) {
+      this.commandType = commandType;
       this.target = target;
     }
 
     @Override
     public void update(AnActionEvent e) {
-      e.getPresentation().setText("Build This Target with Buck");
+      e.getPresentation().setText(StringUtil.capitalize(commandType) + " This Target With Buck");
       e.getPresentation().setEnabled(true);
     }
 
@@ -104,8 +118,8 @@ public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor 
       if (project == null) {
         return;
       }
-      BuckTool tool = new BuckTool("buck build " + target, true, project);
-      tool.setParameters("build " + target.toString());
+      BuckTool tool = new BuckTool("buck " + commandType + " " + target, true, project);
+      tool.setParameters(commandType + " " + target);
       tool.execute(null, e.getDataContext(), 0, null);
     }
   }
