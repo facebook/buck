@@ -473,12 +473,16 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   @Override
   public BuildEngine.BuildEngineResult build(
       BuildEngineBuildContext buildContext, ExecutionContext executionContext, BuildRule rule) {
-    // Keep track of all jobs that run asynchronously with respect to the build dep chain.  We want
-    // to make sure we wait for these before calling yielding the final build result.
-    registerTopLevelRule(rule, buildContext.getEventBus());
     ListenableFuture<BuildResult> resultFuture =
         getBuildRuleResultWithRuntimeDeps(rule, buildContext, executionContext, true);
-    return BuildEngine.BuildEngineResult.of(resultFuture);
+    return BuildEngine.BuildEngineResult.of(
+        Futures.transformAsync(
+            // Keep track of all jobs that run asynchronously with respect to the build dep chain.
+            // We want
+            // to make sure we wait for these before calling yielding the final build result.
+            service.submit(() -> registerTopLevelRule(rule, buildContext.getEventBus())),
+            unused -> resultFuture,
+            MoreExecutors.directExecutor()));
   }
 
   @Nullable
