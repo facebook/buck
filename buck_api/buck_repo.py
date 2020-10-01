@@ -107,7 +107,7 @@ class BuckRepo:
         return BuckProcess(
             awaitable_process,
             result_type=lambda proc, stdin, stdout, encoding: BuildResult(
-                proc, stdin, stdout, encoding, str(self.cwd), *argv
+                proc, stdin, stdout, encoding, *argv
             ),
             encoding=self.encoding,
         )

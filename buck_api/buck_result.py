@@ -106,11 +106,9 @@ class BuildResult(BuckResult):
         stdout: bytes,
         stderr: bytes,
         encoding: str,
-        cwd: str,
         *argv: str,
     ) -> None:
         self.args = argv[0]
-        self.cwd = cwd
         super().__init__(process, stdout, stderr, encoding)
 
     def is_build_failure(self) -> bool:
