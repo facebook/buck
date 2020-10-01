@@ -1,0 +1,31 @@
+python_library(
+    name = "files_signature-lib",
+    srcs = [
+        "files_signature.py",
+    ],
+    tests = [
+        ":test_files_signature",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+python_test(
+    name = "test_files_signature",
+    srcs = [
+        "test_files_signature.py",
+    ],
+    deps = [
+        ":files_signature-lib",
+    ],
+)
+
+python_binary(
+    name = "files_signature",
+    main = "files_signature.py",
+    visibility = ["PUBLIC"],
+)
+
+export_file(
+    name = "files_signature.py",
+    visibility = ["PUBLIC"],
+)
