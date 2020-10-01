@@ -110,7 +110,8 @@ public class RustLibraryIntegrationTest {
                 "rust.rustc_check_flags=-Dwarnings --cfg \"feature=\\\"warning\\\"\"",
                 "//messenger:messenger#check")
             .getStderr(),
-        containsString("error: method is never used: `unused`"));
+        Matchers.matchesPattern(
+            "(?s).*error: (?:method|associated function) is never used: `unused`.*"));
   }
 
   @Test

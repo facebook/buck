@@ -199,7 +199,7 @@ public class RustBinaryIntegrationTest {
     assertThat(
         workspace.runBuckBuild("//:xyzzy").assertSuccess().getStderr(),
         Matchers.allOf(
-            containsString("warning: constant item is never used: `foo`"),
+            Matchers.matchesPattern("(?s).*warning: constant( item)? is never used: `foo`.*"),
             containsString("warning: constant `foo` should have an upper case name")));
 
     BuckBuildLog buildLog = workspace.getBuildLog();
