@@ -30,7 +30,12 @@ async def test_build():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
+        repo = BuckRepo(
+            Path(test_script),
+            cwd=path_of_cwd,
+            encoding="utf-8",
+            inherit_existing_env=False,
+        )
         _create_file(path_of_cwd, "target_file_success", 0)
         result = await repo.build("//:target_file_success").wait()
         assert list(
@@ -47,7 +52,12 @@ async def test_build_with_flag():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
+        repo = BuckRepo(
+            Path(test_script),
+            cwd=path_of_cwd,
+            encoding="utf-8",
+            inherit_existing_env=False,
+        )
         _create_file(path_of_cwd, "target_file_success", 0)
         # test --show-output flag
         result = await repo.build("//:target_file_success --show-output").wait()
@@ -66,7 +76,12 @@ async def test_build_with_multiple_targets_flag():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
+        repo = BuckRepo(
+            Path(test_script),
+            cwd=path_of_cwd,
+            encoding="utf-8",
+            inherit_existing_env=False,
+        )
         target_folder = _create_directory(path_of_cwd, Path("targets"))
         target_files = [
             "target_file_success_1",
@@ -94,7 +109,12 @@ async def test_build_failed():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
+        repo = BuckRepo(
+            Path(test_script),
+            cwd=path_of_cwd,
+            encoding="utf-8",
+            inherit_existing_env=False,
+        )
 
         # testing failures
         _create_file(path_of_cwd, "target_file_build_failure", 1)
@@ -116,7 +136,9 @@ async def test_build_with_rel_cwd():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(Path(test_script), cwd=outer, encoding="utf-8")
+        repo = BuckRepo(
+            Path(test_script), cwd=outer, encoding="utf-8", inherit_existing_env=False
+        )
         _create_file(inner, "target_file_success", 0)
         result = await repo.build(
             "//:target_file_success", rel_cwd=inner.relative_to(outer)
@@ -136,7 +158,12 @@ async def test_run():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
+        repo = BuckRepo(
+            Path(test_script),
+            cwd=path_of_cwd,
+            encoding="utf-8",
+            inherit_existing_env=False,
+        )
         _create_file(path_of_cwd, "target_file_success", 0)
         result = await repo.run("//:target_file_success").wait()
         assert list(
@@ -154,7 +181,12 @@ async def test_run_failed():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
+        repo = BuckRepo(
+            Path(test_script),
+            cwd=path_of_cwd,
+            encoding="utf-8",
+            inherit_existing_env=False,
+        )
 
         # testing failures
         _create_file(path_of_cwd, "target_file_build_failure", 1)
@@ -173,7 +205,12 @@ async def test_clean():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
+        repo = BuckRepo(
+            Path(test_script),
+            cwd=path_of_cwd,
+            encoding="utf-8",
+            inherit_existing_env=False,
+        )
         await repo.build("//:target_file").wait()
         assert list(
             (path_of_cwd / "buck-out").iterdir()
@@ -192,7 +229,12 @@ async def test_kill():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
+        repo = BuckRepo(
+            Path(test_script),
+            cwd=path_of_cwd,
+            encoding="utf-8",
+            inherit_existing_env=False,
+        )
 
         await repo.build("//:target_file").wait()
         assert list(
@@ -214,7 +256,12 @@ async def test_test_passed():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
+        repo = BuckRepo(
+            Path(test_script),
+            cwd=path_of_cwd,
+            encoding="utf-8",
+            inherit_existing_env=False,
+        )
         _create_file(path_of_cwd, "target_file_success", 0)
         result = await repo.test("//:target_file_success").wait()
         assert list(
@@ -237,7 +284,12 @@ async def test_test_skipped():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
+        repo = BuckRepo(
+            Path(test_script),
+            cwd=path_of_cwd,
+            encoding="utf-8",
+            inherit_existing_env=False,
+        )
         # test skipped test
         _create_file(path_of_cwd, "target_file_skipped", "0")
         result = await repo.test("//:target_file_skipped").wait()
@@ -261,7 +313,12 @@ async def test_test_failed():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
+        repo = BuckRepo(
+            Path(test_script),
+            cwd=path_of_cwd,
+            encoding="utf-8",
+            inherit_existing_env=False,
+        )
 
         # testing failures
         _create_file(path_of_cwd, "target_file_test_failure", 32)
@@ -287,7 +344,12 @@ def test_buck_configs_context_manager():
         test_script = pkg_resources.resource_filename(
             "buck_api.test.buck_repo_test", "test_script.py"
         )
-        repo = BuckRepo(Path(test_script), cwd=path_of_cwd, encoding="utf-8")
+        repo = BuckRepo(
+            Path(test_script),
+            cwd=path_of_cwd,
+            encoding="utf-8",
+            inherit_existing_env=False,
+        )
         buck_config_path = Path(temp_dir) / Path(".buckconfig")
         assert not buck_config_path.exists()
         with repo.buck_config() as buck_config:

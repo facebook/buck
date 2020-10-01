@@ -28,16 +28,20 @@ class BuckRepo:
     """ Instantiates a BuckRepo object with a exectuable path """
 
     def __init__(
-        self, path_to_buck: Path, encoding: str, cwd: Optional[Path] = None
+        self,
+        path_to_buck: Path,
+        encoding: str,
+        inherit_existing_env: bool,
+        cwd: Optional[Path] = None,
     ) -> None:
         assert path_to_buck.exists(), str(path_to_buck)
         self.path_to_buck = path_to_buck
         self.cwd = Path() if cwd is None else cwd
         assert self.cwd.exists(), str(self.cwd)
         self.encoding = encoding
-        self.set_buckd(False)
         self._buck_config: Optional[BuckConfig] = None
         self._buck_config_local: Optional[BuckConfig] = None
+        self.create_env(inherit_existing_env)
         ######################################
         #  path_to_buck is the absolute path
         ######################################
@@ -69,9 +73,17 @@ class BuckRepo:
         Setting buckd env to value of toggle.
         toggle can be 0 for enabled and 1 for disabled
         """
-        child_environment = dict(os.environ)
-        child_environment["NO_BUCKD"] = str(int(toggle))
-        self.buckd_env = child_environment
+        self._env["NO_BUCKD"] = str(int(toggle))
+
+    def create_env(self, inherit_existing_env: bool) -> None:
+        self._env: Dict[str, str]
+        if inherit_existing_env:
+            self._env = dict(os.environ.copy())
+            for key in ("BUCK_ROOT_BUILD_ID", "NO_BUCKD", "BUCK_BUILD_ID"):
+                self._env.pop(key, None)
+        else:
+            self._env = {"PATH": os.environ["PATH"]}
+        self.set_buckd(False)
 
     def _get_cwd(self, rel_cwd: Optional[Path]) -> Path:
         if rel_cwd is None:
@@ -179,7 +191,7 @@ class BuckRepo:
             str(self.path_to_buck),
             cmd,
             cwd=self._get_cwd(rel_cwd),
-            env=self.buckd_env,
+            env=self._env,
             *argv,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

@@ -31,7 +31,12 @@ def repo() -> Iterator[BuckRepo]:
     """Returns a BuckRepo for testing"""
     with tempfile.TemporaryDirectory() as temp_dir:
         test_buck_binary = os.environ["TEST_BUCK_BINARY"]
-        repo = BuckRepo(Path(test_buck_binary), cwd=Path(temp_dir), encoding="utf-8")
+        repo = BuckRepo(
+            Path(test_buck_binary),
+            cwd=Path(temp_dir),
+            encoding="utf-8",
+            inherit_existing_env=False,
+        )
         with repo.buck_config() as buck_config:
             buck_config["buildfile"]["name"] = "BUCK.fixture"
         with repo.buck_config_local() as buck_config_local:
