@@ -31,7 +31,6 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
@@ -67,7 +66,6 @@ final class CellProviderImpl implements CellProvider {
   private final ProjectFilesystem rootFilesystem;
   private final BuckConfig rootConfig;
   private final CellPathResolver rootCellCellPathResolver;
-  private final BuckModuleManager moduleManager;
   private final ToolchainProviderFactory toolchainProviderFactory;
   private final ProjectFilesystemFactory projectFilesystemFactory;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
@@ -84,14 +82,12 @@ final class CellProviderImpl implements CellProvider {
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
       DefaultCellPathResolver rootCellCellPathResolver,
-      BuckModuleManager moduleManager,
       ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystemFactory projectFilesystemFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
     this.rootFilesystem = rootFilesystem;
     this.rootConfig = rootConfig;
     this.rootCellCellPathResolver = rootCellCellPathResolver;
-    this.moduleManager = moduleManager;
     this.toolchainProviderFactory = toolchainProviderFactory;
     this.projectFilesystemFactory = projectFilesystemFactory;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
@@ -128,7 +124,6 @@ final class CellProviderImpl implements CellProvider {
             rootCellCellPathResolver,
             toolchainProviderFactory,
             rootFilesystem,
-            moduleManager,
             rootConfig);
     cells.put(CanonicalCellName.rootCell(), rootCell);
   }
@@ -208,7 +203,7 @@ final class CellProviderImpl implements CellProvider {
             cellPathResolver.getCellNameResolver());
 
     RuleKeyConfiguration ruleKeyConfiguration =
-        ConfigRuleKeyConfigurationFactory.create(buckConfig, moduleManager);
+        ConfigRuleKeyConfigurationFactory.create(buckConfig);
 
     ToolchainProvider toolchainProvider =
         toolchainProviderFactory.create(buckConfig, cellFilesystem, ruleKeyConfiguration);

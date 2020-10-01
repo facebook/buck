@@ -19,7 +19,6 @@ package com.facebook.buck.core.cell.impl;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -34,7 +33,6 @@ public class LocalCellProviderFactory {
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
       DefaultCellPathResolver rootCellCellPathResolver,
-      BuckModuleManager moduleManager,
       ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystemFactory projectFilesystemFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
@@ -44,7 +42,6 @@ public class LocalCellProviderFactory {
         rootConfig,
         rootCellConfigOverrides,
         rootCellCellPathResolver,
-        moduleManager,
         toolchainProviderFactory,
         projectFilesystemFactory,
         unconfiguredBuildTargetFactory);

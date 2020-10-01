@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.rules.keys.config.impl.BuckBinaryHashProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -142,10 +141,11 @@ public class AuditBuildInfoCommand extends AbstractCommand {
   }
 
   private enum BuildInfoFields {
+    // TODO(cjhopman): Delete this.
     BUCK_BINARY_HASH {
       @Override
       String getValue() {
-        return BuckBinaryHashProvider.getBuckBinaryHash();
+        return "binary_hash_deprecated";
       }
     },
     BUCK_BUILD_COMMIT_ID {

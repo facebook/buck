@@ -30,9 +30,6 @@ import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.module.BuckModuleManager;
-import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
-import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
@@ -170,9 +167,6 @@ public abstract class IsolatedBuildableBuilder {
             buildTargetFactory,
             cellNameResolver);
 
-    BuckModuleManager moduleManager =
-        new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
-
     Console console = createConsole();
     ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
     ExecutableFinder executableFinder = new ExecutableFinder();
@@ -187,7 +181,6 @@ public abstract class IsolatedBuildableBuilder {
             buckConfig,
             CellConfig.EMPTY_INSTANCE,
             cellPathResolver,
-            moduleManager,
             toolchainProviderFactory,
             projectFilesystemFactory,
             buildTargetFactory);

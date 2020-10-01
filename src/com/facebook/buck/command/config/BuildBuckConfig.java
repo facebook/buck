@@ -52,20 +52,6 @@ public abstract class BuildBuckConfig implements ConfigView<BuckConfig> {
     return getDelegate().getInteger(CACHE_SECTION, "max_action_graph_cache_entries").orElse(1);
   }
 
-  /**
-   * Whether Buck should use Buck binary hash or git commit id as the core key in all rule keys.
-   *
-   * <p>The binary hash reflects the code that can affect the content of artifacts.
-   *
-   * <p>By default git commit id is used as the core key.
-   *
-   * @return <code>True</code> if binary hash should be used as the core key
-   */
-  @Value.Lazy
-  public boolean useBuckBinaryHash() {
-    return getDelegate().getBooleanValue(CACHE_SECTION, "use_buck_binary_hash", false);
-  }
-
   @Value.Lazy
   public int getKeySeed() {
     return parseInt(getDelegate().getValue(CACHE_SECTION, "key_seed").orElse("0"));

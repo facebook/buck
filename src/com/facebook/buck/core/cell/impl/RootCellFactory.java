@@ -22,7 +22,6 @@ import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -45,13 +44,12 @@ public class RootCellFactory {
       CellPathResolver rootCellCellPathResolver,
       ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystem rootFilesystem,
-      BuckModuleManager moduleManager,
       BuckConfig rootConfig) {
     Preconditions.checkState(
         !rootCellCellPathResolver.getCanonicalCellName(rootFilesystem.getRootPath()).isPresent(),
         "Root cell should be nameless");
     RuleKeyConfiguration ruleKeyConfiguration =
-        ConfigRuleKeyConfigurationFactory.create(rootConfig, moduleManager);
+        ConfigRuleKeyConfigurationFactory.create(rootConfig);
     ToolchainProvider toolchainProvider =
         toolchainProviderFactory.create(rootConfig, rootFilesystem, ruleKeyConfiguration);
 

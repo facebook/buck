@@ -449,15 +449,6 @@ class BuckTool(object):
     def _get_java_classpath(self):
         raise NotImplementedError()
 
-    def _get_buck_binary_hash(self):
-        """
-        Returns Buck binary hash
-
-        This hash reflects the code that can affect the content of artifacts.
-        """
-
-        raise NotImplementedError()
-
     def _unpack_modules(self):
         raise NotImplementedError()
 
@@ -1062,7 +1053,6 @@ class BuckTool(object):
                     "-Dbuck.git_commit_timestamp={0}".format(
                         self._get_buck_version_timestamp()
                     ),
-                    "-Dbuck.binary_hash={0}".format(self._get_buck_binary_hash()),
                     "-Dbuck.base_buck_out_dir={0}".format(
                         self._buck_project.get_buck_out_relative_dir()
                     ),

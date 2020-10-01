@@ -30,7 +30,6 @@ import org.junit.Test;
 
 public class AuditBuildInfoCommandTest {
 
-  private static final String BUCK_BINARY_HASH = "binaryHash";
   private static final String BUCK_BUILD_COMMIT_ID = "commitId";
   private static final String BUCK_BUILD_COMMIT_TIMESTAMP = "commitTimestamp";
   private static final String BUCK_BUILD_IS_DIRTY = "isDirty";
@@ -41,7 +40,6 @@ public class AuditBuildInfoCommandTest {
   public void setUp() {
     console = new TestConsole();
 
-    System.setProperty("buck.binary_hash", BUCK_BINARY_HASH);
     System.setProperty("buck.git_commit", BUCK_BUILD_COMMIT_ID);
     System.setProperty("buck.git_commit_timestamp", BUCK_BUILD_COMMIT_TIMESTAMP);
     System.setProperty("buck.git_dirty", BUCK_BUILD_IS_DIRTY);
@@ -54,7 +52,6 @@ public class AuditBuildInfoCommandTest {
 
     JsonNode jsonNode = ObjectMappers.READER.readTree(output);
 
-    assertEquals(BUCK_BINARY_HASH, jsonNode.get("buck_binary_hash").textValue());
     assertEquals(BUCK_BUILD_COMMIT_ID, jsonNode.get("buck_build_commit_id").textValue());
     assertEquals(
         BUCK_BUILD_COMMIT_TIMESTAMP, jsonNode.get("buck_build_commit_timestamp").textValue());
@@ -82,7 +79,6 @@ public class AuditBuildInfoCommandTest {
     Map<String, String> outputFields =
         Splitter.on("\n").trimResults().withKeyValueSeparator(" = ").split(output);
 
-    assertEquals(BUCK_BINARY_HASH, outputFields.get("buck_binary_hash"));
     assertEquals(BUCK_BUILD_COMMIT_ID, outputFields.get("buck_build_commit_id"));
     assertEquals(BUCK_BUILD_COMMIT_TIMESTAMP, outputFields.get("buck_build_commit_timestamp"));
     assertEquals(BUCK_BUILD_IS_DIRTY, outputFields.get("buck_build_is_dirty"));

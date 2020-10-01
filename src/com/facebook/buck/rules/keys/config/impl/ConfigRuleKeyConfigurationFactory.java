@@ -18,44 +18,20 @@ package com.facebook.buck.rules.keys.config.impl;
 
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.module.BuckModuleHashStrategy;
-import com.facebook.buck.core.module.BuckModuleManager;
-import com.facebook.buck.core.module.impl.DefaultBuckModuleHashStrategy;
 import com.facebook.buck.core.module.impl.NoOpBuckModuleHashStrategy;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 
 /** Creates {@link RuleKeyConfiguration} using information from {@link BuckConfig}. */
 public class ConfigRuleKeyConfigurationFactory {
 
-  public static RuleKeyConfiguration create(
-      BuckConfig buckConfig, BuckModuleManager moduleManager) {
+  /** Creates the configuration. */
+  public static RuleKeyConfiguration create(BuckConfig buckConfig) {
     long inputKeySizeLimit =
         buckConfig.getView(BuildBuckConfig.class).getBuildInputRuleKeyFileSizeLimit();
     return RuleKeyConfiguration.of(
         buckConfig.getView(BuildBuckConfig.class).getKeySeed(),
-        getCoreKey(buckConfig),
+        BuckVersion.getVersion(),
         inputKeySizeLimit,
-        createBuckModuleHashStrategy(buckConfig, moduleManager));
-  }
-
-  private static String getCoreKey(BuckConfig buckConfig) {
-    String coreKey;
-    if (buckConfig.getView(BuildBuckConfig.class).useBuckBinaryHash()) {
-      coreKey = BuckBinaryHashProvider.getBuckBinaryHash();
-    } else {
-      coreKey = BuckVersion.getVersion();
-    }
-    return coreKey;
-  }
-
-  private static BuckModuleHashStrategy createBuckModuleHashStrategy(
-      BuckConfig buckConfig, BuckModuleManager moduleManager) {
-    BuckModuleHashStrategy hashStrategy;
-    if (buckConfig.getView(BuildBuckConfig.class).useBuckBinaryHash()) {
-      hashStrategy = new DefaultBuckModuleHashStrategy(moduleManager);
-    } else {
-      hashStrategy = new NoOpBuckModuleHashStrategy();
-    }
-    return hashStrategy;
+        new NoOpBuckModuleHashStrategy());
   }
 }

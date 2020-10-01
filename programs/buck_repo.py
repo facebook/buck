@@ -49,9 +49,6 @@ RESOURCES = {
     "path_to_python_dsl": "python-dsl",
 }
 
-BUCK_BINARY_HASH_LOCATION = os.path.join(
-    "ant-out", "classes", "META-INF", "buck-binary-hash.txt"
-)
 BUCK_INFO_LOCATION = os.path.join("ant-out", "buck-info.json")
 
 
@@ -147,9 +144,6 @@ class BuckRepo(BuckTool):
                     continue
                 classpath_entries.append(line)
         return self._pathsep.join([self._join_buck_dir(p) for p in classpath_entries])
-
-    def _get_buck_binary_hash(self):
-        return self.__read_file(BUCK_BINARY_HASH_LOCATION)
 
     def __enter__(self):
         return self

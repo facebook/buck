@@ -755,7 +755,7 @@ public final class MainRunner {
       Optional<String> projectPrefix = projectPrefix(command, buckConfig, executionEnvironment);
 
       RuleKeyConfiguration ruleKeyConfiguration =
-          ConfigRuleKeyConfigurationFactory.create(buckConfig, moduleManager);
+          ConfigRuleKeyConfigurationFactory.create(buckConfig);
 
           previousBuckCoreKey(command, filesystem, buckConfig, ruleKeyConfiguration);
 
@@ -802,7 +802,6 @@ public final class MainRunner {
                   buckConfig,
                   command.getConfigOverrides(rootCellMapping),
                   rootCellCellPathResolver,
-                  moduleManager,
                   toolchainProviderFactory,
                   projectFilesystemFactory,
                   buildTargetFactory));

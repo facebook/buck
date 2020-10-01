@@ -76,10 +76,6 @@
     <equals arg1="${devbuild}" arg2="0" />
   </condition>
 
-  <property name="buck.hash.dir" value="${build.dir}/classes/META-INF"/>
-  <property name="buck.hash.file" value="${buck.hash.dir}/buck-binary-hash.txt"/>
-  <property name="buck.combined.hash.file" value="${buck.hash.dir}/buck-combined-binary-hash.txt"/>
-
   <property name="buck.info.file" value="${build.dir}/buck-info.json"/>
 
   <property name="modules.dir.name" value="buck-modules" />
@@ -321,7 +317,7 @@
        clear-successful-build must be first, and mark-successful-build last, in the list of dependencies.-->
   <target name="default" depends="clear-successful-build, compile, build-modules, copy-resources,
                                   dx, javac-plugin, report-generator-jar, create-classpath,
-                                  create-classpath-hash, gen-buck-info, mark-successful-build" />
+                                  gen-buck-info, mark-successful-build" />
 
   <target name="checkversion">
     <!-- The function Function class was only introduced in Java 8. -->
@@ -1065,28 +1061,6 @@
       <map from="${basedir}/" to=""/>
     </pathconvert>
     <echo file="${build.dir}/classpath/classpaths">${classpaths}</echo>
-  </target>
-
-  <target name="create-classpath-hash" depends="copy-resources, compile, dx, compile-bazel, javac-plugin,
-                                                report-generator-jar, create-classpath">
-    <delete file="${buck.hash.file}"/>
-    <checksum todir="${build.dir}/checksums" totalproperty="buck.hash.value">
-      <fileset dir="${build.dir}">
-        <include name="${classes.dir.name}/**"/>
-        <include name="${manual.gensrc.classes.dir.name}/**"/>
-        <include name="${android.annotations.classes.dir.name}/**"/>
-        <include name="${aosp.classes.dir.name}/**"/>
-        <include name="${dx.classes.dir.name}/**"/>
-        <include name="${tracing-api.classes.dir.name}/**"/>
-        <include name="${bootstrapper.classes.dir.name}/**"/>
-        <include name="${javac-plugin.classes.dir.name}/**"/>
-        <exclude name="${classes.dir.name}/${javac-plugin.location.dir.name}/${javac-plugin.jar.name}"/>
-      </fileset>
-      <fileset refid="buck.jars"/>
-      <fileset refid="third-party.jars"/>
-    </checksum>
-    <echo file="${buck.hash.file}">${buck.hash.value}</echo>
-    <echo>Generated Buck hash: ${buck.hash.value}</echo>
   </target>
 
   <target name="gen-buck-info">
