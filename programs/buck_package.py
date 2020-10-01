@@ -87,17 +87,19 @@ class BuckPackage(BuckTool):
                 return None
 
         if self._resource_subdir is None:
-            buck_version_uid = self._get_buck_version_uid()
-            java_version = self.get_buck_compiled_java_version()
+            resources_signature = self._get_resources_signature()
             resource_dir = self._get_resource_dir()
-            subdir = os.path.join(
-                resource_dir, buck_version_uid, "java-" + str(java_version)
-            )
+            subdir = os.path.join(resource_dir, resources_signature)
             self._lock_file = try_subdir(subdir)
             if self._lock_file:
                 self._resource_subdir = subdir
             else:
-                subdir = tempfile.mkdtemp(dir=resource_dir, prefix=buck_version_uid)
+                # TODO(cjhopman): This looks pretty sketchy. We work hard to
+                # use a consistent resources directory and this edge case just
+                # goes off and makes a totally different one.
+                # This should be looked into and at least documented about what
+                # it's doing and why it's justified.
+                subdir = tempfile.mkdtemp(dir=resource_dir, prefix=resources_signature)
                 self._lock_file = try_subdir(subdir)
                 if not self._lock_file:
                     raise Exception(
@@ -126,17 +128,6 @@ class BuckPackage(BuckTool):
         resource_path = os.path.join(self._get_resource_subdir(), resource.basename)
         if not os.path.exists(os.path.dirname(resource_path)):
             self.__create_dir(os.path.dirname(resource_path))
-
-        # special case to handle the buck fake version
-        # updating resources every time since they could change
-        # but fake version remains the same
-        if (self.has_fake_version() or self._get_buck_repo_dirty()) and os.path.exists(
-            resource_path
-        ):
-            if os.path.isfile(resource_path):
-                os.remove(resource_path)
-            elif os.path.isdir(resource_path):
-                shutil.rmtree(resource_path, ignore_errors=True)
 
         if not os.path.exists(resource_path):
             logging.debug("Unpacking %s into %s", resource.name, resource_path)

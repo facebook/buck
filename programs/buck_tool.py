@@ -431,6 +431,9 @@ class BuckTool(object):
     def _get_buck_version_timestamp(self):
         return self._package_info["timestamp"]
 
+    def _get_resources_signature(self):
+        return self._package_info["resources_signature"]
+
     def _get_buck_git_commit(self):
         raise NotImplementedError()
 
