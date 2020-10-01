@@ -456,17 +456,4 @@ public class BuckArgsMethodsTest {
     assertEquals(
         ImmutableList.of("build", "foo", "--config", "buck.base_buck_out_dir=foodir"), args);
   }
-
-  @Test
-  public void handleBuckFixArgs() {
-
-    ImmutableMap<String, String> env = ImmutableMap.of("BUCK_POST_RUN_FILES", "foofile");
-
-    List<String> args = new ArrayList<>();
-    args.add("build");
-    args.add("foo");
-
-    BuckArgsMethods.handleBuckFixArgs(args, env);
-    assertEquals(ImmutableList.of("build", "foo", "--command-args-file", "foofile"), args);
-  }
 }
