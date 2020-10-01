@@ -26,7 +26,7 @@
   kotlin_home = test/com/facebook/buck/toolchains/kotlin/kotlinc/
 [alias]
     buck = //programs:buck
-    buck-local = //programs:buck-local
+    buck-local = //programs:buck
     buck-android-support = //android/com/facebook/buck/android/support:buck-android-support
     eden = //test/com/facebook/buck/edenfs/cli:cli_bin
     hmaptool = //src/com/facebook/buck/apple/clang:hmaptool

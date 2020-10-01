@@ -62,20 +62,9 @@ python_binary(
 # be wrong. The upside of that is that this script can be slow, and for most cases
 # skipping that leads to a better developer experience. Unfortunately if one makes
 # a lot of changes, then rebuilds buck and tries to run that pex, the old buckd
-# won't restart because the versions match. In that case, we have a buck-local rule
-# that depends on //programs:buck, which /does/ force VCS info to be regenerated each
-# time that buck.pex changes in any substantial way.
-# That's what gen_local_buck_package_info and buck-local is for
+# won't restart because the versions match.
 genrule(
     name = "gen_buck_package_info",
-    out = "buck_package_info.json",
-    cmd = get_gen_buck_info_command(":gen_buck_info"),
-)
-
-genrule(
-    name = "gen_local_buck_package_info",
-    # Depend on :buck binary so that we're invalidated and run if buck.pex changes
-    srcs = [":buck"],
     out = "buck_package_info.json",
     cmd = get_gen_buck_info_command(":gen_buck_info"),
 )
@@ -202,12 +191,6 @@ python_library(
     resources = {RESOURCES_VERSION_INFO_NAME: ":gen_buck_package_info"},
 )
 
-python_library(
-    name = "buck_local_version",
-    srcs = [],
-    resources = {RESOURCES_VERSION_INFO_NAME: ":gen_local_buck_package_info"},
-)
-
 # Container lib to allow wrapper to detect features about a buck.pex
 #
 # Format (RFC 5234) that is easy to use in shell scripts
@@ -235,24 +218,6 @@ python_binary(
     deps = [
         ":buck_committed_version",
         ":buck_wrapper_info",
-        ":bucklib",
-        ":java_version",
-        ":subprocutils",
-    ],
-)
-
-python_binary(
-    name = "buck-local",
-    build_args = interpreter_override_args(),
-    main = "buck.py",
-    visibility = [
-        "//scripts/packages/chocolatey:chocolatey",
-        "//scripts/packages/debian:debian",
-        "//test/...",
-        "//tools/...",
-    ],
-    deps = [
-        ":buck_local_version",
         ":bucklib",
         ":java_version",
         ":subprocutils",
