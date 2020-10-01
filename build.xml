@@ -76,7 +76,11 @@
     <equals arg1="${devbuild}" arg2="0" />
   </condition>
 
-  <property name="buck.info.file" value="${build.dir}/buck-info.json"/>
+  <property name="buck.signature.dir" value="${build.dir}/classes/META-INF"/>
+  <property name="buck.signature.file" value="${buck.signature.dir}/resources_signature"/>
+
+  <property name="buck.package.info.file" value="${build.dir}/buck-info.json"/>
+  <property name="buck.version.info.file" value="${build.dir}/buck-version-info.json"/>
 
   <property name="modules.dir.name" value="buck-modules" />
   <property name="modules.resources.dir.name" value="buck-modules-resources" />
@@ -317,7 +321,7 @@
        clear-successful-build must be first, and mark-successful-build last, in the list of dependencies.-->
   <target name="default" depends="clear-successful-build, compile, build-modules, copy-resources,
                                   dx, javac-plugin, report-generator-jar, create-classpath,
-                                  gen-buck-info, mark-successful-build" />
+                                  create-resources-signature, gen-package-info, mark-successful-build" />
 
   <target name="checkversion">
     <!-- The function Function class was only introduced in Java 8. -->
@@ -1063,13 +1067,55 @@
     <echo file="${build.dir}/classpath/classpaths">${classpaths}</echo>
   </target>
 
-  <target name="gen-buck-info">
-    <exec executable="python" output="${buck.info.file}" logError="true" failonerror="true">
+  <!--
+    This is an approximate resources signature. There may be things it is missing.
+
+    The ant build is intended only for bootstrapping, not general development or
+    distribution so it's not terrible that this is possibly incorrect.
+
+    Also, unlike the real signature this file will include include the full
+    signature on the first line not the following information.
+    -->
+
+  <target name="create-resources-signature" depends="copy-resources, compile, dx, compile-bazel, javac-plugin,
+                                                report-generator-jar, create-classpath">
+    <delete file="${buck.signature.file}"/>
+    <checksum todir="${build.dir}/checksums" totalproperty="buck.signature.value">
+      <fileset dir="${build.dir}">
+        <include name="${classes.dir.name}/**"/>
+        <include name="${manual.gensrc.classes.dir.name}/**"/>
+        <include name="${android.annotations.classes.dir.name}/**"/>
+        <include name="${aosp.classes.dir.name}/**"/>
+        <include name="${dx.classes.dir.name}/**"/>
+        <include name="${tracing-api.classes.dir.name}/**"/>
+        <include name="${bootstrapper.classes.dir.name}/**"/>
+        <include name="${javac-plugin.classes.dir.name}/**"/>
+        <exclude name="${classes.dir.name}/${javac-plugin.location.dir.name}/${javac-plugin.jar.name}"/>
+      </fileset>
+      <fileset refid="buck.jars"/>
+      <fileset refid="third-party.jars"/>
+    </checksum>
+    <echo file="${buck.signature.file}">${buck.signature.value}</echo>
+    <echo>Generated Buck resources signature: ${buck.signature.value}</echo>
+  </target>
+
+  <target name="gen-version-info">
+    <exec executable="python" output="${buck.version.info.file}" logError="true" failonerror="true">
       <env key="PYTHONPATH" value="${basedir}" />
       <env key="PYTHONDONTWRITEBYTECODE" value="1" />
       <arg value="programs/gen_buck_info.py"/>
       <arg value="--java-version"/>
       <arg value="${java.version}"/>
+    </exec>
+  </target>
+
+  <target name="gen-package-info" depends="gen-version-info, create-resources-signature">
+    <exec executable="python" output="${buck.package.info.file}" logError="true" failonerror="true">
+      <env key="PYTHONPATH" value="${basedir}" />
+      <env key="PYTHONDONTWRITEBYTECODE" value="1" />
+      <arg value="programs/buck_package_info.py"/>
+      <arg value="${buck.version.info.file}"/>
+      <arg value="${buck.signature.file}"/>
     </exec>
   </target>
 

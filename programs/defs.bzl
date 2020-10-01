@@ -42,3 +42,18 @@ def get_gen_buck_info_command(gen_buck_info_target):
         ).format(target = gen_buck_info_target, version = version, timestamp = timestamp, java_version = java_version)
     else:
         return "$(exe {target}) --java-version {java_version} > $OUT".format(target = gen_buck_info_target, java_version = java_version)
+
+def python_resources_with_signature(name, signature_name, resources):
+    native.genrule(
+        name = signature_name,
+        out = signature_name,
+        cmd = "$(exe //py/signature:files_signature) %s hash_files.py=$(location //py/hash:hash_files.py) > $OUT" % (
+            " ".join(["{}=$(location {})".format(name, resource) for (name, resource) in resources.items()])
+        ),
+    )
+
+    native.python_library(
+        name = name,
+        srcs = [],
+        resources = resources,
+    )

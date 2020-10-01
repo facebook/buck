@@ -5,7 +5,7 @@ load(
     "convert_modules_to_resources",
 )
 load("//tools/build_rules:python_rules.bzl", "interpreter_override_args")
-load(":defs.bzl", "get_gen_buck_info_command")
+load(":defs.bzl", "get_gen_buck_info_command", "python_resources_with_signature")
 
 python_library(
     name = "subprocutils",
@@ -46,6 +46,11 @@ python_binary(
     ],
 )
 
+python_binary(
+    name = "buck_package_info",
+    main = "buck_package_info.py",
+)
+
 # This is bit weird.  This rule isn't idempotent, since it calls out
 # to git commands to find repo information -- and this stuff clearly
 # isn't enumerated in the inputs of arguments for this rule (which
@@ -83,10 +88,15 @@ genrule(
 # if it can reuse the resources on disk or reuse the daemon).
 BUCK_PACKAGE_INFO_NAME = "buck_package_info"
 
+export_file(
+    name = "buck_wrapper_info",
+    src = "buck_wrapper_info.txt",
+)
+
 # Resources used by buck. This includes the buck java code itself and things used by it (e.g. dx,
 # logging config, etc). These will be packaged in the pex and extracted to the resources dir to be
 # accessible.
-BUCK_RESOURCES = {
+RAW_RESOURCES = {
     "android_agent_path": "//assets/android:agent.apk",
     "bootstrapper_jar": "//src/com/facebook/buck/cli/bootstrapper:bootstrapper",
     "buck_build_type_info": ":gen_build_type_info",
@@ -99,7 +109,7 @@ BUCK_RESOURCES = {
     #   flag = 1*(ALPHA / DIGIT / "_")
     #   flag-opts = *(vchar-tilde)
     #   vchar-tilde = %x21-7D ; VCHAR - "~"
-    "buck_wrapper_info": "buck_wrapper_info.txt",
+    "buck_wrapper_info": ":buck_wrapper_info",
     "buckfilesystem_jar": "//src/com/facebook/buck/core/filesystems:filesystems",
     "dx": "//third-party/java/dx:etc_dx",
     "jacoco_agent_jar": "//third-party/java/jacoco:agent",
@@ -143,6 +153,26 @@ BUCK_MODULES_WITH_RESOURCES = [
     "python",
 ]
 
+BUCK_RESOURCES = dicts.add(
+    RAW_RESOURCES,
+    convert_modules_to_resources(BUCK_MODULES),
+    convert_modules_to_external_resources(BUCK_MODULES, BUCK_MODULES_WITH_RESOURCES),
+)
+
+# This computes a signature for all the resources and we then embed that in the
+# pex. This signature is used for determining if the unpacked resources can be
+# reused and if the daemon can be reused.
+#
+# This could potentially be limited to be a signature just over the resources
+# that we unpack and make available to the daemon, but that seems like it would
+# add complexity and fragility for basically no benefit (the vast majority of
+# buck changes are going to change daemon resources).
+python_resources_with_signature(
+    name = "buck_resources",
+    resources = BUCK_RESOURCES,
+    signature_name = "buck_resources_signature",
+)
+
 python_library(
     name = "bucklib",
     srcs = [
@@ -156,16 +186,22 @@ python_library(
         "timing.py",
         "tracing.py",
     ],
-    resources = dicts.add(
-        BUCK_RESOURCES,
-        convert_modules_to_resources(BUCK_MODULES),
-        convert_modules_to_external_resources(BUCK_MODULES, BUCK_MODULES_WITH_RESOURCES),
-    ),
+    resources = [
+        # DO NOT ADD THINGS HERE. ANY RESOURCES MUST BE PART OF THE SIGNATURE
+        # COMPUTED ABOVE.
+    ],
     deps = [
+        ":buck_resources",
         ":buck_version",
         ":subprocutils",
         "//third-party/nailgun:ng",
     ],
+)
+
+genrule(
+    name = "gen_buck_package_info",
+    out = "buck_package_info",
+    cmd = "$(exe :buck_package_info) $(location :gen_buck_version_info) $(location :buck_resources_signature) > $OUT",
 )
 
 # Simple container libs to hold the buck package info. This info is used by the
@@ -173,10 +209,10 @@ python_library(
 #
 # This should be the only resource not contained in the main resources above.
 python_library(
-    name = "buck_package_info",
+    name = "buck_package_info_lib",
     srcs = [],
     # Right now, the package info is just the version info
-    resources = {BUCK_PACKAGE_INFO_NAME: ":gen_buck_version_info"},
+    resources = {BUCK_PACKAGE_INFO_NAME: ":gen_buck_package_info"},
 )
 
 python_binary(
@@ -190,7 +226,7 @@ python_binary(
         "//tools/...",
     ],
     deps = [
-        ":buck_package_info",
+        ":buck_package_info_lib",
         ":bucklib",
         ":java_version",
         ":subprocutils",
