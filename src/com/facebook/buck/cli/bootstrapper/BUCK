@@ -1,9 +1,7 @@
 java_binary(
     name = "bootstrapper",
     visibility = [
-        "//programs:bucklib",
-        "//programs:bucklib-no-nailgun",
-        "//programs:calculate-buck-binary-hash",
+        "//programs:",
         "//test/com/facebook/buck/cli/bootstrapper:bootstrapper",
     ],
     deps = [

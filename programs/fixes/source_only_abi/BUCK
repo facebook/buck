@@ -2,7 +2,7 @@ python_binary(
     name = "fix",
     main_module = "autofix_source_only_abi_warnings",
     visibility = [
-        "//programs:bucklib",
+        "//programs:",
     ],
     deps = [
         ":fix-lib",

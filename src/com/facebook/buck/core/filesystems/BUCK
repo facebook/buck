@@ -3,8 +3,7 @@ java_library(
     srcs = glob(["*.java"]),
     tests = ["//test/com/facebook/buck/core/filesystems:filesystems"],
     visibility = [
-        "//programs:bucklib",
-        "//programs:calculate-buck-binary-hash",
+        "//programs:",
         "//src/com/facebook/buck/...",
         "//test/...",
     ],

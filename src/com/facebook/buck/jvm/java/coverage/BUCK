@@ -17,8 +17,7 @@ java_binary(
     ],
     main_class = "com.facebook.buck.jvm.java.coverage.ReportGenerator",
     visibility = [
-        "//programs:bucklib",
-        "//programs:bucklib-no-nailgun",
+        "//programs:",
         "//src/com/facebook/buck/jvm/java:steps",
         "//test/com/facebook/buck/cli:cli",
     ],

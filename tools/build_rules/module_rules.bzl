@@ -87,8 +87,7 @@ def buck_module(
             ":" + jar_without_hash_name,
         ],
         visibility = [
-            "//programs:bucklib",
-            "//programs:calculate-buck-binary-hash",
+            "//programs:",
             "//test/...",
         ],
     )
