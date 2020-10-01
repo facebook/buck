@@ -64,8 +64,8 @@ python_binary(
 # a lot of changes, then rebuilds buck and tries to run that pex, the old buckd
 # won't restart because the versions match.
 genrule(
-    name = "gen_buck_package_info",
-    out = "buck_package_info.json",
+    name = "gen_buck_version_info",
+    out = "buck_version_info.json",
     cmd = get_gen_buck_info_command(":gen_buck_info"),
 )
 
@@ -78,9 +78,10 @@ genrule(
     cmd_exe = "echo {0}> %OUT%".format(build_type),
 )
 
-# The name of the version info flag. If trying to do a deeper build, we need to ensure
-# that we invalidate the version info more often.
-RESOURCES_VERSION_INFO_NAME = "buck_package_info"
+# The name of the package info file. This contains information read by the
+# wrapper to determine the version of buck resources in the pex (to determine
+# if it can reuse the resources on disk or reuse the daemon).
+BUCK_PACKAGE_INFO_NAME = "buck_package_info"
 
 # Resources used by buck. This includes the buck java code itself and things used by it (e.g. dx,
 # logging config, etc). These will be packaged in the pex and extracted to the resources dir to be
@@ -90,6 +91,15 @@ BUCK_RESOURCES = {
     "bootstrapper_jar": "//src/com/facebook/buck/cli/bootstrapper:bootstrapper",
     "buck_build_type_info": ":gen_build_type_info",
     "buck_server": "//src/com/facebook/buck/cli:main",
+    # Container lib to allow wrapper to detect features about a buck.pex
+    #
+    # Format (RFC 5234) that is easy to use in shell scripts
+    #   buck_wrapper_info = *(flag-clause LF) [LF]
+    #   flag-clause = "~" flag "~" flag_opts
+    #   flag = 1*(ALPHA / DIGIT / "_")
+    #   flag-opts = *(vchar-tilde)
+    #   vchar-tilde = %x21-7D ; VCHAR - "~"
+    "buck_wrapper_info": "buck_wrapper_info.txt",
     "buckfilesystem_jar": "//src/com/facebook/buck/core/filesystems:filesystems",
     "dx": "//third-party/java/dx:etc_dx",
     "jacoco_agent_jar": "//third-party/java/jacoco:agent",
@@ -158,25 +168,15 @@ python_library(
     ],
 )
 
-# Simple container libs to hold the resources needed to identify buck's version
-python_library(
-    name = "buck_committed_version",
-    srcs = [],
-    resources = {RESOURCES_VERSION_INFO_NAME: ":gen_buck_package_info"},
-)
-
-# Container lib to allow wrapper to detect features about a buck.pex
+# Simple container libs to hold the buck package info. This info is used by the
+# python wrapper to determine the version of buck resources.
 #
-# Format (RFC 5234) that is easy to use in shell scripts
-#   buck_wrapper_info = *(flag-clause LF) [LF]
-#   flag-clause = "~" flag "~" flag_opts
-#   flag = 1*(ALPHA / DIGIT / "_")
-#   flag-opts = *(vchar-tilde)
-#   vchar-tilde = %x21-7D ; VCHAR - "~"
+# This should be the only resource not contained in the main resources above.
 python_library(
-    name = "buck_wrapper_info",
+    name = "buck_package_info",
     srcs = [],
-    resources = {"buck_wrapper_info": "buck_wrapper_info.txt"},
+    # Right now, the package info is just the version info
+    resources = {BUCK_PACKAGE_INFO_NAME: ":gen_buck_version_info"},
 )
 
 python_binary(
@@ -190,8 +190,7 @@ python_binary(
         "//tools/...",
     ],
     deps = [
-        ":buck_committed_version",
-        ":buck_wrapper_info",
+        ":buck_package_info",
         ":bucklib",
         ":java_version",
         ":subprocutils",
@@ -202,7 +201,6 @@ python_test(
     name = "test",
     srcs = glob(["test_*.py"]),
     deps = [
-        ":buck_wrapper_info",
         ":bucklib",
         ":subprocutils",
     ],
