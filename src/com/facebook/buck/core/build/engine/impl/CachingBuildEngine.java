@@ -453,7 +453,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   @Override
-  public int getNumRulesToBuild(Iterable<BuildRule> rules) {
+  public ListenableFuture<Integer> getNumRulesToBuild(Iterable<BuildRule> rules) {
     Set<BuildRule> seen = Sets.newConcurrentHashSet();
     ImmutableList.Builder<ListenableFuture<?>> results = ImmutableList.builder();
     for (BuildRule rule : rules) {
@@ -461,8 +461,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         results.add(walkRule(rule, seen));
       }
     }
-    Futures.getUnchecked(Futures.allAsList(results.build()));
-    return seen.size();
+    return Futures.transform(
+        Futures.allAsList(results.build()), unused -> seen.size(), MoreExecutors.directExecutor());
   }
 
   private ListenableFuture<RuleKey> calculateRuleKey(

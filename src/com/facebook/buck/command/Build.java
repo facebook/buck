@@ -36,7 +36,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -44,7 +43,6 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.CleanBuildShutdownException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.timing.Clock;
@@ -56,6 +54,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
@@ -218,14 +217,6 @@ public class Build implements Closeable {
                 .map(buildTarget -> getGraphBuilder().requireRule(buildTarget))
                 .collect(ImmutableSet.toImmutableSet()));
 
-    // Calculate and post the number of rules that need to built.
-    try (Scope scope =
-        LeafEvents.scope(getExecutionContext().getBuckEventBus(), "count-num-rules-to-build")) {
-      int numRules = buildEngine.getNumRulesToBuild(rulesToBuild);
-      getExecutionContext()
-          .getBuckEventBus()
-          .post(BuildEvent.ruleCountCalculated(targetsToBuild, numRules));
-    }
     return rulesToBuild;
   }
 
@@ -288,6 +279,24 @@ public class Build implements Closeable {
   private BuildExecutionResult waitForBuildToFinish(
       ImmutableList<BuildRule> rulesToBuild, List<BuildEngine.BuildEngineResult> resultFutures)
       throws ExecutionException, InterruptedException, CleanBuildShutdownException {
+
+    // Calculate and post the number of rules that need to built.
+    ListenableFuture<Void> postRuleCount =
+        Futures.transform(
+            buildEngine.getNumRulesToBuild(rulesToBuild),
+            numRules -> {
+              getExecutionContext()
+                  .getBuckEventBus()
+                  .post(
+                      BuildEvent.ruleCountCalculated(
+                          rulesToBuild.stream()
+                              .map(BuildRule::getBuildTarget)
+                              .collect(ImmutableSet.toImmutableSet()),
+                          Preconditions.checkNotNull(numRules)));
+              return null;
+            },
+            MoreExecutors.directExecutor());
+
     // Get the Future representing the build and then block until everything is built.
     ListenableFuture<List<BuildResult>> buildFuture =
         Futures.allAsList(
@@ -297,6 +306,7 @@ public class Build implements Closeable {
     List<BuildResult> results;
     try {
       results = buildFuture.get();
+      postRuleCount.get();
       if (!buildContext.isKeepGoing()) {
         for (BuildResult result : results) {
           if (!result.isSuccess()) {

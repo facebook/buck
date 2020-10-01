@@ -23,6 +23,8 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import java.util.Map;
 
@@ -59,7 +61,7 @@ public class FakeBuildEngine implements BuildEngine {
   }
 
   @Override
-  public int getNumRulesToBuild(Iterable<BuildRule> rule) {
-    return 0;
+  public ListenableFuture<Integer> getNumRulesToBuild(Iterable<BuildRule> rule) {
+    return Futures.immediateFuture(0);
   }
 }

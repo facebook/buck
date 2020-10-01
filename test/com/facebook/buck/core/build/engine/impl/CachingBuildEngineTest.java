@@ -1921,7 +1921,7 @@ public class CachingBuildEngineTest {
     }
 
     @Test
-    public void getNumRulesToBuild() {
+    public void getNumRulesToBuild() throws Exception {
       BuildRule rule3 =
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule3"))
               .setOut("out3")
@@ -1942,7 +1942,8 @@ public class CachingBuildEngineTest {
           cachingBuildEngineFactory()
               .setCachingBuildEngineDelegate(new LocalCachingBuildEngineDelegate(fileHashCache))
               .build()) {
-        assertThat(cachingBuildEngine.getNumRulesToBuild(ImmutableList.of(rule1)), equalTo(3));
+        assertThat(
+            cachingBuildEngine.getNumRulesToBuild(ImmutableList.of(rule1)).get(), equalTo(3));
       }
     }
 
