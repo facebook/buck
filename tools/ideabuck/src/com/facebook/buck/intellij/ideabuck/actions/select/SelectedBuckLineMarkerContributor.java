@@ -25,6 +25,7 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionTrailer;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckIdentifier;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckStatement;
 import com.facebook.buck.intellij.ideabuck.tool.BuckTool;
+import com.facebook.buck.intellij.ideabuck.util.BuckRunParamsCache;
 import com.google.common.collect.ImmutableList;
 import com.intellij.execution.lineMarker.RunLineMarkerContributor;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -45,6 +46,7 @@ import org.jetbrains.annotations.Nullable;
 
 /** Line markers for a Buck file, with actions available for appropriate Buck targets. */
 public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor {
+
   private static List<String> RUNNABLE_TARGET_TYPES =
       ImmutableList.of("cxx_binary", "java_binary", "sh_binary");
 
@@ -108,6 +110,7 @@ public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor 
   }
 
   private static class FixedBuckRunAction extends AnAction {
+
     public static final String BUILD_COMMAND = "build";
     public static final String TEST_COMMAND = "test";
     public static final String RUN_COMMAND = "run";
@@ -137,18 +140,31 @@ public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor 
       if (project == null) {
         return;
       }
-      String params =
-          shouldGetAdditionalParams
-              ? Messages.showInputDialog(
-                  project,
-                  "Input extra parameters for your Buck command",
-                  "Additional Params",
-                  IconLoader.getIcon("/icons/buck_icon.png"))
-              : "";
+      String params = shouldGetAdditionalParams ? getAdditionalParams(project) : "";
+      if (params == null) {
+        return;
+      }
       BuckTool tool =
           new BuckTool("buck " + commandType + " " + target + " " + params, true, project);
       tool.setParameters(commandType + " " + target + " " + params);
       tool.execute(null, e.getDataContext(), 0, null);
+    }
+
+    private String getAdditionalParams(Project project) {
+      String oldParams = BuckRunParamsCache.getInstance().getParam(target).orElse("");
+      String input =
+          Messages.showInputDialog(
+              project,
+              "Input extra parameters for your Buck run command",
+              "Additional Params",
+              IconLoader.getIcon("/icons/buck_icon.png"),
+              oldParams,
+              null);
+      if (input == null) {
+        return null;
+      }
+      BuckRunParamsCache.getInstance().insertParam(target, input);
+      return input;
     }
   }
 }
