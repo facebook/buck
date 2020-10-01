@@ -24,7 +24,9 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.jetbrains.annotations.Nullable;
 
@@ -245,6 +247,11 @@ public class BuckProjectSettingsProvider
     state.lastAlias = buildTarget;
   }
 
+  public String getConvertedTargetType(String targetType) {
+    // If a target type is not in our mapping, assume that it was a non-macro target type
+    return state.macroTargetTypeToTargetType.getOrDefault(targetType, targetType);
+  }
+
   /** All settings are stored in this inner class. */
   public static class State {
 
@@ -299,6 +306,9 @@ public class BuckProjectSettingsProvider
      */
     @Deprecated @Nullable public List<BuckCell> cells = null;
 
+    /** Mapping from macro build target types to actual build target types */
+    public Map<String, String> macroTargetTypeToTargetType = new HashMap<>();
+
     @Override
     public boolean equals(Object o) {
       if (this == o) {
@@ -319,7 +329,8 @@ public class BuckProjectSettingsProvider
           && Objects.equal(buckExecutable, state.buckExecutable)
           && Objects.equal(adbExecutable, state.adbExecutable)
           && Objects.equal(customizedInstallSettingCommand, state.customizedInstallSettingCommand)
-          && Objects.equal(cells, state.cells);
+          && Objects.equal(cells, state.cells)
+          && Objects.equal(macroTargetTypeToTargetType, state.macroTargetTypeToTargetType);
     }
 
     @Override
@@ -336,7 +347,8 @@ public class BuckProjectSettingsProvider
           uninstallBeforeInstalling,
           customizedInstallSetting,
           customizedInstallSettingCommand,
-          cells);
+          cells,
+          macroTargetTypeToTargetType);
     }
   }
 }

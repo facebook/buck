@@ -18,6 +18,7 @@ package com.facebook.buck.intellij.ideabuck.actions.select;
 
 import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
+import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckDotTrailer;
@@ -59,7 +60,8 @@ public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor 
         && PsiTreeUtil.getParentOfType(psiElement, BuckDotTrailer.class) == null) {
       BuckStatement buckStatement = PsiTreeUtil.getParentOfType(psiElement, BuckStatement.class);
       if (buckStatement != null) {
-        return createInfo(psiElement.getText(), getBuckTarget(buckStatement));
+        return createInfo(
+            psiElement.getProject(), psiElement.getText(), getBuckTarget(buckStatement));
       }
     }
     return null;
@@ -85,11 +87,13 @@ public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor 
         .orElse(null);
   }
 
-  private Info createInfo(String targetType, @Nullable BuckTarget target) {
+  private Info createInfo(Project project, String targetType, @Nullable BuckTarget target) {
     if (target == null) {
       return null;
     }
     List<AnAction> actions = new ArrayList<>();
+    targetType =
+        BuckProjectSettingsProvider.getInstance(project).getConvertedTargetType(targetType);
     actions.add(new FixedBuckRunAction(FixedBuckRunAction.BUILD_COMMAND, target));
     if (isTestTargetType(targetType)) {
       actions.add(new FixedBuckRunAction(FixedBuckRunAction.TEST_COMMAND, target));
