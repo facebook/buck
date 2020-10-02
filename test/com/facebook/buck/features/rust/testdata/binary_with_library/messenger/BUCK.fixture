@@ -3,6 +3,9 @@ rust_library(
     srcs = [
         "lib.rs",
     ],
+    platform_rustc_flags = {
+        "rustc-plugin": ["--using-plugin-flags"],
+    },
     visibility = [
         "PUBLIC",
     ],

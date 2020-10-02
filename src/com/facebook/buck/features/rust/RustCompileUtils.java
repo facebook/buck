@@ -59,6 +59,7 @@ import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.OutputMacroExpander;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.stream.RichStream;
@@ -176,6 +177,14 @@ public class RustCompileUtils {
     RustCompileUtils.addTargetTripleForFlavor(rustPlatform.getFlavor(), rustcArgs);
     rustcArgs.addAll(ruleFlags);
     args.getRustcFlags().forEach(arg -> rustcArgs.add(converter.convert(arg)));
+
+    ImmutableList<StringWithMacros> platFlags =
+        args.getPlatformRustcFlags().get(rustPlatform.getFlavor());
+    if (platFlags != null) {
+      for (StringWithMacros flag : platFlags) {
+        rustcArgs.add(converter.convert(flag));
+      }
+    }
 
     ImmutableSortedMap<String, Arg> env =
         ImmutableSortedMap.copyOf(Maps.transformValues(args.getEnv(), converter::convert));

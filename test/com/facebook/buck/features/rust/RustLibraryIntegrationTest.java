@@ -131,6 +131,24 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
+  public void rustLibraryCheckPlatformCompilerArgs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace
+            .runBuckBuild(
+                "--config",
+                "cxx#rustc-plugin.dummy=123",
+                "--config",
+                "rust#rustc-plugin.dummy=123",
+                "//messenger:messenger#rlib,rustc-plugin")
+            .getStderr(),
+        containsString("Unrecognized option: 'using-plugin-flags'"));
+  }
+
+  @Test
   public void rustLibrarySaveAnalysis() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);

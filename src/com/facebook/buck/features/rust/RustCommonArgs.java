@@ -20,6 +20,7 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -48,6 +49,9 @@ public interface RustCommonArgs
   Optional<String> getCrate();
 
   Optional<String> getCrateRoot();
+
+  @Value.NaturalOrder
+  ImmutableSortedMap<Flavor, ImmutableList<StringWithMacros>> getPlatformRustcFlags();
 
   @Value.Default
   default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
