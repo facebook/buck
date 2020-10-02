@@ -43,7 +43,11 @@ public class FakeWorkerProcessProtocol {
       if (isClosed) {
         throw new RuntimeException("Closed");
       }
-      return new WorkerProcessProtocol.CommandResponse(messageIds.poll(), 0);
+      try {
+        return new WorkerProcessProtocol.CommandResponse(messageIds.take(), 0);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
     }
 
     @Override

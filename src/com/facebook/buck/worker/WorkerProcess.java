@@ -275,8 +275,6 @@ public class WorkerProcess implements Closeable {
         return;
       }
       LOG.error(t, "Worker pool reader process failed");
-      Throwables.throwIfUnchecked(t);
-      throw new RuntimeException(t);
     }
   }
 
