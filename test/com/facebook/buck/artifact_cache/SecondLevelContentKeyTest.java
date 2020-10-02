@@ -35,26 +35,34 @@ public class SecondLevelContentKeyTest {
             "old style",
             "8f459ab30afc9c154cd94f5d5d4cf7b949ffb8fc2c00",
             SecondLevelContentKey.Type.OLD_STYLE,
-            "8f459ab30afc9c154cd94f5d5d4cf7b949ffb8fc2c00"
+            "8f459ab30afc9c154cd94f5d5d4cf7b949ffb8fc2c00",
+            "8f459ab30afc9c154cd94f5d5d4cf7b949ffb8fc",
+            0L
           },
-          {"unrealistic", "asdf", SecondLevelContentKey.Type.UNKNOWN, "asdf"},
+          {"unrealistic", "asdf", SecondLevelContentKey.Type.UNKNOWN, "asdf", "asdf", 0L},
           {
             "cas",
             "cas/597b4cc3b19069e6361dfe878bbc992498dacc30:139562",
             SecondLevelContentKey.Type.CAS_ONLY,
-            "597b4cc3b19069e6361dfe878bbc992498dacc30:139562"
+            "597b4cc3b19069e6361dfe878bbc992498dacc30:139562",
+            "597b4cc3b19069e6361dfe878bbc992498dacc30",
+            139562L
           },
           {
             "cache",
             "cache/9674344c90c2f0646f0b78026e127c9b86e3ad77:20971520",
             SecondLevelContentKey.Type.CACHE_ONLY,
-            "9674344c90c2f0646f0b78026e127c9b86e3ad77:20971520"
+            "9674344c90c2f0646f0b78026e127c9b86e3ad77:20971520",
+            "9674344c90c2f0646f0b78026e127c9b86e3ad77",
+            20971520L
           },
           {
             "unknown prefix",
             "buck/7a8bf8efc28275f9957f283c4dea66cc98b0c29b:314572800",
             SecondLevelContentKey.Type.UNKNOWN,
-            "buck/7a8bf8efc28275f9957f283c4dea66cc98b0c29b:314572800"
+            "buck/7a8bf8efc28275f9957f283c4dea66cc98b0c29b:314572800",
+            "buck/7a8bf8efc28275f9957f283c4dea66cc98b0c29b",
+            314572800L
           },
         });
   }
@@ -63,16 +71,22 @@ public class SecondLevelContentKeyTest {
   private final SecondLevelContentKey contentKey;
   private final SecondLevelContentKey.Type expectedType;
   private final String expectedKey;
+  private final String expectedDigestHash;
+  private final long expectedDigestBytes;
 
   public SecondLevelContentKeyTest(
       @SuppressWarnings("unused") String label,
       String raw,
       SecondLevelContentKey.Type expectedType,
-      String expectedKey) {
+      String expectedKey,
+      String expectedDigestHash,
+      long expectedDigestBytes) {
     this.raw = raw;
     this.contentKey = SecondLevelContentKey.fromString(raw);
     this.expectedType = expectedType;
     this.expectedKey = expectedKey;
+    this.expectedDigestHash = expectedDigestHash;
+    this.expectedDigestBytes = expectedDigestBytes;
   }
 
   @Test
@@ -80,5 +94,11 @@ public class SecondLevelContentKeyTest {
     assertEquals(raw, contentKey.toString());
     assertEquals(expectedType, contentKey.getType());
     assertEquals(expectedKey, contentKey.getKey());
+  }
+
+  @Test
+  public void testDigestParse() {
+    assertEquals(expectedDigestHash, SecondLevelContentKey.getDigestHash(contentKey));
+    assertEquals(expectedDigestBytes, SecondLevelContentKey.getDigestBytes(contentKey));
   }
 }

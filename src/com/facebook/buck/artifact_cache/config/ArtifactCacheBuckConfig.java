@@ -136,6 +136,8 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   private static final Boolean DEFAULT_ENABLE_WRITE_TO_CAS = false;
   private static final String CAS_WRITE_PERCENTAGE = "cas_write_percentage";
   private static final int DEFAULT_CAS_WRITE_PERCENTAGE = 0;
+  private static final String CAS_READ_PERCENTAGE = "cas_read_percentage";
+  private static final int DEFAULT_CAS_READ_PERCENTAGE = 0;
   private static final String CAS_HOST = "cache_cas_host";
   private static final String CAS_PORT = "cache_cas_port";
   private static final int DEFAULT_CAS_PORT = 443;
@@ -232,6 +234,26 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
           CACHE_SECTION_NAME, CAS_WRITE_PERCENTAGE, raw);
     }
 
+    return Math.min(Math.max(raw, 0), 100);
+  }
+
+  /**
+   * Gets the CAS read percentage value from the config file, clamping to [0, 100] if necessary.
+   *
+   * @return the percentage value
+   */
+  public int getCasReadPercentage() {
+    int raw =
+        buckConfig
+            .getValue(CACHE_SECTION_NAME, CAS_READ_PERCENTAGE)
+            .map(Integer::parseInt)
+            .orElse(DEFAULT_CAS_READ_PERCENTAGE);
+
+    if (raw < 0 || raw > 100) {
+      LOG.warn(
+          "Bad percentage value for %s.%s=%d, it should be in [0, 100].",
+          CACHE_SECTION_NAME, CAS_READ_PERCENTAGE, raw);
+    }
     return Math.min(Math.max(raw, 0), 100);
   }
 

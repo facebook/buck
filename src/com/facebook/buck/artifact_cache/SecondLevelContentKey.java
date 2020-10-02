@@ -19,6 +19,7 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.core.util.log.Logger;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.BaseEncoding;
 
 /** Content keys used in metadata attached to first-level Buck Cache objects */
@@ -31,6 +32,7 @@ public abstract class SecondLevelContentKey {
   private static final String CACHE_ONLY_PREFIX = "cache";
   private static final String CAS_ONLY_PREFIX = "cas";
   private static final String CONTENT_KEY_SEPARATOR = "/";
+  private static final String CONTENT_KEY_DIGEST_INFO_SEPARATOR = ":";
 
   /** Types of content keys. Can be used to send/retrieve from different backends. */
   public enum Type {
@@ -71,6 +73,38 @@ public abstract class SecondLevelContentKey {
         LOG.warn("Unknown content key prefix (falling back to unknown): %s", contentKey);
         return new Builder().setType(Type.UNKNOWN).setKey(contentKey).build();
     }
+  }
+
+  /**
+   * Parses a given SecondLevelContentKey to get its digest'hash in the key
+   *
+   * @param contentKey a SecondLevelContentKey to parse from
+   * @return the DigestHash from the key
+   */
+  public static String getDigestHash(SecondLevelContentKey contentKey) {
+    String key = contentKey.getKey();
+    // Check if this is the old style contentKey
+    if (key.length() == 44 && key.endsWith(OLD_STYLE_SUFFIX)) {
+      return key.substring(0, 40);
+    }
+
+    String[] parts = key.split(CONTENT_KEY_DIGEST_INFO_SEPARATOR, 2);
+    return parts[0];
+  }
+
+  @VisibleForTesting
+  static long getDigestBytes(SecondLevelContentKey contentKey) {
+    String key = contentKey.getKey();
+    // Check if this is the old-style contentKey, old-style contentKey does not have DigestBytes
+    // info
+    if (key.length() == 44 && key.endsWith(OLD_STYLE_SUFFIX)) {
+      return 0L;
+    }
+    String[] parts = key.split(CONTENT_KEY_DIGEST_INFO_SEPARATOR, 2);
+    if (parts.length < 2) {
+      return 0L;
+    }
+    return Long.parseLong(parts[1]);
   }
 
   @Override

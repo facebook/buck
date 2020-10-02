@@ -58,7 +58,8 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
   private final ProjectFilesystem projectFilesystem;
   private final Optional<ContentAddressedStorageClient> casClient;
   private final Boolean enableWrite;
-  private final int artifactPartitionPercentage;
+  private final int artifactPartitionWritePercentage;
+  private final int artifactPartitionReadPercentage;
 
   private final SamplingCounter secondLevelHashComputationTimeMs;
 
@@ -68,12 +69,14 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
       BuckEventBus buckEventBus,
       Optional<ContentAddressedStorageClient> casClient,
       Boolean enableWrite,
-      int artifactPartitionPercentage) {
+      int artifactPartitionWritePercentage,
+      int artifactPartitionReadPercentage) {
     this.delegate = delegate;
     this.projectFilesystem = projectFilesystem;
     this.casClient = casClient;
     this.enableWrite = enableWrite;
-    this.artifactPartitionPercentage = artifactPartitionPercentage;
+    this.artifactPartitionWritePercentage = artifactPartitionWritePercentage;
+    this.artifactPartitionReadPercentage = artifactPartitionReadPercentage;
 
     secondLevelHashComputationTimeMs =
         new SamplingCounter(
@@ -86,7 +89,10 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
   }
 
   private boolean shouldReadCAS(SecondLevelContentKey contentKey) {
-    return casClient.isPresent() && contentKey.getType() == SecondLevelContentKey.Type.CAS_ONLY;
+    return casClient.isPresent()
+        && contentKey.getType() == SecondLevelContentKey.Type.CAS_ONLY
+        && (SecondLevelContentKey.getDigestHash(contentKey).hashCode() % 100)
+            < artifactPartitionReadPercentage;
   }
 
   private Digest parseDigest(String s) {
@@ -156,7 +162,7 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
   private boolean shouldWriteCAS(String digest) {
     return enableWrite
         && casClient.isPresent()
-        && (digest.hashCode() % 100) < artifactPartitionPercentage;
+        && (digest.hashCode() % 100) < artifactPartitionWritePercentage;
   }
 
   private ListenableFuture<Unit> doCasStoreAsync(BorrowablePath output, Digest digest) {
