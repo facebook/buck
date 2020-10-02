@@ -1,0 +1,2 @@
+# Something keeps touching this file during builds, let's ignore it, since it never changes.
+.project
