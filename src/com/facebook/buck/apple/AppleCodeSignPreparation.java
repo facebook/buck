@@ -33,6 +33,7 @@ import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
+import com.facebook.buck.step.BuildStepResultHolder;
 import com.facebook.buck.step.ConditionalStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -164,7 +165,8 @@ public class AppleCodeSignPreparation extends ModernBuildRule<AppleCodeSignPrepa
           entitlements.map(
               sourcePath ->
                   buildContext.getSourcePathResolver().getAbsolutePath(sourcePath).getPath());
-      ProvisioningProfileMetadataHolder selectedProfile = new ProvisioningProfileMetadataHolder();
+      BuildStepResultHolder<ProvisioningProfileMetadata> selectedProfile =
+          new BuildStepResultHolder<>();
       {
         Optional<Path> dryRunResultPath =
             dryRunOutput.map(p -> outputPathResolver.resolvePath(p).getPath());
@@ -181,13 +183,13 @@ public class AppleCodeSignPreparation extends ModernBuildRule<AppleCodeSignPrepa
       }
 
       Supplier<Boolean> isProvisioningProfileSelected =
-          () -> selectedProfile.getMetadata().isPresent();
+          () -> selectedProfile.getValue().isPresent();
 
       Supplier<ProvisioningProfileMetadata> selectedProfileSupplier =
           () -> {
             Preconditions.checkState(isProvisioningProfileSelected.get());
             //noinspection OptionalGetWithoutIsPresent
-            return selectedProfile.getMetadata().get();
+            return selectedProfile.getValue().get();
           };
 
       {
@@ -208,7 +210,8 @@ public class AppleCodeSignPreparation extends ModernBuildRule<AppleCodeSignPrepa
             new ConditionalStep(isProvisioningProfileSelected, provisioningProfileCopyStep));
       }
 
-      CodeSignIdentityHolder selectedCodeSignIdentity = new CodeSignIdentityHolder();
+      BuildStepResultHolder<CodeSignIdentity> selectedCodeSignIdentity =
+          new BuildStepResultHolder<>();
       {
         CodeSignIdentitySelectStep codeSignIdentitySelectStep =
             new CodeSignIdentitySelectStep(
@@ -220,8 +223,8 @@ public class AppleCodeSignPreparation extends ModernBuildRule<AppleCodeSignPrepa
       {
         Supplier<CodeSignIdentity> codeSignIdentitySupplier =
             () -> {
-              if (selectedCodeSignIdentity.getIdentity().isPresent()) {
-                return selectedCodeSignIdentity.getIdentity().get();
+              if (selectedCodeSignIdentity.getValue().isPresent()) {
+                return selectedCodeSignIdentity.getValue().get();
               } else if (isDryRun()) {
                 // Code sign identity is allowed not to be selected when code signing is run in dry
                 // mode. Still, we need to return *something*.

@@ -29,11 +29,13 @@ import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
+import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import com.facebook.buck.apple.toolchain.impl.ProvisioningProfileStoreFactory;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.step.BuildStepResultHolder;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -96,8 +98,8 @@ public class ProvisioningProfileSelectStepTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(startsWith("Malformed entitlement .plist: "));
 
-    ProvisioningProfileMetadataHolder profileMetadataHolder =
-        new ProvisioningProfileMetadataHolder();
+    BuildStepResultHolder<ProvisioningProfileMetadata> profileMetadataHolder =
+        new BuildStepResultHolder<>();
     ProvisioningProfileSelectStep step =
         new ProvisioningProfileSelectStep(
             projectFilesystem,
@@ -119,8 +121,8 @@ public class ProvisioningProfileSelectStepTest {
     thrown.expect(IOException.class);
     thrown.expectMessage(containsString("not a property list"));
 
-    ProvisioningProfileMetadataHolder profileMetadataHolder =
-        new ProvisioningProfileMetadataHolder();
+    BuildStepResultHolder<ProvisioningProfileMetadata> profileMetadataHolder =
+        new BuildStepResultHolder<>();
     ProvisioningProfileSelectStep step =
         new ProvisioningProfileSelectStep(
             projectFilesystem,
@@ -146,8 +148,8 @@ public class ProvisioningProfileSelectStepTest {
     Path emptyDir =
         TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles_empty");
 
-    ProvisioningProfileMetadataHolder profileMetadataHolder =
-        new ProvisioningProfileMetadataHolder();
+    BuildStepResultHolder<ProvisioningProfileMetadata> profileMetadataHolder =
+        new BuildStepResultHolder<>();
     ProvisioningProfileSelectStep step =
         new ProvisioningProfileSelectStep(
             projectFilesystem,
@@ -169,8 +171,8 @@ public class ProvisioningProfileSelectStepTest {
     Path emptyDir =
         TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles_empty");
 
-    ProvisioningProfileMetadataHolder profileMetadataHolder =
-        new ProvisioningProfileMetadataHolder();
+    BuildStepResultHolder<ProvisioningProfileMetadata> profileMetadataHolder =
+        new BuildStepResultHolder<>();
     ProvisioningProfileSelectStep step =
         new ProvisioningProfileSelectStep(
             projectFilesystem,
@@ -184,8 +186,8 @@ public class ProvisioningProfileSelectStepTest {
             profileMetadataHolder);
 
     step.execute(executionContext);
-    assertNotNull(profileMetadataHolder.getMetadata());
-    assertFalse(profileMetadataHolder.getMetadata().isPresent());
+    assertNotNull(profileMetadataHolder.getValue());
+    assertFalse(profileMetadataHolder.getValue().isPresent());
 
     Optional<String> resultContents = projectFilesystem.readFileIfItExists(dryRunResultFile);
     assertTrue(resultContents.isPresent());
@@ -199,8 +201,8 @@ public class ProvisioningProfileSelectStepTest {
   @Test
   public void shouldSetProvisioningProfileHolderWhenStepIsRun() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    ProvisioningProfileMetadataHolder profileMetadataHolder =
-        new ProvisioningProfileMetadataHolder();
+    BuildStepResultHolder<ProvisioningProfileMetadata> profileMetadataHolder =
+        new BuildStepResultHolder<>();
     ProvisioningProfileSelectStep step =
         new ProvisioningProfileSelectStep(
             projectFilesystem,
@@ -214,6 +216,6 @@ public class ProvisioningProfileSelectStepTest {
             profileMetadataHolder);
 
     step.execute(executionContext);
-    assertNotNull(profileMetadataHolder.getMetadata());
+    assertNotNull(profileMetadataHolder.getValue());
   }
 }
