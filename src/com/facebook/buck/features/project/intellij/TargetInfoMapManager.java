@@ -24,6 +24,9 @@ import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.project.intellij.model.folders.IjFolder;
+import com.facebook.buck.features.project.intellij.targetinfo.HashFile;
+import com.facebook.buck.features.project.intellij.targetinfo.TargetInfo;
+import com.facebook.buck.features.project.intellij.targetinfo.TargetInfoBinaryFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -35,6 +38,7 @@ import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,6 +48,9 @@ import java.util.stream.Collectors;
 
 public class TargetInfoMapManager {
   static final String TARGET_INFO_MAP_FILENAME = "target-info.json";
+  static final String TARGET_INFO_BINARY_FILENAME = "target-info.bin";
+  static final String TARGET_INFO_MODULE_TO_TARGET_FILENAME = "target-info-modules.bin";
+
   static final String INTELLIJ_TYPE = "intellij.type";
   static final String INTELLIJ_NAME = "intellij.name";
   static final String INTELLIJ_FILE_PATH = "intellij.file_path";
@@ -111,6 +118,67 @@ public class TargetInfoMapManager {
       generator.writeObject(targetInfoMap);
       cleaner.doNotDelete(targetInfoMapPath);
     }
+  }
+
+  private TargetInfo convertToTargetInfo(Map<String, Object> data) {
+    TargetInfo targetInfo = new TargetInfo();
+    targetInfo.intellijFilePath = (String) data.get(INTELLIJ_FILE_PATH);
+    targetInfo.intellijName = (String) data.get(INTELLIJ_NAME);
+    targetInfo.moduleLanguage =
+        data.get(MODULE_LANG) == null
+            ? null
+            : TargetInfo.ModuleLanguage.valueOf((String) data.get(MODULE_LANG));
+    targetInfo.ruleType =
+        data.get(BUCK_TYPE) == null
+            ? null
+            : TargetInfo.BuckType.valueOf((String) data.get(BUCK_TYPE));
+    targetInfo.intellijType =
+        data.get(INTELLIJ_TYPE) == null
+            ? null
+            : TargetInfo.IntelliJType.valueOf((String) data.get(INTELLIJ_TYPE));
+    if (data.get(GENERATED_SOURCES) != null) {
+      targetInfo.generatedSources =
+          ((List<?>) data.get(GENERATED_SOURCES))
+              .stream().map(o -> o.toString()).collect(Collectors.toList());
+    }
+
+    return targetInfo;
+  }
+
+  /** Write binary info. */
+  public void writeBinaryInfo(
+      ImmutableSet<IjModule> modules,
+      ImmutableSet<IjLibrary> libraries,
+      BuckOutPathConverter buckOutPathConverter,
+      IJProjectCleaner cleaner)
+      throws IOException {
+    writeModuleTargetInfo(modules, buckOutPathConverter);
+    writeLibraryTargetInfo(libraries);
+
+    // TODO: use TargetInfo everywhere.
+    Map<String, TargetInfo> converted = new HashMap<String, TargetInfo>();
+    Map<String, String> modulesToTargets = new HashMap<>();
+    for (Map.Entry<String, Map<String, Object>> entry : targetInfoMap.entrySet()) {
+      TargetInfo info = convertToTargetInfo(entry.getValue());
+      converted.put(entry.getKey(), info);
+      modulesToTargets.put(info.intellijName, entry.getKey());
+    }
+
+    Path binaryFilePath =
+        projectConfig.getProjectPaths().getIdeaConfigDir().resolve(TARGET_INFO_BINARY_FILENAME);
+    new TargetInfoBinaryFile(binaryFilePath).write(converted);
+    cleaner.doNotDelete(binaryFilePath);
+
+    // Write a mapping of module names -> targets
+    Path modulesToTargetsName =
+        projectConfig
+            .getProjectPaths()
+            .getIdeaConfigDir()
+            .resolve(TARGET_INFO_MODULE_TO_TARGET_FILENAME);
+    new HashFile<String, String>(
+            HashFile.STRING_SERIALIZER, HashFile.STRING_SERIALIZER, modulesToTargetsName)
+        .write(modulesToTargets);
+    cleaner.doNotDelete(modulesToTargetsName);
   }
 
   private void writeModuleTargetInfo(

@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+
+java_library_with_plugins(
+    name = "targetinfo",
+    srcs = glob(["*.java"]),
+    provided_deps = [
+        "//third-party/java/gson:gson",
+    ],
+    tests = [
+        "//test/com/facebook/buck/features/project/intellij/targetinfo:targetinfo",
+    ],
+    visibility = ["PUBLIC"],
+)

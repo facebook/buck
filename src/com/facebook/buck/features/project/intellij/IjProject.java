@@ -160,6 +160,14 @@ public class IjProject {
           cleaner);
     }
 
+    if (projectConfig.isGeneratingBinaryTargetInfoEnabled()) {
+      targetInfoMapManager.writeBinaryInfo(
+          templateDataPreparer.getModulesToBeWritten(),
+          templateDataPreparer.getAllLibraries(),
+          buckOutPathConverter,
+          cleaner);
+    }
+
     PregeneratedCodeWriter pregeneratedCodeWriter =
         new PregeneratedCodeWriter(
             templateDataPreparer, projectConfig, outFilesystem, androidManifestParser, cleaner);

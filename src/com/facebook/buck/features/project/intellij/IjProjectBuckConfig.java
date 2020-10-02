@@ -156,6 +156,9 @@ public class IjProjectBuckConfig {
         .setGeneratingTargetInfoMapEnabled(
             buckConfig.getBooleanValue(
                 INTELLIJ_BUCK_CONFIG_SECTION, "generate_target_info_map", false))
+        .setGeneratingBinaryTargetInfoEnabled(
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "generate_binary_target_info", false))
         .setOutputUrl(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "project_compiler_output_url"))
         .setExtraCompilerOutputModulesPath(

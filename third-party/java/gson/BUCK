@@ -11,6 +11,7 @@ prebuilt_jar(
     # Plus consistency across the codebase is nice.
     visibility = [
         "//src-gen:downward-model",  # Standard protobuf JsonFormat depend on gson
+        "//src/com/facebook/buck/features/project/intellij/targetinfo/...",  # Only uses annotations
         "//src/com/facebook/buck/worker:worker_process",  # Legacy caller which should probably use Jackson
         "//test/com/facebook/buck/worker:worker",  # Legacy caller
         "//third-party/java/aosp:aosp",  # Sad transitive deps are sad

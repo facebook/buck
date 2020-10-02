@@ -2,7 +2,10 @@ load("//tools/build_rules:module_rules.bzl", "buck_module")
 
 buck_module(
     name = "intellij",
-    srcs = glob(["**/*.java"]),
+    srcs = glob(
+        ["**/*.java"],
+        exclude = ["targetinfo/**"],
+    ),
     module_deps = [
         "//src/com/facebook/buck/features/python:module",
         "//src/com/facebook/buck/features/filegroup:filegroup",
@@ -72,5 +75,8 @@ buck_module(
     ],
     visibility = [
         "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/features/project/intellij/targetinfo:targetinfo",
     ],
 )

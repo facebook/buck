@@ -105,6 +105,8 @@ public abstract class IjProjectConfig {
 
   public abstract boolean isGeneratingTargetInfoMapEnabled();
 
+  public abstract boolean isGeneratingBinaryTargetInfoEnabled();
+
   public abstract Optional<String> getOutputUrl();
 
   public abstract Optional<Path> getExtraCompilerOutputModulesPath();

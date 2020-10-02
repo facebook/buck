@@ -1,0 +1,10 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "targetinfo",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//src/com/facebook/buck/features/project/intellij/targetinfo:targetinfo",
+        "//third-party/java/junit:junit",
+    ],
+)
