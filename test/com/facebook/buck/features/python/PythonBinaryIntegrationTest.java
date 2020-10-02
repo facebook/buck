@@ -23,7 +23,7 @@ import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
@@ -255,21 +255,10 @@ public class PythonBinaryIntegrationTest {
         String.format("%s does not exist", linkerScriptPath),
         Files.exists(workspace.getPath(linkerScriptPath)),
         equalTo(true));
-    MatcherAssert.assertThat(
-        String.format("%s does not exist", versionScriptPath),
-        Files.exists(workspace.getPath(versionScriptPath)),
-        equalTo(true));
 
     // Verify that the linker script contains "bar"
     List<String> linkerScriptLines = filesystem.readLines(workspace.getPath(linkerScriptPath));
     linkerScriptLines.contains("EXTERN(\"bar\")");
-    // Verify that the version script contains "bar" under the global section
-    List<String> versionScriptLines = filesystem.readLines(workspace.getPath(versionScriptPath));
-    int indexOfGlobal = versionScriptLines.indexOf("  global:");
-    int indexOfLocal = versionScriptLines.indexOf("  local: *;");
-    int indexOfSymbol = versionScriptLines.indexOf("  \"bar\";");
-    assertTrue(indexOfGlobal < indexOfSymbol);
-    assertTrue(indexOfLocal > indexOfSymbol);
 
     // Verify that the linker and version scripts are passed to the linker as args
     Path linkerArgsPath =
@@ -282,15 +271,16 @@ public class PythonBinaryIntegrationTest {
         String.format("%s does not exist", linkerArgsPath),
         Files.exists(workspace.getPath(linkerArgsPath)),
         equalTo(true));
+    MatcherAssert.assertThat(
+        String.format("%s exists", versionScriptPath),
+        Files.exists(workspace.getPath(versionScriptPath)),
+        equalTo(false));
     List<String> linkerArgsLines = filesystem.readLines(linkerArgsPath);
-    assertNotSame(
+    assertSame(
         -1,
         Collections.indexOfSubList(
             linkerArgsLines,
-            ImmutableList.of(
-                linkerScriptPath.toString(),
-                "-Wl,--version-script",
-                versionScriptPath.toString())));
+            ImmutableList.of("-Wl,--version-script", versionScriptPath.toString())));
   }
 
   @Test

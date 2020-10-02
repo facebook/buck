@@ -521,34 +521,6 @@ public class Omnibus {
             ImmutableList.of(undefinedSymbolsFile));
   }
 
-  private static ImmutableList<Arg> createGlobalSymbolsArgs(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      ActionGraphBuilder graphBuilder,
-      CxxPlatform cxxPlatform,
-      Iterable<? extends SourcePath> linkerInputs) {
-    SourcePath globalSymbolsFile =
-        cxxPlatform
-            .getSymbolNameTool()
-            .creatGlobalSymbolsFile(
-                projectFilesystem,
-                params,
-                graphBuilder,
-                buildTarget.getTargetConfiguration(),
-                buildTarget.withAppendedFlavors(InternalFlavor.of("omnibus-global-symbols-file")),
-                linkerInputs);
-    return cxxPlatform
-        .getLd()
-        .resolve(graphBuilder, buildTarget.getTargetConfiguration())
-        .createGlobalSymbolsLinkerArgs(
-            projectFilesystem,
-            params,
-            graphBuilder,
-            buildTarget.withAppendedFlavors(InternalFlavor.of("omnibus-global-symbols-args")),
-            ImmutableList.of(globalSymbolsFile));
-  }
-
   // Create a build rule to link the giant merged omnibus library described by the given spec.
   private static OmnibusLibrary createOmnibus(
       BuildTarget buildTarget,
@@ -614,15 +586,6 @@ public class Omnibus {
             graphBuilder,
             cxxPlatform,
             undefinedSymbolsOnlyRoots));
-
-    argsBuilder.addAll(
-        createGlobalSymbolsArgs(
-            buildTarget,
-            projectFilesystem,
-            params,
-            graphBuilder,
-            cxxPlatform,
-            globalSymbolSources));
 
     // Resolve all `NativeLinkableInput`s in parallel, before using them below.
     ImmutableList<? extends NativeLinkable> deps =
