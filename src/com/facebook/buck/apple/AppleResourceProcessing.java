@@ -63,6 +63,7 @@ public class AppleResourceProcessing {
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem,
       SourcePath processedResourcesDir,
+      Supplier<Boolean> shouldPerformIncrementalBuildSupplier,
       Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
       Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
     addStepsToCreateDirectoriesWhereBundlePartsAreCopied(
@@ -75,6 +76,7 @@ public class AppleResourceProcessing {
         dirRoot,
         destinations,
         projectFilesystem,
+        shouldPerformIncrementalBuildSupplier,
         oldContentHashesSupplier,
         newContentHashesSupplier);
     addStepsToCopyProcessedResources(
@@ -85,6 +87,7 @@ public class AppleResourceProcessing {
         destinations,
         projectFilesystem,
         processedResourcesDir,
+        shouldPerformIncrementalBuildSupplier,
         oldContentHashesSupplier,
         newContentHashesSupplier);
     addStepsToCopyNonProcessedFilesAndDirectories(
@@ -95,6 +98,7 @@ public class AppleResourceProcessing {
         dirRoot,
         destinations,
         projectFilesystem,
+        shouldPerformIncrementalBuildSupplier,
         oldContentHashesSupplier,
         newContentHashesSupplier);
   }
@@ -129,6 +133,7 @@ public class AppleResourceProcessing {
       Path dirRoot,
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem,
+      Supplier<Boolean> shouldPerformIncrementalBuildSupplier,
       Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
       Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
 
@@ -164,6 +169,7 @@ public class AppleResourceProcessing {
                   destinationDirectoryPath,
                   dirRoot,
                   projectFilesystem,
+                  shouldPerformIncrementalBuildSupplier.get(),
                   oldContentHashesSupplier,
                   newContentHashesSupplier);
             }
@@ -177,6 +183,7 @@ public class AppleResourceProcessing {
       RelPath destinationDirectoryPath,
       Path dirRoot,
       ProjectFilesystem projectFilesystem,
+      boolean shouldPerformIncrementalBuild,
       Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
       Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
 
@@ -189,6 +196,7 @@ public class AppleResourceProcessing {
       RelPath toPathRelativeToBundleRoot = destinationDirectoryPath.resolveRel(fileName);
       prepareCopyFileToBundleWithIncrementalSupport(
           new AppleBundleComponentCopySpec(fromPath, toPathRelativeToBundleRoot, false),
+          shouldPerformIncrementalBuild,
           newContentHashesSupplier,
           oldContentHashesSupplier,
           projectFilesystem,
@@ -203,6 +211,7 @@ public class AppleResourceProcessing {
 
   private static void prepareCopyFileToBundleWithIncrementalSupport(
       AppleBundleComponentCopySpec copySpec,
+      boolean shouldPerformIncrementalBuild,
       Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier,
       Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
       ProjectFilesystem projectFilesystem,
@@ -210,9 +219,16 @@ public class AppleResourceProcessing {
       ImmutableSet.Builder<Path> pathsToDeleteBuilder,
       ImmutableSet.Builder<AppleBundleComponentCopySpec> copySpecsBuilder) {
     RelPath toPathRelativeToBundleRoot = copySpec.getDestinationPathRelativeToBundleRoot();
-    if (newContentHashesSupplier.isPresent()) {
+    if (shouldPerformIncrementalBuild) {
       String oldHash = oldContentHashesSupplier.get().get(toPathRelativeToBundleRoot);
-      String newHash = newContentHashesSupplier.get().get().get(toPathRelativeToBundleRoot);
+      String newHash =
+          newContentHashesSupplier
+              .orElseThrow(
+                  () ->
+                      new IllegalStateException(
+                          "Content hashes for current build should be computed when incremental build is performed"))
+              .get()
+              .get(toPathRelativeToBundleRoot);
       Path toPathRelativeToProjectRoot = dirRoot.resolve(toPathRelativeToBundleRoot.getPath());
       Preconditions.checkState(
           newHash != null
@@ -264,6 +280,7 @@ public class AppleResourceProcessing {
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem,
       SourcePath processedResourcesDir,
+      Supplier<Boolean> shouldPerformIncrementalBuildSupplier,
       Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
       Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
     Set<AppleBundleDestination> destinationsForAllProcessedResources = new HashSet<>();
@@ -298,6 +315,7 @@ public class AppleResourceProcessing {
                   RelPath.of(destination.getPath(destinations)),
                   dirRoot,
                   projectFilesystem,
+                  shouldPerformIncrementalBuildSupplier.get(),
                   oldContentHashesSupplier,
                   newContentHashesSupplier);
             }
@@ -322,6 +340,7 @@ public class AppleResourceProcessing {
       Path dirRoot,
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem,
+      Supplier<Boolean> shouldPerformIncrementalBuildSupplier,
       Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
       Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
 
@@ -384,6 +403,7 @@ public class AppleResourceProcessing {
             for (AppleBundleComponentCopySpec spec : copySpecs) {
               prepareCopyFileToBundleWithIncrementalSupport(
                   spec,
+                  shouldPerformIncrementalBuildSupplier.get(),
                   newContentHashesSupplier,
                   oldContentHashesSupplier,
                   projectFilesystem,
