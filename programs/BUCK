@@ -215,6 +215,13 @@ python_library(
     resources = {BUCK_PACKAGE_INFO_NAME: ":gen_buck_package_info"},
 )
 
+python_library(
+    name = "buck_sosreport",
+    srcs = [
+        "buck_sosreport.py",
+    ],
+)
+
 python_binary(
     name = "buck",
     build_args = interpreter_override_args(),
@@ -227,6 +234,7 @@ python_binary(
     ],
     deps = [
         ":buck_package_info_lib",
+        ":buck_sosreport",
         ":bucklib",
         ":java_version",
         ":subprocutils",
@@ -237,6 +245,7 @@ python_test(
     name = "test",
     srcs = glob(["test_*.py"]),
     deps = [
+        ":buck_sosreport",
         ":bucklib",
         ":subprocutils",
     ],

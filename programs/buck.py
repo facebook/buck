@@ -32,6 +32,7 @@ from subprocess import check_output
 
 from programs.buck_logging import setup_logging
 from programs.buck_project import BuckProject, NoBuckConfigFoundException
+from programs.buck_sosreport import sosreport_main
 from programs.buck_tool import (
     BuckDaemonErrorException,
     BuckStatusReporter,
@@ -87,6 +88,18 @@ def killall_buck(reporter):
         os.kill(pid, signal.SIGTERM)
         # TODO(buck_team) clean .buckd directories
     return ExitCode.SUCCESS
+
+
+# Invoke SOS report
+def sosreport(reporter):
+    if os.name == "nt":
+        # TODO: windows platform version
+        message = "sosreport is not implemented on: " + os.name
+        logging.error(message)
+        reporter.status_message = message
+        return ExitCode.COMMANDLINE_ERROR
+    # TODO: opt parse and pass project root to sosreport_main()
+    return sosreport_main()
 
 
 def _get_java_version(java_path):
@@ -205,7 +218,11 @@ def main(argv, reporter):
         return ExitCode.SUCCESS
 
     # Execute wrapper specific commands
-    wrapper_specific_commands = [("kill", kill_buck), ("killall", killall_buck)]
+    wrapper_specific_commands = [
+        ("kill", kill_buck),
+        ("killall", killall_buck),
+        ("sosreport", sosreport),
+    ]
     if "--help" not in argv and "-h" not in argv:
         for command_str, command_fcn in wrapper_specific_commands:
             if len(argv) > 1 and argv[1] == command_str:
