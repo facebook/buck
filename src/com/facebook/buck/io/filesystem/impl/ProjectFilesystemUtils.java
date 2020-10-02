@@ -19,6 +19,7 @@ package com.facebook.buck.io.filesystem.impl;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.file.PathListing;
 import com.facebook.buck.io.filesystem.CopySourceMode;
@@ -77,6 +78,8 @@ import javax.annotation.Nullable;
  * root.
  */
 public class ProjectFilesystemUtils {
+
+  public static final String EDEN_MAGIC_PATH_ELEMENT = ".eden";
 
   private ProjectFilesystemUtils() {}
 
@@ -165,6 +168,34 @@ public class ProjectFilesystemUtils {
       throw new IOException("Cannot get size of " + path + " because it is not an ordinary file.");
     }
     return Files.size(path);
+  }
+
+  /** Returns the posix file mode of a file */
+  public static long getPosixFileModes(AbsPath root, Path pathRelativeToProjectRoot)
+      throws IOException {
+    long mode = 0;
+    // Support executable files.  If we detect this file is executable, store this
+    // information as 0100 in the field typically used in zip implementations for
+    // POSIX file permissions.  We'll use this information when unzipping.
+    Path path = getPathForRelativePath(root, pathRelativeToProjectRoot);
+    if (isExecutable(root, path)) {
+      mode |= MorePosixFilePermissions.toMode(EnumSet.of(PosixFilePermission.OWNER_EXECUTE));
+    }
+
+    if (isDirectory(root, path)) {
+      mode |= MostFiles.S_IFDIR;
+    } else if (isFile(root, path)) {
+      mode |= MostFiles.S_IFREG;
+    }
+
+    // Propagate any additional permissions
+    mode |= MorePosixFilePermissions.toMode(getPosixFilePermissions(root, path));
+
+    return mode;
+  }
+
+  public static Path getDefaultEdenMagicPathElement(AbsPath rootPath) {
+    return getPath(rootPath, EDEN_MAGIC_PATH_ELEMENT);
   }
 
   /**

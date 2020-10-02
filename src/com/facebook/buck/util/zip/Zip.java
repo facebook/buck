@@ -16,8 +16,10 @@
 
 package com.facebook.buck.util.zip;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
@@ -27,6 +29,8 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Path;
@@ -34,6 +38,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
@@ -41,29 +46,31 @@ import java.util.zip.ZipEntry;
 public class Zip {
   private static final Logger LOG = Logger.get(Zip.class);
 
+  private static final EnumSet<FileVisitOption> FOLLOW_LINKS =
+      EnumSet.of(FileVisitOption.FOLLOW_LINKS);
+
   private Zip() {}
 
   /**
    * Takes a sequence of paths relative to the project root and writes a zip file to {@code out}
    * with the contents and structure that matches that of the specified paths.
    */
-  public static void create(
-      ProjectFilesystem projectFilesystem, Collection<Path> pathsToIncludeInZip, Path out)
+  public static void create(AbsPath rootPath, Collection<Path> pathsToIncludeInZip, Path out)
       throws IOException {
     try (CustomZipOutputStream zip = ZipOutputStreams.newOutputStream(out)) {
       for (Path path : pathsToIncludeInZip) {
 
-        boolean isDirectory = projectFilesystem.isDirectory(path);
+        boolean isDirectory = ProjectFilesystemUtils.isDirectory(rootPath, path);
         CustomZipEntry entry = new CustomZipEntry(path, isDirectory);
 
         // We want deterministic ZIPs, so avoid mtimes.
         entry.setFakeTime();
 
-        entry.setExternalAttributes(projectFilesystem.getFileAttributesForZipEntry(path));
+        entry.setExternalAttributes(getFileAttributesForZipEntry(rootPath, path));
 
         zip.putNextEntry(entry);
         if (!isDirectory) {
-          try (InputStream input = projectFilesystem.newFileInputStream(path)) {
+          try (InputStream input = ProjectFilesystemUtils.newFileInputStream(rootPath, path)) {
             ByteStreams.copy(input, zip);
           }
         }
@@ -74,9 +81,10 @@ public class Zip {
 
   /** Walks the file tree rooted in baseDirectory to create zip entries */
   public static void walkBaseDirectoryToCreateEntries(
-      ProjectFilesystem filesystem,
+      AbsPath rootPath,
       Map<String, Pair<CustomZipEntry, Optional<Path>>> entries,
       Path baseDir,
+      ImmutableSet<PathMatcher> ignoredPaths,
       ImmutableSet<Path> paths,
       boolean junkPaths,
       ZipCompressionLevel compressionLevel)
@@ -96,7 +104,7 @@ public class Zip {
 
           private CustomZipEntry getZipEntry(String entryName, Path path, BasicFileAttributes attr)
               throws IOException {
-            boolean isDirectory = filesystem.isDirectory(path);
+            boolean isDirectory = ProjectFilesystemUtils.isDirectory(rootPath, path);
             if (isDirectory) {
               entryName += "/";
             }
@@ -114,12 +122,12 @@ public class Zip {
                   new ByteSource() {
                     @Override
                     public InputStream openStream() throws IOException {
-                      return filesystem.newFileInputStream(path);
+                      return ProjectFilesystemUtils.newFileInputStream(rootPath, path);
                     }
                   }.hash(Hashing.crc32()).padToLong());
             }
 
-            long externalAttributes = filesystem.getFileAttributesForZipEntry(path);
+            long externalAttributes = getFileAttributesForZipEntry(rootPath, path);
             LOG.verbose(
                 "Setting mode for entry %s path %s to 0x%08X", entryName, path, externalAttributes);
             entry.setExternalAttributes(externalAttributes);
@@ -146,12 +154,17 @@ public class Zip {
             return FileVisitResult.CONTINUE;
           }
         };
-    filesystem.walkRelativeFileTree(baseDir, pathFileVisitor);
+
+    Path edenMagicPathElement = ProjectFilesystemUtils.getDefaultEdenMagicPathElement(rootPath);
+    DirectoryStream.Filter<? super Path> ignoreFilter =
+        ProjectFilesystemUtils.getIgnoreFilter(rootPath, true, ignoredPaths);
+    ProjectFilesystemUtils.walkRelativeFileTree(
+        rootPath, edenMagicPathElement, baseDir, FOLLOW_LINKS, pathFileVisitor, ignoreFilter);
   }
 
   /** Writes entries to zipOut stream. */
   public static void writeEntriesToZip(
-      ProjectFilesystem filesystem,
+      AbsPath rootPath,
       CustomZipOutputStream zipOut,
       Map<String, Pair<CustomZipEntry, Optional<Path>>> entries)
       throws IOException {
@@ -159,7 +172,8 @@ public class Zip {
     for (Pair<CustomZipEntry, Optional<Path>> entry : entries.values()) {
       zipOut.putNextEntry(entry.getFirst());
       if (entry.getSecond().isPresent()) {
-        try (InputStream input = filesystem.newFileInputStream(entry.getSecond().get())) {
+        try (InputStream input =
+            ProjectFilesystemUtils.newFileInputStream(rootPath, entry.getSecond().get())) {
           ByteStreams.copy(input, zipOut);
         }
       }
@@ -175,5 +189,9 @@ public class Zip {
           .map(ZipEntry::getName)
           .collect(ImmutableList.toImmutableList());
     }
+  }
+
+  private static long getFileAttributesForZipEntry(AbsPath rootPath, Path path) throws IOException {
+    return ProjectFilesystemUtils.getPosixFileModes(rootPath, path) << 16;
   }
 }

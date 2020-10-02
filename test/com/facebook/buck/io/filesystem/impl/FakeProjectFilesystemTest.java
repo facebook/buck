@@ -25,7 +25,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.ZipArchive;
@@ -41,6 +43,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -407,7 +410,20 @@ public class FakeProjectFilesystemTest {
 
   @Test
   public void testCreateZip() throws IOException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    AbsPath tempDir;
+    try {
+      tempDir = AbsPath.of(Files.createTempDirectory("zipTest"));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    ProjectFilesystem filesystem =
+        new DefaultProjectFilesystem(
+            CanonicalCellName.rootCell(),
+            tempDir,
+            new DefaultProjectFilesystemDelegate(tempDir.getPath()),
+            false);
 
     byte[] contents = "contents".getBytes(StandardCharsets.UTF_8);
 
@@ -419,7 +435,10 @@ public class FakeProjectFilesystemTest {
     filesystem.writeBytesToPath(contents, dir.resolve("file"));
 
     AbsPath output = tmp.newFile("output.zip");
-    Zip.create(filesystem, ImmutableList.of(file, dir, dir.resolve("file")), output.getPath());
+    Zip.create(
+        filesystem.getRootPath(),
+        ImmutableList.of(file, dir, dir.resolve("file")),
+        output.getPath());
 
     try (ZipArchive zipArchive = new ZipArchive(output, /* forWriting */ false)) {
       assertEquals(ImmutableSet.of("", "dir"), zipArchive.getDirNames());

@@ -19,9 +19,11 @@ package com.facebook.buck.step.isolatedsteps.common;
 import static com.facebook.buck.util.zip.ZipOutputStreams.HandleDuplicates.THROW_EXCEPTION;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
@@ -50,10 +52,11 @@ import java.util.TreeMap;
 @BuckStyleValue
 public abstract class ZipIsolatedStep extends IsolatedStep {
 
-  // TODO: Remove ProjectFileSystem from the isolated step
-  abstract ProjectFilesystem getFileSystem();
+  abstract AbsPath getRootPath();
 
   abstract Path getPathToZipFile();
+
+  abstract ImmutableSet<PathMatcher> getIgnoredPaths();
 
   abstract ImmutableSet<Path> getPaths();
 
@@ -66,7 +69,7 @@ public abstract class ZipIsolatedStep extends IsolatedStep {
   @Override
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
-    if (getFileSystem().exists(getPathToZipFile())) {
+    if (ProjectFilesystemUtils.exists(getRootPath(), getPathToZipFile())) {
       context.postEvent(
           ConsoleEvent.severe("Attempting to overwrite an existing zip: %s", getPathToZipFile()));
       return StepExecutionResults.ERROR;
@@ -75,19 +78,21 @@ public abstract class ZipIsolatedStep extends IsolatedStep {
     Map<String, Pair<CustomZipEntry, Optional<Path>>> entries = new TreeMap<>();
 
     try (BufferedOutputStream baseOut =
-            new BufferedOutputStream(getFileSystem().newFileOutputStream(getPathToZipFile()));
+            new BufferedOutputStream(
+                ProjectFilesystemUtils.newFileOutputStream(getRootPath(), getPathToZipFile()));
         CustomZipOutputStream out = ZipOutputStreams.newOutputStream(baseOut, THROW_EXCEPTION)) {
       /* TODO: Make this logic to avoid using exceptions.
        * If walking the file directory throws, then an empty jar file is still created.
        */
       Zip.walkBaseDirectoryToCreateEntries(
-          getFileSystem(),
+          getRootPath(),
           entries,
           getBaseDir(),
+          getIgnoredPaths(),
           getPaths(),
           getJunkPaths(),
           getZipCompressionLevel());
-      Zip.writeEntriesToZip(getFileSystem(), out, entries);
+      Zip.writeEntriesToZip(getRootPath(), out, entries);
     }
     return StepExecutionResults.SUCCESS;
   }
@@ -134,13 +139,14 @@ public abstract class ZipIsolatedStep extends IsolatedStep {
   }
 
   public static ZipIsolatedStep of(
-      ProjectFilesystem projectFileSystem,
+      AbsPath rootPath,
       Path pathToZipFile,
+      ImmutableSet<PathMatcher> ignoredPaths,
       ImmutableSet<Path> paths,
       boolean junkPaths,
       ZipCompressionLevel compressionLevel,
       Path baseDir) {
     return ImmutableZipIsolatedStep.ofImpl(
-        projectFileSystem, pathToZipFile, paths, junkPaths, compressionLevel, baseDir);
+        rootPath, pathToZipFile, ignoredPaths, paths, junkPaths, compressionLevel, baseDir);
   }
 }

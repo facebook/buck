@@ -17,7 +17,9 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.isolatedsteps.common.ZipIsolatedStep;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
@@ -29,9 +31,11 @@ import java.nio.file.Path;
 @BuckStyleValue
 public abstract class ZipStep extends DelegateStep<ZipIsolatedStep> {
 
-  abstract ProjectFilesystem getFileSystem();
+  abstract AbsPath getRootPath();
 
   abstract Path getPathToZipFile();
+
+  abstract ImmutableSet<PathMatcher> getIgnoredPaths();
 
   abstract ImmutableSet<Path> getPaths();
 
@@ -57,8 +61,9 @@ public abstract class ZipStep extends DelegateStep<ZipIsolatedStep> {
   @Override
   protected ZipIsolatedStep createDelegate(StepExecutionContext context) {
     return ZipIsolatedStep.of(
-        getFileSystem(),
+        getRootPath(),
         getPathToZipFile(),
+        getIgnoredPaths(),
         getPaths(),
         getJunkPaths(),
         getZipCompressionLevel(),
@@ -66,13 +71,19 @@ public abstract class ZipStep extends DelegateStep<ZipIsolatedStep> {
   }
 
   public static ZipStep of(
-      ProjectFilesystem projectFileSystem,
+      ProjectFilesystem filesystem,
       Path pathToZipFile,
       ImmutableSet<Path> paths,
       boolean junkPaths,
       ZipCompressionLevel compressionLevel,
       Path baseDir) {
     return ImmutableZipStep.ofImpl(
-        projectFileSystem, pathToZipFile, paths, junkPaths, compressionLevel, baseDir);
+        filesystem.getRootPath(),
+        pathToZipFile,
+        filesystem.getIgnoredPaths(),
+        paths,
+        junkPaths,
+        compressionLevel,
+        baseDir);
   }
 }

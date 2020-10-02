@@ -30,7 +30,7 @@ import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.ZipStep;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -428,9 +428,9 @@ public class ZipStepTest {
   public void zipEntryOrderingIsFilesystemAgnostic() throws Exception {
     Path output = Paths.get("output");
     Path zipdir = Paths.get("zipdir");
+    Path root2 = Paths.get("root2");
 
     // Run the zip step on a filesystem with a particular ordering.
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     StepExecutionContext context = TestExecutionContext.newInstance();
     filesystem.mkdirs(zipdir);
     filesystem.touch(zipdir.resolve("file1"));
@@ -441,7 +441,9 @@ public class ZipStepTest {
     ImmutableList<String> entries1 = getEntries(filesystem, output);
 
     // Run the zip step on a filesystem with a different ordering.
-    filesystem = new FakeProjectFilesystem();
+    filesystem.mkdirs(root2);
+    AbsPath rootPath2 = ProjectFilesystemUtils.getAbsPathForRelativePath(tmp.getRoot(), root2);
+    filesystem = TestProjectFilesystems.createProjectFilesystem(rootPath2);
     context = TestExecutionContext.newInstance();
     filesystem.mkdirs(zipdir);
     filesystem.touch(zipdir.resolve("file2"));

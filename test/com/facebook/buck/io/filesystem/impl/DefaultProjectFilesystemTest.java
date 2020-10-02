@@ -459,7 +459,7 @@ public class DefaultProjectFilesystemTest {
 
     // Archive it into a zipfile using `Zip.create`.
     AbsPath zipFile = tmp.getRoot().resolve("test.zip");
-    Zip.create(filesystem, ImmutableList.of(exe.getPath()), zipFile.getPath());
+    Zip.create(filesystem.getRootPath(), ImmutableList.of(exe.getPath()), zipFile.getPath());
 
     // Now unpack the archive (using apache's common-compress, as it preserves
     // executable permissions) and verify that the archive entry has executable
@@ -483,7 +483,7 @@ public class DefaultProjectFilesystemTest {
 
     // Archive it into a zipfile using `Zip.create`.
     AbsPath zipFile = tmp.getRoot().resolve("test.zip");
-    Zip.create(filesystem, ImmutableList.of(exe.getPath()), zipFile.getPath());
+    Zip.create(filesystem.getRootPath(), ImmutableList.of(exe.getPath()), zipFile.getPath());
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -523,7 +523,7 @@ public class DefaultProjectFilesystemTest {
     AbsPath output = tmp.newFile("out.zip");
 
     Zip.create(
-        filesystem,
+        filesystem.getRootPath(),
         ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")),
         output.getPath());
 
@@ -541,7 +541,7 @@ public class DefaultProjectFilesystemTest {
     AbsPath output = tmp.newFile("out.zip");
 
     Zip.create(
-        filesystem,
+        filesystem.getRootPath(),
         ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt"), Paths.get("empty")),
         output.getPath());
 
@@ -559,7 +559,7 @@ public class DefaultProjectFilesystemTest {
     AbsPath output = tmp.newFile("out.zip");
 
     Zip.create(
-        filesystem,
+        filesystem.getRootPath(),
         ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")),
         output.getPath());
 

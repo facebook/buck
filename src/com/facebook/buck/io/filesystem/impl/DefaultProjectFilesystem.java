@@ -20,8 +20,6 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.file.MorePosixFilePermissions;
-import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.file.PathListing;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
@@ -803,24 +801,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
 
   @Override
   public long getPosixFileMode(Path path) throws IOException {
-    long mode = 0;
-    // Support executable files.  If we detect this file is executable, store this
-    // information as 0100 in the field typically used in zip implementations for
-    // POSIX file permissions.  We'll use this information when unzipping.
-    if (isExecutable(path)) {
-      mode |= MorePosixFilePermissions.toMode(EnumSet.of(PosixFilePermission.OWNER_EXECUTE));
-    }
-
-    if (isDirectory(path)) {
-      mode |= MostFiles.S_IFDIR;
-    } else if (isFile(path)) {
-      mode |= MostFiles.S_IFREG;
-    }
-
-    // Propagate any additional permissions
-    mode |= MorePosixFilePermissions.toMode(getPosixFilePermissions(path));
-
-    return mode;
+    return ProjectFilesystemUtils.getPosixFileModes(projectRoot, path);
   }
 
   @Override

@@ -21,6 +21,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem/impl:impl",
+        "//src/com/facebook/buck/io/filesystem/impl:utils",
         "//src/com/facebook/buck/jvm/core:core",
         "//src/com/facebook/buck/jvm/java:config",
         "//src/com/facebook/buck/jvm/java:rules",

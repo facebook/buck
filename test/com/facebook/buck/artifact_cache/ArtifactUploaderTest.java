@@ -33,6 +33,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TarInspector;
 import com.facebook.buck.util.types.Unit;
@@ -59,11 +60,13 @@ import org.junit.Test;
 public class ArtifactUploaderTest {
 
   private static final BuildTarget BUILD_TARGET = BuildTargetFactory.newInstance("//foo:bar");
+  private static final AbsPath DEFAULT_TEST_FILESYSTEM_ROOT =
+      AbsPath.of(Paths.get(".").toAbsolutePath()).normalize();
 
   @Test
   public void testPerformUploadToArtifactCache() throws IOException {
-
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(DEFAULT_TEST_FILESYSTEM_ROOT);
 
     byte[] contents = "contents".getBytes();
 

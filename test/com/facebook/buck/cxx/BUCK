@@ -200,6 +200,7 @@ java_test(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem/impl:impl",
+        "//src/com/facebook/buck/io/filesystem/impl:utils",
         "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/io/watchman:transport",
         "//src/com/facebook/buck/io/watchman:watchman",
