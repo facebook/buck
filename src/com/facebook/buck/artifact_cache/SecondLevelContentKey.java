@@ -33,6 +33,9 @@ public abstract class SecondLevelContentKey {
   private static final String CAS_ONLY_PREFIX = "cas";
   private static final String CONTENT_KEY_SEPARATOR = "/";
   private static final String CONTENT_KEY_DIGEST_INFO_SEPARATOR = ":";
+  // Old-style key format is [SHA-1][2c00], and SHA-1 hashes is 40 characters long
+  private static final int OLD_STYLE_KEY_LENGTH = 44;
+  private static final long UNDEFINED_DIGEST_DIGEST_BYTES = 0L;
 
   /** Types of content keys. Can be used to send/retrieve from different backends. */
   public enum Type {
@@ -54,7 +57,7 @@ public abstract class SecondLevelContentKey {
    */
   public static SecondLevelContentKey fromString(String contentKey) {
     // SHA-1 hashes are 40 characters long
-    if (contentKey.length() == 44 && contentKey.endsWith(OLD_STYLE_SUFFIX)) {
+    if (contentKey.length() == OLD_STYLE_KEY_LENGTH && contentKey.endsWith(OLD_STYLE_SUFFIX)) {
       return new Builder().setType(Type.OLD_STYLE).setKey(contentKey).build();
     }
 
@@ -84,8 +87,8 @@ public abstract class SecondLevelContentKey {
   public static String getDigestHash(SecondLevelContentKey contentKey) {
     String key = contentKey.getKey();
     // Check if this is the old style contentKey
-    if (key.length() == 44 && key.endsWith(OLD_STYLE_SUFFIX)) {
-      return key.substring(0, 40);
+    if (key.length() == OLD_STYLE_KEY_LENGTH && key.endsWith(OLD_STYLE_SUFFIX)) {
+      return key.substring(0, OLD_STYLE_KEY_LENGTH - OLD_STYLE_SUFFIX.length());
     }
 
     String[] parts = key.split(CONTENT_KEY_DIGEST_INFO_SEPARATOR, 2);
@@ -97,12 +100,12 @@ public abstract class SecondLevelContentKey {
     String key = contentKey.getKey();
     // Check if this is the old-style contentKey, old-style contentKey does not have DigestBytes
     // info
-    if (key.length() == 44 && key.endsWith(OLD_STYLE_SUFFIX)) {
-      return 0L;
+    if (key.length() == OLD_STYLE_KEY_LENGTH && key.endsWith(OLD_STYLE_SUFFIX)) {
+      return UNDEFINED_DIGEST_DIGEST_BYTES;
     }
     String[] parts = key.split(CONTENT_KEY_DIGEST_INFO_SEPARATOR, 2);
     if (parts.length < 2) {
-      return 0L;
+      return UNDEFINED_DIGEST_DIGEST_BYTES;
     }
     return Long.parseLong(parts[1]);
   }
