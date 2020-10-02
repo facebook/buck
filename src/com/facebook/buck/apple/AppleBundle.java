@@ -53,6 +53,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.BuildStepResultHolder;
+import com.facebook.buck.step.ConditionalStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -74,6 +75,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -303,11 +305,14 @@ public class AppleBundle extends AbstractBuildRule
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
 
-    Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier =
-        getPreviousBuildHashesSupplier(context, stepsBuilder);
+    Supplier<Optional<AppleBundleIncrementalInfo>> incrementalInfoSupplier =
+        readIncrementalInfo(context, stepsBuilder);
+
+    Supplier<Boolean> shouldPerformIncrementalBuildSupplier =
+        () -> incrementalBundlingEnabled && incrementalInfoSupplier.get().isPresent();
 
     if (incrementalBundlingEnabled) {
-      createBundleRootDirectory(context, stepsBuilder);
+      createBundleRootDirectory(context, stepsBuilder, shouldPerformIncrementalBuildSupplier);
     } else {
       stepsBuilder.addAll(
           MakeCleanDirectoryStep.of(
@@ -315,7 +320,19 @@ public class AppleBundle extends AbstractBuildRule
                   context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot)));
     }
 
-    Supplier<Boolean> shouldPerformIncrementalBuildSupplier = () -> incrementalBundlingEnabled;
+    ImmutableList<RelPath> codeSignOnCopyPaths =
+        collectCodeSignOnCopyPaths(context.getSourcePathResolver());
+
+    Optional<Supplier<Map<RelPath, String>>> maybeCurrentBuildHashesSupplier;
+    if (incrementalBundlingEnabled) {
+      Supplier<Map<RelPath, String>> currentBuildHashesSupplier =
+          computeCurrentBuildHashes(context, stepsBuilder);
+      maybeCurrentBuildHashesSupplier = Optional.of(currentBuildHashesSupplier);
+      appendWriteIncrementalInfoSteps(
+          stepsBuilder, context, buildableContext, currentBuildHashesSupplier, codeSignOnCopyPaths);
+    } else {
+      maybeCurrentBuildHashesSupplier = Optional.empty();
+    }
 
     if (hasBinary()) {
       appendCopyDsymStep(stepsBuilder, buildableContext, context);
@@ -325,20 +342,6 @@ public class AppleBundle extends AbstractBuildRule
       AppleResourceProcessing.verifyResourceConflicts(
           resources, bundleParts, context.getSourcePathResolver(), destinations);
     }
-
-    if (incrementalBundlingEnabled) {
-      ImmutableSortedMap.Builder<RelPath, String> newContentHashesBuilder =
-          ImmutableSortedMap.orderedBy(RelPath.comparator());
-      Supplier<ImmutableMap<RelPath, String>> newContentHashesSupplier =
-          newContentHashesBuilder::build;
-      addStepsToComputeNewContentHashes(
-          context.getSourcePathResolver(), stepsBuilder, newContentHashesBuilder);
-      appendWriteNewContentHashesStep(
-          stepsBuilder, context, buildableContext, newContentHashesSupplier);
-    }
-
-    Optional<Supplier<ImmutableMap<RelPath, String>>> maybeNewContentHashesSupplier =
-        getCurrentBuildHashesSupplier(context, buildableContext, stepsBuilder);
 
     AppleResourceProcessing.addStepsToCopyResources(
         context,
@@ -350,17 +353,16 @@ public class AppleBundle extends AbstractBuildRule
         getProjectFilesystem(),
         processedResourcesDir,
         shouldPerformIncrementalBuildSupplier,
-        oldContentHashesSupplier,
-        maybeNewContentHashesSupplier);
+        () -> incrementalInfoSupplier.get().map(AppleBundleIncrementalInfo::getHashes),
+        maybeCurrentBuildHashesSupplier);
 
-    if (maybeNewContentHashesSupplier.isPresent()) {
-      addStepToDeleteBundlePartsFromPreviousBuildMissingInCurrentBuild(
-          oldContentHashesSupplier,
-          maybeNewContentHashesSupplier.get(),
-          stepsBuilder,
-          bundleRoot,
-          getProjectFilesystem());
-    }
+    deleteBundlePartsFromPreviousBuildMissingInCurrentBuild(
+        shouldPerformIncrementalBuildSupplier,
+        incrementalInfoSupplier,
+        maybeCurrentBuildHashesSupplier,
+        stepsBuilder,
+        bundleRoot,
+        getProjectFilesystem());
 
     if (codeSignType != AppleCodeSignType.SKIP) {
       Supplier<CodeSignIdentity> codeSignIdentitySupplier =
@@ -372,9 +374,6 @@ public class AppleBundle extends AbstractBuildRule
           dryRunCodeSigning ? Optional.empty() : Optional.of(codeSignIdentitySupplier),
           stepsBuilder,
           false);
-
-      ImmutableList<RelPath> codeSignOnCopyPaths =
-          collectCodeSignOnCopyPaths(context.getSourcePathResolver());
 
       ImmutableList<Path> resolvedCodeSignOnCopyPaths =
           codeSignOnCopyPaths.stream()
@@ -414,6 +413,20 @@ public class AppleBundle extends AbstractBuildRule
         context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput()).getPath());
 
     return stepsBuilder.build();
+  }
+
+  private Supplier<Optional<AppleBundleIncrementalInfo>> readIncrementalInfo(
+      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
+    BuildStepResultHolder<AppleBundleIncrementalInfo> incrementalInfoHolder =
+        new BuildStepResultHolder<>();
+    if (incrementalBundlingEnabled) {
+      stepsBuilder.add(
+          new AppleBundleIncrementalInfoReadStep(
+              getProjectFilesystem(),
+              AbsPath.of(context.getBuildCellRootPath().resolve(getIncrementalInfoFilePath())),
+              incrementalInfoHolder));
+    }
+    return incrementalInfoHolder::getValue;
   }
 
   private ImmutableList<RelPath> collectCodeSignOnCopyPaths(
@@ -456,88 +469,86 @@ public class AppleBundle extends AbstractBuildRule
     return codeSignOnCopyPathsBuilder.build();
   }
 
-  private void addStepToDeleteBundlePartsFromPreviousBuildMissingInCurrentBuild(
-      Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
-      Supplier<ImmutableMap<RelPath, String>> newContentHashesSupplier,
+  private void deleteBundlePartsFromPreviousBuildMissingInCurrentBuild(
+      Supplier<Boolean> shouldPerformIncrementalBuildSupplier,
+      Supplier<Optional<AppleBundleIncrementalInfo>> incrementalInfoSupplier,
+      Optional<Supplier<Map<RelPath, String>>> maybeCurrentBuildHashesSupplier,
       ImmutableList.Builder<Step> stepsBuilder,
       Path bundleRoot,
       ProjectFilesystem projectFilesystem) {
     stepsBuilder.add(
-        new AbstractExecutionStep("apple-bundle-delete-bundle-parts") {
-          @Override
-          public StepExecutionResult execute(StepExecutionContext context) {
-            Sets.difference(
-                    oldContentHashesSupplier.get().keySet(),
-                    newContentHashesSupplier.get().keySet())
-                .parallelStream()
-                .forEach(
-                    path -> {
-                      try {
-                        projectFilesystem.deleteRecursivelyIfExists(
-                            bundleRoot.resolve(path.getPath()));
-                      } catch (IOException exception) {
-                        throw new RuntimeException(exception.getMessage());
-                      }
-                    });
-            return StepExecutionResults.SUCCESS;
-          }
-        });
+        new ConditionalStep(
+            shouldPerformIncrementalBuildSupplier,
+            new AbstractExecutionStep("apple-bundle-delete-redundant-bundle-parts") {
+              @Override
+              public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+                Map<RelPath, String> oldHashes =
+                    incrementalInfoSupplier
+                        .get()
+                        .orElseThrow(
+                            () ->
+                                new IllegalStateException(
+                                    "Incremental info should be present when incremental build is performed"))
+                        .getHashes();
+                Map<RelPath, String> newHashes =
+                    maybeCurrentBuildHashesSupplier
+                        .orElseThrow(
+                            () ->
+                                new IllegalStateException(
+                                    "Content hashes for current build should be computed when incremental build is performed"))
+                        .get();
+                Sets.difference(oldHashes.keySet(), newHashes.keySet())
+                    .parallelStream()
+                    .forEach(
+                        path -> {
+                          try {
+                            projectFilesystem.deleteRecursivelyIfExists(
+                                bundleRoot.resolve(path.getPath()));
+                          } catch (IOException exception) {
+                            throw new RuntimeException(exception.getMessage());
+                          }
+                        });
+
+                return StepExecutionResults.SUCCESS;
+              }
+            }));
   }
 
   @Nonnull
-  private Optional<Supplier<ImmutableMap<RelPath, String>>> getCurrentBuildHashesSupplier(
-      BuildContext context,
-      BuildableContext buildableContext,
-      ImmutableList.Builder<Step> stepsBuilder) {
-    if (incrementalBundlingEnabled) {
-      ImmutableSortedMap.Builder<RelPath, String> newContentHashesBuilder =
-          ImmutableSortedMap.orderedBy(RelPath.comparator());
-      Optional<Supplier<ImmutableMap<RelPath, String>>> maybeNewContentHashesSupplier =
-          Optional.of(newContentHashesBuilder::build);
-      addStepsToComputeNewContentHashes(
-          context.getSourcePathResolver(), stepsBuilder, newContentHashesBuilder);
-      appendWriteNewContentHashesStep(
-          stepsBuilder, context, buildableContext, maybeNewContentHashesSupplier.get());
-      return maybeNewContentHashesSupplier;
-    } else {
-      return Optional.empty();
-    }
+  private Supplier<Map<RelPath, String>> computeCurrentBuildHashes(
+      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
+    ImmutableSortedMap.Builder<RelPath, String> hashesBuilder =
+        ImmutableSortedMap.orderedBy(RelPath.comparator());
+    Supplier<Map<RelPath, String>> hashesSupplier = hashesBuilder::build;
+    addStepsToComputeNewContentHashes(context.getSourcePathResolver(), stepsBuilder, hashesBuilder);
+    return hashesSupplier;
   }
 
   private void createBundleRootDirectory(
-      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
+      BuildContext context,
+      ImmutableList.Builder<Step> stepsBuilder,
+      Supplier<Boolean> shouldPerformIncrementalBuildSupplier) {
     BuildCellRelativePath bundleRootPath =
         BuildCellRelativePath.fromCellRelativePath(
             context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot);
-    if (incrementalBundlingEnabled) {
-      stepsBuilder.add(MkdirStep.of(bundleRootPath));
-    } else {
-      stepsBuilder.addAll(MakeCleanDirectoryStep.of(bundleRootPath));
-    }
-  }
-
-  @Nonnull
-  private Supplier<ImmutableMap<RelPath, String>> getPreviousBuildHashesSupplier(
-      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
-    ImmutableMap.Builder<RelPath, String> oldContentHashesBuilder = ImmutableMap.builder();
-    Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier =
-        oldContentHashesBuilder::build;
-    if (incrementalBundlingEnabled) {
-      appendReadExistingContentHashesStep(
-          stepsBuilder,
-          AbsPath.of(context.getBuildCellRootPath().resolve(getContentHashesFilePath())),
-          oldContentHashesBuilder);
-    }
-    return oldContentHashesSupplier;
-  }
-
-  private void appendReadExistingContentHashesStep(
-      ImmutableList.Builder<Step> stepsBuilder,
-      AbsPath contentHashesFilePath,
-      ImmutableMap.Builder<RelPath, String> bundlePartPathToHash) {
     stepsBuilder.add(
-        new AppleBundleContentHashesReadStep(
-            getProjectFilesystem(), contentHashesFilePath, bundlePartPathToHash));
+        new AbstractExecutionStep("apple-bundle-create-root-dir") {
+          @Override
+          public StepExecutionResult execute(StepExecutionContext context)
+              throws IOException, InterruptedException {
+            if (shouldPerformIncrementalBuildSupplier.get()) {
+              return MkdirStep.of(bundleRootPath).execute(context);
+            } else {
+              for (Step step : MakeCleanDirectoryStep.of(bundleRootPath)) {
+                StepExecutionResult result = step.execute(context);
+                if (!result.isSuccess()) {
+                  return result;
+                }
+              }
+              return StepExecutionResults.SUCCESS;
+            }
+          }
+        });
   }
 
   private void addStepsToComputeNewContentHashes(
@@ -685,26 +696,28 @@ public class AppleBundle extends AbstractBuildRule
         });
   }
 
-  private void appendWriteNewContentHashesStep(
+  private void appendWriteIncrementalInfoSteps(
       ImmutableList.Builder<Step> stepsBuilder,
       BuildContext context,
       BuildableContext buildableContext,
-      Supplier<ImmutableMap<RelPath, String>> contentHashesSupplier) {
+      Supplier<Map<RelPath, String>> contentHashesSupplier,
+      ImmutableList<RelPath> codeSignOnCopyPaths) {
     BuildCellRelativePath contentHashesFilePathRelativeToCell =
         BuildCellRelativePath.fromCellRelativePath(
-            context.getBuildCellRootPath(), getProjectFilesystem(), getContentHashesFilePath());
+            context.getBuildCellRootPath(), getProjectFilesystem(), getIncrementalInfoFilePath());
     stepsBuilder.add(RmStep.of(contentHashesFilePathRelativeToCell));
     stepsBuilder.add(
-        new AppleWriteHashPerFileStep(
-            "persist-apple-bundle-hashes",
+        new AppleWriteIncrementalInfoStep(
             contentHashesSupplier,
-            getContentHashesFilePath(),
+            codeSignOnCopyPaths,
+            codeSignType != AppleCodeSignType.SKIP,
+            getIncrementalInfoFilePath(),
             getProjectFilesystem()));
-    buildableContext.recordArtifact(getContentHashesFilePath());
+    buildableContext.recordArtifact(getIncrementalInfoFilePath());
   }
 
-  private Path getContentHashesFilePath() {
-    return bundleRoot.getParent().resolve("content_hashes.json");
+  private Path getIncrementalInfoFilePath() {
+    return bundleRoot.getParent().resolve("incremental_info.json");
   }
 
   private Supplier<CodeSignIdentity> appendStepsToSelectCodeSignIdentity(
