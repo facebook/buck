@@ -77,6 +77,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -2288,6 +2289,40 @@ public class AppleBundleIntegrationTest {
 
     assertTrue(filesystem.exists(outputPath.resolve(shouldBeCopiedPath.getPath())));
     assertFalse(filesystem.exists(outputPath.resolve(shouldNotBeCopiedPath.getPath())));
+  }
+
+  @Test
+  public void
+      givenFileIsRemovedFromProjectAfterSuccessfulBuild_whenIncrementalBuildIsPerformed_thenItIsRemovedFromNewVersionOfBundle()
+          throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_parts_of_every_kind", tmp);
+    workspace.setUp();
+
+    workspace.addBuckConfigLocalOption("apple", "incremental_bundling_enabled", "true");
+    workspace.addBuckConfigLocalOption("apple", "codesign", "/usr/bin/true");
+
+    Path buildTriggerPath = Paths.get("App/BuildTrigger.m");
+    filesystem.writeContentsToPath("", buildTriggerPath);
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#macosx-x86_64,no-debug");
+    Path outputPath = workspace.buildAndReturnOutput(target.toString());
+
+    assertTrue(filesystem.exists(outputPath.resolve("Contents/Resources/xx.lproj")));
+
+    Path buckFilePath = Paths.get("BUCK");
+
+    List<String> lines = filesystem.readLines(buckFilePath);
+    List<String> updatedLines =
+        lines.stream()
+            .filter(s -> !s.contains("Strings/xx.lproj/Localizable.strings"))
+            .collect(Collectors.toList());
+    filesystem.writeLinesToPath(updatedLines, buckFilePath);
+
+    workspace.buildAndReturnOutput(target.toString());
+
+    assertFalse(filesystem.exists(outputPath.resolve("Contents/Resources/xx.lproj")));
   }
 
   @Test
