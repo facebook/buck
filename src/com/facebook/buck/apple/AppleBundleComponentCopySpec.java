@@ -16,17 +16,12 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.StepExecutionResults;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -96,6 +91,10 @@ public class AppleBundleComponentCopySpec {
     return destinationPathRelativeToBundleRoot;
   }
 
+  public boolean ignoreIfMissing() {
+    return ignoreIfMissing;
+  }
+
   private static RelPath destinationPathRelativeToBundleRoot(
       SourcePathResolverAdapter sourcePathResolver,
       AppleBundleDestinations destinations,
@@ -106,16 +105,6 @@ public class AppleBundleComponentCopySpec {
     AbsPath resolvedSourcePath = sourcePathResolver.getAbsolutePath(sourcePath);
     String destinationFileName = maybeNewName.orElse(resolvedSourcePath.getFileName().toString());
     return destinationDirectoryPath.resolveRel(destinationFileName);
-  }
-
-  public Step createCopyStep(ProjectFilesystem projectFilesystem, Path bundleRootPath) {
-    return new AbstractExecutionStep("copy-apple-bundle-component") {
-      @Override
-      public StepExecutionResult execute(StepExecutionContext stepContext) throws IOException {
-        performCopy(projectFilesystem, bundleRootPath);
-        return StepExecutionResults.SUCCESS;
-      }
-    };
   }
 
   /** Perform actual copy according to the spec. */

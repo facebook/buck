@@ -96,7 +96,9 @@ public class AppleResourceProcessing {
         bundleParts,
         dirRoot,
         destinations,
-        projectFilesystem);
+        projectFilesystem,
+        oldContentHashesSupplier,
+        newContentHashesSupplier);
   }
 
   private static void addStepsToCreateDirectoriesWhereBundlePartsAreCopied(
@@ -188,17 +190,52 @@ public class AppleResourceProcessing {
       AbsPath fromPath = sourceContainerDirectoryPath.resolve(fileName);
       RelPath toPathRelativeToBundleRoot = destinationDirectoryPath.resolveRel(fileName);
       prepareCopyFileToBundleWithIncrementalSupport(
-          fromPath,
-          toPathRelativeToBundleRoot,
+          new AppleBundleComponentCopySpec(fromPath, toPathRelativeToBundleRoot, false),
           newContentHashesSupplier,
           oldContentHashesSupplier,
+          projectFilesystem,
           dirRoot,
           pathsToDeleteBuilder,
           copySpecsBuilder);
     }
 
-    pathsToDeleteBuilder
-        .build()
+    deleteRedundantBundlePartsAndCopyNewComponents(
+        pathsToDeleteBuilder.build(), copySpecsBuilder.build(), projectFilesystem, dirRoot);
+  }
+
+  private static void prepareCopyFileToBundleWithIncrementalSupport(
+      AppleBundleComponentCopySpec copySpec,
+      Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier,
+      Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
+      ProjectFilesystem projectFilesystem,
+      Path dirRoot,
+      ImmutableSet.Builder<Path> pathsToDeleteBuilder,
+      ImmutableSet.Builder<AppleBundleComponentCopySpec> copySpecsBuilder) {
+    RelPath toPathRelativeToBundleRoot = copySpec.getDestinationPathRelativeToBundleRoot();
+    if (newContentHashesSupplier.isPresent()) {
+      String oldHash = oldContentHashesSupplier.get().get(toPathRelativeToBundleRoot);
+      String newHash = newContentHashesSupplier.get().get().get(toPathRelativeToBundleRoot);
+      Path toPathRelativeToProjectRoot = dirRoot.resolve(toPathRelativeToBundleRoot.getPath());
+      Preconditions.checkState(
+          newHash != null
+              || (copySpec.ignoreIfMissing()
+                  && !projectFilesystem.exists(toPathRelativeToProjectRoot)),
+          "Expecting a hash to be computed when incremental bundling is enabled unless file is missing and such case should be ignored");
+      if (oldHash != null && oldHash.equals(newHash)) {
+        return;
+      }
+      pathsToDeleteBuilder.add(dirRoot.resolve(toPathRelativeToBundleRoot.getPath()));
+    }
+    copySpecsBuilder.add(copySpec);
+  }
+
+  private static void deleteRedundantBundlePartsAndCopyNewComponents(
+      ImmutableSet<Path> pathsToDelete,
+      ImmutableSet<AppleBundleComponentCopySpec> copySpecs,
+      ProjectFilesystem projectFilesystem,
+      Path dirRoot) {
+
+    pathsToDelete
         .parallelStream()
         .forEach(
             path -> {
@@ -209,8 +246,7 @@ public class AppleResourceProcessing {
               }
             });
 
-    copySpecsBuilder
-        .build()
+    copySpecs
         .parallelStream()
         .forEach(
             spec -> {
@@ -220,28 +256,6 @@ public class AppleResourceProcessing {
                 throw new RuntimeException(exception.getMessage());
               }
             });
-  }
-
-  private static void prepareCopyFileToBundleWithIncrementalSupport(
-      AbsPath fromPath,
-      RelPath toPathRelativeToBundleRoot,
-      Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier,
-      Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
-      Path dirRoot,
-      ImmutableSet.Builder<Path> pathsToDeleteBuilder,
-      ImmutableSet.Builder<AppleBundleComponentCopySpec> copySpecsBuilder) {
-    if (newContentHashesSupplier.isPresent()) {
-      String oldHash = oldContentHashesSupplier.get().get(toPathRelativeToBundleRoot);
-      String newHash = newContentHashesSupplier.get().get().get(toPathRelativeToBundleRoot);
-      Preconditions.checkState(
-          newHash != null, "Expecting a hash to be computed when incremental bundling is enabled");
-      if (oldHash != null && oldHash.equals(newHash)) {
-        return;
-      }
-      pathsToDeleteBuilder.add(dirRoot.resolve(toPathRelativeToBundleRoot.getPath()));
-    }
-    copySpecsBuilder.add(
-        new AppleBundleComponentCopySpec(fromPath, toPathRelativeToBundleRoot, false));
   }
 
   private static void addStepsToCopyProcessedResources(
@@ -310,7 +324,9 @@ public class AppleResourceProcessing {
       ImmutableList<AppleBundlePart> bundleParts,
       Path dirRoot,
       AppleBundleDestinations destinations,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
+      Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
 
     List<AppleBundleComponentCopySpec> copySpecs = new LinkedList<>();
 
@@ -377,10 +393,32 @@ public class AppleResourceProcessing {
               }
             });
 
-    stepsBuilder.addAll(
-        copySpecs.stream()
-            .map(spec -> spec.createCopyStep(projectFilesystem, dirRoot))
-            .collect(Collectors.toList()));
+    stepsBuilder.add(
+        new AbstractExecutionStep("apple-bundle-copy-non-processed-parts") {
+          @Override
+          public StepExecutionResult execute(StepExecutionContext context) {
+
+            ImmutableSet.Builder<Path> pathsToDeleteBuilder = ImmutableSet.builder();
+            ImmutableSet.Builder<AppleBundleComponentCopySpec> copySpecsBuilder =
+                ImmutableSet.builder();
+
+            for (AppleBundleComponentCopySpec spec : copySpecs) {
+              prepareCopyFileToBundleWithIncrementalSupport(
+                  spec,
+                  newContentHashesSupplier,
+                  oldContentHashesSupplier,
+                  projectFilesystem,
+                  dirRoot,
+                  pathsToDeleteBuilder,
+                  copySpecsBuilder);
+            }
+
+            deleteRedundantBundlePartsAndCopyNewComponents(
+                pathsToDeleteBuilder.build(), copySpecsBuilder.build(), projectFilesystem, dirRoot);
+
+            return StepExecutionResults.SUCCESS;
+          }
+        });
   }
 
   /** Checks and throws an exception if parts of bundle have conflicting paths */
