@@ -57,7 +57,6 @@ public class AppleResourceProcessing {
   public static void addStepsToCopyResources(
       BuildContext context,
       ImmutableList.Builder<Step> stepsBuilder,
-      ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
       AppleBundleResources resources,
       ImmutableList<AppleBundlePart> bundleParts,
       Path dirRoot,
@@ -91,7 +90,6 @@ public class AppleResourceProcessing {
     addStepsToCopyNonProcessedFilesAndDirectories(
         context.getSourcePathResolver(),
         stepsBuilder,
-        codeSignOnCopyPathsBuilder,
         resources,
         bundleParts,
         dirRoot,
@@ -319,7 +317,6 @@ public class AppleResourceProcessing {
   private static void addStepsToCopyNonProcessedFilesAndDirectories(
       SourcePathResolverAdapter sourcePathResolver,
       ImmutableList.Builder<Step> stepsBuilder,
-      ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder,
       AppleBundleResources resources,
       ImmutableList<AppleBundlePart> bundleParts,
       Path dirRoot,
@@ -342,12 +339,6 @@ public class AppleResourceProcessing {
             AppleBundleComponentCopySpec copySpec =
                 new AppleBundleComponentCopySpec(bundlePart, sourcePathResolver, destinations);
             copySpecs.add(copySpec);
-
-            if (bundlePart.getCodesignOnCopy()) {
-              Path toPath =
-                  dirRoot.resolve(copySpec.getDestinationPathRelativeToBundleRoot().getPath());
-              codeSignOnCopyPathsBuilder.add(toPath);
-            }
           });
     }
 
@@ -363,12 +354,6 @@ public class AppleResourceProcessing {
             AppleBundleComponentCopySpec copySpec =
                 new AppleBundleComponentCopySpec(bundlePart, sourcePathResolver, destinations);
             copySpecs.add(copySpec);
-
-            if (bundlePart.getCodesignOnCopy()) {
-              Path toPath =
-                  dirRoot.resolve(copySpec.getDestinationPathRelativeToBundleRoot().getPath());
-              codeSignOnCopyPathsBuilder.add(toPath);
-            }
           });
     }
 
@@ -385,12 +370,6 @@ public class AppleResourceProcessing {
                   new AppleBundleComponentCopySpec(
                       pathWithDestination, sourcePathResolver, destinations);
               copySpecs.add(copySpec);
-
-              if (pathWithDestination.getCodesignOnCopy()) {
-                Path toPath =
-                    dirRoot.resolve(copySpec.getDestinationPathRelativeToBundleRoot().getPath());
-                codeSignOnCopyPathsBuilder.add(toPath);
-              }
             });
 
     stepsBuilder.add(
