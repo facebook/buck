@@ -811,7 +811,7 @@ rdeps(<em title="target expression">universe:expr</em>, <em title="target expres
 The <code>rdeps(universe, argset)</code> operator returns the reverse dependencies
 of the argument set <code><em>argset</em></code> within the
 {sp}<a href="https://en.wikipedia.org/wiki/Transitive_closure">transitive closure</a>{sp}
-of the set <code><em>universe</em></code> (the <em>universe</em>). The returned values include
+of the set of targets <code><em>universe</em></code> (the <em>universe</em>). The returned values include
 the nodes from the argument set <code><em>argset</em></code> itself.
 </p>
 
@@ -826,7 +826,8 @@ If the <code><em>depth</em></code> parameter is omitted, the search is unbounded
 <b>Example</b>
 
 <p>
-The <em>universe:expr</em> parameter includes the <em>entire</em> transitive
+The <em>universe:expr</em> parameter is a set of targets, such as <code>"//..."</code>, or <code>"//foo/..."</code>.
+&nbsp;<em>universe:expr</em> includes the <em>entire</em> transitive
 closure of the target pattern specified. So some of these targets might be
 outside the directory structure indicated by that target pattern.  For example,
 the result set of
