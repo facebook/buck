@@ -34,8 +34,7 @@ def main():
         raise Exception(
             "cannot find thinlto.indices arg: {}".format(expanded_expanded_args)
         )
-
-    indices, = thinlto_args
+    (indices,) = thinlto_args
 
     # write the args to the expected files manually
     with open(indices + "/main.cpp.o.thinlto.bc", "w") as f:

@@ -18,6 +18,7 @@ import re
 import sys
 from collections import defaultdict
 
+
 SECTION_REGEX = re.compile(
     r"{call buckconfig.section}\s*{param name: '(?P<section>.+?)' /}",
     re.DOTALL | re.MULTILINE,

@@ -30,6 +30,7 @@ from artificialproject.field_generators import (
 )
 from artificialproject.random import weighted_choice
 
+
 Context = collections.namedtuple(
     "Context",
     [

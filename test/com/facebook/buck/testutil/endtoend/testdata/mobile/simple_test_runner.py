@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 
+
 if __name__ == "__main__":
     test_specs = []
     # Flags are --buck-test-info /path/to/specs

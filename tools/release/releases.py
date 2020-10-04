@@ -19,8 +19,8 @@ import tempfile
 import dateutil.parser
 import magic
 import requests
-
 from platforms.common import ReleaseException, run
+
 
 MESSAGE_PROMPT_TEMPLATE = """\
 # Add release notes below. Any lines starting with '#' will be ignored.

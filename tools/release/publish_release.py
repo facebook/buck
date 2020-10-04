@@ -42,6 +42,7 @@ from releases import (
     get_token,
 )
 
+
 TARGET_MACOS_VERSION = "yosemite"
 TARGET_MACOS_VERSION_SPEC = TARGET_MACOS_VERSION
 

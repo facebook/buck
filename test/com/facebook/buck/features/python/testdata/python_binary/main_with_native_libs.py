@@ -1,6 +1,7 @@
 import ctypes
 import platform
 
+
 lib = "libfoo"
 if platform.system() == "Linux":
     lib += ".so"

@@ -5,6 +5,7 @@ from __future__ import print_function
 import argparse
 import os
 
+
 parser = argparse.ArgumentParser(description="Test")
 parser.add_argument("--output-dir", dest="output_dir", action="store")
 

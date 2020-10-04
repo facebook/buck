@@ -18,6 +18,7 @@ import os
 import subprocess
 import time
 
+
 LINUX_EXIT_ZERO = ["/bin/sh", "-c", "exit", "0"]
 WINDOWS_EXIT_ZERO = ["powershell", "-Command", "exit", "0"]
 

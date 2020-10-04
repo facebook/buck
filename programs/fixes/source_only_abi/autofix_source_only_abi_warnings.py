@@ -23,6 +23,7 @@ from collections import namedtuple
 import buckutils as buck
 import javautils as java
 
+
 # Example:
 #         timestamp         level      command       tid                 class                                                           message
 #  |---------------------|  |   |  |----------||     ||  |----------------------------------------------|  |---------------------------------------------------------------------------------------------------------------------------------------------------------|
