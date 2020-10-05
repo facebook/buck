@@ -2234,9 +2234,6 @@ public class AppleBundleIntegrationTest {
     // processed resources
     givenBundleElementIsChanged_whenIncrementalBuildIsPerformed_thenOnlyChangedElementIsCopiedToBundle(
         RelPath.get("Contents/Resources/aa.lproj"), RelPath.get("Contents/Resources/xx.lproj"));
-    // non-processed parts
-    givenBundleElementIsChanged_whenIncrementalBuildIsPerformed_thenOnlyChangedElementIsCopiedToBundle(
-        RelPath.get("Contents/Resources/Image.png"), RelPath.get("Contents/PkgInfo"));
   }
 
   private void
@@ -2261,9 +2258,6 @@ public class AppleBundleIntegrationTest {
     JsonParser parser = ObjectMappers.createParser(hashesFilePath);
     Map<String, String> pathToHash =
         parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
-
-    assertTrue("First file should exist", Files.exists(outputPath.resolve(path1.getPath())));
-    assertTrue("Second file should exist", Files.exists(outputPath.resolve(path2.getPath())));
 
     RelPath shouldNotBeCopiedPath = path1;
     RelPath shouldBeCopiedPath = path2;
