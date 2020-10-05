@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.step;
+package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import java.util.Optional;
 
-/** Auxiliary class to pass result of arbitrary type between steps. */
-public class BuildStepResultHolder<T> {
+/** Auxiliary class to pass result of type {@link ProvisioningProfileMetadata} between steps. */
+public class ProvisioningProfileMetadataHolder {
 
-  private Optional<T> value = Optional.empty();
+  private Optional<ProvisioningProfileMetadata> metadata = Optional.empty();
 
-  public Optional<T> getValue() {
-    return value;
+  public Optional<ProvisioningProfileMetadata> getMetadata() {
+    return metadata;
   }
 
-  public void setValue(T value) {
-    this.value = Optional.of(value);
+  public void setMetadata(ProvisioningProfileMetadata metadata) {
+    this.metadata = Optional.of(metadata);
   }
 }

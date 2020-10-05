@@ -29,7 +29,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.BuildStepResultHolder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -62,7 +61,7 @@ public class ProvisioningProfileSelectStep implements Step {
   private final Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier;
   private final ProvisioningProfileStore provisioningProfileStore;
   private final Optional<Path> dryRunResultsPath;
-  private final BuildStepResultHolder<ProvisioningProfileMetadata> profileSelectionResult;
+  private final ProvisioningProfileMetadataHolder profileSelectionResult;
 
   private static final Logger LOG = Logger.get(ProvisioningProfileSelectStep.class);
 
@@ -89,7 +88,7 @@ public class ProvisioningProfileSelectStep implements Step {
       Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier,
       ProvisioningProfileStore provisioningProfileStore,
       Optional<Path> dryRunResultsPath,
-      BuildStepResultHolder<ProvisioningProfileMetadata> profileSelectionResult) {
+      ProvisioningProfileMetadataHolder profileSelectionResult) {
     this.filesystem = filesystem;
     this.infoPlist = infoPlist;
     this.platform = platform;
@@ -156,7 +155,7 @@ public class ProvisioningProfileSelectStep implements Step {
       filesystem.writeContentsToPath(dryRunResult.toXMLPropertyList(), dryRunResultsPath.get());
     }
 
-    bestProfile.ifPresent(profileSelectionResult::setValue);
+    bestProfile.ifPresent(profileSelectionResult::setMetadata);
 
     if (!bestProfile.isPresent()) {
       String diagnostics = diagnosticsBuffer.toString();

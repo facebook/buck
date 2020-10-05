@@ -21,7 +21,6 @@ import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.BuildStepResultHolder;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Joiner;
@@ -37,12 +36,12 @@ public class CodeSignIdentitySelectStep extends AbstractExecutionStep {
 
   private final Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier;
   private final Supplier<ProvisioningProfileMetadata> selectedProfileSupplier;
-  private final BuildStepResultHolder<CodeSignIdentity> result;
+  private final CodeSignIdentityHolder result;
 
   public CodeSignIdentitySelectStep(
       Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier,
       Supplier<ProvisioningProfileMetadata> selectedProfileSupplier,
-      BuildStepResultHolder<CodeSignIdentity> result) {
+      CodeSignIdentityHolder result) {
     super("code-sign-identity-select");
     this.codeSignIdentitiesSupplier = codeSignIdentitiesSupplier;
     this.selectedProfileSupplier = selectedProfileSupplier;
@@ -58,14 +57,14 @@ public class CodeSignIdentitySelectStep extends AbstractExecutionStep {
     if (fingerprints.isEmpty()) {
       // No constraints, pick an arbitrary identity.
       // If no identities are available, use an ad-hoc identity.
-      result.setValue(
+      result.setIdentity(
           Iterables.getFirst(codeSignIdentitiesSupplier.get(), CodeSignIdentity.AD_HOC));
       return StepExecutionResults.SUCCESS;
     }
     for (CodeSignIdentity identity : codeSignIdentitiesSupplier.get()) {
       if (identity.getFingerprint().isPresent()
           && fingerprints.contains(identity.getFingerprint().get())) {
-        result.setValue(identity);
+        result.setIdentity(identity);
         return StepExecutionResults.SUCCESS;
       }
     }
