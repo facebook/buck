@@ -318,6 +318,8 @@ public class AppleBundle extends AbstractBuildRule
       appendCopyDsymStep(stepsBuilder, buildableContext, context);
     }
 
+    ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder = ImmutableList.builder();
+
     if (verifyResources) {
       AppleResourceProcessing.verifyResourceConflicts(
           resources, bundleParts, context.getSourcePathResolver(), destinations);
@@ -340,6 +342,7 @@ public class AppleBundle extends AbstractBuildRule
     AppleResourceProcessing.addStepsToCopyResources(
         context,
         stepsBuilder,
+        codeSignOnCopyPathsBuilder,
         resources,
         bundleParts,
         bundleRoot,
@@ -369,13 +372,7 @@ public class AppleBundle extends AbstractBuildRule
           stepsBuilder,
           false);
 
-      ImmutableList<RelPath> codeSignOnCopyPaths =
-          collectCodeSignOnCopyPaths(context.getSourcePathResolver());
-
-      ImmutableList<Path> resolvedCodeSignOnCopyPaths =
-          codeSignOnCopyPaths.stream()
-              .map(p -> bundleRoot.resolve(p.getPath()))
-              .collect(ImmutableList.toImmutableList());
+      ImmutableList<Path> codeSignOnCopyPaths = codeSignOnCopyPathsBuilder.build();
 
       Optional<Path> entitlementsPlist =
           maybeEntitlementsFile.map(
@@ -384,15 +381,12 @@ public class AppleBundle extends AbstractBuildRule
       if (dryRunCodeSigning) {
         final boolean shouldUseEntitlements = entitlementsPlist.isPresent();
         appendDryCodeSignSteps(
-            stepsBuilder,
-            resolvedCodeSignOnCopyPaths,
-            codeSignIdentitySupplier,
-            shouldUseEntitlements);
+            stepsBuilder, codeSignOnCopyPaths, codeSignIdentitySupplier, shouldUseEntitlements);
       } else {
         appendCodeSignSteps(
             context,
             stepsBuilder,
-            resolvedCodeSignOnCopyPaths,
+            codeSignOnCopyPaths,
             codeSignIdentitySupplier,
             entitlementsPlist);
       }
@@ -410,46 +404,6 @@ public class AppleBundle extends AbstractBuildRule
         context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput()).getPath());
 
     return stepsBuilder.build();
-  }
-
-  private ImmutableList<RelPath> collectCodeSignOnCopyPaths(
-      SourcePathResolverAdapter sourcePathResolver) {
-    ImmutableList.Builder<RelPath> codeSignOnCopyPathsBuilder = ImmutableList.builder();
-    codeSignOnCopyPathsBuilder.addAll(
-        bundleParts.stream()
-            .filter(p -> p instanceof FileAppleBundlePart)
-            .map(p -> (FileAppleBundlePart) p)
-            .filter(FileAppleBundlePart::getCodesignOnCopy)
-            .map(
-                p ->
-                    (new AppleBundleComponentCopySpec(p, sourcePathResolver, destinations))
-                        .getDestinationPathRelativeToBundleRoot())
-            .collect(Collectors.toList()));
-    codeSignOnCopyPathsBuilder.addAll(
-        bundleParts.stream()
-            .filter(p -> p instanceof DirectoryAppleBundlePart)
-            .map(p -> (DirectoryAppleBundlePart) p)
-            .filter(DirectoryAppleBundlePart::getCodesignOnCopy)
-            .map(
-                p ->
-                    (new AppleBundleComponentCopySpec(p, sourcePathResolver, destinations))
-                        .getDestinationPathRelativeToBundleRoot())
-            .collect(Collectors.toList()));
-    codeSignOnCopyPathsBuilder.addAll(
-        Stream.concat(
-                resources.getResourceDirs().stream(),
-                resources.getResourceFiles().stream()
-                    .filter(
-                        pathWithDestination ->
-                            !AppleProcessResources.shouldBeProcessed(
-                                pathWithDestination, sourcePathResolver)))
-            .filter(SourcePathWithAppleBundleDestination::getCodesignOnCopy)
-            .map(
-                p ->
-                    (new AppleBundleComponentCopySpec(p, sourcePathResolver, destinations))
-                        .getDestinationPathRelativeToBundleRoot())
-            .collect(Collectors.toList()));
-    return codeSignOnCopyPathsBuilder.build();
   }
 
   private void addStepToDeleteBundlePartsFromPreviousBuildMissingInCurrentBuild(
