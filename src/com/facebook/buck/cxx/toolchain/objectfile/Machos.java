@@ -279,6 +279,9 @@ public class Machos {
         throw new MachoException("LC_SEGMENT or LC_SEGMENT_64 command for string table not found");
       }
 
+      // ld64 deliberately burns the first byte with the space character, so that zero is never a
+      // valid string index and writes 0x00 at offset 1, so that it's always the empty string.
+      // The code for this in ld64 is in LinkEditClassic.hpp (StringPoolAtom::StringPoolAtom).
       map.position(stringTableOffset);
       if (map.get() != 0x20) {
         throw new MachoException("First character in the string table is not a space");
