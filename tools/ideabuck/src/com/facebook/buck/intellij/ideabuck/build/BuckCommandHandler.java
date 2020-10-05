@@ -21,6 +21,7 @@ import com.facebook.buck.intellij.ideabuck.api.BuckCellManager.Cell;
 import com.facebook.buck.intellij.ideabuck.config.BuckExecutableSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTextNode.TextType;
+import com.google.common.base.Strings;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.OSProcessHandler;
@@ -114,11 +115,19 @@ public abstract class BuckCommandHandler {
    * @param doStartNotify true if the handler should call OSHandler#startNotify
    */
   public BuckCommandHandler(Project project, BuckCommand command, boolean doStartNotify) {
+    this(project, command, doStartNotify, "");
+  }
+
+  public BuckCommandHandler(
+      Project project,
+      BuckCommand command,
+      boolean doStartNotify,
+      @Nullable String buckExecutable) {
+    buckExecutable =
+        Strings.isNullOrEmpty(buckExecutable)
+            ? BuckExecutableSettingsProvider.getInstance(project).resolveBuckExecutable()
+            : buckExecutable;
     this.doStartNotify = doStartNotify;
-
-    String buckExecutable =
-        BuckExecutableSettingsProvider.getInstance(project).resolveBuckExecutable();
-
     this.project = project;
     this.buckModule = project.getComponent(BuckModule.class);
     this.command = command;

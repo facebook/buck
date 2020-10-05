@@ -100,12 +100,14 @@ class TestExecutionState implements RunProfileState {
     final String targets = mConfiguration.data.targets;
     final String additionalParams = mConfiguration.data.additionalParams;
     final String testSelectors = mConfiguration.data.testSelectors;
+    final String buckExecutablePath = mConfiguration.data.buckExecutablePath;
     final String title = "Buck Test " + targets;
 
     buckModule.attach(targets);
 
     final BuckBuildCommandHandler handler =
-        new BuckBuildCommandHandler(mProject, BuckCommand.TEST, /* doStartNotify */ false) {
+        new BuckBuildCommandHandler(
+            mProject, BuckCommand.TEST, /* doStartNotify */ false, buckExecutablePath) {
           @Override
           protected void notifyLines(Key outputType, Iterable<String> lines) {
             super.notifyLines(outputType, lines);

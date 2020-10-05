@@ -56,6 +56,11 @@ public class BuckBuildCommandHandler extends BuckCommandHandler {
     super(project, command, doStartNotify);
   }
 
+  public BuckBuildCommandHandler(
+      Project project, BuckCommand command, boolean doStartNotify, String buckExecutable) {
+    super(project, command, doStartNotify, buckExecutable);
+  }
+
   @Override
   protected boolean beforeCommand() {
     BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
