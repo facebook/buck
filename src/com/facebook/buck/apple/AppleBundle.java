@@ -74,7 +74,6 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -306,28 +305,11 @@ public class AppleBundle extends AbstractBuildRule
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
 
-    ImmutableList<RelPath> codeSignOnCopyPaths =
-        collectCodeSignOnCopyPaths(context.getSourcePathResolver());
-
     Supplier<Optional<AppleBundleIncrementalInfo>> incrementalInfoSupplier =
         readIncrementalInfo(context, stepsBuilder);
 
-    Supplier<Boolean> shouldPerformIncrementalBuildSupplier;
-    Optional<Supplier<Map<RelPath, String>>> maybeCurrentBuildHashesSupplier;
-    if (incrementalBundlingEnabled) {
-      Supplier<Map<RelPath, String>> currentBuildHashesSupplier =
-          computeCurrentBuildHashes(context, stepsBuilder);
-      maybeCurrentBuildHashesSupplier = Optional.of(currentBuildHashesSupplier);
-      shouldPerformIncrementalBuildSupplier =
-          computeIfBuildShouldBeIncremental(
-              stepsBuilder,
-              incrementalInfoSupplier,
-              codeSignOnCopyPaths,
-              currentBuildHashesSupplier);
-    } else {
-      shouldPerformIncrementalBuildSupplier = () -> false;
-      maybeCurrentBuildHashesSupplier = Optional.empty();
-    }
+    Supplier<Boolean> shouldPerformIncrementalBuildSupplier =
+        () -> incrementalBundlingEnabled && incrementalInfoSupplier.get().isPresent();
 
     if (incrementalBundlingEnabled) {
       createBundleRootDirectory(context, stepsBuilder, shouldPerformIncrementalBuildSupplier);
@@ -338,16 +320,18 @@ public class AppleBundle extends AbstractBuildRule
                   context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot)));
     }
 
+    ImmutableList<RelPath> codeSignOnCopyPaths =
+        collectCodeSignOnCopyPaths(context.getSourcePathResolver());
+
+    Optional<Supplier<Map<RelPath, String>>> maybeCurrentBuildHashesSupplier;
     if (incrementalBundlingEnabled) {
+      Supplier<Map<RelPath, String>> currentBuildHashesSupplier =
+          computeCurrentBuildHashes(context, stepsBuilder);
+      maybeCurrentBuildHashesSupplier = Optional.of(currentBuildHashesSupplier);
       appendWriteIncrementalInfoSteps(
-          stepsBuilder,
-          context,
-          buildableContext,
-          maybeCurrentBuildHashesSupplier.orElseThrow(
-              () ->
-                  new IllegalStateException(
-                      "Content hashes for current build should be computed when incremental build is performed")),
-          codeSignOnCopyPaths);
+          stepsBuilder, context, buildableContext, currentBuildHashesSupplier, codeSignOnCopyPaths);
+    } else {
+      maybeCurrentBuildHashesSupplier = Optional.empty();
     }
 
     if (hasBinary()) {
@@ -483,65 +467,6 @@ public class AppleBundle extends AbstractBuildRule
                         .getDestinationPathRelativeToBundleRoot())
             .collect(Collectors.toList()));
     return codeSignOnCopyPathsBuilder.build();
-  }
-
-  Supplier<Boolean> computeIfBuildShouldBeIncremental(
-      ImmutableList.Builder<Step> stepsBuilder,
-      Supplier<Optional<AppleBundleIncrementalInfo>> incrementalInfoHolderSupplier,
-      ImmutableList<RelPath> codeSignOnCopyPaths,
-      Supplier<Map<RelPath, String>> currentBuildHashes) {
-    BuildStepResultHolder<Boolean> result = new BuildStepResultHolder<>();
-    stepsBuilder.add(
-        new AbstractExecutionStep("apple-bundle-compute-if-should-be-incremental") {
-
-          private Set<RelPath> codeSignedOnCopyPathsFromPreviousBuildWhichArePresentInCurrentBuild(
-              List<RelPath> codeSignedOnCopyPathsFromPreviousBuild) {
-            return Sets.intersection(
-                new HashSet<>(codeSignedOnCopyPathsFromPreviousBuild),
-                currentBuildHashes.get().keySet());
-          }
-
-          @Override
-          public StepExecutionResult execute(StepExecutionContext context) {
-            Optional<AppleBundleIncrementalInfo> incrementalInfoHolder =
-                incrementalInfoHolderSupplier.get();
-            if (!incrementalInfoHolder.isPresent()) {
-              result.setValue(false);
-              return StepExecutionResults.SUCCESS;
-            }
-            boolean isPreviousBuildCodeSigned = incrementalInfoHolder.get().codeSigned();
-            // If previous build was not code signed there should be no problems with code signing
-            // for current build in incremental mode. Existing binaries could be code signed "on
-            // top" if that's needed.
-            if (!isPreviousBuildCodeSigned) {
-              result.setValue(true);
-              return StepExecutionResults.SUCCESS;
-            }
-            // For simplicity and correctness purposes instead of stripping code signatures we
-            // perform non-incremental build
-            if (codeSignType == AppleCodeSignType.SKIP) {
-              result.setValue(false);
-              return StepExecutionResults.SUCCESS;
-            }
-            // If there is an artifact that was code signed on copy in previous build which is
-            // present in current build and not code signed on copy, we should perform
-            // non-incremental build for simplicity and correctness reasons.
-            Set<RelPath> currentBuildCodeSignedOnCopyPaths = new HashSet<>(codeSignOnCopyPaths);
-            Set<RelPath> codeSignedOnCopyPathsFromPreviousBuildWhichArePresentInCurrentBuild =
-                codeSignedOnCopyPathsFromPreviousBuildWhichArePresentInCurrentBuild(
-                    incrementalInfoHolder.get().getCodeSignedOnCopyPaths());
-            boolean previousBuildCodeSignOnCopyPathsIsSubsetOfCurrentBuildOnes =
-                currentBuildCodeSignedOnCopyPaths.containsAll(
-                    codeSignedOnCopyPathsFromPreviousBuildWhichArePresentInCurrentBuild);
-            result.setValue(previousBuildCodeSignOnCopyPathsIsSubsetOfCurrentBuildOnes);
-            return StepExecutionResults.SUCCESS;
-          }
-        });
-    return () ->
-        result
-            .getValue()
-            .orElseThrow(
-                () -> new IllegalStateException("Should be calculated and set in separate step"));
   }
 
   private void deleteBundlePartsFromPreviousBuildMissingInCurrentBuild(
