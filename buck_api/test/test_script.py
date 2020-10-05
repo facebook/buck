@@ -48,6 +48,7 @@ def run_build(remain_args):
         with open(buckd_sock, "w") as sock:
             sock.write("buck daemon exists")
     print_target_to_build_location(show_output, clean_target, target, output)
+    print(os.environ["BUCK_BUILD_ID"])
     if "..." not in str(clean_target):
         with open(clean_target, "r") as target_file:
             sys.exit(int(target_file.readlines()[-1]))
@@ -71,6 +72,7 @@ def run_run(remain_args):
         with open(buckd_sock, "w") as sock:
             sock.write("buck daemon exists")
     print("run", clean_target)
+    print(os.environ["BUCK_BUILD_ID"])
 
 
 def print_target_to_build_location(show_output, clean_target, target, output):
@@ -101,10 +103,12 @@ def run_clean(remain_args):
     args = parser.parse_args(remain_args)
     if not args.dry_run:
         shutil.rmtree("buck-out/")
+    print(os.environ["BUCK_BUILD_ID"])
 
 
 def run_kill(remain_args):
     shutil.rmtree(".buckd")
+    print(os.environ["BUCK_BUILD_ID"])
 
 
 def run_test(remain_args):
@@ -129,6 +133,7 @@ def run_test(remain_args):
     result_type = data[2].rstrip("\n")
     exitcode = int(data[3])
     print(args)
+    print(os.environ["BUCK_BUILD_ID"])
     if exitcode != 1:
         # creating xml file structure
         data = ET.Element("tests")

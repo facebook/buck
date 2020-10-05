@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import os
+import uuid
 from asyncio import subprocess
 from contextlib import contextmanager
 from pathlib import Path
@@ -103,13 +104,16 @@ class BuckRepo:
         rel_cwd: Optional Path specifying the workding directive to run
         the command relative to the root.
         """
-        awaitable_process = self._run_buck_command("build", *argv, rel_cwd=rel_cwd)
+        awaitable_process, buck_build_id = self._run_buck_command(
+            "build", *argv, rel_cwd=rel_cwd
+        )
         return BuckProcess(
             awaitable_process,
-            result_type=lambda proc, stdin, stdout, encoding: BuildResult(
-                proc, stdin, stdout, encoding, *argv
+            result_type=lambda proc, stdin, stdout, encoding, buck_build_id: BuildResult(
+                proc, stdin, stdout, encoding, buck_build_id, *argv
             ),
             encoding=self.encoding,
+            buck_build_id=buck_build_id,
         )
 
     def run(
@@ -123,9 +127,14 @@ class BuckRepo:
         rel_cwd: Optional Path specifying the workding directive to run
         the command relative to the root.
         """
-        awaitable_process = self._run_buck_command("run", *argv, rel_cwd=rel_cwd)
+        awaitable_process, buck_build_id = self._run_buck_command(
+            "run", *argv, rel_cwd=rel_cwd
+        )
         return BuckProcess(
-            awaitable_process, result_type=BuckResult, encoding=self.encoding
+            awaitable_process,
+            result_type=BuckResult,
+            encoding=self.encoding,
+            buck_build_id=buck_build_id,
         )
 
     def clean(
@@ -139,9 +148,14 @@ class BuckRepo:
         rel_cwd: Optional Path specifying the workding directive to run
         the command relative to the root.
         """
-        awaitable_process = self._run_buck_command("clean", *argv, rel_cwd=rel_cwd)
+        awaitable_process, buck_build_id = self._run_buck_command(
+            "clean", *argv, rel_cwd=rel_cwd
+        )
         return BuckProcess(
-            awaitable_process, result_type=BuckResult, encoding=self.encoding
+            awaitable_process,
+            result_type=BuckResult,
+            encoding=self.encoding,
+            buck_build_id=buck_build_id,
         )
 
     def kill(self, rel_cwd: Optional[Path] = None) -> BuckProcess[BuckResult]:
@@ -152,9 +166,14 @@ class BuckRepo:
         rel_cwd: Optional Path specifying the workding directive to run
         the command relative to the root.
         """
-        awaitable_process = self._run_buck_command("kill", rel_cwd=rel_cwd)
+        awaitable_process, buck_build_id = self._run_buck_command(
+            "kill", rel_cwd=rel_cwd
+        )
         return BuckProcess(
-            awaitable_process, result_type=BuckResult, encoding=self.encoding
+            awaitable_process,
+            result_type=BuckResult,
+            encoding=self.encoding,
+            buck_build_id=buck_build_id,
         )
 
     def test(
@@ -169,24 +188,32 @@ class BuckRepo:
         the command relative to the root.
         """
         xml_flag, test_output_file = self._create_xml_file()
-        awaitable_process = self._run_buck_command(
+        awaitable_process, buck_build_id = self._run_buck_command(
             "test", *argv, xml_flag, rel_cwd=rel_cwd
         )
         return BuckProcess(
             awaitable_process,
-            result_type=lambda proc, stdin, stdout, encoding: TestResult(
-                proc, stdin, stdout, encoding, self.cwd / test_output_file
+            result_type=lambda proc, stdin, stdout, encoding, buck_build_id: TestResult(
+                proc,
+                stdin,
+                stdout,
+                encoding,
+                buck_build_id,
+                self.cwd / test_output_file,
             ),
             encoding=self.encoding,
+            buck_build_id=buck_build_id,
         )
 
     def _run_buck_command(
         self, cmd: str, *argv: str, rel_cwd: Optional[Path]
-    ) -> Awaitable[subprocess.Process]:
+    ) -> Tuple[Awaitable[subprocess.Process], str]:
         """
         Returns a process created from the execuable path,
         command and any additional arguments
         """
+        buck_build_id = str(uuid.uuid1())
+        self._env["BUCK_BUILD_ID"] = buck_build_id
         awaitable_process = subprocess.create_subprocess_exec(
             str(self.path_to_buck),
             cmd,
@@ -196,7 +223,7 @@ class BuckRepo:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        return awaitable_process
+        return awaitable_process, buck_build_id
 
     def _create_xml_file(self, *argv: str) -> Tuple[str, str]:
         """

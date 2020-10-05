@@ -27,16 +27,20 @@ class BuckProcess(Generic[T]):
     def __init__(
         self,
         awaitable_process: Awaitable[subprocess.Process],
-        result_type: Callable[[subprocess.Process, bytes, bytes, str], T],
+        result_type: Callable[[subprocess.Process, bytes, bytes, str, str], T],
         encoding: str,
+        buck_build_id: str,
     ) -> None:
         self._awaitable_process = awaitable_process
         self._result_type = result_type
         self._encoding = encoding
+        self.buck_build_id = buck_build_id
 
     async def _get_result(self, process: subprocess.Process) -> T:
         stdout, stderr = await process.communicate()
-        return self._result_type(process, stdout, stderr, self._encoding)
+        return self._result_type(
+            process, stdout, stderr, self._encoding, self.buck_build_id
+        )
 
     async def wait(self) -> T:
         """ Returns a BuckResult with a finished process """

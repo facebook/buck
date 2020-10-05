@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import uuid
 from asyncio import subprocess
 
 import pytest
@@ -25,9 +26,11 @@ async def test_wait():
     awaitable_process = subprocess.create_subprocess_shell(
         "echo hello", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    bp = BuckProcess(awaitable_process, BuckResult, "utf-8")
+    buck_build_id = str(uuid.uuid1())
+    bp = BuckProcess(awaitable_process, BuckResult, "utf-8", buck_build_id)
     br: BuckResult = await bp.wait()
     assert br.get_stdout() == "hello\n"
+    assert br.buck_build_id == buck_build_id
 
 
 @pytest.mark.asyncio
@@ -35,6 +38,8 @@ async def test_interrupt():
     awaitable_process = subprocess.create_subprocess_shell(
         "sleep 10", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    bp = BuckProcess(awaitable_process, BuckResult, "utf-8")
+    buck_build_id = str(uuid.uuid1())
+    bp = BuckProcess(awaitable_process, BuckResult, "utf-8", buck_build_id)
     br = await bp.interrupt()
     assert br.get_exit_code() == ExitCode.SIGNAL_INTERRUPT
+    assert br.buck_build_id == buck_build_id

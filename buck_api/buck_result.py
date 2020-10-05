@@ -64,12 +64,18 @@ class BuckResult:
     """ Represents a Buck process that has finished running """
 
     def __init__(
-        self, process: subprocess.Process, stdout: bytes, stderr: bytes, encoding: str
+        self,
+        process: subprocess.Process,
+        stdout: bytes,
+        stderr: bytes,
+        encoding: str,
+        buck_build_id: str,
     ) -> None:
         self.process = process
         self.encoding = encoding
         self.stdout = stdout
         self.stderr = stderr
+        self.buck_build_id = buck_build_id
 
     def is_success(self) -> bool:
         """ Returns if a Buck Result is successful"""
@@ -106,10 +112,11 @@ class BuildResult(BuckResult):
         stdout: bytes,
         stderr: bytes,
         encoding: str,
+        buck_build_id: str,
         *argv: str,
     ) -> None:
         self.args = argv[0]
-        super().__init__(process, stdout, stderr, encoding)
+        super().__init__(process, stdout, stderr, encoding, buck_build_id)
 
     def is_build_failure(self) -> bool:
         """Returns if a Build Result fails because of a build failue only"""
@@ -166,9 +173,10 @@ class TestResult(BuckResult):
         stdout: bytes,
         stderr: bytes,
         encoding: str,
+        buck_build_id: str,
         test_output_file: Path,
     ) -> None:
-        super().__init__(process, stdout, stderr, encoding)
+        super().__init__(process, stdout, stderr, encoding, buck_build_id)
         self.test_root = (
             ET.parse(str(test_output_file)).getroot()
             if test_output_file.exists()

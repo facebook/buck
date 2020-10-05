@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import uuid
 from asyncio import subprocess
 
 import pytest
@@ -25,7 +26,7 @@ async def test_get_out():
         "echo hello", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
-    br: BuckResult = BuckResult(process, stdout, stderr, "utf-8")
+    br = BuckResult(process, stdout, stderr, "utf-8", str(uuid.uuid1()))
     assert br.get_stdout() == "hello\n"
 
 
@@ -35,7 +36,7 @@ async def test_get_err():
         '>&2 echo "hello"', stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
-    br: BuckResult = BuckResult(process, stdout, stderr, "utf-8")
+    br = BuckResult(process, stdout, stderr, "utf-8", str(uuid.uuid1()))
     assert br.get_stderr() == "hello\n"
 
 
@@ -45,7 +46,7 @@ async def test_get_exit_code():
         "exit 3", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
-    br: BuckResult = BuckResult(process, stdout, stderr, "utf-8")
+    br = BuckResult(process, stdout, stderr, "utf-8", str(uuid.uuid1()))
     assert br.get_exit_code() == ExitCode.COMMANDLINE_ERROR
 
 
@@ -55,7 +56,7 @@ async def test_get_out_stored():
         "echo hello", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
-    br: BuckResult = BuckResult(process, stdout, stderr, "utf-8")
+    br = BuckResult(process, stdout, stderr, "utf-8", str(uuid.uuid1()))
     assert br.get_stdout() == "hello\n"
     assert br.get_stdout() == "hello\n"
     assert br.get_stdout() == "hello\n"
@@ -68,7 +69,7 @@ async def test_get_err_stored():
         '>&2 echo "hello"', stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
-    br: BuckResult = BuckResult(process, stdout, stderr, "utf-8")
+    br = BuckResult(process, stdout, stderr, "utf-8", str(uuid.uuid1()))
     assert br.get_stderr() == "hello\n"
     assert br.get_stderr() == "hello\n"
     assert br.get_stderr() == "hello\n"
