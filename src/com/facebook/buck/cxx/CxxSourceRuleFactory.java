@@ -25,6 +25,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.Action;
+import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -177,6 +178,63 @@ public abstract class CxxSourceRuleFactory {
                   .flatMap(input -> input.getPreprocessorFlags().get(type).stream())
                   .collect(ImmutableList.toImmutableList()));
 
+  private final Function<CxxSource.Type, CxxToolFlags> preprocessToolFlags =
+      memoize(
+          type -> {
+            Compiler compiler =
+                CxxSourceTypes.getCompiler(
+                        getCxxPlatform(), CxxSourceTypes.getPreprocessorOutputType(type))
+                    .resolve(
+                        getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration());
+            return CxxToolFlags.explicitBuilder()
+                .addAllPlatformFlags(StringArg.from(getPicType().getFlags(compiler)))
+                .addAllPlatformFlags(getPlatformPreprocessorFlags(type))
+                .addAllRuleFlags(rulePreprocessorFlags.apply(type))
+                .build();
+          });
+
+  private final Function<CxxSource.Type, Optional<DependencyAggregation>>
+      aggregatedPreprocessorFlagsDeps =
+          memoize(
+              type -> {
+                ImmutableSet.Builder<BuildRule> depsBuilder = ImmutableSet.builder();
+
+                // Add preprocessor...
+                Preprocessor preprocessor =
+                    CxxSourceTypes.getPreprocessor(getCxxPlatform(), type)
+                        .resolve(
+                            getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration());
+                depsBuilder.addAll(
+                    BuildableSupport.getDepsCollection(preprocessor, getActionGraphBuilder()));
+
+                // Add deps from any args.
+                for (Arg arg : preprocessToolFlags.apply(type).getAllFlags()) {
+                  depsBuilder.addAll(
+                      BuildableSupport.getDepsCollection(arg, getActionGraphBuilder()));
+                }
+
+                ImmutableSet<BuildRule> deps = depsBuilder.build();
+
+                if (deps.isEmpty()) {
+                  return Optional.empty();
+                }
+
+                return Optional.of(
+                    (DependencyAggregation)
+                        getActionGraphBuilder()
+                            .computeIfAbsent(
+                                getBaseBuildTarget()
+                                    .withAppendedFlavors(
+                                        getCxxPlatform().getFlavor(),
+                                        InternalFlavor.of(
+                                            String.format(
+                                                "preprocess-deps-%s",
+                                                type.getLanguage().replace('+', 'x')))),
+                                target ->
+                                    new DependencyAggregation(
+                                        target, getProjectFilesystem(), deps)));
+              });
+
   private final Function<PreprocessorDelegateCacheKey, PreprocessorDelegateCacheValue>
       preprocessorDelegates =
           memoize(
@@ -187,7 +245,12 @@ public abstract class CxxSourceRuleFactory {
                             getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration());
                 // TODO(cjhopman): The aggregated deps logic should move into PreprocessorDelegate
                 // itself.
-                DependencyAggregation aggregatedDeps = requireAggregatedPreprocessDepsRule();
+                ImmutableList.Builder<DependencyAggregation> aggregatedDeps =
+                    ImmutableList.builder();
+                aggregatedDeps.add(requireAggregatedPreprocessDepsRule());
+                aggregatedPreprocessorFlagsDeps
+                    .apply(key.getSourceType())
+                    .ifPresent(aggregatedDeps::add);
                 PreprocessorDelegate delegate =
                     new PreprocessorDelegate(
                         getCxxPlatform().getHeaderVerification(),
@@ -203,7 +266,7 @@ public abstract class CxxSourceRuleFactory {
                             getPathResolver(),
                             getSkipSystemFrameworkSearchPaths()),
                         /* leadingIncludePaths */ Optional.empty(),
-                        Optional.of(aggregatedDeps),
+                        aggregatedDeps.build(),
                         getCxxPlatform().getConflictingHeaderBasenameWhitelist());
                 return new PreprocessorDelegateCacheValue(delegate, getSanitizer());
               });
@@ -474,13 +537,11 @@ public abstract class CxxSourceRuleFactory {
 
   private CxxToolFlags computePreprocessorFlags(
       CxxSource.Type type, ImmutableList<Arg> sourceFlags) {
-    Compiler compiler =
-        CxxSourceTypes.getCompiler(getCxxPlatform(), CxxSourceTypes.getPreprocessorOutputType(type))
-            .resolve(getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration());
+    CxxToolFlags baseFlags = preprocessToolFlags.apply(type);
+    Preconditions.checkState(baseFlags.getSrcFlags().isEmpty());
     return CxxToolFlags.explicitBuilder()
-        .addAllPlatformFlags(StringArg.from(getPicType().getFlags(compiler)))
-        .addAllPlatformFlags(getPlatformPreprocessorFlags(type))
-        .addAllRuleFlags(rulePreprocessorFlags.apply(type))
+        .addAllPlatformFlags(baseFlags.getPlatformFlags())
+        .addAllRuleFlags(baseFlags.getRuleFlags())
         // Add custom per-file flags.
         .addAllRuleFlags(sanitizedArgs(sourceFlags))
         .build();
@@ -545,7 +606,8 @@ public abstract class CxxSourceRuleFactory {
                                   commandPrefixFlags,
                                   getPlatformPreprocessorFlags(source.getType()).stream())
                               .collect(ImmutableList.toImmutableList()),
-                          rulePreprocessorFlags.apply(source.getType()));
+                          rulePreprocessorFlags.apply(source.getType()),
+                          ImmutableList.of());
 
                   CxxToolFlags cFlags = computeCompilerFlags(source.getType(), source.getFlags());
 

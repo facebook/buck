@@ -35,9 +35,14 @@ public abstract class ExplicitCxxToolFlags extends CxxToolFlags {
   @AddToRuleKey
   public abstract ImmutableList<Arg> getRuleFlags();
 
+  @Override
+  @AddToRuleKey
+  public abstract ImmutableList<Arg> getSrcFlags();
+
   public static void addCxxToolFlags(Builder builder, CxxToolFlags flags) {
     builder.addAllPlatformFlags(flags.getPlatformFlags());
     builder.addAllRuleFlags(flags.getRuleFlags());
+    builder.addAllSrcFlags(flags.getSrcFlags());
   }
 
   static Builder builder() {

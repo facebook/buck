@@ -128,7 +128,7 @@ public class CxxCompilationDatabaseTest {
                     preprocessorFlags,
                     new FrameworkPathFunction(),
                     /* leadingIncludePaths */ Optional.empty(),
-                    Optional.of(
+                    ImmutableList.of(
                         new DependencyAggregation(
                             aggregatedDeps,
                             filesystem,

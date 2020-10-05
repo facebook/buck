@@ -93,7 +93,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
 
   private final PathShortener minLengthPathRepresentation;
 
-  private final Optional<DependencyAggregation> aggregatedDeps;
+  private final ImmutableList<DependencyAggregation> aggregatedDeps;
 
   private final WeakMemoizer<HeaderPathNormalizer> headerPathNormalizer = new WeakMemoizer<>();
 
@@ -107,7 +107,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
       PreprocessorFlags preprocessorFlags,
       AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> frameworkPathSearchPathFunction,
       Optional<CxxIncludePaths> leadingIncludePaths,
-      Optional<DependencyAggregation> aggregatedDeps,
+      ImmutableList<DependencyAggregation> aggregatedDeps,
       ImmutableSortedSet<String> conflictingHeaderBasenameWhitelist) {
     this.preprocessor = preprocessor;
     this.preprocessorFlags = preprocessorFlags;
@@ -329,8 +329,10 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
 
   @Override
   public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    Preconditions.checkState(aggregatedDeps.isPresent());
-    return new DepsBuilder(ruleFinder).add(aggregatedDeps.get()).add(this).build().stream();
+    DepsBuilder builder = new DepsBuilder(ruleFinder);
+    aggregatedDeps.forEach(builder::add);
+    builder.add(this);
+    return builder.build().stream();
   }
 
   private Optional<ConflictingHeadersResult> checkConflictingHeadersUncached() {
@@ -449,7 +451,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
           preprocessorFlags,
           frameworkPathSearchPathFunction,
           leadingIncludePaths,
-          Optional.empty(),
+          ImmutableList.of(),
           conflictingHeadersBasenameWhitelist);
     }
   }

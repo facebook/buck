@@ -33,6 +33,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.rules.impl.DependencyAggregationTestUtil;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -483,10 +484,22 @@ public class CxxSourceRuleFactoryTest {
 
       BuildRule cxxPreprocess =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(name, cxxSource);
-      assertThat(cxxPreprocess.getBuildDeps(), hasItems(cxx, cxxpp));
+      assertThat(getBuildDeps(cxxPreprocess), hasItems(cxx, cxxpp));
       cxxPreprocess = cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(name, cxxSource);
-      assertThat(cxxPreprocess.getBuildDeps(), hasItems(cxx, cxxpp));
+      assertThat(getBuildDeps(cxxPreprocess), hasItems(cxx, cxxpp));
     }
+  }
+
+  private static Collection<BuildRule> getBuildDeps(BuildRule rule) {
+    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
+    for (BuildRule dep : rule.getBuildDeps()) {
+      if (dep instanceof DependencyAggregation) {
+        deps.addAll(dep.getBuildDeps());
+      } else {
+        deps.add(dep);
+      }
+    }
+    return deps.build();
   }
 
   @RunWith(Parameterized.class)

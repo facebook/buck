@@ -86,7 +86,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             PreprocessorFlags.builder().build(),
             defaultFrameworkPathSearchPathFunction,
             /* leadingIncludePaths */ Optional.empty(),
-            Optional.of(
+            ImmutableList.of(
                 new DependencyAggregation(
                     buildTarget.withFlavors(InternalFlavor.of("deps")),
                     filesystem,

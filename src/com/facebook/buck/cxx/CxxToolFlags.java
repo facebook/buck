@@ -41,9 +41,11 @@ public abstract class CxxToolFlags implements AddsToRuleKey {
   /** Flags that succeed flags from {@code #getPlatformFlags()}. */
   public abstract ImmutableList<Arg> getRuleFlags();
 
+  public abstract ImmutableList<Arg> getSrcFlags();
+
   /** Returns all flags in the appropriate order. */
   public final Iterable<Arg> getAllFlags() {
-    return Iterables.concat(getPlatformFlags(), getRuleFlags());
+    return Iterables.concat(getPlatformFlags(), getRuleFlags(), getSrcFlags());
   }
 
   /** Returns a builder for explicitly specifying the flags. */
@@ -57,10 +59,12 @@ public abstract class CxxToolFlags implements AddsToRuleKey {
   }
 
   /** Directly construct an instance from the given members. */
-  public static CxxToolFlags copyOf(Iterable<Arg> platformFlags, Iterable<Arg> ruleFlags) {
+  public static CxxToolFlags copyOf(
+      Iterable<Arg> platformFlags, Iterable<Arg> ruleFlags, Iterable<Arg> srcFlags) {
     return ExplicitCxxToolFlags.builder()
         .setPlatformFlags(platformFlags)
         .setRuleFlags(ruleFlags)
+        .setSrcFlags(srcFlags)
         .build();
   }
 
@@ -68,11 +72,14 @@ public abstract class CxxToolFlags implements AddsToRuleKey {
   public static CxxToolFlags concat(CxxToolFlags... parts) {
     ImmutableList.Builder<Arg> platformFlags = ImmutableList.builder();
     ImmutableList.Builder<Arg> ruleFlags = ImmutableList.builder();
+    ImmutableList.Builder<Arg> srcFlags = ImmutableList.builder();
     for (CxxToolFlags part : parts) {
       platformFlags = platformFlags.addAll(part.getPlatformFlags());
       ruleFlags = ruleFlags.addAll(part.getRuleFlags());
+      srcFlags = srcFlags.addAll(part.getSrcFlags());
     }
-    return ImmutableIterableCxxToolFlags.ofImpl(platformFlags.build(), ruleFlags.build());
+    return ImmutableIterableCxxToolFlags.ofImpl(
+        platformFlags.build(), ruleFlags.build(), srcFlags.build());
   }
 }
 
@@ -90,4 +97,8 @@ abstract class IterableCxxToolFlags extends CxxToolFlags {
   @Override
   @AddToRuleKey
   public abstract ImmutableList<Arg> getRuleFlags();
+
+  @Override
+  @AddToRuleKey
+  public abstract ImmutableList<Arg> getSrcFlags();
 }

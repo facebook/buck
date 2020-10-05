@@ -262,7 +262,7 @@ public class CxxPreprocessAndCompileTest {
                         PreprocessorFlags.builder().build(),
                         DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                         /* leadingIncludePaths */ Optional.empty(),
-                        Optional.of(
+                        ImmutableList.of(
                             new DependencyAggregation(
                                 target.withFlavors(InternalFlavor.of("deps")),
                                 projectFilesystem,
@@ -403,7 +403,7 @@ public class CxxPreprocessAndCompileTest {
                         flags,
                         DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                         /* leadingIncludePaths */ Optional.empty(),
-                        Optional.of(
+                        ImmutableList.of(
                             new DependencyAggregation(
                                 target.withFlavors(InternalFlavor.of("deps")),
                                 projectFilesystem,
@@ -513,7 +513,7 @@ public class CxxPreprocessAndCompileTest {
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 /* leadingIncludePaths */ Optional.empty(),
-                Optional.of(
+                ImmutableList.of(
                     new DependencyAggregation(
                         target.withFlavors(InternalFlavor.of("deps")),
                         projectFilesystem,
@@ -614,7 +614,7 @@ public class CxxPreprocessAndCompileTest {
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 /* leadingIncludePaths */ Optional.empty(),
-                Optional.of(
+                ImmutableList.of(
                     new DependencyAggregation(
                         target.withFlavors(InternalFlavor.of("deps")),
                         projectFilesystem,
@@ -768,7 +768,7 @@ public class CxxPreprocessAndCompileTest {
             preprocessorFlags,
             DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
             leadingIncludePaths,
-            Optional.of(
+            ImmutableList.of(
                 new DependencyAggregation(
                     target.withFlavors(InternalFlavor.of("deps")),
                     projectFilesystem,

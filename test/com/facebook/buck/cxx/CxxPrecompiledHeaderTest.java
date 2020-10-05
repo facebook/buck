@@ -78,7 +78,7 @@ public class CxxPrecompiledHeaderTest {
                 CxxDescriptionEnhancer.frameworkPathToSearchPath(
                     CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder.getSourcePathResolver(), false),
                 /* leadingIncludePaths */ Optional.empty(),
-                Optional.of(
+                ImmutableList.of(
                     new DependencyAggregation(
                         target.withFlavors(InternalFlavor.of("deps")),
                         new FakeProjectFilesystem(),

@@ -20,7 +20,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableSet;
 
@@ -38,11 +37,6 @@ public class DepsBuilder {
     return builder.build();
   }
 
-  private DepsBuilder add(Tool tool) {
-    builder.addAll(BuildableSupport.getDepsCollection(tool, ruleFinder));
-    return this;
-  }
-
   public DepsBuilder add(CxxSource source) {
     return add(source.getPath());
   }
@@ -58,8 +52,7 @@ public class DepsBuilder {
   }
 
   public DepsBuilder add(PreprocessorDelegate delegate) {
-    add(delegate.getPreprocessor());
-    for (Arg arg : delegate.getPreprocessorFlags().getOtherFlags().getAllFlags()) {
+    for (Arg arg : delegate.getPreprocessorFlags().getOtherFlags().getSrcFlags()) {
       builder.addAll(BuildableSupport.getDepsCollection(arg, ruleFinder));
     }
     return this;
