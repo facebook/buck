@@ -2,6 +2,5 @@
   "targets": [
     "//xplat/build_infra/buck_client/buck_e2e/..."
   ],
-  "use_buck_builder": true,
-  "version": "f438d2c5aafa270c2b833cfc833e2986101bd44b"
+  "use_buck_builder": true
 }
