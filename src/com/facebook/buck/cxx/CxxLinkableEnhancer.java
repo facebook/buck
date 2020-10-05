@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
@@ -188,7 +189,8 @@ public class CxxLinkableEnhancer {
         linkOptions,
         postprocessor,
         CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY,
-        CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY);
+        CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY,
+        cxxBuckConfig.getLinkScheduleInfo());
   }
 
   /** Creates a {@link CxxLink} rule which supports an optional relinking strategy. */
@@ -208,7 +210,8 @@ public class CxxLinkableEnhancer {
       CxxLinkOptions linkOptions,
       Optional<LinkOutputPostprocessor> postprocessor,
       CxxConditionalLinkStrategyFactory linkStrategyFactory,
-      CxxDebugSymbolLinkStrategyFactory debugSymbolLinkStrategyFactory) {
+      CxxDebugSymbolLinkStrategyFactory debugSymbolLinkStrategyFactory,
+      Optional<RuleScheduleInfo> linkScheduleInfo) {
 
     Linker linker = cxxPlatform.getLd().resolve(ruleResolver, target.getTargetConfiguration());
 
@@ -278,7 +281,7 @@ public class CxxLinkableEnhancer {
         allExtraOutputs,
         ldArgs,
         postprocessor,
-        cxxBuckConfig.getLinkScheduleInfo(),
+        linkScheduleInfo,
         cxxBuckConfig.shouldCacheLinks(),
         linkOptions.getThinLto(),
         linkOptions.getFatLto(),
@@ -528,7 +531,8 @@ public class CxxLinkableEnhancer {
         linkOptions,
         postprocessor,
         linkStrategyFactory,
-        debugSymbolLinkStrategyFactory);
+        debugSymbolLinkStrategyFactory,
+        cxxBuckConfig.getLinkScheduleInfo());
   }
 
   private static void addSharedLibrariesLinkerArgs(
@@ -578,7 +582,8 @@ public class CxxLinkableEnhancer {
       ImmutableMap<String, Path> extraOutputs,
       Optional<String> soname,
       ImmutableList<? extends Arg> args,
-      CellPathResolver cellPathResolver) {
+      CellPathResolver cellPathResolver,
+      Optional<RuleScheduleInfo> linkScheduleInfo) {
     ImmutableList.Builder<Arg> linkArgsBuilder = ImmutableList.builder();
     linkArgsBuilder.addAll(
         cxxPlatform
@@ -611,7 +616,8 @@ public class CxxLinkableEnhancer {
         CxxLinkOptions.of(),
         Optional.empty(),
         CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY,
-        CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY);
+        CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY,
+        linkScheduleInfo);
   }
 
   /**

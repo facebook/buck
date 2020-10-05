@@ -265,7 +265,8 @@ public class Omnibus {
                 ImmutableMap.of(),
                 Optional.of(omnibusSoname),
                 extraLdflags,
-                cellPathResolver));
+                cellPathResolver,
+                cxxBuckConfig.getOmnibusRootLinkScheduleInfo()));
     return rule.getSourcePathToOutput();
   }
 
@@ -396,7 +397,8 @@ public class Omnibus {
                   ImmutableMap.of(),
                   rootSoname,
                   argsBuilder.build(),
-                  cellPathResolver);
+                  cellPathResolver,
+                  cxxBuckConfig.getOmnibusRootLinkScheduleInfo());
           break;
         }
 
@@ -657,7 +659,8 @@ public class Omnibus {
                 ImmutableMap.of(),
                 Optional.of(omnibusSoname),
                 argsBuilder.build(),
-                cellPathResolver));
+                cellPathResolver,
+                cxxBuckConfig.getLinkScheduleInfo()));
 
     return ImmutableOmnibusLibrary.ofImpl(omnibusSoname, omnibusRule.getSourcePathToOutput());
   }

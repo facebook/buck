@@ -266,7 +266,8 @@ public class HaskellGhciDescription
               ImmutableMap.of(),
               Optional.of("libghci_dependencies.so"),
               linkFlagsBuilder.build(),
-              cellPathResolver);
+              cellPathResolver,
+              cxxBuckConfig.getLinkScheduleInfo());
         });
   }
 
