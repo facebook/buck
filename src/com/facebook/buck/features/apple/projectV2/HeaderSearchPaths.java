@@ -165,10 +165,13 @@ class HeaderSearchPaths {
     return builder.build();
   }
 
-  /** Generates the merged header map and writes it to the public header symlink tree location. */
+  /**
+   * Generates the merged header maps and writes them to the public header symlink tree locations.
+   */
   ImmutableList<SourcePath> createMergedHeaderMap(ImmutableSet<BuildTarget> targets)
       throws IOException {
-    HeaderMap.Builder headerMapBuilder = new HeaderMap.Builder();
+    HeaderMap.Builder includingModularHeaderMapBuilder = new HeaderMap.Builder();
+    HeaderMap.Builder excludingModularHeaderMapBuilder = new HeaderMap.Builder();
     ImmutableList.Builder<SourcePath> sourcePathsToBuildBuilder = ImmutableList.builder();
 
     Set<TargetNode<? extends CxxLibraryDescription.CommonArg>> processedNodes = new HashSet<>();
@@ -186,19 +189,40 @@ class HeaderSearchPaths {
                             || headerVisibility != HeaderVisibility.PUBLIC) {
                           return;
                         }
+                        if (!NodeHelper.isModularAppleLibrary(depNativeNode)) {
+                          // All source paths are added to the builder below, so we can skip them
+                          // here.
+                          addToMergedHeaderMap(
+                              depNativeNode, excludingModularHeaderMapBuilder, Optional.empty());
+                        }
                         addToMergedHeaderMap(
-                            depNativeNode, headerMapBuilder, sourcePathsToBuildBuilder);
+                            depNativeNode,
+                            includingModularHeaderMapBuilder,
+                            Optional.of(sourcePathsToBuildBuilder));
+
                         processedNodes.add(depNativeNode);
                       }));
     }
 
-    // Write the resulting header map.
-    Path mergedHeaderMapRoot = getPathToMergedHeaderMap();
-    Path headerMapLocation = getHeaderMapLocationFromSymlinkTreeRoot(mergedHeaderMapRoot);
-    projectFilesystem.mkdirs(mergedHeaderMapRoot);
-    projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
+    // Write the resulting header maps.
+    writeHeaderMap(MergedHeaderMap.INCLUDING_MODULAR_LIBRARIES, includingModularHeaderMapBuilder);
+
+    if (appleConfig.getEnableProjectV2SwiftIndexingFix()) {
+      writeHeaderMap(MergedHeaderMap.EXCLUDING_MODULAR_LIBRARIES, excludingModularHeaderMapBuilder);
+    }
 
     return sourcePathsToBuildBuilder.build();
+  }
+
+  /**
+   * Builds a header map from the builder and writes it to the public header symlink tree location.
+   */
+  private void writeHeaderMap(MergedHeaderMap mergedHeaderMap, HeaderMap.Builder builder)
+      throws IOException {
+    Path mergedHeaderMapRoot = getPathToMergedHeaderMap(mergedHeaderMap);
+    Path headerMapLocation = getHeaderMapLocationFromSymlinkTreeRoot(mergedHeaderMapRoot);
+    projectFilesystem.mkdirs(mergedHeaderMapRoot);
+    projectFilesystem.writeBytesToPath(builder.build().getBytes(), headerMapLocation);
   }
 
   /**
@@ -579,8 +603,58 @@ class HeaderSearchPaths {
     builder.add(
         getHeaderSearchPathFromSymlinkTreeRoot(
             getHeaderSymlinkTreePath(targetNode, HeaderVisibility.PRIVATE)));
-    Path absolutePath = projectFilesystem.resolve(getPathToMergedHeaderMap());
-    builder.add(getHeaderSearchPathFromSymlinkTreeRoot(absolutePath));
+
+    // Swift code cannot use the merged header map for modular imports , because it causes duplicate
+    // definition issues as the headers from modules and the headers from the header map are not
+    // considered the same file. Thus, #import does not deduplicate, and class definitions (etc.)
+    // can occur multiple times. This breaks indexing in Xcode.
+    //
+    // This conditional may need to change in the future, if we start using modules for compiling
+    // Objective-C code. In that case, we could see the same issue with "duplicate" headers that we
+    // see with Swift, since the underlying issues is modules, not the language itself.
+    //
+    // In that case, we'd need something like "using Swift OR using modules". Buck currently doesn't
+    // have a built-in concept of using modules, besides simply adding -fmodules to compiler_flags,
+    // but to do it right, it's likely that we'll need to add that. When that happens, we can also
+    // update this "if" statement. If, long-term, we move towards using modules for all Objective-C
+    // code, the merged header map will no longer work at all.
+    if (appleConfig.getEnableProjectV2SwiftIndexingFix()
+        && AppleDescriptions.targetNodeContainsSwiftSourceCode(targetNode)) {
+      visitRecursiveHeaderSymlinkTrees(
+          targetNode,
+          (nativeNode, headerVisibility) -> {
+            if (headerVisibility.equals(HeaderVisibility.PUBLIC)) {
+              Flavor defaultPlatformFlavor =
+                  targetNode
+                      .getConstructorArg()
+                      .getDefaultPlatform()
+                      .orElse(cxxPlatform.getFlavor());
+
+              // Only "modular" libraries will have a modulemap generated for them.
+              if (nativeNode != targetNode && NodeHelper.isModularAppleLibrary(nativeNode)) {
+                BuildTarget flavoredModuleMapTarget =
+                    NodeHelper.getModularMapTarget(
+                        nativeNode, HeaderMode.SYMLINK_TREE_WITH_MODULEMAP, defaultPlatformFlavor);
+
+                RelPath symlinkTreePath =
+                    CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                        projectFilesystem, flavoredModuleMapTarget, headerVisibility);
+                builder.add(projectFilesystem.resolve(symlinkTreePath).getPath());
+              }
+            }
+          });
+
+      Path absolutePath =
+          projectFilesystem.resolve(
+              getPathToMergedHeaderMap(MergedHeaderMap.EXCLUDING_MODULAR_LIBRARIES));
+      builder.add(getHeaderSearchPathFromSymlinkTreeRoot(absolutePath));
+    } else {
+      Path absolutePath =
+          projectFilesystem.resolve(
+              getPathToMergedHeaderMap(MergedHeaderMap.INCLUDING_MODULAR_LIBRARIES));
+      builder.add(getHeaderSearchPathFromSymlinkTreeRoot(absolutePath));
+    }
+
     visitRecursivePrivateHeaderSymlinkTreesForTests(
         targetNode,
         (nativeNode, headerVisibility) -> {
@@ -600,36 +674,41 @@ class HeaderSearchPaths {
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
     final boolean enableIndexingFix = appleConfig.getEnableProjectV2SwiftIndexingFix();
+    Flavor defaultPlatformFlavor =
+        targetNode.getConstructorArg().getDefaultPlatform().orElse(cxxPlatform.getFlavor());
+
     visitRecursiveHeaderSymlinkTrees(
         targetNode,
         (nativeNode, headerVisibility) -> {
+          // This is duplicated from collectRecursiveHeaderSearchPaths and is here only to maintain
+          // the behavior from before the indexing fix change was made. Once that has been tested
+          // and can be rolled out, this first if statement can be removed entirely.
           if ((!enableIndexingFix || nativeNode != targetNode)
-              && headerVisibility.equals(HeaderVisibility.PUBLIC)) {
-            Flavor defaultPlatformFlavor =
-                targetNode.getConstructorArg().getDefaultPlatform().orElse(cxxPlatform.getFlavor());
+              && headerVisibility.equals(HeaderVisibility.PUBLIC)
+              && NodeHelper.isModularAppleLibrary(nativeNode)) {
+            BuildTarget flavoredModuleMapTarget =
+                NodeHelper.getModularMapTarget(
+                    nativeNode, HeaderMode.SYMLINK_TREE_WITH_MODULEMAP, defaultPlatformFlavor);
 
-            // Only "modular" libraries will have a modulemap generated for them.
-            if (NodeHelper.isModularAppleLibrary(nativeNode)) {
-              BuildTarget flavoredModuleMapTarget =
-                  NodeHelper.getModularMapTarget(
-                      nativeNode, HeaderMode.SYMLINK_TREE_WITH_MODULEMAP, defaultPlatformFlavor);
+            RelPath symlinkTreePath =
+                CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                    projectFilesystem, flavoredModuleMapTarget, headerVisibility);
+            builder.add(projectFilesystem.resolve(symlinkTreePath).getPath());
+          }
 
-              RelPath symlinkTreePath =
-                  CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
-                      projectFilesystem, flavoredModuleMapTarget, headerVisibility);
-              builder.add(projectFilesystem.resolve(symlinkTreePath).getPath());
-            }
+          // Objective-C code/modulemap files are added to HEADER_SEARCH_PATHS, which Xcode also
+          // passes to the Swift compiler, so we do not need to duplicate that work here. However,
+          // we do need to add the paths to .swiftmodule files for dependencies.
+          if (enableIndexingFix
+              && nativeNode != targetNode
+              && headerVisibility.equals(HeaderVisibility.PUBLIC)
+              && AppleDescriptions.targetNodeContainsSwiftSourceCode(nativeNode)) {
+            BuildTarget flavoredSwiftCompileTarget =
+                NodeHelper.getSwiftModuleTarget(nativeNode, defaultPlatformFlavor);
 
-            // However, Swift libraries that are not marked "modular" will still have a swiftmodule.
-            if (enableIndexingFix
-                && AppleDescriptions.targetNodeContainsSwiftSourceCode(nativeNode)) {
-              BuildTarget flavoredSwiftCompileTarget =
-                  NodeHelper.getSwiftModuleTarget(nativeNode, defaultPlatformFlavor);
-
-              RelPath swiftModuleMap =
-                  BuildTargetPaths.getGenPath(projectFilesystem, flavoredSwiftCompileTarget, "%s");
-              builder.add(projectFilesystem.resolve(swiftModuleMap).getPath());
-            }
+            RelPath swiftModuleMap =
+                BuildTargetPaths.getGenPath(projectFilesystem, flavoredSwiftCompileTarget, "%s");
+            builder.add(projectFilesystem.resolve(swiftModuleMap).getPath());
           }
         });
     return builder.build();
@@ -639,7 +718,7 @@ class HeaderSearchPaths {
   private void addToMergedHeaderMap(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode,
       HeaderMap.Builder headerMapBuilder,
-      ImmutableList.Builder<SourcePath> sourcePathsToBuildBuilder) {
+      Optional<ImmutableList.Builder<SourcePath>> sourcePathsToBuildBuilder) {
     CxxLibraryDescription.CommonArg arg = targetNode.getConstructorArg();
     // If the target uses header symlinks, we need to use symlinks in the header map to support
     // accurate indexing/mapping of headers.
@@ -654,7 +733,8 @@ class HeaderSearchPaths {
       basePath = projectFilesystem.getRootPath();
     }
     ImmutableSortedMap<Path, SourcePath> publicCxxHeaders = getPublicCxxHeaders(targetNode);
-    publicCxxHeaders.values().forEach(sourcePath -> sourcePathsToBuildBuilder.add(sourcePath));
+    sourcePathsToBuildBuilder.ifPresent(
+        builder -> publicCxxHeaders.values().forEach(sourcePath -> builder.add(sourcePath)));
     for (Map.Entry<Path, SourcePath> entry : publicCxxHeaders.entrySet()) {
       AbsPath path;
       if (shouldCreateHeadersSymlinks) {
@@ -890,8 +970,8 @@ class HeaderSearchPaths {
     return treeRoot;
   }
 
-  private Path getPathToMergedHeaderMap() {
-    return getPathToHeaderMapsRoot(projectFilesystem).resolve("pub-hmap");
+  private Path getPathToMergedHeaderMap(MergedHeaderMap mergedHeaderMap) {
+    return getPathToHeaderMapsRoot(projectFilesystem).resolve(mergedHeaderMap.getFileName());
   }
 
   /** @return a map of all exported platform headers without matching a specific platform. */
@@ -918,5 +998,20 @@ class HeaderSearchPaths {
             .orElse(
                 buildTarget.getCellRelativeBasePath().getPath().toPath(filesystem.getFileSystem())),
         parsed.build());
+  }
+
+  private enum MergedHeaderMap {
+    INCLUDING_MODULAR_LIBRARIES,
+    EXCLUDING_MODULAR_LIBRARIES;
+
+    private String getFileName() {
+      switch (this) {
+        case INCLUDING_MODULAR_LIBRARIES:
+          return "pub-hmap-including-modular-libraries";
+        case EXCLUDING_MODULAR_LIBRARIES:
+          return "pub-hmap-excluding-modular-libraries";
+      }
+      throw new RuntimeException("Invalid MergedHeaderMap case");
+    }
   }
 }

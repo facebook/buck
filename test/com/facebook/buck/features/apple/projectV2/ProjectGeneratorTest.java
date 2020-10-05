@@ -160,7 +160,8 @@ public class ProjectGeneratorTest {
   private static final Flavor DEFAULT_FLAVOR = InternalFlavor.of("default");
   private static final String WATCH_EXTENSION_PRODUCT_TYPE =
       "com.apple.product-type.watchkit2-extension";
-  private static final Path PUBLIC_HEADER_MAP_PATH = Paths.get("buck-out/gen/_p/pub-hmap");
+  private static final Path PUBLIC_HEADER_MAP_PATH =
+      Paths.get("buck-out/gen/_p/pub-hmap-including-modular-libraries");
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
   private Cells projectCell;
@@ -1442,7 +1443,8 @@ public class ProjectGeneratorTest {
             + "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) "
             + String.format("%s/buck-out/gen/_p/LpygK8zq5F-priv/.hmap ", rootPath)
-            + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap ", rootPath)
+            + String.format(
+                "%s/buck-out/gen/_p/pub-hmap-including-modular-libraries/.hmap ", rootPath)
             + String.format("%s/buck-out/gen/_p/CwkbTNOBmb-priv/.hmap", rootPath),
         buildSettings.get("HEADER_SEARCH_PATHS"));
 
@@ -1504,7 +1506,10 @@ public class ProjectGeneratorTest {
                 .normalize()
                 .toString()
             + " "
-            + currentDirectory.resolve("buck-out/gen/_p/pub-hmap/.hmap").normalize().toString()
+            + currentDirectory
+                .resolve("buck-out/gen/_p/pub-hmap-including-modular-libraries/.hmap")
+                .normalize()
+                .toString()
             + " "
             + currentDirectory
                 .resolve("buck-out/gen/_p/CwkbTNOBmb-priv/.hmap")
@@ -1565,7 +1570,8 @@ public class ProjectGeneratorTest {
             + "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) "
             + String.format("%s/buck-out/gen/_p/LpygK8zq5F-priv/.hmap ", rootPath)
-            + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap ", rootPath)
+            + String.format(
+                "%s/buck-out/gen/_p/pub-hmap-including-modular-libraries/.hmap ", rootPath)
             + String.format("%s/buck-out/gen/_p/CwkbTNOBmb-priv/.hmap", rootPath),
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertNull(
@@ -1622,7 +1628,8 @@ public class ProjectGeneratorTest {
             + "of the tested binary in HEADER_SEARCH_PATHS",
         "$(inherited) "
             + String.format("%s/buck-out/gen/_p/LpygK8zq5F-priv/.hmap ", rootPath)
-            + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap ", rootPath)
+            + String.format(
+                "%s/buck-out/gen/_p/pub-hmap-including-modular-libraries/.hmap ", rootPath)
             + String.format("%s/buck-out/gen/_p/4UdYl649ee-priv/.hmap", rootPath),
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertNull(
@@ -2589,7 +2596,8 @@ public class ProjectGeneratorTest {
     assertEquals(
         "$(inherited) "
             + String.format("%s/buck-out/gen/_p/ptQfVNNRRE-priv/.hmap ", rootPath)
-            + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap", rootPath),
+            + String.format(
+                "%s/buck-out/gen/_p/pub-hmap-including-modular-libraries/.hmap", rootPath),
         settings.get("HEADER_SEARCH_PATHS"));
     assertNull(settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals("$(inherited) $BUILT_PRODUCTS_DIR", settings.get("LIBRARY_SEARCH_PATHS"));
@@ -2651,7 +2659,8 @@ public class ProjectGeneratorTest {
     assertEquals(
         "headers "
             + String.format("%s/buck-out/gen/_p/ptQfVNNRRE-priv/.hmap ", rootPath)
-            + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap", rootPath),
+            + String.format(
+                "%s/buck-out/gen/_p/pub-hmap-including-modular-libraries/.hmap", rootPath),
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals("user_headers", settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals("libraries $BUILT_PRODUCTS_DIR", settings.get("LIBRARY_SEARCH_PATHS"));
@@ -2723,7 +2732,8 @@ public class ProjectGeneratorTest {
     assertEquals(
         "$(inherited) "
             + String.format("%s/buck-out/gen/_p/ptQfVNNRRE-priv/.hmap ", rootPath)
-            + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap", rootPath),
+            + String.format(
+                "%s/buck-out/gen/_p/pub-hmap-including-modular-libraries/.hmap", rootPath),
         settings.get("HEADER_SEARCH_PATHS"));
     assertNull(settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals("$(inherited) " + "$BUILT_PRODUCTS_DIR", settings.get("LIBRARY_SEARCH_PATHS"));
@@ -2812,7 +2822,8 @@ public class ProjectGeneratorTest {
     assertEquals(
         "headers "
             + String.format("%s/buck-out/gen/_p/ptQfVNNRRE-priv/.hmap ", rootPath)
-            + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap", rootPath),
+            + String.format(
+                "%s/buck-out/gen/_p/pub-hmap-including-modular-libraries/.hmap", rootPath),
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals("libraries $BUILT_PRODUCTS_DIR", settings.get("LIBRARY_SEARCH_PATHS"));
 
@@ -4397,7 +4408,7 @@ public class ProjectGeneratorTest {
         XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
 
     // The merged header map should not generated at this point.
-    Path hmapPath = Paths.get("buck-out/gen/_p/pub-hmap/.hmap");
+    Path hmapPath = Paths.get("buck-out/gen/_p/pub-hmap-including-modular-libraries/.hmap");
     assertFalse(hmapPath + " should NOT exist.", projectFilesystem.isFile(hmapPath));
     // Checks the content of the header search paths.
 
@@ -4453,7 +4464,8 @@ public class ProjectGeneratorTest {
             + "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) "
             + String.format("%s/buck-out/gen/_p/WNl0jZWMBk-priv/.hmap ", rootPath)
-            + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap", rootPath),
+            + String.format(
+                "%s/buck-out/gen/_p/pub-hmap-including-modular-libraries/.hmap", rootPath),
         buildSettings1.get("HEADER_SEARCH_PATHS"));
 
     // For //foo:test
@@ -4467,7 +4479,8 @@ public class ProjectGeneratorTest {
             + "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) "
             + String.format("%s/buck-out/gen/_p/LpygK8zq5F-priv/.hmap ", rootPath)
-            + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap ", rootPath)
+            + String.format(
+                "%s/buck-out/gen/_p/pub-hmap-including-modular-libraries/.hmap ", rootPath)
             + String.format("%s/buck-out/gen/_p/WNl0jZWMBk-priv/.hmap", rootPath),
         buildSettingsTest.get("HEADER_SEARCH_PATHS"));
   }
@@ -4523,7 +4536,7 @@ public class ProjectGeneratorTest {
         XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
 
     // The merged header map should not generated at this point.
-    Path hmapPath = Paths.get("buck-out/gen/_p/pub-hmap/.hmap");
+    Path hmapPath = Paths.get("buck-out/gen/_p/pub-hmap-including-modular-libraries/.hmap");
     assertFalse(hmapPath + " should NOT exist.", projectFilesystem.isFile(hmapPath));
     // Checks the content of the header search paths.
 
@@ -4585,7 +4598,10 @@ public class ProjectGeneratorTest {
                 .normalize()
                 .toString()
             + " "
-            + currentDirectory.resolve("buck-out/gen/_p/pub-hmap/.hmap").normalize().toString(),
+            + currentDirectory
+                .resolve("buck-out/gen/_p/pub-hmap-including-modular-libraries/.hmap")
+                .normalize()
+                .toString(),
         buildSettings1.get("HEADER_SEARCH_PATHS"));
 
     // For //foo:test
@@ -4603,7 +4619,10 @@ public class ProjectGeneratorTest {
                 .normalize()
                 .toString()
             + " "
-            + currentDirectory.resolve("buck-out/gen/_p/pub-hmap/.hmap").normalize().toString()
+            + currentDirectory
+                .resolve("buck-out/gen/_p/pub-hmap-including-modular-libraries/.hmap")
+                .normalize()
+                .toString()
             + " "
             + currentDirectory
                 .resolve("buck-out/gen/_p/WNl0jZWMBk-priv/.hmap")
