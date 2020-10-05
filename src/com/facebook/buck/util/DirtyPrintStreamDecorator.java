@@ -52,6 +52,22 @@ public class DirtyPrintStreamDecorator extends PrintStream {
   }
 
   @Override
+  public void flush() {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.flush();
+    }
+  }
+
+  @Override
+  public void close() {
+    synchronized (delegate) {
+      dirty = true;
+      delegate.close();
+    }
+  }
+
+  @Override
   public void write(int b) {
     synchronized (delegate) {
       dirty = true;
