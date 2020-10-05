@@ -23,6 +23,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.log.Logger;
@@ -32,6 +33,7 @@ import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
+import com.facebook.buck.rules.modern.RemoteExecutionEnabled;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -112,6 +114,10 @@ public class AppleVFSOverlayBuildRule extends ModernBuildRule<AppleVFSOverlayBui
     @AddToRuleKey private final String buildTargetName;
     @AddToRuleKey private final String placeholderPathString;
 
+    // TODO: (andyyhope): swap to compiler-invocation relative paths
+    @CustomFieldBehavior(RemoteExecutionEnabled.class)
+    private final boolean remoteExecutionEnabled = false;
+
     Impl(SourcePath symlinkTreePath, String buildTargetName, String placeholderPathString) {
       this.symlinkTreePath = symlinkTreePath;
       this.yamlPath = new OutputPath("overlay.yaml");
@@ -160,7 +166,7 @@ public class AppleVFSOverlayBuildRule extends ModernBuildRule<AppleVFSOverlayBui
                 filesystem.writeContentsToPath(render, yamlRelPath.getPath());
                 return StepExecutionResults.SUCCESS;
               } catch (IOException e) {
-                LOG.debug("Couldn't generate modulemap: %s", e.getMessage());
+                LOG.debug("Couldn't generate VFS overlay: %s", e.getMessage());
                 return StepExecutionResults.ERROR;
               }
             }
