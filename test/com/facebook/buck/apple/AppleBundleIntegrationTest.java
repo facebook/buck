@@ -2328,36 +2328,6 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void
-      givenPreviousBuildIsIncremental_whenNonIncrementalBuildIsPerformed_thenFileWithContentHashesIsRemoved()
-          throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "app_bundle_with_parts_of_every_kind", tmp);
-    workspace.setUp();
-
-    workspace.addBuckConfigLocalOption("apple", "incremental_bundling_enabled", "true");
-    workspace.addBuckConfigLocalOption("apple", "codesign", "/usr/bin/true");
-
-    Path buildTriggerPath = Paths.get("App/BuildTrigger.m");
-    filesystem.writeContentsToPath("", buildTriggerPath);
-
-    BuildTarget target = workspace.newBuildTarget("//:DemoApp#macosx-x86_64,no-debug");
-    Path outputPath = workspace.buildAndReturnOutput(target.toString());
-
-    Path incrementalInfoFilePath = outputPath.resolve("../incremental_info.json");
-    assertTrue("File with hashes should exist", Files.isRegularFile(incrementalInfoFilePath));
-
-    workspace.removeBuckConfigLocalOption("apple", "incremental_bundling_enabled");
-
-    workspace.buildAndReturnOutput(target.toString());
-
-    assertFalse(
-        "File with hashes should not exist after non-incremental build",
-        Files.exists(incrementalInfoFilePath));
-  }
-
-  @Test
   public void resourcesHashesAreNotComputedByDefault() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_resources", tmp);

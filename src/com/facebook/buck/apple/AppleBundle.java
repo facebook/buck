@@ -348,8 +348,6 @@ public class AppleBundle extends AbstractBuildRule
                   new IllegalStateException(
                       "Content hashes for current build should be computed when incremental build is performed")),
           codeSignOnCopyPaths);
-    } else {
-      appendContentHashesFileDeletionSteps(stepsBuilder, context);
     }
 
     if (hasBinary()) {
@@ -779,7 +777,10 @@ public class AppleBundle extends AbstractBuildRule
       BuildableContext buildableContext,
       Supplier<Map<RelPath, String>> contentHashesSupplier,
       ImmutableList<RelPath> codeSignOnCopyPaths) {
-    appendContentHashesFileDeletionSteps(stepsBuilder, context);
+    BuildCellRelativePath contentHashesFilePathRelativeToCell =
+        BuildCellRelativePath.fromCellRelativePath(
+            context.getBuildCellRootPath(), getProjectFilesystem(), getIncrementalInfoFilePath());
+    stepsBuilder.add(RmStep.of(contentHashesFilePathRelativeToCell));
     stepsBuilder.add(
         new AppleWriteIncrementalInfoStep(
             contentHashesSupplier,
@@ -788,14 +789,6 @@ public class AppleBundle extends AbstractBuildRule
             getIncrementalInfoFilePath(),
             getProjectFilesystem()));
     buildableContext.recordArtifact(getIncrementalInfoFilePath());
-  }
-
-  private void appendContentHashesFileDeletionSteps(
-      ImmutableList.Builder<Step> stepsBuilder, BuildContext context) {
-    BuildCellRelativePath contentHashesFilePathRelativeToCell =
-        BuildCellRelativePath.fromCellRelativePath(
-            context.getBuildCellRootPath(), getProjectFilesystem(), getIncrementalInfoFilePath());
-    stepsBuilder.add(RmStep.of(contentHashesFilePathRelativeToCell));
   }
 
   private Path getIncrementalInfoFilePath() {
