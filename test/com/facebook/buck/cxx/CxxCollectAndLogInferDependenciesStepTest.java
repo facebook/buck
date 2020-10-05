@@ -29,7 +29,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -45,6 +45,7 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -85,7 +86,11 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             PreprocessorFlags.builder().build(),
             defaultFrameworkPathSearchPathFunction,
             /* leadingIncludePaths */ Optional.empty(),
-            Optional.of(new FakeBuildRule(buildTarget.withFlavors(InternalFlavor.of("deps")))),
+            Optional.of(
+                new DependencyAggregation(
+                    buildTarget.withFlavors(InternalFlavor.of("deps")),
+                    filesystem,
+                    ImmutableList.of())),
             ImmutableSortedSet.of());
 
     return new CxxInferCapture(

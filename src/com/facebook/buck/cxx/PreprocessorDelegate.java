@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasCustomDepsLogic;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -92,7 +93,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
 
   private final PathShortener minLengthPathRepresentation;
 
-  private final Optional<BuildRule> aggregatedDeps;
+  private final Optional<DependencyAggregation> aggregatedDeps;
 
   private final WeakMemoizer<HeaderPathNormalizer> headerPathNormalizer = new WeakMemoizer<>();
 
@@ -106,7 +107,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
       PreprocessorFlags preprocessorFlags,
       AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> frameworkPathSearchPathFunction,
       Optional<CxxIncludePaths> leadingIncludePaths,
-      Optional<BuildRule> aggregatedDeps,
+      Optional<DependencyAggregation> aggregatedDeps,
       ImmutableSortedSet<String> conflictingHeaderBasenameWhitelist) {
     this.preprocessor = preprocessor;
     this.preprocessorFlags = preprocessorFlags;

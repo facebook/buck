@@ -35,7 +35,7 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -263,7 +263,10 @@ public class CxxPreprocessAndCompileTest {
                         DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                         /* leadingIncludePaths */ Optional.empty(),
                         Optional.of(
-                            new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
+                            new DependencyAggregation(
+                                target.withFlavors(InternalFlavor.of("deps")),
+                                projectFilesystem,
+                                ImmutableList.of())),
                         ImmutableSortedSet.of()),
                     new CompilerDelegate(
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -401,7 +404,10 @@ public class CxxPreprocessAndCompileTest {
                         DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                         /* leadingIncludePaths */ Optional.empty(),
                         Optional.of(
-                            new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
+                            new DependencyAggregation(
+                                target.withFlavors(InternalFlavor.of("deps")),
+                                projectFilesystem,
+                                ImmutableList.of())),
                         ImmutableSortedSet.of()),
                     new CompilerDelegate(
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -507,7 +513,11 @@ public class CxxPreprocessAndCompileTest {
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 /* leadingIncludePaths */ Optional.empty(),
-                Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
+                Optional.of(
+                    new DependencyAggregation(
+                        target.withFlavors(InternalFlavor.of("deps")),
+                        projectFilesystem,
+                        ImmutableList.of())),
                 ImmutableSortedSet.of()),
             new CompilerDelegate(
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -604,7 +614,11 @@ public class CxxPreprocessAndCompileTest {
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 /* leadingIncludePaths */ Optional.empty(),
-                Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
+                Optional.of(
+                    new DependencyAggregation(
+                        target.withFlavors(InternalFlavor.of("deps")),
+                        projectFilesystem,
+                        ImmutableList.of())),
                 ImmutableSortedSet.of()),
             new CompilerDelegate(
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -754,7 +768,11 @@ public class CxxPreprocessAndCompileTest {
             preprocessorFlags,
             DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
             leadingIncludePaths,
-            Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
+            Optional.of(
+                new DependencyAggregation(
+                    target.withFlavors(InternalFlavor.of("deps")),
+                    projectFilesystem,
+                    ImmutableList.of())),
             ImmutableSortedSet.of("white", "list"));
     CompilerDelegate compilerDelegate =
         new CompilerDelegate(

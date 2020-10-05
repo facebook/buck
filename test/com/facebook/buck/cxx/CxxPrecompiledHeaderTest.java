@@ -27,7 +27,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.cxx.toolchain.Compiler;
@@ -78,7 +78,11 @@ public class CxxPrecompiledHeaderTest {
                 CxxDescriptionEnhancer.frameworkPathToSearchPath(
                     CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder.getSourcePathResolver(), false),
                 /* leadingIncludePaths */ Optional.empty(),
-                Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
+                Optional.of(
+                    new DependencyAggregation(
+                        target.withFlavors(InternalFlavor.of("deps")),
+                        new FakeProjectFilesystem(),
+                        ImmutableList.of())),
                 ImmutableSortedSet.of()),
             new CompilerDelegate(
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,

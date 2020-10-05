@@ -187,7 +187,7 @@ public abstract class CxxSourceRuleFactory {
                             getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration());
                 // TODO(cjhopman): The aggregated deps logic should move into PreprocessorDelegate
                 // itself.
-                BuildRule aggregatedDeps = requireAggregatedPreprocessDepsRule();
+                DependencyAggregation aggregatedDeps = requireAggregatedPreprocessDepsRule();
                 PreprocessorDelegate delegate =
                     new PreprocessorDelegate(
                         getCxxPlatform().getHeaderVerification(),
@@ -215,23 +215,24 @@ public abstract class CxxSourceRuleFactory {
    * dep themselves. This turns O(n*m) dependencies into O(n+m) dependencies, where n is number of
    * files in a target, and m is the number of targets.
    */
-  private BuildRule requireAggregatedPreprocessDepsRule() {
-    return getActionGraphBuilder()
-        .computeIfAbsent(
-            createAggregatedPreprocessDepsBuildTarget(),
-            target -> {
-              ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
-              for (CxxPreprocessorInput input : getCxxPreprocessorInput()) {
-                builder.addAll(input.getDeps(getActionGraphBuilder()));
-              }
-              if (getPreInclude().isPresent()) {
-                builder.addAll(
-                    getActionGraphBuilder()
-                        .filterBuildRuleInputs(getPreInclude().get().getHeaderSourcePath()));
-                builder.addAll(getPreInclude().get().getBuildDeps());
-              }
-              return new DependencyAggregation(target, getProjectFilesystem(), builder.build());
-            });
+  private DependencyAggregation requireAggregatedPreprocessDepsRule() {
+    return (DependencyAggregation)
+        getActionGraphBuilder()
+            .computeIfAbsent(
+                createAggregatedPreprocessDepsBuildTarget(),
+                target -> {
+                  ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
+                  for (CxxPreprocessorInput input : getCxxPreprocessorInput()) {
+                    builder.addAll(input.getDeps(getActionGraphBuilder()));
+                  }
+                  if (getPreInclude().isPresent()) {
+                    builder.addAll(
+                        getActionGraphBuilder()
+                            .filterBuildRuleInputs(getPreInclude().get().getHeaderSourcePath()));
+                    builder.addAll(getPreInclude().get().getBuildDeps());
+                  }
+                  return new DependencyAggregation(target, getProjectFilesystem(), builder.build());
+                });
   }
 
   @VisibleForTesting
@@ -745,7 +746,7 @@ public abstract class CxxSourceRuleFactory {
     return pre.getPrecompiledHeader(
         /* canPrecompile */ canUsePrecompiledHeaders(sourceType),
         preprocessorDelegateCacheValue.getPreprocessorDelegate(),
-        (DependencyAggregation) requireAggregatedPreprocessDepsRule(),
+        requireAggregatedPreprocessDepsRule(),
         computeCompilerFlags(sourceType, sourceFlags),
         preprocessorDelegateCacheValue::getHash,
         preprocessorDelegateCacheValue::getBaseHash,
