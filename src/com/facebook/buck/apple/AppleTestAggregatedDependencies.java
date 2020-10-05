@@ -110,7 +110,6 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
         AppleBundleDestinations.platformDestinations(applePlatform),
         getProjectFilesystem(),
         processedResourceDir,
-        () -> false,
         ImmutableMap::of,
         Optional.empty());
 

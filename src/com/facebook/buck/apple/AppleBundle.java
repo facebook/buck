@@ -315,8 +315,6 @@ public class AppleBundle extends AbstractBuildRule
                   context.getBuildCellRootPath(), getProjectFilesystem(), bundleRoot)));
     }
 
-    Supplier<Boolean> shouldPerformIncrementalBuildSupplier = () -> incrementalBundlingEnabled;
-
     if (hasBinary()) {
       appendCopyDsymStep(stepsBuilder, buildableContext, context);
     }
@@ -349,7 +347,6 @@ public class AppleBundle extends AbstractBuildRule
         destinations,
         getProjectFilesystem(),
         processedResourcesDir,
-        shouldPerformIncrementalBuildSupplier,
         oldContentHashesSupplier,
         maybeNewContentHashesSupplier);
 
