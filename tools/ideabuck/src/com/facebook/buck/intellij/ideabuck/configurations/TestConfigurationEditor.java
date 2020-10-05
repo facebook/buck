@@ -16,29 +16,20 @@
 
 package com.facebook.buck.intellij.ideabuck.configurations;
 
-import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.JBUI;
 import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import javax.swing.JComponent;
 import javax.swing.JPanel;
 import org.jetbrains.annotations.NotNull;
 
-public class TestConfigurationEditor extends SettingsEditor<TestConfiguration> {
-  private final JBTextField mTargets;
-  private final JBTextField mAdditionalParams;
+public class TestConfigurationEditor extends AbstractConfigurationEditor<TestConfiguration> {
   private final JBTextField mTestSelectors;
   private final JPanel root;
 
   public TestConfigurationEditor() {
-    root = new JPanel(new GridBagLayout());
-    final JBLabel targetLabel = new JBLabel();
-    targetLabel.setText("Targets");
-    mTargets = new JBTextField();
-    mTargets.getEmptyText().setText("Specify buck targets to test");
-
+    super();
+    root = getRoot();
     final JBLabel testSelectorLabel = new JBLabel();
     testSelectorLabel.setText("Test selectors (--test-selectors)");
     mTestSelectors = new JBTextField();
@@ -46,15 +37,10 @@ public class TestConfigurationEditor extends SettingsEditor<TestConfiguration> {
         .getEmptyText()
         .setText("Select tests to run using <class>, <#method> or <class#method>.");
 
-    final JBLabel additionalParamsLabel = new JBLabel();
-    additionalParamsLabel.setText("Additional params");
-    mAdditionalParams = new JBTextField();
-    mAdditionalParams.getEmptyText().setText("May be empty");
-
     final GridBagConstraints constraints =
         new GridBagConstraints(
             0,
-            0,
+            GridBagConstraints.RELATIVE,
             1,
             1,
             0,
@@ -65,55 +51,24 @@ public class TestConfigurationEditor extends SettingsEditor<TestConfiguration> {
             0,
             0);
     constraints.insets = JBUI.insetsRight(8);
-    root.add(targetLabel, constraints);
-    constraints.gridx = 1;
-    constraints.gridy = 0;
-    constraints.weightx = 1;
-    constraints.fill = GridBagConstraints.HORIZONTAL;
-    root.add(mTargets, constraints);
-
-    constraints.gridx = 0;
-    constraints.gridy = 1;
-    constraints.weightx = 0;
-    constraints.fill = GridBagConstraints.NONE;
     root.add(testSelectorLabel, constraints);
 
     constraints.gridx = 1;
-    constraints.gridy = 1;
+    constraints.gridy = GridBagConstraints.RELATIVE;
     constraints.weightx = 1;
     constraints.fill = GridBagConstraints.HORIZONTAL;
     root.add(mTestSelectors, constraints);
-
-    constraints.gridx = 0;
-    constraints.gridy = 2;
-    constraints.weightx = 0;
-    constraints.fill = GridBagConstraints.NONE;
-    root.add(additionalParamsLabel, constraints);
-
-    constraints.gridx = 1;
-    constraints.gridy = 2;
-    constraints.weightx = 1;
-    constraints.fill = GridBagConstraints.HORIZONTAL;
-    root.add(mAdditionalParams, constraints);
   }
 
   @Override
   protected void resetEditorFrom(@NotNull TestConfiguration configuration) {
-    mTargets.setText(configuration.data.targets);
-    mAdditionalParams.setText(configuration.data.additionalParams);
+    super.resetEditorFrom(configuration);
     mTestSelectors.setText(configuration.data.testSelectors);
   }
 
   @Override
   protected void applyEditorTo(@NotNull TestConfiguration configuration) {
-    configuration.data.targets = mTargets.getText().trim();
-    configuration.data.additionalParams = mAdditionalParams.getText().trim();
+    super.applyEditorTo(configuration);
     configuration.data.testSelectors = mTestSelectors.getText().trim();
-  }
-
-  @NotNull
-  @Override
-  protected JComponent createEditor() {
-    return root;
   }
 }
