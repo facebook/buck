@@ -17,12 +17,14 @@
 package com.facebook.buck.apple.simulator;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.immutables.value.Value;
 
 /** Object that represents an Apple simulator or a physical device. Used with idb. */
 @BuckStyleValue
 @JsonDeserialize(as = ImmutableAppleDevice.class)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public interface AppleDevice {
 
   /** String that represents the name of the device (i.e., "iPhone X", "iPad Air", etc) */
