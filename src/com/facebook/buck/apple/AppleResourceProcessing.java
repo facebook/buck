@@ -24,6 +24,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
@@ -85,9 +86,7 @@ public class AppleResourceProcessing {
         dirRoot,
         destinations,
         projectFilesystem,
-        processedResourcesDir,
-        oldContentHashesSupplier,
-        newContentHashesSupplier);
+        processedResourcesDir);
     addStepsToCopyNonProcessedFilesAndDirectories(
         context.getSourcePathResolver(),
         stepsBuilder,
@@ -159,89 +158,58 @@ public class AppleResourceProcessing {
               AbsPath resolvedSourcePath =
                   sourcePathResolver.getAbsolutePath(dirWithDestination.getSourcePath());
 
-              copyContentsOfDirectoryIfNeededToBundleWithIncrementalSupport(
-                  resolvedSourcePath,
-                  destinationDirectoryPath,
-                  dirRoot,
-                  projectFilesystem,
-                  oldContentHashesSupplier,
-                  newContentHashesSupplier);
+              ImmutableSet.Builder<Path> pathsToDeleteBuilder = ImmutableSet.builder();
+              ImmutableSet.Builder<AppleBundleComponentCopySpec> copySpecsBuilder =
+                  ImmutableSet.builder();
+
+              for (String fileName :
+                  Objects.requireNonNull(new File(resolvedSourcePath.toUri()).list())) {
+
+                RelPath toPathRelativeToBundleRoot = destinationDirectoryPath.resolveRel(fileName);
+                if (newContentHashesSupplier.isPresent()) {
+                  String oldHash = oldContentHashesSupplier.get().get(toPathRelativeToBundleRoot);
+                  String newHash =
+                      newContentHashesSupplier.get().get().get(toPathRelativeToBundleRoot);
+                  Preconditions.checkState(
+                      newHash != null,
+                      "Expecting a hash to be computed when incremental bundling is enabled");
+                  if (oldHash != null && oldHash.equals(newHash)) {
+                    continue;
+                  }
+                  pathsToDeleteBuilder.add(dirRoot.resolve(toPathRelativeToBundleRoot.getPath()));
+                }
+                AbsPath fromPath = resolvedSourcePath.resolve(fileName);
+                copySpecsBuilder.add(
+                    new AppleBundleComponentCopySpec(fromPath, toPathRelativeToBundleRoot, false));
+              }
+
+              pathsToDeleteBuilder
+                  .build()
+                  .parallelStream()
+                  .forEach(
+                      path -> {
+                        try {
+                          projectFilesystem.deleteRecursivelyIfExists(path);
+                        } catch (IOException exception) {
+                          throw new RuntimeException(exception.getMessage());
+                        }
+                      });
+
+              copySpecsBuilder
+                  .build()
+                  .parallelStream()
+                  .forEach(
+                      spec -> {
+                        try {
+                          spec.performCopy(projectFilesystem, dirRoot);
+                        } catch (IOException exception) {
+                          throw new RuntimeException(exception.getMessage());
+                        }
+                      });
             }
             return StepExecutionResults.SUCCESS;
           }
         });
-  }
-
-  private static void copyContentsOfDirectoryIfNeededToBundleWithIncrementalSupport(
-      AbsPath sourceContainerDirectoryPath,
-      RelPath destinationDirectoryPath,
-      Path dirRoot,
-      ProjectFilesystem projectFilesystem,
-      Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
-      Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
-
-    ImmutableSet.Builder<Path> pathsToDeleteBuilder = ImmutableSet.builder();
-    ImmutableSet.Builder<AppleBundleComponentCopySpec> copySpecsBuilder = ImmutableSet.builder();
-
-    for (String fileName :
-        Objects.requireNonNull(new File(sourceContainerDirectoryPath.toUri()).list())) {
-      AbsPath fromPath = sourceContainerDirectoryPath.resolve(fileName);
-      RelPath toPathRelativeToBundleRoot = destinationDirectoryPath.resolveRel(fileName);
-      prepareCopyFileToBundleWithIncrementalSupport(
-          fromPath,
-          toPathRelativeToBundleRoot,
-          newContentHashesSupplier,
-          oldContentHashesSupplier,
-          dirRoot,
-          pathsToDeleteBuilder,
-          copySpecsBuilder);
-    }
-
-    pathsToDeleteBuilder
-        .build()
-        .parallelStream()
-        .forEach(
-            path -> {
-              try {
-                projectFilesystem.deleteRecursivelyIfExists(path);
-              } catch (IOException exception) {
-                throw new RuntimeException(exception.getMessage());
-              }
-            });
-
-    copySpecsBuilder
-        .build()
-        .parallelStream()
-        .forEach(
-            spec -> {
-              try {
-                spec.performCopy(projectFilesystem, dirRoot);
-              } catch (IOException exception) {
-                throw new RuntimeException(exception.getMessage());
-              }
-            });
-  }
-
-  private static void prepareCopyFileToBundleWithIncrementalSupport(
-      AbsPath fromPath,
-      RelPath toPathRelativeToBundleRoot,
-      Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier,
-      Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
-      Path dirRoot,
-      ImmutableSet.Builder<Path> pathsToDeleteBuilder,
-      ImmutableSet.Builder<AppleBundleComponentCopySpec> copySpecsBuilder) {
-    if (newContentHashesSupplier.isPresent()) {
-      String oldHash = oldContentHashesSupplier.get().get(toPathRelativeToBundleRoot);
-      String newHash = newContentHashesSupplier.get().get().get(toPathRelativeToBundleRoot);
-      Preconditions.checkState(
-          newHash != null, "Expecting a hash to be computed when incremental bundling is enabled");
-      if (oldHash != null && oldHash.equals(newHash)) {
-        return;
-      }
-      pathsToDeleteBuilder.add(dirRoot.resolve(toPathRelativeToBundleRoot.getPath()));
-    }
-    copySpecsBuilder.add(
-        new AppleBundleComponentCopySpec(fromPath, toPathRelativeToBundleRoot, false));
   }
 
   private static void addStepsToCopyProcessedResources(
@@ -251,9 +219,7 @@ public class AppleResourceProcessing {
       Path dirRoot,
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem,
-      SourcePath processedResourcesDir,
-      Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
-      Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
+      SourcePath processedResourcesDir) {
     Set<AppleBundleDestination> destinationsForAllProcessedResources = new HashSet<>();
     {
       if (resources.getResourceVariantFiles().size() > 0) {
@@ -269,7 +235,7 @@ public class AppleResourceProcessing {
               .collect(Collectors.toSet()));
     }
     stepsBuilder.add(
-        new AbstractExecutionStep("apple-bundle-copy-processed-resources") {
+        new AbstractExecutionStep("copy-processed-resources") {
           @Override
           public StepExecutionResult execute(StepExecutionContext stepContext) throws IOException {
 
@@ -281,13 +247,22 @@ public class AppleResourceProcessing {
                   AppleProcessResources.directoryNameWithProcessedFilesForDestination(destination);
               AbsPath processedResourcesContainerDirForDestination =
                   rootDirWithProcessedResourcesPath.resolve(subdirectoryNameForDestination);
-              copyContentsOfDirectoryIfNeededToBundleWithIncrementalSupport(
-                  processedResourcesContainerDirForDestination,
-                  RelPath.of(destination.getPath(destinations)),
-                  dirRoot,
-                  projectFilesystem,
-                  oldContentHashesSupplier,
-                  newContentHashesSupplier);
+
+              Path bundleDestinationPath = destination.getPath(destinations);
+
+              for (String fileName :
+                  Objects.requireNonNull(
+                      new File(processedResourcesContainerDirForDestination.toUri()).list())) {
+
+                AbsPath fromPath = processedResourcesContainerDirForDestination.resolve(fileName);
+                Path toPath = dirRoot.resolve(bundleDestinationPath).resolve(fileName);
+
+                boolean isDirectory = projectFilesystem.isDirectory(fromPath);
+                projectFilesystem.copy(
+                    fromPath.getPath(),
+                    isDirectory ? toPath.getParent() : toPath,
+                    isDirectory ? CopySourceMode.DIRECTORY_AND_CONTENTS : CopySourceMode.FILE);
+              }
             }
 
             return StepExecutionResults.SUCCESS;

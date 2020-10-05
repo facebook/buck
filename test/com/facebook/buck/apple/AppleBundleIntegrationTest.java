@@ -2225,20 +2225,8 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void
-      givenBundlePartIsChanged_whenIncrementalBuildIsPerformed_thenOnlyChangedPartIsCopiedToBundle()
+      givenContainingDirectoryContentIsChanged_whenIncrementalBuildIsPerformed_thenOnlyChangedElementsAreCopiedToBundle()
           throws IOException, InterruptedException {
-    // directories with contents
-    givenBundleElementIsChanged_whenIncrementalBuildIsPerformed_thenOnlyChangedElementIsCopiedToBundle(
-        RelPath.get("Contents/Resources/Model.momd"),
-        RelPath.get("Contents/Resources/DemoApp.scnassets"));
-    // processed resources
-    givenBundleElementIsChanged_whenIncrementalBuildIsPerformed_thenOnlyChangedElementIsCopiedToBundle(
-        RelPath.get("Contents/Resources/aa.lproj"), RelPath.get("Contents/Resources/xx.lproj"));
-  }
-
-  private void
-      givenBundleElementIsChanged_whenIncrementalBuildIsPerformed_thenOnlyChangedElementIsCopiedToBundle(
-          RelPath path1, RelPath path2) throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "app_bundle_with_parts_of_every_kind", tmp);
@@ -2259,8 +2247,8 @@ public class AppleBundleIntegrationTest {
     Map<String, String> pathToHash =
         parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
 
-    RelPath shouldNotBeCopiedPath = path1;
-    RelPath shouldBeCopiedPath = path2;
+    RelPath shouldNotBeCopiedPath = RelPath.get("Contents/Resources/Model.momd");
+    RelPath shouldBeCopiedPath = RelPath.get("Contents/Resources/DemoApp.scnassets");
 
     Map<RelPath, String> amendedPathToHash =
         pathToHash.entrySet().stream()
