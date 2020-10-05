@@ -20,27 +20,18 @@ import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.ConfigurationFactory;
-import com.intellij.execution.configurations.LocatableConfigurationBase;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.InvalidDataException;
-import com.intellij.openapi.util.WriteExternalException;
-import com.intellij.util.xmlb.XmlSerializer;
-import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TestConfiguration extends LocatableConfigurationBase
-    implements RunConfigurationWithSuppressedDefaultRunAction {
-
-  public final Data data = new Data();
+public class TestConfiguration extends AbstractConfiguration<TestConfiguration.TestData> {
 
   protected TestConfiguration(Project project, @NotNull ConfigurationFactory factory, String name) {
     super(project, factory, name);
@@ -69,20 +60,11 @@ public class TestConfiguration extends LocatableConfigurationBase
   }
 
   @Override
-  public void readExternal(Element element) throws InvalidDataException {
-    super.readExternal(element);
-    XmlSerializer.deserializeInto(data, element);
+  protected TestData createData() {
+    return new TestData();
   }
 
-  @Override
-  public void writeExternal(Element element) throws WriteExternalException {
-    super.writeExternal(element);
-    XmlSerializer.serializeInto(data, element);
-  }
-
-  public static class Data {
-    public String targets = "";
-    public String additionalParams = "";
+  public static class TestData extends AbstractConfiguration.Data {
     public String testSelectors = "";
   }
 }

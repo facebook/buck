@@ -33,6 +33,7 @@ public class TestConfigurationTest extends BuckTestCase {
     cfg.data.targets = "//src/com/facebook/buck:test";
     cfg.data.testSelectors = "com.facebook.buck.Test";
     cfg.data.additionalParams = "--num-threads 239";
+    cfg.data.buckExecutablePath = "foo/bar/buck";
     final Element testElement = new Element("test_element");
     cfg.writeExternal(testElement);
 
@@ -42,6 +43,7 @@ public class TestConfigurationTest extends BuckTestCase {
     Assert.assertEquals("//src/com/facebook/buck:test", cfg2.data.targets);
     Assert.assertEquals("com.facebook.buck.Test", cfg2.data.testSelectors);
     Assert.assertEquals("--num-threads 239", cfg2.data.additionalParams);
+    Assert.assertEquals("foo/bar/buck", cfg2.data.buckExecutablePath);
   }
 
   public void testAllFieldsPublic() throws Exception {
