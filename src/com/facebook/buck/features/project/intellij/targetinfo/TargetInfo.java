@@ -117,4 +117,17 @@ public class TargetInfo {
         && Objects.equals(moduleLanguage, other.moduleLanguage)
         && Objects.equals(generatedSources, other.generatedSources);
   }
+
+  @Override
+  public String toString() {
+    return String.format(
+        "TargetInfo[\n"
+            + "  ruleType=%s\n"
+            + "  intellijType=%s\n"
+            + "  intellijName=%s\n"
+            + "  intellijFilePath=%s\n"
+            + "  moduleLanguage=%s\n"
+            + "  generatedSources=%s]",
+        ruleType, intellijType, intellijName, intellijFilePath, moduleLanguage, generatedSources);
+  }
 }

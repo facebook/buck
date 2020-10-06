@@ -2,7 +2,10 @@ load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 
 java_library_with_plugins(
     name = "targetinfo",
-    srcs = glob(["*.java"]),
+    srcs = glob(
+        ["*.java"],
+        exclude = ["LookupTool.java"],
+    ),
     provided_deps = [
         "//third-party/java/gson:gson",
     ],
@@ -10,4 +13,20 @@ java_library_with_plugins(
         "//test/com/facebook/buck/features/project/intellij/targetinfo:targetinfo",
     ],
     visibility = ["PUBLIC"],
+)
+
+java_library_with_plugins(
+    name = "lookuptool",
+    srcs = ["LookupTool.java"],
+    deps = [
+        ":targetinfo",
+    ],
+)
+
+java_binary(
+    name = "LookupTool",
+    main_class = "com.facebook.buck.features.project.intellij.targetinfo.LookupTool",
+    deps = [
+        ":lookuptool",
+    ],
 )
