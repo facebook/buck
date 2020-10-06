@@ -68,6 +68,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
@@ -350,6 +352,15 @@ public class AppleBundle extends AbstractBuildRule
         oldContentHashesSupplier,
         maybeNewContentHashesSupplier);
 
+    if (maybeNewContentHashesSupplier.isPresent()) {
+      addStepToDeleteBundlePartsFromPreviousBuildMissingInCurrentBuild(
+          oldContentHashesSupplier,
+          maybeNewContentHashesSupplier.get(),
+          stepsBuilder,
+          bundleRoot,
+          getProjectFilesystem());
+    }
+
     if (codeSignType != AppleCodeSignType.SKIP) {
       Supplier<CodeSignIdentity> codeSignIdentitySupplier =
           appendStepsToSelectCodeSignIdentity(context, stepsBuilder);
@@ -393,6 +404,34 @@ public class AppleBundle extends AbstractBuildRule
         context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput()).getPath());
 
     return stepsBuilder.build();
+  }
+
+  private void addStepToDeleteBundlePartsFromPreviousBuildMissingInCurrentBuild(
+      Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
+      Supplier<ImmutableMap<RelPath, String>> newContentHashesSupplier,
+      ImmutableList.Builder<Step> stepsBuilder,
+      Path bundleRoot,
+      ProjectFilesystem projectFilesystem) {
+    stepsBuilder.add(
+        new AbstractExecutionStep("apple-bundle-delete-bundle-parts") {
+          @Override
+          public StepExecutionResult execute(StepExecutionContext context) {
+            Sets.difference(
+                    oldContentHashesSupplier.get().keySet(),
+                    newContentHashesSupplier.get().keySet())
+                .parallelStream()
+                .forEach(
+                    path -> {
+                      try {
+                        projectFilesystem.deleteRecursivelyIfExists(
+                            bundleRoot.resolve(path.getPath()));
+                      } catch (IOException exception) {
+                        throw new RuntimeException(exception.getMessage());
+                      }
+                    });
+            return StepExecutionResults.SUCCESS;
+          }
+        });
   }
 
   @Nonnull
