@@ -36,7 +36,7 @@ public class BuildConfiguration extends AbstractConfiguration<BuildConfiguration
   @NotNull
   @Override
   public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
-    return null;
+    return new BuildConfigurationEditor();
   }
 
   @Nullable
