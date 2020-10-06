@@ -361,6 +361,8 @@ public class AppleBundle extends AbstractBuildRule
           resources, bundleParts, context.getSourcePathResolver(), destinations);
     }
 
+    appendContentHashesFileDeletionSteps(stepsBuilder, context);
+
     AppleResourceProcessing.addStepsToCopyResources(
         context,
         stepsBuilder,
@@ -381,6 +383,18 @@ public class AppleBundle extends AbstractBuildRule
         stepsBuilder,
         bundleRoot,
         getProjectFilesystem());
+
+    if (incrementalBundlingEnabled) {
+      appendWriteIncrementalInfoSteps(
+          stepsBuilder,
+          context,
+          buildableContext,
+          maybeCurrentBuildHashesSupplier.orElseThrow(
+              () ->
+                  new IllegalStateException(
+                      "Content hashes for current build should be computed when incremental build is performed")),
+          codeSignOnCopyPaths);
+    }
 
     if (codeSignType != AppleCodeSignType.SKIP) {
       Supplier<CodeSignIdentity> codeSignIdentitySupplier =

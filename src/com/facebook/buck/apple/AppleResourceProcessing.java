@@ -258,7 +258,7 @@ public class AppleResourceProcessing {
               try {
                 projectFilesystem.deleteRecursivelyIfExists(path);
               } catch (IOException exception) {
-                throw new RuntimeException(exception.getMessage());
+                throw new RuntimeException(exception.toString());
               }
             });
 
@@ -269,7 +269,7 @@ public class AppleResourceProcessing {
               try {
                 spec.performCopy(projectFilesystem, dirRoot);
               } catch (IOException exception) {
-                throw new RuntimeException(exception.getMessage());
+                throw new RuntimeException(exception.toString());
               }
             });
   }
