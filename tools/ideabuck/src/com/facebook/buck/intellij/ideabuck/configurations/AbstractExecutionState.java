@@ -98,7 +98,7 @@ public abstract class AbstractExecutionState<T extends AbstractConfiguration>
             });
   }
 
-  protected List<String> parseTargets(String targets) {
+  protected List<String> parseParamsIntoList(String targets) {
     return Splitter.on(CharMatcher.whitespace())
         .trimResults()
         .omitEmptyStrings()

@@ -43,7 +43,7 @@ public class BuildConfiguration extends AbstractConfiguration<BuildConfiguration
   @Override
   public RunProfileState getState(
       @NotNull Executor executor, @NotNull ExecutionEnvironment environment) {
-    return null;
+    return isBuckBuilding() ? null : new BuildExecutionState(this, getProject());
   }
 
   @Override

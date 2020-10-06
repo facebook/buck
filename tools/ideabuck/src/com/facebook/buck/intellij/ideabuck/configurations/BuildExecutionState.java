@@ -20,72 +20,51 @@ import com.facebook.buck.intellij.ideabuck.build.BuckBuildCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
 import com.intellij.execution.DefaultExecutionResult;
-import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.Executor;
-import com.intellij.execution.executors.DefaultDebugExecutor;
+import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ProgramRunner;
-import com.intellij.execution.testframework.TestConsoleProperties;
-import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Key;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class TestExecutionState extends AbstractExecutionState<TestConfiguration> {
+public class BuildExecutionState extends AbstractExecutionState<BuildConfiguration> {
 
-  public TestExecutionState(TestConfiguration configuration, Project project) {
+  public BuildExecutionState(BuildConfiguration configuration, Project project) {
     super(configuration, project);
   }
 
   @Nullable
   @Override
-  public ExecutionResult execute(Executor executor, @NotNull ProgramRunner runner)
-      throws ExecutionException {
-    ProcessHandler processHandler = runBuildCommand(executor);
-    TestConsoleProperties properties =
-        new BuckTestConsoleProperties(
-            processHandler, mProject, mConfiguration, "Buck test", executor);
+  public ExecutionResult execute(Executor executor, @NotNull ProgramRunner runner) {
+    ProcessHandler processHandler = runBuildCommand();
     ConsoleView console =
-        SMTestRunnerConnectionUtil.createAndAttachConsole("buck test", processHandler, properties);
+        TextConsoleBuilderFactory.getInstance().createBuilder(mProject).getConsole();
+    console.attachToProcess(processHandler);
     return new DefaultExecutionResult(console, processHandler, AnAction.EMPTY_ARRAY);
   }
 
-  private ProcessHandler runBuildCommand(Executor executor) {
+  private ProcessHandler runBuildCommand() {
     BuckModule buckModule = mProject.getComponent(BuckModule.class);
     String targets = mConfiguration.data.targets;
     String additionalParams = mConfiguration.data.additionalParams;
-    String testSelectors = mConfiguration.data.testSelectors;
     String buckExecutablePath = mConfiguration.data.buckExecutablePath;
-    String title = "Buck Test " + targets;
+    String title = "Buck Build " + targets;
 
     buckModule.attach(targets);
 
     BuckBuildCommandHandler handler =
         new BuckBuildCommandHandler(
-            mProject, BuckCommand.TEST, /* doStartNotify */ false, buckExecutablePath) {
-          @Override
-          protected void notifyLines(Key outputType, Iterable<String> lines) {
-            super.notifyLines(outputType, lines);
-            findAndAttachToDebuggableLines(outputType, lines, title);
-          }
-        };
+            mProject, BuckCommand.BUILD, /* doStartNotify */ false, buckExecutablePath);
     if (!targets.isEmpty()) {
       handler.command().addParameters(parseParamsIntoList(targets));
     }
-    if (!testSelectors.isEmpty()) {
-      handler.command().addParameter("--test-selectors");
-      handler.command().addParameter(testSelectors);
-    }
     if (!additionalParams.isEmpty()) {
       handler.command().addParameters(parseParamsIntoList(additionalParams));
-    }
-    if (executor.getId().equals(DefaultDebugExecutor.EXECUTOR_ID)) {
-      handler.command().addParameter("--debug");
     }
     handler.start();
     OSProcessHandler result = handler.getHandler();
