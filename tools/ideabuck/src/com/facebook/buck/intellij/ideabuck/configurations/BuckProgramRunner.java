@@ -20,6 +20,7 @@ import com.facebook.buck.intellij.ideabuck.config.BuckExecutableSettingsProvider
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.RunProfile;
 import com.intellij.execution.configurations.RunProfileState;
+import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.DefaultProgramRunner;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.RunContentDescriptor;
@@ -27,9 +28,9 @@ import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TestProgramRunner extends DefaultProgramRunner {
+public class BuckProgramRunner extends DefaultProgramRunner {
 
-  public static final String ID = "buck.test.program.runner";
+  public static final String ID = "buck.program.runner";
 
   @Nullable
   @Override
@@ -56,6 +57,8 @@ public class TestProgramRunner extends DefaultProgramRunner {
 
   @Override
   public boolean canRun(@NotNull String executorId, @NotNull RunProfile profile) {
-    return profile instanceof TestConfiguration;
+    return profile instanceof TestConfiguration
+        || (profile instanceof BuildConfiguration
+            && executorId.equals(DefaultRunExecutor.EXECUTOR_ID));
   }
 }
