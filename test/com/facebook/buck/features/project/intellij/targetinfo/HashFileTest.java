@@ -39,7 +39,7 @@ public class HashFileTest {
 
   @Test
   public void testWriteAndGet_succeedWithStringSerializer() throws Exception {
-    File temporaryFile = temp.newFile("file.bin");
+    File temporaryFile = temp.newFile();
     HashFile<String, String> file =
         new HashFile(
             HashFile.STRING_SERIALIZER, HashFile.STRING_SERIALIZER, temporaryFile.toPath());
@@ -61,7 +61,7 @@ public class HashFileTest {
 
   @Test
   public void testWriteAndGet_stringsWithSameHashcode() throws Exception {
-    File temporaryFile = temp.newFile("file.bin");
+    File temporaryFile = temp.newFile();
     HashFile<String, String> file =
         new HashFile<>(
             HashFile.STRING_SERIALIZER, HashFile.STRING_SERIALIZER, temporaryFile.toPath());
@@ -97,7 +97,7 @@ public class HashFileTest {
 
   public void testGet_FailsSanelyWhenVersionIsWrong() throws Exception {
     // Write out a file with the correct version
-    File temporaryFile = new File(temp.getRoot(), "file.bin");
+    File temporaryFile = temp.newFile();
     HashFile<String, String> file =
         new HashFile<>(
             HashFile.STRING_SERIALIZER, HashFile.STRING_SERIALIZER, temporaryFile.toPath());
@@ -118,7 +118,7 @@ public class HashFileTest {
 
   @Test
   public void testWrite_overwritesExistingFile() throws Exception {
-    File temporaryFile = new File(temp.getRoot(), "file.bin");
+    File temporaryFile = temp.newFile();
     HashFile<String, String> file =
         new HashFile<>(
             HashFile.STRING_SERIALIZER, HashFile.STRING_SERIALIZER, temporaryFile.toPath());
@@ -136,7 +136,7 @@ public class HashFileTest {
 
   @Test
   public void testWrite_emptyMapIsOk() throws Exception {
-    File temporaryFile = new File(temp.getRoot(), "file.bin");
+    File temporaryFile = temp.newFile();
     HashFile<String, String> file =
         new HashFile<>(
             HashFile.STRING_SERIALIZER, HashFile.STRING_SERIALIZER, temporaryFile.toPath());
@@ -147,7 +147,7 @@ public class HashFileTest {
 
   @Test
   public void testWrite_customSerializers() throws Exception {
-    File temporaryFile = new File(temp.getRoot(), "file.bin");
+    File temporaryFile = temp.newFile();
     HashFile<String, Widget> file =
         new HashFile<>(HashFile.STRING_SERIALIZER, new WidgetSerializer(), temporaryFile.toPath());
     Map<String, Widget> data = new HashMap<>();

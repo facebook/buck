@@ -54,6 +54,11 @@ public class HashFile<K, V> {
     this.path = path;
   }
 
+  /** Returns the path for this file. */
+  public Path getPath() {
+    return path;
+  }
+
   /**
    * Writes all the data in the given map out to the file, overwriting any existing content.
    *
@@ -107,6 +112,9 @@ public class HashFile<K, V> {
       }
       // Read the number of hashes in the file.
       int hashCount = file.readInt();
+      if (hashCount == 0) {
+        return null;
+      }
 
       // Binary search for the hash.
       int start = 0;

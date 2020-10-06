@@ -24,7 +24,7 @@ import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.project.intellij.model.folders.IjFolder;
-import com.facebook.buck.features.project.intellij.targetinfo.HashFile;
+import com.facebook.buck.features.project.intellij.targetinfo.ModuleToTargetsBinaryFile;
 import com.facebook.buck.features.project.intellij.targetinfo.TargetInfo;
 import com.facebook.buck.features.project.intellij.targetinfo.TargetInfoBinaryFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -39,9 +39,11 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -157,11 +159,15 @@ public class TargetInfoMapManager {
 
     // TODO: use TargetInfo everywhere.
     Map<String, TargetInfo> converted = new HashMap<String, TargetInfo>();
-    Map<String, String> modulesToTargets = new HashMap<>();
+    Map<String, Set<String>> modulesToTargets = new HashMap<>();
     for (Map.Entry<String, Map<String, Object>> entry : targetInfoMap.entrySet()) {
+      String ruleName = entry.getKey();
       TargetInfo info = convertToTargetInfo(entry.getValue());
-      converted.put(entry.getKey(), info);
-      modulesToTargets.put(info.intellijName, entry.getKey());
+      converted.put(ruleName, info);
+
+      Set<String> targets =
+          modulesToTargets.computeIfAbsent(info.intellijName, k -> new HashSet<>());
+      targets.add(ruleName);
     }
 
     Path binaryFilePath =
@@ -169,16 +175,15 @@ public class TargetInfoMapManager {
     new TargetInfoBinaryFile(binaryFilePath).write(converted);
     cleaner.doNotDelete(binaryFilePath);
 
-    // Write a mapping of module names -> targets
-    Path modulesToTargetsName =
+    // Write a mapping of module name -> set(targets)
+    Path modulesToTargetsNamePath =
         projectConfig
             .getProjectPaths()
             .getIdeaConfigDir()
             .resolve(TARGET_INFO_MODULE_TO_TARGET_FILENAME);
-    new HashFile<String, String>(
-            HashFile.STRING_SERIALIZER, HashFile.STRING_SERIALIZER, modulesToTargetsName)
-        .write(modulesToTargets);
-    cleaner.doNotDelete(modulesToTargetsName);
+
+    new ModuleToTargetsBinaryFile(modulesToTargetsNamePath).write(modulesToTargets);
+    cleaner.doNotDelete(modulesToTargetsNamePath);
   }
 
   private void writeModuleTargetInfo(
