@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.step.BuildStepResultHolder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -38,13 +39,13 @@ public class CodeSignIdentityFindStep implements Step {
   private final Path codeSignIdentityFingerprint;
   private final ProjectFilesystem filesystem;
   private final Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier;
-  private final CodeSignIdentityHolder result;
+  private final BuildStepResultHolder<CodeSignIdentity> result;
 
   public CodeSignIdentityFindStep(
       Path codeSignIdentityFingerprint,
       ProjectFilesystem filesystem,
       Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier,
-      CodeSignIdentityHolder result) {
+      BuildStepResultHolder<CodeSignIdentity> result) {
     this.codeSignIdentityFingerprint = codeSignIdentityFingerprint;
     this.filesystem = filesystem;
     this.codeSignIdentitiesSupplier = codeSignIdentitiesSupplier;
@@ -63,14 +64,14 @@ public class CodeSignIdentityFindStep implements Step {
                         "File with code sign identity fingerprint is missing"))
             .trim();
     if (fingerprint.isEmpty()) {
-      result.setIdentity(CodeSignIdentity.AD_HOC);
+      result.setValue(CodeSignIdentity.AD_HOC);
     } else {
       Optional<CodeSignIdentity> maybeCodeSignIdentity =
           codeSignIdentitiesSupplier.get().stream()
               .filter(
                   p -> p.getFingerprint().map(HashCode::toString).equals(Optional.of(fingerprint)))
               .findFirst();
-      result.setIdentity(
+      result.setValue(
           maybeCodeSignIdentity.orElseThrow(
               () ->
                   new IllegalStateException(

@@ -52,6 +52,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.BuildStepResultHolder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -721,14 +722,21 @@ public class AppleBundle extends AbstractBuildRule
                           new IllegalStateException(
                               "Code sign identity should be provided when code sign is needed")))
               .getPath();
-      CodeSignIdentityHolder selectedCodeSignIdentity = new CodeSignIdentityHolder();
+      BuildStepResultHolder<CodeSignIdentity> selectedCodeSignIdentity =
+          new BuildStepResultHolder<>();
       stepsBuilder.add(
           new CodeSignIdentityFindStep(
               fingerprintPath,
               getProjectFilesystem(),
               codeSignIdentitiesSupplier,
               selectedCodeSignIdentity));
-      return () -> selectedCodeSignIdentity.getIdentity().get();
+      return () ->
+          selectedCodeSignIdentity
+              .getValue()
+              .orElseThrow(
+                  () ->
+                      new IllegalStateException(
+                          "Code sign identity should have been set in separate step"));
     }
   }
 
