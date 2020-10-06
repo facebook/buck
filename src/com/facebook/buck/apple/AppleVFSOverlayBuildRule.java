@@ -147,17 +147,16 @@ public class AppleVFSOverlayBuildRule extends ModernBuildRule<AppleVFSOverlayBui
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                         throws IOException {
+                      String keySuffix =
+                          String.format("%s/", underlyingAbsPath.getPath().toString());
+
                       Path key =
-                          Paths.get(
-                              placeholderPathString,
-                              buildTargetName,
-                              file.getFileName().toString());
+                          Paths.get(placeholderPathString, file.toString().replace(keySuffix, ""));
                       // TODO: (andyyhope): swap to compiler-invocation relative paths
                       vfsBuilder.put(key, file);
                       return FileVisitResult.CONTINUE;
                     }
                   };
-
               Files.walkFileTree(underlyingAbsPath.getPath(), fileVisitor);
               VFSOverlay vfsOverlay = new VFSOverlay(vfsBuilder.build());
               try {

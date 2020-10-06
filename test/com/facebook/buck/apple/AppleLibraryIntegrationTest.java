@@ -1224,6 +1224,15 @@ public class AppleLibraryIntegrationTest {
         ImmutableMap.of("apple", ImmutableMap.of("swift_uses_vfs_overlays", "true")));
   }
 
+  @Test
+  public void testBuildAppleLibraryWhereModularSwiftUsesMultipleModularMixedDiffLibsWithVFSOverlay()
+      throws Exception {
+    testModularScenarioWithLocalConfigs(
+        "apple_library_modular_swift_uses_multiple_modular_mixed_diff_libs",
+        "Primary",
+        ImmutableMap.of("apple", ImmutableMap.of("swift_uses_vfs_overlays", "true")));
+  }
+
   private void testModularScenario(String scenario, String targetName) throws Exception {
     testModularScenarioWithFlavor(
         scenario, targetName, Optional.of(CxxDescriptionEnhancer.SHARED_FLAVOR));

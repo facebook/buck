@@ -1,0 +1,39 @@
+apple_library(
+    name = "DepA",
+    srcs = ["DepA.swift"],
+    modular = True,
+    module_name = "DepA",
+    swift_version = "5",
+)
+
+apple_library(
+    name = "DepB",
+    srcs = ["DepB.swift"],
+    modular = True,
+    module_name = "DepB",
+    swift_version = "5",
+)
+
+apple_library(
+    name = "ExternalHeaders",
+    exported_headers = {
+        "ExternalHeaders/Nested/HeaderA.h": "ExternalHeaders/Nested/HeaderA.h",
+        "ExternalHeaders/Nested/HeaderB.h": "ExternalHeaders/Nested/HeaderB.h",
+        "ExternalHeaders/TopLevel.h": "ExternalHeaders/TopLevel.h",
+    },
+    modular = True,
+    module_name = "ExternalHeaders",
+)
+
+apple_library(
+    name = "Primary",
+    srcs = ["Primary.swift"],
+    modular = True,
+    module_name = "Primary",
+    swift_version = "5",
+    deps = [
+        ":DepA",
+        ":DepB",
+        ":ExternalHeaders",
+    ],
+)
