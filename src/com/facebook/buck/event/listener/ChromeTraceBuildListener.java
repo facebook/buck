@@ -68,6 +68,7 @@ import com.facebook.buck.util.perf.ProcessTracker;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.facebook.buck.util.zip.BestCompressionGZIPOutputStream;
+import com.facebook.buck.versions.VersionedTargetGraphEvent;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.cache.CacheBuilder;
@@ -469,6 +470,18 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         ChromeTraceData.Phase.END,
         ImmutableMap.of("targets", Joiner.on(",").join(finished.getBuildTargets())),
         finished);
+  }
+
+  @Subscribe
+  public void versionTargetGraphStarted(VersionedTargetGraphEvent.Started started) {
+    writeChromeTraceData(
+        "buck", "versioned_target_graph", ChromeTraceData.Phase.BEGIN, ImmutableMap.of(), started);
+  }
+
+  @Subscribe
+  public void versionTargetGraphFinished(VersionedTargetGraphEvent.Finished finished) {
+    writeChromeTraceData(
+        "buck", "versioned_target_graph", ChromeTraceData.Phase.END, ImmutableMap.of(), finished);
   }
 
   @Subscribe
