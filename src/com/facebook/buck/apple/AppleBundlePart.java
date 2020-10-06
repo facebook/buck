@@ -16,13 +16,10 @@
 
 package com.facebook.buck.apple;
 
-import static com.facebook.buck.core.util.Optionals.compare;
-
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import java.util.Optional;
 
 @BuckStyleValue
 public abstract class AppleBundlePart implements AddsToRuleKey {
@@ -32,18 +29,12 @@ public abstract class AppleBundlePart implements AddsToRuleKey {
   @AddToRuleKey
   public abstract AppleBundleDestination getDestination();
 
-  @AddToRuleKey
-  public abstract Optional<SourcePath> getContentHashSourcePath();
-
   protected int compareTo(AppleBundlePart o) {
     if (getSourcePath() != o.getSourcePath()) {
       return getSourcePath().compareTo(o.getSourcePath());
     }
     if (getDestination() != o.getDestination()) {
       return getDestination().compareTo(o.getDestination());
-    }
-    if (getContentHashSourcePath() != o.getContentHashSourcePath()) {
-      return compare(getContentHashSourcePath(), o.getContentHashSourcePath());
     }
     return 0;
   }

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import static com.facebook.buck.core.util.Optionals.compare;
+
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -34,9 +36,8 @@ public abstract class DirectoryContentAppleBundlePart extends AppleBundlePart
   @AddToRuleKey
   public abstract AppleBundleDestination getDestination();
 
-  @Override
   @AddToRuleKey
-  public abstract Optional<SourcePath> getContentHashSourcePath();
+  public abstract Optional<SourcePath> getHashesMapSourcePath();
 
   public static DirectoryContentAppleBundlePart of(
       SourcePath sourcePath,
@@ -48,6 +49,9 @@ public abstract class DirectoryContentAppleBundlePart extends AppleBundlePart
 
   @Override
   public int compareTo(DirectoryContentAppleBundlePart o) {
+    if (getHashesMapSourcePath() != o.getHashesMapSourcePath()) {
+      return compare(getHashesMapSourcePath(), o.getHashesMapSourcePath());
+    }
     return super.compareTo(o);
   }
 }

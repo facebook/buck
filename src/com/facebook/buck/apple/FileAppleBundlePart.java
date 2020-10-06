@@ -36,7 +36,6 @@ public abstract class FileAppleBundlePart extends AppleBundlePart
   @AddToRuleKey
   public abstract AppleBundleDestination getDestination();
 
-  @Override
   @AddToRuleKey
   public abstract Optional<SourcePath> getContentHashSourcePath();
 
@@ -82,6 +81,9 @@ public abstract class FileAppleBundlePart extends AppleBundlePart
     }
     if (getIgnoreIfMissing() != o.getIgnoreIfMissing()) {
       return Boolean.compare(getIgnoreIfMissing(), o.getIgnoreIfMissing());
+    }
+    if (getContentHashSourcePath() != o.getContentHashSourcePath()) {
+      return compare(getContentHashSourcePath(), o.getContentHashSourcePath());
     }
     return super.compareTo(o);
   }

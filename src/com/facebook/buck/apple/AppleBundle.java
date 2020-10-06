@@ -658,7 +658,7 @@ public class AppleBundle extends AbstractBuildRule
           AbsPath hashesFilePath =
               sourcePathResolver.getAbsolutePath(
                   bundlePart
-                      .getContentHashSourcePath()
+                      .getHashesMapSourcePath()
                       .orElseThrow(
                           () ->
                               new IllegalStateException(
