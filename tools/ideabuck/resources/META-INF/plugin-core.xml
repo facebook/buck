@@ -77,6 +77,8 @@
       serviceImplementation="com.facebook.buck.intellij.ideabuck.notification.BuckNotification"/>
     <configurationType
       implementation="com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType"/>
+    <configurationType
+      implementation="com.facebook.buck.intellij.ideabuck.configurations.BuildConfigurationType"/>
     <programRunner
       implementation="com.facebook.buck.intellij.ideabuck.configurations.TestProgramRunner"/>
     <psi.referenceContributor implementation="com.facebook.buck.intellij.ideabuck.lang.BuckIdentifierReferenceContributor"/>

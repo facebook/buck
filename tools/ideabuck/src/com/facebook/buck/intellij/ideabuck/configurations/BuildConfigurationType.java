@@ -16,32 +16,33 @@
 
 package com.facebook.buck.intellij.ideabuck.configurations;
 
-import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
+import com.facebook.buck.intellij.ideabuck.lang.BuckFileType;
 import com.intellij.execution.configuration.ConfigurationFactoryEx;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationType;
 import com.intellij.execution.configurations.ConfigurationTypeUtil;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.project.Project;
-import javax.swing.Icon;
+import com.intellij.openapi.util.IconLoader;
+import javax.swing.*;
 import org.jetbrains.annotations.NotNull;
 
-public class TestConfigurationType implements ConfigurationType {
-  public static TestConfigurationType getInstance() {
-    return ConfigurationTypeUtil.findConfigurationType(TestConfigurationType.class);
+public class BuildConfigurationType implements ConfigurationType {
+  public static BuildConfigurationType getInstance() {
+    return ConfigurationTypeUtil.findConfigurationType(BuildConfigurationType.class);
   }
 
-  private static final String ID = "Buck test";
+  private static final String ID = "Buck build";
 
   private final ConfigurationFactoryEx myFactory;
 
-  public TestConfigurationType() {
+  public BuildConfigurationType() {
     myFactory =
         new ConfigurationFactoryEx(this) {
           @Override
           @NotNull
           public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
-            return new TestConfiguration(project, this, "");
+            return new BuildConfiguration(project, this, "");
           }
         };
   }
@@ -53,12 +54,12 @@ public class TestConfigurationType implements ConfigurationType {
 
   @Override
   public String getConfigurationTypeDescription() {
-    return "Runs Buck test on the specified target and test selectors, with support for custom executable path.";
+    return "Runs Buck build on the specified target, with support for custom executable path.";
   }
 
   @Override
   public Icon getIcon() {
-    return BuckIcons.CONFIGURATION_TEST;
+    return IconLoader.getIcon("/icons/buck_icon.png", BuckFileType.class);
   }
 
   @NotNull
