@@ -70,4 +70,23 @@ public interface BuildableCommandOrBuilder extends
    */
   com.google.protobuf.ByteString
       getExternalActionClassBytes();
+
+  /**
+   * <code>repeated string extra_files = 4;</code>
+   */
+  java.util.List<java.lang.String>
+      getExtraFilesList();
+  /**
+   * <code>repeated string extra_files = 4;</code>
+   */
+  int getExtraFilesCount();
+  /**
+   * <code>repeated string extra_files = 4;</code>
+   */
+  java.lang.String getExtraFiles(int index);
+  /**
+   * <code>repeated string extra_files = 4;</code>
+   */
+  com.google.protobuf.ByteString
+      getExtraFilesBytes(int index);
 }

@@ -19,6 +19,7 @@ private static final long serialVersionUID = 0L;
   private BuildableCommand() {
     args_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     externalActionClass_ = "";
+    extraFiles_ = com.google.protobuf.LazyStringArrayList.EMPTY;
   }
 
   @java.lang.Override
@@ -73,6 +74,15 @@ private static final long serialVersionUID = 0L;
             externalActionClass_ = s;
             break;
           }
+          case 34: {
+            java.lang.String s = input.readStringRequireUtf8();
+            if (!((mutable_bitField0_ & 0x00000008) != 0)) {
+              extraFiles_ = new com.google.protobuf.LazyStringArrayList();
+              mutable_bitField0_ |= 0x00000008;
+            }
+            extraFiles_.add(s);
+            break;
+          }
           default: {
             if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -90,6 +100,9 @@ private static final long serialVersionUID = 0L;
     } finally {
       if (((mutable_bitField0_ & 0x00000001) != 0)) {
         args_ = args_.getUnmodifiableView();
+      }
+      if (((mutable_bitField0_ & 0x00000008) != 0)) {
+        extraFiles_ = extraFiles_.getUnmodifiableView();
       }
       this.unknownFields = unknownFields.build();
       makeExtensionsImmutable();
@@ -260,6 +273,35 @@ private static final long serialVersionUID = 0L;
     }
   }
 
+  public static final int EXTRA_FILES_FIELD_NUMBER = 4;
+  private com.google.protobuf.LazyStringList extraFiles_;
+  /**
+   * <code>repeated string extra_files = 4;</code>
+   */
+  public com.google.protobuf.ProtocolStringList
+      getExtraFilesList() {
+    return extraFiles_;
+  }
+  /**
+   * <code>repeated string extra_files = 4;</code>
+   */
+  public int getExtraFilesCount() {
+    return extraFiles_.size();
+  }
+  /**
+   * <code>repeated string extra_files = 4;</code>
+   */
+  public java.lang.String getExtraFiles(int index) {
+    return extraFiles_.get(index);
+  }
+  /**
+   * <code>repeated string extra_files = 4;</code>
+   */
+  public com.google.protobuf.ByteString
+      getExtraFilesBytes(int index) {
+    return extraFiles_.getByteString(index);
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -285,6 +327,9 @@ private static final long serialVersionUID = 0L;
         2);
     if (!getExternalActionClassBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 3, externalActionClass_);
+    }
+    for (int i = 0; i < extraFiles_.size(); i++) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 4, extraFiles_.getRaw(i));
     }
     unknownFields.writeTo(output);
   }
@@ -316,6 +361,14 @@ private static final long serialVersionUID = 0L;
     if (!getExternalActionClassBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, externalActionClass_);
     }
+    {
+      int dataSize = 0;
+      for (int i = 0; i < extraFiles_.size(); i++) {
+        dataSize += computeStringSizeNoTag(extraFiles_.getRaw(i));
+      }
+      size += dataSize;
+      size += 1 * getExtraFilesList().size();
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -337,6 +390,8 @@ private static final long serialVersionUID = 0L;
         other.internalGetEnv())) return false;
     if (!getExternalActionClass()
         .equals(other.getExternalActionClass())) return false;
+    if (!getExtraFilesList()
+        .equals(other.getExtraFilesList())) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -358,6 +413,10 @@ private static final long serialVersionUID = 0L;
     }
     hash = (37 * hash) + EXTERNAL_ACTION_CLASS_FIELD_NUMBER;
     hash = (53 * hash) + getExternalActionClass().hashCode();
+    if (getExtraFilesCount() > 0) {
+      hash = (37 * hash) + EXTRA_FILES_FIELD_NUMBER;
+      hash = (53 * hash) + getExtraFilesList().hashCode();
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -518,6 +577,8 @@ private static final long serialVersionUID = 0L;
       internalGetMutableEnv().clear();
       externalActionClass_ = "";
 
+      extraFiles_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      bitField0_ = (bitField0_ & ~0x00000008);
       return this;
     }
 
@@ -554,6 +615,11 @@ private static final long serialVersionUID = 0L;
       result.env_ = internalGetEnv();
       result.env_.makeImmutable();
       result.externalActionClass_ = externalActionClass_;
+      if (((bitField0_ & 0x00000008) != 0)) {
+        extraFiles_ = extraFiles_.getUnmodifiableView();
+        bitField0_ = (bitField0_ & ~0x00000008);
+      }
+      result.extraFiles_ = extraFiles_;
       result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
@@ -617,6 +683,16 @@ private static final long serialVersionUID = 0L;
           other.internalGetEnv());
       if (!other.getExternalActionClass().isEmpty()) {
         externalActionClass_ = other.externalActionClass_;
+        onChanged();
+      }
+      if (!other.extraFiles_.isEmpty()) {
+        if (extraFiles_.isEmpty()) {
+          extraFiles_ = other.extraFiles_;
+          bitField0_ = (bitField0_ & ~0x00000008);
+        } else {
+          ensureExtraFilesIsMutable();
+          extraFiles_.addAll(other.extraFiles_);
+        }
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -931,6 +1007,100 @@ private static final long serialVersionUID = 0L;
   checkByteStringIsUtf8(value);
       
       externalActionClass_ = value;
+      onChanged();
+      return this;
+    }
+
+    private com.google.protobuf.LazyStringList extraFiles_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    private void ensureExtraFilesIsMutable() {
+      if (!((bitField0_ & 0x00000008) != 0)) {
+        extraFiles_ = new com.google.protobuf.LazyStringArrayList(extraFiles_);
+        bitField0_ |= 0x00000008;
+       }
+    }
+    /**
+     * <code>repeated string extra_files = 4;</code>
+     */
+    public com.google.protobuf.ProtocolStringList
+        getExtraFilesList() {
+      return extraFiles_.getUnmodifiableView();
+    }
+    /**
+     * <code>repeated string extra_files = 4;</code>
+     */
+    public int getExtraFilesCount() {
+      return extraFiles_.size();
+    }
+    /**
+     * <code>repeated string extra_files = 4;</code>
+     */
+    public java.lang.String getExtraFiles(int index) {
+      return extraFiles_.get(index);
+    }
+    /**
+     * <code>repeated string extra_files = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getExtraFilesBytes(int index) {
+      return extraFiles_.getByteString(index);
+    }
+    /**
+     * <code>repeated string extra_files = 4;</code>
+     */
+    public Builder setExtraFiles(
+        int index, java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureExtraFilesIsMutable();
+      extraFiles_.set(index, value);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string extra_files = 4;</code>
+     */
+    public Builder addExtraFiles(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureExtraFilesIsMutable();
+      extraFiles_.add(value);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string extra_files = 4;</code>
+     */
+    public Builder addAllExtraFiles(
+        java.lang.Iterable<java.lang.String> values) {
+      ensureExtraFilesIsMutable();
+      com.google.protobuf.AbstractMessageLite.Builder.addAll(
+          values, extraFiles_);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string extra_files = 4;</code>
+     */
+    public Builder clearExtraFiles() {
+      extraFiles_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      bitField0_ = (bitField0_ & ~0x00000008);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string extra_files = 4;</code>
+     */
+    public Builder addExtraFilesBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      ensureExtraFilesIsMutable();
+      extraFiles_.add(value);
       onChanged();
       return this;
     }
