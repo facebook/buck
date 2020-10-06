@@ -157,16 +157,16 @@ public class AppleResourceProcessing {
                   RelPath.of(dirWithDestination.getDestination().getPath(destinations));
               AbsPath resolvedSourcePath =
                   sourcePathResolver.getAbsolutePath(dirWithDestination.getSourcePath());
+              if (newContentHashesSupplier.isPresent()) {
+                ImmutableSet.Builder<Path> pathsToDeleteBuilder = ImmutableSet.builder();
+                ImmutableSet.Builder<AppleBundleComponentCopySpec> copySpecsBuilder =
+                    ImmutableSet.builder();
 
-              ImmutableSet.Builder<Path> pathsToDeleteBuilder = ImmutableSet.builder();
-              ImmutableSet.Builder<AppleBundleComponentCopySpec> copySpecsBuilder =
-                  ImmutableSet.builder();
+                for (String fileName :
+                    Objects.requireNonNull(new File(resolvedSourcePath.toUri()).list())) {
 
-              for (String fileName :
-                  Objects.requireNonNull(new File(resolvedSourcePath.toUri()).list())) {
-
-                RelPath toPathRelativeToBundleRoot = destinationDirectoryPath.resolveRel(fileName);
-                if (newContentHashesSupplier.isPresent()) {
+                  RelPath toPathRelativeToBundleRoot =
+                      destinationDirectoryPath.resolveRel(fileName);
                   String oldHash = oldContentHashesSupplier.get().get(toPathRelativeToBundleRoot);
                   String newHash =
                       newContentHashesSupplier.get().get().get(toPathRelativeToBundleRoot);
@@ -177,35 +177,41 @@ public class AppleResourceProcessing {
                     continue;
                   }
                   pathsToDeleteBuilder.add(dirRoot.resolve(toPathRelativeToBundleRoot.getPath()));
+                  AbsPath fromPath = resolvedSourcePath.resolve(fileName);
+                  copySpecsBuilder.add(
+                      new AppleBundleComponentCopySpec(
+                          fromPath, toPathRelativeToBundleRoot, false));
                 }
-                AbsPath fromPath = resolvedSourcePath.resolve(fileName);
-                copySpecsBuilder.add(
-                    new AppleBundleComponentCopySpec(fromPath, toPathRelativeToBundleRoot, false));
+
+                pathsToDeleteBuilder
+                    .build()
+                    .parallelStream()
+                    .forEach(
+                        path -> {
+                          try {
+                            projectFilesystem.deleteRecursivelyIfExists(path);
+                          } catch (IOException exception) {
+                            throw new RuntimeException(exception.getMessage());
+                          }
+                        });
+
+                copySpecsBuilder
+                    .build()
+                    .parallelStream()
+                    .forEach(
+                        spec -> {
+                          try {
+                            spec.performCopy(projectFilesystem, dirRoot);
+                          } catch (IOException exception) {
+                            throw new RuntimeException(exception.getMessage());
+                          }
+                        });
+              } else {
+                projectFilesystem.copy(
+                    resolvedSourcePath.getPath(),
+                    dirRoot.resolve(destinationDirectoryPath.getPath()),
+                    CopySourceMode.DIRECTORY_CONTENTS_ONLY);
               }
-
-              pathsToDeleteBuilder
-                  .build()
-                  .parallelStream()
-                  .forEach(
-                      path -> {
-                        try {
-                          projectFilesystem.deleteRecursivelyIfExists(path);
-                        } catch (IOException exception) {
-                          throw new RuntimeException(exception.getMessage());
-                        }
-                      });
-
-              copySpecsBuilder
-                  .build()
-                  .parallelStream()
-                  .forEach(
-                      spec -> {
-                        try {
-                          spec.performCopy(projectFilesystem, dirRoot);
-                        } catch (IOException exception) {
-                          throw new RuntimeException(exception.getMessage());
-                        }
-                      });
             }
             return StepExecutionResults.SUCCESS;
           }
