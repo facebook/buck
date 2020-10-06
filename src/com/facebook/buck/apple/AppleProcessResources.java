@@ -270,16 +270,23 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
       ImmutableList<Step> processSteps = processStepsBuilder.build();
 
       ImmutableList.Builder<Step> stepsBuilder = new ImmutableList.Builder<>();
+
+      RelPath outputDirPath = outputPathResolver.resolvePath(output);
+      stepsBuilder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(), filesystem, outputDirPath)));
+
       usedDestinations.forEach(
           destination -> {
-            RelPath outputDirPath =
-                outputPathResolver
-                    .resolvePath(output)
-                    .resolve(directoryNameWithProcessedFilesForDestination(destination));
+            RelPath outputDirPathForDestination =
+                outputDirPath.resolve(directoryNameWithProcessedFilesForDestination(destination));
             stepsBuilder.add(
                 MkdirStep.of(
                     BuildCellRelativePath.fromCellRelativePath(
-                        buildContext.getBuildCellRootPath(), filesystem, outputDirPath)));
+                        buildContext.getBuildCellRootPath(),
+                        filesystem,
+                        outputDirPathForDestination)));
           });
       stepsBuilder.addAll(processSteps);
 
