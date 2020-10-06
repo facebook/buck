@@ -16,16 +16,11 @@
 
 package com.facebook.buck.intellij.ideabuck.configurations;
 
-import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
-import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.notification.Notification;
-import com.intellij.notification.NotificationType;
-import com.intellij.notification.Notifications;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
@@ -46,17 +41,8 @@ public class TestConfiguration extends AbstractConfiguration<TestConfiguration.T
   @Nullable
   @Override
   public RunProfileState getState(
-      @NotNull Executor executor, @NotNull ExecutionEnvironment environment)
-      throws ExecutionException {
-    final BuckBuildManager buildManager = BuckBuildManager.getInstance(getProject());
-    if (buildManager.isBuilding()) {
-      final Notification notification =
-          new Notification(
-              "", "Can't run test. Buck is already running!", "", NotificationType.ERROR);
-      Notifications.Bus.notify(notification);
-      return null;
-    }
-    return new TestExecutionState(this, getProject());
+      @NotNull Executor executor, @NotNull ExecutionEnvironment environment) {
+    return isBuckBuilding() ? null : new TestExecutionState(this, getProject());
   }
 
   @Override

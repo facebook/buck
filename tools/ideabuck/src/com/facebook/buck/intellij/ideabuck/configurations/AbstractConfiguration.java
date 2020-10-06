@@ -16,9 +16,13 @@
 
 package com.facebook.buck.intellij.ideabuck.configurations;
 
+import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.LocatableConfigurationBase;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationType;
+import com.intellij.notification.Notifications;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.WriteExternalException;
@@ -47,6 +51,18 @@ public abstract class AbstractConfiguration<T extends AbstractConfiguration.Data
   public void writeExternal(Element element) throws WriteExternalException {
     super.writeExternal(element);
     XmlSerializer.serializeInto(data, element);
+  }
+
+  public boolean isBuckBuilding() {
+    final BuckBuildManager buildManager = BuckBuildManager.getInstance(getProject());
+    if (buildManager.isBuilding()) {
+      final Notification notification =
+          new Notification(
+              "", "Can't run build. Buck is already running!", "", NotificationType.ERROR);
+      Notifications.Bus.notify(notification);
+      return true;
+    }
+    return false;
   }
 
   protected abstract T createData();
