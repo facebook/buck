@@ -36,7 +36,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -111,7 +110,7 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
         getProjectFilesystem(),
         processedResourceDir,
         () -> false,
-        ImmutableMap::of,
+        Optional::empty,
         Optional.empty());
 
     if (staticLibDeps.size() > 0) {

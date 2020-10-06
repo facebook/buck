@@ -2099,14 +2099,15 @@ public class AppleBundleIntegrationTest {
 
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#macosx-x86_64,no-debug");
     Path outputPath = workspace.buildAndReturnOutput(target.toString());
-    Path hashesFilePath = outputPath.resolve("../content_hashes.json");
-    assertTrue("File with hashes should exist", Files.isRegularFile(hashesFilePath));
+    Path incrementalInfoFilePath = outputPath.resolve("../incremental_info.json");
+    assertTrue("File with hashes should exist", Files.isRegularFile(incrementalInfoFilePath));
 
-    JsonParser parser = ObjectMappers.createParser(hashesFilePath);
-    Map<String, String> pathToHash =
-        parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
+    JsonParser parser = ObjectMappers.createParser(incrementalInfoFilePath);
+    AppleBundleIncrementalInfo incrementalInfo =
+        parser.readValueAs(AppleBundleIncrementalInfo.class);
+    Map<RelPath, String> pathToHash = incrementalInfo.getHashes();
 
-    ImmutableMap.Builder<String, String> expectedBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<RelPath, String> expectedBuilder = ImmutableMap.builder();
     for (String path :
         ImmutableList.of(
             "Contents/Frameworks/TestFramework.framework",
@@ -2125,7 +2126,7 @@ public class AppleBundleIntegrationTest {
           new AppleComputeFileOrDirectoryHashStep(
               hashBuilder, AbsPath.of(outputPath.resolve(path)), filesystem, true, true);
       step.execute(TestExecutionContext.newInstance());
-      expectedBuilder.put(path, hashBuilder.toString());
+      expectedBuilder.put(RelPath.get(path), hashBuilder.toString());
     }
 
     {
@@ -2148,7 +2149,7 @@ public class AppleBundleIntegrationTest {
               true,
               true);
       step.execute(TestExecutionContext.newInstance());
-      expectedBuilder.put("Contents/Info.plist", hashBuilder.toString());
+      expectedBuilder.put(RelPath.get("Contents/Info.plist"), hashBuilder.toString());
     }
 
     assertEquals(expectedBuilder.build(), pathToHash);
@@ -2170,14 +2171,15 @@ public class AppleBundleIntegrationTest {
 
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
     Path outputPath = workspace.buildAndReturnOutput(target.toString());
-    Path hashesFilePath = outputPath.resolve("../content_hashes.json");
-    assertTrue("File with hashes should exist", Files.isRegularFile(hashesFilePath));
+    Path incrementalInfoFilePath = outputPath.resolve("../incremental_info.json");
+    assertTrue("File with hashes should exist", Files.isRegularFile(incrementalInfoFilePath));
 
-    JsonParser parser = ObjectMappers.createParser(hashesFilePath);
-    Map<String, String> pathToHash =
-        parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
+    JsonParser parser = ObjectMappers.createParser(incrementalInfoFilePath);
+    AppleBundleIncrementalInfo incrementalInfo =
+        parser.readValueAs(AppleBundleIncrementalInfo.class);
+    Map<RelPath, String> pathToHash = incrementalInfo.getHashes();
 
-    ImmutableMap.Builder<String, String> expectedBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<RelPath, String> expectedBuilder = ImmutableMap.builder();
     for (String path :
         ImmutableList.of(
             "Frameworks/TestFramework.framework",
@@ -2195,7 +2197,7 @@ public class AppleBundleIntegrationTest {
           new AppleComputeFileOrDirectoryHashStep(
               hashBuilder, AbsPath.of(outputPath.resolve(path)), filesystem, true, true);
       step.execute(TestExecutionContext.newInstance());
-      expectedBuilder.put(path, hashBuilder.toString());
+      expectedBuilder.put(RelPath.get(path), hashBuilder.toString());
     }
 
     {
@@ -2218,7 +2220,7 @@ public class AppleBundleIntegrationTest {
               true,
               true);
       step.execute(TestExecutionContext.newInstance());
-      expectedBuilder.put("Info.plist", hashBuilder.toString());
+      expectedBuilder.put(RelPath.get("Info.plist"), hashBuilder.toString());
     }
 
     assertEquals(expectedBuilder.build(), pathToHash);
@@ -2256,30 +2258,30 @@ public class AppleBundleIntegrationTest {
 
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#macosx-x86_64,no-debug");
     Path outputPath = workspace.buildAndReturnOutput(target.toString());
-    Path hashesFilePath = outputPath.resolve("../content_hashes.json");
-    assertTrue("File with hashes should exist", Files.isRegularFile(hashesFilePath));
-
-    JsonParser parser = ObjectMappers.createParser(hashesFilePath);
-    Map<String, String> pathToHash =
-        parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
+    Path incrementalInfoFilePath = outputPath.resolve("../incremental_info.json");
 
     assertTrue("First file should exist", Files.exists(outputPath.resolve(path1.getPath())));
     assertTrue("Second file should exist", Files.exists(outputPath.resolve(path2.getPath())));
 
+    JsonParser parser = ObjectMappers.createParser(incrementalInfoFilePath);
+    AppleBundleIncrementalInfo incrementalInfo =
+        parser.readValueAs(AppleBundleIncrementalInfo.class);
+    Map<RelPath, String> pathToHash = incrementalInfo.getHashes();
+
     RelPath shouldNotBeCopiedPath = path1;
     RelPath shouldBeCopiedPath = path2;
+    pathToHash.put(shouldBeCopiedPath, "");
 
-    Map<RelPath, String> amendedPathToHash =
-        pathToHash.entrySet().stream()
-            .collect(Collectors.toMap(e -> RelPath.get(e.getKey()), Map.Entry::getValue));
-    amendedPathToHash.put(shouldBeCopiedPath, "");
-
-    filesystem.deleteFileAtPath(hashesFilePath);
+    filesystem.deleteFileAtPath(incrementalInfoFilePath);
     filesystem.deleteRecursivelyIfExists(outputPath.resolve(shouldBeCopiedPath.getPath()));
     filesystem.deleteRecursivelyIfExists(outputPath.resolve(shouldNotBeCopiedPath.getPath()));
 
-    (new AppleWriteHashPerFileStep(
-            "dummy", () -> ImmutableMap.copyOf(amendedPathToHash), hashesFilePath, filesystem))
+    (new AppleWriteIncrementalInfoStep(
+            () -> ImmutableMap.copyOf(pathToHash),
+            incrementalInfo.getCodeSignedOnCopyPaths(),
+            incrementalInfo.codeSigned(),
+            incrementalInfoFilePath,
+            filesystem))
         .execute(TestExecutionContext.newInstance());
 
     filesystem.deleteFileAtPath(buildTriggerPath);
@@ -2354,7 +2356,7 @@ public class AppleBundleIntegrationTest {
                       AppleDescriptions.stripBundleSpecificFlavors(target)
                           .withAppendedFlavors(AppleProcessResources.FLAVOR),
                       "%s")
-                  .resolve("content_hashes.json"));
+                  .resolve("incremental_info.json"));
       assertFalse(filesystem.exists(path));
     }
   }

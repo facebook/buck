@@ -33,7 +33,6 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
@@ -65,8 +64,8 @@ public class AppleResourceProcessing {
       ProjectFilesystem projectFilesystem,
       SourcePath processedResourcesDir,
       Supplier<Boolean> shouldPerformIncrementalBuildSupplier,
-      Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
-      Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
+      Supplier<Optional<Map<RelPath, String>>> oldContentHashesSupplier,
+      Optional<Supplier<Map<RelPath, String>>> newContentHashesSupplier) {
     addStepsToCreateDirectoriesWhereBundlePartsAreCopied(
         context, stepsBuilder, resources, bundleParts, dirRoot, destinations, projectFilesystem);
     addStepsToCopyContentOfDirectories(
@@ -135,8 +134,8 @@ public class AppleResourceProcessing {
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem,
       Supplier<Boolean> shouldPerformIncrementalBuildSupplier,
-      Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
-      Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
+      Supplier<Optional<Map<RelPath, String>>> oldContentHashesSupplier,
+      Optional<Supplier<Map<RelPath, String>>> newContentHashesSupplier) {
 
     List<DirectoryContentAppleBundlePart> directoriesWithContentBundleParts =
         bundleParts.stream()
@@ -169,11 +168,18 @@ public class AppleResourceProcessing {
                     destinationDirectoryPath,
                     dirRoot,
                     projectFilesystem,
-                    oldContentHashesSupplier,
-                    newContentHashesSupplier.orElseThrow(
-                        () ->
-                            new IllegalStateException(
-                                "Content hashes for current build should be computed when incremental build is performed")));
+                    oldContentHashesSupplier
+                        .get()
+                        .orElseThrow(
+                            () ->
+                                new IllegalStateException(
+                                    "Content hashes for previous build should be computed when incremental build is performed")),
+                    newContentHashesSupplier
+                        .orElseThrow(
+                            () ->
+                                new IllegalStateException(
+                                    "Content hashes for current build should be computed when incremental build is performed"))
+                        .get());
               } else {
                 projectFilesystem.copy(
                     resolvedSourcePath.getPath(),
@@ -191,8 +197,8 @@ public class AppleResourceProcessing {
       RelPath destinationDirectoryPath,
       Path dirRoot,
       ProjectFilesystem projectFilesystem,
-      Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
-      Supplier<ImmutableMap<RelPath, String>> newContentHashesSupplier) {
+      Map<RelPath, String> oldContentHashesSupplier,
+      Map<RelPath, String> newContentHashesSupplier) {
 
     ImmutableSet.Builder<Path> pathsToDeleteBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<AppleBundleComponentCopySpec> copySpecsBuilder = ImmutableSet.builder();
@@ -217,15 +223,15 @@ public class AppleResourceProcessing {
 
   private static void prepareCopyFileToBundleWithIncrementalSupport(
       AppleBundleComponentCopySpec copySpec,
-      Supplier<ImmutableMap<RelPath, String>> newContentHashesSupplier,
-      Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
+      Map<RelPath, String> newContentHashesSupplier,
+      Map<RelPath, String> oldContentHashesSupplier,
       ProjectFilesystem projectFilesystem,
       Path dirRoot,
       ImmutableSet.Builder<Path> pathsToDeleteBuilder,
       ImmutableSet.Builder<AppleBundleComponentCopySpec> copySpecsBuilder) {
     RelPath toPathRelativeToBundleRoot = copySpec.getDestinationPathRelativeToBundleRoot();
-    String oldHash = oldContentHashesSupplier.get().get(toPathRelativeToBundleRoot);
-    String newHash = newContentHashesSupplier.get().get(toPathRelativeToBundleRoot);
+    String oldHash = oldContentHashesSupplier.get(toPathRelativeToBundleRoot);
+    String newHash = newContentHashesSupplier.get(toPathRelativeToBundleRoot);
     Path toPathRelativeToProjectRoot = dirRoot.resolve(toPathRelativeToBundleRoot.getPath());
     Preconditions.checkState(
         newHash != null
@@ -277,8 +283,8 @@ public class AppleResourceProcessing {
       ProjectFilesystem projectFilesystem,
       SourcePath processedResourcesDir,
       Supplier<Boolean> shouldPerformIncrementalBuildSupplier,
-      Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
-      Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
+      Supplier<Optional<Map<RelPath, String>>> oldContentHashesSupplier,
+      Optional<Supplier<Map<RelPath, String>>> newContentHashesSupplier) {
     Set<AppleBundleDestination> destinationsForAllProcessedResources = new HashSet<>();
     {
       if (resources.getResourceVariantFiles().size() > 0) {
@@ -311,11 +317,18 @@ public class AppleResourceProcessing {
                     RelPath.of(destination.getPath(destinations)),
                     dirRoot,
                     projectFilesystem,
-                    oldContentHashesSupplier,
-                    newContentHashesSupplier.orElseThrow(
-                        () ->
-                            new IllegalStateException(
-                                "Content hashes for current build should be computed when incremental build is performed")));
+                    oldContentHashesSupplier
+                        .get()
+                        .orElseThrow(
+                            () ->
+                                new IllegalStateException(
+                                    "Content hashes for previous build should be computed when incremental build is performed")),
+                    newContentHashesSupplier
+                        .orElseThrow(
+                            () ->
+                                new IllegalStateException(
+                                    "Content hashes for current build should be computed when incremental build is performed"))
+                        .get());
               } else {
                 projectFilesystem.copy(
                     processedResourcesContainerDirForDestination.getPath(),
@@ -345,8 +358,8 @@ public class AppleResourceProcessing {
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem,
       Supplier<Boolean> shouldPerformIncrementalBuildSupplier,
-      Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
-      Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
+      Supplier<Optional<Map<RelPath, String>>> oldContentHashesSupplier,
+      Optional<Supplier<Map<RelPath, String>>> newContentHashesSupplier) {
 
     List<AppleBundleComponentCopySpec> copySpecs = new LinkedList<>();
 
@@ -407,11 +420,18 @@ public class AppleResourceProcessing {
               for (AppleBundleComponentCopySpec spec : copySpecs) {
                 prepareCopyFileToBundleWithIncrementalSupport(
                     spec,
-                    newContentHashesSupplier.orElseThrow(
-                        () ->
-                            new IllegalStateException(
-                                "Content hashes for current build should be computed when incremental build is performed")),
-                    oldContentHashesSupplier,
+                    newContentHashesSupplier
+                        .orElseThrow(
+                            () ->
+                                new IllegalStateException(
+                                    "Content hashes for current build should be computed when incremental build is performed"))
+                        .get(),
+                    oldContentHashesSupplier
+                        .get()
+                        .orElseThrow(
+                            () ->
+                                new IllegalStateException(
+                                    "Content hashes for previous build should be computed when incremental build is performed")),
                     projectFilesystem,
                     dirRoot,
                     pathsToDeleteBuilder,
