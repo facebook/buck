@@ -201,10 +201,12 @@ public class CacheCommand extends AbstractCommand {
     int goodRuns = 0;
 
     HashMap<ArtifactCacheMode, AtomicInteger> cacheHitsPerMode = new HashMap<>();
+    HashMap<ArtifactCacheMode, AtomicInteger> cacheHitAttemptsPerMode = new HashMap<>();
     HashMap<ArtifactCacheMode, AtomicInteger> cacheErrorsPerMode = new HashMap<>();
     HashMap<ArtifactCacheMode, AtomicLong> cacheBytesPerMode = new HashMap<>();
     for (ArtifactCacheMode mode : ArtifactCacheMode.values()) {
       cacheHitsPerMode.put(mode, new AtomicInteger(0));
+      cacheHitAttemptsPerMode.put(mode, new AtomicInteger(0));
       cacheErrorsPerMode.put(mode, new AtomicInteger(0));
       cacheBytesPerMode.put(mode, new AtomicLong(0L));
     }
@@ -239,6 +241,9 @@ public class CacheCommand extends AbstractCommand {
           AtomicLong bytes = cacheBytesPerMode.get(artifactCacheMode);
           if (bytes != null) {
             bytes.addAndGet(r.artifactSize);
+          }
+          if (cacheHitAttemptsPerMode.containsKey(artifactCacheMode)) {
+            cacheHitAttemptsPerMode.get(artifactCacheMode).addAndGet(r.hitAttempts);
           }
           ++cacheHits;
           cacheBytes += r.artifactSize;
@@ -282,6 +287,7 @@ public class CacheCommand extends AbstractCommand {
             CacheCountersSummaryEvent.newSummary(
                 CacheCountersSummary.of(
                     cacheHitsPerMode,
+                    cacheHitAttemptsPerMode,
                     cacheErrorsPerMode,
                     cacheBytesPerMode,
                     cacheHits,
@@ -435,6 +441,7 @@ public class CacheCommand extends AbstractCommand {
     ArtifactCache cache;
     boolean completed;
     long artifactSize;
+    int hitAttempts;
 
     public ArtifactRunner(
         ProjectFilesystemFactory projectFilesystemFactory,
@@ -478,6 +485,7 @@ public class CacheCommand extends AbstractCommand {
       resultString.append(ObjectMappers.WRITER.writeValueAsString(metadata));
       resultString.append(System.lineSeparator());
       artifactSize = success.getType() == CacheResultType.HIT ? success.getArtifactSizeBytes() : 0L;
+      hitAttempts = success.getType() == CacheResultType.HIT ? success.getAttempts() : 0;
       boolean cacheSuccess = success.getType().isSuccess();
       if (!cacheSuccess) {
         statusString = String.format("FAILED FETCHING %s %s", ruleKey, cacheResult);

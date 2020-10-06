@@ -37,10 +37,12 @@ public abstract class CacheResult {
           Optional.empty(),
           Optional.empty(),
           Optional.empty(),
+          Optional.empty(),
           Optional.empty());
   private static final CacheResult IGNORED_RESULT =
       ImmutableCacheResult.ofImpl(
           CacheResultType.IGNORED,
+          Optional.empty(),
           Optional.empty(),
           Optional.empty(),
           Optional.empty(),
@@ -55,6 +57,7 @@ public abstract class CacheResult {
           Optional.empty(),
           Optional.empty(),
           Optional.empty(),
+          Optional.empty(),
           Optional.empty());
   public static final CacheResult SKIPPED_RESULT =
       ImmutableCacheResult.ofImpl(
@@ -63,6 +66,7 @@ public abstract class CacheResult {
           Optional.empty(),
           Optional.empty(),
           Optional.of(ImmutableMap.of()),
+          Optional.empty(),
           Optional.empty(),
           Optional.empty());
 
@@ -89,6 +93,9 @@ public abstract class CacheResult {
 
   @JsonProperty("twoLevelContentHashKey")
   public abstract Optional<String> twoLevelContentHashKey();
+
+  @JsonProperty("attempts")
+  public abstract Optional<Integer> cacheAttempts();
 
   public String getCacheSource() {
     Preconditions.checkState(
@@ -121,6 +128,10 @@ public abstract class CacheResult {
     return name;
   }
 
+  public int getAttempts() {
+    return cacheAttempts().orElse(0);
+  }
+
   public static CacheResult hit(
       String cacheSource,
       ArtifactCacheMode cacheMode,
@@ -133,6 +144,7 @@ public abstract class CacheResult {
         Optional.empty(),
         Optional.of(metadata),
         Optional.of(artifactSize),
+        Optional.empty(),
         Optional.empty());
   }
 
@@ -144,6 +156,7 @@ public abstract class CacheResult {
         Optional.empty(),
         Optional.of(ImmutableMap.of()),
         Optional.empty(),
+        Optional.empty(),
         Optional.empty());
   }
 
@@ -152,6 +165,7 @@ public abstract class CacheResult {
         CacheResultType.MISS,
         Optional.of(cacheSource),
         Optional.of(cacheMode),
+        Optional.empty(),
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
@@ -167,6 +181,7 @@ public abstract class CacheResult {
         Optional.of(cacheError),
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
         Optional.empty());
   }
 
@@ -179,6 +194,7 @@ public abstract class CacheResult {
         Optional.of(cacheError),
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
         Optional.empty());
   }
 
@@ -186,6 +202,7 @@ public abstract class CacheResult {
     return ImmutableCacheResult.ofImpl(
         type,
         Optional.of(cacheSource),
+        Optional.empty(),
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
@@ -213,6 +230,7 @@ public abstract class CacheResult {
         Optional.empty(),
         Optional.of(ImmutableMap.of()),
         Optional.empty(),
+        Optional.empty(),
         Optional.empty());
   }
 
@@ -233,6 +251,7 @@ public abstract class CacheResult {
             rest.isEmpty()
                 ? Optional.empty()
                 : Optional.of(rest.substring(0, rest.length() - 1).toLowerCase()),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -269,7 +288,8 @@ public abstract class CacheResult {
         cacheError,
         metadata(),
         artifactSizeBytes(),
-        twoLevelContentHashKey());
+        twoLevelContentHashKey(),
+        cacheAttempts());
   }
 
   public CacheResult withTwoLevelContentHashKey(Optional<String> twoLevelContentHashKey) {
@@ -283,7 +303,8 @@ public abstract class CacheResult {
         cacheError(),
         metadata(),
         artifactSizeBytes(),
-        twoLevelContentHashKey);
+        twoLevelContentHashKey,
+        cacheAttempts());
   }
 
   public CacheResult withMetadata(Optional<ImmutableMap<String, String>> metadata) {
@@ -297,7 +318,8 @@ public abstract class CacheResult {
         cacheError(),
         metadata,
         artifactSizeBytes(),
-        twoLevelContentHashKey());
+        twoLevelContentHashKey(),
+        cacheAttempts());
   }
 
   public CacheResult withArtifactSizeBytes(Optional<Long> artifactSizeBytes) {
@@ -311,6 +333,27 @@ public abstract class CacheResult {
         cacheError(),
         metadata(),
         artifactSizeBytes,
-        twoLevelContentHashKey());
+        twoLevelContentHashKey(),
+        cacheAttempts());
+  }
+
+  /**
+   * Decorate cache results with number of attempts
+   *
+   * @param oldResult old results before decoration
+   * @param numAttempts number of attempts
+   * @return
+   */
+  public static CacheResult withAttempts(CacheResult oldResult, int numAttempts) {
+    Integer attempts = new Integer(numAttempts);
+    return ImmutableCacheResult.ofImpl(
+        oldResult.getType(),
+        oldResult.cacheSource(),
+        oldResult.cacheMode(),
+        oldResult.cacheError(),
+        oldResult.metadata(),
+        oldResult.artifactSizeBytes(),
+        oldResult.twoLevelContentHashKey(),
+        Optional.of(attempts));
   }
 }

@@ -205,6 +205,11 @@ public class MachineReadableLogJsonViewTest {
                 ArtifactCacheMode.http,
                 new AtomicInteger(1),
                 ArtifactCacheMode.dir,
+                new AtomicInteger(3)),
+            ImmutableMap.of(
+                ArtifactCacheMode.http,
+                new AtomicInteger(1),
+                ArtifactCacheMode.dir,
                 new AtomicInteger(2)),
             ImmutableMap.of(
                 ArtifactCacheMode.http,
@@ -223,6 +228,7 @@ public class MachineReadableLogJsonViewTest {
     assertJsonEquals(
         WRITER.writeValueAsString(summary),
         "{\"cacheHitsPerMode\":{\"dir\":2,\"http\":1},"
+            + "\"cacheHitAttemptsPerMode\":{\"dir\":3,\"http\":1},"
             + "\"cacheErrorsPerMode\":{\"dir\":2,\"http\":1},"
             + "\"cacheBytesPerMode\":{\"dir\":2,\"http\":1},"
             + "\"totalCacheHits\":3,\"totalCacheErrors\":3,"

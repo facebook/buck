@@ -72,6 +72,7 @@ public class RetryingCacheDecorator implements ArtifactCache, CacheDecorator {
               resultFuture,
               result -> {
                 if (result.getType() != CacheResultType.ERROR) {
+                  result = CacheResult.withAttempts(result, retryCountForLambda);
                   return Futures.immediateFuture(result);
                 }
                 result.cacheError().ifPresent(allCacheErrors::add);

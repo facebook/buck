@@ -306,7 +306,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       if (cacheTypeBlacklist.contains(mode.getCacheType())) {
         continue;
       }
-
       switch (mode) {
         case unknown:
           break;
@@ -527,6 +526,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             factory,
             cacheMode,
             clientCertificateHandler);
+
     return new RetryingCacheDecorator(cacheMode, cache, config.getMaxFetchRetries(), buckEventBus);
   }
 

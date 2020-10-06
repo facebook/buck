@@ -38,6 +38,9 @@ public abstract class CacheCountersSummary {
   public abstract ImmutableMap<ArtifactCacheMode, AtomicInteger> getCacheHitsPerMode();
 
   @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract ImmutableMap<ArtifactCacheMode, AtomicInteger> getCacheHitAttemptsPerMode();
+
+  @JsonView(JsonViews.MachineReadableLog.class)
   public abstract ImmutableMap<ArtifactCacheMode, AtomicInteger> getCacheErrorsPerMode();
 
   @JsonView(JsonViews.MachineReadableLog.class)
@@ -69,6 +72,7 @@ public abstract class CacheCountersSummary {
 
   public static CacheCountersSummary of(
       Map<ArtifactCacheMode, ? extends AtomicInteger> cacheHitsPerMode,
+      Map<ArtifactCacheMode, ? extends AtomicInteger> cacheHitAttemptsPerMode,
       Map<ArtifactCacheMode, ? extends AtomicInteger> cacheErrorsPerMode,
       Map<ArtifactCacheMode, ? extends AtomicLong> cacheBytesPerMode,
       int totalCacheHits,
@@ -81,6 +85,7 @@ public abstract class CacheCountersSummary {
       AtomicInteger failureUploadCount) {
     return ImmutableCacheCountersSummary.ofImpl(
         cacheHitsPerMode,
+        cacheHitAttemptsPerMode,
         cacheErrorsPerMode,
         cacheBytesPerMode,
         totalCacheHits,
