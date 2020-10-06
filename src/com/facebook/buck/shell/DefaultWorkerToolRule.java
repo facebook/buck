@@ -144,8 +144,8 @@ public class DefaultWorkerToolRule extends WriteFile
     private final Integer maxWorkers;
 
     /**
-     * Important : Do not add this field into RuleKey. Rule key should not change in case of max
-     * worker variable modification.
+     * Important : Do not add this field into RuleKey. Rule key should not change in case of async
+     * variable modification.
      */
     @CustomFieldBehavior(DefaultFieldSerialization.class)
     private final boolean isAsync;

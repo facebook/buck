@@ -25,7 +25,6 @@ import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
@@ -37,8 +36,6 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
@@ -60,9 +57,7 @@ public class WorkerProcess implements Closeable {
   @Nullable private WorkerProcessProtocol.CommandSender protocol;
   @Nullable private ProcessExecutor.LaunchedProcess launchedProcess;
   private final Thread readerThread;
-  private final CountDownLatch readerShutdownSignal = new CountDownLatch(1);
-  private final Thread watchdogThread;
-  private final CountDownLatch watchdogShutdownSignal = new CountDownLatch(1);
+  private volatile boolean shutdownReaderThread = false;
 
   /**
    * Worker process is a process that stays alive and receives commands which describe jobs. Worker
@@ -93,14 +88,10 @@ public class WorkerProcess implements Closeable {
     this.readerThread.setDaemon(true);
     this.readerThread.setName(
         "Worker Process IO Thread: " + Joiner.on(' ').join(processParams.getCommand()));
-    this.watchdogThread = new Thread(this::watchdogLoop);
-    this.watchdogThread.setDaemon(true);
-    this.watchdogThread.setName(
-        "Worker Process Watchdog Thread: " + Joiner.on(' ').join(processParams.getCommand()));
   }
 
   public boolean isAlive() {
-    return launchedProcess != null && launchedProcess.isAlive() && this.readerThread.isAlive();
+    return launchedProcess != null && launchedProcess.isAlive() && !shutdownReaderThread;
   }
 
   public synchronized void ensureLaunchAndHandshake() throws IOException {
@@ -125,17 +116,12 @@ public class WorkerProcess implements Closeable {
 
     LOG.debug("Handshaking with process %d", this.hashCode());
     protocol.handshake(currentMessageID.getAndIncrement());
-    this.readerThread.start();
-    this.watchdogThread.start();
     handshakePerformed = true;
+    readerThread.start();
   }
 
   public ListenableFuture<WorkerJobResult> submitJob(String jobArgs) throws IOException {
-    Preconditions.checkState(
-        protocol != null,
-        "Tried to submit a job to the worker process before the handshake was performed.");
-
-    int messageID = currentMessageID.getAndAdd(1);
+    int messageID = currentMessageID.getAndIncrement();
     Path argsPath = Paths.get(tmpPath.toString(), String.format("%d.args", messageID));
     Path stdoutPath = Paths.get(tmpPath.toString(), String.format("%d.out", messageID));
     Path stderrPath = Paths.get(tmpPath.toString(), String.format("%d.err", messageID));
@@ -149,7 +135,10 @@ public class WorkerProcess implements Closeable {
     try {
       synchronized (this) {
         Preconditions.checkState(
-            protocol != null && readerThread.isAlive(), "Worker job died somehow");
+            protocol != null,
+            "Tried to submit a job to the worker process before the handshake was performed.");
+
+        Preconditions.checkState(!shutdownReaderThread, "Submitting job to a closed worker");
 
         LOG.debug(
             "Sending job %d to process %d \n" + " job arguments: '%s'",
@@ -157,13 +146,15 @@ public class WorkerProcess implements Closeable {
         protocol.send(
             messageID, ImmutableWorkerProcessCommand.of(argsPath, stdoutPath, stderrPath));
       }
+
     } catch (Throwable t) {
       commandExitCodes.remove(messageID);
       throw t;
     }
 
-    synchronized (commandExitCodes) {
-      commandExitCodes.notify();
+    // Notify the reader thread to start reading if it isn't already.
+    synchronized (readerThread) {
+      readerThread.notify();
     }
 
     return exitCodeFuture.transform(
@@ -189,9 +180,10 @@ public class WorkerProcess implements Closeable {
   public synchronized void close() {
     LOG.debug("Closing process %d", this.hashCode());
     try {
-      readerShutdownSignal.countDown();
-      synchronized (commandExitCodes) {
-        commandExitCodes.notifyAll();
+      // Notify the reader thread to exit.
+      synchronized (readerThread) {
+        shutdownReaderThread = true;
+        readerThread.notify();
       }
       if (protocol != null) {
         protocol.close();
@@ -221,17 +213,14 @@ public class WorkerProcess implements Closeable {
           e,
           "Error while trying to close the worker process %s.",
           Joiner.on(' ').join(processParams.getCommand()));
-    } finally {
-      watchdogShutdownSignal.countDown();
     }
   }
 
   @VisibleForTesting
   void launchForTesting(WorkerProcessProtocol.CommandSender protocolMock) {
     this.protocol = protocolMock;
-    this.readerThread.start();
-    this.watchdogThread.start();
     handshakePerformed = true;
+    readerThread.start();
   }
 
   private void processNextCommandResponse() throws Throwable {
@@ -239,12 +228,14 @@ public class WorkerProcess implements Closeable {
         protocol != null,
         "Tried to submit a job to the worker process before the handshake was performed.");
 
-    WorkerProcessProtocol.CommandResponse commandResponse =
-        this.protocol.receiveNextCommandResponse();
+    Preconditions.checkState(
+        !Thread.holdsLock(this),
+        "About to block on input, should not be holding the lock that prevents new jobs");
+    WorkerProcessProtocol.CommandResponse commandResponse = protocol.receiveNextCommandResponse();
     SettableFuture<Integer> result = commandExitCodes.remove(commandResponse.getCommandId());
     Preconditions.checkState(
         result != null,
-        "Received message id %d with no corresponding waiter! (result was %d)",
+        "Received message id %s with no corresponding waiter! (result was %s)",
         commandResponse.getCommandId(),
         commandResponse.getExitCode());
 
@@ -252,59 +243,58 @@ public class WorkerProcess implements Closeable {
   }
 
   private void readerLoop() {
-    try {
-      while (readerShutdownSignal.getCount() > 0) {
-        // A dance here to avoid calling `processNextCommandResponse` if we're not waiting for any
-        // commands. In the best case scenario, where we don't call `close()` until all commands are
-        // done, this will avoid painful exceptions in `close()`.
-        synchronized (commandExitCodes) {
-          while (readerShutdownSignal.getCount() > 0 && commandExitCodes.isEmpty()) {
-            commandExitCodes.wait();
+    boolean readerAlive = true;
+    while (true) {
+      // A dance here to avoid calling `processNextCommandResponse` if we're not waiting for any
+      // commands. In the best case scenario, where we don't call `close()` until all commands are
+      // done, this will avoid painful exceptions in `close()`.
+      //
+      // This uses `readerThread` instead of `this` as the lock so `close()` can block out
+      // `submitJob`, but still wait for this thread to exit.
+      synchronized (readerThread) {
+        while (!shutdownReaderThread && commandExitCodes.isEmpty()) {
+          try {
+            readerThread.wait();
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
           }
         }
-        if (readerShutdownSignal.getCount() > 0 && !commandExitCodes.isEmpty()) {
-          processNextCommandResponse();
-        }
-      }
-    } catch (Throwable t) {
-      // The WorkerProcessProtocol isn't really conducive to concurrency, so we just assume
-      // that shutdowns will cause some kind of exception.
-      // TODO(mikekap): Refactor the protocol enough to allow interrupting reads on a shutdown
-      // signal.
-      if (readerShutdownSignal.getCount() == 0) {
-        return;
-      }
-      LOG.error(t, "Worker pool reader process failed");
-    }
-  }
-
-  private void watchdogLoop() {
-    try {
-      while (!watchdogShutdownSignal.await(5, TimeUnit.SECONDS)) {
-        if (!readerThread.isAlive()) {
-          failAllFutures();
+        if (shutdownReaderThread) {
+          break;
         }
       }
 
-      failAllFutures();
-    } catch (Throwable t) {
-      LOG.error(t, "Worker Process Watchdog thread error!");
-      Throwables.throwIfUnchecked(t);
-      throw new RuntimeException(t);
-    } finally {
-      // Kill it with fire.
-      while (readerThread.isAlive()) {
-        readerThread.interrupt();
+      if (!readerAlive) {
+        failAllFutures();
+        continue;
+      }
+
+      try {
+        processNextCommandResponse();
+      } catch (Throwable t) {
+        // The WorkerProcessProtocol isn't really conducive to concurrency, so we just assume
+        // that shutdowns will cause some kind of exception. In case of a orderly shutdown, we
+        // wouldn't have any jobs running, so we wouldn't even enter processNextCommandResponse.
+        // The code here can only happen if e.g. the worker process crashed.
+
+        // TODO(mikekap): Maybe fail the jobs themselves with this exception, but kill the noise
+        // if 5 jobs fail with the same message.
+        LOG.error(t, "Worker pool process failed");
+        readerAlive = false;
       }
     }
+
+    failAllFutures();
   }
 
   private void failAllFutures() {
-    HashSet<Integer> keys = new HashSet<>(commandExitCodes.keySet());
-    for (Integer key : keys) {
-      SettableFuture<Integer> result = commandExitCodes.remove(key);
-      if (result != null) {
-        result.setException(new RuntimeException("Worker process error"));
+    while (!commandExitCodes.isEmpty()) {
+      HashSet<Integer> keys = new HashSet<>(commandExitCodes.keySet());
+      for (Integer key : keys) {
+        SettableFuture<Integer> result = commandExitCodes.remove(key);
+        if (result != null) {
+          result.setException(new RuntimeException("Worker process error"));
+        }
       }
     }
   }

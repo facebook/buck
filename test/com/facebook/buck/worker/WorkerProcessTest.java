@@ -131,6 +131,51 @@ public class WorkerProcessTest {
     }
   }
 
+  @Test(timeout = 20 * 1000)
+  public void testDeadProcess() throws IOException, ExecutionException, InterruptedException {
+    FakeWorkerProcessProtocol.FakeCommandSender protocol =
+        new FakeWorkerProcessProtocol.FakeCommandSender() {
+          @Override
+          public void send(int messageId, WorkerProcessCommand command) throws IOException {
+            // Noop
+          }
+
+          @Override
+          public WorkerProcessProtocol.CommandResponse receiveNextCommandResponse()
+              throws IOException {
+            throw new IOException("IO Exception!");
+          }
+        };
+
+    try (WorkerProcess process =
+        new WorkerProcess(
+            new FakeProcessExecutor(),
+            createDummyParams(),
+            new FakeProjectFilesystem(),
+            Paths.get("stderr"),
+            Paths.get("tmp").toAbsolutePath().normalize())) {
+      process.launchForTesting(protocol);
+
+      ListenableFuture<WorkerJobResult> job = process.submitJob("do stuff");
+      try {
+        job.get();
+        fail("Should have thrown execution exception?");
+      } catch (ExecutionException ignored) {
+      }
+
+      ListenableFuture<WorkerJobResult> job2 = process.submitJob("do more stuff");
+      try {
+        job2.get();
+        fail("Should have thrown execution exception?");
+      } catch (ExecutionException ignored) {
+      }
+
+      assertFalse(protocol.isClosed());
+      process.close();
+      assertTrue(protocol.isClosed());
+    }
+  }
+
   @Test
   public void testClose() {
     FakeWorkerProcessProtocol.FakeCommandSender protocol =
