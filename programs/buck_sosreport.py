@@ -187,28 +187,34 @@ class SOSReport:
         key_clsname = "com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper"
         key_buckdcfg = "-Dbuck.buckd_dir=%s" % self.buckd_dir
         try:
-            res = subprocess.run(["jps", "-mlvV"], capture_output=True)
+            res = subprocess.run(["ps", "auxww"], capture_output=True)
             if res.returncode == 0:
                 for line in res.stdout.splitlines():
-                    lline = line.strip().split()
-                    if len(lline) < 2:
+                    # make a list of ["user", "pid", "rest..."]
+                    lline = line.strip().split(maxsplit=2)
+                    if len(lline) < 3:
+                        logging.warning(
+                            "_get_buckd_pids found an irregular line of ps. Skipping: %s",
+                            line.decode(errors="replace"),
+                        )
                         continue
+                    cmdargs = lline[-1].strip().split()
                     if (
-                        lline[1] == key_clsname.encode()
-                        and key_buckdcfg.encode() in lline
+                        key_clsname.encode() in cmdargs
+                        and key_buckdcfg.encode() in cmdargs
                     ):
                         try:
-                            pid = int(lline[0])
+                            pid = int(lline[1])
                             pids.append(pid)
                         except ValueError as e:
                             logging.warning(
-                                "_get_buckd_pids found an irregular line of jps (%s): %s",
+                                "_get_buckd_pids found an irregular line of ps (%s): %s",
                                 line.decode(errors="replace"),
                                 repr(e),
                             )
             else:
                 logging.warning(
-                    "jps command failed: %s", repr(res.stderr.decode(errors="replace"))
+                    "ps command failed: %s", repr(res.stderr.decode(errors="replace"))
                 )
         except FileNotFoundError as e:
             logging.warning("_get_buckd_pids failed to get Buckd PIDs: %s", repr(e))
