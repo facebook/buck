@@ -75,6 +75,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -281,6 +282,16 @@ public class AppleBundle extends AbstractBuildRule
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), bundleRoot);
   }
 
+  /** Returns {@code SourcePath} of the file with incremental info if the build is incremental. */
+  public Optional<SourcePath> getSourcePathToIncrementalInfo() {
+    if (incrementalBundlingEnabled) {
+      return Optional.of(
+          ExplicitBuildTargetSourcePath.of(getBuildTarget(), getIncrementalInfoFilePath()));
+    } else {
+      return Optional.empty();
+    }
+  }
+
   public Path getInfoPlistPath() {
     return infoPlistBundlePath;
   }
@@ -314,19 +325,29 @@ public class AppleBundle extends AbstractBuildRule
 
     Supplier<Boolean> shouldPerformIncrementalBuildSupplier;
     Optional<Supplier<Map<RelPath, String>>> maybeCurrentBuildHashesSupplier;
+    Supplier<List<AppleBundleComponentCopySpec>> embeddedBundlesCopySpecsSupplier;
+
     if (incrementalBundlingEnabled) {
-      Supplier<Map<RelPath, String>> currentBuildHashesSupplier =
-          computeCurrentBuildHashes(context, stepsBuilder);
-      maybeCurrentBuildHashesSupplier = Optional.of(currentBuildHashesSupplier);
+      ImmutableSortedMap.Builder<RelPath, String> hashesBuilder =
+          ImmutableSortedMap.orderedBy(RelPath.comparator());
+      // Specs per every file in every embedded bundle to be used when incremental build is
+      // performed
+      ImmutableList.Builder<AppleBundleComponentCopySpec> embeddedBundlesContentCopySpecsBuilder =
+          ImmutableList.builder();
+      addStepsToComputeCurrentBuildHashesAndCopySpecsForEmbeddedBundles(
+          context.getSourcePathResolver(),
+          stepsBuilder,
+          hashesBuilder,
+          embeddedBundlesContentCopySpecsBuilder);
+      maybeCurrentBuildHashesSupplier = Optional.of(hashesBuilder::build);
+      embeddedBundlesCopySpecsSupplier = embeddedBundlesContentCopySpecsBuilder::build;
       shouldPerformIncrementalBuildSupplier =
           computeIfBuildShouldBeIncremental(
-              stepsBuilder,
-              incrementalInfoSupplier,
-              codeSignOnCopyPaths,
-              currentBuildHashesSupplier);
+              stepsBuilder, incrementalInfoSupplier, codeSignOnCopyPaths, hashesBuilder::build);
     } else {
       shouldPerformIncrementalBuildSupplier = () -> false;
       maybeCurrentBuildHashesSupplier = Optional.empty();
+      embeddedBundlesCopySpecsSupplier = ImmutableList::of;
     }
 
     if (incrementalBundlingEnabled) {
@@ -374,7 +395,8 @@ public class AppleBundle extends AbstractBuildRule
         processedResourcesDir,
         shouldPerformIncrementalBuildSupplier,
         () -> incrementalInfoSupplier.get().map(AppleBundleIncrementalInfo::getHashes),
-        maybeCurrentBuildHashesSupplier);
+        maybeCurrentBuildHashesSupplier,
+        embeddedBundlesCopySpecsSupplier);
 
     deleteBundlePartsFromPreviousBuildMissingInCurrentBuild(
         shouldPerformIncrementalBuildSupplier,
@@ -483,6 +505,20 @@ public class AppleBundle extends AbstractBuildRule
                 p ->
                     (new AppleBundleComponentCopySpec(p, sourcePathResolver, destinations))
                         .getDestinationPathRelativeToBundleRoot())
+            .collect(Collectors.toList()));
+    codeSignOnCopyPathsBuilder.addAll(
+        bundleParts.stream()
+            .filter(p -> p instanceof EmbeddedBundleAppleBundlePart)
+            .map(p -> (EmbeddedBundleAppleBundlePart) p)
+            .filter(EmbeddedBundleAppleBundlePart::getCodesignOnCopy)
+            .map(
+                p ->
+                    AppleBundleComponentCopySpec.destinationPathRelativeToBundleRoot(
+                        sourcePathResolver,
+                        destinations,
+                        p.getSourcePath(),
+                        p.getDestination(),
+                        Optional.empty()))
             .collect(Collectors.toList()));
     codeSignOnCopyPathsBuilder.addAll(
         Stream.concat(
@@ -600,19 +636,34 @@ public class AppleBundle extends AbstractBuildRule
                           }
                         });
 
+                deleteRedundantEmptyDirectories(
+                    oldHashes.keySet(), newHashes.keySet(), projectFilesystem);
+
                 return StepExecutionResults.SUCCESS;
               }
             }));
   }
 
-  @Nonnull
-  private Supplier<Map<RelPath, String>> computeCurrentBuildHashes(
-      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
-    ImmutableSortedMap.Builder<RelPath, String> hashesBuilder =
-        ImmutableSortedMap.orderedBy(RelPath.comparator());
-    Supplier<Map<RelPath, String>> hashesSupplier = hashesBuilder::build;
-    addStepsToComputeNewContentHashes(context.getSourcePathResolver(), stepsBuilder, hashesBuilder);
-    return hashesSupplier;
+  private void deleteRedundantEmptyDirectories(
+      Set<RelPath> oldPaths, Set<RelPath> newPaths, ProjectFilesystem projectFilesystem)
+      throws IOException {
+    Set<RelPath> oldDirectories =
+        oldPaths.stream().flatMap(AppleBundle::ancestorDirectories).collect(Collectors.toSet());
+    Set<RelPath> newDirectories =
+        newPaths.stream().flatMap(AppleBundle::ancestorDirectories).collect(Collectors.toSet());
+    for (RelPath dir : Sets.difference(oldDirectories, newDirectories)) {
+      projectFilesystem.deleteRecursivelyIfExists(bundleRoot.resolve(dir.getPath()));
+    }
+  }
+
+  private static Stream<RelPath> ancestorDirectories(@Nonnull RelPath path) {
+    List<RelPath> result = new LinkedList<>();
+    RelPath current = path.getParent();
+    while (current != null) {
+      result.add(current);
+      current = current.getParent();
+    }
+    return result.stream();
   }
 
   private void createBundleRootDirectory(
@@ -642,10 +693,11 @@ public class AppleBundle extends AbstractBuildRule
         });
   }
 
-  private void addStepsToComputeNewContentHashes(
+  private void addStepsToComputeCurrentBuildHashesAndCopySpecsForEmbeddedBundles(
       SourcePathResolverAdapter sourcePathResolver,
       ImmutableList.Builder<Step> stepsBuilder,
-      ImmutableSortedMap.Builder<RelPath, String> newContentHashesBuilder) {
+      ImmutableSortedMap.Builder<RelPath, String> newContentHashesBuilder,
+      ImmutableList.Builder<AppleBundleComponentCopySpec> embeddedBundlesRelatedCopySpecsBuilder) {
 
     List<DirectoryContentAppleBundlePart> directoriesWithContentBundleParts =
         bundleParts.stream()
@@ -731,6 +783,62 @@ public class AppleBundle extends AbstractBuildRule
               newContentHashesBuilder,
               getProjectFilesystem());
         });
+
+    List<EmbeddedBundleAppleBundlePart> embeddedBundles =
+        bundleParts.stream()
+            .filter(p -> p instanceof EmbeddedBundleAppleBundlePart)
+            .map(p -> (EmbeddedBundleAppleBundlePart) p)
+            .collect(Collectors.toList());
+
+    for (EmbeddedBundleAppleBundlePart bundlePart : embeddedBundles) {
+      BuildStepResultHolder<AppleBundleIncrementalInfo> incrementalInfoHolder =
+          new BuildStepResultHolder<>();
+
+      AbsPath incrementalInfoPath =
+          sourcePathResolver.getAbsolutePath(bundlePart.getIncrementalInfoSourcePath());
+
+      AbsPath embeddedBundleRootPath =
+          sourcePathResolver.getAbsolutePath(bundlePart.getSourcePath());
+
+      stepsBuilder.add(
+          new AppleBundleIncrementalInfoReadStep(
+              getProjectFilesystem(), incrementalInfoPath, incrementalInfoHolder));
+      stepsBuilder.add(
+          new AbstractExecutionStep("apple-bundle-process-components-incremental-info") {
+            @Override
+            public StepExecutionResult execute(StepExecutionContext context) {
+
+              AppleBundleIncrementalInfo incrementalInfo =
+                  incrementalInfoHolder
+                      .getValue()
+                      .orElseThrow(
+                          () ->
+                              new IllegalStateException(
+                                  "Expected incremental info to be read in previous steps"));
+
+              Path frameworkDirName =
+                  sourcePathResolver.getAbsolutePath(bundlePart.getSourcePath()).getFileName();
+
+              incrementalInfo
+                  .getHashes()
+                  .forEach(
+                      (relPath, hash) -> {
+                        RelPath destinationDirectoryPath =
+                            RelPath.of(bundlePart.getDestination().getPath(destinations));
+                        RelPath destinationPath =
+                            destinationDirectoryPath
+                                .resolveRel(frameworkDirName.toString())
+                                .resolve(relPath);
+                        newContentHashesBuilder.put(destinationPath, hash);
+                        embeddedBundlesRelatedCopySpecsBuilder.add(
+                            new AppleBundleComponentCopySpec(
+                                embeddedBundleRootPath.resolve(relPath), destinationPath, false));
+                      });
+
+              return StepExecutionResults.SUCCESS;
+            }
+          });
+    }
 
     AbsPath processedResourcesContentHashesFilePath =
         sourcePathResolver.getAbsolutePath(

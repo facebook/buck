@@ -95,7 +95,11 @@ public class AppleBundleComponentCopySpec {
     return ignoreIfMissing;
   }
 
-  private static RelPath destinationPathRelativeToBundleRoot(
+  /**
+   * Returns the destination path relative to bundle root for the given {@code SourcePath} and
+   * {@code AppleBundleDestination}.
+   */
+  public static RelPath destinationPathRelativeToBundleRoot(
       SourcePathResolverAdapter sourcePathResolver,
       AppleBundleDestinations destinations,
       SourcePath sourcePath,

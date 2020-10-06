@@ -111,7 +111,8 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
         processedResourceDir,
         () -> false,
         Optional::empty,
-        Optional.empty());
+        Optional.empty(),
+        ImmutableList::of);
 
     if (staticLibDeps.size() > 0) {
       RelPath argsFile =

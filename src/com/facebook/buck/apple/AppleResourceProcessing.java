@@ -65,7 +65,8 @@ public class AppleResourceProcessing {
       SourcePath processedResourcesDir,
       Supplier<Boolean> shouldPerformIncrementalBuildSupplier,
       Supplier<Optional<Map<RelPath, String>>> oldContentHashesSupplier,
-      Optional<Supplier<Map<RelPath, String>>> newContentHashesSupplier) {
+      Optional<Supplier<Map<RelPath, String>>> newContentHashesSupplier,
+      Supplier<List<AppleBundleComponentCopySpec>> embeddedBundlesCopySpecsSupplier) {
     addStepsToCreateDirectoriesWhereBundlePartsAreCopied(
         context, stepsBuilder, resources, bundleParts, dirRoot, destinations, projectFilesystem);
     addStepsToCopyContentOfDirectories(
@@ -100,7 +101,8 @@ public class AppleResourceProcessing {
         projectFilesystem,
         shouldPerformIncrementalBuildSupplier,
         oldContentHashesSupplier,
-        newContentHashesSupplier);
+        newContentHashesSupplier,
+        embeddedBundlesCopySpecsSupplier);
   }
 
   private static void addStepsToCreateDirectoriesWhereBundlePartsAreCopied(
@@ -359,7 +361,8 @@ public class AppleResourceProcessing {
       ProjectFilesystem projectFilesystem,
       Supplier<Boolean> shouldPerformIncrementalBuildSupplier,
       Supplier<Optional<Map<RelPath, String>>> oldContentHashesSupplier,
-      Optional<Supplier<Map<RelPath, String>>> newContentHashesSupplier) {
+      Optional<Supplier<Map<RelPath, String>>> newContentHashesSupplier,
+      Supplier<List<AppleBundleComponentCopySpec>> embeddedBundlesRelatedCopySpecsSupplier) {
 
     List<AppleBundleComponentCopySpec> copySpecs = new LinkedList<>();
 
@@ -392,6 +395,34 @@ public class AppleResourceProcessing {
             copySpecs.add(copySpec);
           });
     }
+
+    stepsBuilder.add(
+        new AbstractExecutionStep("apple-bundle-append-embedded-bundle-parts") {
+          @Override
+          public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+            if (shouldPerformIncrementalBuildSupplier.get()) {
+              createEmbeddedBundlesIntermediateDirectories(
+                  embeddedBundlesRelatedCopySpecsSupplier.get(), projectFilesystem);
+              copySpecs.addAll(embeddedBundlesRelatedCopySpecsSupplier.get());
+            } else {
+              // Fallback to just copying bundles as a whole directories, it should be faster and
+              // more robust
+              copySpecs.addAll(
+                  bundleParts.stream()
+                      .filter(p -> p instanceof EmbeddedBundleAppleBundlePart)
+                      .map(p -> (EmbeddedBundleAppleBundlePart) p)
+                      .map(
+                          p ->
+                              SourcePathWithAppleBundleDestination.of(
+                                  p.getSourcePath(), p.getDestination()))
+                      .map(
+                          s ->
+                              new AppleBundleComponentCopySpec(s, sourcePathResolver, destinations))
+                      .collect(Collectors.toList()));
+            }
+            return StepExecutionResults.SUCCESS;
+          }
+        });
 
     Stream.concat(
             resources.getResourceDirs().stream(),
@@ -454,6 +485,20 @@ public class AppleResourceProcessing {
         });
   }
 
+  private static void createEmbeddedBundlesIntermediateDirectories(
+      List<AppleBundleComponentCopySpec> appleBundleComponentCopySpecs,
+      ProjectFilesystem projectFilesystem)
+      throws IOException {
+    for (RelPath relPath :
+        appleBundleComponentCopySpecs.stream()
+            .map(AppleBundleComponentCopySpec::getDestinationPathRelativeToBundleRoot)
+            .map(RelPath::getParent)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet())) {
+      projectFilesystem.createParentDirs(relPath.resolve("dummy"));
+    }
+  }
+
   /** Checks and throws an exception if parts of bundle have conflicting paths */
   public static void verifyResourceConflicts(
       AppleBundleResources resources,
@@ -469,14 +514,25 @@ public class AppleResourceProcessing {
                         resources.getResourceDirs().stream(), resources.getResourceFiles().stream())
                     .map(e -> new AppleBundleComponentCopySpec(e, resolver, destinations)),
                 Stream.concat(
+                    Stream.concat(
+                        bundleParts.stream()
+                            .filter(p -> p instanceof DirectoryAppleBundlePart)
+                            .map(p -> (DirectoryAppleBundlePart) p)
+                            .map(e -> new AppleBundleComponentCopySpec(e, resolver, destinations)),
+                        bundleParts.stream()
+                            .filter(p -> p instanceof FileAppleBundlePart)
+                            .map(p -> (FileAppleBundlePart) p)
+                            .map(e -> new AppleBundleComponentCopySpec(e, resolver, destinations))),
                     bundleParts.stream()
-                        .filter(p -> p instanceof DirectoryAppleBundlePart)
-                        .map(p -> (DirectoryAppleBundlePart) p)
-                        .map(e -> new AppleBundleComponentCopySpec(e, resolver, destinations)),
-                    bundleParts.stream()
-                        .filter(p -> p instanceof FileAppleBundlePart)
-                        .map(p -> (FileAppleBundlePart) p)
-                        .map(e -> new AppleBundleComponentCopySpec(e, resolver, destinations))))
+                        .filter(p -> p instanceof EmbeddedBundleAppleBundlePart)
+                        .map(p -> (EmbeddedBundleAppleBundlePart) p)
+                        .map(
+                            e ->
+                                new AppleBundleComponentCopySpec(
+                                    SourcePathWithAppleBundleDestination.of(
+                                        e.getSourcePath(), e.getDestination()),
+                                    resolver,
+                                    destinations))))
             .collect(Collectors.toList());
 
     Map<RelPath, AbsPath> encounteredDestinationToSourcePaths = new HashMap<>();

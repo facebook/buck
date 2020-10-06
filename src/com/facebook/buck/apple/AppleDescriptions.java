@@ -1217,21 +1217,31 @@ public class AppleDescriptions {
 
     {
       final boolean codeSignOnCopy = true;
-      bundlePartsReadyToCopy.addAll(
-          frameworks.stream()
-              .map(
-                  sourcePath ->
-                      DirectoryAppleBundlePart.of(
-                          sourcePath,
-                          AppleBundleDestination.FRAMEWORKS,
-                          getSourcePathToContentHash(
-                              incrementalBundlingEnabled,
-                              sourcePath,
-                              buildTarget,
-                              graphBuilder,
-                              projectFilesystem),
-                          codeSignOnCopy))
-              .collect(ImmutableSet.toImmutableSet()));
+
+      for (SourcePath framework : frameworks) {
+        Optional<SourcePath> maybeSourcePathToIncrementalInfo =
+            frameworkIncrementalInfo(framework, graphBuilder);
+        if (maybeSourcePathToIncrementalInfo.isPresent()) {
+          bundlePartsReadyToCopy.add(
+              EmbeddedBundleAppleBundlePart.of(
+                  framework,
+                  AppleBundleDestination.FRAMEWORKS,
+                  maybeSourcePathToIncrementalInfo.get(),
+                  codeSignOnCopy));
+        } else {
+          bundlePartsReadyToCopy.add(
+              DirectoryAppleBundlePart.of(
+                  framework,
+                  AppleBundleDestination.FRAMEWORKS,
+                  getSourcePathToContentHash(
+                      incrementalBundlingEnabled,
+                      framework,
+                      buildTarget,
+                      graphBuilder,
+                      projectFilesystem),
+                  codeSignOnCopy));
+        }
+      }
     }
 
     AppleBundleResources collectedResources =
@@ -1345,6 +1355,20 @@ public class AppleDescriptions {
         nonProcessedResourcesContentHashesFileSourcePath,
         processResources.getSourcePathToContentHashes(),
         incrementalBundlingEnabled);
+  }
+
+  private static Optional<SourcePath> frameworkIncrementalInfo(
+      SourcePath frameworkSourcePath, ActionGraphBuilder graphBuilder) {
+    if (!(frameworkSourcePath instanceof BuildTargetSourcePath)) {
+      return Optional.empty();
+    }
+    BuildTarget frameworkTarget = ((BuildTargetSourcePath) frameworkSourcePath).getTarget();
+    BuildRule frameworkRule = graphBuilder.requireRule(frameworkTarget);
+    if (!(frameworkRule instanceof AppleBundle)) {
+      return Optional.empty();
+    }
+    AppleBundle frameworkBundle = (AppleBundle) frameworkRule;
+    return frameworkBundle.getSourcePathToIncrementalInfo();
   }
 
   private static void addExtraBinariesToBundleParts(
@@ -1670,17 +1694,26 @@ public class AppleDescriptions {
                 return;
               }
 
-              bundlePartsBuilder.add(
-                  DirectoryAppleBundlePart.of(
-                      sourcePath,
-                      destination,
-                      getSourcePathToContentHash(
-                          incrementalBundlingEnabled,
-                          sourcePath,
-                          appleBundle.getBuildTarget(),
-                          graphBuilder,
-                          projectFilesystem),
-                      codeSignOnCopy));
+              if (appleBundle.getSourcePathToIncrementalInfo().isPresent()) {
+                bundlePartsBuilder.add(
+                    EmbeddedBundleAppleBundlePart.of(
+                        sourcePath,
+                        destination,
+                        appleBundle.getSourcePathToIncrementalInfo().get(),
+                        codeSignOnCopy));
+              } else {
+                bundlePartsBuilder.add(
+                    DirectoryAppleBundlePart.of(
+                        sourcePath,
+                        destination,
+                        getSourcePathToContentHash(
+                            incrementalBundlingEnabled,
+                            sourcePath,
+                            appleBundle.getBuildTarget(),
+                            graphBuilder,
+                            projectFilesystem),
+                        codeSignOnCopy));
+              }
             });
   }
 

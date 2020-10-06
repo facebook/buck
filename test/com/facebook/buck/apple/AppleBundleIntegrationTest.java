@@ -2110,7 +2110,9 @@ public class AppleBundleIntegrationTest {
     ImmutableMap.Builder<RelPath, String> expectedBuilder = ImmutableMap.builder();
     for (String path :
         ImmutableList.of(
-            "Contents/Frameworks/TestFramework.framework",
+            "Contents/Frameworks/TestFramework.framework/TestFramework",
+            "Contents/Frameworks/TestFramework.framework/Resources/Info.plist",
+            "Contents/Frameworks/TestFramework.framework/Resources/PkgInfo",
             "Contents/MacOS/DemoApp",
             "Contents/MacOS/Worker",
             "Contents/PkgInfo",
@@ -2182,7 +2184,9 @@ public class AppleBundleIntegrationTest {
     ImmutableMap.Builder<RelPath, String> expectedBuilder = ImmutableMap.builder();
     for (String path :
         ImmutableList.of(
-            "Frameworks/TestFramework.framework",
+            "Frameworks/TestFramework.framework/Info.plist",
+            "Frameworks/TestFramework.framework/PkgInfo",
+            "Frameworks/TestFramework.framework/TestFramework",
             "DemoApp",
             "PkgInfo",
             "DemoApp.scnassets",
@@ -2355,6 +2359,39 @@ public class AppleBundleIntegrationTest {
     assertFalse(
         "File with hashes should not exist after non-incremental build",
         Files.exists(incrementalInfoFilePath));
+  }
+
+  @Test
+  public void
+      givenFrameworkIsRemovedFromDependenciesInCurrentBuild_whenIncrementalBuildIsPerformed_thenEmptyFrameworkDirectoryIsRemovedFromBundle()
+          throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_parts_of_every_kind", tmp);
+    workspace.setUp();
+
+    workspace.addBuckConfigLocalOption("apple", "incremental_bundling_enabled", "true");
+    workspace.addBuckConfigLocalOption("apple", "codesign_type_override", "skip");
+
+    Path buildTriggerPath = Paths.get("App/BuildTrigger.m");
+    filesystem.writeContentsToPath("", buildTriggerPath);
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#macosx-x86_64,no-debug");
+    workspace.buildAndReturnOutput(target.toString());
+
+    Path buckFilePath = Paths.get("BUCK");
+
+    List<String> lines = filesystem.readLines(buckFilePath);
+    List<String> updatedLines =
+        lines.stream()
+            // Hacky way to get rid of :TestFramework dependency by duplicating :Worker dependency
+            .map(s -> s.replaceAll(":TestFramework", ":Worker"))
+            .collect(Collectors.toList());
+    filesystem.writeLinesToPath(updatedLines, buckFilePath);
+
+    Path outputPath = workspace.buildAndReturnOutput(target.toString());
+
+    assertFalse(Files.exists(outputPath.resolve("Contents/Frameworks")));
   }
 
   @Test
