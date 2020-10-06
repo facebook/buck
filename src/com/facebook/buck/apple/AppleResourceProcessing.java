@@ -64,6 +64,7 @@ public class AppleResourceProcessing {
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem,
       SourcePath processedResourcesDir,
+      Supplier<Boolean> shouldPerformIncrementalBuildSupplier,
       Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
       Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
     addStepsToCreateDirectoriesWhereBundlePartsAreCopied(
@@ -76,6 +77,7 @@ public class AppleResourceProcessing {
         dirRoot,
         destinations,
         projectFilesystem,
+        shouldPerformIncrementalBuildSupplier,
         oldContentHashesSupplier,
         newContentHashesSupplier);
     addStepsToCopyProcessedResources(
@@ -86,6 +88,7 @@ public class AppleResourceProcessing {
         destinations,
         projectFilesystem,
         processedResourcesDir,
+        shouldPerformIncrementalBuildSupplier,
         oldContentHashesSupplier,
         newContentHashesSupplier);
     addStepsToCopyNonProcessedFilesAndDirectories(
@@ -96,6 +99,7 @@ public class AppleResourceProcessing {
         dirRoot,
         destinations,
         projectFilesystem,
+        shouldPerformIncrementalBuildSupplier,
         oldContentHashesSupplier,
         newContentHashesSupplier);
   }
@@ -130,6 +134,7 @@ public class AppleResourceProcessing {
       Path dirRoot,
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem,
+      Supplier<Boolean> shouldPerformIncrementalBuildSupplier,
       Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
       Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
 
@@ -153,20 +158,22 @@ public class AppleResourceProcessing {
         new AbstractExecutionStep("apple-bundle-copy-directories-content") {
           @Override
           public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-
             for (SourcePathWithAppleBundleDestination dirWithDestination : directoriesWithContent) {
               RelPath destinationDirectoryPath =
                   RelPath.of(dirWithDestination.getDestination().getPath(destinations));
               AbsPath resolvedSourcePath =
                   sourcePathResolver.getAbsolutePath(dirWithDestination.getSourcePath());
-              if (newContentHashesSupplier.isPresent()) {
+              if (shouldPerformIncrementalBuildSupplier.get()) {
                 copyContentsOfDirectoryIfNeededToBundleWithIncrementalSupport(
                     resolvedSourcePath,
                     destinationDirectoryPath,
                     dirRoot,
                     projectFilesystem,
                     oldContentHashesSupplier,
-                    newContentHashesSupplier.get());
+                    newContentHashesSupplier.orElseThrow(
+                        () ->
+                            new IllegalStateException(
+                                "Content hashes for current build should be computed when incremental build is performed")));
               } else {
                 projectFilesystem.copy(
                     resolvedSourcePath.getPath(),
@@ -269,6 +276,7 @@ public class AppleResourceProcessing {
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem,
       SourcePath processedResourcesDir,
+      Supplier<Boolean> shouldPerformIncrementalBuildSupplier,
       Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
       Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
     Set<AppleBundleDestination> destinationsForAllProcessedResources = new HashSet<>();
@@ -289,7 +297,6 @@ public class AppleResourceProcessing {
         new AbstractExecutionStep("apple-bundle-copy-processed-resources") {
           @Override
           public StepExecutionResult execute(StepExecutionContext stepContext) throws IOException {
-
             AbsPath rootDirWithProcessedResourcesPath =
                 sourcePathResolver.getAbsolutePath(processedResourcesDir);
 
@@ -298,14 +305,17 @@ public class AppleResourceProcessing {
                   AppleProcessResources.directoryNameWithProcessedFilesForDestination(destination);
               AbsPath processedResourcesContainerDirForDestination =
                   rootDirWithProcessedResourcesPath.resolve(subdirectoryNameForDestination);
-              if (newContentHashesSupplier.isPresent()) {
+              if (shouldPerformIncrementalBuildSupplier.get()) {
                 copyContentsOfDirectoryIfNeededToBundleWithIncrementalSupport(
                     processedResourcesContainerDirForDestination,
                     RelPath.of(destination.getPath(destinations)),
                     dirRoot,
                     projectFilesystem,
                     oldContentHashesSupplier,
-                    newContentHashesSupplier.get());
+                    newContentHashesSupplier.orElseThrow(
+                        () ->
+                            new IllegalStateException(
+                                "Content hashes for current build should be computed when incremental build is performed")));
               } else {
                 projectFilesystem.copy(
                     processedResourcesContainerDirForDestination.getPath(),
@@ -334,6 +344,7 @@ public class AppleResourceProcessing {
       Path dirRoot,
       AppleBundleDestinations destinations,
       ProjectFilesystem projectFilesystem,
+      Supplier<Boolean> shouldPerformIncrementalBuildSupplier,
       Supplier<ImmutableMap<RelPath, String>> oldContentHashesSupplier,
       Optional<Supplier<ImmutableMap<RelPath, String>>> newContentHashesSupplier) {
 
@@ -388,9 +399,7 @@ public class AppleResourceProcessing {
         new AbstractExecutionStep("apple-bundle-copy-non-processed-parts") {
           @Override
           public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-
-            if (newContentHashesSupplier.isPresent()) {
-
+            if (shouldPerformIncrementalBuildSupplier.get()) {
               ImmutableSet.Builder<Path> pathsToDeleteBuilder = ImmutableSet.builder();
               ImmutableSet.Builder<AppleBundleComponentCopySpec> copySpecsBuilder =
                   ImmutableSet.builder();
@@ -398,7 +407,10 @@ public class AppleResourceProcessing {
               for (AppleBundleComponentCopySpec spec : copySpecs) {
                 prepareCopyFileToBundleWithIncrementalSupport(
                     spec,
-                    newContentHashesSupplier.get(),
+                    newContentHashesSupplier.orElseThrow(
+                        () ->
+                            new IllegalStateException(
+                                "Content hashes for current build should be computed when incremental build is performed")),
                     oldContentHashesSupplier,
                     projectFilesystem,
                     dirRoot,
