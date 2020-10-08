@@ -415,25 +415,6 @@ public class LocalFallbackStrategyTest {
   }
 
   @Test
-  public void testEventBusLogForFallbackDisabled() throws InterruptedException {
-    Capture<AbstractBuckEvent> buckEventCapture = Capture.newInstance(CaptureType.ALL);
-    Capture<ConsoleEvent> consoleEventCapture = Capture.newInstance(CaptureType.ALL);
-    eventBus.post(EasyMock.capture(buckEventCapture));
-    eventBus.post(EasyMock.capture(consoleEventCapture));
-    eventBus.post(EasyMock.capture(buckEventCapture));
-    EasyMock.replay(eventBus);
-    testRemoteActionExceptionFallbackDisabledForBuildError();
-
-    List<AbstractBuckEvent> events = buckEventCapture.getValues();
-    Assert.assertTrue(events.get(0) instanceof LocalFallbackEvent.Started);
-    Assert.assertTrue(events.get(1) instanceof LocalFallbackEvent.Finished);
-    LocalFallbackEvent.Finished finishedEvent = (LocalFallbackEvent.Finished) events.get(1);
-    ConsoleEvent consoleEvent = consoleEventCapture.getValue();
-    Assert.assertTrue(consoleEvent.getMessage().contains("The build failed trying to build"));
-    Assert.assertEquals(finishedEvent.getRemoteGrpcStatus(), Status.OK);
-  }
-
-  @Test
   public void testInterruptedState() throws ExecutionException, InterruptedException {
     Capture<LocalFallbackEvent> eventCapture = Capture.newInstance(CaptureType.ALL);
     eventBus.post(EasyMock.capture(eventCapture));
