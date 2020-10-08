@@ -92,6 +92,7 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
             "slb_server_pool"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "project", ImmutableSet.of("ide_prompt", "ide_force_kill"));
+    ignoreFieldsForDaemonRestartBuilder.put("test", ImmutableSet.of("external_runner"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "ui",
         ImmutableSet.of(
