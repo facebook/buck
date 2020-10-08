@@ -23,11 +23,12 @@ import java.awt.GridBagConstraints;
 import javax.swing.JPanel;
 import org.jetbrains.annotations.NotNull;
 
-public class TestConfigurationEditor extends AbstractConfigurationEditor<TestConfiguration> {
+public class BuckTestConfigurationEditor
+    extends AbstractConfigurationEditor<BuckTestConfiguration> {
   private final JBTextField mTestSelectors;
   private final JPanel root;
 
-  public TestConfigurationEditor() {
+  public BuckTestConfigurationEditor() {
     super();
     root = getRoot();
     final JBLabel testSelectorLabel = new JBLabel();
@@ -61,13 +62,13 @@ public class TestConfigurationEditor extends AbstractConfigurationEditor<TestCon
   }
 
   @Override
-  protected void resetEditorFrom(@NotNull TestConfiguration configuration) {
+  protected void resetEditorFrom(@NotNull BuckTestConfiguration configuration) {
     super.resetEditorFrom(configuration);
     mTestSelectors.setText(configuration.data.testSelectors);
   }
 
   @Override
-  protected void applyEditorTo(@NotNull TestConfiguration configuration) {
+  protected void applyEditorTo(@NotNull BuckTestConfiguration configuration) {
     super.applyEditorTo(configuration);
     configuration.data.testSelectors = mTestSelectors.getText().trim();
   }

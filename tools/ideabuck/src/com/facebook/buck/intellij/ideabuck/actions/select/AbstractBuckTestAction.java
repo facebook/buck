@@ -19,8 +19,8 @@ package com.facebook.buck.intellij.ideabuck.actions.select;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.build.BuckJsonCommandHandler;
-import com.facebook.buck.intellij.ideabuck.configurations.TestConfiguration;
-import com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType;
+import com.facebook.buck.intellij.ideabuck.configurations.BuckTestConfiguration;
+import com.facebook.buck.intellij.ideabuck.configurations.BuckTestConfigurationType;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.facebook.buck.intellij.ideabuck.notification.BuckNotification;
 import com.google.common.base.Joiner;
@@ -124,15 +124,15 @@ public abstract class AbstractBuckTestAction extends AnAction {
                       .showWarningBalloon(
                           "No test targets found that are owners of " + containingFilePath);
                 } else {
-                  TestConfigurationType type = new TestConfigurationType();
+                  BuckTestConfigurationType type = new BuckTestConfigurationType();
                   if (type.getConfigurationFactories().length > 0) {
                     RunManagerImpl runManager = (RunManagerImpl) RunManager.getInstance(project);
                     RunnerAndConfigurationSettingsImpl runnerAndConfigurationSettings =
                         (RunnerAndConfigurationSettingsImpl)
                             runManager.createRunConfiguration(
                                 name, type.getConfigurationFactories()[0]);
-                    TestConfiguration testConfiguration =
-                        (TestConfiguration) runnerAndConfigurationSettings.getConfiguration();
+                    BuckTestConfiguration testConfiguration =
+                        (BuckTestConfiguration) runnerAndConfigurationSettings.getConfiguration();
                     testConfiguration.data.targets = Joiner.on(" ").join(ownersList);
                     testConfiguration.data.testSelectors = testSelectors;
                     settingsReference.set(runnerAndConfigurationSettings);

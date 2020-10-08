@@ -76,7 +76,7 @@
     <projectService
       serviceImplementation="com.facebook.buck.intellij.ideabuck.notification.BuckNotification"/>
     <configurationType
-      implementation="com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType"/>
+      implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckTestConfigurationType"/>
     <configurationType
       implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckBuildConfigurationType"/>
     <configurationType

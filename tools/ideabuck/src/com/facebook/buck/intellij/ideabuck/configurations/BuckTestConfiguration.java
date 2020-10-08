@@ -26,23 +26,24 @@ import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TestConfiguration extends AbstractConfiguration<TestConfiguration.TestData> {
+public class BuckTestConfiguration extends AbstractConfiguration<BuckTestConfiguration.TestData> {
 
-  protected TestConfiguration(Project project, @NotNull ConfigurationFactory factory, String name) {
+  protected BuckTestConfiguration(
+      Project project, @NotNull ConfigurationFactory factory, String name) {
     super(project, factory, name);
   }
 
   @NotNull
   @Override
   public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
-    return new TestConfigurationEditor();
+    return new BuckTestConfigurationEditor();
   }
 
   @Nullable
   @Override
   public RunProfileState getState(
       @NotNull Executor executor, @NotNull ExecutionEnvironment environment) {
-    return isBuckBuilding() ? null : new TestExecutionState(this, getProject());
+    return isBuckBuilding() ? null : new BuckTestExecutionState(this, getProject());
   }
 
   @Override

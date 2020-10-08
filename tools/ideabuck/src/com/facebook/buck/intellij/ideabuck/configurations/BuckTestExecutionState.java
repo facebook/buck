@@ -36,9 +36,9 @@ import com.intellij.openapi.util.Key;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class TestExecutionState extends AbstractExecutionState<TestConfiguration> {
+class BuckTestExecutionState extends AbstractExecutionState<BuckTestConfiguration> {
 
-  public TestExecutionState(TestConfiguration configuration, Project project) {
+  public BuckTestExecutionState(BuckTestConfiguration configuration, Project project) {
     super(configuration, project);
   }
 

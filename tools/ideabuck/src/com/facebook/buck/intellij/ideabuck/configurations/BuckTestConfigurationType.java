@@ -26,22 +26,22 @@ import com.intellij.openapi.project.Project;
 import javax.swing.Icon;
 import org.jetbrains.annotations.NotNull;
 
-public class TestConfigurationType implements ConfigurationType {
-  public static TestConfigurationType getInstance() {
-    return ConfigurationTypeUtil.findConfigurationType(TestConfigurationType.class);
+public class BuckTestConfigurationType implements ConfigurationType {
+  public static BuckTestConfigurationType getInstance() {
+    return ConfigurationTypeUtil.findConfigurationType(BuckTestConfigurationType.class);
   }
 
   private static final String ID = "Buck test";
 
   private final ConfigurationFactoryEx myFactory;
 
-  public TestConfigurationType() {
+  public BuckTestConfigurationType() {
     myFactory =
         new ConfigurationFactoryEx(this) {
           @Override
           @NotNull
           public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
-            return new TestConfiguration(project, this, "");
+            return new BuckTestConfiguration(project, this, "");
           }
         };
   }
