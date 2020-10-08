@@ -70,12 +70,13 @@ public class WatchmanFactory {
           .put("clock-sync-timeout", Capability.CLOCK_SYNC_TIMEOUT)
           .build();
   static final Path WATCHMAN = Paths.get("watchman");
-  private static final int DEFAULT_WATCHMAN_CLOCK_SYNC_TIMEOUT_MS = 100;
+  private static final int DEFAULT_WATCHMAN_CLOCK_SYNC_TIMEOUT_MS =
+      (int) TimeUnit.SECONDS.toMillis(60);
   private static final Logger LOG = Logger.get(WatchmanFactory.class);
   private static final long POLL_TIME_NANOS = TimeUnit.SECONDS.toNanos(1);
   private static final long WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(1);
   // Crawling a large repo in `watch-project` might take a long time on a slow disk.
-  private static final long DEFAULT_COMMAND_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(45);
+  private static final long DEFAULT_COMMAND_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(60);
   private final InitialWatchmanClientFactory initialWatchmanClientFactory;
 
   /** Exists to allow us to inject behavior in unit tests. */
