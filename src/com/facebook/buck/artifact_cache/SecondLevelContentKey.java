@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import build.bazel.remote.execution.v2.Digest;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.core.util.log.Logger;
@@ -31,6 +32,7 @@ public abstract class SecondLevelContentKey {
   private static final String OLD_STYLE_SUFFIX = "2c00";
   private static final String CACHE_ONLY_PREFIX = "cache";
   private static final String CAS_ONLY_PREFIX = "cas";
+  private static final String CAS_AND_CACHE_PREFIX = "hybrid";
   private static final String CONTENT_KEY_SEPARATOR = "/";
   private static final String CONTENT_KEY_DIGEST_INFO_SEPARATOR = ":";
   // Old-style key format is [SHA-1][2c00], and SHA-1 hashes is 40 characters long
@@ -42,6 +44,7 @@ public abstract class SecondLevelContentKey {
     OLD_STYLE,
     CACHE_ONLY,
     CAS_ONLY,
+    HYBRID,
     UNKNOWN,
   }
 
@@ -72,10 +75,26 @@ public abstract class SecondLevelContentKey {
         return new Builder().setType(Type.CACHE_ONLY).setKey(parts[1]).build();
       case CAS_ONLY_PREFIX:
         return new Builder().setType(Type.CAS_ONLY).setKey(parts[1]).build();
+      case CAS_AND_CACHE_PREFIX:
+        return new Builder().setType(Type.HYBRID).setKey(parts[1]).build();
       default:
         LOG.warn("Unknown content key prefix (falling back to unknown): %s", contentKey);
         return new Builder().setType(Type.UNKNOWN).setKey(contentKey).build();
     }
+  }
+
+  /**
+   * Parse a given digest and type to a SecondLevelContentKey
+   *
+   * @param digest digest to form the key
+   * @param keyType the type of content keys
+   * @return the SecondLevelContentKey
+   */
+  public static SecondLevelContentKey fromDigestAndType(Digest digest, Type keyType) {
+    return new Builder()
+        .setType(keyType)
+        .setKey(String.format("%s:%d", digest.getHash(), digest.getSizeBytes()))
+        .build();
   }
 
   /**
@@ -117,6 +136,8 @@ public abstract class SecondLevelContentKey {
         return CACHE_ONLY_PREFIX + CONTENT_KEY_SEPARATOR + getKey();
       case CAS_ONLY:
         return CAS_ONLY_PREFIX + CONTENT_KEY_SEPARATOR + getKey();
+      case HYBRID:
+        return CAS_AND_CACHE_PREFIX + CONTENT_KEY_SEPARATOR + getKey();
       case OLD_STYLE:
       case UNKNOWN:
       default:

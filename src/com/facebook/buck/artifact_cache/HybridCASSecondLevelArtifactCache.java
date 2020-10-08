@@ -58,6 +58,7 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
   private final ProjectFilesystem projectFilesystem;
   private final Optional<ContentAddressedStorageClient> casClient;
   private final Boolean enableWrite;
+  private final Boolean enableDoubleWriteWithCAS;
   private final int artifactPartitionWritePercentage;
   private final int artifactPartitionReadPercentage;
 
@@ -69,12 +70,19 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
       BuckEventBus buckEventBus,
       Optional<ContentAddressedStorageClient> casClient,
       Boolean enableWrite,
+      Boolean enableDoubleWriteWithCAS,
       int artifactPartitionWritePercentage,
       int artifactPartitionReadPercentage) {
+
     this.delegate = delegate;
     this.projectFilesystem = projectFilesystem;
     this.casClient = casClient;
     this.enableWrite = enableWrite;
+    this.enableDoubleWriteWithCAS = enableDoubleWriteWithCAS;
+    if (!enableWrite && enableDoubleWriteWithCAS) {
+      LOG.warn(
+          "Ignore the enableDoubleWriteWithCAS as it requires enableCASWrite to be true as well");
+    }
     this.artifactPartitionWritePercentage = artifactPartitionWritePercentage;
     this.artifactPartitionReadPercentage = artifactPartitionReadPercentage;
 
@@ -90,8 +98,9 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
 
   private boolean shouldReadCAS(SecondLevelContentKey contentKey) {
     return casClient.isPresent()
-        && contentKey.getType() == SecondLevelContentKey.Type.CAS_ONLY
-        && (SecondLevelContentKey.getDigestHash(contentKey).hashCode() % 100)
+        && (contentKey.getType() == SecondLevelContentKey.Type.CAS_ONLY
+            || contentKey.getType() == SecondLevelContentKey.Type.HYBRID)
+        && (Math.abs(SecondLevelContentKey.getDigestHash(contentKey).hashCode()) % 100)
             < artifactPartitionReadPercentage;
   }
 
@@ -150,9 +159,12 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
   public ListenableFuture<CacheResult> fetchAsync(
       @Nullable BuildTarget target, String contentKey, LazyPath output) {
     SecondLevelContentKey ck = SecondLevelContentKey.fromString(contentKey);
-    LOG.verbose("Fetching content key %s [%s]", contentKey, ck.getType());
+    boolean shouldReadCAS = shouldReadCAS(ck);
 
-    if (shouldReadCAS(ck)) {
+    LOG.verbose(
+        "Fetching content key %s [%s], (from cas? %s)", contentKey, ck.getType(), shouldReadCAS);
+
+    if (shouldReadCAS) {
       return doCasFetchAsync(ck, output);
     }
 
@@ -162,27 +174,47 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
   private boolean shouldWriteCAS(String digest) {
     return enableWrite
         && casClient.isPresent()
-        && (digest.hashCode() % 100) < artifactPartitionWritePercentage;
+        && (Math.abs(digest.hashCode()) % 100) < artifactPartitionWritePercentage;
   }
 
-  private ListenableFuture<Unit> doCasStoreAsync(BorrowablePath output, Digest digest) {
+  private ListenableFuture<Unit> doCasStoreAsync(
+      ArtifactInfo info, BorrowablePath output, Digest digest, SecondLevelContentKey contentKey) {
     if (!enableWrite || !casClient.isPresent()) {
       throw new RuntimeException("doCasStoreAsync called, but cannot write to CAS!");
     }
 
+    ListenableFuture<Unit> casFuture;
     try {
-      return casClient
-          .get()
-          .addMissing(
-              Collections.singletonList(
-                  UploadDataSupplier.of(
-                      output.getPath().getFileName().toString(),
-                      new GrpcProtocol.GrpcDigest(digest),
-                      () -> projectFilesystem.newFileInputStream(output.getPath()))));
+      casFuture =
+          casClient
+              .get()
+              .addMissing(
+                  Collections.singletonList(
+                      UploadDataSupplier.of(
+                          output.getPath().getFileName().toString(),
+                          new GrpcProtocol.GrpcDigest(digest),
+                          () -> projectFilesystem.newFileInputStream(output.getPath()))));
     } catch (IOException e) {
       LOG.error(e, "Error uploading artifact to CAS");
       return Futures.immediateCancelledFuture();
     }
+
+    if (enableDoubleWriteWithCAS) {
+      // If enable double write, use delegate store to write as well
+      return Futures.transformAsync(
+          casFuture,
+          __ ->
+              delegate.store(
+                  ArtifactInfo.builder()
+                      .addRuleKeys(contentKey.toRuleKey())
+                      .setBuildTarget(info.getBuildTarget())
+                      .setBuildTimeMs(info.getBuildTimeMs())
+                      .build(),
+                  output),
+          MoreExecutors.directExecutor());
+    }
+
+    return casFuture;
   }
 
   @Override
@@ -197,18 +229,23 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
     boolean shouldCAS = shouldWriteCAS(digest.getHash());
     LOG.verbose("Storing %s:%d (to cas? %s)", digest.getHash(), digest.getSizeBytes(), shouldCAS);
 
-    SecondLevelContentKey contentKey =
-        SecondLevelContentKey.builder()
-            .setType(
-                shouldCAS
-                    ? SecondLevelContentKey.Type.CAS_ONLY
-                    : SecondLevelContentKey.Type.CACHE_ONLY)
-            .setKey(String.format("%s:%d", digest.getHash(), digest.getSizeBytes()))
-            .build();
+    SecondLevelContentKey contentKey;
+    if (shouldCAS) {
+      if (enableDoubleWriteWithCAS) {
+        contentKey =
+            SecondLevelContentKey.fromDigestAndType(digest, SecondLevelContentKey.Type.HYBRID);
+      } else {
+        contentKey =
+            SecondLevelContentKey.fromDigestAndType(digest, SecondLevelContentKey.Type.CAS_ONLY);
+      }
+    } else {
+      contentKey =
+          SecondLevelContentKey.fromDigestAndType(digest, SecondLevelContentKey.Type.CACHE_ONLY);
+    }
 
     return Futures.transform(
         shouldCAS
-            ? doCasStoreAsync(output, digest)
+            ? doCasStoreAsync(info, output, digest, contentKey)
             : delegate.store(
                 ArtifactInfo.builder()
                     .addRuleKeys(contentKey.toRuleKey())

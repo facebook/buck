@@ -143,6 +143,8 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   private static final int DEFAULT_CAS_PORT = 443;
   private static final String CAS_DEADLINE_SEC = "cache_cas_deadline_sec";
   private static final int DEFAULT_CAS_DEADLINE_SEC = 300;
+  private static final String ENABLE_DOUBLE_WRITE_WITH_CAS = "enable_double_write_with_cas";
+  private static final Boolean DEFAULT_ENABLE_DOUBLE_WRITE_WITH_CAS = false;
 
   private static final String SCHEDULE_TYPE = "schedule_type";
   private static final String DEFAULT_SCHEDULE_TYPE = "none";
@@ -214,6 +216,16 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   public Boolean getEnableWriteToCas() {
     return buckConfig.getBooleanValue(
         CACHE_SECTION_NAME, ENABLE_WRITE_TO_CAS, DEFAULT_ENABLE_WRITE_TO_CAS);
+  }
+
+  /**
+   * This option should only be used when CAS write is turned on. If true, artifact cache will write
+   * both through CAS and Thrift. If false, artifact cache will only write through CAS when CAS is
+   * enabled.
+   */
+  public Boolean getEnableDoubleWriteWithCas() {
+    return buckConfig.getBooleanValue(
+        CACHE_SECTION_NAME, ENABLE_DOUBLE_WRITE_WITH_CAS, DEFAULT_ENABLE_DOUBLE_WRITE_WITH_CAS);
   }
 
   /**

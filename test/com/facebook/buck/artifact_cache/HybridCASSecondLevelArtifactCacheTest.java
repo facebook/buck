@@ -68,7 +68,7 @@ public class HybridCASSecondLevelArtifactCacheTest {
   public void nonCasStoreFetch() throws IOException {
     HybridCASSecondLevelArtifactCache cache =
         new HybridCASSecondLevelArtifactCache(
-            baseCache, projectFilesystem, buckEventBus, Optional.empty(), false, 0, 0);
+            baseCache, projectFilesystem, buckEventBus, Optional.empty(), false, false, 0, 0);
     String testContents = "hi, i am a test file.";
     AbsPath testFile = tmp.newFile();
 
@@ -96,7 +96,14 @@ public class HybridCASSecondLevelArtifactCacheTest {
             tmp.newFolder().getPath(), new GrpcProtocol(), buckEventBus);
     HybridCASSecondLevelArtifactCache cache =
         new HybridCASSecondLevelArtifactCache(
-            baseCache, projectFilesystem, buckEventBus, Optional.of(casClient), true, 100, 100);
+            baseCache,
+            projectFilesystem,
+            buckEventBus,
+            Optional.of(casClient),
+            true,
+            false,
+            100,
+            100);
 
     String testContents = "hi, i am a CAS test file. O__O";
     AbsPath testFile = tmp.newFile();
@@ -117,6 +124,42 @@ public class HybridCASSecondLevelArtifactCacheTest {
     assertEquals(testContents, new String(Files.readAllBytes(testFile.getPath())));
   }
 
+  @Test
+  public void casStoreWithDoubleWriteFetch() throws IOException {
+    ContentAddressedStorageClient casClient =
+        new LocalContentAddressedStorage(
+            tmp.newFolder().getPath(), new GrpcProtocol(), buckEventBus);
+    HybridCASSecondLevelArtifactCache cache =
+        new HybridCASSecondLevelArtifactCache(
+            baseCache,
+            projectFilesystem,
+            buckEventBus,
+            Optional.of(casClient),
+            true,
+            true,
+            100,
+            100);
+
+    String testContents = "hey, I am a CAS test file.";
+    AbsPath testFile = tmp.newFile();
+    writeString(testFile, testContents);
+
+    String ck =
+        Futures.getUnchecked(
+            cache.storeAsync(
+                ArtifactInfo.builder().build(),
+                BorrowablePath.notBorrowablePath(testFile.getPath())));
+
+    writeString(testFile, "yo");
+    CacheResult result =
+        Futures.getUnchecked(cache.fetchAsync(null, ck, LazyPath.ofInstance(testFile)));
+
+    // verify that the baseCache also has the artifact
+    assertEquals(1, baseCache.getArtifactCount());
+    assertEquals(CacheResultType.HIT, result.getType());
+    assertEquals(testContents, new String(Files.readAllBytes(testFile.getPath())));
+  }
+
   @Test(expected = HumanReadableException.class)
   public void badDigestFetch() throws IOException {
     ContentAddressedStorageClient casClient =
@@ -124,7 +167,14 @@ public class HybridCASSecondLevelArtifactCacheTest {
             tmp.newFolder().getPath(), new GrpcProtocol(), buckEventBus);
     HybridCASSecondLevelArtifactCache cache =
         new HybridCASSecondLevelArtifactCache(
-            baseCache, projectFilesystem, buckEventBus, Optional.of(casClient), true, 100, 100);
+            baseCache,
+            projectFilesystem,
+            buckEventBus,
+            Optional.of(casClient),
+            true,
+            false,
+            100,
+            100);
 
     Futures.getUnchecked(cache.fetchAsync(null, "cas/Hello!", LazyPath.ofInstance(tmp.newFile())));
   }
@@ -136,7 +186,14 @@ public class HybridCASSecondLevelArtifactCacheTest {
             tmp.newFolder().getPath(), new GrpcProtocol(), buckEventBus);
     HybridCASSecondLevelArtifactCache cache =
         new HybridCASSecondLevelArtifactCache(
-            baseCache, projectFilesystem, buckEventBus, Optional.of(casClient), true, 100, 100);
+            baseCache,
+            projectFilesystem,
+            buckEventBus,
+            Optional.of(casClient),
+            true,
+            false,
+            100,
+            100);
 
     Futures.getUnchecked(
         cache.fetchAsync(
@@ -157,6 +214,7 @@ public class HybridCASSecondLevelArtifactCacheTest {
             buckEventBus,
             Optional.of(casClient),
             true,
+            false,
             100,
             100);
 
@@ -170,7 +228,7 @@ public class HybridCASSecondLevelArtifactCacheTest {
   public void oldStyleRkFetch() throws IOException {
     HybridCASSecondLevelArtifactCache cache =
         new HybridCASSecondLevelArtifactCache(
-            baseCache, projectFilesystem, buckEventBus, Optional.empty(), false, 0, 0);
+            baseCache, projectFilesystem, buckEventBus, Optional.empty(), false, false, 0, 0);
     String testContents = "hi, i am a test file.";
     AbsPath testFile = tmp.newFile();
 
