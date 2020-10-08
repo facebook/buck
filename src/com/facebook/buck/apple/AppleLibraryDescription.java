@@ -738,10 +738,23 @@ public class AppleLibraryDescription
           ImmutableSortedSet<BuildTarget> extraCxxDeps,
           CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxDeps) {
 
-    Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform =
+    FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformsFlavorDomain =
         AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
-                toolchainProvider, buildTarget.getTargetConfiguration())
-            .getValue(buildTarget);
+            toolchainProvider, buildTarget.getTargetConfiguration());
+
+    Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform;
+    if (appleConfig.getLibraryUsesFallbackPlatform()) {
+      appleCxxPlatform =
+          Optional.of(
+              ApplePlatforms.getUnresolvedAppleCxxPlatformForBuildTarget(
+                  graphBuilder,
+                  getCxxPlatformsProvider(buildTarget.getTargetConfiguration()),
+                  appleCxxPlatformsFlavorDomain,
+                  buildTarget,
+                  args.getDefaultPlatform()));
+    } else {
+      appleCxxPlatform = appleCxxPlatformsFlavorDomain.getValue(buildTarget);
+    }
 
     boolean addSDKVersionLinkerFlag = shouldAddSDKVersionLinkerFlag(buildTarget);
     CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
