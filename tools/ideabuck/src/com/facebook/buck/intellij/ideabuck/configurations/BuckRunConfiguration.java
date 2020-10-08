@@ -43,7 +43,7 @@ public class BuckRunConfiguration extends AbstractConfiguration<BuckRunConfigura
   @Override
   public RunProfileState getState(
       @NotNull Executor executor, @NotNull ExecutionEnvironment environment) {
-    return null;
+    return isBuckBuilding() ? null : new BuckRunExecutionState(this, getProject());
   }
 
   @Override

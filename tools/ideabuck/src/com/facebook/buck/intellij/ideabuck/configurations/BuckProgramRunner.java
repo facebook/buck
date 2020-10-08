@@ -59,6 +59,8 @@ public class BuckProgramRunner extends DefaultProgramRunner {
   public boolean canRun(@NotNull String executorId, @NotNull RunProfile profile) {
     return profile instanceof TestConfiguration
         || (profile instanceof BuildConfiguration
+            && executorId.equals(DefaultRunExecutor.EXECUTOR_ID))
+        || (profile instanceof BuckRunConfiguration
             && executorId.equals(DefaultRunExecutor.EXECUTOR_ID));
   }
 }
