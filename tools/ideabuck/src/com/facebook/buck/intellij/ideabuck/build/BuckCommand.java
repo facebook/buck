@@ -23,7 +23,9 @@ public class BuckCommand {
   private static final String VERBOSITY_TAG = "-v";
   private static final String VERBOSITY_LEVEL = "0";
   // Visual commands
-  public static final BuckCommand BUILD = new BuckCommand("build", VERBOSITY_TAG, VERBOSITY_LEVEL);
+  public static final BuckCommand BUILD_V_0 =
+      new BuckCommand("build", VERBOSITY_TAG, VERBOSITY_LEVEL);
+  public static final BuckCommand BUILD = new BuckCommand("build");
   public static final BuckCommand INSTALL =
       new BuckCommand("install", VERBOSITY_TAG, VERBOSITY_LEVEL);
   public static final BuckCommand KILL = new BuckCommand("kill");

@@ -221,7 +221,7 @@ public abstract class BuckStructureViewElement<E extends NavigatablePsiElement>
         @Nullable
         @Override
         public Icon getIcon(boolean unused) {
-          return BuckIcons.FILE_TYPE;
+          return BuckIcons.DEFAULT_BUCK_ICON;
         }
       };
     }

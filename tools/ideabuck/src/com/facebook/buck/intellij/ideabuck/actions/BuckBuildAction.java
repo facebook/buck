@@ -52,7 +52,7 @@ public class BuckBuildAction extends BuckBaseAction {
       return;
     }
 
-    BuckBuildCommandHandler handler = new BuckBuildCommandHandler(project, BuckCommand.BUILD);
+    BuckBuildCommandHandler handler = new BuckBuildCommandHandler(project, BuckCommand.BUILD_V_0);
     handler.command().addParameter(target);
     buildManager.runBuckCommandWhileConnectedToBuck(handler, ACTION_TITLE, buckModule);
   }

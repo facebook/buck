@@ -44,7 +44,7 @@ public class BuckColorSettingsPage implements ColorSettingsPage {
 
   @Override
   public Icon getIcon() {
-    return BuckIcons.FILE_TYPE;
+    return BuckIcons.DEFAULT_BUCK_ICON;
   }
 
   @Override

@@ -74,7 +74,7 @@ public class ChooseTargetItem implements NavigationItem {
 
     @Override
     public Icon getIcon(boolean b) {
-      return BuckIcons.FILE_TYPE;
+      return BuckIcons.DEFAULT_BUCK_ICON;
     }
   }
 }

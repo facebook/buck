@@ -16,14 +16,13 @@
 
 package com.facebook.buck.intellij.ideabuck.configurations;
 
-import com.facebook.buck.intellij.ideabuck.lang.BuckFileType;
+import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.execution.configuration.ConfigurationFactoryEx;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationType;
 import com.intellij.execution.configurations.ConfigurationTypeUtil;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.IconLoader;
 import javax.swing.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -59,7 +58,7 @@ public class BuildConfigurationType implements ConfigurationType {
 
   @Override
   public Icon getIcon() {
-    return IconLoader.getIcon("/icons/buck_icon.png", BuckFileType.class);
+    return BuckIcons.DEFAULT_BUCK_ICON;
   }
 
   @NotNull

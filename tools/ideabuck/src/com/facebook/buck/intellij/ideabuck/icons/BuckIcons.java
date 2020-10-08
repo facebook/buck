@@ -30,7 +30,7 @@ public final class BuckIcons {
     return IconLoader.getIcon(path, BuckIcons.class);
   }
 
-  public static final Icon FILE_TYPE = BuckFileType.DEFAULT_ICON; // 16x16
+  public static final Icon DEFAULT_BUCK_ICON = BuckFileType.DEFAULT_ICON; // 16x16
   public static final Icon BUCK_TOOL_WINDOW_ICON =
       load("/icons/buck_tool_window_icon.png"); // 13x13
   public static final Icon ACTION_DEBUG = load("/icons/actions/Debug.png");

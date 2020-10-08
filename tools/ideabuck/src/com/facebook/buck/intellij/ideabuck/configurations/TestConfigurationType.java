@@ -58,7 +58,7 @@ public class TestConfigurationType implements ConfigurationType {
 
   @Override
   public Icon getIcon() {
-    return BuckIcons.CONFIGURATION_TEST;
+    return BuckIcons.DEFAULT_BUCK_ICON;
   }
 
   @NotNull

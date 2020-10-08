@@ -107,7 +107,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
   }
 
   private void addResultForTarget(CompletionResultSet result, String name) {
-    result.addElement(LookupElementBuilder.create(name).withIcon(BuckIcons.FILE_TYPE));
+    result.addElement(LookupElementBuilder.create(name).withIcon(BuckIcons.DEFAULT_BUCK_ICON));
   }
 
   private void addResultForFile(CompletionResultSet result, VirtualFile file, String name) {
