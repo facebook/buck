@@ -938,6 +938,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
         .getPath();
   }
 
+  public AbsPath getLastOutputDir() throws IOException {
+    return getProjectFileSystem().getRootPath().resolve(getBuckPaths().getLastOutputDir());
+  }
+
   public void verify(Path subdirectory) throws IOException {
     Preconditions.checkArgument(
         !subdirectory.isAbsolute(),

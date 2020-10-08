@@ -611,14 +611,9 @@ abstract class AbstractBuildCommand extends AbstractCommand {
   private void symLinkBuildResults(
       CommandRunnerParams params, GraphsAndBuildTargets graphsAndBuildTargets) throws IOException {
     // Clean up last buck-out/last.
+    ProjectFilesystem filesystem = params.getCells().getRootCell().getFilesystem();
     AbsPath lastOutputDirPath =
-        params
-            .getCells()
-            .getRootCell()
-            .getFilesystem()
-            .getBuckPaths()
-            .getLastOutputDir()
-            .toAbsolutePath();
+        filesystem.getRootPath().resolve(filesystem.getBuckPaths().getLastOutputDir());
     MostFiles.deleteRecursivelyIfExists(lastOutputDirPath);
     Files.createDirectories(lastOutputDirPath.getPath());
 
