@@ -79,6 +79,8 @@
       implementation="com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType"/>
     <configurationType
       implementation="com.facebook.buck.intellij.ideabuck.configurations.BuildConfigurationType"/>
+    <configurationType
+      implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckRunConfigurationType"/>
     <programRunner
       implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckProgramRunner"/>
     <psi.referenceContributor implementation="com.facebook.buck.intellij.ideabuck.lang.BuckIdentifierReferenceContributor"/>
