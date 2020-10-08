@@ -28,6 +28,9 @@ apple_library(
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
     visibility = ["//Apps/..."],
+    deps = [
+        ":C",
+    ],
 )
 
 apple_library(
