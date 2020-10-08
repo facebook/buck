@@ -213,13 +213,15 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
       throws IOException, InterruptedException {
     long connectTimeoutNanos = TimeUnit.SECONDS.toNanos(5);
     long endTimeNanos = clock.nanoTime() + connectTimeoutNanos;
+    int syncTimeoutMillis = 100;
     return WatchmanFactory.getWatchman(
         createWatchmanClient(),
         watchmanDaemon.getTransportPath(),
         watchedProjects,
         console,
         clock,
-        endTimeNanos);
+        endTimeNanos,
+        syncTimeoutMillis);
   }
 
   private WatchmanClient createWatchmanClient() throws IOException {

@@ -95,7 +95,14 @@ public class WatchmanFactoryTest {
     WatchmanFactory watchmanFactory = new WatchmanFactory();
     Watchman watchman =
         watchmanFactory.build(
-            executor, rootPaths, env, finder, new TestConsole(), clock, Optional.empty());
+            executor,
+            rootPaths,
+            env,
+            finder,
+            new TestConsole(),
+            clock,
+            Optional.empty(),
+            Optional.empty());
 
     assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
   }
@@ -115,7 +122,14 @@ public class WatchmanFactoryTest {
     WatchmanFactory watchmanFactory = new WatchmanFactory();
     Watchman watchman =
         watchmanFactory.build(
-            executor, rootPaths, env, finder, new TestConsole(), clock, Optional.empty());
+            executor,
+            rootPaths,
+            env,
+            finder,
+            new TestConsole(),
+            clock,
+            Optional.empty(),
+            Optional.empty());
 
     assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
   }
@@ -149,7 +163,14 @@ public class WatchmanFactoryTest {
                 ImmutableMap.of("version", "3.7.9", "watch", root)));
     Watchman watchman =
         watchmanFactory.build(
-            executor, rootPaths, env, finder, new TestConsole(), clock, Optional.empty());
+            executor,
+            rootPaths,
+            env,
+            finder,
+            new TestConsole(),
+            clock,
+            Optional.empty(),
+            Optional.empty());
 
     assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
   }
@@ -192,7 +213,14 @@ public class WatchmanFactoryTest {
                         + "server")));
     Watchman watchman =
         watchmanFactory.build(
-            executor, rootPaths, env, finder, new TestConsole(), clock, Optional.empty());
+            executor,
+            rootPaths,
+            env,
+            finder,
+            new TestConsole(),
+            clock,
+            Optional.empty(),
+            Optional.empty());
 
     assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
   }
@@ -241,7 +269,8 @@ public class WatchmanFactoryTest {
             finder,
             new TestConsole(),
             clock,
-            Optional.of(TimeUnit.SECONDS.toMillis(5)));
+            Optional.of(TimeUnit.SECONDS.toMillis(5)),
+            Optional.empty());
 
     assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
   }
@@ -290,7 +319,8 @@ public class WatchmanFactoryTest {
             finder,
             new TestConsole(),
             clock,
-            Optional.of(TimeUnit.SECONDS.toMillis(5)));
+            Optional.of(TimeUnit.SECONDS.toMillis(5)),
+            Optional.empty());
 
     assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
   }
@@ -335,7 +365,14 @@ public class WatchmanFactoryTest {
                 ImmutableMap.of("version", "3.8.0", "clock", "c:0:0:1")));
     Watchman watchman =
         watchmanFactory.build(
-            executor, rootPaths, env, finder, new TestConsole(), clock, Optional.empty());
+            executor,
+            rootPaths,
+            env,
+            finder,
+            new TestConsole(),
+            clock,
+            Optional.empty(),
+            Optional.empty());
 
     assertEquals(
         ImmutableSet.of(
@@ -389,7 +426,14 @@ public class WatchmanFactoryTest {
                 ImmutableMap.of("version", "4.7.0", "clock", "c:0:0:1")));
     Watchman watchman =
         watchmanFactory.build(
-            executor, rootPaths, env, finder, new TestConsole(), clock, Optional.empty());
+            executor,
+            rootPaths,
+            env,
+            finder,
+            new TestConsole(),
+            clock,
+            Optional.empty(),
+            Optional.empty());
 
     assertEquals(
         ImmutableSet.of(
@@ -445,7 +489,14 @@ public class WatchmanFactoryTest {
                 ImmutableMap.of()));
     Watchman watchman =
         watchmanFactory.build(
-            executor, rootPaths, env, finder, new TestConsole(), clock, Optional.empty());
+            executor,
+            rootPaths,
+            env,
+            finder,
+            new TestConsole(),
+            clock,
+            Optional.empty(),
+            Optional.empty());
 
     assertEquals(ImmutableMap.of(), watchman.getClockIds());
     assertEquals("4.7.0", watchman.getVersion());

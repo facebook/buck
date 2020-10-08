@@ -70,7 +70,7 @@ public class WatchmanFactory {
           .put("clock-sync-timeout", Capability.CLOCK_SYNC_TIMEOUT)
           .build();
   static final Path WATCHMAN = Paths.get("watchman");
-  private static final int WATCHMAN_CLOCK_SYNC_TIMEOUT = 100;
+  private static final int DEFAULT_WATCHMAN_CLOCK_SYNC_TIMEOUT_MS = 100;
   private static final Logger LOG = Logger.get(WatchmanFactory.class);
   private static final long POLL_TIME_NANOS = TimeUnit.SECONDS.toNanos(1);
   private static final long WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(1);
@@ -104,7 +104,8 @@ public class WatchmanFactory {
       ImmutableMap<String, String> env,
       Console console,
       Clock clock,
-      Optional<Long> commandTimeoutMillis)
+      Optional<Long> commandTimeoutMillis,
+      Optional<Integer> syncTimeoutMillis)
       throws InterruptedException {
     return build(
         new ListeningProcessExecutor(),
@@ -113,7 +114,8 @@ public class WatchmanFactory {
         new ExecutableFinder(),
         console,
         clock,
-        commandTimeoutMillis);
+        commandTimeoutMillis,
+        syncTimeoutMillis);
   }
 
   @VisibleForTesting
@@ -125,7 +127,8 @@ public class WatchmanFactory {
       ExecutableFinder exeFinder,
       Console console,
       Clock clock,
-      Optional<Long> commandTimeoutMillis)
+      Optional<Long> commandTimeoutMillis,
+      Optional<Integer> syncTimeoutMillis)
       throws InterruptedException {
     LOG.info("Creating for: " + projectWatchList);
     Path pathToTransport;
@@ -148,8 +151,17 @@ public class WatchmanFactory {
     try (WatchmanClient client =
         initialWatchmanClientFactory.tryCreateClientToFetchInitialWatchmanData(
             pathToTransport, console, clock)) {
+      int effectiveSyncTimeoutMillis =
+          syncTimeoutMillis.orElse(DEFAULT_WATCHMAN_CLOCK_SYNC_TIMEOUT_MS);
       Watchman watchman =
-          getWatchman(client, pathToTransport, projectWatchList, console, clock, endTimeNanos);
+          getWatchman(
+              client,
+              pathToTransport,
+              projectWatchList,
+              console,
+              clock,
+              endTimeNanos,
+              effectiveSyncTimeoutMillis);
       LOG.debug("Connected to Watchman");
       return watchman;
     } catch (ClassCastException | IOException e) {
@@ -210,7 +222,8 @@ public class WatchmanFactory {
       ImmutableSet<AbsPath> projectWatchList,
       Console console,
       Clock clock,
-      long endTimeNanos)
+      long endTimeNanos,
+      int syncTimeoutMillis)
       throws IOException, InterruptedException {
     long versionQueryStartTimeNanos = clock.nanoTime();
     Optional<? extends Map<String, ?>> result =
@@ -263,7 +276,13 @@ public class WatchmanFactory {
     ImmutableMap.Builder<String, String> clockIdsBuilder = ImmutableMap.builder();
     for (String watchRoot : watchRoots) {
       Optional<String> clockId =
-          queryClock(client, watchRoot, capabilities, clock, endTimeNanos - clock.nanoTime());
+          queryClock(
+              client,
+              watchRoot,
+              capabilities,
+              clock,
+              endTimeNanos - clock.nanoTime(),
+              syncTimeoutMillis);
       if (clockId.isPresent()) {
         clockIdsBuilder.put(watchRoot, clockId.get());
       }
@@ -406,13 +425,14 @@ public class WatchmanFactory {
       String watchRoot,
       ImmutableSet<Capability> capabilities,
       Clock clock,
-      long timeoutNanos)
+      long timeoutNanos,
+      int syncTimeoutMilis)
       throws IOException, InterruptedException {
     Optional<String> clockId = Optional.empty();
     long clockStartTimeNanos = clock.nanoTime();
     ImmutableMap<String, Object> args =
         capabilities.contains(Capability.CLOCK_SYNC_TIMEOUT)
-            ? ImmutableMap.of("sync_timeout", WATCHMAN_CLOCK_SYNC_TIMEOUT)
+            ? ImmutableMap.of("sync_timeout", syncTimeoutMilis)
             : ImmutableMap.of();
 
     Optional<? extends Map<String, ?>> result =

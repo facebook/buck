@@ -85,6 +85,7 @@ public class EdenProjectFilesystemDelegateTest {
             ImmutableMap.of(),
             new TestConsole(),
             FakeClock.doNotCare(),
+            Optional.empty(),
             Optional.empty());
     assumeTrue(watchman.getTransportPath().isPresent());
   }

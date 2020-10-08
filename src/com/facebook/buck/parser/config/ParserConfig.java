@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import org.immutables.value.Value;
 
 @BuckStyleValue
@@ -211,6 +212,12 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public Optional<Long> getWatchmanQueryTimeoutMs() {
     return getDelegate().getLong("project", "watchman_query_timeout_ms");
+  }
+
+  @Value.Lazy
+  public Optional<Integer> getWatchmanSyncTimeoutMs() {
+    OptionalInt syncTimeout = getDelegate().getInteger("project", "watchman_sync_timeout_ms");
+    return syncTimeout.isPresent() ? Optional.of(syncTimeout.getAsInt()) : Optional.empty();
   }
 
   @Value.Lazy

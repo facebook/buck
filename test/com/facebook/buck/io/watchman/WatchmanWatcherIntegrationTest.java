@@ -73,6 +73,7 @@ public class WatchmanWatcherIntegrationTest {
             EnvVariablesProvider.getSystemEnv(),
             new Console(Verbosity.ALL, System.out, System.err, Ansi.withoutTty()),
             new DefaultClock(),
+            Optional.empty(),
             Optional.empty());
     assumeTrue(watchman.getTransportPath().isPresent());
 

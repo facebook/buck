@@ -60,6 +60,7 @@ public class HybridGlobberTest {
             ImmutableMap.of(),
             new TestConsole(),
             FakeClock.doNotCare(),
+            Optional.empty(),
             Optional.empty());
     assumeTrue(watchman.getTransportPath().isPresent());
     nativeGlobber = NativeGlobber.create(root);

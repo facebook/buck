@@ -60,6 +60,7 @@ public class TestWithBuckd extends ExternalResource {
             getWatchmanEnv(),
             new TestConsole(),
             FakeClock.doNotCare(),
+            Optional.empty(),
             Optional.empty());
 
     globalState = new BuckGlobalStateLifecycleManager();
