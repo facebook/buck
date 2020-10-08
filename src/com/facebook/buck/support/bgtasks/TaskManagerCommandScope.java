@@ -96,11 +96,10 @@ public class TaskManagerCommandScope implements Scope {
   public synchronized void close() {
     if (!isClosed) {
       isClosed = true;
-      manager.notify(Notification.COMMAND_END);
-    }
-
-    if (blocking) {
-      awaitTasksToComplete();
+      boolean hasCommandsRunning = manager.notify(Notification.COMMAND_END);
+      if (!hasCommandsRunning && blocking) {
+        awaitTasksToComplete();
+      }
     }
   }
 

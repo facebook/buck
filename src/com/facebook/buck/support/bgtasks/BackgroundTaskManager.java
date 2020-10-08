@@ -70,6 +70,8 @@ public abstract class BackgroundTaskManager {
    * Notify the manager of some event, e.g. command start or end. Exceptions should generally be
    * caught and handled by the manager, except in test implementations. {@link Notification} should
    * be handled through a {@link TaskManagerCommandScope}.
+   *
+   * @return {@code true} iff commands are running
    */
-  abstract void notify(Notification code);
+  abstract boolean notify(Notification code);
 }

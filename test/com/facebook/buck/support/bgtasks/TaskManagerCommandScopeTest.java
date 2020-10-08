@@ -115,6 +115,31 @@ public class TaskManagerCommandScopeTest {
   }
 
   @Test
+  public void commandScopeDoesNotBlockIfOtherCommandsRunningInBlockingMode() {
+    TestBackgroundTaskManager testBackgroundTaskManager = TestBackgroundTaskManager.of();
+    // "start" a different command
+    testBackgroundTaskManager.notify(Notification.COMMAND_START);
+
+    TaskManagerCommandScope scope =
+        new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId(), true);
+    BackgroundTask<?> task1 = BackgroundTask.of("test1", ignored -> {}, new Object());
+    BackgroundTask<?> task2 = BackgroundTask.of("test2", ignored -> {}, new Object());
+    scope.schedule(task1);
+    scope.schedule(task2);
+
+    ImmutableMap<BackgroundTask<?>, Future<Unit>> scheduledTasks = scope.getScheduledTasksResults();
+
+    assertTrue(scheduledTasks.containsKey(task1));
+    assertTrue(scheduledTasks.containsKey(task2));
+
+    scope.close();
+
+    for (Future<Unit> f : scheduledTasks.values()) {
+      assertFalse(f.isDone());
+    }
+  }
+
+  @Test
   public void commandScopeCloseBlocksOnlyForTasksItScheduled() {
     TestBackgroundTaskManager testBackgroundTaskManager = TestBackgroundTaskManager.of();
     TaskManagerCommandScope scope1 =

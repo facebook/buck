@@ -190,18 +190,20 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   }
 
   @Override
-  void notify(Notification code) {
+  boolean notify(Notification code) {
     switch (code) {
       case COMMAND_START:
         commandsRunning.incrementAndGet();
-        break;
+        return true;
 
       case COMMAND_END:
         synchronized (commandsRunning) {
-          commandsRunning.decrementAndGet();
+          int numRunning = commandsRunning.decrementAndGet();
           commandsRunning.notify();
+          return numRunning != 0;
         }
-        break;
+      default:
+        throw new IllegalArgumentException(String.format("Unknown Notification %s", code));
     }
   }
 

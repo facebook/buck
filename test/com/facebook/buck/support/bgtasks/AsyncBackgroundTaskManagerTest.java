@@ -241,14 +241,17 @@ public class AsyncBackgroundTaskManagerTest {
     manager.notify(Notification.COMMAND_START);
     ImmutableList<Future<Unit>> thirdCommandFutures = schedule(thirdCommandTasks);
     // signal once -- this should not permit tasks to be run as one command is still waiting
-    manager.notify(Notification.COMMAND_END);
+    boolean hasCommandsRunning = manager.notify(Notification.COMMAND_END);
+    assertTrue(hasCommandsRunning);
     assertThat(
         manager.getScheduledTasks().size(),
         Matchers.greaterThanOrEqualTo(FIRST_COMMAND_TASKS + SECOND_COMMAND_TASKS));
     assertThat(
         manager.getScheduledTasks().size(),
         Matchers.lessThanOrEqualTo(FIRST_COMMAND_TASKS + SECOND_COMMAND_TASKS + NTHREADS));
-    manager.notify(Notification.COMMAND_END); // actually permit to run
+
+    hasCommandsRunning = manager.notify(Notification.COMMAND_END); // actually permit to run
+    assertFalse(hasCommandsRunning);
 
     assertFuturesSuccessful(firstCommandBlockingFutures);
     assertFuturesSuccessful(firstCommandFutures);
