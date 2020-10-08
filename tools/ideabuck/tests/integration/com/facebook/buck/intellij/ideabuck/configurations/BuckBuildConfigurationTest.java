@@ -23,21 +23,21 @@ import java.lang.reflect.Modifier;
 import org.jdom.Element;
 import org.junit.Assert;
 
-public class BuildConfigurationTest extends BuckTestCase {
+public class BuckBuildConfigurationTest extends BuckTestCase {
 
   public void testPersistency() throws Exception {
     final ConfigurationFactory factory =
-        BuildConfigurationType.getInstance().getConfigurationFactories()[0];
-    final BuildConfiguration cfg =
-        new BuildConfiguration(getProject(), factory, "test serialization");
+        BuckBuildConfigurationType.getInstance().getConfigurationFactories()[0];
+    final BuckBuildConfiguration cfg =
+        new BuckBuildConfiguration(getProject(), factory, "test serialization");
     cfg.data.targets = "//src/com/facebook/buck:test";
     cfg.data.additionalParams = "--num-threads 239";
     cfg.data.buckExecutablePath = "foo/bar/buck";
     final Element testElement = new Element("test_element");
     cfg.writeExternal(testElement);
 
-    final BuildConfiguration cfg2 =
-        new BuildConfiguration(getProject(), factory, "test serialization");
+    final BuckBuildConfiguration cfg2 =
+        new BuckBuildConfiguration(getProject(), factory, "test serialization");
     cfg2.readExternal(testElement);
     Assert.assertEquals("//src/com/facebook/buck:test", cfg2.data.targets);
     Assert.assertEquals("--num-threads 239", cfg2.data.additionalParams);
@@ -45,7 +45,7 @@ public class BuildConfigurationTest extends BuckTestCase {
   }
 
   public void testAllFieldsPublic() throws Exception {
-    final Field[] fs = BuildConfiguration.Data.class.getDeclaredFields();
+    final Field[] fs = BuckBuildConfiguration.Data.class.getDeclaredFields();
     for (Field f : fs) {
       final int modifiers = f.getModifiers();
       Assert.assertTrue(Modifier.isPublic(modifiers));

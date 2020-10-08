@@ -26,22 +26,22 @@ import com.intellij.openapi.project.Project;
 import javax.swing.*;
 import org.jetbrains.annotations.NotNull;
 
-public class BuildConfigurationType implements ConfigurationType {
-  public static BuildConfigurationType getInstance() {
-    return ConfigurationTypeUtil.findConfigurationType(BuildConfigurationType.class);
+public class BuckBuildConfigurationType implements ConfigurationType {
+  public static BuckBuildConfigurationType getInstance() {
+    return ConfigurationTypeUtil.findConfigurationType(BuckBuildConfigurationType.class);
   }
 
   private static final String ID = "Buck build";
 
   private final ConfigurationFactoryEx myFactory;
 
-  public BuildConfigurationType() {
+  public BuckBuildConfigurationType() {
     myFactory =
         new ConfigurationFactoryEx(this) {
           @Override
           @NotNull
           public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
-            return new BuildConfiguration(project, this, "");
+            return new BuckBuildConfiguration(project, this, "");
           }
         };
   }

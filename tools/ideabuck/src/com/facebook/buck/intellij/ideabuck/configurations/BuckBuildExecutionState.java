@@ -32,9 +32,9 @@ import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BuildExecutionState extends AbstractExecutionState<BuildConfiguration> {
+public class BuckBuildExecutionState extends AbstractExecutionState<BuckBuildConfiguration> {
 
-  public BuildExecutionState(BuildConfiguration configuration, Project project) {
+  public BuckBuildExecutionState(BuckBuildConfiguration configuration, Project project) {
     super(configuration, project);
   }
 

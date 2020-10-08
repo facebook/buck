@@ -78,7 +78,7 @@
     <configurationType
       implementation="com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType"/>
     <configurationType
-      implementation="com.facebook.buck.intellij.ideabuck.configurations.BuildConfigurationType"/>
+      implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckBuildConfigurationType"/>
     <configurationType
       implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckRunConfigurationType"/>
     <programRunner

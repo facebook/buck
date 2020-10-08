@@ -26,9 +26,10 @@ import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BuildConfiguration extends AbstractConfiguration<BuildConfiguration.BuildData> {
+public class BuckBuildConfiguration
+    extends AbstractConfiguration<BuckBuildConfiguration.BuildData> {
 
-  protected BuildConfiguration(
+  protected BuckBuildConfiguration(
       Project project, @NotNull ConfigurationFactory factory, String name) {
     super(project, factory, name);
   }
@@ -36,14 +37,14 @@ public class BuildConfiguration extends AbstractConfiguration<BuildConfiguration
   @NotNull
   @Override
   public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
-    return new BuildConfigurationEditor();
+    return new BuckBuildConfigurationEditor();
   }
 
   @Nullable
   @Override
   public RunProfileState getState(
       @NotNull Executor executor, @NotNull ExecutionEnvironment environment) {
-    return isBuckBuilding() ? null : new BuildExecutionState(this, getProject());
+    return isBuckBuilding() ? null : new BuckBuildExecutionState(this, getProject());
   }
 
   @Override

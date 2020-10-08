@@ -16,4 +16,5 @@
 
 package com.facebook.buck.intellij.ideabuck.configurations;
 
-public class BuildConfigurationEditor extends AbstractConfigurationEditor<BuildConfiguration> {}
+public class BuckBuildConfigurationEditor
+    extends AbstractConfigurationEditor<BuckBuildConfiguration> {}
