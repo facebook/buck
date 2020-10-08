@@ -181,4 +181,32 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileExists("small_with_no_resource_deps/manifest/AndroidManifest.xml");
     zipInspector.assertFileExists("small_with_no_resource_deps/resources.pb");
   }
+
+  @Test
+  public void testAppBundleWithMultipleNativeModules() throws IOException {
+    String target = "//apps/sample:app_modular_debug_multiple_native";
+    ProcessResult result = workspace.runBuckCommand("build", target);
+    result.assertSuccess();
+
+    Path aab =
+      workspace.getPath(
+        BuildTargetPaths.getGenPath(
+          filesystem, BuildTargetFactory.newInstance(target), "%s.signed.aab"));
+
+    ZipInspector zipInspector = new ZipInspector(aab);
+    zipInspector.assertFileExists("base/dex/classes.dex");
+    zipInspector.assertFileExists("base/dex/classes2.dex");
+    zipInspector.assertFileExists("native1/assets.pb");
+    zipInspector.assertFileExists("native1/manifest/AndroidManifest.xml");
+    zipInspector.assertFileExists("native1/assets/native1/libs.xzs");
+
+    zipInspector.assertFileExists("native2/assets.pb");
+    zipInspector.assertFileExists("native2/manifest/AndroidManifest.xml");
+    zipInspector.assertFileExists("native1/assets/native1/libs.xzs");
+
+    zipInspector.assertFileDoesNotExist("native2/assets/native1/libs.xzs");
+    zipInspector.assertFileDoesNotExist("native1/assets/native2/libs.xzs");
+    zipInspector.assertFileDoesNotExist("base/assets/native2/libs.xzs");
+    zipInspector.assertFileDoesNotExist("base/assets/native1/libs.xzs");
+  }
 }

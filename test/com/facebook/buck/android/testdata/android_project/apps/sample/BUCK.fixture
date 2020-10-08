@@ -45,6 +45,56 @@ android_bundle(
     ],
 )
 
+android_binary(
+    name = "app_binary_debug_multiple_native",
+    application_module_configs = {
+        "native1": ["//native/cxx:foo1"],
+        "native2": ["//native/cxx:bar"],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    module_manifest_skeleton = "NativeModuleManifest.xml",
+    package_type = "debug",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base_with_lib_dep",
+        "//res/com/sample/base:base",
+        "//native/cxx:foo1",
+        "//native/cxx:bar",
+    ],
+)
+
+
+
+android_bundle(
+    name = "app_modular_debug_multiple_native",
+    application_module_configs = {
+        "native1": ["//native/cxx:foo1"],
+        "native2": ["//native/cxx:bar"],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    module_manifest_skeleton = "NativeModuleManifest.xml",
+    package_type = "debug",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base_with_lib_dep",
+        "//res/com/sample/base:base",
+        "//native/cxx:foo1",
+        "//native/cxx:bar",
+    ],
+)
+
 android_bundle(
     name = "app_bundle_1",
     bundle_config_file = "bundle-config.json",

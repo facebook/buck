@@ -228,7 +228,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           context,
           mapOfModuleToSecondaryDexSourcePaths,
           baseModuleInfo,
-          modulesInfo);
+          modulesInfo,
+          isApk);
     }
 
     // If non-english strings are to be stored as assets, pass them to ApkBuilder.
@@ -408,7 +409,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       BuildContext context,
       ImmutableMap<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths,
       ImmutableModuleInfo.Builder baseModuleInfo,
-      ImmutableSet.Builder<ModuleInfo> modulesInfo) {
+      ImmutableSet.Builder<ModuleInfo> modulesInfo,
+      boolean isApk) {
     boolean addThisModule = false;
     Map<Path, String> assetDirectoriesForThisModule = new HashMap<>();
     Set<Path> nativeLibraryDirectoriesForThisModule = new HashSet<>();
@@ -450,7 +452,12 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     if (shouldPackageAssetLibraries) {
       addThisModule = true;
       addNativeLibraryAsAssetDirectory(
-          module, context, nativeLibraryAsAssetDirectories, assetDirectoriesForThisModule, steps);
+          module,
+          context,
+          nativeLibraryAsAssetDirectories,
+          assetDirectoriesForThisModule,
+          isApk,
+          steps);
     }
 
     if (moduleResourceApkPaths.get(module) != null) {
@@ -545,11 +552,18 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       BuildContext context,
       ImmutableSet.Builder<Path> nativeLibraryAsAssetDirectories,
       Map<Path, String> assetDirectoriesForThisModule,
+      boolean isApk,
       ImmutableList.Builder<Step> steps) {
     Preconditions.checkState(
         ExopackageMode.enabledForModules(exopackageModes)
             || !ExopackageMode.enabledForResources(exopackageModes));
+    // This is a module that is being packed into an AAB - we only want to put the native libraries
+    // in the specific module directory not in the generic assets directory
+    boolean isModuleInBundle = !(module.isRootModule() || isApk);
     RelPath pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
+    if (isModuleInBundle) {
+      pathForNativeLibsAsAssets = pathForNativeLibsAsAssets.resolveRel(module.getName());
+    }
 
     RelPath libSubdirectory =
         pathForNativeLibsAsAssets
@@ -563,7 +577,9 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         module.isRootModule() ? "metadata.txt" : "libs.txt",
         module);
 
-    nativeLibraryAsAssetDirectories.add(pathForNativeLibsAsAssets.getPath());
+    if (!isModuleInBundle) {
+      nativeLibraryAsAssetDirectories.add(pathForNativeLibsAsAssets.getPath());
+    }
 
     assetDirectoriesForThisModule.put(pathForNativeLibsAsAssets.getPath(), "");
   }
