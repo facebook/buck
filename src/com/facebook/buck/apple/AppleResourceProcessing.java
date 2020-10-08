@@ -200,7 +200,8 @@ public class AppleResourceProcessing {
       Path dirRoot,
       ProjectFilesystem projectFilesystem,
       Map<RelPath, String> oldContentHashesSupplier,
-      Map<RelPath, String> newContentHashesSupplier) {
+      Map<RelPath, String> newContentHashesSupplier)
+      throws IOException {
 
     ImmutableSet.Builder<Path> pathsToDeleteBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<AppleBundleComponentCopySpec> copySpecsBuilder = ImmutableSet.builder();
@@ -218,9 +219,12 @@ public class AppleResourceProcessing {
           pathsToDeleteBuilder,
           copySpecsBuilder);
     }
-
-    deleteRedundantBundlePartsAndCopyNewComponents(
-        pathsToDeleteBuilder.build(), copySpecsBuilder.build(), projectFilesystem, dirRoot);
+    for (Path pathToDelete : pathsToDeleteBuilder.build()) {
+      projectFilesystem.deleteRecursivelyIfExists(pathToDelete);
+    }
+    for (AppleBundleComponentCopySpec spec : copySpecsBuilder.build()) {
+      spec.performCopy(projectFilesystem, dirRoot);
+    }
   }
 
   private static void prepareCopyFileToBundleWithIncrementalSupport(
@@ -245,35 +249,6 @@ public class AppleResourceProcessing {
     }
     pathsToDeleteBuilder.add(dirRoot.resolve(toPathRelativeToBundleRoot.getPath()));
     copySpecsBuilder.add(copySpec);
-  }
-
-  private static void deleteRedundantBundlePartsAndCopyNewComponents(
-      ImmutableSet<Path> pathsToDelete,
-      ImmutableSet<AppleBundleComponentCopySpec> copySpecs,
-      ProjectFilesystem projectFilesystem,
-      Path dirRoot) {
-
-    pathsToDelete
-        .parallelStream()
-        .forEach(
-            path -> {
-              try {
-                projectFilesystem.deleteRecursivelyIfExists(path);
-              } catch (IOException exception) {
-                throw new RuntimeException(exception.toString());
-              }
-            });
-
-    copySpecs
-        .parallelStream()
-        .forEach(
-            spec -> {
-              try {
-                spec.performCopy(projectFilesystem, dirRoot);
-              } catch (IOException exception) {
-                throw new RuntimeException(exception.toString());
-              }
-            });
   }
 
   private static void addStepsToCopyProcessedResources(
@@ -468,12 +443,13 @@ public class AppleResourceProcessing {
                     pathsToDeleteBuilder,
                     copySpecsBuilder);
               }
+              for (Path pathToDelete : pathsToDeleteBuilder.build()) {
+                projectFilesystem.deleteRecursivelyIfExists(pathToDelete);
+              }
+              for (AppleBundleComponentCopySpec spec : copySpecsBuilder.build()) {
+                spec.performCopy(projectFilesystem, dirRoot);
+              }
 
-              deleteRedundantBundlePartsAndCopyNewComponents(
-                  pathsToDeleteBuilder.build(),
-                  copySpecsBuilder.build(),
-                  projectFilesystem,
-                  dirRoot);
             } else {
               for (AppleBundleComponentCopySpec spec : copySpecs) {
                 spec.performCopy(projectFilesystem, dirRoot);
