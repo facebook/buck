@@ -82,6 +82,7 @@ def _is_eden(dirpath):
 
 def _find_eden_root(dirpath):
     if sys.platform == "win32":
+        dirpath = dirpath if not os.path.islink(dirpath) else os.readlink(dirpath)
         dirpath = os.path.abspath(dirpath)
 
         while True:
