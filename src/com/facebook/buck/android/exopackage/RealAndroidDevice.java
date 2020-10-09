@@ -336,7 +336,7 @@ public class RealAndroidDevice implements AndroidDevice {
 
   @VisibleForTesting
   @Nullable
-  public String deviceStartActivity(String activityToRun, boolean waitForDebugger) {
+  public String deviceStartIntent(AndroidIntent intent) {
     try {
       ErrorParsingReceiver receiver =
           new ErrorParsingReceiver() {
@@ -350,16 +350,8 @@ public class RealAndroidDevice implements AndroidDevice {
                   : null;
             }
           };
-      String waitForDebuggerFlag = waitForDebugger ? "-D" : "";
       device.executeShellCommand(
-          //  0x10200000 is FLAG_ACTIVITY_RESET_TASK_IF_NEEDED | FLAG_ACTIVITY_NEW_TASK; the
-          // constant values are public ABI.  This way of invoking "am start" makes buck install -r
-          // act just like the launcher, avoiding activity duplication on subsequent
-          // launcher starts.
-          String.format(
-              "am start -f 0x10200000 -a android.intent.action.MAIN "
-                  + "-c android.intent.category.LAUNCHER -n %s %s",
-              activityToRun, waitForDebuggerFlag),
+          AndroidIntent.getAmStartCommand(intent),
           receiver,
           INSTALL_TIMEOUT,
           TimeUnit.MILLISECONDS);

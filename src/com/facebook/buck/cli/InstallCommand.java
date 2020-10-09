@@ -122,6 +122,8 @@ public class InstallCommand extends BuildCommand {
   @VisibleForTesting static final String ACTIVITY_SHORT_ARG = "-a";
   @VisibleForTesting static final String UNINSTALL_LONG_ARG = "--uninstall";
   @VisibleForTesting static final String UNINSTALL_SHORT_ARG = "-u";
+  @VisibleForTesting static final String INTENT_URI_LONG_ARG = "--intent-uri";
+  @VisibleForTesting static final String INTENT_URI_SHORT_ARG = "-i";
 
   @Option(
       name = UNINSTALL_LONG_ARG,
@@ -169,6 +171,14 @@ public class InstallCommand extends BuildCommand {
   @Nullable
   private String activity = null;
 
+  @Option(
+      name = INTENT_URI_LONG_ARG,
+      aliases = {INTENT_URI_SHORT_ARG},
+      metaVar = "<pkg/intent_uri>",
+      usage = "Intent URI to launch e.g. fb://profile. Implies -r.")
+  @Nullable
+  private String intentUri = null;
+
   public AdbOptions adbOptions(BuckConfig buckConfig) {
     return adbOptions.getAdbOptions(buckConfig);
   }
@@ -186,7 +196,7 @@ public class InstallCommand extends BuildCommand {
   }
 
   public boolean shouldStartActivity() {
-    return (activity != null) || run;
+    return activity != null || intentUri != null || run;
   }
 
   public boolean shouldInstallViaSd() {
@@ -457,7 +467,7 @@ public class InstallCommand extends BuildCommand {
     if (shouldStartActivity()) {
       try {
         adbHelper.startActivity(
-            pathResolver, hasInstallableApk, getActivityToStart(), waitForDebugger);
+            pathResolver, hasInstallableApk, getActivityToStart(), intentUri, waitForDebugger);
       } catch (HumanReadableException hre) {
         LOG.warn(hre, "Unable to start activity");
         params.getConsole().printBuildFailure(hre.getMessage());

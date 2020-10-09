@@ -86,13 +86,17 @@ public class RealAndroidDeviceTest {
     TestDevice device =
         createDeviceForShellCommandTest(
             "Starting: Intent { cmp=com.example.ExceptionErrorActivity }\r\n");
-    assertNull(createAndroidDevice(device).deviceStartActivity("com.foo/.Activity", false));
+    assertNull(
+        createAndroidDevice(device)
+            .deviceStartIntent(createActivityIntent("com.foo/.Activity", false)));
   }
 
   @Test
   public void testDeviceStartActivityAmDoesntExist() {
     TestDevice device = createDeviceForShellCommandTest("sh: am: not found\r\n");
-    assertNotNull(createAndroidDevice(device).deviceStartActivity("com.foo/.Activity", false));
+    assertNotNull(
+        createAndroidDevice(device)
+            .deviceStartIntent(createActivityIntent("com.foo/.Activity", false)));
   }
 
   @Test
@@ -103,7 +107,9 @@ public class RealAndroidDeviceTest {
             "Starting: Intent { cmp=com.foo/.Activiqy }\r\n" + "Error type 3\r\n" + errorLine);
     assertEquals(
         errorLine.trim(),
-        createAndroidDevice(device).deviceStartActivity("com.foo/.Activiy", false).trim());
+        createAndroidDevice(device)
+            .deviceStartIntent(createActivityIntent("com.foo/.Activity", false))
+            .trim());
   }
 
   @Test
@@ -123,7 +129,9 @@ public class RealAndroidDeviceTest {
                 "  at dalvik.system.NativeStart.main(Native Method)\r\n");
     assertEquals(
         errorLine.trim(),
-        createAndroidDevice(device).deviceStartActivity("com.foo/.Activity", false).trim());
+        createAndroidDevice(device)
+            .deviceStartIntent(createActivityIntent("com.foo/.Activity", false))
+            .trim());
   }
 
   /** Verify that if failure reason is returned, installation is marked as failed. */
@@ -175,7 +183,9 @@ public class RealAndroidDeviceTest {
             runDeviceCommand.set(command);
           }
         };
-    assertNull(createAndroidDevice(device).deviceStartActivity("com.foo/.Activity", true));
+    assertNull(
+        createAndroidDevice(device)
+            .deviceStartIntent(createActivityIntent("com.foo/.Activity", true)));
     assertTrue(runDeviceCommand.get().contains(" -D"));
   }
 
@@ -193,8 +203,48 @@ public class RealAndroidDeviceTest {
             runDeviceCommand.set(command);
           }
         };
-    assertNull(createAndroidDevice(device).deviceStartActivity("com.foo/.Activity", false));
+    assertNull(
+        createAndroidDevice(device)
+            .deviceStartIntent(createActivityIntent("com.foo/.Activity", false)));
     assertFalse(runDeviceCommand.get().contains(" -D"));
+  }
+
+  @Test
+  public void testDeviceStartIntentWithURI() {
+    AtomicReference<String> runDeviceCommand = new AtomicReference<>();
+    TestDevice device =
+        new TestDevice() {
+          @Override
+          public void executeShellCommand(
+              String command,
+              IShellOutputReceiver receiver,
+              long maxTimeToOutputResponse,
+              TimeUnit maxTimeUnits) {
+            runDeviceCommand.set(command);
+          }
+        };
+    assertNull(createAndroidDevice(device).deviceStartIntent(craeteURIIntent("foo://bar", false)));
+    assertFalse(runDeviceCommand.get().contains(" -D"));
+    assertTrue(runDeviceCommand.get().contains(" -d foo://bar"));
+  }
+
+  @Test
+  public void testDeviceStartIntentWithURIWaitForDebugger() {
+    AtomicReference<String> runDeviceCommand = new AtomicReference<>();
+    TestDevice device =
+        new TestDevice() {
+          @Override
+          public void executeShellCommand(
+              String command,
+              IShellOutputReceiver receiver,
+              long maxTimeToOutputResponse,
+              TimeUnit maxTimeUnits) {
+            runDeviceCommand.set(command);
+          }
+        };
+    assertNull(createAndroidDevice(device).deviceStartIntent(craeteURIIntent("foo://bar", true)));
+    assertTrue(runDeviceCommand.get().contains(" -D"));
+    assertTrue(runDeviceCommand.get().contains(" -d foo://bar"));
   }
 
   @Test
@@ -215,5 +265,19 @@ public class RealAndroidDeviceTest {
     assertTrue(command.contains("com.foo.ACTION"));
     assertTrue(command.contains("--es extra1"));
     assertTrue(command.contains("value1"));
+  }
+
+  private static AndroidIntent createActivityIntent(String activity, boolean waitForDebugger) {
+    return new AndroidIntent(
+        activity,
+        AndroidIntent.ACTION_MAIN,
+        AndroidIntent.CATEGORY_LAUNCHER,
+        null,
+        null,
+        waitForDebugger);
+  }
+
+  private static AndroidIntent craeteURIIntent(String uri, boolean waitForDebugger) {
+    return new AndroidIntent(null, AndroidIntent.ACTION_VIEW, null, uri, null, waitForDebugger);
   }
 }

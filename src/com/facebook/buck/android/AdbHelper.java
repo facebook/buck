@@ -25,6 +25,7 @@ import com.android.ddmlib.IDevice;
 import com.facebook.buck.android.device.TargetDeviceOptions;
 import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
+import com.facebook.buck.android.exopackage.AndroidIntent;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
@@ -398,6 +399,7 @@ public class AdbHelper implements AndroidDevicesHelper {
       SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       @Nullable String activity,
+      @Nullable String intentUri,
       boolean waitForDebugger)
       throws IOException {
 
@@ -406,36 +408,57 @@ public class AdbHelper implements AndroidDevicesHelper {
         pathResolver.getAbsolutePath(hasInstallableApk.getApkInfo().getManifestPath());
     AndroidManifestReader reader = DefaultAndroidManifestReader.forPath(pathToManifest.getPath());
 
-    if (activity == null) {
-      // Get list of activities that show up in the launcher.
-      List<String> launcherActivities = reader.getLauncherActivities();
+    final AndroidIntent intent;
+    final String intentTargetNiceName;
+    if (intentUri != null) {
+      intent =
+          new AndroidIntent(
+              null, AndroidIntent.ACTION_VIEW, null, intentUri, null, waitForDebugger);
+      intentTargetNiceName = intentUri;
+    } else {
+      if (activity == null) {
+        // Get list of activities that show up in the launcher.
+        List<String> launcherActivities = reader.getLauncherActivities();
 
-      // Sanity check.
-      if (launcherActivities.isEmpty()) {
-        throw new HumanReadableException("No launchable activities found.");
-      } else if (launcherActivities.size() > 1) {
-        throw new HumanReadableException("Default activity is ambiguous.");
+        // Sanity check.
+        if (launcherActivities.isEmpty()) {
+          throw new HumanReadableException("No launchable activities found.");
+        } else if (launcherActivities.size() > 1) {
+          throw new HumanReadableException("Default activity is ambiguous.");
+        }
+
+        // Construct a component for the '-n' argument of 'adb shell am start'.
+        activity = reader.getPackage() + "/" + launcherActivities.get(0);
+      } else if (!activity.contains("/")) {
+        // If no package name was provided, assume the one in the manifest.
+        activity = reader.getPackage() + "/" + activity;
       }
 
-      // Construct a component for the '-n' argument of 'adb shell am start'.
-      activity = reader.getPackage() + "/" + launcherActivities.get(0);
-    } else if (!activity.contains("/")) {
-      // If no package name was provided, assume the one in the manifest.
-      activity = reader.getPackage() + "/" + activity;
+      //  0x10200000 is FLAG_ACTIVITY_RESET_TASK_IF_NEEDED | FLAG_ACTIVITY_NEW_TASK; the
+      // constant values are public ABI.  This way of invoking "am start" makes buck install -r
+      // act just like the launcher, avoiding activity duplication on subsequent
+      // launcher starts.
+      intent =
+          new AndroidIntent(
+              activity,
+              AndroidIntent.ACTION_MAIN,
+              AndroidIntent.CATEGORY_LAUNCHER,
+              null,
+              "0x10200000",
+              waitForDebugger);
+      intentTargetNiceName = activity;
     }
 
-    String activityToRun = activity;
-
-    printMessage(String.format("Starting activity %s...", activityToRun));
+    printMessage(String.format("Starting activity %s...", intentTargetNiceName));
 
     StartActivityEvent.Started started =
-        StartActivityEvent.started(hasInstallableApk.getBuildTarget(), activityToRun);
+        StartActivityEvent.started(hasInstallableApk.getBuildTarget(), intentTargetNiceName);
     getBuckEventBus().post(started);
     try {
       adbCallOrThrow(
           "start activity",
           (device) -> {
-            ((RealAndroidDevice) device).deviceStartActivity(activityToRun, waitForDebugger);
+            ((RealAndroidDevice) device).deviceStartIntent(intent);
             return true;
           },
           false);

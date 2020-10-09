@@ -82,6 +82,7 @@ public interface AndroidDevicesHelper extends Closeable {
       SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       @Nullable String activity,
+      @Nullable String intentUri,
       boolean waitForDebugger)
       throws IOException;
 }
