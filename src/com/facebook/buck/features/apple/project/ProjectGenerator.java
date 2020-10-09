@@ -4880,7 +4880,7 @@ public class ProjectGenerator {
   }
 
   /**
-   * Determines if a target node is for watchOS2 application
+   * Determines if a target node is for AppClip application
    *
    * @param targetNode A target node
    * @return If the given target node is for an AppClip application
