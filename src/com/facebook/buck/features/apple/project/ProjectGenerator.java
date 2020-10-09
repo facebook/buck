@@ -3394,6 +3394,11 @@ public class ProjectGenerator {
                 CopyFilePhaseDestinationSpec.of(
                     PBXCopyFilesBuildPhase.Destination.PRODUCTS,
                     Optional.of("$(CONTENTS_FOLDER_PATH)/Watch")));
+          } else if (isAppClipApplicationNode(targetNode)) {
+            return Optional.of(
+                CopyFilePhaseDestinationSpec.of(
+                  PBXCopyFilesBuildPhase.Destination.APPCLIPS,
+                  Optional.of("$(CONTENTS_FOLDER_PATH)/AppClips")));
           } else {
             return Optional.of(
                 CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.EXECUTABLES));
@@ -4710,6 +4715,9 @@ public class ProjectGenerator {
             return productType.get();
           }
         } else if (extension == AppleBundleExtension.FRAMEWORK) {
+          if (targetNode.getConstructorArg().getIsAppClip().orElse(false)) {
+            return ProductTypes.APP_CLIP;
+          }
           return ProductTypes.STATIC_FRAMEWORK;
         }
       } else if (binaryNode.getDescription() instanceof AppleBinaryDescription) {
@@ -4867,6 +4875,21 @@ public class ProjectGenerator {
       AppleBundleDescriptionArg arg = (AppleBundleDescriptionArg) targetNode.getConstructorArg();
       return arg.getXcodeProductType()
           .equals(Optional.of(ProductTypes.WATCH_APPLICATION.getIdentifier()));
+    }
+    return false;
+  }
+
+  /**
+   * Determines if a target node is for watchOS2 application
+   *
+   * @param targetNode A target node
+   * @return If the given target node is for an AppClip application
+   */
+  private static boolean isAppClipApplicationNode(TargetNode<?> targetNode) {
+    if (targetNode.getDescription() instanceof AppleBundleDescription) {
+      AppleBundleDescriptionArg arg = (AppleBundleDescriptionArg) targetNode.getConstructorArg();
+      return arg.getXcodeProductType()
+        .equals(Optional.of(ProductTypes.APP_CLIP.getIdentifier()));
     }
     return false;
   }

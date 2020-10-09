@@ -374,7 +374,8 @@ public class AppleTestDescription
                         swiftBuckConfig.getUseLipoThin(),
                         cxxBuckConfig.shouldCacheStrip(),
                         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
-                        Predicates.alwaysTrue())));
+                        Predicates.alwaysTrue(),
+                        Optional.empty())));
 
     Optional<SourcePath> xctool =
         getXctool(projectFilesystem, params, targetConfiguration, graphBuilder);

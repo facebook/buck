@@ -190,6 +190,7 @@ public class AppleBundle extends AbstractBuildRule
   private final Duration codesignTimeout;
   private final BuildRuleParams buildRuleParams;
   private BuildableSupport.DepsSupplier depsSupplier;
+  private final Optional<Boolean> isAppClip;
 
   AppleBundle(
       BuildTarget buildTarget,
@@ -224,7 +225,8 @@ public class AppleBundle extends AbstractBuildRule
       Duration codesignTimeout,
       boolean copySwiftStdlibToFrameworks,
       boolean useLipoThin,
-      boolean useEntitlementsWhenAdhocCodeSigning) {
+      boolean useEntitlementsWhenAdhocCodeSigning,
+      Optional<Boolean> isAppClip) {
     super(buildTarget, projectFilesystem);
     this.buildRuleParams = params;
     this.extension =
@@ -301,6 +303,7 @@ public class AppleBundle extends AbstractBuildRule
     this.useLipoThin = useLipoThin;
     this.useEntitlementsWhenAdhocCodeSigning = useEntitlementsWhenAdhocCodeSigning;
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
+    this.isAppClip = isAppClip;
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -989,6 +992,10 @@ public class AppleBundle extends AbstractBuildRule
     }
 
     return keys.build();
+  }
+
+  public Boolean getIsAppClip() {
+    return isAppClip.orElse(false);
   }
 
   @Override
