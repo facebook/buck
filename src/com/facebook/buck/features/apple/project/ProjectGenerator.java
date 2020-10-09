@@ -4715,13 +4715,13 @@ public class ProjectGenerator {
             return productType.get();
           }
         } else if (extension == AppleBundleExtension.FRAMEWORK) {
-          if (targetNode.getConstructorArg().getIsAppClip().orElse(false)) {
-            return ProductTypes.APP_CLIP;
-          }
           return ProductTypes.STATIC_FRAMEWORK;
         }
       } else if (binaryNode.getDescription() instanceof AppleBinaryDescription) {
         if (extension == AppleBundleExtension.APP) {
+          if (targetNode.getConstructorArg().getIsAppClip().orElse(false)) {
+            return ProductTypes.APP_CLIP;
+          }
           return ProductTypes.APPLICATION;
         }
       } else if (binaryNode.getDescription() instanceof AppleTestDescription) {
