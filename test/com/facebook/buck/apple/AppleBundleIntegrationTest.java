@@ -1177,11 +1177,10 @@ public class AppleBundleIntegrationTest {
         BuildTargetPaths.getGenPath(
           filesystem,
           target.withAppendedFlavors(
-            AppleDebugFormat.NONE.getFlavor(),
+            AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
           "%s")
           .resolve(target.getShortName() + ".app"));
-
     assertTrue(Files.exists(appPath.resolve("ExampleApp")));
     assertTrue(Files.exists(appPath.resolve("Info.plist")));
 
