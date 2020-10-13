@@ -22,6 +22,8 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -41,7 +43,6 @@ public class FakeWorkerProcess extends WorkerProcess {
         Paths.get("tmp").toAbsolutePath().normalize());
     this.jobArgsToJobResultMap = jobArgsToJobResultMap;
     this.isAlive = false;
-    this.setProtocol(new FakeWorkerProcessProtocol.FakeCommandSender());
   }
 
   @Override
@@ -55,13 +56,15 @@ public class FakeWorkerProcess extends WorkerProcess {
   }
 
   @Override
-  public synchronized WorkerJobResult submitAndWaitForJob(String jobArgs) {
+  public synchronized ListenableFuture<WorkerJobResult> submitJob(String jobArgs) {
     WorkerJobResult result = this.jobArgsToJobResultMap.get(jobArgs);
     if (result == null) {
       throw new IllegalArgumentException(
           String.format("No fake WorkerJobResult found for job arguments '%s'", jobArgs));
     }
-    return result;
+    SettableFuture<WorkerJobResult> out = SettableFuture.create();
+    out.set(result);
+    return out;
   }
 
   @Override

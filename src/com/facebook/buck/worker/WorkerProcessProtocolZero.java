@@ -129,7 +129,7 @@ public class WorkerProcessProtocolZero {
         }
     */
     @Override
-    public int receiveCommandResponse(int messageID) throws IOException {
+    public WorkerProcessProtocol.CommandResponse receiveNextCommandResponse() throws IOException {
       int id = -1;
       int exitCode = -1;
       String type = "";
@@ -157,12 +157,6 @@ public class WorkerProcessProtocolZero {
             getStdErrorOutput(stdErr));
       }
 
-      if (id != messageID) {
-        throw new HumanReadableException(
-            String.format(
-                "Expected response's \"id\" value to be " + "\"%d\", got \"%d\" instead.",
-                messageID, id));
-      }
       if (!type.equals(TYPE_RESULT) && !type.equals(TYPE_ERROR)) {
         throw new HumanReadableException(
             String.format(
@@ -170,7 +164,7 @@ public class WorkerProcessProtocolZero {
                     + "to be one of [\"%s\",\"%s\"], got \"%s\" instead.",
                 TYPE_RESULT, TYPE_ERROR, type));
       }
-      return exitCode;
+      return new WorkerProcessProtocol.CommandResponse(id, exitCode);
     }
 
     @Override

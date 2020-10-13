@@ -28,13 +28,14 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.worker.WorkerJobParams;
 import com.facebook.buck.worker.WorkerJobResult;
 import com.facebook.buck.worker.WorkerProcessPool;
-import com.facebook.buck.worker.WorkerProcessPool.BorrowedWorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 public class WorkerShellStep implements Step {
@@ -78,9 +79,14 @@ public class WorkerShellStep implements Step {
     WorkerJobParams paramsToUse = getWorkerJobParamsToUse(context.getPlatform());
     WorkerProcessPool pool =
         factory.getWorkerProcessPool(context, paramsToUse.getWorkerProcessParams());
-    WorkerJobResult result;
-    try (BorrowedWorkerProcess process = pool.borrowWorkerProcess()) {
-      result = process.submitAndWaitForJob(getExpandedJobArgs(context));
+    WorkerJobResult result = null;
+    try {
+      result = pool.submitJob(getExpandedJobArgs(context)).get();
+    } catch (ExecutionException e) {
+      if (e.getCause() != null) {
+        Throwables.throwIfUnchecked(e.getCause());
+      }
+      throw new RuntimeException(e);
     }
 
     Verbosity verbosity = context.getVerbosity();

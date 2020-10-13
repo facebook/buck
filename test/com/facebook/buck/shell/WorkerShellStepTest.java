@@ -41,6 +41,7 @@ import com.facebook.buck.worker.WorkerProcessIdentity;
 import com.facebook.buck.worker.WorkerProcessParams;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
+import com.facebook.buck.worker.WorkerProcessPoolSync;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -103,7 +104,7 @@ public class WorkerShellStepTest {
       ImmutableMap<String, String> startupEnv,
       String jobArgs,
       int maxWorkers) {
-    return createJobParams(startupCommand, startupEnv, jobArgs, maxWorkers, null, null);
+    return createJobParams(startupCommand, startupEnv, jobArgs, maxWorkers, false, null, null);
   }
 
   private WorkerJobParams createJobParams(
@@ -111,6 +112,7 @@ public class WorkerShellStepTest {
       ImmutableMap<String, String> startupEnv,
       String jobArgs,
       int maxWorkers,
+      boolean isAsync,
       @Nullable String persistentWorkerKey,
       @Nullable HashCode workerHash) {
     return WorkerJobParams.of(
@@ -120,6 +122,7 @@ public class WorkerShellStepTest {
             startupCommand,
             startupEnv,
             maxWorkers,
+            isAsync,
             persistentWorkerKey == null || workerHash == null
                 ? Optional.empty()
                 : Optional.of(WorkerProcessIdentity.of(persistentWorkerKey, workerHash))));
@@ -139,18 +142,18 @@ public class WorkerShellStepTest {
   private ExecutionContext createExecutionContextWith(
       ImmutableMap<String, WorkerJobResult> jobArgs, int poolCapacity) {
     WorkerProcessPool workerProcessPool =
-        new WorkerProcessPool(
+        new WorkerProcessPoolSync(
             poolCapacity,
-            Hashing.sha1().hashString(fakeWorkerStartupCommand, Charsets.UTF_8),
+            Hashing.sha256().hashString(fakeWorkerStartupCommand, Charsets.UTF_8),
             () -> new FakeWorkerProcess(jobArgs));
 
     ConcurrentHashMap<String, WorkerProcessPool> workerProcessMap = new ConcurrentHashMap<>();
     workerProcessMap.put(fakeWorkerStartupCommand, workerProcessPool);
 
     WorkerProcessPool persistentWorkerProcessPool =
-        new WorkerProcessPool(
+        new WorkerProcessPoolSync(
             poolCapacity,
-            Hashing.sha1().hashString(fakePersistentWorkerStartupCommand, Charsets.UTF_8),
+            Hashing.sha256().hashString(fakePersistentWorkerStartupCommand, Charsets.UTF_8),
             () -> new FakeWorkerProcess(jobArgs));
     ConcurrentHashMap<String, WorkerProcessPool> persistentWorkerProcessMap =
         new ConcurrentHashMap<>();
@@ -282,8 +285,9 @@ public class WorkerShellStepTest {
                 ImmutableMap.of(),
                 "myJobArgs",
                 1,
+                false,
                 persistentWorkerKey,
-                Hashing.sha1().hashString(fakePersistentWorkerStartupCommand, Charsets.UTF_8)),
+                Hashing.sha256().hashString(fakePersistentWorkerStartupCommand, Charsets.UTF_8)),
             null,
             null);
 
@@ -499,12 +503,47 @@ public class WorkerShellStepTest {
     assertThat(consoleEvent.getLevel(), Matchers.is(Level.WARNING));
     assertThat(
         consoleEvent.getMessage(),
-        Matchers.is(
-            String.format(
-                "There are two 'worker_tool' targets declared with the same command (%s), but different "
-                    + "'max_worker' settings (%d and %d). Only the first capacity is applied. Consolidate "
-                    + "these workers to avoid this warning.",
-                fakeWorkerStartupCommand, existingPoolSize, stepPoolSize)));
+        Matchers.allOf(
+            Matchers.containsString("max_worker"),
+            Matchers.containsString(fakeWorkerStartupCommand),
+            Matchers.containsString(String.format("%d and %d", existingPoolSize, stepPoolSize))));
+  }
+
+  @Test
+  public void testWarningIsPrintedForAsyncAndNonAsyncPools() throws Exception {
+    int poolSize = 2;
+
+    ExecutionContext context =
+        createExecutionContextWith(
+            ImmutableMap.of("jobArgs", WorkerJobResult.of(0, Optional.of(""), Optional.of(""))),
+            poolSize);
+
+    FakeBuckEventListener listener = new FakeBuckEventListener();
+    context.getBuckEventBus().register(listener);
+
+    WorkerJobParams params =
+        createJobParams(
+            ImmutableList.of(startupCommand, startupArg),
+            ImmutableMap.of(),
+            "jobArgs",
+            poolSize,
+            true,
+            null,
+            null);
+
+    WorkerShellStep step = createWorkerShellStep(params, null, null);
+    step.execute(context);
+
+    BuckEvent firstEvent = listener.getEvents().get(0);
+    assertThat(firstEvent, Matchers.instanceOf(ConsoleEvent.class));
+
+    ConsoleEvent consoleEvent = (ConsoleEvent) firstEvent;
+    assertThat(consoleEvent.getLevel(), Matchers.is(Level.WARNING));
+    assertThat(
+        consoleEvent.getMessage(),
+        Matchers.allOf(
+            Matchers.containsString("solo_async"),
+            Matchers.containsString(fakeWorkerStartupCommand)));
   }
 
   private static class ConcurrentExecution extends Thread {

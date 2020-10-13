@@ -39,6 +39,8 @@ java_immutables_library(
         "WorkerProcess.java",
         "WorkerProcessCommand.java",
         "WorkerProcessPool.java",
+        "WorkerProcessPoolAsync.java",
+        "WorkerProcessPoolSync.java",
         "WorkerProcessProtocol.java",
         "WorkerProcessProtocolZero.java",
     ],

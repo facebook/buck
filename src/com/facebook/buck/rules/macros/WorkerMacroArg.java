@@ -133,6 +133,10 @@ public class WorkerMacroArg extends ProxyArg {
     return workerTool.getMaxWorkers();
   }
 
+  public boolean isAsync() {
+    return workerTool.isAsync();
+  }
+
   public String getJobArgs(SourcePathResolverAdapter pathResolver) {
     return Arg.stringify(arg, pathResolver).trim();
   }
