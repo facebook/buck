@@ -48,6 +48,7 @@ java_test(
         "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/rules/modern/config:config",
         "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/step/buildables:buildables",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//src/com/facebook/buck/util:util",

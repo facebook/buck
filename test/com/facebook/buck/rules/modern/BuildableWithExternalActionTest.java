@@ -31,6 +31,8 @@ import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.step.buildables.BuildableCommandExecutionStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -70,6 +72,22 @@ public class BuildableWithExternalActionTest {
         buildable.getBuildSteps(
             buildContext, projectFilesystem, outputPathResolver, buildCellRelativePathFactory);
     assertThat(steps, Matchers.contains(new FakeStep("test_arg")));
+  }
+
+  @Test
+  public void canGetStepsWithBuildableCommandExecutionStep() {
+    Buildable buildable = new FakeBuildable(true, "test_arg");
+
+    ImmutableList<Step> steps =
+        buildable.getBuildSteps(
+            buildContext, projectFilesystem, outputPathResolver, buildCellRelativePathFactory);
+
+    assertThat(steps, Matchers.hasSize(1));
+    assertThat(steps.get(0), Matchers.instanceOf(BuildableCommandExecutionStep.class));
+
+    BuildableCommandExecutionStep actualStep = (BuildableCommandExecutionStep) steps.get(0);
+    String description = actualStep.getDescription(TestExecutionContext.newInstance());
+    assertThat(description, Matchers.containsString("test_arg"));
   }
 
   private static class FakeBuildable extends BuildableWithExternalAction {

@@ -23,6 +23,7 @@ import com.facebook.buck.external.utils.BuildStepsRetriever;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.buildables.BuildableCommandExecutionStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.collect.ImmutableList;
 
@@ -48,9 +49,9 @@ public abstract class BuildableWithExternalAction implements Buildable {
     BuildableCommand buildableCommand =
         getBuildableCommand(filesystem, outputPathResolver, buildContext);
     if (shouldExecuteInSeparateProcess) {
-      // TODO(irenewchen): Stub! Implement BuildableCommandExecutionStep, which wraps
-      // getBuildableCommand, and return that step here
-      return ImmutableList.of();
+      return ImmutableList.of(
+          new BuildableCommandExecutionStep(
+              getBuildableCommand(filesystem, outputPathResolver, buildContext), filesystem));
     }
     String externalActionClassName = buildableCommand.getExternalActionClass();
     try {
