@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Optional;
@@ -319,6 +320,10 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
     // Avoid reading files if we can determine type from extension
     boolean objectCode = (pathString.endsWith(".a") || pathString.endsWith(".o"));
     if (objectCode) {
+      return false;
+    }
+
+    if (Files.isDirectory(path.getPath())) {
       return false;
     }
 
