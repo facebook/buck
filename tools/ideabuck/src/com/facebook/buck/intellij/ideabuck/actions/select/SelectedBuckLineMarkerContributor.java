@@ -27,7 +27,6 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.BuckDotTrailer;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionTrailer;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckIdentifier;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckStatement;
-import com.facebook.buck.intellij.ideabuck.util.BuckRunParamsCache;
 import com.google.common.collect.ImmutableList;
 import com.intellij.execution.Executor;
 import com.intellij.execution.ProgramRunnerUtil;
@@ -175,20 +174,13 @@ public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor 
     }
 
     private String getAdditionalParams(Project project) {
-      String oldParams = BuckRunParamsCache.getInstance().getParam(target).orElse("");
-      String input =
-          Messages.showInputDialog(
-              project,
-              "Input extra parameters for your Buck run command",
-              "Additional Params",
-              IconLoader.getIcon("/icons/buck_icon.png"),
-              oldParams,
-              null);
-      if (input == null) {
-        return null;
-      }
-      BuckRunParamsCache.getInstance().insertParam(target, input);
-      return input;
+      return Messages.showInputDialog(
+          project,
+          "Input extra parameters for your Buck run command",
+          "Additional Params",
+          IconLoader.getIcon("/icons/buck_icon.png"),
+          "",
+          null);
     }
   }
 }
