@@ -64,6 +64,7 @@ import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -315,6 +316,11 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       }
 
       ImmutableSet<AbsPath> focusedBuildOutputPaths = debugStrategy.getFocusedBuildOutputPaths();
+      Supplier<Boolean> skipScrubbingCheck =
+          () -> {
+            // Skip scrubbing if the executable was not modified, as there's no need to re-scrub
+            return filesystem.exists(skipLinkingPath.getPath());
+          };
 
       Builder<Step> stepsBuilder =
           new Builder<Step>()
@@ -361,7 +367,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                   new FileScrubberStep(
                       filesystem,
                       outputPath.getPath(),
-                      linker.getScrubbers(cellRootMap, focusedBuildOutputPaths)))
+                      linker.getScrubbers(cellRootMap, focusedBuildOutputPaths),
+                      skipScrubbingCheck))
               .addAll(relinkWriteSteps);
       if (linkerMapPath.isPresent()) {
         // In some case (when there are no `dll_export`s eg) an import library is not produced by

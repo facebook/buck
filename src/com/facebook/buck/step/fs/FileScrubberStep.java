@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.function.Supplier;
 
 /** Scrub any non-deterministic meta-data from the given file (e.g. timestamp, UID, GID). */
 public class FileScrubberStep implements Step {
@@ -36,12 +37,22 @@ public class FileScrubberStep implements Step {
   private final ProjectFilesystem filesystem;
   private final Path input;
   private final ImmutableList<FileScrubber> scrubbers;
+  private final Supplier<Boolean> skipScrubbing;
 
   public FileScrubberStep(
-      ProjectFilesystem filesystem, Path input, ImmutableList<FileScrubber> scrubbers) {
+      ProjectFilesystem filesystem,
+      Path input,
+      ImmutableList<FileScrubber> scrubbers,
+      Supplier<Boolean> skipScrubbing) {
     this.filesystem = filesystem;
     this.input = input;
     this.scrubbers = scrubbers;
+    this.skipScrubbing = skipScrubbing;
+  }
+
+  public FileScrubberStep(
+      ProjectFilesystem filesystem, Path input, ImmutableList<FileScrubber> scrubbers) {
+    this(filesystem, input, scrubbers, () -> false /* skip scrubbing */);
   }
 
   private FileChannel readWriteChannel(Path path) throws IOException {
@@ -51,6 +62,10 @@ public class FileScrubberStep implements Step {
   @Override
   public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
+    if (skipScrubbing.get()) {
+      return StepExecutionResults.SUCCESS;
+    }
+
     Path filePath = filesystem.resolve(input);
     try {
       for (FileScrubber scrubber : scrubbers) {
