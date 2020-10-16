@@ -141,8 +141,7 @@ BUCK_LOG_RULEKEY_LINE = re.compile(
 
 
 def buck_build_target(args, cwd, targets, log_as_perftest=True):
-    """Builds a target with buck and returns performance information.
-    """
+    """Builds a target with buck and returns performance information."""
     log("Running buck build %s." % " ".join(targets))
     bucklogging_properties_path = os.path.join(cwd, ".bucklogging.local.properties")
     with open(bucklogging_properties_path, "w") as bucklogging_properties:

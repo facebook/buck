@@ -41,8 +41,8 @@ async def test_build():
         assert list(
             (path_of_cwd / "buck-out").iterdir()
         ), "build should have generated outputs in buck-out"
-        assert "target_file_success" in result.get_stdout()
-        assert result.buck_build_id in result.get_stdout()
+        assert "target_file_success" in result.stdout
+        assert result.buck_build_id in result.stdout
         assert result.is_success()
 
 
@@ -61,12 +61,12 @@ async def test_build_with_flag():
         )
         _create_file(path_of_cwd, "target_file_success", 0)
         # test --show-output flag
-        result = await repo.build("//:target_file_success --show-output").wait()
+        result = await repo.build("//:target_file_success", "--show-output").wait()
         assert result.is_success()
         target_to_output = result.get_target_to_build_output()
         target = next(iter(target_to_output.keys()))
         assert target == "//:target_file_success"
-        assert result.buck_build_id in result.get_stdout()
+        assert result.buck_build_id in result.stdout
         # checks if the buck-out directory was added
         assert "buck-out/gen/" in target_to_output.get(target)
 
@@ -95,7 +95,7 @@ async def test_build_with_multiple_targets_flag():
         # test --show-output flag
         result = await repo.build("//targets/... --show-output").wait()
         assert result.is_success()
-        assert result.buck_build_id in result.get_stdout()
+        assert result.buck_build_id in result.stdout
         target_to_output = result.get_target_to_build_output()
         for target_file in target_files:
             target = f"//targets:{target_file}"
@@ -123,12 +123,12 @@ async def test_build_failed():
         _create_file(path_of_cwd, "target_file_build_failure", 1)
         result = await repo.build("//:target_file_build_failure").wait()
         assert result.is_build_failure()
-        assert result.buck_build_id in result.get_stdout()
+        assert result.buck_build_id in result.stdout
 
         _create_file(path_of_cwd, "target_file_failure", 13)
         result = await repo.build("//:target_file_failure").wait()
         assert result.is_failure()
-        assert result.buck_build_id in result.get_stdout()
+        assert result.buck_build_id in result.stdout
 
 
 @pytest.mark.asyncio
@@ -152,9 +152,9 @@ async def test_build_with_rel_cwd():
         assert list(
             (inner / "buck-out").iterdir()
         ), "build should have generated outputs in buck-out"
-        assert "target_file_success" in result.get_stdout()
+        assert "target_file_success" in result.stdout
         assert result.is_success()
-        assert result.buck_build_id in result.get_stdout()
+        assert result.buck_build_id in result.stdout
 
 
 @pytest.mark.asyncio
@@ -175,10 +175,10 @@ async def test_run():
         assert list(
             (path_of_cwd / "buck-out").iterdir()
         ), "run should have generated outputs in buck-out"
-        assert "run" in result.get_stdout()
-        assert "target_file_success" in result.get_stdout()
+        assert "run" in result.stdout
+        assert "target_file_success" in result.stdout
         assert result.is_success()
-        assert result.buck_build_id in result.get_stdout()
+        assert result.buck_build_id in result.stdout
 
 
 @pytest.mark.asyncio
@@ -199,12 +199,12 @@ async def test_run_failed():
         _create_file(path_of_cwd, "target_file_build_failure", 1)
         result = await repo.run("//:target_file_build_failure").wait()
         assert result.is_success()
-        assert result.buck_build_id in result.get_stdout()
+        assert result.buck_build_id in result.stdout
 
         _create_file(path_of_cwd, "target_file_failure", 13)
         result = await repo.build("//:target_file_failure").wait()
         assert result.is_failure()
-        assert result.buck_build_id in result.get_stdout()
+        assert result.buck_build_id in result.stdout
 
 
 @pytest.mark.asyncio
@@ -229,7 +229,7 @@ async def test_clean():
             path_of_cwd / "buck-out"
         ).exists(), "clean should have deleted outputs in buck-out"
         assert result.get_exit_code() == ExitCode.SUCCESS
-        assert result.buck_build_id in result.get_stdout()
+        assert result.buck_build_id in result.stdout
 
 
 @pytest.mark.asyncio
@@ -257,7 +257,7 @@ async def test_kill():
         ).exists(), "kill should have deleted buck daemon"
 
         assert result.get_exit_code() == ExitCode.SUCCESS
-        assert result.buck_build_id in result.get_stdout()
+        assert result.buck_build_id in result.stdout
 
 
 @pytest.mark.asyncio
@@ -278,15 +278,15 @@ async def test_test_passed():
         assert list(
             (path_of_cwd / "buck-out").iterdir()
         ), "test should have generated outputs in buck-out"
-        assert "target_file_success" in result.get_stdout()
+        assert "target_file_success" in result.stdout
         assert (
             '<tests><test name="target_file_success"><testresult name="test1" status="PASS" type="SUCCESS" /></test></tests>\n'
-            in result.get_stdout()
+            in result.stdout
         )
         assert result.is_success()
         assert result.get_tests()[0].get_name() == "test1"
         assert result.get_success_count() == 1
-        assert result.buck_build_id in result.get_stdout()
+        assert result.buck_build_id in result.stdout
 
 
 @pytest.mark.asyncio
@@ -308,10 +308,10 @@ async def test_test_skipped():
         assert list(
             (path_of_cwd / "buck-out").iterdir()
         ), "test should have generated outputs in buck-out"
-        assert "target_file_skipped" in result.get_stdout()
+        assert "target_file_skipped" in result.stdout
         assert (
             '<tests><test name="target_file_skipped"><testresult name="test1" status="PASS" type="EXCLUDED" /></test></tests>'
-            in result.get_stdout()
+            in result.stdout
         )
         assert result.is_success()
         assert result.get_tests()[0].get_name() == "test1"
@@ -336,20 +336,20 @@ async def test_test_failed():
         _create_file(path_of_cwd, "target_file_test_failure", 32)
         result = await repo.test("//:target_file_test_failure").wait()
         assert result.is_test_failure()
-        assert result.buck_build_id in result.get_stdout()
+        assert result.buck_build_id in result.stdout
 
         _create_file(path_of_cwd, "target_file_failure", 13)
         result = await repo.test("//:target_file_failure").wait()
         assert result.is_failure()
         assert result.get_tests()[0].get_name() == "test1"
         assert result.get_failure_count() == 1
-        assert result.buck_build_id in result.get_stdout()
+        assert result.buck_build_id in result.stdout
 
         # testing failures
         _create_file(path_of_cwd, "target_file_build_failure", 1)
         result = await repo.test("//:target_file_build_failure").wait()
         assert result.is_build_failure()
-        assert result.buck_build_id in result.get_stdout()
+        assert result.buck_build_id in result.stdout
 
 
 @pytest.mark.asyncio

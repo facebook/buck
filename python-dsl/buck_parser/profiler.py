@@ -324,9 +324,9 @@ class Profiler(object):
 
 
 class Trace:
-    """ Trace object represents a single trace along with any children.
-        The object keeps track of description, stats key (used for aggregation)
-        along with relevant timing information.
+    """Trace object represents a single trace along with any children.
+    The object keeps track of description, stats key (used for aggregation)
+    along with relevant timing information.
     """
 
     def __init__(self, description, key=None):
@@ -382,8 +382,8 @@ class Trace:
 
 
 class Tracer:
-    """ Tracer object is a static object used to collect and emit traces.
-        Before start/stop tracer methods can be used, Tracer must be enable()d.
+    """Tracer object is a static object used to collect and emit traces.
+    Before start/stop tracer methods can be used, Tracer must be enable()d.
     """
 
     class _State:
@@ -475,10 +475,10 @@ class Tracer:
 
 @contextlib.contextmanager
 def scoped_trace(trace_description, stats_key=None):
-    """ Creates scoped trace object with the given description.
-        If stats_key is specified, this key is used to produced aggregate
-        statistics for all traces with the same stats_key (e.g IO, CPU, etc)
-        This decorator is a no-op if the tracer is not enabled.
+    """Creates scoped trace object with the given description.
+    If stats_key is specified, this key is used to produced aggregate
+    statistics for all traces with the same stats_key (e.g IO, CPU, etc)
+    This decorator is a no-op if the tracer is not enabled.
     """
 
     trace = (
@@ -494,8 +494,8 @@ def scoped_trace(trace_description, stats_key=None):
 
 
 def traced(description=None, stats_key=None):
-    """ Decorator for tracing entire function
-        This decorator is a no-op if the tracer is not enabled.
+    """Decorator for tracing entire function
+    This decorator is a no-op if the tracer is not enabled.
     """
 
     if description is None:
@@ -513,9 +513,9 @@ def traced(description=None, stats_key=None):
 
 
 def emit_trace(message, *args, **kwargs):
-    """ Emits a single trace message
-        args/kwargs are passed to format() call
-        This decorator is a no-op if the tracer is not enabled.
+    """Emits a single trace message
+    args/kwargs are passed to format() call
+    This decorator is a no-op if the tracer is not enabled.
     """
     if Tracer.is_enabled():
         Tracer.end_trace(Tracer.start_trace(message.format(*args, **kwargs)))

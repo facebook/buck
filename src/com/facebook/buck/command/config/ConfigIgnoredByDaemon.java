@@ -40,6 +40,7 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
     return ImmutableConfigIgnoredByDaemon.ofImpl(delegate);
   }
 
+  // empty value list means that all values under the corresponding section are ignored
   private static ImmutableMap<String, ImmutableSet<String>> getIgnoreFieldsForDaemonRestart() {
     ImmutableMap.Builder<String, ImmutableSet<String>> ignoreFieldsForDaemonRestartBuilder =
         ImmutableMap.builder();
@@ -133,10 +134,14 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
         continue;
       }
 
+      ImmutableSet<String> ignoredFieldNames = ignoredFields.get(sectionName);
+      // if the ignoredFieldNames is mepty we should ignore the full section
+      if (ignoredFieldNames.isEmpty()) {
+        continue;
+      }
+
       // If none of this section's entries are ignored, then add it as-is.
       ImmutableMap<String, String> fields = sectionEnt.getValue();
-      ImmutableSet<String> ignoredFieldNames =
-          ignoredFields.getOrDefault(sectionName, ImmutableSet.of());
       if (Sets.intersection(fields.keySet(), ignoredFieldNames).isEmpty()) {
         filtered.put(sectionEnt);
         continue;

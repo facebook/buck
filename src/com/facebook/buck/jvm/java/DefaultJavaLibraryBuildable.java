@@ -83,7 +83,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
                     new NonHashableSourcePathContainer(
                         Objects.requireNonNull(rule.getSourcePathToOutput())));
 
-    CompilerOutputPaths outputPaths = CompilerOutputPaths.of(buildTarget, filesystem);
+    CompilerOutputPaths outputPaths =
+        CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
 
     RelPath pathToClassHashes = getPathToClassHashes(filesystem);
     this.pathToClassHashesOutputPath = new PublicOutputPath(pathToClassHashes);

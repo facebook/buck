@@ -19,7 +19,7 @@ package com.facebook.buck.intellij.ideabuck.actions.select;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.build.BuckJsonCommandHandler;
-import com.facebook.buck.intellij.ideabuck.configurations.BuckTestConfiguration;
+import com.facebook.buck.intellij.ideabuck.configurations.BuckRunnerAndConfigurationSettingsFactory;
 import com.facebook.buck.intellij.ideabuck.configurations.BuckTestConfigurationType;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.facebook.buck.intellij.ideabuck.notification.BuckNotification;
@@ -31,7 +31,6 @@ import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.impl.RunManagerImpl;
-import com.intellij.execution.impl.RunnerAndConfigurationSettingsImpl;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.project.Project;
@@ -127,14 +126,9 @@ public abstract class AbstractBuckTestAction extends AnAction {
                   BuckTestConfigurationType type = new BuckTestConfigurationType();
                   if (type.getConfigurationFactories().length > 0) {
                     RunManagerImpl runManager = (RunManagerImpl) RunManager.getInstance(project);
-                    RunnerAndConfigurationSettingsImpl runnerAndConfigurationSettings =
-                        (RunnerAndConfigurationSettingsImpl)
-                            runManager.createRunConfiguration(
-                                name, type.getConfigurationFactories()[0]);
-                    BuckTestConfiguration testConfiguration =
-                        (BuckTestConfiguration) runnerAndConfigurationSettings.getConfiguration();
-                    testConfiguration.data.targets = Joiner.on(" ").join(ownersList);
-                    testConfiguration.data.testSelectors = testSelectors;
+                    RunnerAndConfigurationSettings runnerAndConfigurationSettings =
+                        BuckRunnerAndConfigurationSettingsFactory.getBuckTestConfigSettings(
+                            runManager, name, Joiner.on(" ").join(ownersList), "", testSelectors);
                     settingsReference.set(runnerAndConfigurationSettings);
                     runManager.addConfiguration(runnerAndConfigurationSettings, false);
                   }

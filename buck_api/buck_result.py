@@ -64,15 +64,9 @@ class BuckResult:
     """ Represents a Buck process that has finished running """
 
     def __init__(
-        self,
-        process: subprocess.Process,
-        stdout: bytes,
-        stderr: bytes,
-        encoding: str,
-        buck_build_id: str,
+        self, process: subprocess.Process, stdout: str, stderr: str, buck_build_id: str
     ) -> None:
         self.process = process
-        self.encoding = encoding
         self.stdout = stdout
         self.stderr = stderr
         self.buck_build_id = buck_build_id
@@ -93,15 +87,6 @@ class BuckResult:
             return ExitCode(128 - self.process.returncode)
         return ExitCode(self.process.returncode)
 
-    def get_stderr(self) -> str:
-        """ Returns the standard error of the Buck Result instance """
-        return str(self.stderr, self.encoding)
-
-    def get_stdout(self) -> str:
-        """ Returns the standard error that is redirected into standard output
-            of the Buck Result instance """
-        return str(self.stdout, self.encoding)
-
 
 class BuildResult(BuckResult):
     """ Represents a Buck process  of a build command that has finished running """
@@ -109,14 +94,13 @@ class BuildResult(BuckResult):
     def __init__(
         self,
         process: subprocess.Process,
-        stdout: bytes,
-        stderr: bytes,
-        encoding: str,
+        stdout: str,
+        stderr: str,
         buck_build_id: str,
         *argv: str,
     ) -> None:
-        self.args = argv[0]
-        super().__init__(process, stdout, stderr, encoding, buck_build_id)
+        self.args = " ".join(argv)
+        super().__init__(process, stdout, stderr, buck_build_id)
 
     def is_build_failure(self) -> bool:
         """Returns if a Build Result fails because of a build failue only"""
@@ -131,7 +115,7 @@ class BuildResult(BuckResult):
         assert (
             "--show-output" in self.args
         ), "Must add --show-output arg to get build output"
-        show_output = self.get_stdout().splitlines()
+        show_output = self.stdout.splitlines()
         for line in show_output:
             output_mapping = line.split()
             assert len(output_mapping) <= 2, "Output mapping should be less than 2"
@@ -170,13 +154,12 @@ class TestResult(BuckResult):
     def __init__(
         self,
         process: subprocess.Process,
-        stdout: bytes,
-        stderr: bytes,
-        encoding: str,
+        stdout: str,
+        stderr: str,
         buck_build_id: str,
         test_output_file: Path,
     ) -> None:
-        super().__init__(process, stdout, stderr, encoding, buck_build_id)
+        super().__init__(process, stdout, stderr, buck_build_id)
         self.test_root = (
             ET.parse(str(test_output_file)).getroot()
             if test_output_file.exists()

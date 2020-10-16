@@ -1,0 +1,8 @@
+prebuilt_jar(
+    name = "junixsocket",
+    binary_jar = "junixsocket-2.3.2.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = ["PUBLIC"],
+)

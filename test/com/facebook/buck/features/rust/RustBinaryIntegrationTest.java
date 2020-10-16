@@ -1069,7 +1069,7 @@ public class RustBinaryIntegrationTest {
     String binary =
         "buck-out/cells/cell/gen/"
             + BuildTargetPaths.getBasePath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths().shouldIncludeTargetConfigHash(),
                     BuildTargetFactory.newInstance("//:thinguser#binary"),
                     "%s")
                 .resolve("thinguser");

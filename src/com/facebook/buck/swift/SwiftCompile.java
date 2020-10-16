@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -44,6 +45,8 @@ import java.util.Optional;
 
 /** A build rule which compiles one or more Swift sources into a Swift module. */
 public class SwiftCompile extends SwiftCompileBase {
+  @AddToRuleKey private final boolean transformErrorsToAbsolutePaths;
+
   SwiftCompile(
       SwiftBuckConfig swiftBuckConfig,
       BuildTarget buildTarget,
@@ -51,6 +54,7 @@ public class SwiftCompile extends SwiftCompileBase {
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       Tool swiftCompiler,
+      ImmutableList<Arg> systemFrameworkSearchPaths,
       ImmutableSet<FrameworkPath> frameworks,
       AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> frameworkPathToSearchPath,
       Flavor flavor,
@@ -72,6 +76,7 @@ public class SwiftCompile extends SwiftCompileBase {
         projectFilesystem,
         graphBuilder,
         swiftCompiler,
+        systemFrameworkSearchPaths,
         frameworks,
         frameworkPathToSearchPath,
         flavor,
@@ -86,6 +91,8 @@ public class SwiftCompile extends SwiftCompileBase {
         cxxDeps,
         importUnderlyingModule,
         withDownwardApi);
+
+    transformErrorsToAbsolutePaths = swiftBuckConfig.getTransformErrorsToAbsolutePaths();
   }
 
   @Override
@@ -118,7 +125,8 @@ public class SwiftCompile extends SwiftCompileBase {
         compilerArgs,
         projectFilesystem,
         argfilePath,
-        withDownwardApi);
+        withDownwardApi,
+        transformErrorsToAbsolutePaths);
   }
 
   @Override

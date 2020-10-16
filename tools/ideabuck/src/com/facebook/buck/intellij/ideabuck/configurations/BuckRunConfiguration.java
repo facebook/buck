@@ -36,7 +36,7 @@ public class BuckRunConfiguration extends AbstractConfiguration<BuckRunConfigura
   @NotNull
   @Override
   public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
-    return new BuckRunConfigurationEditor();
+    return new BuckRunConfigurationEditor(getProject());
   }
 
   @Nullable

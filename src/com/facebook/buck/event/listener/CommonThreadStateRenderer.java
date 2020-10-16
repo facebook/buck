@@ -21,6 +21,7 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.util.Ansi;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Verify;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -59,17 +60,28 @@ public class CommonThreadStateRenderer {
   private final long currentTimeMs;
   private final ImmutableMap<Long, ThreadRenderingInformation> threadInformationMap;
 
+  // Accepts a 4-character custom prefix that'll be placed before LINE_PREFIX
+  private final String prefix;
+
   public CommonThreadStateRenderer(
       Ansi ansi,
       Function<Long, String> formatTimeFunction,
       long currentTimeMs,
       int outputMaxColumns,
-      ImmutableMap<Long, ThreadRenderingInformation> threadInformationMap) {
+      ImmutableMap<Long, ThreadRenderingInformation> threadInformationMap,
+      Optional<String> prefix) {
     this.ansi = ansi;
     this.formatTimeFunction = formatTimeFunction;
     this.currentTimeMs = currentTimeMs;
     this.threadInformationMap = threadInformationMap;
     this.outputMaxColumns = outputMaxColumns;
+
+    String resolvedPrefix = prefix.orElse("    ");
+    Verify.verify(
+        resolvedPrefix.length() == 4,
+        "thread state renderer custom prefix must be exactly 4 characters to ensure alignment. got `%s`",
+        resolvedPrefix);
+    this.prefix = resolvedPrefix + LINE_PREFIX;
   }
 
   public int getThreadCount() {
@@ -110,13 +122,13 @@ public class CommonThreadStateRenderer {
       long elapsedTimeMs) {
     if (!startEvent.isPresent() || !buildTarget.isPresent()) {
       return ansi.asSubtleText(
-          formatWithTruncatable(outputMaxColumns, LINE_PREFIX, IDLE_STRING, "", ""));
+          formatWithTruncatable(outputMaxColumns, prefix, IDLE_STRING, "", ""));
     }
     String buildTargetStr = buildTarget.get().toString();
     String elapsedTimeStr = formatElapsedTime(elapsedTimeMs);
     String line =
         formatWithTruncatable(
-            outputMaxColumns, LINE_PREFIX, ELLIPSIS + elapsedTimeStr, buildTargetStr, "");
+            outputMaxColumns, prefix, ELLIPSIS + elapsedTimeStr, buildTargetStr, "");
     String step = maybeRenderStep(runningStep, stepCategory, placeholderStepInformation, line);
     if (!step.isEmpty()) {
       line += step;

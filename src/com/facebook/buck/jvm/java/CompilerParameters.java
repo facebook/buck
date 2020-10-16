@@ -75,7 +75,7 @@ public abstract class CompilerParameters {
 
   public static class Builder extends ImmutableCompilerParameters.Builder {
     public Builder setScratchPaths(BuildTarget target, ProjectFilesystem projectFilesystem) {
-      CompilerOutputPaths paths = CompilerOutputPaths.of(target, projectFilesystem);
+      CompilerOutputPaths paths = CompilerOutputPaths.of(target, projectFilesystem.getBuckPaths());
       return this.setOutputPaths(paths);
     }
 

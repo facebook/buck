@@ -22,6 +22,7 @@ import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.ass
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContents;
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContentsExactly;
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesPaths;
+import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertParseErrorWithMessageSubstring;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.ThriftOutputUtils;
@@ -383,6 +384,17 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("uquery", "inputs(//:foo)");
     assertOutputMatchesPaths("res", result);
+  }
+
+  @Test
+  public void printsErrorMessageFromParseFailure() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "parse_failure", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("uquery", "//...");
+
+    assertParseErrorWithMessageSubstring("This file fails to parse!", result);
   }
 
   /**

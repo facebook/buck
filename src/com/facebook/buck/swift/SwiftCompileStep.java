@@ -20,13 +20,17 @@ import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -35,6 +39,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** A step that compiles Swift sources to a single module. */
 class SwiftCompileStep extends SwiftCompileStepBase {
@@ -43,6 +50,7 @@ class SwiftCompileStep extends SwiftCompileStepBase {
 
   private final ImmutableMap<String, String> compilerEnvironment;
   private final Optional<AbsPath> argfilePath;
+  private final boolean transformErrorsToAbsolutePaths;
 
   SwiftCompileStep(
       AbsPath compilerCwd,
@@ -51,11 +59,13 @@ class SwiftCompileStep extends SwiftCompileStepBase {
       ImmutableList<String> compilerCommandArguments,
       ProjectFilesystem filesystem,
       Optional<AbsPath> argfilePath,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean transformErrorsToAbsolutePaths) {
     super(
         compilerCwd, compilerCommandPrefix, compilerCommandArguments, filesystem, withDownwardApi);
     this.compilerEnvironment = ImmutableMap.copyOf(compilerEnvironment);
     this.argfilePath = argfilePath;
+    this.transformErrorsToAbsolutePaths = transformErrorsToAbsolutePaths;
   }
 
   @Override
@@ -112,20 +122,70 @@ class SwiftCompileStep extends SwiftCompileStepBase {
     // TODO(markwang): parse the output, print build failure errors, etc.
     LOG.debug("%s", getRawCommand());
 
-    ProcessExecutor processExecutor = context.getProcessExecutor();
+    boolean willTransformStderr =
+        transformErrorsToAbsolutePaths && context.shouldReportAbsolutePaths();
+
+    // When we transform the stderr output, we need to use an executor that will not output to
+    // stderr by default. Otherwise, we'll print any compiler errors twice: once with a relative
+    // path, and once transformed with a relative path.
+    ProcessExecutor processExecutor =
+        willTransformStderr
+            ? new DefaultProcessExecutor(Console.createNullConsole())
+            : context.getProcessExecutor();
+
     if (withDownwardApi) {
       processExecutor =
           processExecutor.withDownwardAPI(
               DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
     }
-    Result processResult = processExecutor.launchAndExecute(params);
+    Result processResult =
+        getTransformedProcessResult(processExecutor.launchAndExecute(params), willTransformStderr);
 
     int result = processResult.getExitCode();
+    boolean failed = result != StepExecutionResults.SUCCESS_EXIT_CODE;
     Optional<String> stderr = processResult.getStderr();
-    if (result != StepExecutionResults.SUCCESS_EXIT_CODE) {
+
+    // If we are transforming the stderr output, we did not output stderr while running the process,
+    // so we need to output it now, with the absolute path transformations applied.
+    if (willTransformStderr && stderr.isPresent()) {
+      boolean usingColor = context.getAnsi().isAnsiTerminal();
+      Level level = failed ? Level.SEVERE : Level.WARNING;
+      context
+          .getBuckEventBus()
+          .post(
+              usingColor
+                  ? ConsoleEvent.createForMessageWithAnsiEscapeCodes(level, stderr.get())
+                  : ConsoleEvent.create(level, stderr.get()));
+    }
+
+    if (failed && !willTransformStderr) {
       LOG.error("Error running %s: %s", getDescription(context), stderr);
     }
+
     return StepExecutionResult.of(processResult);
+  }
+
+  private Result getTransformedProcessResult(Result result, boolean willTransformStderr)
+      throws IOException {
+    if (willTransformStderr && result.getStderr().isPresent()) {
+      String stderr = result.getStderr().get();
+      Stream<String> stderrLines = MoreStrings.lines(stderr).stream();
+
+      SwiftErrorTransformer transformer = new SwiftErrorTransformer(filesystem);
+      String transformedStderr =
+          stderrLines
+              .map(line -> transformer.transformLine(line))
+              .collect(Collectors.joining(System.lineSeparator()));
+
+      return new Result(
+          result.getExitCode(),
+          result.isTimedOut(),
+          result.getStdout(),
+          Optional.of(transformedStderr),
+          result.getCommand());
+    } else {
+      return result;
+    }
   }
 
   @Override

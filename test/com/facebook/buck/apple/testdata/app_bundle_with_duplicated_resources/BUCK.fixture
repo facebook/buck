@@ -1,0 +1,40 @@
+apple_resource(
+    name = "DemoAppResources",
+    dirs = ["foo.txt"],
+    files = ["foo.txt"],
+    variants = [],
+)
+
+apple_resource(
+    name = "DemoAppResources2",
+    files = ["bar/foo.txt"],
+    variants = [],
+)
+
+apple_bundle(
+    name = "DemoAppWithDuplicatedResources",
+    binary = ":AppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = [],
+)
+
+apple_binary(
+    name = "AppBinary",
+    srcs = ["App/App.m"],
+    deps = [":DemoAppResources"],
+)
+
+apple_bundle(
+    name = "DemoAppWithDifferentDuplicatedResources",
+    binary = ":AppBinaryWithDifferentDuplicatedResources",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = [],
+)
+
+apple_binary(
+    name = "AppBinaryWithDifferentDuplicatedResources",
+    srcs = ["App/App.m"],
+    deps = [":DemoAppResources", ":DemoAppResources2"],
+)

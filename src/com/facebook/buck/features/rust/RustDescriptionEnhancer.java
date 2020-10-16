@@ -54,6 +54,7 @@ public class RustDescriptionEnhancer {
     RLIB_PIC(RustDescriptionEnhancer.RFRLIB_PIC, CrateType.RLIB_PIC),
     DYLIB(RustDescriptionEnhancer.RFDYLIB, CrateType.DYLIB),
     STATICLIB(CxxDescriptionEnhancer.STATIC_FLAVOR, CrateType.STATIC),
+    STATICLIB_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR, CrateType.STATIC_PIC),
     CDYLIB(CxxDescriptionEnhancer.SHARED_FLAVOR, CrateType.CDYLIB),
     CHECK(RustDescriptionEnhancer.RFCHECK, CrateType.CHECK),
     SAVEANALYSIS(RustDescriptionEnhancer.RFSAVEANALYSIS, CrateType.SAVEANALYSIS),

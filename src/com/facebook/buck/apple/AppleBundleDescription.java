@@ -237,7 +237,8 @@ public class AppleBundleDescription
         downwardApiConfig.isEnabledForApple(),
         minOSVersion,
         appleConfig.getIncrementalBundlingEnabled(),
-        appleConfig.getCodeSignTypeOverride());
+        appleConfig.getCodeSignTypeOverride(),
+        appleConfig.getBundleInputBasedRulekeyEnabled());
   }
 
   private static Optional<String> getMinimumOSVersionForBundle(

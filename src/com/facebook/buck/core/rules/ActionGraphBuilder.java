@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -31,7 +32,7 @@ public interface ActionGraphBuilder extends BuildRuleResolver {
    * @return an unmodifiable view of the rules in the index. Throws an exception if construction
    *     fails for any rule.
    */
-  Iterable<BuildRule> getBuildRules();
+  Collection<BuildRule> getBuildRules();
 
   /**
    * @return an unmodifiable view of the successfully constructed (i.e. didn't throw an exception

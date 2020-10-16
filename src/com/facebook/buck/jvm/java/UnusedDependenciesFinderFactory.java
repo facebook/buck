@@ -209,7 +209,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
       SourcePathResolverAdapter resolver,
       JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction) {
 
-    Path depFilePath = CompilerOutputPaths.getDepFilePath(buildTarget, filesystem);
+    Path depFilePath = CompilerOutputPaths.getDepFilePath(buildTarget, filesystem.getBuckPaths());
 
     return UnusedDependenciesFinder.of(
         buildTarget,

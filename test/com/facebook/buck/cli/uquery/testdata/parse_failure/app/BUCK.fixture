@@ -1,0 +1,6 @@
+python_binary(
+    name = "bin",
+    deps = [
+        "//lib:lib",
+    ],
+)

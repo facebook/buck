@@ -20,7 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -37,15 +37,17 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
   public void writeFile(
       ClassUsageTracker tracker,
       Path relativePath,
-      ProjectFilesystem filesystem,
+      AbsPath rootPath,
+      RelPath configuredBuckOut,
       CellPathResolver cellPathResolver) {
     ImmutableMap<Path, Map<Path, Integer>> classUsageMap = tracker.getClassUsageMap();
     try {
       Path parent = relativePath.getParent();
-      Preconditions.checkState(filesystem.exists(parent), "directory must exist: %s", parent);
+      Preconditions.checkState(
+          ProjectFilesystemUtils.exists(rootPath, parent), "directory must exist: %s", parent);
       ObjectMappers.WRITER.writeValue(
-          filesystem.resolve(relativePath).toFile(),
-          relativizeMap(classUsageMap, filesystem, cellPathResolver));
+          rootPath.resolve(relativePath).toFile(),
+          relativizeMap(classUsageMap, rootPath, configuredBuckOut, cellPathResolver));
     } catch (IOException e) {
       throw new HumanReadableException(e, "Unable to write used classes file.");
     }
@@ -53,7 +55,8 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
 
   private static ImmutableSortedMap<Path, Map<Path, Integer>> relativizeMap(
       ImmutableMap<Path, Map<Path, Integer>> classUsageMap,
-      ProjectFilesystem filesystem,
+      AbsPath rootPath,
+      RelPath configuredBuckOut,
       CellPathResolver cellPathResolver) {
     ImmutableSortedMap.Builder<Path, Map<Path, Integer>> builder =
         ImmutableSortedMap.naturalOrder();
@@ -68,8 +71,8 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
       // Here we first check to see if the path is inside the root filesystem of the build
       // If not, we check to see if it's under one of the other cell roots.
       // If the the absolute path does not reside under any cell root, we exclude it
-      filesystem
-          .getPathRelativeToProjectRoot(jarAbsolutePath)
+      ProjectFilesystemUtils.getPathRelativeToProjectRoot(
+              rootPath, configuredBuckOut, jarAbsolutePath)
           .map(Optional::of)
           .orElseGet(() -> getCrossCellPath(jarAbsolutePath, cellPathResolver))
           .ifPresent(

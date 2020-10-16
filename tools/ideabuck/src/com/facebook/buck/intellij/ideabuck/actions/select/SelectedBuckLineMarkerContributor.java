@@ -18,16 +18,22 @@ package com.facebook.buck.intellij.ideabuck.actions.select;
 
 import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
+import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.configurations.BuckRunnerAndConfigurationSettingsFactory;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckDotTrailer;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionTrailer;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckIdentifier;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckStatement;
-import com.facebook.buck.intellij.ideabuck.tool.BuckTool;
 import com.facebook.buck.intellij.ideabuck.util.BuckRunParamsCache;
 import com.google.common.collect.ImmutableList;
+import com.intellij.execution.Executor;
+import com.intellij.execution.ProgramRunnerUtil;
+import com.intellij.execution.RunManager;
+import com.intellij.execution.RunnerAndConfigurationSettings;
+import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.lineMarker.RunLineMarkerContributor;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -94,12 +100,12 @@ public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor 
     List<AnAction> actions = new ArrayList<>();
     targetType =
         BuckProjectSettingsProvider.getInstance(project).getConvertedTargetType(targetType);
-    actions.add(new FixedBuckRunAction(FixedBuckRunAction.BUILD_COMMAND, target));
+    actions.add(new FixedBuckRunAction(BuckCommand.BUILD.name(), target));
     if (isTestTargetType(targetType)) {
-      actions.add(new FixedBuckRunAction(FixedBuckRunAction.TEST_COMMAND, target));
+      actions.add(new FixedBuckRunAction(BuckCommand.TEST.name(), target));
     }
     if (isRunnableTargetType(targetType)) {
-      actions.add(new FixedBuckRunAction(FixedBuckRunAction.RUN_COMMAND, target, true));
+      actions.add(new FixedBuckRunAction(BuckCommand.RUN.name(), target, true));
     }
     return new Info(
         BuckIcons.BUILD_RUN_TEST, actions.toArray(new AnAction[0]), it -> "Build/Test this target");
@@ -115,9 +121,6 @@ public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor 
 
   private static class FixedBuckRunAction extends AnAction {
 
-    public static final String BUILD_COMMAND = "build";
-    public static final String TEST_COMMAND = "test";
-    public static final String RUN_COMMAND = "run";
     private final String commandType;
     private final BuckTarget target;
     private final boolean shouldGetAdditionalParams;
@@ -148,10 +151,27 @@ public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor 
       if (params == null) {
         return;
       }
-      BuckTool tool =
-          new BuckTool("buck " + commandType + " " + target + " " + params, true, project);
-      tool.setParameters(commandType + " " + target + " " + params);
-      tool.execute(null, e.getDataContext(), 0, null);
+      RunManager runManager = RunManager.getInstance(project);
+      RunnerAndConfigurationSettings settings;
+      if (commandType.equals(BuckCommand.BUILD.name())) {
+        settings =
+            BuckRunnerAndConfigurationSettingsFactory.getBuckBuildConfigSettings(
+                runManager, target.toString(), params);
+      } else if (commandType.equals(BuckCommand.RUN.name())) {
+        settings =
+            BuckRunnerAndConfigurationSettingsFactory.getBuckRunConfigSettings(
+                runManager, target.toString(), params);
+      } else if (commandType.equals(BuckCommand.TEST.name())) {
+        settings =
+            BuckRunnerAndConfigurationSettingsFactory.getBuckTestConfigSettings(
+                runManager, target.toString(), params, "");
+      } else {
+        return;
+      }
+      runManager.addConfiguration(settings, false);
+      runManager.setSelectedConfiguration(settings);
+      Executor executor = DefaultRunExecutor.getRunExecutorInstance();
+      ProgramRunnerUtil.executeConfiguration(settings, executor);
     }
 
     private String getAdditionalParams(Project project) {

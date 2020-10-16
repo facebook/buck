@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 public class BuckDepVisibilityInspection extends LocalInspectionTool {
@@ -196,13 +197,16 @@ public class BuckDepVisibilityInspection extends LocalInspectionTool {
       // Convert the raw target strings into BuckTargetPatterns
       return new Pair<>(
           new BuckVisibilityState(
-              visibilities.stream()
-                  .map(
-                      v ->
-                          BuckTargetPattern.parse(v)
-                              .flatMap(p -> buckTargetLocator.resolve(buckFile, p))
-                              .orElse(null))
-                  .filter(Objects::nonNull)
+              Stream.concat(
+                      visibilities.stream()
+                          .map(
+                              v ->
+                                  BuckTargetPattern.parse(v)
+                                      .flatMap(p -> buckTargetLocator.resolve(buckFile, p))
+                                      .orElse(null))
+                          .filter(Objects::nonNull),
+                      // Target should be visible if in same package
+                      Stream.of(buckTargetPattern.asPackageMatchingPattern()))
                   .collect(Collectors.toList())),
           visibilityListMaker);
     }

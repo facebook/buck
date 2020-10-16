@@ -62,7 +62,9 @@ public class CodeSignIdentityStoreFactoryTest {
                 + "\"Apple Distribution: Fuss Bizz (BBBBB12345)\" (CSSMERR_TP_CERT_REVOKED)\n"
                 + "  9) FFFFFFFFFFFFFFFFFFFFAAAAAAAAAAAAAAAAAAAA "
                 + "\"Apple Distribution: Fuss Bizz (54321CCCCC)\" (CSSMERR_TP_CERT_EXPIRED)\n"
-                + "     9 valid identities found\n",
+                + "  10) 1234567890123456789012345678901234567890 "
+                + "\"Developer ID Application: Company, Inc. (XY345BBBBB)\"/ "
+                + "     10 valid identities found\n",
             "");
 
     FakeProcessExecutor processExecutor =
@@ -80,7 +82,10 @@ public class CodeSignIdentityStoreFactoryTest {
                 "Apple Development: Fizz Buzz (12345AAAAA)"),
             CodeSignIdentity.of(
                 CodeSignIdentity.toFingerprint("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"),
-                "Apple Distribution: Fuss Bizz (12345BBBBB)"));
+                "Apple Distribution: Fuss Bizz (12345BBBBB)"),
+            CodeSignIdentity.of(
+                CodeSignIdentity.toFingerprint("1234567890123456789012345678901234567890"),
+                "Developer ID Application: Company, Inc. (XY345BBBBB)"));
 
     assertThat(store.getIdentitiesSupplier().get(), equalTo(expected));
   }

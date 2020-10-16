@@ -126,7 +126,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
   }
 
   @Override
-  public Iterable<BuildRule> getBuildRules() {
+  public Collection<BuildRule> getBuildRules() {
     Preconditions.checkState(isValid);
     return buildRuleIndex.values().stream().map(Task::get).collect(ImmutableList.toImmutableList());
   }

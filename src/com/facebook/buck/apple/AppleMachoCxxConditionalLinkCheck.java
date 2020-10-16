@@ -269,10 +269,15 @@ public class AppleMachoCxxConditionalLinkCheck extends AbstractExecutionStep {
     // beyond the expected benefits of handling such cases which involve duplicate symbols being
     // added during incremental builds.
     //
-    // == Two-Level Namespaces ==
+    // == Two-Level vs Flat Namespaces ==
     //
-    // Note that we only support two-level namespaced dylibs as flat namespacing is deprecated on
-    // mobile (iOS/tvOS/watchOS/iPadOS) platforms.
+    // The algorithm outlined above works with both flat and two-level namespaced executables.
+    // That's because we do not need to record the precise association of bound symbols to libraries
+    // which is not present for flat namespaced executables.
+    //
+    // Even though flat namespacing is deprecated on mobile platforms (iOS/tvOS/watchOS/iPadOS),
+    // flat lookup symbols can still exist in a two-level namespaced executable because of
+    // dynamic lookup symbols (-undefined or -U).
     //
     // == Linker Identity ==
     //

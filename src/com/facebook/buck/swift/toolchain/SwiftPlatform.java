@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /** Interface describing a Swift toolchain and platform to build for. */
 @BuckStyleValueWithBuilder
@@ -64,6 +65,11 @@ public interface SwiftPlatform {
    *     x86_64-apple-ios9.0
    */
   AppleCompilerTargetTriple getSwiftTarget();
+
+  @Value.Default
+  default ImmutableList<Path> getAdditionalSystemFrameworkSearchPaths() {
+    return ImmutableList.of();
+  }
 
   static Builder builder() {
     return new Builder();

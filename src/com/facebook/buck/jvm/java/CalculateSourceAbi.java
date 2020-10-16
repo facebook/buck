@@ -99,7 +99,8 @@ public class CalculateSourceAbi
       this.buildTarget = buildTarget;
       this.jarBuildStepsFactory = jarBuildStepsFactory;
 
-      CompilerOutputPaths outputPaths = CompilerOutputPaths.of(buildTarget, filesystem);
+      CompilerOutputPaths outputPaths =
+          CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
       this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());
       this.annotationsOutputPath = new PublicOutputPath(outputPaths.getAnnotationPath());
     }

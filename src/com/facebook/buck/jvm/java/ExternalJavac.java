@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.util.MoreSuppliers;
@@ -40,6 +41,7 @@ import javax.annotation.Nullable;
 
 /** javac implemented in a separate binary. */
 public class ExternalJavac implements Javac {
+
   @AddToRuleKey private final Supplier<Tool> javac;
   private final String shortName;
 
@@ -119,7 +121,7 @@ public class ExternalJavac implements Javac {
         try {
           expandedSources =
               JavaPaths.extractArchivesAndGetPaths(
-                  context.getProjectFilesystem(),
+                  context.getRuleCellRoot(),
                   context.getProjectFilesystemFactory(),
                   javaSourceFilePaths,
                   workingDirectory);
@@ -149,9 +151,10 @@ public class ExternalJavac implements Javac {
           FluentIterable<String> escapedArgs =
               FluentIterable.from(options).transform(ARGFILES_ESCAPER::apply);
 
-          context
-              .getProjectFilesystem()
-              .writeLinesToPath(Iterables.concat(escapedArgs, escapedPaths), pathToSrcsList);
+          ProjectFilesystemUtils.writeLinesToPath(
+              context.getRuleCellRoot(),
+              Iterables.concat(escapedArgs, escapedPaths),
+              pathToSrcsList);
           command.add("@" + pathToSrcsList);
         } catch (IOException e) {
           context

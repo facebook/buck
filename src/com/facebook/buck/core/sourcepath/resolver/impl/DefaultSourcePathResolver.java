@@ -103,7 +103,10 @@ public class DefaultSourcePathResolver extends AbstractSourcePathResolver {
                 .getGenDir()
                 .resolve(
                     BuildTargetPaths.getBasePathForBaseName(
-                            rule.getProjectFilesystem(), rule.getBuildTarget())
+                            rule.getProjectFilesystem()
+                                .getBuckPaths()
+                                .shouldIncludeTargetConfigHash(),
+                            rule.getBuildTarget())
                         .toPath(path.getFileSystem()));
         if (path.startsWith(basePath)) {
           return basePath.relativize(path).toString();

@@ -100,4 +100,8 @@ public abstract class CachingBuildEngineBuckConfig implements ConfigView<BuckCon
             Maps.filterKeys(sectionMap, key -> !key.equals(OUTPUT_HASH_SIZE_LIMIT_DEFAULT_KEY)),
             Long::parseLong));
   }
+
+  public boolean shouldUseParallelDepsResolving() {
+    return getDelegate().getBoolean("build", "parallel_deps_resolving").orElse(false);
+  }
 }

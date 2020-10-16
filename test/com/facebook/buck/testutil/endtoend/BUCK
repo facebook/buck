@@ -50,5 +50,8 @@ java_test(
 export_file(
     name = "testdata",
     src = "testdata",
-    visibility = ["//buck_e2e/..."],
+    visibility = [
+        "//buck_e2e/...",
+        "//test/com/facebook/buck/cxx/...",
+    ],
 )

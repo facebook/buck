@@ -189,9 +189,9 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     result.assertSuccess();
 
     Path aab =
-      workspace.getPath(
-        BuildTargetPaths.getGenPath(
-          filesystem, BuildTargetFactory.newInstance(target), "%s.signed.aab"));
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), "%s.signed.aab"));
 
     ZipInspector zipInspector = new ZipInspector(aab);
     zipInspector.assertFileExists("base/dex/classes.dex");

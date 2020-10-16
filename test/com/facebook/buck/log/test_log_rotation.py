@@ -21,8 +21,8 @@ from project_workspace import ProjectWorkspace
 
 class LogRotationTest(unittest.TestCase):
     def test_log_retention(self):
-        """ Tests that the default java.util.logging setup can maintain at least 'a couple'
-            of log files. """
+        """Tests that the default java.util.logging setup can maintain at least 'a couple'
+        of log files."""
         test_data = os.path.join(
             "test", "com", "facebook", "buck", "log", "testdata", "log"
         )

@@ -477,6 +477,7 @@ The following sections are recognized by Buck:
     'resources_per_rule',
     'rust',
     'sandbox',
+    'swift',
     'test',
     'thrift',
     'tools',
@@ -1012,6 +1013,81 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
     clang_xcode_tool_name_override=my_clang
     actool_xcode_tool_name_override=my_actool
 </pre>{/literal}
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'target_triple_enabled' /}
+  {param example_value: 'false' /}
+  {param description}
+  This controls whether the architecture is passed using <code>-arch</code> or whether a <a href="https://clang.llvm.org/docs/CrossCompilation.html#target-triple">target triple</a> is used.
+  The default value is <code>false</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'target_sdk_version_linker_flag' /}
+  {param example_value: 'false' /}
+  {param description}
+  <p>This determines whether the minimum deployment target (target SDK version), as set
+  on a specific build target, is passed to the linker. If this setting is disabled, then the global
+  minimum deployment target is used.</p>
+  <p>The default value is <code>false</code>.</p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'binary_uses_fallback_platform' /}
+  {param example_value: 'false' /}
+  {param description}
+  <p>Determines whether compiling <code>apple_binary</code> will use unified logic to a
+  fallback platform to determine the minimum deployment target (target SDK version).</p>
+  <p>Disabled by default for maintaining backwards compatibility. The default value is <code>false</code>.</p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'conditional_relinking_enabled' /}
+  {param example_value: 'false' /}
+  {param description}
+  Controls whether Conditional Relinking is enabled. The default value is <code>false</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'conditional_relinking_fallback' /}
+  {param example_value: 'false' /}
+  {param description}
+  Controls whether Conditional Relinking falls back to normal linking or whether it
+  fails by aborting the build. By default, the setting is <code>false</code>, so that
+  any issues will result in a build failure rather than silent fallback. The default
+  value is <code>false</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'compilation_database_includes_swift' /}
+  {param example_value: 'false' /}
+  {param description}
+  Determines whether Swift sources are included in the compilation database of 
+  <code>apple_library()</code>, <code>apple_binary()</code> and <code>apple_test()</code>.
+  The default value is <code>false</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'link_scrub_concurrently' /}
+  {param example_value: 'false' /}
+  {param description}
+  Determines whether the built-in OSO scrubber, which normalizes Mach-O executions if they need to be cached,
+  scrubs concurrently or serially. The default value is <code>false.</code>
   {/param}
 {/call}
 
@@ -2546,6 +2622,48 @@ or the value could be a custom platform flavor:
     any dependency shared libraries), allowing all shared library interfaces to
     be built in parallel, and therefore also allowing subsequent shared libraries
     to be built in parallel.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'use_arg_file' /}
+  {param example_value: 'true' /}
+  {param description}
+  Controls whether the linker is passed an arg file (response file).
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'skip_system_framework_search_paths' /}
+  {param example_value: 'false' /}
+  {param description}
+  <p>When referencing system frameworks, by default, Buck will add the path to the SDK folder
+  which contains the system frameworks using <code>-F</code>. This is generally undesirable
+  but exists for historical reasons for backwards compatibility. The default value is <code>false</code>.</p>
+  <p>NOTE: This only affects when building for Apple platforms. This is a temporary flag that will be removed.</p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'link_path_normalization_args_enabled' /}
+  {param example_value: 'false' /}
+  {param description}
+  <p>This controls whether executable normalization, required for universal deterministic builds/remote caching,
+  is performed by the linker (setting is enabled) or by Buck itself (setting is disabled).</p>
+  <p>NOTE: This is only supported when building for Apple platforms.</p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'link_groups_enabled' /}
+  {param example_value: 'false' /}
+  {param description}
+  <p>Controls whether link group mapping behavior is active.</p>
+  <p>NOTE: This is only supported when building for Apple platform.</p>
   {/param}
 {/call}
 
@@ -4868,6 +4986,151 @@ buck = .
   {param example_value: 'true' /}
   {param description}
     Enables sandbox in <code>genrule</code>.
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'swift' /}
+  {param description}
+    This section controls settings related to Swift.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'swift' /}
+  {param name: 'compiler_flags' /}
+  {param example_value: '-warnings-as-errors -Xfrontend -disable-reflection-names' /}
+  {param description}
+    Flags to pass to every invocation of the Swift compiler.
+    This is a space-separated list. It defaults to an empty list.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'swift' /}
+  {param name: 'version' /}
+  {param example_value: '5' /}
+  {param description}
+    <p>
+    The version of Swift to pass to the compiler using
+    the <code>-swift-version</code> parameter.
+    </p>
+    
+    <p>
+    Note that every
+    <code>apple_library()</code>, <code>apple_binary()</code> and
+    <code>apple_test()</code> can set its own
+    <code>swift_version</code> attribute to override
+    the global setting defined here.
+    </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'swift' /}
+  {param name: 'use_filelist' /}
+  {param example_value: 'true' /}
+  {param description}
+  If enabled, the list of input files to the Swift compiler is passed in a file.
+  This is useful when trying to shorten the number of arguments. Also see <code>swift.use_argfile</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'swift' /}
+  {param name: 'use_argfile' /}
+  {param example_value: 'true' /}
+  {param description}
+  If enabled, parameters to the Swift compiler are passed as an arg file (response file).
+  This is useful when the number of arguments exceed the OS limit.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'swift' /}
+  {param name: 'project_wmo' /}
+  {param example_value: 'true' /}
+  {param description}
+  <p>If enabled, turns on Whole Module Optimization for any targets that contain Swift.</p>
+  <p>NOTE: This is only affects project generation.</p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'swift' /}
+  {param name: 'project_embed_runtime' /}
+  {param example_value: 'true' /}
+  {param description}
+  <p>If enabled, automatically embeds the Swift runtime if any bundle target depends
+  on any libraries that use Swift.</p>
+  <p>NOTE: This is only affects project generation.</p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'swift' /}
+  {param name: 'project_add_ast_paths' /}
+  {param example_value: 'true' /}
+  {param description}
+  <p>If enabled, AST paths to the <code>.swiftmodules</code> will be added as part of the linker invocation. This
+  is necessary for <code>lldb</code> to be able to debug statically linked Swift libraries.</p>
+  <p>NOTE: This is only affects project generation.</p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'swift' /}
+  {param name: 'copy_stdlib_to_frameworks' /}
+  {param example_value: 'true' /}
+  {param description}
+  If enabled, <code>swift-stdlib-tool</code> will be run on <code>.framework</code> bundles, copying
+  the Swift standard library into them. This is usually not what you want - it will lead to multiple
+  redundant copies of the libraries being embedded in both the app bundle and any descendant framework
+  bundles. Even if Swift is only used in a framework, and not in the app binary, Buck and
+  <code>swift-stdlib-tool</code> will handle that correctly and embed the libraries.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'swift' /}
+  {param name: 'emit_swiftdocs' /}
+  {param example_value: 'true' /}
+  {param description}
+  If enabled, a <code>.swiftdoc</p> file will be generated along with the <code>.swiftmodule</code> file. This is
+  necessary for Xcode to display the documentation for the libraries prebuilt with buck.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'swift' /}
+  {param name: 'slice_app_package_runtime' /}
+  {param example_value: 'true' /}
+  {param description}
+  If enabled, after running <code>swift-stdlib-tool</code> to copy the Swift runtime into the <code>SwiftSupport</code>
+  directory in the <code>.ipa</code>, unused architectures will be removed using <code>lipo</code>. If disabled, the dylibs
+  will be left untouched.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'swift' /}
+  {param name: 'slice_app_bundle_runtime' /}
+  {param example_value: 'false' /}
+  {param description}
+  If enabled, after running <code>swift-stdlib-tool</code> to copy the Swift runtime into the Frameworks
+  directory, unused architectures will be removed using <code>lipo</code>. If disabled, the dylibs will be left
+  untouched.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'swift' /}
+  {param name: 'input_based_compile_enabled' /}
+  {param example_value: 'true' /}
+  {param description}
+    <p>Defines whether the Swift compile rule will be treated as an input-based rule,
+    resulting in faster builds.</p>
+    <p>NOTE: This is a temporary flag and will be removed in the future.</p>
   {/param}
 {/call}
 

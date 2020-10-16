@@ -23,4 +23,15 @@ apple_binary(
         "$SDKROOT/usr/lib/libobjc.dylib",
     ],
     preprocessor_flags = ["-fobjc-arc"],
+    deps = [
+        ":Analytics",
+    ],
+)
+
+apple_library(
+    name = "Analytics",
+    swift_version = "5",
+    srcs = glob([
+        "*.swift",
+    ]),
 )

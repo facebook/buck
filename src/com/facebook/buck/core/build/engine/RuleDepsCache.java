@@ -21,7 +21,11 @@ import com.facebook.buck.core.rules.BuildRule;
 
 public interface RuleDepsCache {
 
+  /** @return all build and runtime deps for {@code rule}. */
   Iterable<BuildRule> get(BuildRule rule);
+
+  /** @return build deps for {@code rule}. */
+  Iterable<BuildRule> getBuildDeps(BuildRule rule);
 
   /**
    * @param buildEngineAction an action for the build engine that we want the deps for

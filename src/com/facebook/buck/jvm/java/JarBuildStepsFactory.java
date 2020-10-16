@@ -62,6 +62,7 @@ import javax.annotation.Nullable;
 
 public class JarBuildStepsFactory
     implements AddsToRuleKey, RulePipelineStateFactory<JavacPipelineState> {
+
   private static final Path[] METADATA_DIRS =
       new Path[] {Paths.get("META-INF"), Paths.get("_STRIPPED_RESOURCES")};
 
@@ -93,6 +94,7 @@ public class JarBuildStepsFactory
 
   /** Contains information about a Java classpath dependency. */
   public static class JavaDependencyInfo implements AddsToRuleKey {
+
     @AddToRuleKey public final SourcePath compileTimeJar;
     @AddToRuleKey public final SourcePath abiJar;
     @AddToRuleKey public final boolean isRequiredForSourceOnlyAbi;
@@ -106,6 +108,7 @@ public class JarBuildStepsFactory
   }
 
   private static class DependencyInfoHolder implements AddsToRuleKey, HasCustomDepsLogic {
+
     // TODO(cjhopman): This is pretty much all due to these things caching all AddsToRuleKey things,
     // but we don't want that for these things because nobody else uses them. We should improve the
     // rulekey and similar stuff to better handle this.
@@ -494,9 +497,10 @@ public class JarBuildStepsFactory
     }
 
     if (JavaAbis.isSourceAbiTarget(buildTarget) || JavaAbis.isSourceOnlyAbiTarget(buildTarget)) {
-      return Optional.of(CompilerOutputPaths.getAbiJarPath(buildTarget, filesystem));
+      return Optional.of(CompilerOutputPaths.getAbiJarPath(buildTarget, filesystem.getBuckPaths()));
     } else if (JavaAbis.isLibraryTarget(buildTarget)) {
-      return Optional.of(CompilerOutputPaths.getOutputJarPath(buildTarget, filesystem));
+      return Optional.of(
+          CompilerOutputPaths.getOutputJarPath(buildTarget, filesystem.getBuckPaths()));
     } else {
       throw new IllegalArgumentException();
     }
@@ -507,12 +511,12 @@ public class JarBuildStepsFactory
     if (!hasAnnotationProcessing()) {
       return Optional.empty();
     }
-    return Optional.of(CompilerOutputPaths.getAnnotationPath(filesystem, buildTarget).getPath());
+    return Optional.of(
+        CompilerOutputPaths.getAnnotationPath(buildTarget, filesystem.getBuckPaths()).getPath());
   }
 
   private Path getDepFileRelativePath(ProjectFilesystem filesystem, BuildTarget buildTarget) {
-    return CompilerOutputPaths.getOutputJarDirPath(buildTarget, filesystem)
-        .resolve("used-classes.json");
+    return CompilerOutputPaths.getDepFilePath(buildTarget, filesystem.getBuckPaths());
   }
 
   private ImmutableMap<Path, SourcePath> getDepOutputPathToAbiSourcePath(

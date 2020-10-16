@@ -143,6 +143,7 @@ public class FetchCommand extends BuildCommand {
                   cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
                   cachingBuildEngineBuckConfig.getDefaultOutputHashSizeLimit(),
                   cachingBuildEngineBuckConfig.getRuleTypeOutputHashSizeLimit(),
+                  cachingBuildEngineBuckConfig.shouldUseParallelDepsResolving(),
                   actionGraphAndBuilder.getActionGraphBuilder(),
                   actionGraphAndBuilder.getBuildEngineActionToBuildRuleResolver(),
                   params.getTargetConfigurationSerializer(),

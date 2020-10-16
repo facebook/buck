@@ -63,10 +63,14 @@ public class BuildableCommandExecutionStepTest {
 
     BuildableCommandExecutionStep testStep =
         new BuildableCommandExecutionStep(
-            testBinary,
             "com.facebook.buck.step.buildables.FakeExternalActionsMain",
             BuildableCommand.getDefaultInstance(),
-            new FakeProjectFilesystem());
+            new FakeProjectFilesystem()) {
+          @Override
+          protected AbsPath getJarPath() {
+            return testBinary;
+          }
+        };
     StepExecutionResult result = testStep.execute(createExecutionContext(projectFilesystem));
     assertThat(result.getExitCode(), equalTo(0));
     assertThat(

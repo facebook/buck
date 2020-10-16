@@ -36,6 +36,8 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String SLICE_APP_PACKAGE_RUNTIME = "slice_app_package_runtime";
   public static final String SLICE_APP_BUNDLE_RUNTIME = "slice_app_bundle_runtime";
   public static final String INPUT_BASED_COMPILE_ENABLED = "input_based_compile_enabled";
+  public static final String TRANSFORM_ERRORS_TO_ABSOLUTE_PATHS =
+      "transform_errors_to_absolute_paths";
   private final BuckConfig delegate;
 
   @Override
@@ -139,5 +141,14 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public boolean getInputBasedCompileEnabled() {
     // TODO(#67788442): Remove config option once behavior correctness has been verified
     return delegate.getBooleanValue(SECTION_NAME, INPUT_BASED_COMPILE_ENABLED, true);
+  }
+
+  /**
+   * If true, error message paths will be transformed from relative paths to absolute paths. This is
+   * required for clicking on the error in Xcode to correctly jump to its location. In addition to
+   * setting this config, the --report-absolute-paths option must be used.
+   */
+  public boolean getTransformErrorsToAbsolutePaths() {
+    return delegate.getBooleanValue(SECTION_NAME, TRANSFORM_ERRORS_TO_ABSOLUTE_PATHS, false);
   }
 }

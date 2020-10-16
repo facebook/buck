@@ -86,6 +86,7 @@ third-party/java/thrift/libthrift-0.12.0.jar
 third-party/java/xz-java-1.5/xz-1.5.jar
 third-party/java/bazel/bazel_deploy.jar
 third-party/java/remote-apis/remote-apis.jar
+third-party/java/junixsocket/junixsocket-2.3.2.jar
 # maven/aether libs
 third-party/java/aether/aether-api-1.0.2.v20150114.jar
 third-party/java/aether/aether-connector-basic-1.0.2.v20150114.jar

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.configurations;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.JBUI;
@@ -28,8 +29,8 @@ public class BuckTestConfigurationEditor
   private final JBTextField mTestSelectors;
   private final JPanel root;
 
-  public BuckTestConfigurationEditor() {
-    super();
+  public BuckTestConfigurationEditor(Project project) {
+    super(project);
     root = getRoot();
     final JBLabel testSelectorLabel = new JBLabel();
     testSelectorLabel.setText("Test selectors (--test-selectors)");

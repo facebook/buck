@@ -367,7 +367,7 @@ public class DummyRDotJava extends AbstractBuildRule
 
   public static RelPath getRDotJavaBinFolder(
       BuildTarget buildTarget, ProjectFilesystem filesystem) {
-    return CompilerOutputPaths.of(buildTarget, filesystem).getClassesDir();
+    return CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths()).getClassesDir();
   }
 
   public static RelPath getPathToOutputDir(BuildTarget buildTarget, ProjectFilesystem filesystem) {

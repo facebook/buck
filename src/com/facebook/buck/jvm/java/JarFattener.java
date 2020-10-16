@@ -119,7 +119,8 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     RelPath outputDir = getOutputDirectory();
     ProjectFilesystem filesystem = getProjectFilesystem();
-    RelPath fatJarDir = CompilerOutputPaths.getClassesDir(getBuildTarget(), filesystem);
+    RelPath fatJarDir =
+        CompilerOutputPaths.getClassesDir(getBuildTarget(), filesystem.getBuckPaths());
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(

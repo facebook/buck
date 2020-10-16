@@ -21,6 +21,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.config.Config;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
@@ -148,6 +149,11 @@ public abstract class BuckPaths {
   @Value.Derived
   public Path getProjectRootDir() {
     return getBuckOut().resolve("project_root");
+  }
+
+  @Value.Derived
+  public FileSystem getFileSystem() {
+    return getBuckOut().getFileSystem();
   }
 
   public RelPath getSymlinkPathForDir(Path unconfiguredDirInBuckOut) {

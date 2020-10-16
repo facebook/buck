@@ -34,6 +34,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
+import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
@@ -90,7 +91,11 @@ import javax.annotation.Nonnull;
  * Creates a bundle: a directory containing files and subdirectories, described by an Info.plist.
  */
 public class AppleBundle extends AbstractBuildRule
-    implements NativeTestable, BuildRuleWithBinary, HasRuntimeDeps, BinaryBuildRule {
+    implements NativeTestable,
+        BuildRuleWithBinary,
+        HasRuntimeDeps,
+        BinaryBuildRule,
+        SupportsInputBasedRuleKey {
 
   public static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
   private static final String CODE_SIGN_DRY_RUN_ARGS_FILE = "BUCK_code_sign_args.plist";
@@ -103,11 +108,13 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final boolean incrementalBundlingEnabled;
 
-  @AddToRuleKey private final BuildRule binary;
+  @AddToRuleKey private final boolean hasBinary;
 
   @AddToRuleKey private final Boolean isLegacyWatchApp;
 
-  @AddToRuleKey private final Optional<AppleDsym> appleDsym;
+  @AddToRuleKey private final Optional<BuildTarget> appleDsymBuildTarget;
+
+  @AddToRuleKey private final Optional<SourcePath> appleDsymSourcePath;
 
   @AddToRuleKey private final AppleBundleDestinations destinations;
 
@@ -140,6 +147,7 @@ public class AppleBundle extends AbstractBuildRule
 
   private final Path sdkPath;
 
+  private final BuildRule binary;
   private final String binaryName;
   private final Path bundleRoot;
   private final Path binaryPath;
@@ -151,6 +159,7 @@ public class AppleBundle extends AbstractBuildRule
   private final Duration codesignTimeout;
   private final BuildRuleParams buildRuleParams;
   private BuildableSupport.DepsSupplier depsSupplier;
+  private final Optional<AppleDsym> appleDsym;
 
   @AddToRuleKey private final boolean withDownwardApi;
 
@@ -167,6 +176,8 @@ public class AppleBundle extends AbstractBuildRule
   @AddToRuleKey private final Optional<SourcePath> nonProcessedResourcesContentHashesFileSourcePath;
 
   @AddToRuleKey private final Optional<SourcePath> processedResourcesContentHashesFileSourcePath;
+
+  @AddToRuleKey private final boolean inputBasedRulekeyEnabled;
 
   AppleBundle(
       BuildTarget buildTarget,
@@ -200,16 +211,20 @@ public class AppleBundle extends AbstractBuildRule
       SourcePath processedResourcesDir,
       Optional<SourcePath> nonProcessedResourcesContentHashesFileSourcePath,
       Optional<SourcePath> processedResourcesContentHashesFileSourcePath,
-      boolean incrementalBundlingEnabled) {
+      boolean incrementalBundlingEnabled,
+      boolean inputBasedRulekeyEnabled) {
     super(buildTarget, projectFilesystem);
     this.buildRuleParams = params;
     this.extension = extension;
     this.productName = productName;
+    this.hasBinary = binary.getSourcePathToOutput() != null;
     this.binary = binary;
     this.withDownwardApi = withDownwardApi;
     this.maybeEntitlementsFile = maybeEntitlementsFile;
     this.isLegacyWatchApp = AppleBundleSupport.isLegacyWatchApp(extension, binary);
     this.appleDsym = appleDsym;
+    this.appleDsymBuildTarget = appleDsym.map(AppleDsym::getBuildTarget);
+    this.appleDsymSourcePath = appleDsym.map(AppleDsym::getSourcePathToOutput);
     this.destinations = destinations;
     this.resources = resources;
     this.bundleParts = bundleParts;
@@ -257,10 +272,7 @@ public class AppleBundle extends AbstractBuildRule
     this.processedResourcesContentHashesFileSourcePath =
         processedResourcesContentHashesFileSourcePath;
     this.incrementalBundlingEnabled = incrementalBundlingEnabled;
-  }
-
-  private boolean hasBinary() {
-    return binary.getSourcePathToOutput() != null;
+    this.inputBasedRulekeyEnabled = inputBasedRulekeyEnabled;
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -373,7 +385,7 @@ public class AppleBundle extends AbstractBuildRule
       appendContentHashesFileDeletionSteps(stepsBuilder, context);
     }
 
-    if (hasBinary()) {
+    if (hasBinary) {
       appendCopyDsymStep(stepsBuilder, buildableContext, context);
     }
 
@@ -1077,13 +1089,13 @@ public class AppleBundle extends AbstractBuildRule
       ImmutableList.Builder<Step> stepsBuilder,
       BuildableContext buildableContext,
       BuildContext buildContext) {
-    if (appleDsym.isPresent()) {
+    if (appleDsymSourcePath.isPresent()) {
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
               buildContext
                   .getSourcePathResolver()
-                  .getAbsolutePath(appleDsym.get().getSourcePathToOutput())
+                  .getAbsolutePath(appleDsymSourcePath.get())
                   .getPath(),
               bundleRoot.getParent(),
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
@@ -1095,13 +1107,12 @@ public class AppleBundle extends AbstractBuildRule
       ImmutableList.Builder<Step> stepsBuilder,
       BuildableContext buildableContext,
       BuildContext buildContext) {
-    Preconditions.checkArgument(hasBinary() && appleDsym.isPresent());
+    Preconditions.checkArgument(
+        hasBinary && appleDsymSourcePath.isPresent() && appleDsymBuildTarget.isPresent());
 
     // rename dSYM bundle to match bundle name
     RelPath dsymPath =
-        buildContext
-            .getSourcePathResolver()
-            .getCellUnsafeRelPath(appleDsym.get().getSourcePathToOutput());
+        buildContext.getSourcePathResolver().getCellUnsafeRelPath(appleDsymSourcePath.get());
     Path dsymSourcePath = bundleRoot.getParent().resolve(dsymPath.getFileName());
     Path dsymDestinationPath =
         bundleRoot
@@ -1114,8 +1125,7 @@ public class AppleBundle extends AbstractBuildRule
             true));
     stepsBuilder.add(new MoveStep(getProjectFilesystem(), dsymSourcePath, dsymDestinationPath));
 
-    String dwarfFilename =
-        AppleDsym.getDwarfFilenameForDsymTarget(appleDsym.get().getBuildTarget());
+    String dwarfFilename = AppleDsym.getDwarfFilenameForDsymTarget(appleDsymBuildTarget.get());
 
     // rename DWARF file inside dSYM bundle to match bundle name
     Path dwarfFolder = dsymDestinationPath.resolve(AppleDsym.DSYM_DWARF_FILE_FOLDER);
@@ -1192,5 +1202,10 @@ public class AppleBundle extends AbstractBuildRule
 
   public boolean isWithDownwardApi() {
     return withDownwardApi;
+  }
+
+  @Override
+  public boolean inputBasedRuleKeyIsEnabled() {
+    return inputBasedRulekeyEnabled;
   }
 }

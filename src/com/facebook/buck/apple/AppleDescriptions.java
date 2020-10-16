@@ -773,7 +773,8 @@ public class AppleDescriptions {
       boolean withDownwardApi,
       Optional<String> minimumOSVersion,
       boolean incrementalBundlingEnabled,
-      Optional<AppleCodeSignType> codeSignTypeOverride) {
+      Optional<AppleCodeSignType> codeSignTypeOverride,
+      boolean bundleInputBasedRulekeyEnabled) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             graphBuilder,
@@ -1354,7 +1355,8 @@ public class AppleDescriptions {
         processResources.getSourcePathToOutput(),
         nonProcessedResourcesContentHashesFileSourcePath,
         processResources.getSourcePathToContentHashes(),
-        incrementalBundlingEnabled);
+        incrementalBundlingEnabled,
+        bundleInputBasedRulekeyEnabled);
   }
 
   private static Optional<SourcePath> frameworkIncrementalInfo(

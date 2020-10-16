@@ -101,6 +101,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   @AddToRuleKey private final Optional<String> version;
   @AddToRuleKey private final ImmutableList<? extends Arg> compilerFlags;
 
+  @AddToRuleKey private final ImmutableList<Arg> systemFrameworkSearchPaths;
   @AddToRuleKey private final ImmutableSet<FrameworkPath> frameworks;
 
   @AddToRuleKey
@@ -141,6 +142,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       Tool swiftCompiler,
+      ImmutableList<Arg> systemFrameworkSearchPaths,
       ImmutableSet<FrameworkPath> frameworks,
       AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> frameworkPathToSearchPath,
       Flavor flavor,
@@ -156,6 +158,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       boolean importUnderlyingModule,
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
+    this.systemFrameworkSearchPaths = systemFrameworkSearchPaths;
     this.frameworks = frameworks;
     this.frameworkPathToSearchPath = frameworkPathToSearchPath;
     this.flavor = flavor;
@@ -233,6 +236,10 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     if (importUnderlyingModule) {
       compilerArgs.add("-import-underlying-module");
     }
+
+    compilerArgs.addAll(
+        MoreIterables.zipAndConcat(
+            Iterables.cycle("-Fsystem"), Arg.stringify(systemFrameworkSearchPaths, resolver)));
 
     compilerArgs.addAll(
         Streams.concat(frameworks.stream(), cxxDeps.getFrameworkPaths().stream())
