@@ -150,7 +150,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       CompilerParameters compilerParameters,
       BuildableContext buildableContext) {
     if (compilerParameters.shouldTrackClassUsage()) {
-      Path depFilePath = CompilerOutputPaths.getDepFilePath(buildTarget, filesystem);
+      Path depFilePath = CompilerOutputPaths.getDepFilePath(buildTarget, filesystem.getBuckPaths());
       buildableContext.recordArtifact(depFilePath);
     }
   }

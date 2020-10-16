@@ -17,6 +17,7 @@ import inspect
 import os
 import shutil
 import tempfile
+from asyncio import subprocess
 from functools import wraps
 from pathlib import Path
 from typing import Callable, Iterable, Iterator, Optional, Union
@@ -37,9 +38,11 @@ def repo() -> Iterator[BuckRepo]:
             encoding="utf-8",
             inherit_existing_env=False,
         )
-        with repo.buck_config() as buck_config:
-            buck_config["buildfile"]["name"] = "BUCK.fixture"
+        # NOTE: This currently overrides existing .buckconfig.local files.
+        # Testing data can only use .buckconfig files at the moment.
+        # TODO: Support parsing of .buckconfig files.
         with repo.buck_config_local() as buck_config_local:
+            buck_config_local["buildfile"]["name"] = "BUCK.fixture"
             buck_config_local["log"]["scuba_logging"] = "false"
             buck_config_local["log"]["everstore_log_upload_mode"] = "never"
             buck_config_local["log"]["scribe_offline_enabled"] = "false"
@@ -91,6 +94,11 @@ def _buck_test_not_callable(module: str, data: str) -> Callable:
         def wrapped(repo: BuckRepo, *inner_args, **kwargs):
             src = Path(pkg_resources.resource_filename(module, data))
             tgt = Path(repo.cwd)
+            buck_config_local_files = list(src.rglob(".buckconfig.local"))
+            assert len(buck_config_local_files) == 0, (
+                f"data directory {data} cannot contain .buckconfig.local files. "
+                f"Found .buckconfig.local files in {buck_config_local_files}"
+            )
             os.makedirs(tgt, exist_ok=True)
             _copytree(src, tgt)
             response = fn(repo, *inner_args, **kwargs)
@@ -118,3 +126,12 @@ def buck_test(data: Union[Callable, str]) -> Callable:
     frm = inspect.stack()[1]
     mod = inspect.getmodule(frm[0])
     return _buck_test_not_callable(mod.__name__, data)
+
+
+async def exec_path(path: Path) -> subprocess.Process:
+    assert path.exists()
+    process = await subprocess.create_subprocess_exec(
+        str(path), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    stdout, stderr = await process.communicate()
+    return process

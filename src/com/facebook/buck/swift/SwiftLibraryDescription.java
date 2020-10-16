@@ -68,6 +68,7 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
@@ -303,6 +304,7 @@ public class SwiftLibraryDescription
           projectFilesystem,
           graphBuilder,
           swiftPlatform.get().getSwiftc(),
+          getSystemFrameworkSearchPaths(swiftPlatform.get()),
           args.getFrameworks(),
           getFrameworkPathToSearchPath(
               cxxPlatform, graphBuilder, cxxBuckConfig.getSkipSystemFrameworkSearchPaths()),
@@ -471,6 +473,7 @@ public class SwiftLibraryDescription
         projectFilesystem,
         graphBuilder,
         swiftPlatform.getSwiftc(),
+        getSystemFrameworkSearchPaths(swiftPlatform),
         args.getFrameworks(),
         getFrameworkPathToSearchPath(
             cxxPlatform, graphBuilder, cxxBuckConfig.getSkipSystemFrameworkSearchPaths()),
@@ -537,6 +540,7 @@ public class SwiftLibraryDescription
         projectFilesystem,
         graphBuilder,
         swiftPlatform.getSwiftc(),
+        getSystemFrameworkSearchPaths(swiftPlatform),
         args.getFrameworks(),
         getFrameworkPathToSearchPath(
             cxxPlatform, graphBuilder, cxxBuckConfig.getSkipSystemFrameworkSearchPaths()),
@@ -564,6 +568,12 @@ public class SwiftLibraryDescription
   public static boolean isSwiftTarget(BuildTarget buildTarget) {
     return buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR)
         || buildTarget.getFlavors().contains(SWIFT_COMPILE_FLAVOR);
+  }
+
+  private static ImmutableList<Arg> getSystemFrameworkSearchPaths(SwiftPlatform swiftPlatform) {
+    return swiftPlatform.getAdditionalSystemFrameworkSearchPaths().stream()
+        .map(path -> StringArg.of(path.toString()))
+        .collect(ImmutableList.toImmutableList());
   }
 
   private FlavorDomain<UnresolvedCxxPlatform> getCxxPlatforms(

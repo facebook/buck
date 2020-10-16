@@ -15,9 +15,11 @@
  */
 
 #import <UIKit/UIKit.h>
+#import <Analytics/Analytics-Swift.h>
 
 int main(int argc, char * argv[]) {
     @autoreleasepool {
+        [AnalyticsManager new];
         return UIApplicationMain(argc, argv, nil, nil);
     }
 }

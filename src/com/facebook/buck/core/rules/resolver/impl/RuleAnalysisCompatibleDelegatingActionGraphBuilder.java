@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.transformer.impl.LegacyRuleAnalysisDelegatin
 import com.facebook.buck.util.concurrent.Parallelizer;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -60,7 +61,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilder extends Abstract
   }
 
   @Override
-  public Iterable<BuildRule> getBuildRules() {
+  public Collection<BuildRule> getBuildRules() {
     return delegateActionGraphBuilder.getBuildRules();
   }
 

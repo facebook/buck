@@ -23,6 +23,7 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
+import java.nio.file.FileSystem;
 
 /**
  * Static helpers for working with build targets.
@@ -52,10 +53,13 @@ public class BuildTargetPaths {
       ProjectFilesystem filesystem, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
-    return filesystem
-        .getBuckPaths()
-        .getScratchDir()
-        .resolve(getBasePath(filesystem, target, format).toRelPath(filesystem.getFileSystem()));
+    BuckPaths buckPaths = filesystem.getBuckPaths();
+    return getRelativePath(
+        target,
+        format,
+        buckPaths.getFileSystem(),
+        buckPaths.shouldIncludeTargetConfigHash(),
+        buckPaths.getScratchDir());
   }
 
   /**
@@ -73,10 +77,13 @@ public class BuildTargetPaths {
       ProjectFilesystem filesystem, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
-    return filesystem
-        .getBuckPaths()
-        .getAnnotationDir()
-        .resolve(getBasePath(filesystem, target, format).toRelPath(filesystem.getFileSystem()));
+    BuckPaths buckPaths = filesystem.getBuckPaths();
+    return getRelativePath(
+        target,
+        format,
+        buckPaths.getFileSystem(),
+        buckPaths.shouldIncludeTargetConfigHash(),
+        buckPaths.getAnnotationDir());
   }
 
   /**
@@ -95,18 +102,34 @@ public class BuildTargetPaths {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
 
-    return filesystem
-        .getBuckPaths()
-        .getGenDir()
-        .resolve(getBasePath(filesystem, target, format).toRelPath(filesystem.getFileSystem()));
+    BuckPaths buckPaths = filesystem.getBuckPaths();
+    return getRelativePath(
+        target,
+        format,
+        buckPaths.getFileSystem(),
+        buckPaths.shouldIncludeTargetConfigHash(),
+        buckPaths.getGenDir());
+  }
+
+  public static RelPath getRelativePath(
+      BuildTarget target,
+      String format,
+      FileSystem fileSystem,
+      boolean includeTargetConfigHash,
+      RelPath directory) {
+    return directory.resolve(
+        getBasePath(includeTargetConfigHash, target, format).toRelPath(fileSystem));
   }
 
   /** A folder where all targets in the file of target are created. */
   public static RelPath getGenPathForBaseName(ProjectFilesystem filesystem, BuildTarget target) {
-    return filesystem
-        .getBuckPaths()
+    BuckPaths buckPaths = filesystem.getBuckPaths();
+    FileSystem fileSystem = filesystem.getFileSystem();
+    return buckPaths
         .getGenDir()
-        .resolve(getBasePathForBaseName(filesystem, target).toRelPath(filesystem.getFileSystem()));
+        .resolve(
+            getBasePathForBaseName(buckPaths.shouldIncludeTargetConfigHash(), target)
+                .toRelPath(fileSystem));
   }
 
   /**
@@ -122,18 +145,17 @@ public class BuildTargetPaths {
    * @return A {@link java.nio.file.Path} scoped to the base path of {@code target}.
    */
   public static ForwardRelativePath getBasePath(
-      ProjectFilesystem filesystem, BuildTarget target, String format) {
+      boolean includeTargetConfigHash, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
 
-    return getBasePathForBaseName(filesystem, target)
+    return getBasePathForBaseName(includeTargetConfigHash, target)
         .resolve(formatLastSegment(format, target.getShortNameAndFlavorPostfix()));
   }
 
   /** Return a relative path for all targets in a package of a {@link BuildTarget}. */
   public static ForwardRelativePath getBasePathForBaseName(
-      ProjectFilesystem filesystem, BuildTarget target) {
-    boolean includeTargetConfigHash = filesystem.getBuckPaths().shouldIncludeTargetConfigHash();
+      boolean includeTargetConfigHash, BuildTarget target) {
     ForwardRelativePath configHashPath =
         ForwardRelativePath.of(
             includeTargetConfigHash

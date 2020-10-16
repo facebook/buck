@@ -262,14 +262,14 @@ public class WindowsClangCxxIntegrationTest {
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "x//lib:out");
     buildResult.assertSuccess();
+    boolean includeTargetConfigHash =
+        workspace.getProjectFileSystem().getBuckPaths().shouldIncludeTargetConfigHash();
     Path outputPath =
         workspace
             .resolve("xplat/buck-out/gen")
             .resolve(
                 BuildTargetPaths.getBasePath(
-                        workspace.getProjectFileSystem(),
-                        BuildTargetFactory.newInstance("x//lib:out"),
-                        "%s")
+                        includeTargetConfigHash, BuildTargetFactory.newInstance("x//lib:out"), "%s")
                     .toString())
             .resolve("lib.lib");
 
@@ -280,9 +280,7 @@ public class WindowsClangCxxIntegrationTest {
             .resolve("xplat/buck-out/gen")
             .resolve(
                 BuildTargetPaths.getBasePath(
-                        workspace.getProjectFileSystem(),
-                        BuildTargetFactory.newInstance("x//lib:out"),
-                        "%s")
+                        includeTargetConfigHash, BuildTargetFactory.newInstance("x//lib:out"), "%s")
                     .toString())
             .resolve("lib.lib");
     MoreAsserts.assertContentsEqual(outputPath, outputPath2);

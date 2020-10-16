@@ -205,6 +205,21 @@ class BuckProject:
         buck_javaargs_path_local = os.path.join(self.root, ".buckjavaargs.local")
         self.buck_javaargs_local = get_file_contents_if_exists(buck_javaargs_path_local)
 
+        logging.debug(
+            (
+                "Created BuckProject with the following state:\n"
+                "  root: {root}\n"
+                "  buck-out: {buckout}\n"
+                "  buckd: {buckd}\n"
+                "  tmp_dir: {tmp}"
+            ).format(
+                root=self.root,
+                buckout=self._buck_out,
+                buckd=self.buckd_dir,
+                tmp=self.tmp_dir,
+            )
+        )
+
     # A hash that uniquely identifies this instance of buck.
     # Historically, this has meant 'one buck per repo' or 'one buck per root',
     # but isolation mode means we can have multiple bucks coexisting.
@@ -294,6 +309,9 @@ class BuckProject:
         with Tracing("BuckProject.from_current_dir"):
             current_dir = os.getcwd()
             at_root_dir = False
+            logging.debug(
+                "Starting to search for Buck project from cwd: {}".format(current_dir)
+            )
             while not at_root_dir:
                 if os.path.exists(os.path.join(current_dir, ".buckconfig")):
                     return BuckProject(current_dir)

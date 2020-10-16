@@ -762,7 +762,8 @@ public class TestRunning {
       RelPath classesItem = null;
 
       if (useIntermediateClassesDir) {
-        classesItem = CompilerOutputPaths.getClassesDir(rule.getBuildTarget(), filesystem);
+        classesItem =
+            CompilerOutputPaths.getClassesDir(rule.getBuildTarget(), filesystem.getBuckPaths());
       }
       // If we aren't configured to use the classes dir on disk, or it wasn't part of this
       // compilation run, then we'll need to unzip the output jar to get access to the classes

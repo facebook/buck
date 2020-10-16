@@ -179,14 +179,15 @@ public class OutputListAttributeTest {
       assertFalse(artifact.isBound());
       assertFalse(artifact.isSource());
     }
+    boolean includeTargetConfigHash = filesystem.getBuckPaths().shouldIncludeTargetConfigHash();
     assertEquals(
         ImmutableList.of(
-            BuildTargetPaths.getBasePath(filesystem, target, "%s__")
+            BuildTargetPaths.getBasePath(includeTargetConfigHash, target, "%s__")
                 .toPath(filesystem.getFileSystem())
                 .resolve("subdir")
                 .resolve("other.cpp")
                 .toString(),
-            BuildTargetPaths.getBasePath(filesystem, target, "%s__")
+            BuildTargetPaths.getBasePath(includeTargetConfigHash, target, "%s__")
                 .toPath(filesystem.getFileSystem())
                 .resolve("main.cpp")
                 .toString()),

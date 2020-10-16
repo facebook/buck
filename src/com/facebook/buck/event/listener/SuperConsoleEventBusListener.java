@@ -523,7 +523,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
     if (useCompressedLine) {
       LINE_BUILDER.setLength(0);
-      LINE_BUILDER.append(" - ");
+      LINE_BUILDER.append("     - ");
       LINE_BUILDER.append(threadsWithShortStatus);
       if (fullLines == 0) {
         LINE_BUILDER.append(String.format(" %s:", renderer.getExecutorCollectionLabel()));

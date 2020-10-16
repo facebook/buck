@@ -9,5 +9,6 @@ java_library(
         "//src/com/facebook/buck/external/model:model",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
+        "//third-party/java/jsr:jsr305",
     ],
 )

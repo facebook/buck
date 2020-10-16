@@ -45,7 +45,12 @@ public class BuildThreadStateRenderer implements MultiStateRenderer {
             currentTimeMs, minimumDurationMillis, runningStepsByThread, buildRuleThreadTracker);
     this.commonThreadStateRenderer =
         new CommonThreadStateRenderer(
-            ansi, formatTimeFunction, currentTimeMs, outputMaxColumns, threadInformationMap);
+            ansi,
+            formatTimeFunction,
+            currentTimeMs,
+            outputMaxColumns,
+            threadInformationMap,
+            Optional.empty());
   }
 
   private static ImmutableMap<Long, ThreadRenderingInformation> getThreadInformationMap(

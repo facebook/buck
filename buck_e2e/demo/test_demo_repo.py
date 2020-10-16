@@ -20,16 +20,16 @@ from buck_api.buck_result import ExitCode
 from buck_e2e.repo_workspace import buck_test, nobuckd, repo  # noqa F401
 
 
-@buck_test(data="testdata/cli/run/simple_bin")
+@buck_test(data="testdata/cli")
 async def test_repo_build(repo: BuckRepo):
-    result = await repo.build(":main").wait()
+    result = await repo.build("//run/simple_bin:main").wait()
     assert result.is_success()
 
 
-@buck_test(data="testdata/cli/run/simple_bin")
+@buck_test(data="testdata/cli")
 @nobuckd
 async def test_buckd_toggle_disabled(repo: BuckRepo):
-    result = await repo.build(":main").wait()
+    result = await repo.build("run/simple_bin:main").wait()
     assert result.is_success()
     assert not (Path(repo.cwd) / ".buckd").exists(), "buck daemon should not exist"
     assert result.get_exit_code() == ExitCode.SUCCESS

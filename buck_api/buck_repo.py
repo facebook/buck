@@ -109,8 +109,8 @@ class BuckRepo:
         )
         return BuckProcess(
             awaitable_process,
-            result_type=lambda proc, stdin, stdout, encoding, buck_build_id: BuildResult(
-                proc, stdin, stdout, encoding, buck_build_id, *argv
+            result_type=lambda proc, stdin, stdout, buck_build_id: BuildResult(
+                proc, stdin, stdout, buck_build_id, *argv
             ),
             encoding=self.encoding,
             buck_build_id=buck_build_id,
@@ -193,13 +193,8 @@ class BuckRepo:
         )
         return BuckProcess(
             awaitable_process,
-            result_type=lambda proc, stdin, stdout, encoding, buck_build_id: TestResult(
-                proc,
-                stdin,
-                stdout,
-                encoding,
-                buck_build_id,
-                self.cwd / test_output_file,
+            result_type=lambda proc, stdin, stdout, buck_build_id: TestResult(
+                proc, stdin, stdout, buck_build_id, self.cwd / test_output_file
             ),
             encoding=self.encoding,
             buck_build_id=buck_build_id,

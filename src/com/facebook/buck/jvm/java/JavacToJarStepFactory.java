@@ -82,7 +82,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       ProjectFilesystem filesystem,
       Builder<Step> steps,
       BuildableContext buildableContext) {
-    RelPath annotationGenFolder = CompilerOutputPaths.getAnnotationPath(filesystem, invokingTarget);
+    RelPath annotationGenFolder =
+        CompilerOutputPaths.getAnnotationPath(invokingTarget, filesystem.getBuckPaths());
 
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(annotationGenFolder));
     buildableContext.recordArtifact(annotationGenFolder.getPath());
@@ -242,8 +243,9 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       steps.add(
           SymlinkIsolatedStep.of(
               CompilerOutputPaths.getAnnotationPath(
-                  projectFilesystem, JavaAbis.getSourceAbiJar(invokingRule)),
-              CompilerOutputPaths.getAnnotationPath(projectFilesystem, invokingRule)));
+                  JavaAbis.getSourceAbiJar(invokingRule), projectFilesystem.getBuckPaths()),
+              CompilerOutputPaths.getAnnotationPath(
+                  invokingRule, projectFilesystem.getBuckPaths())));
     }
 
     steps.add(

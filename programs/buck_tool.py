@@ -144,6 +144,7 @@ EXPORTED_RESOURCES = [
     Resource("android_agent_path"),
     Resource("buck_build_type_info"),
     Resource("native_exopackage_fake_path"),
+    Resource("external_actions"),
 ]
 
 
@@ -328,7 +329,7 @@ class PrintExecution(ExitCodeCallable):
 
 class BuckStatusReporter(object):
 
-    """ Add custom logic to log Buck completion statuses or errors including
+    """Add custom logic to log Buck completion statuses or errors including
     critical ones like JVM crashes and OOMs. This object is fully mutable with
     all fields optional which get populated on the go. Only safe operations
     are allowed in the reporter except for report() function which can throw
@@ -569,11 +570,18 @@ class BuckTool(object):
                 ) as c:
                     now = int(round(time.time() * 1000))
                     env["BUCK_PYTHON_SPACE_INIT_TIME"] = str(now - self._init_timestamp)
+                    command_args = self._add_args_from_env(argv, post_run_files)
+                    command_cwd = self._buck_project.root
+                    logging.debug(
+                        "Sending command over Nailgun:\n  cwd={cwd}\n  args={args}\n  env={env}".format(
+                            args=command_args, env=env, cwd=command_cwd
+                        )
+                    )
                     exit_code = c.send_command(
                         "com.facebook.buck.cli.MainWithNailgun",
-                        self._add_args_from_env(argv, post_run_files),
+                        command_args,
                         env=env,
-                        cwd=self._buck_project.root,
+                        cwd=command_cwd,
                     )
                     if exit_code == 2:
                         env["BUCK_BUILD_ID"] = str(uuid.uuid4())
@@ -637,8 +645,14 @@ class BuckTool(object):
         now = int(round(time.time() * 1000))
         env["BUCK_PYTHON_SPACE_INIT_TIME"] = str(now - self._init_timestamp)
         with Tracing("buck", args={"command": command}):
+            subprocess_cwd = self._buck_project.root
+            logging.debug(
+                "Spawning Buck directly without Nailgun:\n  cwd={cwd}\n  executable={exe_path}\n  command={cmd}\n  env={env}".format(
+                    exe_path=java_path, cmd=command, env=env, cwd=subprocess_cwd
+                )
+            )
             return subprocess.call(
-                command, cwd=self._buck_project.root, env=env, executable=java_path
+                command, cwd=subprocess_cwd, env=env, executable=java_path
             )
 
     def _execute_command_and_maybe_run_target(self, run_fn, java_path, env, argv):

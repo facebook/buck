@@ -13,4 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# TODO: Add useful asserts
+from buck_api.buck_result import BuckResult, BuildResult, ExitCode
+
+
+def _get_error_msg(result: BuckResult, error_msg: str) -> str:
+    return error_msg or (
+        f"exit_code: {result.get_exit_code()}\n"
+        f"stdout: {result.stdout}\n"
+        f"stderr: {result.stderr}"
+    )
+
+
+def success(result: BuckResult, error_msg: str = "") -> None:
+    assert result.is_success(), _get_error_msg(result, error_msg)
+
+
+def failure(result: BuckResult, error_msg: str = "") -> None:
+    assert result.is_failure(), _get_error_msg(result, error_msg)
+
+
+def parse_error(result: BuildResult, error_msg: str = "") -> None:
+    assert result.get_exit_code() == ExitCode.PARSE_ERROR, _get_error_msg(
+        result, error_msg
+    )

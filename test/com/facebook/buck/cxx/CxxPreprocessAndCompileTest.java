@@ -708,7 +708,9 @@ public class CxxPreprocessAndCompileTest {
                 "-o",
                 "buck-out/gen/"
                     + BuildTargetPaths.getBasePath(
-                        projectFilesystem, BuildTargetFactory.newInstance("//foo:bar"), "%s__")
+                        projectFilesystem.getBuckPaths().shouldIncludeTargetConfigHash(),
+                        BuildTargetFactory.newInstance("//foo:bar"),
+                        "%s__")
                     + "/baz/test.o")
             .add("-c")
             .add(PathFormatter.pathWithUnixSeparators(input.toString()))

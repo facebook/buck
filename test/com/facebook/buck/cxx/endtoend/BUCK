@@ -1,4 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "java_test")
+load("//tools/build_rules:python_rules.bzl", "pytest_test")
 
 TEST_SRCS = [
     "*Test.java",
@@ -19,5 +20,20 @@ java_test(
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/endtoend:testutil",
         "//third-party/java/junit:junit",
+    ],
+)
+
+pytest_test(
+    name = "e2e",
+    srcs = glob(["*test.py"]),
+    env = {
+        "TEST_BUCK_BINARY": "$(location //programs:buck)",
+    },
+    resources = [
+        "//test/com/facebook/buck/testutil/endtoend:testdata",
+    ],
+    deps = [
+        "//buck_api:api",
+        "//buck_e2e:utilities",
     ],
 )

@@ -21,6 +21,7 @@ import com.facebook.buck.intellij.ideabuck.api.BuckCellManager.Cell;
 import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
+import com.facebook.buck.intellij.ideabuck.configurations.AbstractConfigurationEditor;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.facebook.buck.intellij.ideabuck.lang.BuckFileType;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadCall;
@@ -32,17 +33,18 @@ import com.intellij.codeInsight.completion.CompletionContributor;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.ArrayUtil;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -57,6 +59,30 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     if (!BuckFileType.INSTANCE.equals(psiFile.getFileType())) {
       return;
     }
+    // Modify the prefix match, since we already filter by prefix
+    // Ensure that new match is a prefix of the words we return, and a suffix of the original prefix
+    String[] tokens = result.getPrefixMatcher().getPrefix().split("[/:]", -1);
+    if (ArrayUtil.isEmpty(tokens)) {
+      // This should never happen
+      return;
+    }
+    result = result.withPrefixMatcher(tokens[tokens.length - 1]);
+    if (AbstractConfigurationEditor.isFileFromRunConfigurationEditor(psiFile)) {
+      Document document = psiFile.getViewProvider().getDocument();
+      if (document == null) {
+        return;
+      }
+      String prefix = document.getText();
+      if (prefix.startsWith("@")) {
+        prefix = prefix.substring(1);
+      }
+      Project project = psiFile.getProject();
+      doCellNames(project, prefix, result);
+      doPathsForFullyQualifiedBuckTarget(project.getBaseDir(), project, prefix, result);
+      doTargetsForBuckTarget(project.getBaseDir(), project, prefix, result);
+      return;
+    }
+
     PsiElement position = parameters.getPosition();
     String openingQuote;
     if (BuckPsiUtils.hasElementType(position, BuckTypes.APOSTROPHED_STRING)) {
@@ -89,7 +115,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
       if (prefix.startsWith("@")) {
         prefix = prefix.substring(1);
       }
-      doCellNames(position, prefix, result);
+      doCellNames(project, prefix, result);
       doTargetsForRelativeExtensionFile(virtualFile, prefix, result);
       doPathsForFullyQualifiedExtensionFile(virtualFile, project, prefix, result);
       doTargetsForFullyQualifiedExtensionFile(virtualFile, project, prefix, result);
@@ -99,10 +125,9 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
       if (prefix.startsWith("@")) {
         prefix = prefix.substring(1);
       }
-      doCellNames(position, prefix, result);
-      doTargetsForRelativeBuckTarget(psiFile, prefix, result);
+      doCellNames(project, prefix, result);
       doPathsForFullyQualifiedBuckTarget(virtualFile, project, prefix, result);
-      doTargetsForFullyQualifiedBuckTarget(virtualFile, project, prefix, result);
+      doTargetsForBuckTarget(virtualFile, project, prefix, result);
     }
   }
 
@@ -114,11 +139,10 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     result.addElement(LookupElementBuilder.create(name).withIcon(file.getFileType().getIcon()));
   }
 
-  private void doCellNames(PsiElement position, String prefix, CompletionResultSet result) {
+  private void doCellNames(Project project, String prefix, CompletionResultSet result) {
     if (prefix.contains("/")) {
       return; // already beyond a cell name
     }
-    Project project = position.getProject();
     BuckCellManager.getInstance(project)
         .getCells()
         .forEach(
@@ -156,7 +180,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
         continue;
       }
       if (child.isDirectory() || name.endsWith(".bzl")) {
-        addResultForFile(result, child, path + name);
+        addResultForFile(result, child, name);
       }
     }
   }
@@ -188,12 +212,6 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     if (targetDirectory == null) {
       return;
     }
-    String partialPrefix;
-    if ("".equals(cellName)) {
-      partialPrefix = cellPath;
-    } else {
-      partialPrefix = cellName + "//" + cellPath;
-    }
     String partial = matcher.group("partial");
     for (VirtualFile child : targetDirectory.getChildren()) {
       String name = child.getName();
@@ -201,11 +219,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
         continue;
       }
       if (child.isDirectory()) {
-        doTargetsForFullyQualifiedExtensionFile(
-            child, project, cellName + "//" + cellPath + name, result);
-        if (Stream.of(child.getChildren()).anyMatch(VirtualFile::isDirectory)) {
-          addResultForFile(result, child, partialPrefix + name);
-        }
+        addResultForFile(result, child, name);
       }
     }
   }
@@ -238,17 +252,11 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     if (targetDirectory == null) {
       return;
     }
-    String partialPrefix;
-    if ("".equals(cellName)) {
-      partialPrefix = cellPath + ":" + extPath;
-    } else {
-      partialPrefix = cellName + "//" + cellPath + ":" + extPath;
-    }
     String partial = matcher.group("partial");
     for (VirtualFile child : targetDirectory.getChildren()) {
       String name = child.getName();
       if (!child.isDirectory() && name.startsWith(partial) && name.endsWith(".bzl")) {
-        addResultForFile(result, child, partialPrefix + name);
+        addResultForFile(result, child, name);
       }
     }
   }
@@ -276,20 +284,6 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
                 symbols.stream()
                     .filter(symbol -> !symbol.startsWith("_")) // do not show private symbols
                     .forEach(symbol -> addResultForTarget(result, symbol)));
-  }
-
-  /** Autocomplete buck targets within this buck file, as in ":targ" => ":target". */
-  private void doTargetsForRelativeBuckTarget(
-      PsiFile psiFile, String prefixToAutocomplete, CompletionResultSet result) {
-    if (!prefixToAutocomplete.startsWith(":")) {
-      return;
-    }
-    // Autocomplete a target in *this* file
-    String targetPrefix = prefixToAutocomplete.substring(1);
-    Map<String, ?> targetsInPsiTree = BuckPsiUtils.findTargetsInPsiTree(psiFile, targetPrefix);
-    for (String name : targetsInPsiTree.keySet()) {
-      addResultForTarget(result, name);
-    }
   }
 
   private static final Pattern PATH_TO_BUCK_TARGET_PATTERN =
@@ -331,12 +325,6 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     if (targetDirectory == null) {
       return;
     }
-    String partialPrefix;
-    if ("".equals(cellName)) {
-      partialPrefix = cellPath;
-    } else {
-      partialPrefix = cellName + "//" + cellPath;
-    }
     String partial = matcher.group("partial");
     for (VirtualFile child : targetDirectory.getChildren()) {
       String name = child.getName();
@@ -344,12 +332,12 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
         continue;
       }
       if (child.isDirectory()) {
-        addResultForFile(result, child, partialPrefix + name);
+        addResultForFile(result, child, name);
       }
     }
   }
 
-  private void doTargetsForFullyQualifiedBuckTarget(
+  private void doTargetsForBuckTarget(
       VirtualFile sourceFile,
       Project project,
       String prefixToAutocomplete,
@@ -373,16 +361,8 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     }
     Map<String, ?> targetsInPsiTree =
         BuckPsiUtils.findTargetsInPsiTree(targetPsiFile, pattern.getRuleName().orElse(""));
-    String cellName = pattern.getCellName().orElse(null);
-    String cellPath = pattern.getCellPath().orElse("");
     for (String name : targetsInPsiTree.keySet()) {
-      String completion;
-      if (cellName == null) {
-        completion = cellPath + ":" + name;
-      } else {
-        completion = cellName + "//" + cellPath + ":" + name;
-      }
-      addResultForTarget(result, completion);
+      addResultForTarget(result, name);
     }
   }
 }

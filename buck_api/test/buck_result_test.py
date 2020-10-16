@@ -26,8 +26,10 @@ async def test_get_out():
         "echo hello", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
-    br = BuckResult(process, stdout, stderr, "utf-8", str(uuid.uuid1()))
-    assert br.get_stdout() == "hello\n"
+    br = BuckResult(
+        process, str(stdout, "utf-8"), str(stderr, "utf-8"), str(uuid.uuid1())
+    )
+    assert br.stdout == "hello\n"
 
 
 @pytest.mark.asyncio
@@ -36,8 +38,10 @@ async def test_get_err():
         '>&2 echo "hello"', stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
-    br = BuckResult(process, stdout, stderr, "utf-8", str(uuid.uuid1()))
-    assert br.get_stderr() == "hello\n"
+    br = BuckResult(
+        process, str(stdout, "utf-8"), str(stderr, "utf-8"), str(uuid.uuid1())
+    )
+    assert br.stderr == "hello\n"
 
 
 @pytest.mark.asyncio
@@ -46,7 +50,9 @@ async def test_get_exit_code():
         "exit 3", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
-    br = BuckResult(process, stdout, stderr, "utf-8", str(uuid.uuid1()))
+    br = BuckResult(
+        process, str(stdout, "utf-8"), str(stderr, "utf-8"), str(uuid.uuid1())
+    )
     assert br.get_exit_code() == ExitCode.COMMANDLINE_ERROR
 
 
@@ -56,11 +62,13 @@ async def test_get_out_stored():
         "echo hello", stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
-    br = BuckResult(process, stdout, stderr, "utf-8", str(uuid.uuid1()))
-    assert br.get_stdout() == "hello\n"
-    assert br.get_stdout() == "hello\n"
-    assert br.get_stdout() == "hello\n"
-    assert br.get_stdout() == "hello\n"
+    br = BuckResult(
+        process, str(stdout, "utf-8"), str(stderr, "utf-8"), str(uuid.uuid1())
+    )
+    assert br.stdout == "hello\n"
+    assert br.stdout == "hello\n"
+    assert br.stdout == "hello\n"
+    assert br.stdout == "hello\n"
 
 
 @pytest.mark.asyncio
@@ -69,8 +77,10 @@ async def test_get_err_stored():
         '>&2 echo "hello"', stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
-    br = BuckResult(process, stdout, stderr, "utf-8", str(uuid.uuid1()))
-    assert br.get_stderr() == "hello\n"
-    assert br.get_stderr() == "hello\n"
-    assert br.get_stderr() == "hello\n"
-    assert br.get_stderr() == "hello\n"
+    br = BuckResult(
+        process, str(stdout, "utf-8"), str(stderr, "utf-8"), str(uuid.uuid1())
+    )
+    assert br.stderr == "hello\n"
+    assert br.stderr == "hello\n"
+    assert br.stderr == "hello\n"
+    assert br.stderr == "hello\n"

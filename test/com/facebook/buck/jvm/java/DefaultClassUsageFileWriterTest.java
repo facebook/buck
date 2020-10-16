@@ -75,7 +75,12 @@ public class DefaultClassUsageFileWriterTest {
       }
     }
     filesystem.createParentDirs(outputOne);
-    writerOne.writeFile(trackerOne, outputOne.getPath(), filesystem, cellPathResolver);
+    writerOne.writeFile(
+        trackerOne,
+        outputOne.getPath(),
+        filesystem.getRootPath(),
+        filesystem.getBuckPaths().getConfiguredBuckOut(),
+        cellPathResolver);
 
     DefaultClassUsageFileWriter writerTwo = new DefaultClassUsageFileWriter();
     ClassUsageTracker trackerTwo = new ClassUsageTracker();
@@ -88,7 +93,12 @@ public class DefaultClassUsageFileWriterTest {
       }
     }
     filesystem.createParentDirs(outputTwo);
-    writerTwo.writeFile(trackerTwo, outputTwo.getPath(), filesystem, cellPathResolver);
+    writerTwo.writeFile(
+        trackerTwo,
+        outputTwo.getPath(),
+        filesystem.getRootPath(),
+        filesystem.getBuckPaths().getConfiguredBuckOut(),
+        cellPathResolver);
 
     assertEquals(
         new String(Files.readAllBytes(outputOne.getPath())),
@@ -125,7 +135,12 @@ public class DefaultClassUsageFileWriterTest {
       }
     }
     homeFs.createParentDirs(outputOne);
-    writer.writeFile(trackerOne, outputOne.getPath(), homeFs, cellPathResolver);
+    writer.writeFile(
+        trackerOne,
+        outputOne.getPath(),
+        homeFs.getRootPath(),
+        homeFs.getBuckPaths().getConfiguredBuckOut(),
+        cellPathResolver);
 
     // The xcell file should appear relative to the "home" filesystem, and the external class
     // which is not under any cell in the project should not appear at all.

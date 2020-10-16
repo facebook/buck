@@ -96,8 +96,8 @@ public class UnconfiguredQueryTargetEvaluator
       ImmutableMap<String, ImmutableSet<UnconfiguredQueryTarget>> keyedResults =
           resolveTargetPatterns(ImmutableSet.of(target));
       return keyedResults.values().asList().get(0);
-    } catch (BuildFileParseException | InterruptedException | IOException e) {
-      throw new QueryException(e, "Error in resolving targets matching %s", target);
+    } catch (InterruptedException | IOException e) {
+      throw new QueryException(e, "Error while resolving targets matching %s", target);
     }
   }
 

@@ -57,6 +57,10 @@ public class SwiftPlatformFactory {
             .setSwiftSharedLibraryRunPaths(buildSharedRunPaths(platformName, shouldLinkSystemSwift))
             .setSwiftTarget(swiftTarget);
 
+    for (String systemFrameworkPath : sdk.getAdditionalSystemFrameworkSearchPaths()) {
+      builder.addAdditionalSystemFrameworkSearchPaths(Paths.get(systemFrameworkPath));
+    }
+
     for (Path toolchainPath : toolchainPaths) {
       Optional<Path> swiftRuntimePathForBundling =
           findSwiftRuntimePath(toolchainPath, platformName);

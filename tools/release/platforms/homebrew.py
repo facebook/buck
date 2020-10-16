@@ -334,8 +334,10 @@ def build_bottle(
 
     # This is a wholly undocumented endpoint, but is not subject to ratelimiting
     # See https://github.com/facebook/homebrew-fb/pull/33
-    undocumented_tarball_url = "https://github.com/{repository}/archive/{tag_name}.tar.gz".format(
-        repository=repository, tag_name=release["tag_name"]
+    undocumented_tarball_url = (
+        "https://github.com/{repository}/archive/{tag_name}.tar.gz".format(
+            repository=repository, tag_name=release["tag_name"]
+        )
     )
     tarball_sha256 = fetch_tarball_sha256(undocumented_tarball_url)
 

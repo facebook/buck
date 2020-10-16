@@ -45,7 +45,8 @@ public class CommonThreadStateRendererTest {
   @Test
   public void rendersShortStatusWithCorrectColor() {
     CommonThreadStateRenderer renderer =
-        new CommonThreadStateRenderer(new Ansi(false), Object::toString, 0, 80, ImmutableMap.of());
+        new CommonThreadStateRenderer(
+            new Ansi(false), Object::toString, 0, 80, ImmutableMap.of(), Optional.empty());
 
     assertEquals(
         ansi.asSubtleText("[:]"),
@@ -63,7 +64,8 @@ public class CommonThreadStateRendererTest {
   @Test
   public void rendersShortStatusWithAnimation() {
     CommonThreadStateRenderer renderer =
-        new CommonThreadStateRenderer(new Ansi(false), Object::toString, 0, 80, ImmutableMap.of());
+        new CommonThreadStateRenderer(
+            new Ansi(false), Object::toString, 0, 80, ImmutableMap.of(), Optional.empty());
 
     assertEquals(
         ansi.asSubtleText("[:]"),
@@ -76,7 +78,8 @@ public class CommonThreadStateRendererTest {
             Object::toString,
             CommonThreadStateRenderer.ANIMATION_DURATION,
             80,
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            Optional.empty());
 
     assertEquals(
         ansi.asSubtleText("[']"),
@@ -89,7 +92,8 @@ public class CommonThreadStateRendererTest {
             Object::toString,
             CommonThreadStateRenderer.ANIMATION_DURATION * 2,
             80,
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            Optional.empty());
 
     assertEquals(
         ansi.asSubtleText("[:]"),
@@ -102,7 +106,8 @@ public class CommonThreadStateRendererTest {
             Object::toString,
             CommonThreadStateRenderer.ANIMATION_DURATION * 3,
             80,
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            Optional.empty());
 
     assertEquals(
         ansi.asSubtleText("[.]"),
@@ -113,10 +118,11 @@ public class CommonThreadStateRendererTest {
   @Test
   public void rendersLineCorrectLength() {
     CommonThreadStateRenderer renderer =
-        new CommonThreadStateRenderer(new Ansi(false), Object::toString, 0, 100, ImmutableMap.of());
+        new CommonThreadStateRenderer(
+            new Ansi(false), Object::toString, 0, 100, ImmutableMap.of(), Optional.empty());
 
     assertEquals(
-        ansi.asSubtleText(" - //some:target... 5000 (running some step[0])"),
+        ansi.asSubtleText("     - //some:target... 5000 (running some step[0])"),
         renderer.renderLine(
             Optional.of(BuildTargetFactory.newInstance("some:target")),
             Optional.of(fakeEvent),
@@ -126,10 +132,11 @@ public class CommonThreadStateRendererTest {
             5000));
 
     renderer =
-        new CommonThreadStateRenderer(new Ansi(false), Object::toString, 0, 15, ImmutableMap.of());
+        new CommonThreadStateRenderer(
+            new Ansi(false), Object::toString, 0, 19, ImmutableMap.of(), Optional.empty());
 
     assertEquals(
-        ansi.asSubtleText(" - //so... 5000"),
+        ansi.asSubtleText("     - //so... 5000"),
         renderer.renderLine(
             Optional.of(BuildTargetFactory.newInstance("some:target")),
             Optional.of(fakeEvent),
@@ -139,10 +146,11 @@ public class CommonThreadStateRendererTest {
             5000));
 
     renderer =
-        new CommonThreadStateRenderer(new Ansi(false), Object::toString, 0, 45, ImmutableMap.of());
+        new CommonThreadStateRenderer(
+            new Ansi(false), Object::toString, 0, 49, ImmutableMap.of(), Optional.empty());
 
     assertEquals(
-        ansi.asSubtleText(" - //some:target... 5000 (running som... [0])"),
+        ansi.asSubtleText("     - //some:target... 5000 (running som... [0])"),
         renderer.renderLine(
             Optional.of(BuildTargetFactory.newInstance("some:target")),
             Optional.of(fakeEvent),
@@ -152,10 +160,11 @@ public class CommonThreadStateRendererTest {
             5000));
 
     renderer =
-        new CommonThreadStateRenderer(new Ansi(false), Object::toString, 0, 80, ImmutableMap.of());
+        new CommonThreadStateRenderer(
+            new Ansi(false), Object::toString, 0, 84, ImmutableMap.of(), Optional.empty());
 
     assertEquals(
-        ansi.asSubtleText(" - //some:target... 5000 (some placeholder)"),
+        ansi.asSubtleText("     - //some:target... 5000 (some placeholder)"),
         renderer.renderLine(
             Optional.of(BuildTargetFactory.newInstance("some:target")),
             Optional.of(fakeEvent),
@@ -165,10 +174,11 @@ public class CommonThreadStateRendererTest {
             5000));
 
     renderer =
-        new CommonThreadStateRenderer(new Ansi(false), Object::toString, 0, 40, ImmutableMap.of());
+        new CommonThreadStateRenderer(
+            new Ansi(false), Object::toString, 0, 44, ImmutableMap.of(), Optional.of("[[]]"));
 
     assertEquals(
-        ansi.asSubtleText(" - //some:target... 5000 (some plac... )"),
+        ansi.asSubtleText("[[]] - //some:target... 5000 (some plac... )"),
         renderer.renderLine(
             Optional.of(BuildTargetFactory.newInstance("some:target")),
             Optional.of(fakeEvent),

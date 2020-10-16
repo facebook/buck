@@ -42,11 +42,13 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.TopLevelRuleKeyCalculatedEvent;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
@@ -58,6 +60,8 @@ import com.facebook.buck.util.collect.SortedSets;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
+import com.facebook.buck.util.randomizedtrial.WithProbability;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -74,6 +78,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -129,7 +134,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final BuildType buildMode;
   private final DepFiles depFiles;
   private final long maxDepFileCacheEntries;
-  private final BuildRuleResolver resolver;
+  private final ActionGraphBuilder resolver;
   private final TargetConfigurationSerializer targetConfigurationSerializer;
   private final Optional<Long> artifactCacheSizeLimit;
   private final Optional<Long> defaultOutputHashSizeLimit;
@@ -137,6 +142,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final FileHashCache fileHashCache;
   @VisibleForTesting final RuleKeyFactories ruleKeyFactories;
   private final ResourceAwareSchedulingInfo resourceAwareSchedulingInfo;
+  private final boolean shouldUseParallelDepsResolving;
 
   private final RuleDepsCache ruleDeps;
   private final Optional<UnskippedBuildEngineActionTracker> unskippedRulesTracker;
@@ -161,7 +167,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       Optional<Long> artifactCacheSizeLimit,
       Optional<Long> defaultOutputHashSizeLimit,
       ImmutableMap<String, Long> ruleTypeOutputHashSizeLimit,
-      BuildRuleResolver resolver,
+      boolean shouldUseParallelDepsResolving,
+      ActionGraphBuilder resolver,
       BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver,
       TargetConfigurationSerializer targetConfigurationSerializer,
       BuildInfoStoreManager buildInfoStoreManager,
@@ -178,6 +185,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         artifactCacheSizeLimit,
         defaultOutputHashSizeLimit,
         ruleTypeOutputHashSizeLimit,
+        shouldUseParallelDepsResolving,
         resolver,
         buildInfoStoreManager,
         actionToBuildRuleResolver,
@@ -208,7 +216,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       Optional<Long> artifactCacheSizeLimit,
       Optional<Long> defaultOutputHashSizeLimit,
       ImmutableMap<String, Long> ruleTypeOutputHashSizeLimit,
-      BuildRuleResolver resolver,
+      boolean shouldUseParallelDepsResolving,
+      ActionGraphBuilder resolver,
       BuildInfoStoreManager buildInfoStoreManager,
       BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver,
       TargetConfigurationSerializer targetConfigurationSerializer,
@@ -233,6 +242,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.ruleKeyFactories = ruleKeyFactories;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
     this.buildInfoStoreManager = buildInfoStoreManager;
+    this.shouldUseParallelDepsResolving = shouldUseParallelDepsResolving;
 
     this.ruleDeps = new DefaultRuleDepsCache(resolver, actionToBuildRuleResolver);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
@@ -475,14 +485,48 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       BuildEngineBuildContext buildContext, ExecutionContext executionContext, BuildRule rule) {
     ListenableFuture<BuildResult> resultFuture =
         getBuildRuleResultWithRuntimeDeps(rule, buildContext, executionContext, true);
+
+    ArrayList<ListenableFuture<Void>> pending = new ArrayList<>();
+
+    // By calculating all deps in parallel up front, we avoid serializing on long dep chains
+    // (ideally, we submit these as low-pri tasks, to avoid starving rule key calc and builds
+    // jobs...).
+    if (shouldUseParallelDepsResolving) {
+      EngineDepsResolvingMode mode =
+          RandomizedTrial.getGroup(
+              "engine_dep_resolving",
+              buildContext.getBuildId().toString(),
+              EngineDepsResolvingMode.class);
+      buildContext
+          .getEventBus()
+          .post(new ExperimentEvent("engine_dep_resolving", mode.toString(), "", null, null));
+      if (mode == EngineDepsResolvingMode.PARALLEL) {
+        Collection<BuildRule> allRules = resolver.getBuildRules();
+        pending.ensureCapacity(pending.size() + allRules.size());
+        allRules.stream()
+            .map(
+                r ->
+                    service.<Void>submit(
+                        () -> {
+                          ruleDeps.getBuildDeps(r);
+                          return null;
+                        }))
+            .forEach(pending::add);
+      }
+    }
+
+    // Keep track of all jobs that run asynchronously with respect to the build dep chain.
+    // We want to make sure we wait for these before calling yielding the final build result.
+    pending.add(
+        service.submit(
+            () -> {
+              registerTopLevelRule(rule, buildContext.getEventBus());
+              return null;
+            }));
+
     return BuildEngine.BuildEngineResult.of(
         Futures.transformAsync(
-            // Keep track of all jobs that run asynchronously with respect to the build dep chain.
-            // We want
-            // to make sure we wait for these before calling yielding the final build result.
-            service.submit(() -> registerTopLevelRule(rule, buildContext.getEventBus())),
-            unused -> resultFuture,
-            MoreExecutors.directExecutor()));
+            Futures.allAsList(pending), unused -> resultFuture, MoreExecutors.directExecutor()));
   }
 
   @Nullable
@@ -607,6 +651,21 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     @Override
     public void onRuleAboutToBeBuilt(BuildRule rule) {
       cachingBuildEngine.cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
+    }
+  }
+
+  /** Modes to resolve build rule deps. */
+  private enum EngineDepsResolvingMode implements WithProbability {
+    /** Resolve all rule deps in parallel. */
+    PARALLEL,
+
+    /** Resolve deps as they're needed, while traversing the build graph. */
+    DAG,
+    ;
+
+    @Override
+    public double getProbability() {
+      return 0.5;
     }
   }
 }

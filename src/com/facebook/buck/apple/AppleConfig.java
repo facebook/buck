@@ -91,10 +91,17 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String ENABLE_PROJECT_V2_SWIFT_INDEXING_FIX =
       "enable_project_v2_swift_indexing_fix";
 
+  private static final String ENABLE_PROJECT_V2_SWIFT_TESTS_LINKING_SDKROOT_FIX =
+      "enable_project_v2_swift_tests_linking_sdkroot_fix";
+
   // TODO(T71539769): This is a temporary flag, remove after successful deployment
   private static final String TARGET_TRIPLE_ENABLED = "target_triple_enabled";
 
   private static final String INCREMENTAL_BUNDLING_ENABLED = "incremental_bundling_enabled";
+
+  // TODO(T76656556): This is a temporary flag, remove after successful deployment
+  private static final String BUNDLE_INPUT_BASED_RULEKEY_ENABLED =
+      "bundle_input_based_rulekey_enabled";
 
   private final BuckConfig delegate;
 
@@ -595,12 +602,21 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, ENABLE_PROJECT_V2_SWIFT_INDEXING_FIX, false);
   }
 
+  public boolean getEnableProjectV2SwiftTestsLinkingSdkrootFix() {
+    return delegate.getBooleanValue(
+        APPLE_SECTION, ENABLE_PROJECT_V2_SWIFT_TESTS_LINKING_SDKROOT_FIX, false);
+  }
+
   public boolean getTargetTripleEnabled() {
     return delegate.getBooleanValue(APPLE_SECTION, TARGET_TRIPLE_ENABLED, false);
   }
 
   public boolean getIncrementalBundlingEnabled() {
     return delegate.getBooleanValue(APPLE_SECTION, INCREMENTAL_BUNDLING_ENABLED, false);
+  }
+
+  public boolean getBundleInputBasedRulekeyEnabled() {
+    return delegate.getBooleanValue(APPLE_SECTION, BUNDLE_INPUT_BASED_RULEKEY_ENABLED, false);
   }
 
   @BuckStyleValue

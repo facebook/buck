@@ -85,4 +85,25 @@ public class BuckDepVisibilityInspectionTest extends PlatformTestCaseWithBuckCel
         BuckVisibilityState.VisibleState.VISIBLE,
         state.getVisibility(BuckTarget.parse("//abc:def").get()));
   }
+
+  public void testSameBuckFileVisibility() {
+    String content =
+        "fb_java_library(\n"
+            + "name = \"xyz\",\n"
+            + "visibility = [\"cell//dir:target\"]\n"
+            + ")\n"
+            + "fb_java_library(\n"
+            + "name = \"abc\",\n"
+            + "deps = [\":xyz\"]\n"
+            + ")";
+    Path path = createFileInDefaultCell("foo/BUCK", content);
+    BuckTargetPattern pattern = BuckTargetPattern.parse("//foo:xyz").get();
+    BuckVisibilityState state =
+        BuckDepVisibilityInspection.Visitor.getVisibilityStateWithList(
+                project, buckTargetLocator, asVirtualFile(path), pattern)
+            .getFirst();
+    assertEquals(
+        BuckVisibilityState.VisibleState.VISIBLE,
+        state.getVisibility(BuckTarget.parse("//foo:abc").get()));
+  }
 }

@@ -172,6 +172,7 @@ public class BuildExecutor {
         engineConfig.getBuildArtifactCacheSizeLimit(),
         engineConfig.getDefaultOutputHashSizeLimit(),
         engineConfig.getRuleTypeOutputHashSizeLimit(),
+        engineConfig.shouldUseParallelDepsResolving(),
         actionGraphAndBuilder.getActionGraphBuilder(),
         actionGraphAndBuilder.getBuildEngineActionToBuildRuleResolver(),
         targetConfigurationSerializer,

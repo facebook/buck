@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
@@ -39,7 +39,7 @@ public class JavaPaths {
    * directory and returns a list of all the resulting .java files.
    */
   static ImmutableList<Path> extractArchivesAndGetPaths(
-      ProjectFilesystem projectFilesystem,
+      AbsPath ruleCellPathRoot,
       ProjectFilesystemFactory projectFilesystemFactory,
       ImmutableSet<Path> javaSourceFilePaths,
       Path workingDirectory)
@@ -58,8 +58,8 @@ public class JavaPaths {
                 .getUnarchiver()
                 .extractArchive(
                     projectFilesystemFactory,
-                    projectFilesystem.resolve(path),
-                    projectFilesystem.resolve(workingDirectory),
+                    ruleCellPathRoot.resolve(path).getPath(),
+                    ruleCellPathRoot.resolve(workingDirectory).getPath(),
                     ExistingFileMode.OVERWRITE);
         sources.addAll(
             zipPaths.stream().filter(input -> input.toString().endsWith(".java")).iterator());

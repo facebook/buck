@@ -2178,6 +2178,9 @@ public class XcodeNativeTargetGenerator {
       if (options.shouldLinkSystemSwift()) {
         librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift-5.0/$PLATFORM_NAME");
       }
+      if (appleConfig.getEnableProjectV2SwiftTestsLinkingSdkrootFix()) {
+        librarySearchPaths.add("$SDKROOT/usr/lib/swift");
+      }
     }
 
     if (swiftDeps.size() > 0 || projGenerationStateCache.targetContainsSwiftSourceCode(node)) {

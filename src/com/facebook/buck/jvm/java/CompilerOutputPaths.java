@@ -20,9 +20,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.google.common.base.Preconditions;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -44,9 +45,20 @@ public abstract class CompilerOutputPaths {
 
   public abstract Optional<Path> getOutputJarPath();
 
-  public static CompilerOutputPaths of(BuildTarget target, ProjectFilesystem filesystem) {
-    RelPath genRoot = BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__output");
-    RelPath scratchRoot = BuildTargetPaths.getScratchPath(filesystem, target, "lib__%s__scratch");
+  /** Creates {@link CompilerOutputPaths} */
+  public static CompilerOutputPaths of(BuildTarget target, BuckPaths buckPath) {
+    FileSystem fileSystem = buckPath.getFileSystem();
+    boolean includeTargetConfigHash = buckPath.shouldIncludeTargetConfigHash();
+    RelPath genDir = buckPath.getGenDir();
+    RelPath scratchDir = buckPath.getScratchDir();
+    RelPath annotationDir = buckPath.getAnnotationDir();
+
+    RelPath genRoot =
+        BuildTargetPaths.getRelativePath(
+            target, "lib__%s__output", fileSystem, includeTargetConfigHash, genDir);
+    RelPath scratchRoot =
+        BuildTargetPaths.getRelativePath(
+            target, "lib__%s__scratch", fileSystem, includeTargetConfigHash, scratchDir);
 
     return ImmutableCompilerOutputPaths.builder()
         .setClassesDir(scratchRoot.resolveRel("classes"))
@@ -60,39 +72,46 @@ public abstract class CompilerOutputPaths {
                 ? Optional.of(
                     genRoot.resolve(String.format("%s.jar", target.getShortNameAndFlavorPostfix())))
                 : Optional.empty())
-        .setAnnotationPath(BuildTargetPaths.getAnnotationPath(filesystem, target, "__%s_gen__"))
+        .setAnnotationPath(
+            BuildTargetPaths.getRelativePath(
+                target, "__%s_gen__", fileSystem, includeTargetConfigHash, annotationDir))
         .setPathToSourcesList(
-            BuildTargetPaths.getGenPath(filesystem, target, "__%s__srcs").getPath())
+            BuildTargetPaths.getRelativePath(
+                    target, "__%s__srcs", fileSystem, includeTargetConfigHash, genDir)
+                .getPath())
         .setWorkingDirectory(
-            BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__working_directory").getPath())
+            BuildTargetPaths.getRelativePath(
+                    target,
+                    "lib__%s__working_directory",
+                    fileSystem,
+                    includeTargetConfigHash,
+                    genDir)
+                .getPath())
         .build();
   }
 
-  public static Path getDepFilePath(BuildTarget target, ProjectFilesystem filesystem) {
-    return CompilerOutputPaths.of(target, filesystem)
+  /** Returns a path to a file that contains dependencies used in the compilation */
+  public static Path getDepFilePath(BuildTarget target, BuckPaths buckPath) {
+    return CompilerOutputPaths.of(target, buckPath)
         .getOutputJarDirPath()
         .resolve("used-classes.json");
   }
 
-  public static RelPath getClassesDir(BuildTarget target, ProjectFilesystem filesystem) {
-    return CompilerOutputPaths.of(target, filesystem).getClassesDir();
+  public static RelPath getClassesDir(BuildTarget target, BuckPaths buckPaths) {
+    return CompilerOutputPaths.of(target, buckPaths).getClassesDir();
   }
 
-  public static Path getOutputJarDirPath(BuildTarget target, ProjectFilesystem filesystem) {
-    return CompilerOutputPaths.of(target, filesystem).getOutputJarDirPath();
+  public static RelPath getAnnotationPath(BuildTarget target, BuckPaths buckPaths) {
+    return CompilerOutputPaths.of(target, buckPaths).getAnnotationPath();
   }
 
-  public static RelPath getAnnotationPath(ProjectFilesystem filesystem, BuildTarget target) {
-    return CompilerOutputPaths.of(target, filesystem).getAnnotationPath();
-  }
-
-  public static Path getAbiJarPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+  public static Path getAbiJarPath(BuildTarget buildTarget, BuckPaths buckPaths) {
     Preconditions.checkArgument(hasAbiJar(buildTarget));
-    return CompilerOutputPaths.of(buildTarget, filesystem).getAbiJarPath().get();
+    return CompilerOutputPaths.of(buildTarget, buckPaths).getAbiJarPath().get();
   }
 
-  public static Path getOutputJarPath(BuildTarget target, ProjectFilesystem filesystem) {
-    return CompilerOutputPaths.of(target, filesystem).getOutputJarPath().get();
+  public static Path getOutputJarPath(BuildTarget target, BuckPaths buckPaths) {
+    return CompilerOutputPaths.of(target, buckPaths).getOutputJarPath().get();
   }
 
   private static boolean isLibraryJar(BuildTarget target) {

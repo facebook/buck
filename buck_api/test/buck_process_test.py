@@ -29,7 +29,7 @@ async def test_wait():
     buck_build_id = str(uuid.uuid1())
     bp = BuckProcess(awaitable_process, BuckResult, "utf-8", buck_build_id)
     br: BuckResult = await bp.wait()
-    assert br.get_stdout() == "hello\n"
+    assert br.stdout == "hello\n"
     assert br.buck_build_id == buck_build_id
 
 

@@ -36,7 +36,7 @@ public class BuckTestConfiguration extends AbstractConfiguration<BuckTestConfigu
   @NotNull
   @Override
   public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
-    return new BuckTestConfigurationEditor();
+    return new BuckTestConfigurationEditor(getProject());
   }
 
   @Nullable

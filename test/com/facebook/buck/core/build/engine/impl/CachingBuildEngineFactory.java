@@ -26,7 +26,7 @@ import com.facebook.buck.core.build.engine.type.DepFiles;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
@@ -56,7 +56,7 @@ public class CachingBuildEngineFactory {
   private Optional<RuleKeyFactories> ruleKeyFactories = Optional.empty();
   private CachingBuildEngineDelegate cachingBuildEngineDelegate;
   private WeightedListeningExecutorService executorService;
-  private final BuildRuleResolver buildRuleResolver;
+  private final ActionGraphBuilder buildRuleResolver;
   private final BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver;
   private final ResourceAwareSchedulingInfo resourceAwareSchedulingInfo =
       ResourceAwareSchedulingInfo.NON_AWARE_SCHEDULING_INFO;
@@ -65,7 +65,7 @@ public class CachingBuildEngineFactory {
   private Optional<BuildRuleStrategy> customBuildRuleStrategy = Optional.empty();
 
   public CachingBuildEngineFactory(
-      BuildRuleResolver buildRuleResolver,
+      ActionGraphBuilder buildRuleResolver,
       BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver,
       BuildInfoStoreManager buildInfoStoreManager) {
     this.cachingBuildEngineDelegate = new LocalCachingBuildEngineDelegate(new DummyFileHashCache());
@@ -164,6 +164,7 @@ public class CachingBuildEngineFactory {
                     artifactCacheSizeLimit,
                     defaultOutputHashSizeLimit,
                     ruleTypeOutputHashSizeLimit,
+                    false,
                     buildRuleResolver,
                     buildInfoStoreManager,
                     actionToBuildRuleResolver,
@@ -184,6 +185,7 @@ public class CachingBuildEngineFactory {
                     artifactCacheSizeLimit,
                     defaultOutputHashSizeLimit,
                     ruleTypeOutputHashSizeLimit,
+                    false,
                     buildRuleResolver,
                     actionToBuildRuleResolver,
                     targetConfigurationSerializer,

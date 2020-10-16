@@ -194,6 +194,7 @@ public class AppleBundleIntegrationTest {
     workspace.addBuckConfigLocalOption("apple", "use_entitlements_when_adhoc_code_signing", "true");
     workspace.addBuckConfigLocalOption("cxx", "skip_system_framework_search_paths", "true");
     workspace.addBuckConfigLocalOption("apple", "maccatalyst_target_sdk_version", "13.0");
+    workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
   }
 
   @Test
@@ -265,6 +266,18 @@ public class AppleBundleIntegrationTest {
     assertTrue(maybeSignatureOutput.isPresent());
     assertThat(maybeSignatureOutput.get(), containsString("code object is not signed at all"));
     assertThat(maybeSignatureOutput.get(), not(containsString("Signature=adhoc")));
+  }
+
+  @Test
+  public void simpleApplicationBundleWithInputBasedRulekey() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_with_codesigning", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "bundle_input_based_rulekey_enabled", "true");
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
   }
 
   @Test
@@ -2426,5 +2439,38 @@ public class AppleBundleIntegrationTest {
                   .resolve("incremental_info.json"));
       assertFalse(filesystem.exists(path));
     }
+  }
+
+  @Test
+  public void givenBundleContainsDuplicateResourcesWithSameContentThenBuildSucceeds()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_duplicated_resources", tmp);
+    workspace.setUp();
+
+    workspace.addBuckConfigLocalOption("apple", "incremental_bundling_enabled", "true");
+    workspace.addBuckConfigLocalOption("apple", "codesign_type_override", "skip");
+
+    BuildTarget target =
+        workspace.newBuildTarget("//:DemoAppWithDuplicatedResources#macosx-x86_64,no-debug");
+    workspace.buildAndReturnOutput(target.toString());
+  }
+
+  @Test
+  public void givenBundleContainsDuplicateResourcesWithDifferentContentThenBuildFails()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_duplicated_resources", tmp);
+    workspace.setUp();
+
+    workspace.addBuckConfigLocalOption("apple", "incremental_bundling_enabled", "true");
+    workspace.addBuckConfigLocalOption("apple", "codesign_type_override", "skip");
+
+    BuildTarget target =
+        workspace.newBuildTarget(
+            "//:DemoAppWithDifferentDuplicatedResources#macosx-x86_64,no-debug");
+    workspace.runBuckBuild(target.toString()).assertFailure();
   }
 }

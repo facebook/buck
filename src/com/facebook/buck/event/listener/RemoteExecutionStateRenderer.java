@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 public class RemoteExecutionStateRenderer implements MultiStateRenderer {
 
   private static final String EXECUTOR_COLLECTION_LABEL = "RE";
-  private static final String REMOTE_EXECUTION_PREFIX = "[RE] ";
+  private static final String REMOTE_EXECUTION_PREFIX = "[RE]";
 
   private final long currentTimeMillis;
   private final int maxConcurrentExecutions;
@@ -62,7 +62,8 @@ public class RemoteExecutionStateRenderer implements MultiStateRenderer {
             formatTimeFunction,
             currentTimeMillis,
             outputMaxColumns,
-            /* threadInformationMap= */ ImmutableMap.of());
+            ImmutableMap.of(),
+            Optional.of(REMOTE_EXECUTION_PREFIX));
     this.remotelyBuildingTargets =
         filterByElapsedTime(remotelyBuildingTargets, minimumDurationMillis);
   }
@@ -90,14 +91,13 @@ public class RemoteExecutionStateRenderer implements MultiStateRenderer {
   @Override
   public String renderStatusLine(long targetId) {
     RemoteExecutionActionEvent.Started event = getEventByTargetId(targetId);
-    return REMOTE_EXECUTION_PREFIX
-        + commonThreadStateRenderer.renderLine(
-            Optional.of(event.getBuildTarget()),
-            Optional.of(event),
-            /* runningStep= */ Optional.empty(),
-            /* stepCategory= */ Optional.empty(),
-            /* placeholderStepInformation= */ Optional.empty(),
-            getElapsedTimeMsForEvent(event));
+    return commonThreadStateRenderer.renderLine(
+        Optional.of(event.getBuildTarget()),
+        Optional.of(event),
+        /* runningStep= */ Optional.empty(),
+        /* stepCategory= */ Optional.empty(),
+        /* placeholderStepInformation= */ Optional.empty(),
+        getElapsedTimeMsForEvent(event));
   }
 
   @Override

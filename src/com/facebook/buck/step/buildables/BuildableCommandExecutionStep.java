@@ -28,16 +28,15 @@ import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Resources;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import javax.annotation.Nullable;
 
 /**
  * {@link Step} that wraps a {@link BuildableCommand}. Writes the {@link BuildableCommand} into a
@@ -48,21 +47,19 @@ import java.nio.file.Paths;
  */
 public class BuildableCommandExecutionStep extends IsolatedStep {
 
-  private static final String EXTERNAL_ACTIONS_RESOURCE_JAR =
-      "com/facebook/buck/external/main/external_actions_bin.jar";
+  public static final String EXTERNAL_ACTIONS_PROPERTY_NAME = "buck.external_actions";
   private static final String EXTERNAL_ACTIONS_MAIN =
       "com.facebook.buck.external.main.ExternalActionsExecutable";
   private static final ImmutableList<String> COMMAND_PREFIX = ImmutableList.of("java", "-cp");
   private static final String TEMP_FILE_NAME_PREFIX = "buildable_command_";
 
-  private final AbsPath jarPath;
   private final String mainToInvoke;
   private final BuildableCommand buildableCommand;
   private final ProjectFilesystem projectFilesystem;
 
   public BuildableCommandExecutionStep(
       BuildableCommand buildableCommand, ProjectFilesystem projectFilesystem) {
-    this(getJarPath(), EXTERNAL_ACTIONS_MAIN, buildableCommand, projectFilesystem);
+    this(EXTERNAL_ACTIONS_MAIN, buildableCommand, projectFilesystem);
   }
 
   /**
@@ -71,23 +68,10 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
    */
   @VisibleForTesting
   public BuildableCommandExecutionStep(
-      AbsPath jarPath,
-      String mainToInvoke,
-      BuildableCommand buildableCommand,
-      ProjectFilesystem projectFilesystem) {
-    this.jarPath = jarPath;
+      String mainToInvoke, BuildableCommand buildableCommand, ProjectFilesystem projectFilesystem) {
     this.mainToInvoke = mainToInvoke;
     this.buildableCommand = buildableCommand;
     this.projectFilesystem = projectFilesystem;
-  }
-
-  private static AbsPath getJarPath() {
-    try {
-      URL binary = Resources.getResource(EXTERNAL_ACTIONS_RESOURCE_JAR);
-      return AbsPath.of(Paths.get(binary.toURI()));
-    } catch (URISyntaxException e) {
-      throw new IllegalStateException("Failed to retrieve external actions binary", e);
-    }
   }
 
   @Override
@@ -117,6 +101,21 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
     return "running buildable command: " + buildableCommand;
   }
 
+  /**
+   * Returns the external action binary's JAR path. Protected visibility only for testing purposes,
+   * otherwise private.
+   */
+  @VisibleForTesting
+  protected AbsPath getJarPath() {
+    return AbsPath.of(
+        Paths.get(Preconditions.checkNotNull(getExternalActionsFromPropertiesOrNull())));
+  }
+
+  @Nullable
+  public String getExternalActionsFromPropertiesOrNull() {
+    return System.getProperty(EXTERNAL_ACTIONS_PROPERTY_NAME);
+  }
+
   private Path writeBuildableCommandAndGetPath() throws IOException {
     Path buildableCommandPath = projectFilesystem.createTempFile(TEMP_FILE_NAME_PREFIX, "");
     try (OutputStream outputStream = new FileOutputStream(buildableCommandPath.toFile())) {
@@ -129,7 +128,7 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
     return ImmutableList.<String>builderWithExpectedSize(
             COMMAND_PREFIX.size() + buildableCommand.getArgsList().size())
         .addAll(COMMAND_PREFIX)
-        .add(jarPath.toString())
+        .add(getJarPath().toString())
         .add(mainToInvoke)
         .add(buildableCommandPath.toString())
         .build();

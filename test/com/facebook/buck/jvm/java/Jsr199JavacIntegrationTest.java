@@ -128,7 +128,8 @@ public class Jsr199JavacIntegrationTest {
             projectFilesystem.getRootPath(),
             executionContext.getProjectFilesystemFactory(),
             executionContext.getEnvironment(),
-            executionContext.getProcessExecutor());
+            executionContext.getProcessExecutor(),
+            projectFilesystem.getBuckPaths());
 
     int exitCode =
         javac
@@ -184,7 +185,8 @@ public class Jsr199JavacIntegrationTest {
             projectFilesystem.getRootPath(),
             executionContext.getProjectFilesystemFactory(),
             executionContext.getEnvironment(),
-            executionContext.getProcessExecutor());
+            executionContext.getProcessExecutor(),
+            projectFilesystem.getBuckPaths());
 
     int exitCode =
         javac
@@ -292,7 +294,8 @@ public class Jsr199JavacIntegrationTest {
             projectFilesystem.getRootPath(),
             executionContext.getProjectFilesystemFactory(),
             executionContext.getEnvironment(),
-            executionContext.getProcessExecutor());
+            executionContext.getProcessExecutor(),
+            projectFilesystem.getBuckPaths());
 
     boolean caught = false;
 
@@ -386,7 +389,8 @@ public class Jsr199JavacIntegrationTest {
             projectFilesystem.getRootPath(),
             executionContext.getProjectFilesystemFactory(),
             executionContext.getEnvironment(),
-            executionContext.getProcessExecutor());
+            executionContext.getProcessExecutor(),
+            projectFilesystem.getBuckPaths());
 
     Invocation buildInvocation =
         javac.newBuildInvocation(

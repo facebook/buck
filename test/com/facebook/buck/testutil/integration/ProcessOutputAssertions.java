@@ -18,6 +18,7 @@ package com.facebook.buck.testutil.integration;
 
 import static com.facebook.buck.util.MoreStringsForTests.normalizeNewlines;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.testutil.OutputHelper;
@@ -104,5 +105,21 @@ public final class ProcessOutputAssertions {
     result.assertSuccess();
 
     assertEquals(normalizeNewlines(expectedOutput), normalizeNewlines(result.getStdout()));
+  }
+
+  /**
+   * Asserts that the result failed and that the error message contains the substring {@code
+   * expectedSubstring}. The substring should be short but unique, as error messages are likely to
+   * have things like stack traces which will differ on every run.
+   */
+  public static void assertParseErrorWithMessageSubstring(
+      String expectedSubstring, ProcessResult result) {
+    result.assertParseError();
+
+    assertTrue(
+        String.format(
+            "Expected error message to contain the string '%s'. Message: %s",
+            expectedSubstring, result.getStderr()),
+        result.getStderr().contains(expectedSubstring));
   }
 }

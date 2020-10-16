@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -36,9 +37,12 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Stream;
 
 /**
@@ -91,7 +95,8 @@ public class AppleComputeNonProcessedResourcesContentHashes
         BuildCellRelativePathFactory buildCellPathFactory) {
 
       ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-      ImmutableMap.Builder<RelPath, String> pathToHashBuilder = ImmutableMap.builder();
+      ImmutableList.Builder<Pair<RelPath, String>> pathWithContentHashPairsBuilder =
+          ImmutableList.builder();
 
       Stream.concat(resources.getResourceFiles().stream(), resources.getResourceDirs().stream())
           .filter(
@@ -121,7 +126,8 @@ public class AppleComputeNonProcessedResourcesContentHashes
                                 .getFileName();
                         RelPath destinationFilePath =
                             destinationDirectoryPath.resolveRel(fileName.toString());
-                        pathToHashBuilder.put(destinationFilePath, hashBuilder.toString());
+                        pathWithContentHashPairsBuilder.add(
+                            new Pair<>(destinationFilePath, hashBuilder.toString()));
                         return StepExecutionResults.SUCCESS;
                       }
                     });
@@ -147,7 +153,8 @@ public class AppleComputeNonProcessedResourcesContentHashes
                         (pathRelativeToContainerDir, hash) -> {
                           RelPath pathRelativeToBundleRoot =
                               RelPath.of(destinationPath).resolve(pathRelativeToContainerDir);
-                          pathToHashBuilder.put(pathRelativeToBundleRoot, hash);
+                          pathWithContentHashPairsBuilder.add(
+                              new Pair<>(pathRelativeToBundleRoot, hash));
                         });
                 return StepExecutionResults.SUCCESS;
               }
@@ -157,11 +164,37 @@ public class AppleComputeNonProcessedResourcesContentHashes
       stepsBuilder.add(
           new AppleWriteHashPerFileStep(
               "persist-non-processed-resources-hashes",
-              pathToHashBuilder::build,
+              () ->
+                  validatePathsNotConflictAndBuildMapFromPathToHash(
+                      pathWithContentHashPairsBuilder.build()),
               outputPathResolver.resolvePath(output).getPath(),
               filesystem));
 
       return stepsBuilder.build();
+    }
+
+    private ImmutableMap<RelPath, String> validatePathsNotConflictAndBuildMapFromPathToHash(
+        List<Pair<RelPath, String>> pathWithContentHashPairs) {
+
+      ImmutableMap.Builder<RelPath, String> resultBuilder = ImmutableMap.builder();
+      HashMap<RelPath, String> memoize = new HashMap<>();
+      pathWithContentHashPairs.forEach(
+          pathWithHash -> {
+            RelPath destinationPath = pathWithHash.getFirst();
+            String hash = pathWithHash.getSecond();
+            if (memoize.containsKey(destinationPath)) {
+              String existingHash = memoize.get(destinationPath);
+              if (!existingHash.equals(hash)) {
+                throw new HumanReadableException(
+                    "Multiple resources with the same bundle path '%s' have different content.",
+                    destinationPath);
+              }
+            } else {
+              memoize.put(destinationPath, hash);
+              resultBuilder.put(destinationPath, hash);
+            }
+          });
+      return resultBuilder.build();
     }
   }
 }

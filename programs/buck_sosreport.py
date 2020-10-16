@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import datetime
+import getpass
 import logging
 import multiprocessing
 import os
+import platform
 import subprocess
 import sys
 import tempfile
@@ -178,6 +180,7 @@ class SOSReport:
             self.sos_outdir = os.path.join(
                 self.buckd_logdir, "%s_sosreport" % time_prefix()
             )
+        self.pfname = platform.system()
 
     def _get_buckd_pids(self):
         """
@@ -217,7 +220,7 @@ class SOSReport:
                     "ps command failed: %s", repr(res.stderr.decode(errors="replace"))
                 )
         except FileNotFoundError as e:
-            logging.warning("_get_buckd_pids failed to get Buckd PIDs: %s", repr(e))
+            logging.error("_get_buckd_pids failed to get Buckd PIDs: %s", repr(e))
         return pids
 
     def _get_jstack_once(self, pids, ntry=0):
@@ -239,15 +242,89 @@ class SOSReport:
                         repr(res.stderr.decode(errors="replace")),
                     )
             except FileNotFoundError as e:
-                logging.warning("_get_jstack_once failed to get jstack: %s", repr(e))
+                logging.error("_get_jstack_once failed to get jstack: %s", repr(e))
 
     def _get_jstack(self, count=10, interval_s=5):
         for n in range(count):
             logging.info(
-                "Getting jstack (%d/%d) with interval %d sec.", n + 1, count, interval_s
+                "Getting jstack (%d/%d) with interval %d sec", n + 1, count, interval_s
             )
             self._get_jstack_once(self._get_buckd_pids(), n)
             time.sleep(interval_s)
+
+    def _cmd_dump_common(self, cmd):
+        """
+        Run cmd (e.g. ["echo", "hi"]) and dump its stdout/stderr on a file.
+        Be sure not to run filesystem-related command such as 'ls'. Instead,
+        define a fs-safe function (see fs_safe_* for example) for the operation.
+        """
+        filename = os.path.join(
+            self.sos_outdir, "%s_%s" % (time_prefix(), "_".join(cmd))
+        )
+        logging.info("Getting '%s'", " ".join(cmd))
+        try:
+            res = subprocess.run(cmd, capture_output=True)
+            out = (
+                "stderr:\n"
+                + res.stderr.decode(errors="replace")
+                + "\n\nstdout:\n"
+                + res.stdout.decode(errors="replace")
+            )
+            written = fs_safe_write(filename, out)
+            if written < 0:
+                logging.error("Failed to log %s", filename)
+            if res.returncode != 0:
+                logging.warning(
+                    "'%s' finished with error/warning: %s",
+                    " ".join(cmd),
+                    repr(res.stderr.decode(errors="replace")),
+                )
+        except FileNotFoundError as e:
+            logging.error("'%s' failed: %s", " ".join(cmd), repr(e))
+
+    def _get_df(self):
+        self._cmd_dump_common(["df", "-h"])
+
+    def _get_mount(self):
+        self._cmd_dump_common(["mount"])
+
+    def _get_ifconfig(self):
+        self._cmd_dump_common(["ifconfig", "-a"])
+
+    def _get_uptime(self):
+        self._cmd_dump_common(["uptime"])
+
+    def _get_ps(self):
+        self._cmd_dump_common(["ps", "auxww"])
+        if self.pfname == "Linux":
+            self._cmd_dump_common(["ps", "auxww", "-L"])
+        elif self.pfname == "Darwin":
+            self._cmd_dump_common(["ps", "auxww", "-M"])
+
+    def _get_netstat(self):
+        if self.pfname == "Linux":
+            self._cmd_dump_common(["netstat", "-nap"])
+        elif self.pfname == "Darwin":
+            self._cmd_dump_common(["netstat", "-nav"])
+
+    def _get_top(self):
+        if self.pfname == "Linux":
+            self._cmd_dump_common(["top", "-b", "-n", "1"])
+        elif self.pfname == "Darwin":
+            self._cmd_dump_common(["top", "-l", "1"])
+
+    def _get_lsof(self):
+        cmd = ["lsof"]
+        try:
+            uid = getpass.getuser()
+            cmd.extend(["-u", uid])
+        except KeyError:
+            pass
+        self._cmd_dump_common(cmd)
+
+    def _get_daemon_status(self):
+        self._cmd_dump_common(["edenfsctl", "status"])
+        self._cmd_dump_common(["watchman", "debug-status"])
 
     def gen_report(self):
         """
@@ -281,8 +358,16 @@ class SOSReport:
             self.sos_outdir = tmpdir
         logging.info("Generating report under %s", self.sos_outdir)
 
-        # jstack
         self._get_jstack()
+        self._get_df()
+        self._get_mount()
+        self._get_ps()
+        self._get_netstat()
+        self._get_lsof()
+        self._get_uptime()
+        self._get_top()
+        self._get_ifconfig()
+        self._get_daemon_status()
 
         # TODO: other metrics
         return SOSReportExitCode.SUCCESS, "success"

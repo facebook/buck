@@ -395,6 +395,14 @@
 
 
 /***/
+{template .swift}
+{call .section_link}
+  {param section: 'swift' /}
+{/call}
+{/template}
+
+
+/***/
 {template .test}
 {call .section_link}
   {param section: 'test' /}
@@ -489,6 +497,15 @@
 
 
 /***/
+{template .apple_binary_uses_fallback_platform}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'binary_uses_fallback_platform' /}
+{/call}
+{/template}
+
+
+/***/
 {template .apple_code_sign_identities_command}
 {call .entry_link}
   {param section: 'apple' /}
@@ -511,6 +528,33 @@
 {call .entry_link}
   {param section: 'apple' /}
   {param entry: 'codesign_timeout' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_compilation_database_includes_swift}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'compilation_database_includes_swift' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_conditional_relinking_enabled}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'conditional_relinking_enabled' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_conditional_relinking_fallback}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'conditional_relinking_fallback' /}
 {/call}
 {/template}
 
@@ -556,6 +600,15 @@
 {call .entry_link}
   {param section: 'apple' /}
   {param entry: 'ipa_compression_level' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_link_scrub_concurrently}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'link_scrub_concurrently' /}
 {/call}
 {/template}
 
@@ -610,6 +663,24 @@
 {call .entry_link}
   {param section: 'apple' /}
   {param entry: 'target_sdk_version' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_target_sdk_version_linker_flag}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'target_sdk_version_linker_flag' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_target_triple_enabled}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'target_triple_enabled' /}
 {/call}
 {/template}
 
@@ -1470,6 +1541,24 @@
 
 
 /***/
+{template .cxx_link_groups_enabled}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'link_groups_enabled' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_link_path_normalization_args_enabled}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'link_path_normalization_args_enabled' /}
+{/call}
+{/template}
+
+
+/***/
 {template .cxx_link_weight}
 {call .entry_link}
   {param section: 'cxx' /}
@@ -1524,6 +1613,15 @@
 
 
 /***/
+{template .cxx_skip_system_framework_search_paths}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'skip_system_framework_search_paths' /}
+{/call}
+{/template}
+
+
+/***/
 {template .cxx_untracked_headers}
 {call .entry_link}
   {param section: 'cxx' /}
@@ -1537,6 +1635,15 @@
 {call .entry_link}
   {param section: 'cxx' /}
   {param entry: 'untracked_headers_whitelist' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_use_arg_file}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'use_arg_file' /}
 {/call}
 {/template}
 
@@ -2824,6 +2931,114 @@
 {call .entry_link}
   {param section: 'sandbox' /}
   {param entry: 'genrule_sandbox_enabled' /}
+{/call}
+{/template}
+
+
+/***/
+{template .swift_compiler_flags}
+{call .entry_link}
+  {param section: 'swift' /}
+  {param entry: 'compiler_flags' /}
+{/call}
+{/template}
+
+
+/***/
+{template .swift_copy_stdlib_to_frameworks}
+{call .entry_link}
+  {param section: 'swift' /}
+  {param entry: 'copy_stdlib_to_frameworks' /}
+{/call}
+{/template}
+
+
+/***/
+{template .swift_emit_swiftdocs}
+{call .entry_link}
+  {param section: 'swift' /}
+  {param entry: 'emit_swiftdocs' /}
+{/call}
+{/template}
+
+
+/***/
+{template .swift_input_based_compile_enabled}
+{call .entry_link}
+  {param section: 'swift' /}
+  {param entry: 'input_based_compile_enabled' /}
+{/call}
+{/template}
+
+
+/***/
+{template .swift_project_add_ast_paths}
+{call .entry_link}
+  {param section: 'swift' /}
+  {param entry: 'project_add_ast_paths' /}
+{/call}
+{/template}
+
+
+/***/
+{template .swift_project_embed_runtime}
+{call .entry_link}
+  {param section: 'swift' /}
+  {param entry: 'project_embed_runtime' /}
+{/call}
+{/template}
+
+
+/***/
+{template .swift_project_wmo}
+{call .entry_link}
+  {param section: 'swift' /}
+  {param entry: 'project_wmo' /}
+{/call}
+{/template}
+
+
+/***/
+{template .swift_slice_app_bundle_runtime}
+{call .entry_link}
+  {param section: 'swift' /}
+  {param entry: 'slice_app_bundle_runtime' /}
+{/call}
+{/template}
+
+
+/***/
+{template .swift_slice_app_package_runtime}
+{call .entry_link}
+  {param section: 'swift' /}
+  {param entry: 'slice_app_package_runtime' /}
+{/call}
+{/template}
+
+
+/***/
+{template .swift_use_argfile}
+{call .entry_link}
+  {param section: 'swift' /}
+  {param entry: 'use_argfile' /}
+{/call}
+{/template}
+
+
+/***/
+{template .swift_use_filelist}
+{call .entry_link}
+  {param section: 'swift' /}
+  {param entry: 'use_filelist' /}
+{/call}
+{/template}
+
+
+/***/
+{template .swift_version}
+{call .entry_link}
+  {param section: 'swift' /}
+  {param entry: 'version' /}
 {/call}
 {/template}
 

@@ -126,7 +126,8 @@ public class JavacPipelineState implements RulePipelineState {
               context.getRuleCellRoot(),
               context.getProjectFilesystemFactory(),
               firstOrderContext.getEnvironment(),
-              processExecutor);
+              processExecutor,
+              filesystem.getBuckPaths());
 
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors =
           ImmutableList.copyOf(

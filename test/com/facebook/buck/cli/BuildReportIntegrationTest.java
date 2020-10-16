@@ -26,7 +26,6 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.BuckPaths;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -127,8 +126,7 @@ public class BuildReportIntegrationTest {
     assertEquals(
         "buck-out/cells/cell2/gen/"
             + BuildTargetPaths.getBasePath(
-                    FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
-                        BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
+                    BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH,
                     BuildTargetFactory.newInstance("cell2//:bar"),
                     "%s")
                 .resolve("bar.txt"),

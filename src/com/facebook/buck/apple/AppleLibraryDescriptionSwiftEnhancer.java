@@ -76,7 +76,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
 
     Preprocessor preprocessor = getPreprocessor(target, graphBuilder, platform);
 
-    PreprocessorFlags preprocessorFlags = getPreprocessorFlags(inputs);
+    PreprocessorFlags preprocessorFlags = getPreprocessorFlags(inputs, applePlatform.getAppleSdk());
 
     Optional<CxxPreprocessorInput> underlyingModule =
         getUnderlyingModulePreprocessorInput(target, graphBuilder, platform);
@@ -123,9 +123,16 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     return platform.getCpp().resolve(graphBuilder, target.getTargetConfiguration());
   }
 
-  private static PreprocessorFlags getPreprocessorFlags(ImmutableSet<CxxPreprocessorInput> inputs) {
+  private static PreprocessorFlags getPreprocessorFlags(
+      ImmutableSet<CxxPreprocessorInput> inputs, AppleSdk appleSdk) {
     PreprocessorFlags.Builder flagsBuilder = PreprocessorFlags.builder();
     ExplicitCxxToolFlags.Builder explicitCxxToolFlags = CxxToolFlags.explicitBuilder();
+
+    for (String headerSearchPath : appleSdk.getAdditionalSystemHeaderSearchPaths()) {
+      explicitCxxToolFlags.addPlatformFlags(
+          StringArg.of("-isystem"), StringArg.of(headerSearchPath));
+    }
+
     inputs.forEach(input -> flagsBuilder.addAllIncludes(input.getIncludes()));
     inputs.forEach(input -> flagsBuilder.addAllFrameworkPaths(input.getFrameworks()));
     inputs.forEach(
@@ -173,7 +180,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         filesystem,
         getSwiftArgs(target, graphBuilder, args, swiftBuckConfig),
         getPreprocessor(target, graphBuilder, platform),
-        getPreprocessorFlags(inputs),
+        getPreprocessorFlags(inputs, applePlatform.getAppleSdk()),
         underlyingModule.isPresent(),
         getSwiftTargetTruple(args, swiftPlatform));
   }

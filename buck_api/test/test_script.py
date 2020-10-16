@@ -28,10 +28,10 @@ parser = argparse.ArgumentParser()
 def run_build(remain_args):
     parser = argparse.ArgumentParser()
     parser.add_argument("target")
+    parser.add_argument("--show-output", action="store_true")
     args = parser.parse_args(remain_args)
-    show_output = "--show-output" in args.target
-    target: str = None
-    if show_output:
+    show_output = "--show-output" in args.target or args.show_output
+    if "--show-output" in args.target:
         target = args.target.strip("--show-output").strip(" ")
     else:
         target = args.target

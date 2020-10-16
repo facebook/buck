@@ -45,7 +45,7 @@ else:
 
 
 def acquire_shared_lock(fh, wait=False):
-    """ Acquires a shared posix advisory lock on a file in a non-blocking way. The f argument
+    """Acquires a shared posix advisory lock on a file in a non-blocking way. The f argument
     should be a file (ideally opened with 'a+', as that works for both shared and exclusive locks).
     Returns True on success, False if the lock cannot be taken, throws on error.
     """
@@ -62,7 +62,7 @@ def shared_lock(path, *args, **kwargs):
 
 
 def acquire_exclusive_lock(fh, wait=False):
-    """ Acquires an exclusive posix advisory lock on a file in a non-blocking way. The f argument
+    """Acquires an exclusive posix advisory lock on a file in a non-blocking way. The f argument
     should be a file (ideally opened with 'a+', as that works for both shared and exclusive locks).
     Returns True on success, False if the lock cannot be taken, throws on error.
     """
@@ -79,7 +79,7 @@ def exclusive_lock(path, *args, **kwargs):
 
 
 def rmtree_if_can_lock(root):
-    """ Removes the directory and sub-directories under root, except any directories which have
+    """Removes the directory and sub-directories under root, except any directories which have
     a `.buck_lock` file present, which are only deleted if an exclusive lock can be obtained on
     the lock file.
     """

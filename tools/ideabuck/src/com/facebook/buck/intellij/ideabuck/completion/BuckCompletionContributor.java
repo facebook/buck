@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.completion;
 
+import com.facebook.buck.intellij.ideabuck.configurations.AbstractConfigurationEditor;
 import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
@@ -121,6 +122,10 @@ public class BuckCompletionContributor extends CompletionContributor {
     @Override
     protected void addCompletions(
         CompletionParameters parameters, ProcessingContext context, CompletionResultSet result) {
+      if (AbstractConfigurationEditor.isFileFromRunConfigurationEditor(
+          parameters.getOriginalFile())) {
+        return;
+      }
       Optional.of(parameters.getPosition())
           .map(PsiElement::getContainingFile)
           .map(psiFile -> BuckPsiUtils.findSymbolsInPsiTree(psiFile, ""))

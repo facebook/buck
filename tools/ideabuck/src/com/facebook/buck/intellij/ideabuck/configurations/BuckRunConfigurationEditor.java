@@ -16,4 +16,10 @@
 
 package com.facebook.buck.intellij.ideabuck.configurations;
 
-public class BuckRunConfigurationEditor extends AbstractConfigurationEditor<BuckRunConfiguration> {}
+import com.intellij.openapi.project.Project;
+
+public class BuckRunConfigurationEditor extends AbstractConfigurationEditor<BuckRunConfiguration> {
+  public BuckRunConfigurationEditor(Project project) {
+    super(project);
+  }
+}

@@ -150,10 +150,10 @@ is correct.".format(
 def _try_to_verify_java_version_off_thread(
     java_version_status_queue, java_path, required_java_version
 ):
-    """ Attempts to validate the java version off main execution thread.
-        The reason for this is to speed up the start-up time for the buck process.
-        testing has shown that starting java process is rather expensive and on local tests,
-        this optimization has reduced startup time of 'buck run' from 673 ms to 520 ms. """
+    """Attempts to validate the java version off main execution thread.
+    The reason for this is to speed up the start-up time for the buck process.
+    testing has shown that starting java process is rather expensive and on local tests,
+    this optimization has reduced startup time of 'buck run' from 673 ms to 520 ms."""
     verify_java_version_thread = threading.Thread(
         target=_try_to_verify_java_version,
         args=(java_version_status_queue, java_path, required_java_version),
@@ -163,15 +163,15 @@ def _try_to_verify_java_version_off_thread(
 
 
 def _emit_java_version_warnings_if_any(java_version_status_queue):
-    """ Emits java_version warnings that got posted in the java_version_status_queue
-        queus from the java version verification thread.
-        There are 2 cases where we need to take special care for.
-         1. The main thread finishes before the main thread gets here before the version testing
-         thread is done. In such case we wait for 50 ms. This should pretty much never happen,
-         except in cases where buck deployment or the VM is really badly misconfigured.
-         2. The java version thread never testing returns. This can happen if the process that is
-         called java is hanging for some reason. This is also not a normal case, and in such case
-         we will wait for 50 ms and if still no response, ignore the error."""
+    """Emits java_version warnings that got posted in the java_version_status_queue
+    queus from the java version verification thread.
+    There are 2 cases where we need to take special care for.
+     1. The main thread finishes before the main thread gets here before the version testing
+     thread is done. In such case we wait for 50 ms. This should pretty much never happen,
+     except in cases where buck deployment or the VM is really badly misconfigured.
+     2. The java version thread never testing returns. This can happen if the process that is
+     called java is hanging for some reason. This is also not a normal case, and in such case
+     we will wait for 50 ms and if still no response, ignore the error."""
     if java_version_status_queue.empty():
         time.sleep(0.05)
 

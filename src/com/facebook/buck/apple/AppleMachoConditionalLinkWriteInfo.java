@@ -175,9 +175,19 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
                 symbol -> {
                   // Flat lookup is deprecated for iOS targets, so only support two-level
                   // namespaces on all platforms (mobile + desktop).
-                  MachoBindInfoSymbol.LibraryLookup lookup = symbol.getLibraryLookup();
-                  Preconditions.checkState(lookup != MachoBindInfoSymbol.LibraryLookup.FLAT_LOOKUP);
-                  return (lookup == MachoBindInfoSymbol.LibraryLookup.DEPENDENT_LIBRARY);
+                  switch (symbol.getLibraryLookup()) {
+                    case DEPENDENT_LIBRARY:
+                    case FLAT_LOOKUP:
+                      // Symbols which are explicitly marked as undefined at link time via
+                      // "-undefined dynamic_lookup" or "-U symbol" will appear as flat lookup
+                      // even in two-level namespaced executable.
+                      return true;
+                    case SELF:
+                    case MAIN_EXECUTABLE:
+                      break;
+                  }
+
+                  return false;
                 })
             .collect(ImmutableList.toImmutableList());
 

@@ -105,11 +105,14 @@ public class DummyRDotJavaTest {
     RelPath rDotJavaSrcFolder =
         DummyRDotJava.getRDotJavaSrcFolder(dummyRDotJava.getBuildTarget(), filesystem);
     RelPath rDotJavaBinFolder =
-        CompilerOutputPaths.getClassesDir(dummyRDotJava.getBuildTarget(), filesystem);
+        CompilerOutputPaths.getClassesDir(
+            dummyRDotJava.getBuildTarget(), filesystem.getBuckPaths());
     RelPath rDotJavaOutputFolder =
         DummyRDotJava.getPathToOutputDir(dummyRDotJava.getBuildTarget(), filesystem);
     Path rDotJavaAnnotationFolder =
-        CompilerOutputPaths.getAnnotationPath(filesystem, dummyRDotJava.getBuildTarget()).getPath();
+        CompilerOutputPaths.getAnnotationPath(
+                dummyRDotJava.getBuildTarget(), filesystem.getBuckPaths())
+            .getPath();
 
     String rDotJavaOutputJar =
         MorePaths.pathWithPlatformSeparators(

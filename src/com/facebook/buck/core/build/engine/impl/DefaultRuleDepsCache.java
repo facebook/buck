@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /** A cache of rule deps. */
 public class DefaultRuleDepsCache implements RuleDepsCache {
-  private final Map<BuildRule, Iterable<BuildRule>> allDepsCache;
+  private final Map<BuildRule, Iterable<BuildRule>> buildDepsCache;
   private final Map<BuildRule, Iterable<BuildRule>> runtimeDepsCache;
   private final BuildRuleResolver resolver;
   private final BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver;
@@ -38,17 +38,18 @@ public class DefaultRuleDepsCache implements RuleDepsCache {
       BuildRuleResolver resolver, BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver) {
     this.resolver = resolver;
     this.actionToBuildRuleResolver = actionToBuildRuleResolver;
-    this.allDepsCache = new ConcurrentHashMap<>();
+    this.buildDepsCache = new ConcurrentHashMap<>();
     this.runtimeDepsCache = new ConcurrentHashMap<>();
   }
 
   @Override
   public Iterable<BuildRule> get(BuildRule rule) {
-    return allDepsCache.computeIfAbsent(rule, this::computeDeps);
+    return Iterables.concat(getBuildDeps(rule), getRuntimeDeps(rule));
   }
 
-  private Iterable<BuildRule> computeDeps(BuildRule rule) {
-    return Iterables.concat(rule.getBuildDeps(), getRuntimeDeps(rule));
+  @Override
+  public Iterable<BuildRule> getBuildDeps(BuildRule rule) {
+    return buildDepsCache.computeIfAbsent(rule, BuildRule::getBuildDeps);
   }
 
   private Iterable<BuildRule> getRuntimeDeps(BuildRule rule) {

@@ -17,13 +17,15 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import java.nio.file.Path;
 
 public interface ClassUsageFileWriter {
   void writeFile(
       ClassUsageTracker tracker,
       Path relativePath,
-      ProjectFilesystem filesystem,
+      AbsPath rootPath,
+      RelPath configuredBuckOut,
       CellPathResolver cellPathResolver);
 }
