@@ -20,6 +20,7 @@ import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
@@ -43,6 +44,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 class GroovycStep implements Step {
+
   private final Tool groovyc;
   private final Optional<ImmutableList<String>> extraArguments;
   private final JavacOptions javacOptions;
@@ -80,11 +82,12 @@ class GroovycStep implements Step {
   @Override
   public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
+    AbsPath ruleCellRoot = context.getRuleCellRoot();
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()
-            .setCommand(createCommand())
+            .setCommand(createCommand(ruleCellRoot))
             .setEnvironment(context.getEnvironment())
-            .setDirectory(filesystem.getRootPath().getPath())
+            .setDirectory(ruleCellRoot.getPath())
             .build();
     writePathToSourcesList(sourceFilePaths);
     ProcessExecutor processExecutor = context.getProcessExecutor();
@@ -103,10 +106,10 @@ class GroovycStep implements Step {
 
   @Override
   public String getDescription(StepExecutionContext context) {
-    return Joiner.on(" ").join(createCommand());
+    return Joiner.on(" ").join(createCommand(context.getRuleCellRoot()));
   }
 
-  private ImmutableList<String> createCommand() {
+  private ImmutableList<String> createCommand(AbsPath ruleCellRoot) {
     ImmutableList.Builder<String> command = ImmutableList.builder();
 
     command.addAll(groovyc.getCommandPrefix(resolver));
@@ -118,7 +121,7 @@ class GroovycStep implements Step {
         .add(classpath.isEmpty() ? "''" : classpath)
         .add("-d")
         .add(outputDirectory.toString());
-    addCrossCompilationOptions(command);
+    addCrossCompilationOptions(command, ruleCellRoot);
 
     command.addAll(extraArguments.orElse(ImmutableList.of()));
 
@@ -135,7 +138,8 @@ class GroovycStep implements Step {
         pathToSrcsList);
   }
 
-  private void addCrossCompilationOptions(ImmutableList.Builder<String> command) {
+  private void addCrossCompilationOptions(
+      ImmutableList.Builder<String> command, AbsPath ruleCellRoot) {
     if (shouldCrossCompile()) {
       command.add("-j");
       javacOptions.appendOptionsTo(
@@ -171,7 +175,7 @@ class GroovycStep implements Step {
             }
           },
           resolver,
-          filesystem);
+          ruleCellRoot);
     }
   }
 

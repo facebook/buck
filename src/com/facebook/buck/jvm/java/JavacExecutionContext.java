@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.ProcessExecutor;
@@ -39,23 +38,17 @@ public interface JavacExecutionContext {
 
   Verbosity getVerbosity();
 
-  // need to remove. Used only in DefaultClassUsageFileWriter
+  // TODO: msemko : need to remove. Used only in DefaultClassUsageFileWriter
   CellPathResolver getCellPathResolver();
-
-  // (msemko@) remove as a separate diff
-  ProjectFilesystem getProjectFilesystem();
 
   AbsPath getRuleCellRoot();
 
-  // Needs for unarchiver
+  // TODO: msemko : Needs for unarchiver
   ProjectFilesystemFactory getProjectFilesystemFactory();
 
   ImmutableMap<String, String> getEnvironment();
 
   ProcessExecutor getProcessExecutor();
 
-  // (msemko@) construct from ConfiguredBuck + FileSystem + includeTargetConfigHash
-  // genDir + scratchDir + annotation -> derived from ConfiguredBuck
-  // so only `ConfiguredBuck + FileSystem + includeTargetConfigHash ` params needed
   BaseBuckPaths getBaseBuckPaths();
 }

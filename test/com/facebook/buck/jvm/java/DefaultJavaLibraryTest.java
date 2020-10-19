@@ -21,10 +21,10 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -1683,9 +1683,12 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       List<Step> steps = javaLibrary.getBuildSteps(buildContext, new FakeBuildableContext());
       JavacStep javacCommand = lastJavacCommand(steps);
 
+      AbsPath rootPath = projectFilesystem.getRootPath();
       StepExecutionContext executionContext =
           TestExecutionContext.newBuilder()
               .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
+              .setRuleCellRoot(rootPath)
+              .setBuildCellRootPath(rootPath.getPath())
               .build();
 
       return javacCommand.getOptions(executionContext, buildClasspath);

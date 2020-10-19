@@ -521,7 +521,7 @@ public class JavaBuckConfigTest {
                 throw new UnsupportedOperationException();
               }
             }),
-        defaultFilesystem);
+        defaultFilesystem.getRootPath());
     return optionsConsumer;
   }
 

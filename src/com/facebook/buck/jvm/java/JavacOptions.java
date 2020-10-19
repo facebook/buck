@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -26,7 +27,6 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -208,7 +208,7 @@ public abstract class JavacOptions implements AddsToRuleKey {
   public void appendOptionsTo(
       OptionsConsumer optionsConsumer,
       SourcePathResolverAdapter pathResolver,
-      ProjectFilesystem filesystem) {
+      AbsPath ruleCellRoot) {
 
     // Add some standard options.
     optionsConsumer.addOptionValue("source", getLanguageLevelOptions().getSourceLevel());
@@ -235,7 +235,7 @@ public abstract class JavacOptions implements AddsToRuleKey {
         String bcp =
             bootclasspath.stream()
                 .map(pathResolver::getAbsolutePath)
-                .map(filesystem::relativize)
+                .map(ruleCellRoot::relativize)
                 .map(RelPath::toString)
                 .collect(Collectors.joining(File.pathSeparator));
         optionsConsumer.addOptionValue("bootclasspath", bcp);

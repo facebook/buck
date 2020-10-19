@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.step.Step;
@@ -109,7 +110,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
             buildTimeOptions,
             invokingRule,
             context.getSourcePathResolver(),
-            projectFilesystem,
+            projectFilesystem.getBuckPaths(),
             new ClasspathChecker(),
             parameters,
             null,
@@ -211,7 +212,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
               buildTimeOptions,
               invokingRule,
               context.getSourcePathResolver(),
-              projectFilesystem,
+              projectFilesystem.getBuckPaths(),
               new ClasspathChecker(),
               compilerParameters,
               abiJarParameters,
@@ -239,17 +240,16 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       BuildTarget invokingRule,
       Builder<Step> steps) {
     boolean generatingCode = !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
+    BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     if (generatingCode && pipeline.isRunning()) {
       steps.add(
           SymlinkIsolatedStep.of(
               CompilerOutputPaths.getAnnotationPath(
-                  JavaAbis.getSourceAbiJar(invokingRule), projectFilesystem.getBuckPaths()),
-              CompilerOutputPaths.getAnnotationPath(
-                  invokingRule, projectFilesystem.getBuckPaths())));
+                  JavaAbis.getSourceAbiJar(invokingRule), buckPaths),
+              CompilerOutputPaths.getAnnotationPath(invokingRule, buckPaths)));
     }
 
-    steps.add(
-        new JavacStep(pipeline, invokingRule, context.getSourcePathResolver(), projectFilesystem));
+    steps.add(new JavacStep(pipeline, invokingRule, context.getSourcePathResolver(), buckPaths));
   }
 
   @VisibleForTesting

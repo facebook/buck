@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
@@ -24,8 +25,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
-import com.facebook.buck.io.filesystem.BuckPaths;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
@@ -91,9 +90,7 @@ public class JavacPipelineState implements RulePipelineState {
 
   /** Get the invocation instance. */
   public Javac.Invocation getJavacInvocation(
-      SourcePathResolverAdapter resolver,
-      ProjectFilesystem filesystem,
-      StepExecutionContext context)
+      SourcePathResolverAdapter resolver, BaseBuckPaths buckPaths, StepExecutionContext context)
       throws IOException {
     if (invocation == null) {
       javacOptions.validateOptions(classpathChecker::validateClasspath);
@@ -116,13 +113,6 @@ public class JavacPipelineState implements RulePipelineState {
             processExecutor.withDownwardAPI(
                 DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
       }
-      BuckPaths paths = filesystem.getBuckPaths();
-      // TODO msemko: construct outside of the step.
-      BaseBuckPaths buckPaths =
-          BaseBuckPaths.of(
-              paths.getBuckOut(),
-              paths.getConfiguredBuckOut(),
-              paths.shouldIncludeTargetConfigHash());
       JavacExecutionContext javacExecutionContext =
           ImmutableJavacExecutionContext.ofImpl(
               new JavacEventSinkToBuckEventBusBridge(
@@ -131,7 +121,6 @@ public class JavacPipelineState implements RulePipelineState {
               firstOrderContext.getClassLoaderCache(),
               verbosity,
               firstOrderContext.getCellPathResolver(),
-              filesystem,
               context.getRuleCellRoot(),
               context.getProjectFilesystemFactory(),
               firstOrderContext.getEnvironment(),
@@ -156,8 +145,7 @@ public class JavacPipelineState implements RulePipelineState {
                   javacExecutionContext,
                   resolver,
                   invokingRule,
-                  getOptions(
-                      context, compilerParameters.getClasspathEntries(), filesystem, resolver),
+                  getOptions(context, compilerParameters.getClasspathEntries(), resolver),
                   annotationProcessors,
                   javaPlugins,
                   compilerParameters.getSourceFilePaths(),
@@ -218,11 +206,9 @@ public class JavacPipelineState implements RulePipelineState {
   ImmutableList<String> getOptions(
       StepExecutionContext context,
       ImmutableSortedSet<Path> buildClasspathEntries,
-      ProjectFilesystem filesystem,
       SourcePathResolverAdapter resolver) {
     return getOptions(
         javacOptions,
-        filesystem,
         resolver,
         compilerParameters.getOutputPaths().getClassesDir(),
         compilerParameters.getOutputPaths().getAnnotationPath().getPath(),
@@ -232,7 +218,6 @@ public class JavacPipelineState implements RulePipelineState {
 
   public static ImmutableList<String> getOptions(
       JavacOptions javacOptions,
-      ProjectFilesystem filesystem,
       SourcePathResolverAdapter pathResolver,
       RelPath outputDirectory,
       Path generatedCodeDirectory,
@@ -240,6 +225,7 @@ public class JavacPipelineState implements RulePipelineState {
       ImmutableSortedSet<Path> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
+    AbsPath ruleCellRoot = context.getRuleCellRoot();
     javacOptions.appendOptionsTo(
         new OptionsConsumer() {
           @Override
@@ -249,7 +235,7 @@ public class JavacPipelineState implements RulePipelineState {
                   .add("-bootclasspath")
                   .add(
                       Arrays.stream(value.split(File.pathSeparator))
-                          .map(path -> filesystem.resolve(path).toString())
+                          .map(path -> ruleCellRoot.resolve(path).toString())
                           .collect(Collectors.joining(File.pathSeparator)));
             } else {
               builder.add("-" + option).add(value);
@@ -267,7 +253,7 @@ public class JavacPipelineState implements RulePipelineState {
           }
         },
         pathResolver,
-        filesystem);
+        ruleCellRoot);
 
     // verbose flag, if appropriate.
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
@@ -275,10 +261,10 @@ public class JavacPipelineState implements RulePipelineState {
     }
 
     // Specify the output directory.
-    builder.add("-d").add(filesystem.resolve(outputDirectory).toString());
+    builder.add("-d").add(ruleCellRoot.resolve(outputDirectory).toString());
 
     if (!javacOptions.getJavaAnnotationProcessorParams().isEmpty()) {
-      builder.add("-s").add(filesystem.resolve(generatedCodeDirectory).toString());
+      builder.add("-s").add(ruleCellRoot.resolve(generatedCodeDirectory).toString());
     }
 
     // Build up and set the classpath.

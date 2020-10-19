@@ -149,7 +149,7 @@ public class DummyRDotJavaTest {
                             .build(),
                         dummyRDotJava.getBuildTarget(),
                         graphBuilder.getSourcePathResolver(),
-                        new FakeProjectFilesystem(),
+                        filesystem.getBuckPaths(),
                         new ClasspathChecker(),
                         CompilerParameters.builder()
                             .setScratchPaths(

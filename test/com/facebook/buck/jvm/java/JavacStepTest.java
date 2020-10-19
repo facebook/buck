@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -78,7 +79,7 @@ public class JavacStepTest {
             javacOptions,
             target,
             buildRuleResolver.getSourcePathResolver(),
-            fakeFilesystem,
+            fakeFilesystem.getBuckPaths(),
             classpathChecker,
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
@@ -87,10 +88,13 @@ public class JavacStepTest {
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
+    AbsPath rootPath = fakeFilesystem.getRootPath();
     StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
+            .setRuleCellRoot(rootPath)
+            .setBuildCellRootPath(rootPath.getPath())
             .build();
     BuckEventBusForTests.CapturingEventListener listener =
         new BuckEventBusForTests.CapturingEventListener();
@@ -126,7 +130,7 @@ public class JavacStepTest {
             javacOptions,
             target,
             buildRuleResolver.getSourcePathResolver(),
-            fakeFilesystem,
+            fakeFilesystem.getBuckPaths(),
             classpathChecker,
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
@@ -135,10 +139,13 @@ public class JavacStepTest {
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
 
+    AbsPath rootPath = fakeFilesystem.getRootPath();
     StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
+            .setRuleCellRoot(rootPath)
+            .setBuildCellRootPath(rootPath.getPath())
             .build();
     BuckEventBusForTests.CapturingEventListener listener =
         new BuckEventBusForTests.CapturingEventListener();
@@ -182,7 +189,7 @@ public class JavacStepTest {
             javacOptions,
             target,
             buildRuleResolver.getSourcePathResolver(),
-            fakeFilesystem,
+            fakeFilesystem.getBuckPaths(),
             classpathChecker,
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
@@ -191,10 +198,13 @@ public class JavacStepTest {
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
+    AbsPath rootPath = fakeFilesystem.getRootPath();
     StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
+            .setRuleCellRoot(rootPath)
+            .setBuildCellRootPath(rootPath.getPath())
             .build();
     BuckEventBusForTests.CapturingEventListener listener =
         new BuckEventBusForTests.CapturingEventListener();
@@ -230,7 +240,7 @@ public class JavacStepTest {
             javacOptions,
             target,
             buildRuleResolver.getSourcePathResolver(),
-            fakeFilesystem,
+            fakeFilesystem.getBuckPaths(),
             classpathChecker,
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
@@ -239,10 +249,13 @@ public class JavacStepTest {
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
+    AbsPath rootPath = fakeFilesystem.getRootPath();
     StepExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProcessExecutor(
                 new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
+            .setRuleCellRoot(rootPath)
+            .setBuildCellRootPath(rootPath.getPath())
             .build();
 
     String description = step.getDescription(executionContext);
@@ -284,7 +297,7 @@ public class JavacStepTest {
             javacOptions,
             target,
             buildRuleResolver.getSourcePathResolver(),
-            fakeFilesystem,
+            fakeFilesystem.getBuckPaths(),
             classpathChecker,
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,

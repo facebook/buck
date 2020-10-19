@@ -296,7 +296,7 @@ public class JavacOptionsTest {
                 throw new UnsupportedOperationException();
               }
             }),
-        filesystem);
+        filesystem.getRootPath());
     return optionsConsumer;
   }
 
