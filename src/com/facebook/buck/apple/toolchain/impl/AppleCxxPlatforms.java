@@ -464,7 +464,7 @@ public class AppleCxxPlatforms {
                 appleConfig.getFocusedTargetsPath().isPresent()),
             StringArg.from(combinedLdFlags),
             ImmutableMultimap.of(),
-            strip,
+            new ConstantToolProvider(strip),
             ArchiverProvider.from(new BsdArchiver(ar)),
             ArchiveContents.NORMAL,
             Optional.of(new ConstantToolProvider(ranlib)),

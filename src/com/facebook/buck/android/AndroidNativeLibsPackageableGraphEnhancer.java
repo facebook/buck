@@ -574,7 +574,10 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                     targetForStripRule,
                     projectFilesystem,
                     graphBuilder,
-                    platform.getCxxPlatform().getStrip(),
+                    platform
+                        .getCxxPlatform()
+                        .getStrip()
+                        .resolve(graphBuilder, targetForStripRule.getTargetConfiguration()),
                     sourcePath,
                     sharedLibrarySoName,
                     withDownwardApi));

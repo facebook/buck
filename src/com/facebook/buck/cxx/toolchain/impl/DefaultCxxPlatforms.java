@@ -289,7 +289,7 @@ public class DefaultCxxPlatforms {
             false),
         ImmutableList.of(),
         ImmutableMultimap.of(),
-        getHashedFileTool(cxxBuckConfig, "strip", DEFAULT_STRIP, env),
+        new ConstantToolProvider(getHashedFileTool(cxxBuckConfig, "strip", DEFAULT_STRIP, env)),
         ArchiverProvider.from(archiver),
         ArchiveContents.NORMAL,
         ranlib,

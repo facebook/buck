@@ -18,7 +18,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 
@@ -26,11 +26,11 @@ import com.google.common.collect.ImmutableList;
 @BuckStyleValue
 public abstract class MachoDylibStubParams implements SharedLibraryInterfaceParams {
 
-  public static MachoDylibStubParams of(Tool strip) {
+  public static MachoDylibStubParams of(ToolProvider strip) {
     return ImmutableMachoDylibStubParams.ofImpl(strip);
   }
 
-  public abstract Tool getStrip();
+  public abstract ToolProvider getStrip();
 
   @Override
   public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {

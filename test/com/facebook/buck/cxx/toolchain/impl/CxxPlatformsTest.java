@@ -86,7 +86,7 @@ public class CxxPlatformsTest {
             .setLd(
                 new DefaultLinkerProvider(
                     LinkerProvider.Type.GNU, new ConstantToolProvider(borland), true))
-            .setStrip(borland)
+            .setStrip(new ConstantToolProvider(borland))
             .setSymbolNameTool(new PosixNmSymbolNameTool(new ConstantToolProvider(borland), false))
             .setAr(ArchiverProvider.from(new GnuArchiver(borland)))
             .setRanlib(new ConstantToolProvider(borland))

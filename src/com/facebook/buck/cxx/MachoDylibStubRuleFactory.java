@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.MachoDylibStubParams;
@@ -34,7 +34,7 @@ import com.google.common.collect.ImmutableList;
 @BuckStyleValue
 public abstract class MachoDylibStubRuleFactory implements SharedLibraryInterfaceFactory {
 
-  abstract Tool getStrip();
+  abstract ToolProvider getStrip();
 
   @Override
   public BuildRule createSharedInterfaceLibraryFromLibrary(
@@ -45,7 +45,12 @@ public abstract class MachoDylibStubRuleFactory implements SharedLibraryInterfac
       SourcePath library,
       boolean withDownwardApi) {
     return MachoDylibStubRule.from(
-        target, projectFilesystem, resolver, getStrip(), library, withDownwardApi);
+        target,
+        projectFilesystem,
+        resolver,
+        getStrip().resolve(resolver, target.getTargetConfiguration()),
+        library,
+        withDownwardApi);
   }
 
   @Override

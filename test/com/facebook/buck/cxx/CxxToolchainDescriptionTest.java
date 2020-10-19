@@ -107,7 +107,10 @@ public class CxxToolchainDescriptionTest {
 
     Tool pathTool = new HashedFileTool(pathToolPath);
 
-    assertIsBinaryTool(resolver, binaryTool, platform.getStrip());
+    assertIsBinaryTool(
+        resolver,
+        binaryTool,
+        platform.getStrip().resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE));
     assertIsBinaryTool(
         resolver,
         pathTool,

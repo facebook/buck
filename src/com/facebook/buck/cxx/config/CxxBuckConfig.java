@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.BinaryBuildRuleToolProvider;
@@ -537,16 +536,12 @@ public class CxxBuckConfig {
     return getToolProvider(OBJCOPY);
   }
 
-  private Optional<Tool> getTool(String name) {
-    return getPath(name).map(this::getSourcePath).map(HashedFileTool::new);
-  }
-
   public Optional<ToolProvider> getNm() {
     return getToolProvider(NM);
   }
 
-  public Optional<Tool> getStrip() {
-    return getTool(STRIP);
+  public Optional<ToolProvider> getStrip() {
+    return getToolProvider(STRIP);
   }
 
   public boolean isUniqueLibraryNameEnabled() {

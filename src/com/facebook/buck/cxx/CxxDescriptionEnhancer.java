@@ -1626,7 +1626,9 @@ public class CxxDescriptionEnhancer {
                         unstrippedBinaryRule.getBuildTarget()),
                     graphBuilder,
                     stripStyle,
-                    cxxPlatform.getStrip(),
+                    cxxPlatform
+                        .getStrip()
+                        .resolve(graphBuilder, stripBuildTarget.getTargetConfiguration()),
                     isCacheable,
                     CxxDescriptionEnhancer.getBinaryOutputPath(
                             stripBuildTarget,

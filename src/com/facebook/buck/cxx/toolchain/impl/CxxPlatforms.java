@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -78,7 +77,7 @@ public class CxxPlatforms {
   private CxxPlatforms() {}
 
   private static Optional<SharedLibraryInterfaceParams> getSharedLibraryInterfaceParams(
-      CxxBuckConfig config, Platform platform, Optional<Tool> stripTool) {
+      CxxBuckConfig config, Platform platform, Optional<ToolProvider> stripTool) {
     Optional<SharedLibraryInterfaceParams> sharedLibraryInterfaceParams = Optional.empty();
     Optional<SharedLibraryInterfaceParams.Type> type = config.getSharedLibraryInterfaces();
     if (!type.isPresent()) {
@@ -124,7 +123,7 @@ public class CxxPlatforms {
       LinkerProvider ld,
       Iterable<Arg> ldFlags,
       ImmutableMultimap<Linker.LinkableDepType, Arg> runtimeLdflags,
-      Tool strip,
+      ToolProvider strip,
       ArchiverProvider ar,
       ArchiveContents archiveContents,
       Optional<ToolProvider> ranlib,
@@ -158,7 +157,7 @@ public class CxxPlatforms {
       }
     }
 
-    Tool stripTool = cxxBuckConfig.getStrip().orElse(strip);
+    ToolProvider stripTool = cxxBuckConfig.getStrip().orElse(strip);
 
     builder
         .setFlavor(flavor)

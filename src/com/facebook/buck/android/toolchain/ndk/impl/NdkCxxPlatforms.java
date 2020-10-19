@@ -596,7 +596,9 @@ public class NdkCxxPlatforms {
                         executableFinder)),
                 config.shouldCacheLinks()))
         .addAllLdflags(StringArg.from(getLdFlags(targetConfiguration, androidConfig)))
-        .setStrip(getGccTool(toolchainPaths, "strip", version, executableFinder))
+        .setStrip(
+            new ConstantToolProvider(
+                getGccTool(toolchainPaths, "strip", version, executableFinder)))
         .setSymbolNameTool(
             new PosixNmSymbolNameTool(
                 new ConstantToolProvider(

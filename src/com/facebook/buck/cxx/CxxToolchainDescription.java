@@ -222,9 +222,7 @@ public class CxxToolchainDescription
             .map(macrosConverter::convert)
             .collect(ImmutableList.toImmutableList()));
 
-    cxxPlatform.setStrip(
-        ToolProviders.getToolProvider(args.getStrip())
-            .resolve(ruleResolver, buildTarget.getTargetConfiguration()));
+    cxxPlatform.setStrip(ToolProviders.getToolProvider(args.getStrip()));
     cxxPlatform.setStripFlags(
         args.getStripFlags().stream()
             .map(macrosConverter::convert)

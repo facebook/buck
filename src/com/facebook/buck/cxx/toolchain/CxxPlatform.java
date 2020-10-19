@@ -18,7 +18,6 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -93,7 +92,7 @@ public interface CxxPlatform extends FlavorConvertible {
 
   ImmutableMultimap<Linker.LinkableDepType, Arg> getRuntimeLdflags();
 
-  Tool getStrip();
+  ToolProvider getStrip();
 
   ImmutableList<Arg> getStripFlags();
 
