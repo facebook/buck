@@ -16,9 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
-
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -35,7 +34,6 @@ import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -45,7 +43,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
@@ -102,16 +99,8 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
     this.exportedDeps = exportedDeps;
     this.doUltralightChecking = doUltralightChecking;
     this.cellNameResolver = cellPathResolver.getCellNameResolver();
-    this.cellToPathMappings = getCellToMapMappings(ruleCellRoot, cellPathResolver);
-  }
-
-  private ImmutableMap<String, RelPath> getCellToMapMappings(
-      AbsPath ruleCellRoot, CellPathResolver cellPathResolver) {
-    return cellPathResolver.getCellPathsByRootCellExternalName().entrySet().stream()
-        .collect(
-            toImmutableMap(
-                Map.Entry::getKey,
-                e -> ProjectFilesystemUtils.relativize(ruleCellRoot, e.getValue().getPath())));
+    this.cellToPathMappings =
+        CellPathResolverUtils.getCellToMapMappings(ruleCellRoot, cellPathResolver);
   }
 
   private ImmutableList<DependencyAndExportedDeps> getDependencies(

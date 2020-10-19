@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -37,8 +37,7 @@ public interface JavacExecutionContext {
 
   Verbosity getVerbosity();
 
-  // TODO: msemko : need to remove. Used only in DefaultClassUsageFileWriter
-  CellPathResolver getCellPathResolver();
+  ImmutableMap<String, RelPath> getCellToMapMappings();
 
   AbsPath getRuleCellRoot();
 

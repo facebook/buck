@@ -54,7 +54,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
-import java.io.PrintWriter; // NOPMD
+import java.io.PrintWriter; // NOPMD required by API
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -284,7 +284,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                           CompilerOutputPaths.getDepFilePath(abiTarget, baseBuckPaths),
                           context.getRuleCellRoot(),
                           baseBuckPaths.getConfiguredBuckOut(),
-                          context.getCellPathResolver());
+                          context.getCellToMapMappings());
                 }
                 abiResult.set(0);
               } else {
@@ -452,7 +452,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                                 CompilerOutputPaths.getDepFilePath(libraryTarget, baseBuckPaths),
                                 context.getRuleCellRoot(),
                                 baseBuckPaths.getConfiguredBuckOut(),
-                                context.getCellPathResolver());
+                                context.getCellToMapMappings());
                       }
                     } else {
                       reportDiagnosticsToUser();

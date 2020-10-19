@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -31,6 +32,7 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -113,6 +115,12 @@ public class JavacPipelineState implements RulePipelineState {
             processExecutor.withDownwardAPI(
                 DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
       }
+
+      AbsPath ruleCellRoot = context.getRuleCellRoot();
+      ImmutableMap<String, RelPath> cellToMapMappings =
+          CellPathResolverUtils.getCellToMapMappings(
+              ruleCellRoot, firstOrderContext.getCellPathResolver());
+
       JavacExecutionContext javacExecutionContext =
           ImmutableJavacExecutionContext.ofImpl(
               new JavacEventSinkToBuckEventBusBridge(
@@ -120,7 +128,7 @@ public class JavacPipelineState implements RulePipelineState {
               stderr,
               firstOrderContext.getClassLoaderCache(),
               verbosity,
-              firstOrderContext.getCellPathResolver(),
+              cellToMapMappings,
               context.getRuleCellRoot(),
               firstOrderContext.getEnvironment(),
               processExecutor,

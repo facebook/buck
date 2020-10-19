@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -39,7 +38,7 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
       Path relativePath,
       AbsPath rootPath,
       RelPath configuredBuckOut,
-      CellPathResolver cellPathResolver) {
+      ImmutableMap<String, RelPath> cellToMapMappings) {
     ImmutableMap<Path, Map<Path, Integer>> classUsageMap = tracker.getClassUsageMap();
     try {
       Path parent = relativePath.getParent();
@@ -47,7 +46,7 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
           ProjectFilesystemUtils.exists(rootPath, parent), "directory must exist: %s", parent);
       ObjectMappers.WRITER.writeValue(
           rootPath.resolve(relativePath).toFile(),
-          relativizeMap(classUsageMap, rootPath, configuredBuckOut, cellPathResolver));
+          relativizeMap(classUsageMap, rootPath, configuredBuckOut, cellToMapMappings));
     } catch (IOException e) {
       throw new HumanReadableException(e, "Unable to write used classes file.");
     }
@@ -57,7 +56,7 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
       ImmutableMap<Path, Map<Path, Integer>> classUsageMap,
       AbsPath rootPath,
       RelPath configuredBuckOut,
-      CellPathResolver cellPathResolver) {
+      ImmutableMap<String, RelPath> cellToMapMappings) {
     ImmutableSortedMap.Builder<Path, Map<Path, Integer>> builder =
         ImmutableSortedMap.naturalOrder();
 
@@ -74,7 +73,7 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
       ProjectFilesystemUtils.getPathRelativeToProjectRoot(
               rootPath, configuredBuckOut, jarAbsolutePath)
           .map(Optional::of)
-          .orElseGet(() -> getCrossCellPath(jarAbsolutePath, cellPathResolver))
+          .orElseGet(() -> getCrossCellPath(jarAbsolutePath, rootPath, cellToMapMappings))
           .ifPresent(
               projectPath ->
                   builder.put(projectPath, ImmutableSortedMap.copyOf(jarClassesEntry.getValue())));
@@ -91,13 +90,15 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
    * /cell2/buck-out/gen/baz/a.jar</code>. If the given absolute path is not relative to any of the
    * cell roots in the resolver, Optional.empty() is returned.
    */
-  private static Optional<Path> getCrossCellPath(Path jarAbsolutePath, CellPathResolver resolver) {
+  private static Optional<Path> getCrossCellPath(
+      Path jarAbsolutePath, AbsPath root, ImmutableMap<String, RelPath> cellToPathMappings) {
     // TODO(cjhopman): This is wrong if a cell ends up depending on something in another cell that
     // it doesn't have a mapping for :o
-    for (AbsPath cellRoot : resolver.getKnownRoots()) {
+    for (Map.Entry<String, RelPath> entry : cellToPathMappings.entrySet()) {
+      AbsPath cellRoot = root.resolve(entry.getValue()).normalize();
       if (jarAbsolutePath.startsWith(cellRoot.getPath())) {
         RelPath relativePath = cellRoot.relativize(jarAbsolutePath);
-        Optional<String> cellName = resolver.getCanonicalCellName(cellRoot);
+        Optional<String> cellName = Optional.ofNullable(entry.getKey());
         // We use an absolute path to represent a path rooted in another cell
         AbsPath cellNameRoot = cellRoot.getRoot().resolve(cellName.orElse(ROOT_CELL_IDENTIFIER));
         return Optional.of(cellNameRoot.resolve(relativePath).getPath());

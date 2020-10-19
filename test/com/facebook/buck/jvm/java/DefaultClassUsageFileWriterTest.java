@@ -16,11 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -46,7 +47,6 @@ public class DefaultClassUsageFileWriterTest {
   @Test
   public void fileReadOrderDoesntAffectClassesUsedOutput() throws IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     AbsPath testJarPath = filesystem.getPathForRelativePath("test.jar");
     AbsPath testTwoJarPath = filesystem.getPathForRelativePath("test2.jar");
 
@@ -80,7 +80,7 @@ public class DefaultClassUsageFileWriterTest {
         outputOne.getPath(),
         filesystem.getRootPath(),
         filesystem.getBuckPaths().getConfiguredBuckOut(),
-        cellPathResolver);
+        ImmutableMap.of());
 
     DefaultClassUsageFileWriter writerTwo = new DefaultClassUsageFileWriter();
     ClassUsageTracker trackerTwo = new ClassUsageTracker();
@@ -98,7 +98,7 @@ public class DefaultClassUsageFileWriterTest {
         outputTwo.getPath(),
         filesystem.getRootPath(),
         filesystem.getBuckPaths().getConfiguredBuckOut(),
-        cellPathResolver);
+        ImmutableMap.of());
 
     assertEquals(
         new String(Files.readAllBytes(outputOne.getPath())),
@@ -111,9 +111,11 @@ public class DefaultClassUsageFileWriterTest {
     ProjectFilesystem awayFs = FakeProjectFilesystem.createRealTempFilesystem();
     ProjectFilesystem externalFs = FakeProjectFilesystem.createRealTempFilesystem();
 
+    AbsPath rootPath = homeFs.getRootPath();
     CellPathResolver cellPathResolver =
         TestCellPathResolver.create(
             homeFs.getRootPath(), ImmutableMap.of("AwayCell", awayFs.getRootPath().getPath()));
+
     AbsPath testJarPath = homeFs.getPathForRelativePath("home.jar");
     AbsPath testTwoJarPath = awayFs.getPathForRelativePath("away.jar");
     AbsPath externalJarPath = externalFs.getPathForRelativePath("external.jar");
@@ -127,29 +129,23 @@ public class DefaultClassUsageFileWriterTest {
 
     DefaultClassUsageFileWriter writer = new DefaultClassUsageFileWriter();
     ClassUsageTracker trackerOne = new ClassUsageTracker();
-    {
-      ListenableFileManager wrappedFileManager = new ListenableFileManager(fakeFileManager);
-      wrappedFileManager.addListener(trackerOne);
-      for (JavaFileObject javaFileObject : wrappedFileManager.list(null, null, null, false)) {
-        javaFileObject.openInputStream();
-      }
+    ListenableFileManager wrappedFileManager = new ListenableFileManager(fakeFileManager);
+    wrappedFileManager.addListener(trackerOne);
+    for (JavaFileObject javaFileObject : wrappedFileManager.list(null, null, null, false)) {
+      javaFileObject.openInputStream();
     }
     homeFs.createParentDirs(outputOne);
     writer.writeFile(
         trackerOne,
         outputOne.getPath(),
-        homeFs.getRootPath(),
+        rootPath,
         homeFs.getBuckPaths().getConfiguredBuckOut(),
-        cellPathResolver);
+        CellPathResolverUtils.getCellToMapMappings(rootPath, cellPathResolver));
 
     // The xcell file should appear relative to the "home" filesystem, and the external class
     // which is not under any cell in the project should not appear at all.
     AbsPath expectedAwayCellPath =
-        homeFs
-            .getRootPath()
-            .getRoot()
-            .resolve("AwayCell")
-            .resolve(awayFs.relativize(testTwoJarPath).getPath());
+        rootPath.getRoot().resolve("AwayCell").resolve(awayFs.relativize(testTwoJarPath).getPath());
     Escaper.Quoter quoter =
         Platform.detect() == Platform.WINDOWS
             ? Escaper.Quoter.DOUBLE_WINDOWS_JAVAC
