@@ -44,6 +44,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.stream.RichStream;
@@ -65,6 +66,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
@@ -523,6 +526,55 @@ public class Omnibus {
             ImmutableList.of(undefinedSymbolsFile));
   }
 
+  private static ImmutableList<Arg> createGlobalSymbolsArgs(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      ActionGraphBuilder graphBuilder,
+      CxxPlatform cxxPlatform,
+      Iterable<? extends SourcePath> linkerInputs,
+      ImmutableList<String> extraGlobals) {
+    SourcePath globalSymbolsFile =
+        cxxPlatform
+            .getSymbolNameTool()
+            .creatGlobalSymbolsFile(
+                projectFilesystem,
+                params,
+                graphBuilder,
+                buildTarget.getTargetConfiguration(),
+                buildTarget.withAppendedFlavors(InternalFlavor.of("omnibus-global-symbols-file")),
+                linkerInputs);
+    return cxxPlatform
+        .getLd()
+        .resolve(graphBuilder, buildTarget.getTargetConfiguration())
+        .createGlobalSymbolsLinkerArgs(
+            projectFilesystem,
+            params,
+            graphBuilder,
+            buildTarget.withAppendedFlavors(InternalFlavor.of("omnibus-global-symbols-args")),
+            ImmutableList.of(globalSymbolsFile),
+            extraGlobals);
+  }
+
+  private static Pattern globalSymbolPattern;
+
+  private static ImmutableList<String> parseGlobalSymbols(ImmutableList<? extends Arg> flags) {
+
+    assert globalSymbolPattern != null;
+
+    ImmutableList.Builder<String> globalSymbols = ImmutableList.builder();
+    for (Arg flag : flags) {
+      if (flag instanceof SanitizedArg) {
+        Matcher matcher = globalSymbolPattern.matcher(flag.toString());
+        if (matcher.matches()) {
+          String symbol = matcher.group("symbol");
+          globalSymbols.add(symbol);
+        }
+      }
+    }
+    return globalSymbols.build();
+  }
+
   // Create a build rule to link the giant merged omnibus library described by the given spec.
   private static OmnibusLibrary createOmnibus(
       BuildTarget buildTarget,
@@ -589,6 +641,21 @@ public class Omnibus {
             cxxPlatform,
             undefinedSymbolsOnlyRoots));
 
+    String exportDynamicSymbolFlag =
+        cxxPlatform
+            .getLd()
+            .resolve(graphBuilder, buildTarget.getTargetConfiguration())
+            .getExportDynamicSymbolFlag();
+
+    // linker args will be in one of these two forms:
+    // 1. --export-dynamic-symbol=some_symbol
+    // 2. -Wl,--export-dynamic-symbol,some_symbol
+    globalSymbolPattern =
+        Pattern.compile(
+            String.format("(-Wl,)?%s[,=](?<symbol>[_a-zA-Z0-9]+)", exportDynamicSymbolFlag));
+
+    ImmutableList.Builder<String> globalSymbols = ImmutableList.builder();
+
     // Resolve all `NativeLinkableInput`s in parallel, before using them below.
     ImmutableList<? extends NativeLinkable> deps =
         NativeLinkables.getNativeLinkables(
@@ -632,7 +699,9 @@ public class Omnibus {
 
       // Otherwise, this is a body node, and we need to add its static library to the link line,
       // so that the linker can discard unused object files from it.
-      argsBuilder.addAll(inputs.get(target).getArgs());
+      ImmutableList<Arg> args = inputs.get(target).getArgs();
+      argsBuilder.addAll(args);
+      globalSymbols.addAll(parseGlobalSymbols(args));
     }
 
     // We process all excluded omnibus deps last, and just add their components as if this were a
@@ -640,6 +709,16 @@ public class Omnibus {
     for (NativeLinkable nativeLinkable : deps) {
       argsBuilder.addAll(inputs.get(nativeLinkable.getBuildTarget()).getArgs());
     }
+
+    argsBuilder.addAll(
+        createGlobalSymbolsArgs(
+            buildTarget,
+            projectFilesystem,
+            params,
+            graphBuilder,
+            cxxPlatform,
+            globalSymbolSources,
+            globalSymbols.build()));
 
     // Create the merged omnibus library using the arguments assembled above.
     BuildTarget omnibusTarget = buildTarget.withAppendedFlavors(OMNIBUS_FLAVOR);

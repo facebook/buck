@@ -195,7 +195,13 @@ public class RustCompileTest {
           BuildRuleParams baseParams,
           ActionGraphBuilder graphBuilder,
           BuildTarget target,
-          ImmutableList<? extends SourcePath> symbolFiles) {
+          ImmutableList<? extends SourcePath> symbolFiles,
+          ImmutableList<String> extraGlobals) {
+        return null;
+      }
+
+      @Override
+      public String getExportDynamicSymbolFlag() {
         return null;
       }
 

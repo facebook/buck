@@ -140,7 +140,13 @@ public class WindowsLinker extends DelegatingTool implements Linker, HasImportLi
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
       BuildTarget target,
-      ImmutableList<? extends SourcePath> symbolFiles) {
+      ImmutableList<? extends SourcePath> symbolFiles,
+      ImmutableList<String> extraGlobals) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public String getExportDynamicSymbolFlag() {
     throw new UnsupportedOperationException();
   }
 

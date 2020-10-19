@@ -250,8 +250,14 @@ public class DarwinLinker extends DelegatingTool
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
       BuildTarget target,
-      ImmutableList<? extends SourcePath> symbolFiles) {
-    return ImmutableList.of(new ExportedSymbolsArg(symbolFiles));
+      ImmutableList<? extends SourcePath> symbolFiles,
+      ImmutableList<String> extraGlobals) {
+    return ImmutableList.of(new ExportedSymbolsArg(symbolFiles, extraGlobals));
+  }
+
+  @Override
+  public String getExportDynamicSymbolFlag() {
+    return "-exported_symbol";
   }
 
   @Override
@@ -297,9 +303,12 @@ public class DarwinLinker extends DelegatingTool
    */
   private abstract static class SymbolsArg implements Arg {
     @AddToRuleKey private final ImmutableList<? extends SourcePath> symbolFiles;
+    @AddToRuleKey private final ImmutableList<String> extraSymbols;
 
-    public SymbolsArg(ImmutableList<? extends SourcePath> symbolFiles) {
+    public SymbolsArg(
+        ImmutableList<? extends SourcePath> symbolFiles, ImmutableList<String> extraSymbols) {
       this.symbolFiles = symbolFiles;
+      this.extraSymbols = extraSymbols;
     }
 
     abstract String getLinkerArgument();
@@ -320,6 +329,7 @@ public class DarwinLinker extends DelegatingTool
               Files.readAllLines(
                   pathResolver.getAbsolutePath(path).getPath(), StandardCharsets.UTF_8));
         }
+        symbols.addAll(extraSymbols);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -362,7 +372,7 @@ public class DarwinLinker extends DelegatingTool
   private static class UndefinedSymbolsArg extends SymbolsArg {
 
     public UndefinedSymbolsArg(ImmutableList<? extends SourcePath> symbolFiles) {
-      super(symbolFiles);
+      super(symbolFiles, ImmutableList.of());
     }
 
     @Override
@@ -380,8 +390,9 @@ public class DarwinLinker extends DelegatingTool
    */
   private static class ExportedSymbolsArg extends SymbolsArg {
 
-    public ExportedSymbolsArg(ImmutableList<? extends SourcePath> symbolFiles) {
-      super(symbolFiles);
+    public ExportedSymbolsArg(
+        ImmutableList<? extends SourcePath> symbolFiles, ImmutableList<String> extraGlobals) {
+      super(symbolFiles, extraGlobals);
     }
 
     @Override

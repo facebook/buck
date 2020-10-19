@@ -23,7 +23,7 @@ import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
@@ -259,6 +259,14 @@ public class PythonBinaryIntegrationTest {
     // Verify that the linker script contains "bar"
     List<String> linkerScriptLines = filesystem.readLines(workspace.getPath(linkerScriptPath));
     linkerScriptLines.contains("EXTERN(\"bar\")");
+    // Verify that the version script contains "bar" under the global section
+    List<String> versionScriptLines = filesystem.readLines(workspace.getPath(versionScriptPath));
+    int indexOfGlobal = versionScriptLines.indexOf("  global:");
+    int indexOfLocal = versionScriptLines.indexOf("  local: *;");
+    int indexOfSymbol = versionScriptLines.indexOf("  \"bar\";");
+    int indexOfExtraGlobalSymbol = versionScriptLines.indexOf("  \"other_func\";");
+    assertTrue(indexOfGlobal < indexOfSymbol && indexOfLocal > indexOfSymbol);
+    assertTrue(indexOfGlobal < indexOfExtraGlobalSymbol && indexOfLocal > indexOfExtraGlobalSymbol);
 
     // Verify that the linker and version scripts are passed to the linker as args
     Path linkerArgsPath =
@@ -272,11 +280,11 @@ public class PythonBinaryIntegrationTest {
         Files.exists(workspace.getPath(linkerArgsPath)),
         equalTo(true));
     MatcherAssert.assertThat(
-        String.format("%s exists", versionScriptPath),
+        String.format("%s does not exist", versionScriptPath),
         Files.exists(workspace.getPath(versionScriptPath)),
-        equalTo(false));
+        equalTo(true));
     List<String> linkerArgsLines = filesystem.readLines(linkerArgsPath);
-    assertSame(
+    assertNotSame(
         -1,
         Collections.indexOfSubList(
             linkerArgsLines,

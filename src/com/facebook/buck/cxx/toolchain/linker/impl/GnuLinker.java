@@ -124,6 +124,7 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
    *
    * @param target the name given to the {@link BuildRule} which creates the version script.
    * @param symbolFiles
+   * @param extraGlobals
    * @return the list of arguments which pass the version script containing the global symbols to
    *     link.
    */
@@ -133,7 +134,8 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
       BuildTarget target,
-      ImmutableList<? extends SourcePath> symbolFiles) {
+      ImmutableList<? extends SourcePath> symbolFiles,
+      ImmutableList<String> extraGlobals) {
     GlobalSymbolsVersionScript rule =
         graphBuilder.addToIndex(
             new GlobalSymbolsVersionScript(
@@ -143,9 +145,15 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
                     .withDeclaredDeps(
                         ImmutableSortedSet.copyOf(graphBuilder.filterBuildRuleInputs(symbolFiles)))
                     .withoutExtraDeps(),
-                symbolFiles));
+                symbolFiles,
+                extraGlobals));
     return ImmutableList.of(
         StringArg.of("-Wl,--version-script"), SourcePathArg.of(rule.getSourcePathToOutput()));
+  }
+
+  @Override
+  public String getExportDynamicSymbolFlag() {
+    return "--export-dynamic-symbol";
   }
 
   /**
@@ -218,14 +226,17 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
   private abstract static class SymbolsScript extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     @AddToRuleKey private final Iterable<? extends SourcePath> symbolFiles;
+    @AddToRuleKey private final ImmutableList<String> extraSymbols;
 
     public SymbolsScript(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
-        Iterable<? extends SourcePath> symbolFiles) {
+        Iterable<? extends SourcePath> symbolFiles,
+        ImmutableList<String> extraSymbols) {
       super(buildTarget, projectFilesystem, buildRuleParams);
       this.symbolFiles = symbolFiles;
+      this.extraSymbols = extraSymbols;
     }
 
     abstract String getScriptType();
@@ -262,6 +273,7 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
                     throw new RuntimeException(e);
                   }
                 }
+                symbols.addAll(extraSymbols);
                 List<String> lines = mapSymbols(symbols);
                 return Joiner.on(System.lineSeparator()).join(lines);
               },
@@ -284,7 +296,7 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
         ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
         Iterable<? extends SourcePath> symbolFiles) {
-      super(buildTarget, projectFilesystem, buildRuleParams, symbolFiles);
+      super(buildTarget, projectFilesystem, buildRuleParams, symbolFiles, ImmutableList.of());
     }
 
     @Override
@@ -310,8 +322,9 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
-        Iterable<? extends SourcePath> symbolFiles) {
-      super(buildTarget, projectFilesystem, buildRuleParams, symbolFiles);
+        Iterable<? extends SourcePath> symbolFiles,
+        ImmutableList<String> extraGlobals) {
+      super(buildTarget, projectFilesystem, buildRuleParams, symbolFiles, extraGlobals);
     }
 
     @Override

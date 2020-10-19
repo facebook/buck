@@ -58,6 +58,7 @@ cxx_library(
     ],
     deps = [
         ":func",
+        ":other_func",
     ],
 )
 
@@ -68,6 +69,22 @@ cxx_library(
     ],
     exported_headers = [
         "func.h",
+    ],
+)
+
+cxx_library(
+    name = "other_func",
+    srcs = [
+        "other_func.c",
+    ],
+    exported_headers = [
+        "other_func.h",
+    ],
+    link_whole = True,
+    exported_linker_flags = [
+        "-fuse-ld=gold",
+        # Make other_func() available for dynamic loading
+        "-Wl,--export-dynamic-symbol,other_func",
     ],
 )
 

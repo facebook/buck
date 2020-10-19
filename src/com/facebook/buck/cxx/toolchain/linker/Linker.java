@@ -148,6 +148,7 @@ public interface Linker extends Tool {
    *     generating the arguments,
    * @param symbolFiles the symbols files, each listing global symbols, one per line, to add to the
    *     link.
+   * @param extraGlobals
    * @return the list of linker arguments needed to propagate the list of global symbols to the link
    *     command.
    */
@@ -156,7 +157,10 @@ public interface Linker extends Tool {
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
       BuildTarget target,
-      ImmutableList<? extends SourcePath> symbolFiles);
+      ImmutableList<? extends SourcePath> symbolFiles,
+      ImmutableList<String> extraGlobals);
+
+  String getExportDynamicSymbolFlag();
 
   Iterable<Arg> getSharedLibFlag();
 
