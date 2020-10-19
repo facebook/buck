@@ -92,12 +92,12 @@ public class ExternalJavac implements Javac {
       Path workingDirectory,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
-      @Nullable JarParameters abiJarParaameters,
+      @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
       AbiGenerationMode abiCompatibilityMode,
       @Nullable SourceOnlyAbiRuleInfoFactory ruleInfoFactory) {
-    Preconditions.checkArgument(abiJarParaameters == null);
+    Preconditions.checkArgument(abiJarParameters == null);
     Preconditions.checkArgument(libraryJarParameters == null);
 
     return new Invocation() {
@@ -121,10 +121,7 @@ public class ExternalJavac implements Javac {
         try {
           expandedSources =
               JavaPaths.extractArchivesAndGetPaths(
-                  context.getRuleCellRoot(),
-                  context.getProjectFilesystemFactory(),
-                  javaSourceFilePaths,
-                  workingDirectory);
+                  context.getRuleCellRoot(), javaSourceFilePaths, workingDirectory);
         } catch (IOException e) {
           throw new HumanReadableException(
               "Unable to expand sources for %s into %s", invokingRule, workingDirectory);

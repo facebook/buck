@@ -115,11 +115,7 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
     ImmutableList<Path> expandedSources;
     try {
       expandedSources =
-          getExpandedSourcePaths(
-              projectFilesystem,
-              context.getProjectFilesystemFactory(),
-              kotlinSourceFilePaths,
-              workingDirectory);
+          getExpandedSourcePaths(projectFilesystem, kotlinSourceFilePaths, workingDirectory);
     } catch (Throwable throwable) {
       throwable.printStackTrace();
       throw new HumanReadableException(

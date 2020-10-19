@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.collect.ImmutableList;
@@ -66,10 +65,9 @@ public interface Kotlinc extends Tool {
 
   default ImmutableList<Path> getExpandedSourcePaths(
       ProjectFilesystem projectFilesystem,
-      ProjectFilesystemFactory projectFilesystemFactory,
       ImmutableSet<Path> kotlinSourceFilePaths,
       Optional<Path> workingDirectory)
-      throws InterruptedException, IOException {
+      throws IOException {
 
     // Add sources file or sources list to command
     ImmutableList.Builder<Path> sources = ImmutableList.builder();
@@ -85,7 +83,7 @@ public interface Kotlinc extends Tool {
             ArchiveFormat.ZIP
                 .getUnarchiver()
                 .extractArchive(
-                    projectFilesystemFactory,
+                    projectFilesystem.getRootPath(),
                     projectFilesystem.resolve(path),
                     projectFilesystem.resolve(workingDirectory.orElse(path)),
                     ExistingFileMode.OVERWRITE);

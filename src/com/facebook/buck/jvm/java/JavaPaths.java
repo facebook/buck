@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.collect.ImmutableList;
@@ -31,6 +30,7 @@ import java.util.zip.ZipFile;
 
 /** Utilities for handling paths to java source files. */
 public class JavaPaths {
+
   public static final String SRC_ZIP = ".src.zip";
   public static final String SRC_JAR = "-sources.jar";
 
@@ -39,11 +39,8 @@ public class JavaPaths {
    * directory and returns a list of all the resulting .java files.
    */
   static ImmutableList<Path> extractArchivesAndGetPaths(
-      AbsPath ruleCellPathRoot,
-      ProjectFilesystemFactory projectFilesystemFactory,
-      ImmutableSet<Path> javaSourceFilePaths,
-      Path workingDirectory)
-      throws InterruptedException, IOException {
+      AbsPath ruleCellPathRoot, ImmutableSet<Path> javaSourceFilePaths, Path workingDirectory)
+      throws IOException {
 
     // Add sources file or sources list to command
     ImmutableList.Builder<Path> sources = ImmutableList.builder();
@@ -57,7 +54,7 @@ public class JavaPaths {
             ArchiveFormat.ZIP
                 .getUnarchiver()
                 .extractArchive(
-                    projectFilesystemFactory,
+                    ruleCellPathRoot,
                     ruleCellPathRoot.resolve(path).getPath(),
                     ruleCellPathRoot.resolve(workingDirectory).getPath(),
                     ExistingFileMode.OVERWRITE);

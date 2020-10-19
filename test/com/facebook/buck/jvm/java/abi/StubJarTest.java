@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.JarDumper;
 import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
@@ -1988,7 +1987,7 @@ public class StubJarTest {
 
   @Test
   public void failsWhenInterfaceWillNotLoad() throws IOException {
-    if (testingMode != MODE_SOURCE_BASED_MISSING_DEPS) {
+    if (!testingMode.equals(MODE_SOURCE_BASED_MISSING_DEPS)) {
       return;
     }
 
@@ -2026,7 +2025,7 @@ public class StubJarTest {
 
   @Test
   public void failsWhenClassWillNotLoad() throws IOException {
-    if (testingMode != MODE_SOURCE_BASED_MISSING_DEPS) {
+    if (!testingMode.equals(MODE_SOURCE_BASED_MISSING_DEPS)) {
       return;
     }
 
@@ -2064,7 +2063,7 @@ public class StubJarTest {
 
   @Test
   public void failsWhenAnnotationWillNotLoad() throws IOException {
-    if (testingMode != MODE_SOURCE_BASED_MISSING_DEPS) {
+    if (!testingMode.equals(MODE_SOURCE_BASED_MISSING_DEPS)) {
       return;
     }
 
@@ -2474,7 +2473,7 @@ public class StubJarTest {
 
   @Test
   public void providesNiceErrorWhenAnnotationMissing() throws IOException {
-    if (testingMode != MODE_SOURCE_BASED_MISSING_DEPS) {
+    if (!testingMode.equals(MODE_SOURCE_BASED_MISSING_DEPS)) {
       return;
     }
 
@@ -2967,7 +2966,7 @@ public class StubJarTest {
 
   @Test
   public void providesNiceErrorWhenConstantMissing() throws IOException {
-    if (testingMode != MODE_SOURCE_BASED_MISSING_DEPS) {
+    if (!testingMode.equals(MODE_SOURCE_BASED_MISSING_DEPS)) {
       return;
     }
 
@@ -4584,7 +4583,7 @@ public class StubJarTest {
             "  public Inner field;",
             "}");
 
-    if (testingMode == MODE_SOURCE_BASED_MISSING_DEPS) {
+    if (testingMode.equals(MODE_SOURCE_BASED_MISSING_DEPS)) {
       tester
           .addExpectedCompileError(
               "JDK8:A.java:2: error: cannot access com.example.buck.imported.ImportedBase",
@@ -4619,7 +4618,7 @@ public class StubJarTest {
 
   @Test
   public void failsOnObviouslyNonExistentStaticImports() throws IOException {
-    if (testingMode != MODE_SOURCE_BASED_MISSING_DEPS) {
+    if (!testingMode.equals(MODE_SOURCE_BASED_MISSING_DEPS)) {
       return;
     }
     tester
@@ -6062,10 +6061,7 @@ public class StubJarTest {
     ArchiveFormat.ZIP
         .getUnarchiver()
         .extractArchive(
-            new DefaultProjectFilesystemFactory(),
-            fullJarPath,
-            classDir,
-            ExistingFileMode.OVERWRITE);
+            filesystem.getRootPath(), fullJarPath, classDir, ExistingFileMode.OVERWRITE);
 
     Path stubJarPath = createStubJar(classDir);
     tester
@@ -7084,9 +7080,9 @@ public class StubJarTest {
       if (language.equals(Language.KOTLIN) && testingMode.equals(MODE_SOURCE_BASED)) {
         stubJarPath =
             compileToKotlinAbiJar(classpath, sourceFileName, sourceFileContents, temp.newFolder());
-      } else if (testingMode != MODE_JAR_BASED) {
+      } else if (!testingMode.equals(MODE_JAR_BASED)) {
         SortedSet<Path> classpath1 =
-            testingMode == MODE_SOURCE_BASED
+            testingMode.equals(MODE_SOURCE_BASED)
                 ? ImmutableSortedSet.<Path>naturalOrder()
                     .addAll(universalClasspath)
                     .addAll(classpath)
@@ -7101,7 +7097,7 @@ public class StubJarTest {
           if (manifest != null) {
             testCompiler.setManifest(manifest);
           }
-          if (testingMode == MODE_SOURCE_BASED_MISSING_DEPS) {
+          if (testingMode.equals(MODE_SOURCE_BASED_MISSING_DEPS)) {
             testCompiler.useFrontendOnlyJavacTask();
           }
           testCompiler.addSourceFileContents(sourceFileName, sourceFileContents);

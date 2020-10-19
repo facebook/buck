@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
-import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
@@ -42,9 +41,6 @@ public interface JavacExecutionContext {
   CellPathResolver getCellPathResolver();
 
   AbsPath getRuleCellRoot();
-
-  // TODO: msemko : Needs for unarchiver
-  ProjectFilesystemFactory getProjectFilesystemFactory();
 
   ImmutableMap<String, String> getEnvironment();
 

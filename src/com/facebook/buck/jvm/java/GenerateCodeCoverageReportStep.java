@@ -146,13 +146,8 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     properties.setProperty("classes.dir", formatPathSet(extractedClassesDirectories));
     properties.setProperty("src.dir", Joiner.on(":").join(sourceDirectories));
 
-    if (coverageIncludes.isPresent()) {
-      properties.setProperty("jacoco.includes", coverageIncludes.get());
-    }
-
-    if (coverageExcludes.isPresent()) {
-      properties.setProperty("jacoco.excludes", coverageExcludes.get());
-    }
+    coverageIncludes.ifPresent(s -> properties.setProperty("jacoco.includes", s));
+    coverageExcludes.ifPresent(s -> properties.setProperty("jacoco.excludes", s));
 
     try (Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
       properties.store(writer, "Parameters for Jacoco report generator.");
@@ -181,8 +176,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
    * extract it first.
    */
   private void populateClassesDir(
-      ProjectFilesystemFactory projectFilesystemFactory, Path outputJar, Path classesDir)
-      throws InterruptedException {
+      ProjectFilesystemFactory projectFilesystemFactory, Path outputJar, Path classesDir) {
     try {
       Preconditions.checkState(filesystem.exists(outputJar), outputJar + " does not exist");
       ArchiveFormat.ZIP

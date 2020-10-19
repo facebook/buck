@@ -125,7 +125,6 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getVerbosity(),
             executionContext.getCellPathResolver(),
             projectFilesystem.getRootPath(),
-            executionContext.getProjectFilesystemFactory(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
             projectFilesystem.getBuckPaths());
@@ -181,7 +180,6 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getVerbosity(),
             executionContext.getCellPathResolver(),
             projectFilesystem.getRootPath(),
-            executionContext.getProjectFilesystemFactory(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
             projectFilesystem.getBuckPaths());
@@ -289,7 +287,6 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getVerbosity(),
             executionContext.getCellPathResolver(),
             projectFilesystem.getRootPath(),
-            executionContext.getProjectFilesystemFactory(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
             projectFilesystem.getBuckPaths());
@@ -362,6 +359,7 @@ public class Jsr199JavacIntegrationTest {
    * present
    */
   private static class JdkNotFoundJavac extends Jsr199Javac {
+
     @Override
     protected JavaCompiler createCompiler(
         JavacExecutionContext context, SourcePathResolverAdapter resolver) {
@@ -383,7 +381,6 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getVerbosity(),
             executionContext.getCellPathResolver(),
             projectFilesystem.getRootPath(),
-            executionContext.getProjectFilesystemFactory(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
             projectFilesystem.getBuckPaths());
