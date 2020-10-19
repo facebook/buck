@@ -575,7 +575,8 @@ public class AppleLibraryDescription
         args.getTargetSdkVersion(),
         appleConfig.getIncrementalBundlingEnabled(),
         appleConfig.getCodeSignTypeOverride(),
-        appleConfig.getBundleInputBasedRulekeyEnabled());
+        appleConfig.getBundleInputBasedRulekeyEnabled(),
+        appleConfig.getIncrementalHashCacheEnabled());
   }
 
   /**

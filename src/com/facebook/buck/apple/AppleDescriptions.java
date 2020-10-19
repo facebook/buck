@@ -774,7 +774,8 @@ public class AppleDescriptions {
       Optional<String> minimumOSVersion,
       boolean incrementalBundlingEnabled,
       Optional<AppleCodeSignType> codeSignTypeOverride,
-      boolean bundleInputBasedRulekeyEnabled) {
+      boolean bundleInputBasedRulekeyEnabled,
+      boolean shouldCacheFileHashes) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             graphBuilder,
@@ -960,7 +961,8 @@ public class AppleDescriptions {
         extraBinaries,
         graphBuilder,
         projectFilesystem,
-        incrementalBundlingEnabled);
+        incrementalBundlingEnabled,
+        shouldCacheFileHashes);
 
     String unwrappedExtension =
         extension.isLeft() ? extension.getLeft().fileExtension : extension.getRight();
@@ -971,7 +973,8 @@ public class AppleDescriptions {
         buildTarget,
         unwrappedExtension,
         graphBuilder,
-        projectFilesystem);
+        projectFilesystem,
+        shouldCacheFileHashes);
 
     Stream.of(assetCatalog, coreDataModel, sceneKitAssets)
         .filter(Optional::isPresent)
@@ -996,7 +999,8 @@ public class AppleDescriptions {
         bundlePartsReadyToCopy,
         graphBuilder,
         projectFilesystem,
-        incrementalBundlingEnabled);
+        incrementalBundlingEnabled,
+        shouldCacheFileHashes);
 
     BuildRule unwrappedBinary = getBinaryFromBuildRuleWithBinary(flavoredBinaryRule);
 
@@ -1106,7 +1110,8 @@ public class AppleDescriptions {
                             sourcePath,
                             codeSignPrepRule.getBuildTarget(),
                             graphBuilder,
-                            projectFilesystem)));
+                            projectFilesystem,
+                            shouldCacheFileHashes)));
               });
       if (dryRunCodeSigning) {
         final boolean codeSignOnCopy = false;
@@ -1121,7 +1126,8 @@ public class AppleDescriptions {
                     entitlementsSourcePath,
                     codeSignPrepRule.getBuildTarget(),
                     graphBuilder,
-                    projectFilesystem),
+                    projectFilesystem,
+                    shouldCacheFileHashes),
                 codeSignOnCopy,
                 Optional.of("BUCK_code_sign_entitlements.plist"),
                 ignoreMissingSource));
@@ -1145,7 +1151,8 @@ public class AppleDescriptions {
                     provisioningProfileSourcePath,
                     codeSignPrepRule.getBuildTarget(),
                     graphBuilder,
-                    projectFilesystem),
+                    projectFilesystem,
+                    shouldCacheFileHashes),
                 codeSignOnCopy,
                 newNameAfterCopy,
                 ignoreIfMissing));
@@ -1173,7 +1180,8 @@ public class AppleDescriptions {
                   infoPlistReadyToCopy,
                   buildTarget,
                   graphBuilder,
-                  projectFilesystem)));
+                  projectFilesystem,
+                  shouldCacheFileHashes)));
       infoPlistFileBundlePath =
           RelPath.of(destination.getPath(destinations)).resolveRel("Info.plist");
     }
@@ -1186,7 +1194,8 @@ public class AppleDescriptions {
               binarySourcePath,
               unwrappedBinary.getBuildTarget(),
               graphBuilder,
-              projectFilesystem);
+              projectFilesystem,
+              shouldCacheFileHashes);
       {
         final boolean codeSignOnCopy = false;
         final boolean ignoreIfMissing = false;
@@ -1239,7 +1248,8 @@ public class AppleDescriptions {
                       framework,
                       buildTarget,
                       graphBuilder,
-                      projectFilesystem),
+                      projectFilesystem,
+                      shouldCacheFileHashes),
                   codeSignOnCopy));
         }
       }
@@ -1378,7 +1388,8 @@ public class AppleDescriptions {
       ImmutableSet<BuildRule> extraBinaries,
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
-      boolean incrementalBundlingEnabled) {
+      boolean incrementalBundlingEnabled,
+      boolean shouldCacheFileHashes) {
     bundlePartsBuilder.addAll(
         extraBinaries.stream()
             .map(
@@ -1396,7 +1407,8 @@ public class AppleDescriptions {
                           buildRule.getSourcePathToOutput(),
                           buildRule.getBuildTarget(),
                           graphBuilder,
-                          projectFilesystem),
+                          projectFilesystem,
+                          shouldCacheFileHashes),
                       codeSignOnCopy,
                       newNameAfterCopy,
                       ignoreIfMissing);
@@ -1409,7 +1421,8 @@ public class AppleDescriptions {
       SourcePath sourcePath,
       BuildTarget baseTarget,
       ActionGraphBuilder graphBuilder,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      boolean shouldCacheFileHashes) {
     if (!incrementalBundlingEnabled) {
       return Optional.empty();
     }
@@ -1429,7 +1442,12 @@ public class AppleDescriptions {
                 calculateHashTarget,
                 target ->
                     new AppleWriteFileHash(
-                        target, projectFilesystem, graphBuilder, sourcePath, true));
+                        target,
+                        projectFilesystem,
+                        graphBuilder,
+                        sourcePath,
+                        true,
+                        shouldCacheFileHashes));
     return Optional.of(calculateHash.getSourcePathToOutput());
   }
 
@@ -1462,7 +1480,8 @@ public class AppleDescriptions {
       BuildTarget bundleTarget,
       String extension,
       ActionGraphBuilder graphBuilder,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      boolean shouldCacheFileHashes) {
     if (!ApplePkgInfo.isPkgInfoNeeded(extension)) {
       return;
     }
@@ -1484,7 +1503,8 @@ public class AppleDescriptions {
                 pkgInfo.getSourcePathToOutput(),
                 pkgInfoBuildTarget,
                 graphBuilder,
-                projectFilesystem)));
+                projectFilesystem,
+                shouldCacheFileHashes)));
   }
 
   /**
@@ -1645,7 +1665,8 @@ public class AppleDescriptions {
       ImmutableList.Builder<AppleBundlePart> bundlePartsBuilder,
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
-      boolean incrementalBundlingEnabled) {
+      boolean incrementalBundlingEnabled,
+      boolean shouldCacheFileHashes) {
     // We only care about the direct layer of dependencies. ExtensionBundles inside ExtensionBundles
     // do not get pulled in to the top-level Bundle.
     dependencies.stream()
@@ -1713,7 +1734,8 @@ public class AppleDescriptions {
                             sourcePath,
                             appleBundle.getBuildTarget(),
                             graphBuilder,
-                            projectFilesystem),
+                            projectFilesystem,
+                            shouldCacheFileHashes),
                         codeSignOnCopy));
               }
             });

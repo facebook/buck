@@ -48,6 +48,7 @@ public class AppleWriteFileHash extends ModernBuildRule<AppleWriteFileHash> impl
   @AddToRuleKey private final SourcePath inputPath;
   @AddToRuleKey private final OutputPath outputPath;
   @AddToRuleKey private final boolean useMachoUuid;
+  @AddToRuleKey private final boolean isCacheable;
 
   // This class is used for incremental builds, so it does not make sense to be trying to send
   // those over remote execution.
@@ -59,11 +60,18 @@ public class AppleWriteFileHash extends ModernBuildRule<AppleWriteFileHash> impl
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
       SourcePath pathToFile,
-      boolean useMachoUuid) {
+      boolean useMachoUuid,
+      boolean isCacheable) {
     super(buildTarget, projectFilesystem, ruleFinder, AppleWriteFileHash.class);
     this.inputPath = pathToFile;
     this.outputPath = new OutputPath("file.apple_hash");
     this.useMachoUuid = useMachoUuid;
+    this.isCacheable = isCacheable;
+  }
+
+  @Override
+  public boolean isCacheable() {
+    return isCacheable;
   }
 
   @Override

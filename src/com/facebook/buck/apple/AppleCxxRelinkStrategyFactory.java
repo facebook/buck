@@ -47,24 +47,30 @@ class AppleCxxRelinkStrategyFactory implements CxxConditionalLinkStrategyFactory
   /** Returns the currently configured relinking strategy. */
   static CxxConditionalLinkStrategyFactory getConfiguredStrategy(AppleConfig appleConfig) {
     if (appleConfig.getConditionalRelinkingEnabled()) {
-      return new AppleCxxRelinkStrategyFactory(appleConfig.getConditionalRelinkingFallback());
+      return new AppleCxxRelinkStrategyFactory(
+          appleConfig.getConditionalRelinkingFallback(),
+          appleConfig.getIncrementalHashCacheEnabled());
     }
 
     return CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY;
   }
 
   private final boolean fallback;
+  private final boolean shouldCacheFileHashes;
 
-  private AppleCxxRelinkStrategyFactory(boolean fallback) {
+  private AppleCxxRelinkStrategyFactory(boolean fallback, boolean shouldCacheFileHashes) {
     this.fallback = fallback;
+    this.shouldCacheFileHashes = shouldCacheFileHashes;
   }
 
   private BuildRule createHashRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      SourcePath pathToFile) {
-    return new AppleWriteFileHash(buildTarget, projectFilesystem, ruleFinder, pathToFile, true);
+      SourcePath pathToFile,
+      boolean shouldCacheFileHashes) {
+    return new AppleWriteFileHash(
+        buildTarget, projectFilesystem, ruleFinder, pathToFile, true, shouldCacheFileHashes);
   }
 
   @Override
@@ -112,7 +118,13 @@ class AppleCxxRelinkStrategyFactory implements CxxConditionalLinkStrategyFactory
       BuildRule hashingRule =
           graphBuilder.computeIfAbsent(
               pathToTargetEntry.getValue(),
-              hashTarget -> createHashRule(hashTarget, projectFilesystem, ruleResolver, inputPath));
+              hashTarget ->
+                  createHashRule(
+                      hashTarget,
+                      projectFilesystem,
+                      ruleResolver,
+                      inputPath,
+                      shouldCacheFileHashes));
       SourcePath hashPath = hashingRule.getSourcePathToOutput();
       inputFileHashes.put(inputPath, hashPath);
     }

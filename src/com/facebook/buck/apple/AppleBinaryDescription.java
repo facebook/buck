@@ -426,7 +426,8 @@ public class AppleBinaryDescription
         args.getTargetSdkVersion(),
         appleConfig.getIncrementalBundlingEnabled(),
         appleConfig.getCodeSignTypeOverride(),
-        appleConfig.getBundleInputBasedRulekeyEnabled());
+        appleConfig.getBundleInputBasedRulekeyEnabled(),
+        appleConfig.getIncrementalHashCacheEnabled());
   }
 
   private BuildRule createBinary(

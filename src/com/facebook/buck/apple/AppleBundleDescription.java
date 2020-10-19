@@ -238,7 +238,8 @@ public class AppleBundleDescription
         minOSVersion,
         appleConfig.getIncrementalBundlingEnabled(),
         appleConfig.getCodeSignTypeOverride(),
-        appleConfig.getBundleInputBasedRulekeyEnabled());
+        appleConfig.getBundleInputBasedRulekeyEnabled(),
+        appleConfig.getIncrementalHashCacheEnabled());
   }
 
   private static Optional<String> getMinimumOSVersionForBundle(

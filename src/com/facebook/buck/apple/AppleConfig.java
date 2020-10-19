@@ -270,6 +270,15 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return getOptionalPath(APPLE_SECTION, "focused_targets_path");
   }
 
+  /**
+   * Buck config that indicates whether we should cache hashes from conditional relinking.
+   *
+   * @return optional bool for enabling hash caching
+   */
+  public Boolean getIncrementalHashCacheEnabled() {
+    return delegate.getBooleanValue(APPLE_SECTION, "incremental_hash_cache_enabled", false);
+  }
+
   public ToolProvider getCodesignProvider() {
     String codesignField = "codesign";
     Optional<UnconfiguredBuildTarget> target =
