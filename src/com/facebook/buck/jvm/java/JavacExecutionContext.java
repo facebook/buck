@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -57,5 +57,5 @@ public interface JavacExecutionContext {
   // (msemko@) construct from ConfiguredBuck + FileSystem + includeTargetConfigHash
   // genDir + scratchDir + annotation -> derived from ConfiguredBuck
   // so only `ConfiguredBuck + FileSystem + includeTargetConfigHash ` params needed
-  BuckPaths getBuckPath();
+  BaseBuckPaths getBaseBuckPaths();
 }

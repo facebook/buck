@@ -20,7 +20,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
-import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.google.common.base.Preconditions;
 import java.nio.file.FileSystem;
@@ -46,7 +46,7 @@ public abstract class CompilerOutputPaths {
   public abstract Optional<Path> getOutputJarPath();
 
   /** Creates {@link CompilerOutputPaths} */
-  public static CompilerOutputPaths of(BuildTarget target, BuckPaths buckPath) {
+  public static CompilerOutputPaths of(BuildTarget target, BaseBuckPaths buckPath) {
     FileSystem fileSystem = buckPath.getFileSystem();
     boolean includeTargetConfigHash = buckPath.shouldIncludeTargetConfigHash();
     RelPath genDir = buckPath.getGenDir();
@@ -91,26 +91,26 @@ public abstract class CompilerOutputPaths {
   }
 
   /** Returns a path to a file that contains dependencies used in the compilation */
-  public static Path getDepFilePath(BuildTarget target, BuckPaths buckPath) {
+  public static Path getDepFilePath(BuildTarget target, BaseBuckPaths buckPath) {
     return CompilerOutputPaths.of(target, buckPath)
         .getOutputJarDirPath()
         .resolve("used-classes.json");
   }
 
-  public static RelPath getClassesDir(BuildTarget target, BuckPaths buckPaths) {
+  public static RelPath getClassesDir(BuildTarget target, BaseBuckPaths buckPaths) {
     return CompilerOutputPaths.of(target, buckPaths).getClassesDir();
   }
 
-  public static RelPath getAnnotationPath(BuildTarget target, BuckPaths buckPaths) {
+  public static RelPath getAnnotationPath(BuildTarget target, BaseBuckPaths buckPaths) {
     return CompilerOutputPaths.of(target, buckPaths).getAnnotationPath();
   }
 
-  public static Path getAbiJarPath(BuildTarget buildTarget, BuckPaths buckPaths) {
+  public static Path getAbiJarPath(BuildTarget buildTarget, BaseBuckPaths buckPaths) {
     Preconditions.checkArgument(hasAbiJar(buildTarget));
     return CompilerOutputPaths.of(buildTarget, buckPaths).getAbiJarPath().get();
   }
 
-  public static Path getOutputJarPath(BuildTarget target, BuckPaths buckPaths) {
+  public static Path getOutputJarPath(BuildTarget target, BaseBuckPaths buckPaths) {
     return CompilerOutputPaths.of(target, buckPaths).getOutputJarPath().get();
   }
 

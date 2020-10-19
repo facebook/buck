@@ -22,6 +22,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.api.BuckTracing;
+import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
@@ -276,12 +277,13 @@ class Jsr199JavacInvocation implements Javac.Invocation {
               debugLogDiagnostics();
               if (buildSuccessful()) {
                 if (classUsageTracker != null) {
+                  BaseBuckPaths baseBuckPaths = context.getBaseBuckPaths();
                   new DefaultClassUsageFileWriter()
                       .writeFile(
                           classUsageTracker,
-                          CompilerOutputPaths.getDepFilePath(abiTarget, context.getBuckPath()),
+                          CompilerOutputPaths.getDepFilePath(abiTarget, baseBuckPaths),
                           context.getRuleCellRoot(),
-                          context.getBuckPath().getConfiguredBuckOut(),
+                          baseBuckPaths.getConfiguredBuckOut(),
                           context.getCellPathResolver());
                 }
                 abiResult.set(0);
@@ -443,13 +445,13 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
                     if (success && buildSuccessful()) {
                       if (classUsageTracker != null) {
+                        BaseBuckPaths baseBuckPaths = context.getBaseBuckPaths();
                         new DefaultClassUsageFileWriter()
                             .writeFile(
                                 classUsageTracker,
-                                CompilerOutputPaths.getDepFilePath(
-                                    libraryTarget, context.getBuckPath()),
+                                CompilerOutputPaths.getDepFilePath(libraryTarget, baseBuckPaths),
                                 context.getRuleCellRoot(),
-                                context.getBuckPath().getConfiguredBuckOut(),
+                                baseBuckPaths.getConfiguredBuckOut(),
                                 context.getCellPathResolver());
                       }
                     } else {

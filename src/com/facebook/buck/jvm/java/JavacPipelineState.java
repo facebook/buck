@@ -23,6 +23,8 @@ import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
+import com.facebook.buck.io.filesystem.BaseBuckPaths;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.ProcessExecutor;
@@ -46,6 +48,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public class JavacPipelineState implements RulePipelineState {
+
   private static final Logger LOG = Logger.get(JavacPipelineState.class);
 
   private final CompilerParameters compilerParameters;
@@ -113,7 +116,13 @@ public class JavacPipelineState implements RulePipelineState {
             processExecutor.withDownwardAPI(
                 DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
       }
-
+      BuckPaths paths = filesystem.getBuckPaths();
+      // TODO msemko: construct outside of the step.
+      BaseBuckPaths buckPaths =
+          BaseBuckPaths.of(
+              paths.getBuckOut(),
+              paths.getConfiguredBuckOut(),
+              paths.shouldIncludeTargetConfigHash());
       JavacExecutionContext javacExecutionContext =
           ImmutableJavacExecutionContext.ofImpl(
               new JavacEventSinkToBuckEventBusBridge(
@@ -127,7 +136,7 @@ public class JavacPipelineState implements RulePipelineState {
               context.getProjectFilesystemFactory(),
               firstOrderContext.getEnvironment(),
               processExecutor,
-              filesystem.getBuckPaths());
+              buckPaths);
 
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors =
           ImmutableList.copyOf(

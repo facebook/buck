@@ -47,7 +47,9 @@ public class JavacStep implements Step {
   private final BuildTarget invokingRule;
 
   private final boolean ownsPipelineObject;
+  // TODO: msemko : remove
   private final SourcePathResolverAdapter resolver;
+  // TODO: msemko : remove
   private final ProjectFilesystem filesystem;
 
   public JavacStep(
