@@ -16,13 +16,13 @@
 
 package com.facebook.buck.edenfs;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -40,6 +40,8 @@ public final class EdenClientPool {
    * {@link ThreadLocal} rather than create a new client for each Thrift call.
    */
   private final ThreadLocal<EdenClient> clientFactory;
+
+  private static final Logger LOG = Logger.get(EdenClientPool.class);
 
   private EdenClientPool(Path socketFile) {
     this(
@@ -72,14 +74,13 @@ public final class EdenClientPool {
   }
 
   public static Optional<EdenClientPool> tryToCreateEdenClientPool(Path directoryInEdenFsMount) {
-    Path socketSymlink = directoryInEdenFsMount.resolve(".eden/socket");
-    Path socketFile;
-    try {
-      socketFile = Files.readSymbolicLink(socketSymlink);
-    } catch (IOException e) {
+    Optional<Path> socket = EdenUtil.getPathFromEdenConfig(directoryInEdenFsMount, "socket");
+    if (!socket.isPresent()) {
+      LOG.debug("could not find the Eden socket file from the directory:" + directoryInEdenFsMount);
       return Optional.empty();
+    } else {
+      return newInstanceFromSocket(socket.get());
     }
-    return newInstanceFromSocket(socketFile);
   }
 
   public static Optional<EdenClientPool> newInstanceFromSocket(Path socketFile) {
@@ -90,6 +91,7 @@ public final class EdenClientPool {
     try {
       edenClient.listMounts();
     } catch (EdenError | IOException | TException e) {
+      LOG.debug("Could not connect Eden client via socket: " + socketFile);
       return Optional.empty();
     }
     return Optional.of(new EdenClientPool(socketFile));

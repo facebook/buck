@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.DeepMatcher;
 import com.facebook.buck.testutil.PathNormalizer;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.SHA1Result;
@@ -39,6 +40,8 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -62,11 +65,18 @@ public class EdenMountTest {
     replay(thriftClient);
 
     EdenClientPool pool = new EdenClientPool(thriftClient);
-    Path pathToBuck = fs.getPath("/home/mbolin/src/buck");
-    Files.createDirectories(pathToBuck.resolve(".eden"));
-    Files.createSymbolicLink(
-        PathNormalizer.toWindowsPathIfNeeded(pathToBuck.resolve(".eden").resolve("root")),
-        PathNormalizer.toWindowsPathIfNeeded(pathToBuck));
+    Path pathToBuck = PathNormalizer.toWindowsPathIfNeeded(fs.getPath("/home/mbolin/src/buck"));
+    if (Platform.detect() == Platform.WINDOWS) {
+      List<String> config = Arrays.asList("[Config]", "root=" + pathToBuck.toString());
+      Files.createDirectories(PathNormalizer.toWindowsPathIfNeeded(pathToBuck.resolve(".eden")));
+      Path configFile =
+          Files.createFile(
+              PathNormalizer.toWindowsPathIfNeeded(pathToBuck.resolve(".eden").resolve("config")));
+      Files.write(configFile, config);
+    } else {
+      Files.createDirectories(pathToBuck.resolve(".eden"));
+      Files.createSymbolicLink(pathToBuck.resolve(".eden").resolve("root"), pathToBuck);
+    }
 
     Optional<EdenMount> mount = EdenMount.createEdenMountForProjectRoot(pathToBuck, pool);
     assertTrue("Should find mount for path.", mount.isPresent());

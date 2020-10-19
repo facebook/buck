@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -70,15 +69,12 @@ public class EdenMount {
   /** @return an Eden mount point if {@code projectRoot} is backed by Eden or {@code null}. */
   public static Optional<EdenMount> createEdenMountForProjectRoot(
       Path projectRoot, EdenClientPool pool) {
-    Path rootSymlink = projectRoot.resolve(".eden/root");
-    Path rootOfEdenMount;
-    try {
-      rootOfEdenMount = Files.readSymbolicLink(rootSymlink);
-    } catch (IOException e) {
+    Optional<Path> rootPath = EdenUtil.getPathFromEdenConfig(projectRoot, "root");
+    if (!rootPath.isPresent()) {
       return Optional.empty();
     }
 
-    return Optional.of(new EdenMount(pool, rootOfEdenMount, projectRoot));
+    return Optional.of(new EdenMount(pool, rootPath.get(), projectRoot));
   }
 
   /** @return The root to the Buck project that this {@link EdenMount} represents. */

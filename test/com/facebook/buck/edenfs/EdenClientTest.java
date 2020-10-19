@@ -24,6 +24,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.PathNormalizer;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.MountInfo;
 import com.facebook.eden.thrift.MountState;
@@ -37,6 +39,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.junit.Before;
@@ -75,13 +78,25 @@ public class EdenClientTest {
 
   @Test
   public void getMountForMatchesProjectRootEqualToMount() throws IOException {
-    Path projectRoot = fs.getPath("/home/mbolin/src/eden");
-    Files.createDirectories(projectRoot.resolve(".eden"));
-    Files.createSymbolicLink(projectRoot.resolve(".eden").resolve("root"), projectRoot);
+    Path projectRoot = PathNormalizer.toWindowsPathIfNeeded(fs.getPath("/home/mbolin/src/eden"));
+    Files.createDirectories(projectRoot);
+    if (Platform.detect() == Platform.WINDOWS) {
+      List<String> config = Arrays.asList("[Config]", "root=" + projectRoot.toString());
+      Files.createDirectories(PathNormalizer.toWindowsPathIfNeeded(projectRoot.resolve(".eden")));
+      Path configFile =
+          Files.createFile(
+              PathNormalizer.toWindowsPathIfNeeded(projectRoot.resolve(".eden").resolve("config")));
+      Files.write(configFile, config);
+    } else {
+      Files.createDirectories(projectRoot.resolve(".eden"));
+      Files.createSymbolicLink(projectRoot.resolve(".eden").resolve("root"), projectRoot);
+    }
 
     Optional<EdenMount> mount = EdenMount.createEdenMountForProjectRoot(projectRoot, pool);
     assertTrue("Should find mount for path.", mount.isPresent());
-    assertEquals(fs.getPath("/home/mbolin/src/eden"), mount.get().getProjectRoot());
+    assertEquals(
+        PathNormalizer.toWindowsPathIfNeeded(fs.getPath("/home/mbolin/src/eden")),
+        mount.get().getProjectRoot());
     assertEquals(fs.getPath(""), mount.get().getPrefix());
   }
 
@@ -89,8 +104,16 @@ public class EdenClientTest {
   public void getMountForMatchesProjectRootUnderMount() throws IOException {
     Path edenMountRoot = fs.getPath("/home/mbolin/src/eden");
     Path projectRoot = fs.getPath("/home/mbolin/src/eden/deep/project");
-    Files.createDirectories(projectRoot.resolve(".eden"));
-    Files.createSymbolicLink(projectRoot.resolve(".eden").resolve("root"), edenMountRoot);
+    Files.createDirectories(projectRoot);
+    if (Platform.detect() == Platform.WINDOWS) {
+      List<String> config = Arrays.asList("[Config]", "root=/home/mbolin/src/eden");
+      Files.createDirectories(edenMountRoot.resolve(".eden"));
+      Path configFile = Files.createFile(edenMountRoot.resolve(".eden").resolve("config"));
+      Files.write(configFile, config);
+    } else {
+      Files.createDirectories(projectRoot.resolve(".eden"));
+      Files.createSymbolicLink(projectRoot.resolve(".eden").resolve("root"), edenMountRoot);
+    }
 
     Optional<EdenMount> mount = EdenMount.createEdenMountForProjectRoot(projectRoot, pool);
     assertTrue("Should find mount for path.", mount.isPresent());
