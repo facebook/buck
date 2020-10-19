@@ -1,10 +1,9 @@
 java_library(
     name = "unixsocket",
-    srcs = glob(["*.java"]),
+    srcs = ["UnixDomainSocket.java"],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/io/watchman:transport",
-        "//third-party/java/jna:jna",
-        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junixsocket:junixsocket",
     ],
 )

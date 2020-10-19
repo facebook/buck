@@ -249,7 +249,7 @@ java_binary(
     name = "main",
     blacklist = [
         "META-INF/MANIFEST.MF",
-        "META-INF/(?!services|native).*",
+        "META-INF/(?!services|native|maven/com.kohlschutter.junixsocket).*",
         "^.api_description",
         "^.options",
         "^LICENSE",

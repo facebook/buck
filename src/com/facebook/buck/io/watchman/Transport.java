@@ -17,6 +17,7 @@
 package com.facebook.buck.io.watchman;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -30,12 +31,12 @@ public interface Transport extends Closeable {
    *
    * @return an input stream for reading messages in this IPC
    */
-  InputStream getInputStream();
+  InputStream getInputStream() throws IOException;
 
   /**
    * Returns an input stream for writing messages.
    *
    * @return an input stream for writing messages in this IPC
    */
-  OutputStream getOutputStream();
+  OutputStream getOutputStream() throws IOException;
 }

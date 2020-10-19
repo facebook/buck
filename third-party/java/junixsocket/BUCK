@@ -4,5 +4,5 @@ prebuilt_jar(
     licenses = [
         "LICENSE",
     ],
-    visibility = ["PUBLIC"],
+    visibility = ["//src/com/facebook/buck/io/unixsocket:unixsocket"],
 )
