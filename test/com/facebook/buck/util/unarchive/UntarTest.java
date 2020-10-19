@@ -17,6 +17,7 @@
 package com.facebook.buck.util.unarchive;
 
 import static com.google.common.collect.Iterables.concat;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -275,7 +276,7 @@ public class UntarTest {
       unarchivedFiles =
           unarchiver.extractArchive(
               archivePath,
-              filesystem,
+              filesystem.getRootPath(),
               Paths.get("output_dir"),
               Optional.empty(),
               ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES,
@@ -291,7 +292,7 @@ public class UntarTest {
               ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
     }
 
-    Assert.assertThat(unarchivedFiles, Matchers.containsInAnyOrder(expectedPaths.toArray()));
+    assertThat(unarchivedFiles, Matchers.containsInAnyOrder(expectedPaths.toArray()));
     Assert.assertEquals(expectedPaths.size(), unarchivedFiles.size());
 
     // Make sure we wrote the files
@@ -318,7 +319,7 @@ public class UntarTest {
     assertExecutable(expectedPaths.get(0), true);
     if (tmpFolder.getRoot().getFileSystem().supportedFileAttributeViews().contains("posix")) {
       AbsPath executablePath = tmpFolder.getRoot().resolve(expectedPaths.get(0));
-      Assert.assertThat(
+      assertThat(
           Files.getPosixFilePermissions(executablePath.getPath()),
           Matchers.hasItems(
               PosixFilePermission.OWNER_EXECUTE,
@@ -360,7 +361,7 @@ public class UntarTest {
                 Optional.of(Paths.get("root")),
                 ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
-    Assert.assertThat(unarchivedFiles, Matchers.containsInAnyOrder(expectedPaths.toArray()));
+    assertThat(unarchivedFiles, Matchers.containsInAnyOrder(expectedPaths.toArray()));
     Assert.assertEquals(expectedPaths.size(), unarchivedFiles.size());
 
     // Make sure we wrote the files
@@ -427,7 +428,7 @@ public class UntarTest {
                 Optional.empty(),
                 ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
-    Assert.assertThat(unarchivedFiles, Matchers.containsInAnyOrder(expectedPaths.toArray()));
+    assertThat(unarchivedFiles, Matchers.containsInAnyOrder(expectedPaths.toArray()));
     Assert.assertEquals(expectedPaths.size(), unarchivedFiles.size());
 
     assertOutputDirExists(expectedDirs.get(1));
@@ -479,7 +480,7 @@ public class UntarTest {
                 Optional.empty(),
                 ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
-    Assert.assertThat(unarchivedFiles, Matchers.containsInAnyOrder(expectedPaths.toArray()));
+    assertThat(unarchivedFiles, Matchers.containsInAnyOrder(expectedPaths.toArray()));
     Assert.assertEquals(expectedPaths.size(), unarchivedFiles.size());
 
     assertOutputDirExists(expectedDirs.get(1));
@@ -549,7 +550,7 @@ public class UntarTest {
                 Optional.empty(),
                 ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
-    Assert.assertThat(unarchivedFiles, Matchers.containsInAnyOrder(expectedPaths.toArray()));
+    assertThat(unarchivedFiles, Matchers.containsInAnyOrder(expectedPaths.toArray()));
     Assert.assertEquals(expectedPaths.size(), unarchivedFiles.size());
 
     assertOutputDirExists(expectedDirs.get(1));
@@ -685,7 +686,7 @@ public class UntarTest {
                 Optional.empty(),
                 ExistingFileMode.OVERWRITE);
 
-    Assert.assertThat(unarchivedFiles, Matchers.containsInAnyOrder(expectedPaths.toArray()));
+    assertThat(unarchivedFiles, Matchers.containsInAnyOrder(expectedPaths.toArray()));
     Assert.assertEquals(expectedPaths.size(), unarchivedFiles.size());
 
     assertOutputDirExists(expectedDirs.get(1));
@@ -736,7 +737,7 @@ public class UntarTest {
                 new PatternsMatcher(ImmutableSet.of(".*alternative/Main.java")),
                 ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
-    Assert.assertThat(unarchivedFiles, Matchers.containsInAnyOrder(expectedPaths.toArray()));
+    assertThat(unarchivedFiles, Matchers.containsInAnyOrder(expectedPaths.toArray()));
     Assert.assertEquals(expectedPaths.size(), unarchivedFiles.size());
   }
 

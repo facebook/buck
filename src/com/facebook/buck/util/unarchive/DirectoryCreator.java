@@ -16,7 +16,8 @@
 
 package com.facebook.buck.util.unarchive;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -30,17 +31,17 @@ import java.util.Set;
  */
 public class DirectoryCreator {
 
-  private final ProjectFilesystem filesystem;
-  private Set<Path> existing = new HashSet<>();
+  private final AbsPath projectRoot;
+  private final Set<Path> existing = new HashSet<>();
 
   /**
    * Creates an instance of {@link DirectoryCreator}
    *
-   * @param filesystem The filesystem to operate on
+   * @param projectRoot The root path to operate on
    */
-  public DirectoryCreator(ProjectFilesystem filesystem) {
-    this.filesystem = filesystem;
-    existing.add(filesystem.getRootPath().getPath());
+  public DirectoryCreator(AbsPath projectRoot) {
+    this.projectRoot = projectRoot;
+    this.existing.add(projectRoot.getPath());
   }
 
   /**
@@ -57,15 +58,13 @@ public class DirectoryCreator {
    * Ensure that we record that a path was created. This can be useful if for some reason a
    * directory is created externally, but the list of created directories is pulled from an instance
    * of {@link DirectoryCreator}
-   *
-   * @param target
    */
   public void recordPath(Path target) {
     existing.add(target);
   }
 
-  public ProjectFilesystem getFilesystem() {
-    return filesystem;
+  public AbsPath getProjectRoot() {
+    return projectRoot;
   }
 
   /**
@@ -78,7 +77,7 @@ public class DirectoryCreator {
     if (existing.contains(target)) {
       return;
     }
-    filesystem.mkdirs(target);
+    ProjectFilesystemUtils.mkdirs(projectRoot, target);
     while (target != null) {
       existing.add(target);
       target = target.getParent();
@@ -97,9 +96,9 @@ public class DirectoryCreator {
     if (existing.contains(target)) {
       return;
     }
-    if (filesystem.exists(target)) {
-      if (!filesystem.isDirectory(target)) {
-        filesystem.deleteFileAtPath(target);
+    if (ProjectFilesystemUtils.exists(projectRoot, target)) {
+      if (!ProjectFilesystemUtils.isDirectory(projectRoot, target)) {
+        ProjectFilesystemUtils.deleteFileAtPath(projectRoot, target);
         mkdirs(target);
       }
     } else {

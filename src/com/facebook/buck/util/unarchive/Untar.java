@@ -19,7 +19,8 @@ package com.facebook.buck.util.unarchive;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -29,13 +30,11 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -50,6 +49,8 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory;
 
 /** Utility class to extract a .tar.* file */
 public class Untar extends Unarchiver {
+
+  private static final boolean IS_WINDOWS = Platform.detect() == Platform.WINDOWS;
 
   private final Optional<String> compressorType;
 
@@ -80,26 +81,26 @@ public class Untar extends Unarchiver {
   @Override
   public ImmutableSet<Path> extractArchive(
       Path archiveFile,
-      ProjectFilesystem filesystem,
-      Path filesystemRelativePath,
-      Optional<Path> stripPath,
+      AbsPath extractedPath,
+      Path relativePath,
+      Optional<Path> stripPrefix,
       PatternsMatcher entriesToExclude,
       ExistingFileMode existingFileMode)
       throws IOException {
     return extractArchive(
         archiveFile,
-        filesystem,
-        filesystemRelativePath,
-        stripPath,
+        extractedPath,
+        relativePath,
+        stripPrefix,
         existingFileMode,
         entriesToExclude,
-        Platform.detect() == Platform.WINDOWS);
+        IS_WINDOWS);
   }
 
   @VisibleForTesting
   ImmutableSet<Path> extractArchive(
       Path archiveFile,
-      ProjectFilesystem filesystem,
+      AbsPath root,
       Path filesystemRelativePath,
       Optional<Path> stripPath,
       ExistingFileMode existingFileMode,
@@ -110,7 +111,7 @@ public class Untar extends Unarchiver {
     ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
     HashSet<Path> dirsToTidy = new HashSet<>();
     TreeMap<Path, Long> dirCreationTimes = new TreeMap<>();
-    DirectoryCreator creator = new DirectoryCreator(filesystem);
+    DirectoryCreator creator = new DirectoryCreator(root);
 
     // On windows, we create hard links instead of symlinks. This is fine, but the
     // destination file may not exist yet, which is an error. So, just hold onto the paths until
@@ -147,11 +148,11 @@ public class Untar extends Unarchiver {
             writeSymbolicLink(creator, destPath, entry);
           }
           paths.add(destPath);
-          setAttributes(filesystem, destPath, entry);
+          setAttributes(root, destPath, entry);
         } else if (entry.isFile()) {
           writeFile(creator, archiveStream, destPath);
           paths.add(destPath);
-          setAttributes(filesystem, destPath, entry);
+          setAttributes(root, destPath, entry);
         }
       }
 
@@ -161,12 +162,12 @@ public class Untar extends Unarchiver {
           String.format("Could not get decompressor for archive at %s", archiveFile), e);
     }
 
-    setDirectoryModificationTimes(filesystem, dirCreationTimes);
+    setDirectoryModificationTimes(root, dirCreationTimes);
 
     ImmutableSet<Path> filePaths = paths.build();
     if (existingFileMode == ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES) {
       // Clean out directories of files that were not in the archive
-      tidyDirectories(filesystem, dirsToTidy, filePaths);
+      tidyDirectories(root, dirsToTidy, filePaths);
     }
     return filePaths;
   }
@@ -184,14 +185,14 @@ public class Untar extends Unarchiver {
   }
 
   /** Cleans up any files that exist on the filesystem that were not in the archive */
-  private void tidyDirectories(
-      ProjectFilesystem filesystem, Set<Path> dirsToTidy, ImmutableSet<Path> createdFiles)
+  private void tidyDirectories(AbsPath root, Set<Path> dirsToTidy, ImmutableSet<Path> createdFiles)
       throws IOException {
     for (Path directory : dirsToTidy) {
-      for (Path foundFile :
-          filesystem.asView().getFilesUnderPath(directory, EnumSet.noneOf(FileVisitOption.class))) {
+      // Empty ignore list
+      ImmutableSet<PathMatcher> ignores = ImmutableSet.of();
+      for (Path foundFile : ProjectFilesystemUtils.getDirectoryContents(root, ignores, directory)) {
         if (!createdFiles.contains(foundFile) && !dirsToTidy.contains(foundFile)) {
-          filesystem.deleteRecursivelyIfExists(foundFile);
+          ProjectFilesystemUtils.deleteRecursivelyIfExists(root, foundFile);
         }
       }
     }
@@ -199,8 +200,8 @@ public class Untar extends Unarchiver {
 
   /** Create a director on the filesystem */
   private void mkdirs(DirectoryCreator creator, Path target) throws IOException {
-    ProjectFilesystem filesystem = creator.getFilesystem();
-    if (filesystem.isDirectory(target, LinkOption.NOFOLLOW_LINKS)) {
+    AbsPath root = creator.getProjectRoot();
+    if (ProjectFilesystemUtils.isDirectory(root, target, LinkOption.NOFOLLOW_LINKS)) {
       creator.recordPath(target);
     } else {
       creator.forcefullyCreateDirs(target);
@@ -209,11 +210,11 @@ public class Untar extends Unarchiver {
 
   /** Prepares to write out a file. This deletes existing files/directories */
   private void prepareForFile(DirectoryCreator creator, Path target) throws IOException {
-    ProjectFilesystem filesystem = creator.getFilesystem();
-    if (filesystem.isFile(target, LinkOption.NOFOLLOW_LINKS)) {
+    AbsPath root = creator.getProjectRoot();
+    if (ProjectFilesystemUtils.isFile(root, target, LinkOption.NOFOLLOW_LINKS)) {
       return;
-    } else if (filesystem.exists(target, LinkOption.NOFOLLOW_LINKS)) {
-      filesystem.deleteRecursivelyIfExists(target);
+    } else if (ProjectFilesystemUtils.exists(root, target, LinkOption.NOFOLLOW_LINKS)) {
+      ProjectFilesystemUtils.deleteRecursivelyIfExists(root, target);
     } else if (target.getParent() != null) {
       creator.forcefullyCreateDirs(target.getParent());
     }
@@ -222,10 +223,10 @@ public class Untar extends Unarchiver {
   /** Writes a regular file from an archive */
   private void writeFile(DirectoryCreator creator, TarArchiveInputStream inputStream, Path target)
       throws IOException {
-    ProjectFilesystem filesystem = creator.getFilesystem();
+    AbsPath root = creator.getProjectRoot();
     prepareForFile(creator, target);
 
-    try (OutputStream outputStream = filesystem.newFileOutputStream(target)) {
+    try (OutputStream outputStream = ProjectFilesystemUtils.newFileOutputStream(root, target)) {
       ByteStreams.copy(inputStream, outputStream);
     }
   }
@@ -234,7 +235,8 @@ public class Untar extends Unarchiver {
   private void writeSymbolicLink(DirectoryCreator creator, Path target, TarArchiveEntry entry)
       throws IOException {
     prepareForFile(creator, target);
-    creator.getFilesystem().createSymLink(target, Paths.get(entry.getLinkName()), true);
+    ProjectFilesystemUtils.createSymLink(
+        creator.getProjectRoot(), target, Paths.get(entry.getLinkName()), true);
   }
 
   /**
@@ -270,7 +272,6 @@ public class Untar extends Unarchiver {
    *     as it traverses, removing files that have been written out
    * @param linkFilePath The link file that will actually be created
    * @param target What the link should point to
-   * @throws IOException
    */
   private void writeWindowsSymlink(
       DirectoryCreator creator, Map<Path, Path> windowsSymlinkMap, Path linkFilePath, Path target)
@@ -279,7 +280,8 @@ public class Untar extends Unarchiver {
       writeWindowsSymlink(creator, windowsSymlinkMap, target, windowsSymlinkMap.get(target));
     }
     Path relativeTargetPath = linkFilePath.getParent().relativize(target);
-    creator.getFilesystem().createSymLink(linkFilePath, relativeTargetPath, true);
+    ProjectFilesystemUtils.createSymLink(
+        creator.getProjectRoot(), linkFilePath, relativeTargetPath, true);
     windowsSymlinkMap.remove(linkFilePath);
   }
 
@@ -290,7 +292,6 @@ public class Untar extends Unarchiver {
    * @param creator Creator with the right filesystem to create symlinks
    * @param windowsSymlinkMap The map of paths to their target. NOTE: This method modifies the map
    *     as it traverses, removing files that have been written out
-   * @throws IOException
    */
   private void writeWindowsSymlinks(DirectoryCreator creator, Map<Path, Path> windowsSymlinkMap)
       throws IOException {
@@ -306,9 +307,8 @@ public class Untar extends Unarchiver {
   }
 
   /** Sets the modification time and the execution bit on a file */
-  private void setAttributes(ProjectFilesystem filesystem, Path path, TarArchiveEntry entry)
-      throws IOException {
-    AbsPath filePath = filesystem.getRootPath().resolve(path);
+  private void setAttributes(AbsPath root, Path path, TarArchiveEntry entry) throws IOException {
+    AbsPath filePath = root.resolve(path);
     File file = filePath.toFile();
     file.setLastModified(entry.getModTime().getTime());
     Set<PosixFilePermission> posixPermissions = MorePosixFilePermissions.fromMode(entry.getMode());
@@ -323,10 +323,9 @@ public class Untar extends Unarchiver {
   }
 
   /** Set the modification times on directories that were directly specified in the archive */
-  private void setDirectoryModificationTimes(
-      ProjectFilesystem filesystem, NavigableMap<Path, Long> dirToTime) {
+  private void setDirectoryModificationTimes(AbsPath root, NavigableMap<Path, Long> dirToTime) {
     for (Map.Entry<Path, Long> pathAndTime : dirToTime.descendingMap().entrySet()) {
-      File file = filesystem.getRootPath().resolve(pathAndTime.getKey()).toFile();
+      File file = root.resolve(pathAndTime.getKey()).toFile();
       file.setLastModified(pathAndTime.getValue());
     }
   }

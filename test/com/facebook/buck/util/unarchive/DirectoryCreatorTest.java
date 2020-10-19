@@ -41,7 +41,7 @@ public class DirectoryCreatorTest {
   @Test
   public void mkdirsCreatesDirectoryIfHasntBeenCreated() throws IOException {
     Path path = Paths.get("foo", "bar");
-    DirectoryCreator creator = new DirectoryCreator(filesystem);
+    DirectoryCreator creator = new DirectoryCreator(filesystem.getRootPath());
 
     creator.mkdirs(path);
 
@@ -53,7 +53,7 @@ public class DirectoryCreatorTest {
   @Test
   public void mkdirsDoesNotCreateDirectoryIfAlreadyCreated() throws IOException {
     Path path = Paths.get("foo", "bar");
-    DirectoryCreator creator = new DirectoryCreator(filesystem);
+    DirectoryCreator creator = new DirectoryCreator(filesystem.getRootPath());
 
     creator.mkdirs(path);
     filesystem.deleteRecursivelyIfExists(path);
@@ -69,7 +69,7 @@ public class DirectoryCreatorTest {
   @Test
   public void mkdirsRecordsParentDirectoriesIfChildDoesNotExistButParentDoes() throws IOException {
     Path path = Paths.get("foo", "bar");
-    DirectoryCreator creator = new DirectoryCreator(filesystem);
+    DirectoryCreator creator = new DirectoryCreator(filesystem.getRootPath());
 
     filesystem.mkdirs(path.getParent());
     creator.mkdirs(path);
@@ -82,7 +82,7 @@ public class DirectoryCreatorTest {
   @Test
   public void recordPathRecordsProperly() {
     Path path = Paths.get("foo", "bar");
-    DirectoryCreator creator = new DirectoryCreator(filesystem);
+    DirectoryCreator creator = new DirectoryCreator(filesystem.getRootPath());
 
     creator.recordPath(path);
 
@@ -92,7 +92,7 @@ public class DirectoryCreatorTest {
   @Test
   public void forcefullyCreateDirsDoesNothingIfDirectoryAlreadyExists() throws IOException {
     Path path = Paths.get("foo", "bar");
-    DirectoryCreator creator = new DirectoryCreator(filesystem);
+    DirectoryCreator creator = new DirectoryCreator(filesystem.getRootPath());
 
     filesystem.mkdirs(path);
     filesystem.writeContentsToPath("test", path.resolve("subfile"));
@@ -105,7 +105,7 @@ public class DirectoryCreatorTest {
   @Test
   public void forcefullyCreateDirsDeletesFileAndCreatesDirAlreadyExists() throws IOException {
     Path path = Paths.get("foo", "bar");
-    DirectoryCreator creator = new DirectoryCreator(filesystem);
+    DirectoryCreator creator = new DirectoryCreator(filesystem.getRootPath());
 
     filesystem.mkdirs(path.getParent());
     filesystem.writeContentsToPath("test", path);
@@ -119,7 +119,7 @@ public class DirectoryCreatorTest {
   public void forcefullyCreateDirsRemovesParentFilesIfParentExistsAndChildDoesNot()
       throws IOException {
     Path path = Paths.get("foo", "bar");
-    DirectoryCreator creator = new DirectoryCreator(filesystem);
+    DirectoryCreator creator = new DirectoryCreator(filesystem.getRootPath());
 
     filesystem.writeContentsToPath("test", path.getParent());
     creator.forcefullyCreateDirs(path);
@@ -133,7 +133,7 @@ public class DirectoryCreatorTest {
   @Test
   public void forcefullyCreateDirsDoesNotCreateAnythingIfAlreadyAdded() throws IOException {
     Path path = Paths.get("foo", "bar");
-    DirectoryCreator creator = new DirectoryCreator(filesystem);
+    DirectoryCreator creator = new DirectoryCreator(filesystem.getRootPath());
 
     creator.forcefullyCreateDirs(path);
     filesystem.deleteRecursivelyIfExists(path);

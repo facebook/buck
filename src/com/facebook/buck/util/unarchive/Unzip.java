@@ -16,9 +16,10 @@
 
 package com.facebook.buck.util.unarchive;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.util.PatternsMatcher;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -48,24 +49,25 @@ import org.apache.commons.compress.archivers.zip.ZipFile;
 /** A simple utility class that extracts zip files */
 public class Unzip extends Unarchiver {
 
-  private void writeZipContents(
-      ZipFile zip, ZipArchiveEntry entry, ProjectFilesystem filesystem, Path target)
+  private void writeZipContents(ZipFile zip, ZipArchiveEntry entry, AbsPath root, Path target)
       throws IOException {
     // Write file
     try (InputStream is = zip.getInputStream(entry)) {
       if (entry.isUnixSymlink()) {
-        filesystem.createSymLink(
+        ProjectFilesystemUtils.createSymLink(
+            root,
             target,
-            filesystem.getPath(new String(ByteStreams.toByteArray(is), StandardCharsets.UTF_8)),
+            ProjectFilesystemUtils.getPath(
+                root, new String(ByteStreams.toByteArray(is), StandardCharsets.UTF_8)),
             /* force */ true);
       } else {
-        try (OutputStream out = filesystem.newFileOutputStream(target)) {
+        try (OutputStream out = ProjectFilesystemUtils.newFileOutputStream(root, target)) {
           ByteStreams.copy(is, out);
         }
       }
     }
 
-    Path filePath = filesystem.resolve(target);
+    Path filePath = root.resolve(target).getPath();
     File file = filePath.toFile();
 
     // restore mtime for the file
@@ -175,16 +177,16 @@ public class Unzip extends Unarchiver {
       Path target,
       ZipArchiveEntry entry)
       throws IOException {
-    ProjectFilesystem filesystem = creator.getFilesystem();
-    if (filesystem.isFile(target, LinkOption.NOFOLLOW_LINKS)) { // NOPMD for clarity
-      // pass
-    } else if (filesystem.exists(target, LinkOption.NOFOLLOW_LINKS)) {
-      filesystem.deleteRecursivelyIfExists(target);
+    AbsPath root = creator.getProjectRoot();
+    if (ProjectFilesystemUtils.isFile(
+        root, target, LinkOption.NOFOLLOW_LINKS)) { // NOPMD for clarity pass
+    } else if (ProjectFilesystemUtils.exists(root, target, LinkOption.NOFOLLOW_LINKS)) {
+      ProjectFilesystemUtils.deleteRecursivelyIfExists(root, target);
     } else if (target.getParent() != null) {
       creator.forcefullyCreateDirs(target.getParent());
     }
     filesWritten.add(target);
-    writeZipContents(zip, entry, filesystem, target);
+    writeZipContents(zip, entry, root, target);
   }
 
   private void extractDirectory(
@@ -193,18 +195,19 @@ public class Unzip extends Unarchiver {
       DirectoryCreator creator,
       Path target)
       throws IOException {
-    ProjectFilesystem filesystem = creator.getFilesystem();
-    if (filesystem.isDirectory(target, LinkOption.NOFOLLOW_LINKS)) {
+    AbsPath root = creator.getProjectRoot();
+    if (ProjectFilesystemUtils.isDirectory(root, target, LinkOption.NOFOLLOW_LINKS)) {
       // We have a pre-existing directory: delete its contents if they aren't in the zip.
       if (existingFileMode == ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES) {
-        for (Path path : filesystem.getDirectoryContents(target)) {
+        for (Path path :
+            ProjectFilesystemUtils.getDirectoryContents(root, ImmutableSet.of(), target)) {
           if (!pathMap.containsKey(path)) {
-            filesystem.deleteRecursivelyIfExists(path);
+            ProjectFilesystemUtils.deleteRecursivelyIfExists(root, path);
           }
         }
       }
-    } else if (filesystem.exists(target, LinkOption.NOFOLLOW_LINKS)) {
-      filesystem.deleteFileAtPath(target);
+    } else if (ProjectFilesystemUtils.exists(root, target, LinkOption.NOFOLLOW_LINKS)) {
+      ProjectFilesystemUtils.deleteFileAtPath(root, target);
       creator.mkdirs(target);
     } else {
       creator.forcefullyCreateDirs(target);
@@ -259,11 +262,10 @@ public class Unzip extends Unarchiver {
     return pathMap;
   }
 
-  /** Unzips a file to a destination and returns the paths of the written files. */
   @Override
   public ImmutableSet<Path> extractArchive(
       Path archiveFile,
-      ProjectFilesystem filesystem,
+      AbsPath extractedPath,
       Path relativePath,
       Optional<Path> stripPrefix,
       PatternsMatcher entriesToExclude,
@@ -280,12 +282,11 @@ public class Unzip extends Unarchiver {
     ImmutableSet.Builder<Path> filesWritten = ImmutableSet.builder();
     try (ZipFile zip = new ZipFile(archiveFile.toFile())) {
       SortedMap<Path, ZipArchiveEntry> pathMap;
-      if (stripPrefix.isPresent()) {
-        pathMap =
-            getZipFilePathsStrippingPrefix(zip, relativePath, stripPrefix.get(), entriesToExclude);
-      } else {
-        pathMap = getZipFilePaths(zip, relativePath, entriesToExclude);
-      }
+      pathMap =
+          stripPrefix
+              .map(
+                  path -> getZipFilePathsStrippingPrefix(zip, relativePath, path, entriesToExclude))
+              .orElseGet(() -> getZipFilePaths(zip, relativePath, entriesToExclude));
       // A zip file isn't required to list intermediate paths (e.g., it can contain "foo/" and
       // "foo/bar/baz"), but we need to know not to delete those intermediates, so fill them in.
       for (SortedMap.Entry<Path, ZipArchiveEntry> p : new ArrayList<>(pathMap.entrySet())) {
@@ -294,7 +295,7 @@ public class Unzip extends Unarchiver {
         }
       }
 
-      DirectoryCreator creator = new DirectoryCreator(filesystem);
+      DirectoryCreator creator = new DirectoryCreator(extractedPath);
 
       for (SortedMap.Entry<Path, ZipArchiveEntry> p : pathMap.entrySet()) {
         Path target = p.getKey();

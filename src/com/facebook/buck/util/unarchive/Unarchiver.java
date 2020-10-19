@@ -60,7 +60,7 @@ public abstract class Unarchiver {
    * Extract a given archive to a destination
    *
    * @param archiveFile The path to the archive
-   * @param filesystem The filesystem that will be extracted into
+   * @param extractedPath The filesystem's path that will be extracted into
    * @param relativePath The path relative to the filesystem to extract files into
    * @param stripPrefix If provided, only files under this prefix will be extracted. This prefix
    *     prefix will also be removed from the destination path. e.g. foo.tar.gz/foo/bar/baz with a
@@ -73,7 +73,7 @@ public abstract class Unarchiver {
    */
   public abstract ImmutableSet<Path> extractArchive(
       Path archiveFile,
-      ProjectFilesystem filesystem,
+      AbsPath extractedPath,
       Path relativePath,
       Optional<Path> stripPrefix,
       PatternsMatcher entriesToExclude,
@@ -85,11 +85,43 @@ public abstract class Unarchiver {
    *
    * @param archiveFile The path to the archive
    * @param filesystem The filesystem that will be extracted into
+   * @param relativePath The path relative to the filesystem to extract files into
+   * @param stripPrefix If provided, only files under this prefix will be extracted. This prefix
+   *     prefix will also be removed from the destination path. e.g. foo.tar.gz/foo/bar/baz with a
+   *     prefix of foo will extract bar/baz into the destination directory. If not provided, no
+   *     stripping is done.
+   * @param entriesToExclude Entries that match this matcher will not be extracted
    * @param existingFileMode How to handle existing files
    * @return A list of paths to files that were created (not directories)
    * @throws IOException If the archive could not be extracted for any reason
    */
-  public ImmutableSet<Path> extractArchive(
+  public final ImmutableSet<Path> extractArchive(
+      Path archiveFile,
+      ProjectFilesystem filesystem,
+      Path relativePath,
+      Optional<Path> stripPrefix,
+      PatternsMatcher entriesToExclude,
+      ExistingFileMode existingFileMode)
+      throws IOException {
+    return extractArchive(
+        archiveFile,
+        filesystem.getRootPath(),
+        relativePath,
+        stripPrefix,
+        entriesToExclude,
+        existingFileMode);
+  }
+
+  /**
+   * Extract a given archive to a destination
+   *
+   * @param archiveFile The path to the archive
+   * @param filesystem The filesystem that will be extracted into
+   * @param existingFileMode How to handle existing files
+   * @return A list of paths to files that were created (not directories)
+   * @throws IOException If the archive could not be extracted for any reason
+   */
+  public final ImmutableSet<Path> extractArchive(
       Path archiveFile, ProjectFilesystem filesystem, ExistingFileMode existingFileMode)
       throws IOException {
     return extractArchive(
@@ -104,10 +136,9 @@ public abstract class Unarchiver {
    * @param destination The destination directory where the archive should be extracted to
    * @param existingFileMode How to handle existing files
    * @return A list of paths to files that were created (not directories)
-   * @throws InterruptedException If a filesystem could not be created in the destination directory
    * @throws IOException If the archive could not be extracted for any reason
    */
-  public ImmutableList<Path> extractArchive(
+  public final ImmutableList<Path> extractArchive(
       ProjectFilesystemFactory projectFilesystemFactory,
       Path archiveFile,
       Path destination,
@@ -125,6 +156,29 @@ public abstract class Unarchiver {
   /**
    * Extract a given archive to a specific directory
    *
+   * @param extractedPath The filesystem's path that will be extracted into
+   * @param archiveFile The path to the archive
+   * @param destination The destination directory where the archive should be extracted to
+   * @param existingFileMode How to handle existing files
+   * @return A list of paths to files that were created (not directories)
+   * @throws IOException If the archive could not be extracted for any reason
+   */
+  public final ImmutableList<Path> extractArchive(
+      AbsPath extractedPath, Path archiveFile, Path destination, ExistingFileMode existingFileMode)
+      throws IOException {
+    return extractArchive(
+            archiveFile,
+            extractedPath,
+            destination,
+            Optional.empty(),
+            PatternsMatcher.NONE,
+            existingFileMode)
+        .asList();
+  }
+
+  /**
+   * Extract a given archive to a specific directory
+   *
    * @param projectFilesystemFactory A factory that creates filesystems
    * @param archiveFile The path to the archive
    * @param destination The destination directory where the archive should be extracted to
@@ -136,7 +190,7 @@ public abstract class Unarchiver {
    * @return A list of paths to files that were created (not directories)
    * @throws IOException If the archive could not be extracted for any reason
    */
-  public ImmutableList<Path> extractArchive(
+  public final ImmutableList<Path> extractArchive(
       ProjectFilesystemFactory projectFilesystemFactory,
       Path archiveFile,
       Path destination,
