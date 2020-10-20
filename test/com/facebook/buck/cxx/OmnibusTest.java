@@ -85,7 +85,8 @@ public class OmnibusTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
                 ImmutableList.of(root),
-                ImmutableList.of()));
+                ImmutableList.of(),
+                false));
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(root.getBuildTarget().toString(), "libomnibus.so"));
@@ -139,7 +140,8 @@ public class OmnibusTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
                 ImmutableList.of(root),
-                ImmutableList.of()));
+                ImmutableList.of(),
+                false));
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(
@@ -198,7 +200,8 @@ public class OmnibusTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
                 ImmutableList.of(root),
-                ImmutableList.of()));
+                ImmutableList.of(),
+                false));
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(
@@ -264,7 +267,8 @@ public class OmnibusTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
                 ImmutableList.of(root),
-                ImmutableList.of(excludedRoot)));
+                ImmutableList.of(excludedRoot),
+                false));
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(
@@ -327,7 +331,8 @@ public class OmnibusTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
                 ImmutableList.of(root),
-                ImmutableList.of(excludedRoot)));
+                ImmutableList.of(excludedRoot),
+                false));
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(
@@ -381,7 +386,8 @@ public class OmnibusTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
                 ImmutableList.of(root),
-                ImmutableList.of()));
+                ImmutableList.of(),
+                false));
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(root.getBuildTarget().toString(), "libomnibus.so"));
@@ -439,7 +445,8 @@ public class OmnibusTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
                 ImmutableList.of(includedRoot),
-                ImmutableList.of(excludedRoot)));
+                ImmutableList.of(excludedRoot),
+                false));
     assertThat(libs.keySet(), Matchers.hasItem(excludedRoot.getBuildTarget().toString()));
   }
 
@@ -467,7 +474,8 @@ public class OmnibusTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(StringArg.of(flag)),
                 ImmutableList.of(root),
-                ImmutableList.of()));
+                ImmutableList.of(),
+                false));
     assertThat(
         Arg.stringify(
             getCxxLinkRule(graphBuilder, libs.get(root.getBuildTarget().toString())).getArgs(),

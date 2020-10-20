@@ -685,7 +685,11 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       for (NativeLinkable nativeLinkable : nativeLinkables) {
         nativeLinkableInputs.add(
             NativeLinkables.getNativeLinkableInput(
-                depType, nativeLinkable, graphBuilder, buildTarget.getTargetConfiguration()));
+                depType,
+                nativeLinkable,
+                graphBuilder,
+                buildTarget.getTargetConfiguration(),
+                false));
       }
       return NativeLinkableInput.concat(nativeLinkableInputs.build());
     }

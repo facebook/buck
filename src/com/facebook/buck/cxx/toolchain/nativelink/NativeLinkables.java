@@ -191,10 +191,11 @@ public class NativeLinkables {
       Linker.LinkableDepType linkStyle,
       NativeLinkable nativeLinkable,
       ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration) {
+      TargetConfiguration targetConfiguration,
+      boolean preferStripped) {
     NativeLinkableGroup.Linkage link = nativeLinkable.getPreferredLinkage();
     return nativeLinkable.getNativeLinkableInput(
-        getLinkStyle(link, linkStyle), graphBuilder, targetConfiguration);
+        getLinkStyle(link, linkStyle), false, graphBuilder, targetConfiguration, preferStripped);
   }
 
   /**
@@ -212,7 +213,8 @@ public class NativeLinkables {
     ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
     for (NativeLinkable nativeLinkable : nativeLinkables) {
       nativeLinkableInputs.add(
-          getNativeLinkableInput(depType, nativeLinkable, graphBuilder, targetConfiguration));
+          getNativeLinkableInput(
+              depType, nativeLinkable, graphBuilder, targetConfiguration, false));
     }
     return NativeLinkableInput.concat(nativeLinkableInputs.build());
   }

@@ -429,7 +429,8 @@ public class PythonTestDescription
                       .collect(ImmutableList.toImmutableList()),
                   pythonBuckConfig.getNativeLinkStrategy(),
                   args.getPreloadDeps(),
-                  args.getCompile().orElse(false));
+                  args.getCompile().orElse(false),
+                  args.getPreferStrippedNativeObjects());
 
           // Build the PEX using a python binary rule with the minimum dependencies.
           PythonBinary binary =
@@ -594,7 +595,11 @@ public class PythonTestDescription
 
   @RuleArg
   interface AbstractPythonTestDescriptionArg
-      extends HasTestRunner, HasTestTimeout, PythonLibraryDescription.CoreArg, HasVersionUniverse {
+      extends PythonBinaryDescription.PythonBinaryCommonArg,
+          HasTestRunner,
+          HasTestTimeout,
+          PythonLibraryDescription.CoreArg,
+          HasVersionUniverse {
     Optional<String> getMainModule();
 
     Optional<String> getPlatform();

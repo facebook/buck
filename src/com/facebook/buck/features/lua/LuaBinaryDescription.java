@@ -415,7 +415,8 @@ public class LuaBinaryDescription
               cxxPlatform,
               ImmutableList.of(),
               roots.getIncludedRoots().values(),
-              roots.getExcludedRoots().values());
+              roots.getExcludedRoots().values(),
+              false);
 
       // Add all the roots from the omnibus link.  If it's an extension, add it as a module.
       for (Map.Entry<BuildTarget, Omnibus.OmnibusRoot> root : libraries.getRoots().entrySet()) {

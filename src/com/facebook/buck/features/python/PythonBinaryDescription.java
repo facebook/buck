@@ -445,7 +445,8 @@ public class PythonBinaryDescription
                       .collect(ImmutableList.toImmutableList()),
                   pythonBuckConfig.getNativeLinkStrategy(),
                   args.getPreloadDeps(),
-                  args.getCompile().orElse(false));
+                  args.getCompile().orElse(false),
+                  args.getPreferStrippedNativeObjects());
           return createPackageRule(
               cellRoots,
               buildTarget,
@@ -493,9 +494,16 @@ public class PythonBinaryDescription
     return true;
   }
 
+  interface PythonBinaryCommonArg {
+    @Value.Default
+    default boolean getPreferStrippedNativeObjects() {
+      return false;
+    }
+  }
+
   @RuleArg
   interface AbstractPythonBinaryDescriptionArg
-      extends BuildRuleArg, HasDeclaredDeps, HasTests, HasVersionUniverse {
+      extends PythonBinaryCommonArg, BuildRuleArg, HasDeclaredDeps, HasTests, HasVersionUniverse {
     Optional<SourcePath> getMain();
 
     Optional<String> getMainModule();

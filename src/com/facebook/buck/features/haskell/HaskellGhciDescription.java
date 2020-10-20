@@ -218,7 +218,11 @@ public class HaskellGhciDescription
     for (NativeLinkable linkable : depLinkables) {
       nativeLinkableInputs.add(
           NativeLinkables.getNativeLinkableInput(
-              LinkableDepType.SHARED, linkable, graphBuilder, baseTarget.getTargetConfiguration()));
+              LinkableDepType.SHARED,
+              linkable,
+              graphBuilder,
+              baseTarget.getTargetConfiguration(),
+              false));
     }
 
     return NativeLinkableInput.concat(nativeLinkableInputs);

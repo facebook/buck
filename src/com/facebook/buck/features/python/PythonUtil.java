@@ -390,7 +390,8 @@ public class PythonUtil {
       ImmutableList<? extends Arg> extraLdflags,
       NativeLinkStrategy nativeLinkStrategy,
       ImmutableSet<BuildTarget> preloadDeps,
-      boolean compile) {
+      boolean compile,
+      boolean preferStrippedNativeObjects) {
 
     PythonPackageComponents.Builder allComponents = new PythonPackageComponents.Builder();
 
@@ -464,7 +465,8 @@ public class PythonUtil {
               cxxPlatform,
               extraLdflags,
               roots.getIncludedRoots().values(),
-              roots.getExcludedRoots().values());
+              roots.getExcludedRoots().values(),
+              preferStrippedNativeObjects);
 
       // Add all the roots from the omnibus link.  If it's an extension, add it as a module.
       // Otherwise, add it as a native library.

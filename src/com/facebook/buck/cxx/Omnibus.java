@@ -586,7 +586,8 @@ public class Omnibus {
       DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
-      OmnibusSpec spec) {
+      OmnibusSpec spec,
+      boolean preferStrippedObjects) {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
 
@@ -678,7 +679,8 @@ public class Omnibus {
                                     : Linker.LinkableDepType.SHARED,
                                 nativeLinkable,
                                 graphBuilder,
-                                buildTarget.getTargetConfiguration()))));
+                                buildTarget.getTargetConfiguration(),
+                                preferStrippedObjects))));
 
     // Walk the graph in topological order, appending each nodes contributions to the link.
     ImmutableList<BuildTarget> targets = TopologicalSort.sort(spec.getGraph()).reverse();
@@ -767,7 +769,8 @@ public class Omnibus {
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
       Iterable<? extends NativeLinkTarget> nativeLinkTargetRoots,
-      Iterable<? extends NativeLinkable> nativeLinkableRoots) {
+      Iterable<? extends NativeLinkable> nativeLinkableRoots,
+      boolean preferStrippedObjects) {
 
     ImmutableOmnibusLibraries.Builder libs = ImmutableOmnibusLibraries.builder();
 
@@ -846,7 +849,8 @@ public class Omnibus {
               downwardApiConfig,
               cxxPlatform,
               extraLdflags,
-              spec);
+              spec,
+              preferStrippedObjects);
       libs.addLibraries(omnibus);
       realOmnibus = Optional.of(omnibus.getPath());
     }
