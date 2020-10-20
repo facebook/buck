@@ -21,11 +21,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.externalactions.model.JsonArgs;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.io.Files;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.ExpectedException;
@@ -38,11 +35,10 @@ public class ExternalActionsUtilsTest {
   @Rule public ExpectedException expectedThrownException = ExpectedException.none();
 
   @Test
-  public void canReadJsonArgs() throws Exception {
+  public void canReadAndWriteJsonArgs() throws Exception {
     Path jsonFile = temporaryFolder.newFile().getPath();
     FakeJsonArgs args = FakeJsonArgs.of("test_value");
-    String json = ObjectMappers.WRITER.writeValueAsString(args);
-    Files.asCharSink(jsonFile.toFile(), StandardCharsets.UTF_8).write(json);
+    ExternalActionsUtils.writeJsonArgs(jsonFile.toString(), args);
 
     // Test the path overload of readJsonArgs
     FakeJsonArgs actual = ExternalActionsUtils.readJsonArgs(jsonFile, FakeJsonArgs.class);
@@ -58,10 +54,18 @@ public class ExternalActionsUtilsTest {
     expectedThrownException.expect(IllegalStateException.class);
     expectedThrownException.expectMessage("Failed to read JSON from ");
 
-    Path jsonFile =
-        java.nio.file.Files.createTempFile(temporaryFolder.getRoot().getPath(), "prefix", "suffix");
+    Path jsonFile = temporaryFolder.newFile().getPath();
 
     ExternalActionsUtils.readJsonArgs(jsonFile, FakeJsonArgs.class);
+  }
+
+  @Test
+  public void failureToWriteJsonGivesCorrectErrorMessage() throws Exception {
+    expectedThrownException.expect(IllegalStateException.class);
+    expectedThrownException.expectMessage("Failed to write JSON for ");
+
+    ExternalActionsUtils.writeJsonArgs(
+        temporaryFolder.getRoot().getPath(), FakeJsonArgs.of("unused"));
   }
 
   @BuckStyleValue
