@@ -251,7 +251,8 @@ public class NativeLinkableInfo implements NativeLinkable {
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
       ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration) {
+      TargetConfiguration targetConfiguration,
+      boolean preferStripped) {
     try {
       return nativeLinkableCache.get(
           ImmutableLinkableInputCacheKey.ofImpl(forceLinkWhole, type, targetConfiguration),

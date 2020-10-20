@@ -97,9 +97,10 @@ public class PlatformLockedNativeLinkableGroup implements NativeLinkable {
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
       ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration) {
+      TargetConfiguration targetConfiguration,
+      boolean preferStripped) {
     return underlyingGroup.getNativeLinkableInput(
-        cxxPlatform, type, forceLinkWhole, graphBuilder, targetConfiguration);
+        cxxPlatform, type, forceLinkWhole, graphBuilder, targetConfiguration, preferStripped);
   }
 
   @Override

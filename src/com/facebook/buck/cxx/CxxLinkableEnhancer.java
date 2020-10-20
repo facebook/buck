@@ -327,7 +327,8 @@ public class CxxLinkableEnhancer {
                               link, depType, Optional.of(cxxPlatform.getPicTypeForSharedLinking())),
                           linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
                           graphBuilder,
-                          target.getTargetConfiguration());
+                          target.getTargetConfiguration(),
+                          false);
                   LOG.verbose("Native linkable %s returned input %s", nativeLinkable, input);
                   return input;
                 });

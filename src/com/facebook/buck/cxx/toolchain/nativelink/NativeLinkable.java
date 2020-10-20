@@ -50,7 +50,8 @@ public interface NativeLinkable {
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
       ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration);
+      TargetConfiguration targetConfiguration,
+      boolean preferStripped);
 
   /**
    * Return input that *dependents* should put on their link line when linking against this
@@ -60,7 +61,7 @@ public interface NativeLinkable {
       Linker.LinkableDepType type,
       ActionGraphBuilder graphBuilder,
       TargetConfiguration targetConfiguration) {
-    return getNativeLinkableInput(type, false, graphBuilder, targetConfiguration);
+    return getNativeLinkableInput(type, false, graphBuilder, targetConfiguration, false);
   }
 
   /**

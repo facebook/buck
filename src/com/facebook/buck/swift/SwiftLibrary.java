@@ -162,7 +162,8 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
       ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration) {
+      TargetConfiguration targetConfiguration,
+      boolean preferStripped) {
     SwiftCompile rule = requireSwiftCompileRule(cxxPlatform.getFlavor());
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
     inputBuilder

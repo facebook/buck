@@ -267,10 +267,12 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
       ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration) {
+      TargetConfiguration targetConfiguration,
+      boolean preferStripped) {
     // forceLinkWhole is not needed for PrebuiltAppleFramework so we provide constant value
     return nativeLinkableCache.getUnchecked(
-        NativeLinkableCacheKey.of(cxxPlatform.getFlavor(), type, false, cxxPlatform));
+        NativeLinkableCacheKey.of(
+            cxxPlatform.getFlavor(), type, false, cxxPlatform, preferStripped));
   }
 
   @Override

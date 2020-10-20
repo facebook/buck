@@ -199,7 +199,8 @@ public class HaskellGhciDescription
                 NativeLinkables.getLinkStyle(link, linkStyle),
                 forceLinkWhole,
                 graphBuilder,
-                targetConfiguration);
+                targetConfiguration,
+                false);
         nativeLinkableInputs.add(linkableInput);
 
         LOG.verbose(

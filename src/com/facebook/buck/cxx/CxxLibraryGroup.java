@@ -59,8 +59,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -390,6 +392,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
 
     Linker.LinkableDepType type = key.getType();
     boolean forceLinkWhole = key.getForceLinkWhole();
+    boolean preferStripped = key.getPreferStripped();
 
     // Build up the arguments used to link this library.  If we're linking the
     // whole archive, wrap the library argument in the necessary "ld" flags.
@@ -422,14 +425,17 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
       }
       if (isStatic) {
         if (cxxPlatform.useArchives()) {
+          List<Flavor> archiveFlavors =
+              Lists.newArrayList(
+                  cxxPlatform.getFlavor(),
+                  type == Linker.LinkableDepType.STATIC
+                      ? CxxDescriptionEnhancer.STATIC_FLAVOR
+                      : CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
+          if (preferStripped) {
+            archiveFlavors.add(StripStyle.DEBUGGING_SYMBOLS.getFlavor());
+          }
           Archive archive =
-              (Archive)
-                  requireBuildRule(
-                      graphBuilder,
-                      cxxPlatform.getFlavor(),
-                      type == Linker.LinkableDepType.STATIC
-                          ? CxxDescriptionEnhancer.STATIC_FLAVOR
-                          : CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
+              (Archive) requireBuildRule(graphBuilder, archiveFlavors.toArray(new Flavor[0]));
           if (linkWhole || forceLinkWhole) {
             Linker linker =
                 cxxPlatform
@@ -454,7 +460,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
                   graphBuilder,
                   cxxPlatform,
                   type == Linker.LinkableDepType.STATIC ? PicType.PDC : PicType.PIC,
-                  false);
+                  preferStripped);
           Iterable<Arg> objectArgs =
               objects.stream().map(SourcePathArg::of).collect(Collectors.toList());
 
@@ -500,9 +506,11 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
       ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration) {
+      TargetConfiguration targetConfiguration,
+      boolean preferStripped) {
     NativeLinkableCacheKey key =
-        NativeLinkableCacheKey.of(cxxPlatform.getFlavor(), type, forceLinkWhole, cxxPlatform);
+        NativeLinkableCacheKey.of(
+            cxxPlatform.getFlavor(), type, forceLinkWhole, cxxPlatform, preferStripped);
     try {
       return nativeLinkableCache.get(
           key, () -> computeNativeLinkableInputUncached(key, graphBuilder));

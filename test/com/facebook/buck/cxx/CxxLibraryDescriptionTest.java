@@ -79,6 +79,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
+import com.facebook.buck.rules.args.HasSourcePath;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -1542,13 +1543,71 @@ public class CxxLibraryDescriptionTest {
                 Linker.LinkableDepType.STATIC,
                 true,
                 graphBuilder,
-                cxxLibraryBuilder.getTarget().getTargetConfiguration());
+                cxxLibraryBuilder.getTarget().getTargetConfiguration(),
+                false);
     MatcherAssert.assertThat(input.getArgs(), Matchers.hasSize(1));
     MatcherAssert.assertThat(
         graphBuilder
             .getRule(((SourcePathArg) input.getArgs().get(0)).getPath())
             .orElseThrow(AssertionError::new),
         instanceOf(CxxPreprocessAndCompile.class));
+  }
+
+  @Test
+  public void linkableInputPreferringStrippedObjects() {
+    CxxLibraryBuilder cxxLibraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))));
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
+    CxxLibraryGroup library =
+        (CxxLibraryGroup) graphBuilder.requireRule(cxxLibraryBuilder.getTarget());
+    NativeLinkableInput input =
+        library
+            .getNativeLinkable(
+                CxxPlatformUtils.DEFAULT_PLATFORM.withUseArchives(false), graphBuilder)
+            .getNativeLinkableInput(
+                Linker.LinkableDepType.STATIC,
+                true,
+                graphBuilder,
+                cxxLibraryBuilder.getTarget().getTargetConfiguration(),
+                true);
+    MatcherAssert.assertThat(input.getArgs(), Matchers.hasSize(1));
+    MatcherAssert.assertThat(
+        graphBuilder
+            .getRule(((SourcePathArg) input.getArgs().get(0)).getPath())
+            .orElseThrow(AssertionError::new),
+        instanceOf(CxxStrip.class));
+  }
+
+  @Test
+  public void linkableInputPreferringStrippedArchives() {
+    CxxLibraryBuilder cxxLibraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))));
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
+    CxxLibraryGroup library =
+        (CxxLibraryGroup) graphBuilder.requireRule(cxxLibraryBuilder.getTarget());
+    NativeLinkableInput input =
+        library
+            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getNativeLinkableInput(
+                Linker.LinkableDepType.STATIC,
+                false,
+                graphBuilder,
+                cxxLibraryBuilder.getTarget().getTargetConfiguration(),
+                true);
+    MatcherAssert.assertThat(input.getArgs(), Matchers.hasSize(1));
+    Archive archive =
+        (Archive)
+            graphBuilder
+                .getRule(((HasSourcePath) input.getArgs().get(0)).getPath())
+                .orElseThrow(AssertionError::new);
+    MatcherAssert.assertThat(archive.getInputs(), Matchers.hasSize(1));
+    MatcherAssert.assertThat(
+        graphBuilder.getRule(archive.getInputs().get(0)).orElseThrow(AssertionError::new),
+        instanceOf(CxxStrip.class));
   }
 
   /**

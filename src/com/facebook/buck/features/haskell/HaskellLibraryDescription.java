@@ -805,7 +805,8 @@ public class HaskellLibraryDescription
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
           ActionGraphBuilder graphBuilder,
-          TargetConfiguration targetConfiguration) {
+          TargetConfiguration targetConfiguration,
+          boolean preferStripped) {
         Iterable<Arg> linkArgs;
         switch (type) {
           case STATIC:

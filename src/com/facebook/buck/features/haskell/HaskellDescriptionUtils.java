@@ -309,7 +309,8 @@ public class HaskellDescriptionUtils {
               NativeLinkableGroups.getLinkStyle(link, depType),
               linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
               graphBuilder,
-              target.getTargetConfiguration());
+              target.getTargetConfiguration(),
+              false);
       linkerArgsBuilder.addAll(input.getArgs());
     }
 

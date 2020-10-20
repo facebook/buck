@@ -94,7 +94,8 @@ public class NativeLinkableGroupTest {
         Linker.LinkableDepType type,
         boolean forceLinkWhole,
         ActionGraphBuilder graphBuilder,
-        TargetConfiguration targetConfiguration) {
+        TargetConfiguration targetConfiguration,
+        boolean preferStripped) {
       return nativeLinkableInput;
     }
 

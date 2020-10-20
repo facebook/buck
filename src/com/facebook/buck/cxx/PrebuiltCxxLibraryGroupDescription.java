@@ -277,7 +277,8 @@ public class PrebuiltCxxLibraryGroupDescription
         Linker.LinkableDepType type,
         boolean forceLinkWhole,
         ActionGraphBuilder graphBuilder,
-        TargetConfiguration targetConfiguration) {
+        TargetConfiguration targetConfiguration,
+        boolean preferStripped) {
 
       if (!isPlatformSupported(cxxPlatform)) {
         return NativeLinkableInput.of();

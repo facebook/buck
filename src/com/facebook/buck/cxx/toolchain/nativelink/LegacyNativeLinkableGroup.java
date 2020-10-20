@@ -79,7 +79,8 @@ public interface LegacyNativeLinkableGroup extends NativeLinkableGroup {
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
       ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration);
+      TargetConfiguration targetConfiguration,
+      boolean preferStripped);
 
   /**
    * Return input that *dependents* should put on their link line when linking against this
@@ -91,7 +92,8 @@ public interface LegacyNativeLinkableGroup extends NativeLinkableGroup {
       Linker.LinkableDepType type,
       ActionGraphBuilder graphBuilder,
       TargetConfiguration targetConfiguration) {
-    return getNativeLinkableInput(cxxPlatform, type, false, graphBuilder, targetConfiguration);
+    return getNativeLinkableInput(
+        cxxPlatform, type, false, graphBuilder, targetConfiguration, false);
   }
 
   /**

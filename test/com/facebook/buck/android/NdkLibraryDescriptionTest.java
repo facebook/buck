@@ -75,7 +75,8 @@ public class NdkLibraryDescriptionTest {
         Linker.LinkableDepType type,
         boolean forceLinkWhole,
         ActionGraphBuilder graphBuilder,
-        TargetConfiguration targetConfiguration) {
+        TargetConfiguration targetConfiguration,
+        boolean preferStripped) {
       return NativeLinkableInput.builder().addArgs(SourcePathArg.of(input)).build();
     }
 

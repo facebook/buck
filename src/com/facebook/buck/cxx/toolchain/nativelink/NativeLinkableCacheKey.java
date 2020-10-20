@@ -26,8 +26,13 @@ import org.immutables.value.Value;
 public abstract class NativeLinkableCacheKey {
 
   public static NativeLinkableCacheKey of(
-      Flavor flavor, Linker.LinkableDepType type, boolean forceLinkWhole, CxxPlatform cxxPlatform) {
-    return ImmutableNativeLinkableCacheKey.ofImpl(flavor, type, forceLinkWhole, cxxPlatform);
+      Flavor flavor,
+      Linker.LinkableDepType type,
+      boolean forceLinkWhole,
+      CxxPlatform cxxPlatform,
+      boolean preferStripped) {
+    return ImmutableNativeLinkableCacheKey.ofImpl(
+        flavor, type, forceLinkWhole, cxxPlatform, preferStripped);
   }
 
   public abstract Flavor getFlavor();
@@ -39,4 +44,6 @@ public abstract class NativeLinkableCacheKey {
   @Value.Auxiliary
   // used only when loading from cache
   public abstract CxxPlatform getCxxPlatform();
+
+  public abstract boolean getPreferStripped();
 }

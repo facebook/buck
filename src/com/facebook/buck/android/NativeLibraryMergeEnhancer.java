@@ -894,7 +894,8 @@ class NativeLibraryMergeEnhancer {
         Linker.LinkableDepType type,
         boolean forceLinkWhole,
         ActionGraphBuilder graphBuilder,
-        TargetConfiguration targetConfiguration) {
+        TargetConfiguration targetConfiguration,
+        boolean preferStripped) {
 
       // This path gets taken for a force-static library.
       if (type == Linker.LinkableDepType.STATIC_PIC) {
