@@ -467,7 +467,8 @@ public class AppleLibraryDescription
         swiftBuckConfig.getUseLipoThin(),
         cxxBuckConfig.shouldCacheStrip(),
         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
-        Predicates.alwaysTrue());
+        Predicates.alwaysTrue(),
+        Optional.empty());
   }
 
   /**

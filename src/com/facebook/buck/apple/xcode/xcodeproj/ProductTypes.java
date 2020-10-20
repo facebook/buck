@@ -32,7 +32,10 @@ public final class ProductTypes {
       ProductType.of("com.apple.product-type.framework.static");
   public static final ProductType APPLICATION =
       ProductType.of("com.apple.product-type.application");
+  public static final ProductType APP_CLIP =
+      ProductType.of("com.apple.product-type.application.on-demand-install-capable");
   public static final ProductType WATCH_APPLICATION =
+
       ProductType.of("com.apple.product-type.application.watchapp2");
   public static final ProductType UNIT_TEST =
       ProductType.of("com.apple.product-type.bundle.unit-test");

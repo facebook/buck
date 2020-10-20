@@ -430,7 +430,8 @@ public class AppleBinaryDescription
         swiftBuckConfig.getUseLipoThin(),
         cxxBuckConfig.shouldCacheStrip(),
         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
-        Predicates.alwaysTrue());
+        Predicates.alwaysTrue(),
+        Optional.empty());
   }
 
   private BuildRule createBinary(

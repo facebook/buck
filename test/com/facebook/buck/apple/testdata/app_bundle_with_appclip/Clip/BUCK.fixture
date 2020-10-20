@@ -1,0 +1,19 @@
+apple_bundle(
+    name = "Clip",
+    visibility = ["PUBLIC"],
+    extension = "app",
+    binary = ":ClipBinary#iphonesimulator-x86_64",
+    product_name = "Clip",
+    info_plist = "Info.plist",
+    is_app_clip = True,
+    xcode_product_type = "com.apple.product-type.application.on-demand-install-capable"
+)
+
+apple_binary(
+    name = "ClipBinary",
+    visibility = ["PUBLIC"],
+    target_sdk_version = "14.0",
+    swift_version = "5",
+    srcs = glob(["*.swift",]),
+    entitlements_file = "Clip.entitlements"
+)
