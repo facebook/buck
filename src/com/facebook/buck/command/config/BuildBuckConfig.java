@@ -244,4 +244,10 @@ public abstract class BuildBuckConfig implements ConfigView<BuckConfig> {
         .getEnum(PROJECT_SECTION, "buck_out_links_to_hashed_paths", HashedBuckOutLinkMode.class)
         .orElse(HashedBuckOutLinkMode.DEFAULT);
   }
+
+  /** Returns whether actions can be executed in a process separate from buck. */
+  @Value.Lazy
+  public boolean areExternalActionsEnabled() {
+    return getDelegate().getBooleanValue(BUILD_SECTION, "are_external_actions_enabled", false);
+  }
 }

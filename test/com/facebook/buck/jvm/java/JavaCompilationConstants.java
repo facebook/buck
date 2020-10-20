@@ -16,10 +16,10 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
-import com.facebook.buck.external.config.ExternalActionsConfig;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.google.common.collect.ImmutableList;
 
@@ -31,8 +31,8 @@ public class JavaCompilationConstants {
   public static final DownwardApiConfig DEFAULT_DOWNWARD_API_CONFIG =
       DownwardApiConfig.of(FakeBuckConfig.empty());
 
-  public static final ExternalActionsConfig DEFAULT_EXTERNAL_ACTIONS_CONFIG =
-      ExternalActionsConfig.of(FakeBuckConfig.empty());
+  public static final BuildBuckConfig DEFAULT_EXTERNAL_ACTIONS_CONFIG =
+      BuildBuckConfig.of(FakeBuckConfig.empty());
 
   public static final ImmutableList<String> DEFAULT_JAVA_COMMAND_PREFIX = ImmutableList.of("java");
 

@@ -26,6 +26,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.DxToolchain;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
@@ -43,7 +44,6 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
-import com.facebook.buck.external.config.ExternalActionsConfig;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -74,7 +74,7 @@ public class AndroidInstrumentationApkDescription
   private final AndroidBuckConfig androidBuckConfig;
   private final JavacFactory javacFactory;
   private final DownwardApiConfig downwardApiConfig;
-  private final ExternalActionsConfig externalActionsConfig;
+  private final BuildBuckConfig buildBuckConfig;
 
   public AndroidInstrumentationApkDescription(
       JavaBuckConfig javaBuckConfig,
@@ -84,7 +84,7 @@ public class AndroidInstrumentationApkDescription
       ToolchainProvider toolchainProvider,
       AndroidBuckConfig androidBuckConfig,
       DownwardApiConfig downwardApiConfig,
-      ExternalActionsConfig externalActionsConfig) {
+      BuildBuckConfig buildBuckConfig) {
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.cxxBuckConfig = cxxBuckConfig;
@@ -93,7 +93,7 @@ public class AndroidInstrumentationApkDescription
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.androidBuckConfig = androidBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
-    this.externalActionsConfig = externalActionsConfig;
+    this.buildBuckConfig = buildBuckConfig;
   }
 
   @Override
@@ -241,7 +241,7 @@ public class AndroidInstrumentationApkDescription
             androidBuckConfig.getAaptNoResourceRemoval(),
             javaBuckConfig,
             downwardApiConfig,
-            externalActionsConfig,
+            buildBuckConfig,
             javacFactory,
             toolchainProvider
                 .getByName(

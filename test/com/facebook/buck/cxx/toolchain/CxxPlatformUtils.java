@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -35,7 +36,6 @@ import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
-import com.facebook.buck.external.config.ExternalActionsConfig;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
@@ -55,8 +55,8 @@ public class CxxPlatformUtils {
   public static final CxxBuckConfig DEFAULT_CONFIG = new CxxBuckConfig(DEFAULT_BUCK_CONFIG);
   public static final DownwardApiConfig DEFAULT_DOWNWARD_API_CONFIG =
       DownwardApiConfig.of(DEFAULT_BUCK_CONFIG);
-  public static final ExternalActionsConfig DEFAULT_EXTERNAL_ACTIONS_CONFIG =
-      ExternalActionsConfig.of(DEFAULT_BUCK_CONFIG);
+  public static final BuildBuckConfig DEFAULT_EXTERNAL_ACTIONS_CONFIG =
+      BuildBuckConfig.of(DEFAULT_BUCK_CONFIG);
 
   public static final Tool DEFAULT_TOOL = new CommandTool.Builder().build();
 
