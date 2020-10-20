@@ -78,6 +78,7 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.OutputMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.rules.modern.SourcePathResolverSerialization;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription.Mode;
@@ -1630,12 +1631,13 @@ public class CxxDescriptionEnhancer {
                         .getStrip()
                         .resolve(graphBuilder, stripBuildTarget.getTargetConfiguration()),
                     isCacheable,
-                    CxxDescriptionEnhancer.getBinaryOutputPath(
-                            stripBuildTarget,
-                            projectFilesystem,
-                            cxxPlatform.getBinaryExtension(),
-                            outputRootName)
-                        .getPath(),
+                    new PublicOutputPath(
+                        CxxDescriptionEnhancer.getBinaryOutputPath(
+                                stripBuildTarget,
+                                projectFilesystem,
+                                cxxPlatform.getBinaryExtension(),
+                                outputRootName)
+                            .getPath()),
                     withDownwardApi));
   }
 
