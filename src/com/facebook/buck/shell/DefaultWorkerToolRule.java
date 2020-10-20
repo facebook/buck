@@ -59,6 +59,7 @@ public class DefaultWorkerToolRule extends WriteFile
       SourcePathRuleFinder ruleFinder,
       Tool tool,
       int maxWorkers,
+      boolean isAsync,
       boolean isPersistent) {
     super(
         buildTarget,
@@ -71,6 +72,7 @@ public class DefaultWorkerToolRule extends WriteFile
         new DefaultWorkerTool(
             new DefaultWorkerToolDelegatingTool(tool, getSourcePathToOutput()),
             maxWorkers,
+            isAsync,
             isPersistent,
             buildTarget,
             generateNewUUID());
@@ -142,6 +144,13 @@ public class DefaultWorkerToolRule extends WriteFile
     private final Integer maxWorkers;
 
     /**
+     * Important : Do not add this field into RuleKey. Rule key should not change in case of async
+     * variable modification.
+     */
+    @CustomFieldBehavior(DefaultFieldSerialization.class)
+    private final boolean isAsync;
+
+    /**
      * Important : Do not add this field into RuleKey. Rule key should not change in case of
      * instance key modification (that is calculated during creation as random UUID).
      */
@@ -149,11 +158,17 @@ public class DefaultWorkerToolRule extends WriteFile
     private HashCode instanceKey;
 
     DefaultWorkerTool(
-        Tool tool, int maxWorkers, boolean isPersistent, BuildTarget buildTarget, UUID uuid) {
+        Tool tool,
+        int maxWorkers,
+        boolean isAsync,
+        boolean isPersistent,
+        BuildTarget buildTarget,
+        UUID uuid) {
       this.tool = tool;
       this.maxWorkers = maxWorkers;
       this.isPersistent = isPersistent;
       this.buildTarget = buildTarget;
+      this.isAsync = isAsync;
       this.instanceKey = calculateInstanceKey(uuid);
     }
 
@@ -178,6 +193,11 @@ public class DefaultWorkerToolRule extends WriteFile
     @Override
     public int getMaxWorkers() {
       return maxWorkers;
+    }
+
+    @Override
+    public boolean isAsync() {
+      return isAsync;
     }
 
     @Override

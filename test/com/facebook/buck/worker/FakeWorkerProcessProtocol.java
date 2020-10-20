@@ -17,27 +17,47 @@
 package com.facebook.buck.worker;
 
 import java.io.IOException;
+import java.util.concurrent.ArrayBlockingQueue;
 
 public class FakeWorkerProcessProtocol {
 
   public static class FakeCommandSender implements WorkerProcessProtocol.CommandSender {
 
-    private boolean isClosed = false;
+    private volatile boolean isClosed = false;
+    private final ArrayBlockingQueue<Integer> messageIds = new ArrayBlockingQueue<>(10);
 
     @Override
     public void handshake(int messageId) {}
 
     @Override
-    public void send(int messageId, WorkerProcessCommand command) {}
-
-    @Override
-    public int receiveCommandResponse(int messageID) throws IOException {
-      return 0;
+    public void send(int messageId, WorkerProcessCommand command) throws IOException {
+      try {
+        messageIds.put(messageId);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
     }
 
     @Override
-    public void close() {
+    public WorkerProcessProtocol.CommandResponse receiveNextCommandResponse() throws IOException {
+      if (isClosed) {
+        throw new RuntimeException("Closed");
+      }
+      try {
+        return new WorkerProcessProtocol.CommandResponse(messageIds.take(), 0);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    @Override
+    public synchronized void close() {
       isClosed = true;
+      try {
+        messageIds.put(-1);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
     }
 
     public boolean isClosed() {

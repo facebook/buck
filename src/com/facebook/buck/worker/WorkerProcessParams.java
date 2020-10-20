@@ -45,6 +45,12 @@ public interface WorkerProcessParams {
   int getMaxWorkers();
 
   /**
+   * Whether we use synchronous 1-command-at-a-time processes, or one process with a max number of
+   * tasks
+   */
+  boolean isAsync();
+
+  /**
    * Identifies the instance of the persisted worker process pool. Defines when worker process pool
    * should be invalidated.
    *
@@ -58,8 +64,9 @@ public interface WorkerProcessParams {
       ImmutableList<String> startupCommand,
       ImmutableMap<String, String> startupEnvironment,
       int maxWorkers,
+      boolean isAsync,
       Optional<WorkerProcessIdentity> workerProcessIdentity) {
     return ImmutableWorkerProcessParams.of(
-        tempDir, startupCommand, startupEnvironment, maxWorkers, workerProcessIdentity);
+        tempDir, startupCommand, startupEnvironment, maxWorkers, isAsync, workerProcessIdentity);
   }
 }

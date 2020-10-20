@@ -705,7 +705,8 @@ public class GenruleBuildable implements Buildable {
     androidTools.ifPresent(
         tools -> {
           environmentVariablesBuilder.put("ANDROID_HOME", tools.getAndroidSdkLocation().toString());
-          environmentVariablesBuilder.put("ANDROID_SDK_ROOT", tools.getAndroidSdkLocation().toString());
+          environmentVariablesBuilder.put(
+              "ANDROID_SDK_ROOT", tools.getAndroidSdkLocation().toString());
           environmentVariablesBuilder.put("DX", tools.getAndroidPathToDx().toString());
           environmentVariablesBuilder.put("ZIPALIGN", tools.getAndroidPathToZipalign().toString());
           environmentVariablesBuilder.put(
@@ -760,6 +761,7 @@ public class GenruleBuildable implements Buildable {
                   workerMacroArg.getStartupCommand(),
                   workerMacroArg.getEnvironment(),
                   workerMacroArg.getMaxWorkers(),
+                  workerMacroArg.isAsync(),
                   workerMacroArg.getPersistentWorkerKey().isPresent()
                       ? Optional.of(
                           WorkerProcessIdentity.of(
