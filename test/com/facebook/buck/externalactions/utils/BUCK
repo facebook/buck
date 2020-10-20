@@ -1,0 +1,15 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "utils",
+    srcs = glob(["*Test.java"]),
+    has_immutable_types = True,
+    deps = [
+        "//src/com/facebook/buck/externalactions/model:model",
+        "//src/com/facebook/buck/externalactions/utils:utils",
+        "//src/com/facebook/buck/util/json:json",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

@@ -19,17 +19,14 @@ package com.facebook.buck.externalactions.android;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.external.model.ExternalAction;
+import com.facebook.buck.externalactions.utils.ExternalActionsUtils;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.android.SplitResourcesStep;
 import com.facebook.buck.step.isolatedsteps.android.ZipalignStep;
-import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import com.google.common.collect.Iterables;
 import java.util.List;
 
 /**
@@ -48,23 +45,9 @@ public class SplitResourcesExternalAction implements ExternalAction {
         "Expected %s JSON files, got %s",
         NUM_EXPECTED_FILES,
         json.size());
-    Path jsonPath = Paths.get(json.get(0));
-    SplitResourcesExternalActionArgs args;
-    try {
-      args = ObjectMappers.readValue(jsonPath, SplitResourcesExternalActionArgs.class);
-    } catch (FileNotFoundException e) {
-      throw new IllegalStateException(
-          String.format(
-              "Failed to find file %s when getting steps for %s",
-              jsonPath, SplitResourcesExternalAction.class.getName()),
-          e);
-    } catch (IOException e) {
-      throw new IllegalStateException(
-          String.format(
-              "Failed to read JSON from  %s when getting steps for %s",
-              jsonPath, SplitResourcesExternalAction.class.getName()),
-          e);
-    }
+    SplitResourcesExternalActionArgs args =
+        ExternalActionsUtils.readJsonArgs(
+            Iterables.getOnlyElement(json), SplitResourcesExternalActionArgs.class);
 
     SplitResourcesStep splitResourcesStep =
         new SplitResourcesStep(

@@ -1,0 +1,12 @@
+java_library(
+    name = "utils",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/external/model:model",
+        "//src/com/facebook/buck/externalactions/model:model",
+        "//src/com/facebook/buck/util/json:json",
+    ],
+)

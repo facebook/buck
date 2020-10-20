@@ -17,6 +17,7 @@
 package com.facebook.buck.externalactions.android;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.externalactions.model.JsonArgs;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Collection;
@@ -24,7 +25,7 @@ import java.util.Collection;
 /** Args for {@link SplitResourcesExternalAction}. */
 @BuckStyleValue
 @JsonDeserialize(as = ImmutableSplitResourcesExternalActionArgs.class)
-public abstract class SplitResourcesExternalActionArgs {
+public abstract class SplitResourcesExternalActionArgs implements JsonArgs {
   @JsonProperty("pathToAaptResources")
   abstract String getPathToAaptResources();
 

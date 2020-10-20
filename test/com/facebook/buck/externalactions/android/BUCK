@@ -6,6 +6,7 @@ standard_java_test(
         "//src-gen:buildable-command-model",
         "//src/com/facebook/buck/external/model:model",
         "//src/com/facebook/buck/externalactions/android:android_external_actions",
+        "//src/com/facebook/buck/externalactions/model:model",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//src/com/facebook/buck/step/isolatedsteps/android:android_steps",
         "//src/com/facebook/buck/step/isolatedsteps/common:common",
