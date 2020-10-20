@@ -20,19 +20,24 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.CxxLibraryDescription.CommonArg;
 import com.facebook.buck.cxx.CxxPreprocessables.IncludeType;
 import com.facebook.buck.cxx.CxxPreprocessorInput.Builder;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.CompositeArg;
@@ -41,18 +46,47 @@ import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWor
 import com.facebook.buck.rules.macros.CxxHeaderTreeMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimaps;
 import java.util.Map;
 import java.util.Optional;
 
 public class CxxLibraryMetadataFactory {
+
+  private static final FlavorDomain<PicType> PIC_TYPE_FLAVOR_DOMAIN =
+      FlavorDomain.from("C++ Pic Type", PicType.class);
+
   private final ToolchainProvider toolchainProvider;
   private final ProjectFilesystem projectFilesystem;
+  private final CxxBuckConfig cxxBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public CxxLibraryMetadataFactory(
-      ToolchainProvider toolchainProvider, ProjectFilesystem projectFilesystem) {
+      ToolchainProvider toolchainProvider,
+      ProjectFilesystem projectFilesystem,
+      CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.projectFilesystem = projectFilesystem;
+    this.cxxBuckConfig = cxxBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
+  }
+
+  private CxxPlatform extractPlatform(ActionGraphBuilder graphBuilder, BuildTarget buildTarget) {
+    Map.Entry<Flavor, UnresolvedCxxPlatform> platform =
+        getCxxPlatformsProvider(buildTarget.getTargetConfiguration())
+            .getUnresolvedCxxPlatforms()
+            .getFlavorAndValue(buildTarget)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        String.format(
+                            "%s: cannot extract platform from target flavors (available platforms: %s)",
+                            buildTarget,
+                            getCxxPlatformsProvider(buildTarget.getTargetConfiguration())
+                                .getUnresolvedCxxPlatforms()
+                                .getFlavors())));
+    return platform.getValue().resolve(graphBuilder, buildTarget.getTargetConfiguration());
   }
 
   public <U> Optional<U> createMetadata(
@@ -92,19 +126,6 @@ public class CxxLibraryMetadataFactory {
 
       case CXX_PREPROCESSOR_INPUT:
         {
-          Map.Entry<Flavor, UnresolvedCxxPlatform> platform =
-              getCxxPlatformsProvider(buildTarget.getTargetConfiguration())
-                  .getUnresolvedCxxPlatforms()
-                  .getFlavorAndValue(buildTarget)
-                  .orElseThrow(
-                      () ->
-                          new IllegalArgumentException(
-                              String.format(
-                                  "%s: cannot extract platform from target flavors (available platforms: %s)",
-                                  buildTarget,
-                                  getCxxPlatformsProvider(buildTarget.getTargetConfiguration())
-                                      .getUnresolvedCxxPlatforms()
-                                      .getFlavors())));
           Map.Entry<Flavor, HeaderVisibility> visibility =
               CxxLibraryDescription.HEADER_VISIBILITY
                   .getFlavorAndValue(buildTarget)
@@ -115,14 +136,15 @@ public class CxxLibraryMetadataFactory {
                                   "%s: cannot extract visibility from target flavors (available options: %s)",
                                   buildTarget,
                                   CxxLibraryDescription.HEADER_VISIBILITY.getFlavors())));
-          baseTarget = baseTarget.withoutFlavors(platform.getKey(), visibility.getKey());
+          baseTarget = baseTarget.withoutFlavors(visibility.getKey());
+
+          CxxPlatform cxxPlatform = extractPlatform(graphBuilder, baseTarget);
+          baseTarget = baseTarget.withoutFlavors(cxxPlatform.getFlavor());
 
           CxxPreprocessorInput.Builder cxxPreprocessorInputBuilder = CxxPreprocessorInput.builder();
 
           // TODO(agallagher): We currently always add exported flags and frameworks to the
           // preprocessor input to mimic existing behavior, but this should likely be fixed.
-          CxxPlatform cxxPlatform =
-              platform.getValue().resolve(graphBuilder, buildTarget.getTargetConfiguration());
           addCxxPreprocessorInputFromArgs(
               cxxPreprocessorInputBuilder,
               args,
@@ -147,7 +169,8 @@ public class CxxLibraryMetadataFactory {
                   (HeaderSymlinkTree)
                       graphBuilder.requireRule(
                           baseTarget.withAppendedFlavors(
-                              platform.getKey(), CxxLibraryDescription.Type.HEADERS.getFlavor()));
+                              cxxPlatform.getFlavor(),
+                              CxxLibraryDescription.Type.HEADERS.getFlavor()));
               cxxPreprocessorInputBuilder.addIncludes(
                   CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL));
             }
@@ -183,7 +206,7 @@ public class CxxLibraryMetadataFactory {
 
             // Add platform-specific headers.
             if (!args.getExportedPlatformHeaders()
-                .getMatchingValues(platform.getKey().toString())
+                .getMatchingValues(cxxPlatform.getFlavor().toString())
                 .isEmpty()) {
               HeaderSymlinkTree symlinkTree =
                   (HeaderSymlinkTree)
@@ -192,7 +215,7 @@ public class CxxLibraryMetadataFactory {
                               .withoutFlavors(CxxLibraryDescription.LIBRARY_TYPE.getFlavors())
                               .withAppendedFlavors(
                                   CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
-                                  platform.getKey()));
+                                  cxxPlatform.getFlavor()));
               cxxPreprocessorInputBuilder.addIncludes(
                   CxxSymlinkTreeHeaders.from(symlinkTree, args.getExportedHeaderStyle()));
             }
@@ -232,6 +255,36 @@ public class CxxLibraryMetadataFactory {
 
           CxxPreprocessorInput cxxPreprocessorInput = cxxPreprocessorInputBuilder.build();
           return Optional.of(cxxPreprocessorInput).map(metadataClass::cast);
+        }
+
+      case OBJECTS:
+        {
+          CxxPlatform cxxPlatform = extractPlatform(graphBuilder, baseTarget);
+          baseTarget = baseTarget.withoutFlavors(cxxPlatform.getFlavor());
+
+          Map.Entry<Flavor, PicType> picType =
+              PIC_TYPE_FLAVOR_DOMAIN
+                  .getFlavorAndValue(baseTarget)
+                  .orElseThrow(IllegalStateException::new);
+          baseTarget = baseTarget.withoutFlavors(picType.getKey());
+
+          CxxDeps cxxDeps = CxxDeps.builder().addDeps(args.getCxxDeps()).build();
+          ImmutableList<SourcePath> objects =
+              CxxLibraryFactory.requireObjects(
+                  baseTarget,
+                  projectFilesystem,
+                  graphBuilder,
+                  cellRoots,
+                  cxxBuckConfig,
+                  downwardApiConfig,
+                  cxxPlatform,
+                  picType.getValue(),
+                  args,
+                  cxxDeps.get(graphBuilder, cxxPlatform),
+                  CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction.fromLibraryRule(),
+                  Optional.empty());
+
+          return Optional.of(objects).map(metadataClass::cast);
         }
     }
 

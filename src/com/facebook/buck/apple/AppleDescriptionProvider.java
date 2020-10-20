@@ -65,7 +65,8 @@ public class AppleDescriptionProvider implements DescriptionProvider {
     CxxLibraryFactory cxxLibraryFactory =
         new CxxLibraryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig, downwardApiConfig);
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
-        new CxxLibraryMetadataFactory(toolchainProvider, config.getFilesystem());
+        new CxxLibraryMetadataFactory(
+            toolchainProvider, config.getFilesystem(), cxxBuckConfig, downwardApiConfig);
 
     SwiftLibraryDescription swiftLibraryDescription =
         new SwiftLibraryDescription(

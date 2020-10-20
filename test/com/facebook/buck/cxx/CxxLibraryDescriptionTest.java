@@ -1466,6 +1466,23 @@ public class CxxLibraryDescriptionTest {
         hasItem(containsString("-ffile-prefix-map=")));
   }
 
+  @Test
+  public void objectsMetadata() {
+    CxxLibraryBuilder cxxLibraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))));
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
+    CxxLibraryGroup library =
+        (CxxLibraryGroup) graphBuilder.requireRule(cxxLibraryBuilder.getTarget());
+    ImmutableList<SourcePath> objects =
+        library.getObjects(graphBuilder, CxxPlatformUtils.DEFAULT_PLATFORM, PicType.PIC);
+    MatcherAssert.assertThat(objects, Matchers.hasSize(1));
+    MatcherAssert.assertThat(
+        graphBuilder.getRule(objects.get(0)).orElseThrow(AssertionError::new),
+        instanceOf(CxxPreprocessAndCompile.class));
+  }
+
   /**
    * Verify that all source paths are resolvable, which wouldn't be the case if `cxx_genrule`
    * outputs were not handled correctly.

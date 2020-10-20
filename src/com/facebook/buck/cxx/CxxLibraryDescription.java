@@ -106,6 +106,7 @@ public class CxxLibraryDescription
   public enum MetadataType implements FlavorConvertible {
     CXX_HEADERS(InternalFlavor.of("header-symlink-tree")),
     CXX_PREPROCESSOR_INPUT(InternalFlavor.of("cxx-preprocessor-input")),
+    OBJECTS(InternalFlavor.of("objects")),
     ;
 
     private final Flavor flavor;

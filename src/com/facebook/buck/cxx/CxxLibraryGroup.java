@@ -32,6 +32,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
@@ -48,6 +49,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.function.QuadFunction;
 import com.facebook.buck.util.stream.RichStream;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -355,6 +357,21 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
     ImmutableList.Builder<NativeLinkableGroup> builder = ImmutableList.builder();
     forEachNativeLinkableExportedDepForPlatform(cxxPlatform, graphBuilder, builder::add);
     return builder.build();
+  }
+
+  @VisibleForTesting
+  @SuppressWarnings("unchecked")
+  ImmutableList<SourcePath> getObjects(
+      ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform, PicType picType) {
+    return graphBuilder
+        .requireMetadata(
+            getBuildTarget()
+                .withAppendedFlavors(
+                    CxxLibraryDescription.MetadataType.OBJECTS.getFlavor(),
+                    cxxPlatform.getFlavor(),
+                    picType.getFlavor()),
+            ImmutableList.class)
+        .orElseThrow(IllegalStateException::new);
   }
 
   private NativeLinkableInput computeNativeLinkableInputUncached(

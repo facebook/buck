@@ -68,7 +68,8 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
     CxxLibraryFactory cxxLibraryFactory =
         new CxxLibraryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig, downwardApiConfig);
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
-        new CxxLibraryMetadataFactory(toolchainProvider, buckConfig.getFilesystem());
+        new CxxLibraryMetadataFactory(
+            toolchainProvider, buckConfig.getFilesystem(), cxxBuckConfig, downwardApiConfig);
 
     CxxLibraryDescription cxxLibraryDescription =
         new CxxLibraryDescription(

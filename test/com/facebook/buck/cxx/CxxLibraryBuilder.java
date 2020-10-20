@@ -76,7 +76,10 @@ public class CxxLibraryBuilder
             DEFAULT_DOWNWARD_API_CONFIG);
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
         new CxxLibraryMetadataFactory(
-            toolchainProvider, cxxBuckConfig.getDelegate().getFilesystem());
+            toolchainProvider,
+            cxxBuckConfig.getDelegate().getFilesystem(),
+            cxxBuckConfig,
+            DEFAULT_DOWNWARD_API_CONFIG);
     return new CxxLibraryDescription(
         cxxLibraryImplicitFlavors,
         new CxxLibraryFlavored(toolchainProvider, cxxBuckConfig),

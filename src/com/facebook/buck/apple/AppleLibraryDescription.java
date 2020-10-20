@@ -934,6 +934,8 @@ public class AppleLibraryDescription
           case CXX_HEADERS:
             throw new IllegalStateException(
                 "Modular apple_library should provide a unified modular CXX_PREPROCESSOR_INPUT and not pass individual CXX_HEADERS");
+          case OBJECTS:
+            throw new UnsupportedOperationException();
         }
       } else {
         return forwardMetadataToCxxLibraryDescription(

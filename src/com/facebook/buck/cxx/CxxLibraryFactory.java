@@ -473,7 +473,7 @@ public class CxxLibraryFactory {
         toolchainProvider, targetConfiguration);
   }
 
-  private static ImmutableList<SourcePath> requireObjects(
+  static ImmutableList<SourcePath> requireObjects(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,

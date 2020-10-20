@@ -305,7 +305,11 @@ public class FakeAppleRuleDescriptions {
             new InferBuckConfig(DEFAULT_BUCK_CONFIG),
             CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG);
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
-        new CxxLibraryMetadataFactory(toolchainProvider, DEFAULT_BUCK_CONFIG.getFilesystem());
+        new CxxLibraryMetadataFactory(
+            toolchainProvider,
+            DEFAULT_BUCK_CONFIG.getFilesystem(),
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG);
     XCodeDescriptions xcodeDescriptions =
         XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
 

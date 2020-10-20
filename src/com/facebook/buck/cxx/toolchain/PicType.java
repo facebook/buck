@@ -16,16 +16,19 @@
 
 package com.facebook.buck.cxx.toolchain;
 
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorConvertible;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.google.common.collect.ImmutableList;
 
 /**
  * Different compilation modes for PIC (position-independent code) and PDC (position-dependent
  * code).
  */
-public enum PicType {
+public enum PicType implements FlavorConvertible {
 
   // Generate position-independent code (e.g. for use in shared libraries).
-  PIC {
+  PIC(InternalFlavor.of("pic")) {
     @Override
     public ImmutableList<String> getFlags(Compiler compiler) {
       return compiler.getPicFlags();
@@ -33,12 +36,23 @@ public enum PicType {
   },
 
   // Generate position-dependent code.
-  PDC {
+  PDC(InternalFlavor.of("no-pic")) {
     @Override
     public ImmutableList<String> getFlags(Compiler compiler) {
       return compiler.getPdcFlags();
     }
   };
 
+  private final InternalFlavor flavor;
+
+  PicType(InternalFlavor flavor) {
+    this.flavor = flavor;
+  }
+
   public abstract ImmutableList<String> getFlags(Compiler compiler);
+
+  @Override
+  public Flavor getFlavor() {
+    return flavor;
+  }
 }
