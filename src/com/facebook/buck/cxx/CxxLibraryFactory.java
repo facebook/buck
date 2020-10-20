@@ -41,6 +41,7 @@ import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
+import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkType;
 import com.facebook.buck.cxx.toolchain.nativelink.LinkableListFilter;
@@ -329,33 +330,49 @@ public class CxxLibraryFactory {
               linkStrategyFactory,
               debugSymbolLinkStrategyFactory);
         case STATIC:
-          return createStaticLibraryBuildRule(
-              untypedBuildTarget,
-              projectFilesystem,
-              graphBuilder,
-              cellRoots,
-              cxxBuckConfig,
-              downwardApiConfig,
-              platform.get(),
-              args,
-              cxxDeps.get(graphBuilder, platform.get()),
-              PicType.PDC,
-              transitiveCxxPreprocessorInputFunction,
-              configuredDelegate);
+          {
+            Optional<StripStyle> stripStyle = StripStyle.FLAVOR_DOMAIN.getValue(untypedBuildTarget);
+            if (stripStyle.isPresent()) {
+              Preconditions.checkState(extraDeps.isEmpty());
+              untypedBuildTarget = untypedBuildTarget.withoutFlavors(stripStyle.get().getFlavor());
+            }
+            return createStaticLibraryBuildRule(
+                untypedBuildTarget,
+                projectFilesystem,
+                graphBuilder,
+                cellRoots,
+                cxxBuckConfig,
+                downwardApiConfig,
+                platform.get(),
+                args,
+                cxxDeps.get(graphBuilder, platform.get()),
+                PicType.PDC,
+                transitiveCxxPreprocessorInputFunction,
+                configuredDelegate,
+                stripStyle);
+          }
         case STATIC_PIC:
-          return createStaticLibraryBuildRule(
-              untypedBuildTarget,
-              projectFilesystem,
-              graphBuilder,
-              cellRoots,
-              cxxBuckConfig,
-              downwardApiConfig,
-              platform.get(),
-              args,
-              cxxDeps.get(graphBuilder, platform.get()),
-              PicType.PIC,
-              transitiveCxxPreprocessorInputFunction,
-              configuredDelegate);
+          {
+            Optional<StripStyle> stripStyle = StripStyle.FLAVOR_DOMAIN.getValue(untypedBuildTarget);
+            if (stripStyle.isPresent()) {
+              Preconditions.checkState(extraDeps.isEmpty());
+              untypedBuildTarget = untypedBuildTarget.withoutFlavors(stripStyle.get().getFlavor());
+            }
+            return createStaticLibraryBuildRule(
+                untypedBuildTarget,
+                projectFilesystem,
+                graphBuilder,
+                cellRoots,
+                cxxBuckConfig,
+                downwardApiConfig,
+                platform.get(),
+                args,
+                cxxDeps.get(graphBuilder, platform.get()),
+                PicType.PIC,
+                transitiveCxxPreprocessorInputFunction,
+                configuredDelegate,
+                stripStyle);
+          }
       }
       throw new RuntimeException("unhandled library build type");
     }
@@ -866,27 +883,47 @@ public class CxxLibraryFactory {
       PicType pic,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction
           transitiveCxxPreprocessorInputFunction,
-      Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> delegate) {
-    // Create rules for compiling the object files.
-    ImmutableList<SourcePath> objects =
-        requireObjects(
-            buildTarget,
-            projectFilesystem,
-            graphBuilder,
-            cellRoots,
-            cxxBuckConfig,
-            downwardApiConfig,
-            cxxPlatform,
-            pic,
-            args,
-            deps,
-            transitiveCxxPreprocessorInputFunction,
-            delegate);
+      Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> delegate,
+      Optional<StripStyle> stripStyle) {
+
+    ImmutableList<SourcePath> objects;
+    if (!stripStyle.isPresent()) {
+      objects =
+          requireObjects(
+              buildTarget,
+              projectFilesystem,
+              graphBuilder,
+              cellRoots,
+              cxxBuckConfig,
+              downwardApiConfig,
+              cxxPlatform,
+              pic,
+              args,
+              deps,
+              transitiveCxxPreprocessorInputFunction,
+              delegate);
+    } else {
+      Preconditions.checkState(!delegate.isPresent());
+
+      // Create rules for compiling the object files.
+      BuildTarget objectsTarget =
+          buildTarget.withAppendedFlavors(
+              CxxLibraryDescription.MetadataType.OBJECTS.getFlavor(), pic.getFlavor());
+      if (stripStyle.isPresent()) {
+        objectsTarget = objectsTarget.withAppendedFlavors(stripStyle.get().getFlavor());
+      }
+      @SuppressWarnings("unchecked")
+      ImmutableList<SourcePath> unstrippedObjects =
+          graphBuilder
+              .requireMetadata(objectsTarget, ImmutableList.class)
+              .orElseThrow(IllegalStateException::new);
+      objects = unstrippedObjects;
+    }
 
     // Write a build rule to create the archive for this C/C++ library.
     BuildTarget staticTarget =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-            buildTarget, cxxPlatform.getFlavor(), pic);
+            buildTarget, cxxPlatform.getFlavor(), pic, stripStyle);
 
     if (objects.isEmpty()) {
       return new NoopBuildRule(staticTarget, projectFilesystem);

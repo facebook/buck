@@ -564,9 +564,14 @@ public class CxxDescriptionEnhancer {
   }
 
   public static BuildTarget createStaticLibraryBuildTarget(
-      BuildTarget target, Flavor platform, PicType pic) {
-    return target.withAppendedFlavors(
-        platform, pic == PicType.PDC ? STATIC_FLAVOR : STATIC_PIC_FLAVOR);
+      BuildTarget target, Flavor platform, PicType pic, Optional<StripStyle> stripStyle) {
+    target =
+        target.withAppendedFlavors(
+            platform, pic == PicType.PDC ? STATIC_FLAVOR : STATIC_PIC_FLAVOR);
+    if (stripStyle.isPresent()) {
+      target = target.withAppendedFlavors(stripStyle.get().getFlavor());
+    }
+    return target;
   }
 
   public static BuildTarget createSharedLibraryBuildTarget(

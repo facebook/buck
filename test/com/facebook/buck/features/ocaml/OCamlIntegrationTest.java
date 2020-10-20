@@ -600,7 +600,7 @@ public class OCamlIntegrationTest {
         CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), cclib, cxxPlatform);
     BuildTarget cclibbin =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-            cclib, cxxPlatform.getFlavor(), PicType.PDC);
+            cclib, cxxPlatform.getFlavor(), PicType.PDC, Optional.empty());
     String sourceName = "cc/cc.cpp";
     BuildTarget ccObj = cxxSourceRuleFactory.createCompileBuildTarget(sourceName);
     BuildTarget headerSymlinkTreeTarget =

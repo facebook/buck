@@ -1534,7 +1534,7 @@ public class CxxBinaryIntegrationTest {
             CxxPlatformUtils.getHeaderModeForDefaultPlatform(tmp.getRoot()).getFlavor());
     BuildTarget depArchiveTarget =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-            depTarget, cxxPlatform.getFlavor(), PicType.PDC);
+            depTarget, cxxPlatform.getFlavor(), PicType.PDC, Optional.empty());
     BuildTarget depAggregatedDepsTarget =
         depCxxSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
 

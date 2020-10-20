@@ -66,6 +66,7 @@ import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -293,7 +294,7 @@ public class CxxLibraryDescriptionTest {
     BuildRule archiveRule =
         graphBuilder.getRule(
             CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-                target, cxxPlatform.getFlavor(), PicType.PDC));
+                target, cxxPlatform.getFlavor(), PicType.PDC, Optional.empty()));
     assertNotNull(archiveRule);
     assertEquals(
         ImmutableSet.of(
@@ -565,7 +566,7 @@ public class CxxLibraryDescriptionTest {
     BuildRule staticRule =
         graphBuilder.getRule(
             CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-                target, cxxPlatform.getFlavor(), PicType.PDC));
+                target, cxxPlatform.getFlavor(), PicType.PDC, Optional.empty()));
     assertNotNull(staticRule);
     assertEquals(
         ImmutableSet.of(
@@ -1477,11 +1478,51 @@ public class CxxLibraryDescriptionTest {
     CxxLibraryGroup library =
         (CxxLibraryGroup) graphBuilder.requireRule(cxxLibraryBuilder.getTarget());
     ImmutableList<SourcePath> objects =
-        library.getObjects(graphBuilder, CxxPlatformUtils.DEFAULT_PLATFORM, PicType.PIC);
+        library.getObjects(graphBuilder, CxxPlatformUtils.DEFAULT_PLATFORM, PicType.PIC, false);
     MatcherAssert.assertThat(objects, Matchers.hasSize(1));
     MatcherAssert.assertThat(
         graphBuilder.getRule(objects.get(0)).orElseThrow(AssertionError::new),
         instanceOf(CxxPreprocessAndCompile.class));
+  }
+
+  @Test
+  public void strippedObjectsMetadata() {
+    CxxLibraryBuilder cxxLibraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))));
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
+    CxxLibraryGroup library =
+        (CxxLibraryGroup) graphBuilder.requireRule(cxxLibraryBuilder.getTarget());
+    ImmutableList<SourcePath> objects =
+        library.getObjects(graphBuilder, CxxPlatformUtils.DEFAULT_PLATFORM, PicType.PIC, true);
+    MatcherAssert.assertThat(objects, Matchers.hasSize(1));
+    MatcherAssert.assertThat(
+        graphBuilder.getRule(objects.get(0)).orElseThrow(AssertionError::new),
+        instanceOf(CxxStrip.class));
+  }
+
+  @Test
+  public void strippedArchive() {
+    CxxLibraryBuilder cxxLibraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))));
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
+    Archive archive =
+        (Archive)
+            graphBuilder.requireRule(
+                cxxLibraryBuilder
+                    .getTarget()
+                    .withAppendedFlavors(
+                        CxxLibraryDescription.Type.STATIC.getFlavor(),
+                        CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR,
+                        StripStyle.DEBUGGING_SYMBOLS.getFlavor()));
+    ImmutableList<SourcePath> objects = archive.getInputs();
+    MatcherAssert.assertThat(objects, Matchers.hasSize(1));
+    MatcherAssert.assertThat(
+        graphBuilder.getRule(objects.get(0)).orElseThrow(AssertionError::new),
+        instanceOf(CxxStrip.class));
   }
 
   @Test

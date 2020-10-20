@@ -36,6 +36,7 @@ import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.PicType;
+import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -45,6 +46,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.CxxHeaderTreeMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.modern.OutputPath;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimaps;
@@ -267,6 +269,59 @@ public class CxxLibraryMetadataFactory {
                   .getFlavorAndValue(baseTarget)
                   .orElseThrow(IllegalStateException::new);
           baseTarget = baseTarget.withoutFlavors(picType.getKey());
+
+          // If a strip style is present generate stripped objects.
+          Optional<StripStyle> stripStyle = StripStyle.FLAVOR_DOMAIN.getValue(baseTarget);
+          if (stripStyle.isPresent()) {
+            baseTarget = buildTarget.withoutFlavors(stripStyle.get().getFlavor());
+
+            // Get the original, unstripped objects.
+            @SuppressWarnings("unchecked")
+            ImmutableList<SourcePath> objects =
+                graphBuilder
+                    .requireMetadata(
+                        baseTarget.withAppendedFlavors(
+                            CxxLibraryDescription.MetadataType.OBJECTS.getFlavor(),
+                            picType.getValue().getFlavor()),
+                        ImmutableList.class)
+                    .orElseThrow(IllegalStateException::new);
+
+            // Generate stripped objects from them.
+            ImmutableList<SourcePath> strippedObjects =
+                objects.stream()
+                    .map(
+                        object ->
+                            graphBuilder
+                                .computeIfAbsent(
+                                    graphBuilder
+                                        .getRule(object)
+                                        .orElseThrow(IllegalStateException::new)
+                                        .getBuildTarget()
+                                        .withAppendedFlavors(
+                                            CxxStrip.RULE_FLAVOR, stripStyle.get().getFlavor()),
+                                    target ->
+                                        new CxxStrip(
+                                            target,
+                                            projectFilesystem,
+                                            object,
+                                            graphBuilder,
+                                            stripStyle.get(),
+                                            cxxPlatform
+                                                .getStrip()
+                                                .resolve(
+                                                    graphBuilder, target.getTargetConfiguration()),
+                                            true,
+                                            new OutputPath(
+                                                graphBuilder
+                                                    .getSourcePathResolver()
+                                                    .getIdeallyRelativePath(object)
+                                                    .getFileName()),
+                                            downwardApiConfig.isEnabledForCxx()))
+                                .getSourcePathToOutput())
+                    .collect(ImmutableList.toImmutableList());
+
+            return Optional.of(strippedObjects).map(metadataClass::cast);
+          }
 
           CxxDeps cxxDeps = CxxDeps.builder().addDeps(args.getCxxDeps()).build();
           ImmutableList<SourcePath> objects =

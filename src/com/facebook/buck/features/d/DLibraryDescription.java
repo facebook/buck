@@ -136,7 +136,7 @@ public class DLibraryDescription
     // Write a build rule to create the archive for this library.
     BuildTarget staticTarget =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-            buildTarget, cxxPlatform.getFlavor(), pic);
+            buildTarget, cxxPlatform.getFlavor(), pic, Optional.empty());
 
     String staticLibraryName =
         CxxDescriptionEnhancer.getStaticLibraryName(

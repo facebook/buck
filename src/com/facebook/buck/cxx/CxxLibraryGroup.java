@@ -33,6 +33,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.PicType;
+import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
@@ -363,15 +364,18 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
   @VisibleForTesting
   @SuppressWarnings("unchecked")
   ImmutableList<SourcePath> getObjects(
-      ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform, PicType picType) {
+      ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform, PicType picType, boolean stripped) {
+    BuildTarget objectsTarget =
+        getBuildTarget()
+            .withAppendedFlavors(
+                CxxLibraryDescription.MetadataType.OBJECTS.getFlavor(),
+                cxxPlatform.getFlavor(),
+                picType.getFlavor());
+    if (stripped) {
+      objectsTarget = objectsTarget.withAppendedFlavors(StripStyle.DEBUGGING_SYMBOLS.getFlavor());
+    }
     return graphBuilder
-        .requireMetadata(
-            getBuildTarget()
-                .withAppendedFlavors(
-                    CxxLibraryDescription.MetadataType.OBJECTS.getFlavor(),
-                    cxxPlatform.getFlavor(),
-                    picType.getFlavor()),
-            ImmutableList.class)
+        .requireMetadata(objectsTarget, ImmutableList.class)
         .orElseThrow(IllegalStateException::new);
   }
 
@@ -449,7 +453,8 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
               getObjects(
                   graphBuilder,
                   cxxPlatform,
-                  type == Linker.LinkableDepType.STATIC ? PicType.PDC : PicType.PIC);
+                  type == Linker.LinkableDepType.STATIC ? PicType.PDC : PicType.PIC,
+                  false);
           Iterable<Arg> objectArgs =
               objects.stream().map(SourcePathArg::of).collect(Collectors.toList());
 
