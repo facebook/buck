@@ -385,6 +385,7 @@ public class CxxPlatforms {
         .getSharedLibraryInterfaceParams()
         .ifPresent(f -> deps.addAll(f.getParseTimeDeps(targetConfiguration)));
     deps.addAll(cxxPlatform.getSymbolNameTool().getParseTimeDeps(targetConfiguration));
+    deps.addAll(cxxPlatform.getStrip().getParseTimeDeps(targetConfiguration));
     return deps.build();
   }
 
