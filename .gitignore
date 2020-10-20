@@ -27,6 +27,10 @@
 /test/com/facebook/buck/testutil/integration/testlibs/buck-out/
 /test/**/testdata/**/buck-out/
 /test/**/testdata/**/.buckd/
+# But keep log files used for testing
+!/test/com/facebook/buck/support/fix/testdata/
+!/test/com/facebook/buck/log/testdata/
+!/test/com/facebook/buck/doctor/testdata/
 
 # Compiled Python
 *.pyc
