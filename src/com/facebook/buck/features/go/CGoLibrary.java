@@ -424,7 +424,8 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
             args.getIncludeDirectories(),
             Optional.empty(),
             CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY,
-            CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY);
+            CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY,
+            args.getPreferStrippedObjects());
 
     return cxxLinkAndCompileRules.getCxxLink();
   }

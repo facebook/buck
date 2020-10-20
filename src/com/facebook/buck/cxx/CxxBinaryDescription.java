@@ -171,6 +171,11 @@ public class CxxBinaryDescription
     default boolean getLinkDepsQueryWhole() {
       return false;
     }
+
+    @Value.Default
+    default boolean getPreferStrippedObjects() {
+      return false;
+    }
   }
 
   @RuleArg

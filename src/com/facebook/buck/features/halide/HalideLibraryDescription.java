@@ -199,7 +199,8 @@ public class HalideLibraryDescription
             includeDirectories,
             Optional.empty(),
             CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY,
-            CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY);
+            CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY,
+            false);
 
     buildTarget = CxxStrip.restoreStripStyleFlavorInTarget(buildTarget, flavoredStripStyle);
     buildTarget =

@@ -1135,7 +1135,8 @@ public class CxxDescriptionEnhancer {
         args.getIncludeDirectories(),
         args.getExecutableName(),
         linkStrategyFactory,
-        debugStrategyFactory);
+        debugStrategyFactory,
+        args.getPreferStrippedObjects());
   }
 
   private static ImmutableList<Arg> createLinkArgsForCxxBinary(
@@ -1441,7 +1442,8 @@ public class CxxDescriptionEnhancer {
       ImmutableSortedSet<String> includeDirectories,
       Optional<String> outputRootName,
       CxxConditionalLinkStrategyFactory linkStrategyFactory,
-      CxxDebugSymbolLinkStrategyFactory debugStrategyFactory) {
+      CxxDebugSymbolLinkStrategyFactory debugStrategyFactory,
+      boolean preferStrippedObjects) {
     //    TODO(beefon): should be:
     //    Path linkOutput = getLinkOutputPath(
     //        createCxxLinkTarget(params.getBuildTarget(), flavoredLinkerMapMode),
@@ -1541,7 +1543,8 @@ public class CxxDescriptionEnhancer {
                         Optional.empty(),
                         cellRoots,
                         linkStrategyFactory,
-                        debugStrategyFactory));
+                        debugStrategyFactory,
+                        preferStrippedObjects));
 
     BuildRule binaryRuleForExecutable;
     Optional<CxxStrip> cxxStrip = Optional.empty();

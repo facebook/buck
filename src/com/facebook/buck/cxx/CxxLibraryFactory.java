@@ -805,7 +805,8 @@ public class CxxLibraryFactory {
         Optional.empty(),
         cellRoots,
         linkStrategyFactory,
-        debugSymbolLinkStrategyFactory);
+        debugSymbolLinkStrategyFactory,
+        false);
   }
 
   /** @return a {@link HeaderSymlinkTree} for the headers of this C/C++ library. */

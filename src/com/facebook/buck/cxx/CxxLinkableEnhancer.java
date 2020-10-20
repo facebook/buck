@@ -132,7 +132,8 @@ public class CxxLinkableEnhancer {
             blacklist,
             linkWholeDeps,
             immediateLinkableInput,
-            cxxBuckConfig.getSkipSystemFrameworkSearchPaths());
+            cxxBuckConfig.getSkipSystemFrameworkSearchPaths(),
+            false);
 
     argsBuilder.addAll(allArgs);
 
@@ -303,7 +304,8 @@ public class CxxLinkableEnhancer {
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSet<BuildTarget> linkWholeDeps,
       NativeLinkableInput immediateLinkableInput,
-      boolean skipSystemFrameworkSearchPaths) {
+      boolean skipSystemFrameworkSearchPaths,
+      boolean preferStrippedObjects) {
 
     // Soname should only ever be set when linking a "shared" library.
     Preconditions.checkState(!soname.isPresent() || SONAME_REQUIRED_LINK_TYPES.contains(linkType));
@@ -328,7 +330,7 @@ public class CxxLinkableEnhancer {
                           linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
                           graphBuilder,
                           target.getTargetConfiguration(),
-                          false);
+                          preferStrippedObjects);
                   LOG.verbose("Native linkable %s returned input %s", nativeLinkable, input);
                   return input;
                 });
@@ -459,7 +461,8 @@ public class CxxLinkableEnhancer {
         postprocessor,
         cellPathResolver,
         CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY,
-        CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY);
+        CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY,
+        false);
   }
 
   /**
@@ -493,7 +496,8 @@ public class CxxLinkableEnhancer {
       Optional<LinkOutputPostprocessor> postprocessor,
       CellPathResolver cellPathResolver,
       CxxConditionalLinkStrategyFactory linkStrategyFactory,
-      CxxDebugSymbolLinkStrategyFactory debugSymbolLinkStrategyFactory) {
+      CxxDebugSymbolLinkStrategyFactory debugSymbolLinkStrategyFactory,
+      boolean preferStrippedObjects) {
 
     ImmutableList<Arg> allArgs =
         createDepSharedLibFrameworkArgsForLink(
@@ -509,7 +513,8 @@ public class CxxLinkableEnhancer {
             blacklist,
             linkWholeDeps,
             immediateLinkableInput,
-            cxxBuckConfig.getSkipSystemFrameworkSearchPaths());
+            cxxBuckConfig.getSkipSystemFrameworkSearchPaths(),
+            preferStrippedObjects);
 
     Linker.LinkableDepType runtimeDepType = depType;
     if (cxxRuntimeType.orElse(Linker.CxxRuntimeType.DYNAMIC) == Linker.CxxRuntimeType.STATIC) {
