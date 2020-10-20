@@ -313,7 +313,8 @@ public class DefaultCxxPlatforms {
         cxxBuckConfig.getHeaderVerificationOrIgnore(),
         cxxBuckConfig.getPublicHeadersSymlinksEnabled(),
         cxxBuckConfig.getPrivateHeadersSymlinksEnabled(),
-        picTypeForSharedLinking);
+        picTypeForSharedLinking,
+        Optional.empty());
   }
 
   private static Tool getHashedFileTool(

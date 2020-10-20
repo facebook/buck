@@ -161,6 +161,11 @@ public class DarwinLinker extends DelegatingTool
   }
 
   @Override
+  public Iterable<Arg> asLibrary(Iterable<Arg> objects) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public Iterable<Arg> linkerMap(Path output) {
     // Build up the arguments to pass to the linker.
     return StringArg.from("-Xlinker", "-map", "-Xlinker", linkerMapPath(output).toString());

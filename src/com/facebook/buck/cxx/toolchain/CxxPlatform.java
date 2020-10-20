@@ -167,6 +167,15 @@ public interface CxxPlatform extends FlavorConvertible {
     return false;
   }
 
+  /**
+   * @return whether to use archives for static linking (e.g. as opposed to <code>
+   *     -Wl,--start-lib foo.o -Wl,--end-lib</code>).
+   */
+  @Value.Default
+  default boolean useArchives() {
+    return true;
+  }
+
   static Builder builder() {
     return new Builder();
   }
@@ -293,6 +302,13 @@ public interface CxxPlatform extends FlavorConvertible {
       return this;
     }
     return builder().from(this).setLd(linkerProvider).build();
+  }
+
+  default CxxPlatform withUseArchives(boolean useArchives) {
+    if (useArchives() == useArchives) {
+      return this;
+    }
+    return builder().from(this).setUseArchives(useArchives).build();
   }
 
   class Builder extends ImmutableCxxPlatform.Builder {}

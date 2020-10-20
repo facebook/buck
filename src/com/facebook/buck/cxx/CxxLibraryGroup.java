@@ -67,6 +67,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -416,26 +417,50 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
           throw new IllegalStateException("unhandled linkage type: " + linkage);
       }
       if (isStatic) {
-        Archive archive =
-            (Archive)
-                requireBuildRule(
-                    graphBuilder,
-                    cxxPlatform.getFlavor(),
-                    type == Linker.LinkableDepType.STATIC
-                        ? CxxDescriptionEnhancer.STATIC_FLAVOR
-                        : CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
-        if (linkWhole || forceLinkWhole) {
-          Linker linker =
-              cxxPlatform.getLd().resolve(graphBuilder, getBuildTarget().getTargetConfiguration());
-          linkerArgsBuilder.addAll(
-              linker.linkWhole(archive.toArg(), graphBuilder.getSourcePathResolver()));
-        } else {
-          Arg libraryArg = archive.toArg();
-          if (libraryArg instanceof SourcePathArg) {
-            linkerArgsBuilder.add(
-                FileListableLinkerInputArg.withSourcePathArg((SourcePathArg) libraryArg));
+        if (cxxPlatform.useArchives()) {
+          Archive archive =
+              (Archive)
+                  requireBuildRule(
+                      graphBuilder,
+                      cxxPlatform.getFlavor(),
+                      type == Linker.LinkableDepType.STATIC
+                          ? CxxDescriptionEnhancer.STATIC_FLAVOR
+                          : CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
+          if (linkWhole || forceLinkWhole) {
+            Linker linker =
+                cxxPlatform
+                    .getLd()
+                    .resolve(graphBuilder, getBuildTarget().getTargetConfiguration());
+            linkerArgsBuilder.addAll(
+                linker.linkWhole(archive.toArg(), graphBuilder.getSourcePathResolver()));
           } else {
-            linkerArgsBuilder.add(libraryArg);
+            Arg libraryArg = archive.toArg();
+            if (libraryArg instanceof SourcePathArg) {
+              linkerArgsBuilder.add(
+                  FileListableLinkerInputArg.withSourcePathArg((SourcePathArg) libraryArg));
+            } else {
+              linkerArgsBuilder.add(libraryArg);
+            }
+          }
+        } else {
+
+          // Archive-less
+          ImmutableList<SourcePath> objects =
+              getObjects(
+                  graphBuilder,
+                  cxxPlatform,
+                  type == Linker.LinkableDepType.STATIC ? PicType.PDC : PicType.PIC);
+          Iterable<Arg> objectArgs =
+              objects.stream().map(SourcePathArg::of).collect(Collectors.toList());
+
+          if (!(linkWhole || forceLinkWhole)) {
+            Linker linker =
+                cxxPlatform
+                    .getLd()
+                    .resolve(graphBuilder, getBuildTarget().getTargetConfiguration());
+            linkerArgsBuilder.addAll(linker.asLibrary(objectArgs));
+          } else {
+            linkerArgsBuilder.addAll(objectArgs);
           }
         }
       } else {

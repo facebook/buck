@@ -194,4 +194,9 @@ public class WindowsLinker extends DelegatingTool implements Linker, HasImportLi
   public boolean getUseUnixPathSeparator() {
     return false;
   }
+
+  @Override
+  public Iterable<Arg> asLibrary(Iterable<Arg> objects) {
+    throw new UnsupportedOperationException();
+  }
 }

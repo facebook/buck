@@ -145,7 +145,8 @@ public class CxxPlatforms {
       HeaderVerification headerVerification,
       boolean publicHeadersSymlinksEnabled,
       boolean privateHeadersSymlinksEnabled,
-      PicType picTypeForSharedLinking) {
+      PicType picTypeForSharedLinking,
+      Optional<Boolean> linkWithArchives) {
     // TODO(beng, agallagher): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
 
@@ -199,6 +200,9 @@ public class CxxPlatforms {
         .setHeaderMode(cxxBuckConfig.getHeaderMode())
         .setUseArgFile(cxxBuckConfig.getUseArgFile())
         .setFilepathLengthLimited(cxxBuckConfig.getFilepathLengthLimited());
+
+    linkWithArchives.ifPresent(builder::setUseArchives);
+    cxxBuckConfig.getLinkWithArchives().ifPresent(builder::setUseArchives);
 
     boolean withDownwardApi = downwardApiConfig.isEnabledForCxx();
     builder.setSymbolNameTool(
@@ -274,7 +278,8 @@ public class CxxPlatforms {
         defaultPlatform.getHeaderVerification(),
         defaultPlatform.getPublicHeadersSymlinksEnabled(),
         defaultPlatform.getPrivateHeadersSymlinksEnabled(),
-        defaultPlatform.getPicTypeForSharedLinking());
+        defaultPlatform.getPicTypeForSharedLinking(),
+        Optional.of(defaultPlatform.useArchives()));
   }
 
   private static ImmutableMap<String, Flavor> getHostFlavorMap() {

@@ -140,6 +140,11 @@ public class RustCompileTest {
       }
 
       @Override
+      public Iterable<Arg> asLibrary(Iterable<Arg> objects) {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
       public Iterable<String> soname(String soname) {
         return null;
       }

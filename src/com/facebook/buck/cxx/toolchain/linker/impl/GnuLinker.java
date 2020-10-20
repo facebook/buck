@@ -78,6 +78,15 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
   }
 
   @Override
+  public Iterable<Arg> asLibrary(Iterable<Arg> objects) {
+    return ImmutableList.<Arg>builder()
+        .add(StringArg.of("-Wl,--start-lib"))
+        .addAll(objects)
+        .add(StringArg.of("-Wl,--end-lib"))
+        .build();
+  }
+
+  @Override
   public Iterable<Arg> incrementalThinLTOFlags(Path output) {
     return StringArg.from(
         "-Wl,-plugin-opt,thinlto-index-only=thinlto.objects",

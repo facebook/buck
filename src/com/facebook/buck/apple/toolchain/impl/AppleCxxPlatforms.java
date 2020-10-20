@@ -487,7 +487,8 @@ public class AppleCxxPlatforms {
             headerVerification,
             cxxBuckConfig.getPublicHeadersSymlinksEnabled(),
             cxxBuckConfig.getPrivateHeadersSymlinksEnabled(),
-            PicType.PIC);
+            PicType.PIC,
+            Optional.empty());
 
     ImmutableList.Builder<Path> swiftOverrideSearchPathBuilder = ImmutableList.builder();
     AppleSdkPaths.Builder swiftSdkPathsBuilder = AppleSdkPaths.builder().from(sdkPaths);

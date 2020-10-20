@@ -178,6 +178,13 @@ public interface Linker extends Tool {
         ImmutableList<String> linkerArgs, Path output);
   }
 
+  /**
+   * @param objects object files to treat as a library
+   * @return augmented arguments so that linking treats the given objects as a library (e.g. wraps
+   *     in <code>-Wl,--start-lib</code> and <code>-Wl,--end-group</code>).
+   */
+  Iterable<Arg> asLibrary(Iterable<Arg> objects);
+
   /** The various ways to link an output file. */
   enum LinkType {
 
@@ -205,7 +212,7 @@ public interface Linker extends Tool {
 
     // Provide input suitable for dynamically linking this linkable (e.g. return references to
     // shared libraries, libfoo.so).
-    SHARED
+    SHARED,
   }
 
   /** The various ways to load shared libraries on different platforms */
