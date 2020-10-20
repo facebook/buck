@@ -34,7 +34,6 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.CopyStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -139,11 +138,8 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
-        CopyStep.forFile(
-            getProjectFilesystem(),
-            context.getSourcePathResolver().getAbsolutePath(unstrippedBinary).getPath(),
-            output),
         new StripSymbolsStep(
+            context.getSourcePathResolver().getAbsolutePath(unstrippedBinary).getPath(),
             output,
             strip.getCommandPrefix(context.getSourcePathResolver()),
             strip.getEnvironment(context.getSourcePathResolver()),

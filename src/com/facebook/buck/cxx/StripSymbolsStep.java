@@ -29,6 +29,7 @@ import java.nio.file.Path;
 class StripSymbolsStep implements Step {
 
   private final Path input;
+  private final Path output;
   private final ImmutableList<String> stripCommandPrefix;
   private final ImmutableMap<String, String> stripEnvironment;
   private final ImmutableList<String> stripToolArgs;
@@ -37,12 +38,14 @@ class StripSymbolsStep implements Step {
 
   public StripSymbolsStep(
       Path input,
+      Path output,
       ImmutableList<String> stripCommandPrefix,
       ImmutableMap<String, String> stripEnvironment,
       ImmutableList<String> stripToolArgs,
       ProjectFilesystem projectFilesystem,
       boolean withDownwardApi) {
     this.input = input;
+    this.output = output;
     this.stripCommandPrefix = stripCommandPrefix;
     this.stripEnvironment = stripEnvironment;
     this.stripToolArgs = stripToolArgs;
@@ -60,6 +63,7 @@ class StripSymbolsStep implements Step {
                 .addAll(stripCommandPrefix)
                 .addAll(stripToolArgs)
                 .add(projectFilesystem.resolve(input).toString())
+                .add("-o", projectFilesystem.resolve(output).toString())
                 .build(),
             stripEnvironment))
         .execute(context);
