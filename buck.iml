@@ -164,6 +164,7 @@
     <orderEntry type="library" name="scribe-thrift" level="project" />
     <orderEntry type="library" name="error_prone" level="project" />
     <orderEntry type="library" name="jsr305" level="project" />
+    <orderEntry type="library" name="junixsocket" level="project" />
     <orderEntry type="module" module-name="bazel" />
   </component>
 </module>

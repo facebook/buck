@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="junixsocket">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/third-party/java/junixsocket" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/third-party/java/junixsocket" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/third-party/java/junixsocket" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/third-party/java/junixsocket" recursive="false" type="SOURCES" />
+  </library>
+</component>
