@@ -477,6 +477,7 @@ public class CxxLibraryFactory {
         args.isReexportAllHeaderDependencies()
             .orElse(cxxBuckConfig.getDefaultReexportAllHeaderDependencies()),
         args.getSupportsMergedLinking().orElse(true),
+        args.getUseArchive(),
         delegate);
   }
 

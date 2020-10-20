@@ -557,5 +557,7 @@ public class CxxLibraryDescription
     default boolean getIncludeInAndroidMergeMapOutput() {
       return true;
     }
+
+    Optional<Boolean> getUseArchive();
   }
 }

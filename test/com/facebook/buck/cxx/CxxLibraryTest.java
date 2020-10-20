@@ -211,6 +211,7 @@ public class CxxLibraryTest {
             true,
             true,
             true,
+            Optional.empty(),
             CxxLibraryDescriptionDelegate.noop());
 
     NativeLinkableInput expectedSharedNativeLinkableInput =
@@ -272,6 +273,7 @@ public class CxxLibraryTest {
             true,
             true,
             true,
+            Optional.empty(),
             CxxLibraryDescriptionDelegate.noop());
 
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();

@@ -310,4 +310,9 @@ public class CxxLibraryBuilder
     getArgForPopulating().setHeaderNamespace(Optional.of(namespace));
     return this;
   }
+
+  public CxxLibraryBuilder setUseArchive(boolean useArchive) {
+    getArgForPopulating().setUseArchive(Optional.of(useArchive));
+    return this;
+  }
 }

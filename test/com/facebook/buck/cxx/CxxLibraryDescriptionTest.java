@@ -1527,7 +1527,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void linkWithoutArchives() {
+  public void linkWithoutArchivesPlatform() {
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))));
@@ -1539,6 +1539,33 @@ public class CxxLibraryDescriptionTest {
         library
             .getNativeLinkable(
                 CxxPlatformUtils.DEFAULT_PLATFORM.withUseArchives(false), graphBuilder)
+            .getNativeLinkableInput(
+                Linker.LinkableDepType.STATIC,
+                true,
+                graphBuilder,
+                cxxLibraryBuilder.getTarget().getTargetConfiguration(),
+                false);
+    MatcherAssert.assertThat(input.getArgs(), Matchers.hasSize(1));
+    MatcherAssert.assertThat(
+        graphBuilder
+            .getRule(((SourcePathArg) input.getArgs().get(0)).getPath())
+            .orElseThrow(AssertionError::new),
+        instanceOf(CxxPreprocessAndCompile.class));
+  }
+
+  @Test
+  public void linkWithoutArchivesParameter() {
+    CxxLibraryBuilder cxxLibraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setUseArchive(false)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))));
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
+    CxxLibraryGroup library =
+        (CxxLibraryGroup) graphBuilder.requireRule(cxxLibraryBuilder.getTarget());
+    NativeLinkableInput input =
+        library
+            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableInput(
                 Linker.LinkableDepType.STATIC,
                 true,

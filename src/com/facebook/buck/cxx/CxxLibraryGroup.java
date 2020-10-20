@@ -111,6 +111,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final boolean canBeAsset;
   private final boolean reexportAllHeaderDependencies;
   private final boolean supportsOmnibusLinking;
+  private final Optional<Boolean> useArchive;
 
   private final CxxLibraryDescriptionDelegate delegate;
 
@@ -158,6 +159,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
       boolean propagateLinkables,
       boolean reexportAllHeaderDependencies,
       boolean supportsOmnibusLinking,
+      Optional<Boolean> useArchive,
       CxxLibraryDescriptionDelegate delegate) {
     super(buildTarget, projectFilesystem, params);
     this.deps = deps;
@@ -178,6 +180,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.propagateLinkables = propagateLinkables;
     this.reexportAllHeaderDependencies = reexportAllHeaderDependencies;
     this.supportsOmnibusLinking = supportsOmnibusLinking;
+    this.useArchive = useArchive;
     this.delegate = delegate;
     this.transitiveCxxPreprocessorInputCache = new TransitiveCxxPreprocessorInputCache(this);
     this.linkableCache = LegacyNativeLinkableGroup.getNativeLinkableCache(this);
@@ -424,7 +427,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
           throw new IllegalStateException("unhandled linkage type: " + linkage);
       }
       if (isStatic) {
-        if (cxxPlatform.useArchives()) {
+        if (useArchive.orElse(cxxPlatform.useArchives())) {
           List<Flavor> archiveFlavors =
               Lists.newArrayList(
                   cxxPlatform.getFlavor(),
