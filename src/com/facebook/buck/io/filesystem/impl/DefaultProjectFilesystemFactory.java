@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
@@ -45,6 +46,8 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
 
   // A non-exhaustive list of characters that might indicate that we're about to deal with a glob.
   private static final Pattern GLOB_CHARS = Pattern.compile("[*?{\\[]");
+
+  private static final Logger LOG = Logger.get(DefaultProjectFilesystemFactory.class);
 
   @Override
   public DefaultProjectFilesystem createProjectFilesystem(
@@ -224,8 +227,14 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     try {
       // toRealPath() is necessary to resolve symlinks, allowing us to later
       // check whether files are inside or outside of the project without issue.
-      return createProjectFilesystem(
-          cellName, path.toRealPath().normalize(), buckOutIncludeTargetCofigHash);
+      AbsPath normalizedRealPath = path.toRealPath().normalize();
+      if (!path.equals(normalizedRealPath)) {
+        LOG.warn(
+            "Creating project filesystem for cell ('%s') where normalized real path ('%s') differs from given path ('%s')",
+            cellName.getName(), normalizedRealPath.toString(), path.toString());
+      }
+
+      return createProjectFilesystem(cellName, normalizedRealPath, buckOutIncludeTargetCofigHash);
     } catch (IOException e) {
       throw new HumanReadableException(
           String.format(

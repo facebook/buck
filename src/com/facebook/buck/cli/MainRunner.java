@@ -629,8 +629,11 @@ public final class MainRunner {
     // happens
     ExitCode exitCode = ExitCode.FATAL_GENERIC;
 
+    Path projectRootRealPath = projectRoot.toRealPath();
+    Path projectRootNormalizedPath = projectRootRealPath.normalize();
+
     // Setup filesystem and buck config.
-    AbsPath canonicalRootPath = AbsPath.of(projectRoot.toRealPath()).normalize();
+    AbsPath canonicalRootPath = AbsPath.of(projectRootNormalizedPath);
     ImmutableMap<CellName, AbsPath> rootCellMapping = getCellMapping(canonicalRootPath);
     ImmutableList<String> args =
         BuckArgsMethods.expandArgs(
@@ -1376,6 +1379,11 @@ public final class MainRunner {
               new BuckInitializationDurationEvent(
                   TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - initTimestamp)));
 
+          // This needs to be called sufficiently late, so that the log statements appear
+          // in the file logs
+          logProjectRootPathsAndCells(
+              projectRootRealPath, projectRootNormalizedPath, rootCellMapping, cells);
+
           try {
             exitCode =
                 command.run(
@@ -1474,6 +1482,29 @@ public final class MainRunner {
       }
     }
     return exitCode;
+  }
+
+  private void logProjectRootPathsAndCells(
+      Path projectRootRealPath,
+      Path projectRootNormalizedPath,
+      ImmutableMap<CellName, AbsPath> rootCellMapping,
+      Cells cells) {
+    LOG.info("Project root: '%s'", projectRoot.toString());
+    LOG.info("Project root real path: '%s'", projectRootRealPath.toString());
+    LOG.info("Project root normalized real path: '%s'", projectRootNormalizedPath.toString());
+
+    Cell rootCell = cells.getRootCell();
+    LOG.info(
+        "Root cell name: '%s', path: '%s', filesystem root: '%s'",
+        rootCell.getCanonicalName().getName(),
+        rootCell.getRoot().toString(),
+        rootCell.getFilesystem().getRootPath().toString());
+
+    for (Map.Entry<CellName, AbsPath> rootCellMappingEntry : rootCellMapping.entrySet()) {
+      LOG.info(
+          "Cell name: '%s', path: '%s'",
+          rootCellMappingEntry.getKey().getName(), rootCellMappingEntry.getValue().toString());
+    }
   }
 
   private Optional<String> projectPrefix(
