@@ -43,6 +43,7 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.external.config.ExternalActionsConfig;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -73,6 +74,7 @@ public class AndroidInstrumentationApkDescription
   private final AndroidBuckConfig androidBuckConfig;
   private final JavacFactory javacFactory;
   private final DownwardApiConfig downwardApiConfig;
+  private final ExternalActionsConfig externalActionsConfig;
 
   public AndroidInstrumentationApkDescription(
       JavaBuckConfig javaBuckConfig,
@@ -81,7 +83,8 @@ public class AndroidInstrumentationApkDescription
       DxConfig dxConfig,
       ToolchainProvider toolchainProvider,
       AndroidBuckConfig androidBuckConfig,
-      DownwardApiConfig downwardApiConfig) {
+      DownwardApiConfig downwardApiConfig,
+      ExternalActionsConfig externalActionsConfig) {
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.cxxBuckConfig = cxxBuckConfig;
@@ -90,6 +93,7 @@ public class AndroidInstrumentationApkDescription
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.androidBuckConfig = androidBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
+    this.externalActionsConfig = externalActionsConfig;
   }
 
   @Override
@@ -237,6 +241,7 @@ public class AndroidInstrumentationApkDescription
             androidBuckConfig.getAaptNoResourceRemoval(),
             javaBuckConfig,
             downwardApiConfig,
+            externalActionsConfig,
             javacFactory,
             toolchainProvider
                 .getByName(

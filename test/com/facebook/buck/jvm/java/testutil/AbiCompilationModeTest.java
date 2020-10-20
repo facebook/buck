@@ -35,8 +35,8 @@ public abstract class AbiCompilationModeTest {
 
   @Parameterized.Parameter public String compileAgainstAbis;
 
-  protected static final String FALSE = "Compiling against full jars";
-  protected static final String TRUE = "Compiling against ABI jars";
+  public static final String FALSE = "Compiling against full jars";
+  public static final String TRUE = "Compiling against ABI jars";
 
   @Parameterized.Parameters(name = "{0}")
   public static Object[] getParameters() {

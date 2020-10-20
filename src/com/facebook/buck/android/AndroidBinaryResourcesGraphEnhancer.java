@@ -104,6 +104,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final ImmutableSet<String> extraFilteredResources;
   private final Optional<SourcePath> resourceStableIds;
   private final boolean withDownwardApi;
+  private final boolean shouldExecuteInSeparateProcess;
 
   public AndroidBinaryResourcesGraphEnhancer(
       BuildTarget buildTarget,
@@ -139,7 +140,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       boolean useAapt2LocaleFiltering,
       ImmutableSet<String> extraFilteredResources,
       Optional<SourcePath> resourceStableIds,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean shouldExecuteInSeparateProcess) {
     this.androidPlatformTarget = androidPlatformTarget;
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
@@ -174,6 +176,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.extraFilteredResources = extraFilteredResources;
     this.resourceStableIds = resourceStableIds;
     this.withDownwardApi = withDownwardApi;
+    this.shouldExecuteInSeparateProcess = shouldExecuteInSeparateProcess;
   }
 
   @BuckStyleValueWithBuilder
@@ -367,7 +370,8 @@ class AndroidBinaryResourcesGraphEnhancer {
             resultBuilder,
             aaptOutputInfo,
             packageStringAssets,
-            withDownwardApi);
+            withDownwardApi,
+            shouldExecuteInSeparateProcess);
 
         // Create a rule that copies the AndroidManifest. This allows the AndroidBinary rule (and
         // exopackage installation rules) to have a runtime dep on the manifest without having to
@@ -427,7 +431,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       ImmutableAndroidBinaryResourcesGraphEnhancementResult.Builder resultBuilder,
       AaptOutputInfo aaptOutputInfo,
       Optional<PackageStringAssets> packageStringAssets,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean shouldExecuteInSeparateProcess) {
     SourcePath pathToRDotTxt;
     ImmutableList<ExopackagePathAndHash> exoResources;
     if (exopackageForResources) {
@@ -438,7 +443,8 @@ class AndroidBinaryResourcesGraphEnhancer {
           createSplitResourcesRule(
               aaptOutputInfo.getPrimaryResourcesApkPath(),
               aaptOutputInfo.getPathToRDotTxt(),
-              withDownwardApi);
+              withDownwardApi,
+              shouldExecuteInSeparateProcess);
       MergeThirdPartyJarResources mergeThirdPartyJarResource =
           createMergeThirdPartyJarResources(
               packageableCollection.getPathsToThirdPartyJars().values());
@@ -527,7 +533,10 @@ class AndroidBinaryResourcesGraphEnhancer {
   }
 
   private SplitResources createSplitResourcesRule(
-      SourcePath aaptOutputPath, SourcePath aaptRDotTxtPath, boolean withDownwardApi) {
+      SourcePath aaptOutputPath,
+      SourcePath aaptRDotTxtPath,
+      boolean withDownwardApi,
+      boolean shouldExecuteInSeparateProcess) {
     BuildTarget target = buildTarget.withAppendedFlavors(SPLIT_RESOURCES_FLAVOR);
     return new SplitResources(
         target,
@@ -538,7 +547,8 @@ class AndroidBinaryResourcesGraphEnhancer {
         androidPlatformTarget
             .getZipalignToolProvider()
             .resolve(graphBuilder, target.getTargetConfiguration()),
-        withDownwardApi);
+        withDownwardApi,
+        shouldExecuteInSeparateProcess);
   }
 
   private Aapt2Link createAapt2Link(

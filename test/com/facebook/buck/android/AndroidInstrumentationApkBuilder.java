@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_DOWNWARD_API_CONFIG;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_EXTERNAL_ACTIONS_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 
 import com.facebook.buck.android.toolchain.DxToolchain;
@@ -52,7 +53,8 @@ public class AndroidInstrumentationApkBuilder
             new DxConfig(FakeBuckConfig.empty()),
             createToolchainProviderForAndroidInstrumentationApk(),
             new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()),
-            DEFAULT_DOWNWARD_API_CONFIG),
+            DEFAULT_DOWNWARD_API_CONFIG,
+            DEFAULT_EXTERNAL_ACTIONS_CONFIG),
         target,
         new FakeProjectFilesystem(),
         createToolchainProviderForAndroidInstrumentationApk());

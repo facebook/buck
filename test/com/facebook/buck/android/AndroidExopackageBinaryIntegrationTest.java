@@ -23,12 +23,15 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
+import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -36,14 +39,18 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTest {
+@RunWith(Parameterized.class)
+public class AndroidExopackageBinaryIntegrationTest {
 
   private static final String DEX_EXOPACKAGE_TARGET = "//apps/multidex:app-dex-exo";
   private static final String NATIVE_EXOPACKAGE_TARGET = "//apps/multidex:app-native-exo";
@@ -52,8 +59,20 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
-  private ProjectWorkspace workspace;
+  @Parameterized.Parameters(
+      name = "compile_against_abis={0}, should_execute_in_separate_process={1}")
+  public static Collection<Object[]> data() {
+    return ParameterizedTests.getPermutations(
+        ImmutableList.of(AbiCompilationModeTest.TRUE, AbiCompilationModeTest.FALSE),
+        ImmutableList.of(false, true));
+  }
 
+  @Parameterized.Parameter public String compileAgainstAbis;
+
+  @Parameterized.Parameter(value = 1)
+  public boolean shouldExecuteInSeparateProcess;
+
+  private ProjectWorkspace workspace;
   private ProjectFilesystem filesystem;
 
   @Before
@@ -62,9 +81,12 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
         TestDataHelper.createProjectWorkspaceForScenario(
             new AndroidExopackageBinaryIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
+    if (shouldExecuteInSeparateProcess) {
+      workspace.enableOutOfProcessExecution();
+    }
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
-    setWorkspaceCompilationMode(workspace);
+    setWorkspaceCompilationMode();
 
     Properties properties = System.getProperties();
     properties.setProperty(
@@ -76,6 +98,13 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
             DEX_EXOPACKAGE_TARGET, NATIVE_EXOPACKAGE_TARGET, DEX_AND_NATIVE_EXOPACKAGE_TARGET)
         .assertSuccess();
     filesystem = workspace.getProjectFileSystem();
+  }
+
+  private void setWorkspaceCompilationMode() throws IOException {
+    workspace.addBuckConfigLocalOption(
+        JavaBuckConfig.SECTION,
+        JavaBuckConfig.PROPERTY_COMPILE_AGAINST_ABIS,
+        Boolean.toString(compileAgainstAbis.equals(AbiCompilationModeTest.TRUE)));
   }
 
   @Test

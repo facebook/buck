@@ -164,6 +164,20 @@ public abstract class AbstractWorkspace {
   }
 
   /**
+   * Convenience method for {@link #addBuckConfigLocalOption(String, String, String)} to take a
+   * boolean value rather than String value.
+   *
+   * @param section is the section name where option is defined
+   * @param key is the option name
+   * @param value is the new value for the option
+   * @throws IOException when saving the new BuckConfigLocal has an issue
+   */
+  public void addBuckConfigLocalOption(String section, String key, boolean value)
+      throws IOException {
+    addBuckConfigLocalOption(section, key, String.valueOf(value));
+  }
+
+  /**
    * Overrides buckconfig options with the given value at the given section's option.
    *
    * @param section is the section name where option is defined

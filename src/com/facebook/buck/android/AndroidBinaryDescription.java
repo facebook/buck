@@ -48,6 +48,7 @@ import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.external.config.ExternalActionsConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -94,6 +95,7 @@ public class AndroidBinaryDescription
   private final AndroidInstallConfig androidInstallConfig;
   private final AdbConfig adbConfig;
   private final DownwardApiConfig downwardApiConfig;
+  private final ExternalActionsConfig externalActionsConfig;
   private final ToolchainProvider toolchainProvider;
   private final AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory;
   private final AndroidBinaryFactory androidBinaryFactory;
@@ -107,6 +109,7 @@ public class AndroidBinaryDescription
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
       DownwardApiConfig downwardApiConfig,
+      ExternalActionsConfig externalActionsConfig,
       ToolchainProvider toolchainProvider,
       AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory,
       AndroidBinaryFactory androidBinaryFactory) {
@@ -118,6 +121,7 @@ public class AndroidBinaryDescription
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
     this.downwardApiConfig = downwardApiConfig;
+    this.externalActionsConfig = externalActionsConfig;
     this.androidInstallConfig = androidInstallConfig;
     this.adbConfig = adbConfig;
     this.toolchainProvider = toolchainProvider;
@@ -185,6 +189,7 @@ public class AndroidBinaryDescription
             dxConfig,
             proGuardConfig,
             downwardApiConfig,
+            externalActionsConfig,
             cellRoots,
             context.getTargetGraph(),
             buildTarget,

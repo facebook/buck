@@ -25,6 +25,7 @@ import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.external.config.ExternalActionsConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
@@ -57,6 +58,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
     AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, Platform.detect());
     TestBuckConfig testBuckConfig = buckConfig.getView(TestBuckConfig.class);
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    ExternalActionsConfig externalActionsConfig = buckConfig.getView(ExternalActionsConfig.class);
     CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
@@ -82,6 +84,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             cxxBuckConfig,
             dxConfig,
             downwardApiConfig,
+            externalActionsConfig,
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBinaryFactory(androidBuckConfig, downwardApiConfig)),
@@ -94,6 +97,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             cxxBuckConfig,
             dxConfig,
             downwardApiConfig,
+            externalActionsConfig,
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBundleFactory(androidBuckConfig, downwardApiConfig)),
@@ -104,7 +108,8 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             dxConfig,
             toolchainProvider,
             androidBuckConfig,
-            downwardApiConfig),
+            downwardApiConfig,
+            externalActionsConfig),
         new AndroidInstrumentationTestDescription(
             javaConfig, testBuckConfig, downwardApiConfig, toolchainProvider),
         new AndroidLibraryDescription(

@@ -639,6 +639,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
     addBuckConfigLocalOption("cache", "mode", "dir");
   }
 
+  public void enableOutOfProcessExecution() throws IOException {
+    addBuckConfigLocalOption("buildables_v2", "enabled", true);
+  }
+
   public void disableThreadLimitOverride() throws IOException {
     removeBuckConfigLocalOption("build", "threads");
   }

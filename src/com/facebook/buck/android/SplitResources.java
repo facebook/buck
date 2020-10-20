@@ -24,18 +24,19 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.externalactions.android.SplitResourcesExternalAction;
+import com.facebook.buck.externalactions.android.SplitResourcesExternalActionArgs;
+import com.facebook.buck.externalactions.utils.ExternalActionsUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
-import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
-import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.BuildableWithExternalAction;
 import com.facebook.buck.rules.modern.DefaultOutputPathResolver;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.isolatedsteps.android.SplitResourcesStep;
-import com.facebook.buck.step.isolatedsteps.android.ZipalignStep;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.rules.modern.model.BuildableCommand;
+import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -56,6 +57,8 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
   private static final String EXO_RESOURCES_APK_FILE_NAME = "exo-resources.apk";
   private static final String PRIMARY_RESOURCES_APK_FILE_NAME = "primary-resources.apk";
   private static final String R_TXT_FILE_NAME = "R.txt";
+  private static final String BUILDABLE_COMMAND_TEMP_FILE_PREFIX = "split_resources_";
+  private static final String BUILDABLE_COMMAND_TEMP_FILE_SUFFIX = "";
 
   public SplitResources(
       BuildTarget buildTarget,
@@ -64,7 +67,8 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
       SourcePath pathToAaptResources,
       SourcePath pathToOriginalRDotTxt,
       Tool zipalignTool,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean shouldExecuteInSeparateProcess) {
     super(
         buildTarget,
         projectFilesystem,
@@ -77,7 +81,8 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
             Paths.get(EXO_RESOURCES_APK_FILE_NAME),
             Paths.get(PRIMARY_RESOURCES_APK_FILE_NAME),
             Paths.get(R_TXT_FILE_NAME),
-            withDownwardApi));
+            withDownwardApi,
+            shouldExecuteInSeparateProcess));
   }
 
   SourcePath getPathToRDotTxt() {
@@ -93,7 +98,7 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
   }
 
   /** Buildable implementation for {@link com.facebook.buck.android.SplitResources}. */
-  static class Impl implements Buildable {
+  static class Impl extends BuildableWithExternalAction {
 
     private static final String EXO_RESOURCES_UNALIGNED_ZIP_NAME = "exo-resources.unaligned.zip";
 
@@ -116,7 +121,9 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
         Path exoResourcesOutputPath,
         Path primaryResourcesOutputPath,
         Path rDotTxtOutputPath,
-        boolean withDownwardApi) {
+        boolean withDownwardApi,
+        boolean shouldExecuteInSeparateProcess) {
+      super(shouldExecuteInSeparateProcess);
       this.buildTarget = buildTarget;
       this.exoResourcesOutputPath = new OutputPath(exoResourcesOutputPath);
       this.primaryResourcesOutputPath = new OutputPath(primaryResourcesOutputPath);
@@ -128,29 +135,33 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
     }
 
     @Override
-    public ImmutableList<Step> getBuildSteps(
-        BuildContext buildContext,
+    public BuildableCommand getBuildableCommand(
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
-        BuildCellRelativePathFactory buildCellPathFactory) {
+        BuildContext buildContext) {
       SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
-      return ImmutableList.<Step>builder()
-          .add(
-              new SplitResourcesStep(
-                  sourcePathResolverAdapter.getCellUnsafeRelPath(pathToAaptResources),
-                  sourcePathResolverAdapter.getCellUnsafeRelPath(pathToOriginalRDotTxt),
-                  outputPathResolver.resolvePath(primaryResourcesOutputPath),
-                  RelPath.of(getUnalignedExoPath(filesystem)),
-                  outputPathResolver.resolvePath(rDotTxtOutputPath)))
-          .add(
-              new ZipalignStep(
-                  filesystem.getRootPath(),
-                  ProjectFilesystemUtils.relativize(
-                      filesystem.getRootPath(), buildContext.getBuildCellRootPath()),
-                  RelPath.of(getUnalignedExoPath(filesystem)),
-                  outputPathResolver.resolvePath(exoResourcesOutputPath),
-                  withDownwardApi,
-                  zipalignTool.getCommandPrefix(buildContext.getSourcePathResolver())))
+      Path jsonFilePath = createTempFile(filesystem);
+      SplitResourcesExternalActionArgs jsonArgs =
+          SplitResourcesExternalActionArgs.of(
+              sourcePathResolverAdapter.getCellUnsafeRelPath(pathToAaptResources).toString(),
+              sourcePathResolverAdapter.getCellUnsafeRelPath(pathToOriginalRDotTxt).toString(),
+              outputPathResolver.resolvePath(primaryResourcesOutputPath).toString(),
+              RelPath.of(getUnalignedExoPath(filesystem)).toString(),
+              outputPathResolver.resolvePath(rDotTxtOutputPath).toString(),
+              filesystem.getRootPath().toString(),
+              ProjectFilesystemUtils.relativize(
+                      filesystem.getRootPath(), buildContext.getBuildCellRootPath())
+                  .toString(),
+              RelPath.of(getUnalignedExoPath(filesystem)).toString(),
+              outputPathResolver.resolvePath(exoResourcesOutputPath).toString(),
+              withDownwardApi,
+              zipalignTool.getCommandPrefix(buildContext.getSourcePathResolver()));
+      ExternalActionsUtils.writeJsonArgs(jsonFilePath, jsonArgs);
+
+      return BuildableCommand.newBuilder()
+          .addExtraFiles(jsonFilePath.toString())
+          .putAllEnv(ImmutableMap.of())
+          .setExternalActionClass(SplitResourcesExternalAction.class.getName())
           .build();
     }
 
@@ -172,6 +183,16 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
 
     private OutputPath getPathToPrimaryResources() {
       return primaryResourcesOutputPath;
+    }
+
+    private Path createTempFile(ProjectFilesystem filesystem) {
+      try {
+        return filesystem.createTempFile(
+            BUILDABLE_COMMAND_TEMP_FILE_PREFIX, BUILDABLE_COMMAND_TEMP_FILE_SUFFIX);
+      } catch (IOException e) {
+        throw new IllegalStateException(
+            "Failed to create temp file when creating split resources buildable command");
+      }
     }
   }
 }

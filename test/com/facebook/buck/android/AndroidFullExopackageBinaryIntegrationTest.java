@@ -16,26 +16,41 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Properties;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(Parameterized.class)
 public class AndroidFullExopackageBinaryIntegrationTest {
   private static final String RESOURCES_EXOPACKAGE_TARGET = "//apps/multidex:app-full-exo";
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
-  private ProjectWorkspace workspace;
+  @Parameterized.Parameters(name = "should_execute_in_separate_process={0}")
+  public static Collection<Object[]> data() {
+    return ParameterizedTests.getPermutations(ImmutableList.of(false, true));
+  }
 
+  @Parameterized.Parameter() public boolean shouldExecuteInSeparateProcess;
+
+  private ProjectWorkspace workspace;
   private Path outputPath;
 
   @Before
@@ -51,6 +66,17 @@ public class AndroidFullExopackageBinaryIntegrationTest {
     properties.setProperty(
         "buck.native_exopackage_fake_path",
         Paths.get("assets/android/native-exopackage-fakes.apk").toAbsolutePath().toString());
+
+    if (shouldExecuteInSeparateProcess) {
+      workspace.enableOutOfProcessExecution();
+      URL binary =
+          Resources.getResource("com/facebook/buck/external/main/external_actions_bin.jar");
+      Path externalBinary = tmpFolder.getRoot().getPath().resolve("external_action.jar");
+      try (FileOutputStream stream = new FileOutputStream(externalBinary.toFile())) {
+        stream.write(Resources.toByteArray(binary));
+      }
+      properties.setProperty("buck.external_actions", externalBinary.toString());
+    }
 
     outputPath = workspace.buildAndReturnOutput(RESOURCES_EXOPACKAGE_TARGET);
   }

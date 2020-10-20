@@ -40,6 +40,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.external.config.ExternalActionsConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
@@ -193,6 +194,7 @@ public class AndroidBinaryGraphEnhancer {
       boolean noResourceRemoval,
       JavaBuckConfig javaBuckConfig,
       DownwardApiConfig downwardApiConfig,
+      ExternalActionsConfig externalActionsConfig,
       JavacFactory javacFactory,
       JavacOptions javacOptions,
       EnumSet<ExopackageMode> exopackageModes,
@@ -310,7 +312,8 @@ public class AndroidBinaryGraphEnhancer {
             useAapt2LocaleFiltering,
             extraFilteredResources,
             resourceStableIds,
-            downwardApiConfig.isEnabledForAndroid());
+            downwardApiConfig.isEnabledForAndroid(),
+            externalActionsConfig.getEnabled());
     this.apkModuleGraph = apkModuleGraph;
     this.dxConfig = dxConfig;
     this.nonPreDexedDexBuildableArgs = nonPreDexedDexBuildableArgs;
