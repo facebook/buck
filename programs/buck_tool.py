@@ -584,7 +584,6 @@ class BuckTool(object):
                         cwd=command_cwd,
                     )
                     if exit_code == 2:
-                        env["BUCK_BUILD_ID"] = str(uuid.uuid4())
                         if busy_diagnostic_displayed:
                             sys.stderr.write(".")
                             sys.stderr.flush()
