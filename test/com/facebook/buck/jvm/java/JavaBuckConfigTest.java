@@ -371,7 +371,12 @@ public class JavaBuckConfigTest {
 
   @Test
   public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithJavacSet()
-      throws IOException, NoSuchBuildTargetException {
+      throws IOException {
+    assumeThat(
+        "Windows can't create a process for a fake executable.",
+        Platform.detect(),
+        is(not(Platform.WINDOWS)));
+
     final String javac = temporaryFolder.newExecutableFile().toString();
 
     ImmutableMap<String, ImmutableMap<String, String>> sections =
@@ -383,7 +388,7 @@ public class JavaBuckConfigTest {
     assertEquals(
         javac,
         JavacFactoryHelper.createJavacFactory(javaConfig)
-            .create(null, null, UnconfiguredTargetConfiguration.INSTANCE)
+            .create(new TestActionGraphBuilder(), null, UnconfiguredTargetConfiguration.INSTANCE)
             .getShortName());
   }
 

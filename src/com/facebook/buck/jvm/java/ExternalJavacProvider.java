@@ -47,6 +47,7 @@ import java.util.Optional;
 
 /** Provides utilities for creating/providing javac instances. */
 public class ExternalJavacProvider implements JavacProvider {
+
   private final ProcessExecutor processExecutor;
   private final SourcePath javacPath;
 
@@ -84,6 +85,7 @@ public class ExternalJavacProvider implements JavacProvider {
   /** Creates an ExternalJavac. */
   @Override
   public Javac resolve(SourcePathRuleFinder ruleFinder) {
+    SourcePathResolverAdapter sourcePathResolver = ruleFinder.getSourcePathResolver();
     if (javacPath instanceof BuildTargetSourcePath) {
       BuildTargetSourcePath buildTargetPath = (BuildTargetSourcePath) javacPath;
       BuildRule rule = ruleFinder.getRule(buildTargetPath);
@@ -91,10 +93,13 @@ public class ExternalJavacProvider implements JavacProvider {
           rule instanceof BinaryBuildRule
               ? () -> ((BinaryBuildRule) rule).getExecutableCommand(OutputLabel.defaultLabel())
               : Suppliers.ofInstance(new NonHashingJavacTool(buildTargetPath)),
-          buildTargetPath.getTarget().toString());
+          buildTargetPath.getTarget().toString(),
+          sourcePathResolver);
     } else {
       return new ExternalJavac(
-          () -> createVersionedJavac((PathSourcePath) javacPath), javacPath.toString());
+          () -> createVersionedJavac((PathSourcePath) javacPath),
+          javacPath.toString(),
+          sourcePathResolver);
     }
   }
 
@@ -133,6 +138,7 @@ public class ExternalJavacProvider implements JavacProvider {
   }
 
   private static class NonHashingJavacTool implements Tool {
+
     @AddToRuleKey private final NonHashableSourcePathContainer container;
 
     public NonHashingJavacTool(BuildTargetSourcePath buildTargetPath) {

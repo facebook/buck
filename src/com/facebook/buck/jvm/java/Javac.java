@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
@@ -36,7 +35,6 @@ public interface Javac extends Tool {
   /** Prepares an invocation of the compiler with the given parameters. */
   Invocation newBuildInvocation(
       JavacExecutionContext context,
-      SourcePathResolverAdapter resolver,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,

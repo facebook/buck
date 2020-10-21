@@ -43,7 +43,6 @@ public class FakeJavac implements Javac {
   @Override
   public Javac.Invocation newBuildInvocation(
       JavacExecutionContext context,
-      SourcePathResolverAdapter sourcePathResolverAdapter,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,

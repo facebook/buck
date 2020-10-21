@@ -46,8 +46,6 @@ import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -68,6 +66,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class ExternalJavacTest extends EasyMockSupport {
+
   private static final Path PATH_TO_SRCS_LIST = Paths.get("srcs_list");
   public static final ImmutableSortedSet<Path> SOURCE_PATHS =
       ImmutableSortedSet.of(Paths.get("foobar.java"));
@@ -145,6 +144,7 @@ public class ExternalJavacTest extends EasyMockSupport {
     commandPrefix.add("prefix");
 
     class SimpleBinaryRule extends AbstractBuildRule implements BinaryBuildRule {
+
       protected SimpleBinaryRule(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
         super(buildTarget, projectFilesystem);
       }
@@ -250,10 +250,21 @@ public class ExternalJavacTest extends EasyMockSupport {
   }
 
   private Javac createTestStep() {
-    Path fakeJavac = Paths.get("fakeJavac");
-    return new ExternalJavacProvider(
-            new DefaultProcessExecutor(Console.createNullConsole()),
-            FakeSourcePath.of(filesystem, fakeJavac))
-        .resolve(new TestActionGraphBuilder());
+    return new ExternalJavac(
+        () ->
+            new Tool() {
+              @Override
+              public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
+                return ImmutableList.of();
+              }
+
+              @Override
+              public ImmutableMap<String, String> getEnvironment(
+                  SourcePathResolverAdapter resolver) {
+                return ImmutableMap.of();
+              }
+            },
+        filesystem.resolve(Paths.get("fakeJavac")).toString(),
+        new TestActionGraphBuilder().getSourcePathResolver());
   }
 }

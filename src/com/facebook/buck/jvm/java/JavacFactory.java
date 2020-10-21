@@ -53,12 +53,13 @@ public final class JavacFactory {
   public static JavacFactory getDefault(ToolchainProvider toolchainProvider) {
     return new JavacFactory(
         MoreFunctions.memoize(
-            toolchainTargetConfiguration -> {
-              return toolchainProvider
-                  .getByName(
-                      JavaToolchain.DEFAULT_NAME, toolchainTargetConfiguration, JavaToolchain.class)
-                  .getJavacProvider();
-            }));
+            toolchainTargetConfiguration ->
+                toolchainProvider
+                    .getByName(
+                        JavaToolchain.DEFAULT_NAME,
+                        toolchainTargetConfiguration,
+                        JavaToolchain.class)
+                    .getJavacProvider()));
   }
 
   /**

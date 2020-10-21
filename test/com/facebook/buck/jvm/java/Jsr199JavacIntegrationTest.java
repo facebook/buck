@@ -28,7 +28,6 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -133,7 +132,6 @@ public class Jsr199JavacIntegrationTest {
         javac
             .newBuildInvocation(
                 javacExecutionContext,
-                new TestActionGraphBuilder().getSourcePathResolver(),
                 BuildTargetFactory.newInstance("//some:example"),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -188,7 +186,6 @@ public class Jsr199JavacIntegrationTest {
         javac
             .newBuildInvocation(
                 javacExecutionContext,
-                new TestActionGraphBuilder().getSourcePathResolver(),
                 BuildTargetFactory.newInstance("//some:example"),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -297,7 +294,6 @@ public class Jsr199JavacIntegrationTest {
       javac
           .newBuildInvocation(
               javacExecutionContext,
-              new TestActionGraphBuilder().getSourcePathResolver(),
               BuildTargetFactory.newInstance("//some:example"),
               ImmutableList.of(),
               ImmutableList.of(),
@@ -340,7 +336,9 @@ public class Jsr199JavacIntegrationTest {
     Optional<SourcePath> jar = javacJar.map(p -> PathSourcePath.of(new FakeProjectFilesystem(), p));
     if (jar.isPresent()) {
       return new JarBackedJavac(
-          ExternalJavacProvider.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL, ImmutableSet.of(jar.get()));
+          ExternalJavacProvider.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL,
+          ImmutableSet.of(jar.get()),
+          new TestActionGraphBuilder().getSourcePathResolver());
     }
 
     return new JdkProvidedInMemoryJavac();
@@ -361,8 +359,7 @@ public class Jsr199JavacIntegrationTest {
   private static class JdkNotFoundJavac extends Jsr199Javac {
 
     @Override
-    protected JavaCompiler createCompiler(
-        JavacExecutionContext context, SourcePathResolverAdapter resolver) {
+    protected JavaCompiler createCompiler(JavacExecutionContext context) {
       throw new RuntimeException("JDK is not found");
     }
   }
@@ -388,7 +385,6 @@ public class Jsr199JavacIntegrationTest {
     Invocation buildInvocation =
         javac.newBuildInvocation(
             javacExecutionContext,
-            new TestActionGraphBuilder().getSourcePathResolver(),
             BuildTargetFactory.newInstance("//some:example"),
             ImmutableList.of(),
             ImmutableList.of(),

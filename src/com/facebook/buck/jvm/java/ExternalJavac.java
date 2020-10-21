@@ -43,16 +43,18 @@ import javax.annotation.Nullable;
 public class ExternalJavac implements Javac {
 
   @AddToRuleKey private final Supplier<Tool> javac;
+  private final ImmutableList<String> commandPrefix;
   private final String shortName;
 
-  public ExternalJavac(Supplier<Tool> javac, String shortName) {
+  public ExternalJavac(Supplier<Tool> javac, String shortName, SourcePathResolverAdapter resolver) {
     this.javac = MoreSuppliers.memoize(javac);
+    this.commandPrefix = this.javac.get().getCommandPrefix(resolver);
     this.shortName = shortName;
   }
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
-    return javac.get().getCommandPrefix(resolver);
+    return commandPrefix;
   }
 
   @Override
@@ -82,7 +84,6 @@ public class ExternalJavac implements Javac {
   @Override
   public Invocation newBuildInvocation(
       JavacExecutionContext context,
-      SourcePathResolverAdapter sourcePathResolverAdapter,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
@@ -138,7 +139,7 @@ public class ExternalJavac implements Javac {
         }
 
         ImmutableList.Builder<String> command = ImmutableList.builder();
-        command.addAll(javac.get().getCommandPrefix(sourcePathResolverAdapter));
+        command.addAll(commandPrefix);
 
         try {
           FluentIterable<String> escapedPaths =

@@ -30,6 +30,7 @@ import javax.tools.JavaCompiler;
 
 /** Command used to compile java libraries with a variety of ways to handle dependencies. */
 public abstract class Jsr199Javac implements Javac {
+
   @Override
   public String getDescription(
       ImmutableList<String> options,
@@ -58,13 +59,11 @@ public abstract class Jsr199Javac implements Javac {
     throw new UnsupportedOperationException("In memory javac may not be used externally");
   }
 
-  protected abstract JavaCompiler createCompiler(
-      JavacExecutionContext context, SourcePathResolverAdapter resolver);
+  protected abstract JavaCompiler createCompiler(JavacExecutionContext context);
 
   @Override
   public Invocation newBuildInvocation(
       JavacExecutionContext context,
-      SourcePathResolverAdapter resolver,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
@@ -80,7 +79,7 @@ public abstract class Jsr199Javac implements Javac {
       AbiGenerationMode abiCompatibilityMode,
       @Nullable SourceOnlyAbiRuleInfoFactory ruleInfoFactory) {
     return new Jsr199JavacInvocation(
-        () -> createCompiler(context, resolver),
+        () -> createCompiler(context),
         context,
         invokingRule,
         options,

@@ -22,6 +22,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.net.MalformedURLException;
@@ -29,22 +30,27 @@ import java.net.URL;
 import javax.tools.JavaCompiler;
 
 public class JarBackedJavac extends Jsr199Javac {
+
   @AddToRuleKey private final String compilerClassName;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> classpath;
+  private final ImmutableSortedSet<AbsPath> resolvedClasspath;
 
-  public JarBackedJavac(String compilerClassName, Iterable<SourcePath> classpath) {
+  public JarBackedJavac(
+      String compilerClassName,
+      ImmutableSet<SourcePath> classpath,
+      SourcePathResolverAdapter resolver) {
     this.compilerClassName = compilerClassName;
     this.classpath = ImmutableSortedSet.copyOf(classpath);
+    this.resolvedClasspath = resolver.getAllAbsolutePaths(classpath);
   }
 
   @Override
-  protected JavaCompiler createCompiler(
-      JavacExecutionContext context, SourcePathResolverAdapter resolver) {
+  protected JavaCompiler createCompiler(JavacExecutionContext context) {
     ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
     ClassLoader compilerClassLoader =
         classLoaderCache.getClassLoaderForClassPath(
             ClassLoader.getSystemClassLoader(),
-            resolver.getAllAbsolutePaths(classpath).stream()
+            resolvedClasspath.stream()
                 .map(JarBackedJavac::pathToUrl)
                 // Use "toString" since URL.equals does DNS lookups.
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.usingToString()))
@@ -57,8 +63,8 @@ public class JarBackedJavac extends Jsr199Javac {
   }
 
   @VisibleForTesting
-  Iterable<SourcePath> getCompilerClassPath() {
-    return classpath;
+  Iterable<AbsPath> getClasspath() {
+    return resolvedClasspath;
   }
 
   @VisibleForTesting

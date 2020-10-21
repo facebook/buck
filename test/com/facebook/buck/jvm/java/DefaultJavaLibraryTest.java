@@ -84,7 +84,6 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.hashing.FileHashLoader;
-import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.zip.CustomJarOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.base.Splitter;
@@ -1515,10 +1514,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertTrue(javacStep.getJavac() instanceof Jsr199Javac);
     JarBackedJavac jsrJavac = ((JarBackedJavac) javacStep.getJavac());
     assertEquals(
-        RichStream.from(jsrJavac.getCompilerClassPath())
-            .map(pathResolver::getCellUnsafeRelPath)
-            .collect(ImmutableSet.toImmutableSet()),
-        ImmutableSet.of(pathResolver.getCellUnsafeRelPath(javac.getSourcePathToOutput())));
+        jsrJavac.getClasspath(),
+        ImmutableSet.of(pathResolver.getAbsolutePath(javac.getSourcePathToOutput())));
   }
 
   // Utilities

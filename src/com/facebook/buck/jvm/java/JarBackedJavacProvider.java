@@ -56,7 +56,9 @@ public class JarBackedJavacProvider implements JavacProvider, AddsToRuleKey {
 
       ImmutableSortedSet<SourcePath> fullJavacClasspath = builder.build();
 
-      javac = new JarBackedJavac(compilerClassName, fullJavacClasspath);
+      javac =
+          new JarBackedJavac(
+              compilerClassName, fullJavacClasspath, ruleFinder.getSourcePathResolver());
     }
 
     return javac;

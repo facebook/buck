@@ -150,7 +150,6 @@ public class JavacPipelineState implements RulePipelineState {
           getJavac()
               .newBuildInvocation(
                   javacExecutionContext,
-                  resolver,
                   invokingRule,
                   getOptions(context, compilerParameters.getClasspathEntries(), resolver),
                   annotationProcessors,

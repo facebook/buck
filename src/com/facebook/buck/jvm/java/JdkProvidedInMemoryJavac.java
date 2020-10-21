@@ -17,14 +17,12 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import javax.tools.JavaCompiler;
 
 public class JdkProvidedInMemoryJavac extends Jsr199Javac {
   @Override
-  protected JavaCompiler createCompiler(
-      JavacExecutionContext context, SourcePathResolverAdapter pathResolver) {
+  protected JavaCompiler createCompiler(JavacExecutionContext context) {
     JavaCompiler compiler = SynchronizedToolProvider.getSystemJavaCompiler();
 
     if (compiler == null) {
