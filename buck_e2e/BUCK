@@ -15,9 +15,12 @@ python_library(
     ],
 )
 
-export_file(
+filegroup(
     name = "testdata",
-    src = "testdata",
+    srcs = glob([
+        "testdata/**",
+        "testdata/**/.*",
+    ]),
 )
 
 pytest_test(
@@ -25,9 +28,9 @@ pytest_test(
     srcs = ["repo_end_to_end_test.py"],
     env = {
         "TEST_BUCK_BINARY": "$(location //buck_api/test:test_script.py)",
+        "TEST_REPO_DATA": "$(location :testdata)",
     },
     resources = [
-        ":testdata",
         "//buck_api/test:test_script.py",
     ],
     deps = [

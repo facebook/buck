@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import inspect
 import os
 import shutil
 import tempfile
@@ -22,7 +21,6 @@ from functools import wraps
 from pathlib import Path
 from typing import Callable, Iterable, Iterator, Optional, Union
 
-import pkg_resources
 import pytest
 from buck_api.buck_repo import BuckRepo
 
@@ -87,12 +85,12 @@ def _buck_test_callable(fn: Callable) -> Callable:
     return wrapped
 
 
-def _buck_test_not_callable(module: str, data: str) -> Callable:
+def _buck_test_not_callable(data: str) -> Callable:
     def inner_decorator(fn: Callable) -> Callable:
         @pytest.mark.asyncio
         @wraps(fn)
-        def wrapped(repo: BuckRepo, *inner_args, **kwargs):
-            src = Path(pkg_resources.resource_filename(module, data))
+        def wrapped(repo: BuckRepo, *args, **kwargs):
+            src = Path(os.environ["TEST_REPO_DATA"], data)
             tgt = Path(repo.cwd)
             buck_config_local_files = list(src.rglob(".buckconfig.local"))
             assert len(buck_config_local_files) == 0, (
@@ -101,7 +99,7 @@ def _buck_test_not_callable(module: str, data: str) -> Callable:
             )
             os.makedirs(tgt, exist_ok=True)
             _copytree(src, tgt)
-            response = fn(repo, *inner_args, **kwargs)
+            response = fn(repo, *args, **kwargs)
             return response
 
         return wrapped
@@ -118,14 +116,7 @@ def buck_test(data: Union[Callable, str]) -> Callable:
     if callable(data):
         return _buck_test_callable(data)
     assert isinstance(data, str), data
-    # Use Python's inspect to get the module name that calls buck_test.
-    # We need the module name in order to use pkg_resources.resource_filename to get
-    # the path to the resource specified in the BUCK file.
-    # For more details, see this Stack Overflow post:
-    # https://stackoverflow.com/questions/1095543/get-name-of-calling-functions-module-in-python
-    frm = inspect.stack()[1]
-    mod = inspect.getmodule(frm[0])
-    return _buck_test_not_callable(mod.__name__, data)
+    return _buck_test_not_callable(data)
 
 
 async def exec_path(path: Path) -> subprocess.Process:

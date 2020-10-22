@@ -47,9 +47,12 @@ java_test(
     ],
 )
 
-export_file(
+filegroup(
     name = "testdata",
-    src = "testdata",
+    srcs = glob([
+        "testdata/**",
+        "testdata/**/.*",
+    ]),
     visibility = [
         "//buck_e2e/...",
         "//test/com/facebook/buck/cxx/...",

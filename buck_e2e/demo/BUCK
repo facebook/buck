@@ -5,10 +5,8 @@ pytest_test(
     srcs = ["test_demo_repo.py"],
     env = {
         "TEST_BUCK_BINARY": "$(location //programs:buck)",
+        "TEST_REPO_DATA": "$(location //test/com/facebook/buck/testutil/endtoend:testdata)",
     },
-    resources = [
-        "//test/com/facebook/buck/testutil/endtoend:testdata",
-    ],
     deps = [
         "//buck_e2e:utilities",
     ],
