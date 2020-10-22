@@ -17,11 +17,11 @@
 package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TraversableGraph;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.util.stream.RichStream;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Target graph version where node is a set of all nodes with the same {@link
@@ -30,48 +30,73 @@ import com.google.common.collect.ImmutableMap;
  * <p>This utility exists to support legacy configured {@code buck query}, and should not be used
  * for anything else.
  */
-public class MergedTargetGraph extends DirectedAcyclicGraph<MergedTargetNode> {
+public class MergedTargetGraph implements TraversableGraph<MergedTargetNode> {
 
   private final ImmutableMap<UnflavoredBuildTarget, MergedTargetNode> index;
+  private final TraversableGraph<TargetNode<?>> targetGraph;
 
-  private MergedTargetGraph(
-      MutableDirectedGraph<MergedTargetNode> graph,
-      ImmutableMap<UnflavoredBuildTarget, MergedTargetNode> index) {
-    super(graph);
+  public MergedTargetGraph(
+      ImmutableMap<UnflavoredBuildTarget, MergedTargetNode> index,
+      TraversableGraph<TargetNode<?>> targetGraph) {
     this.index = index;
+    this.targetGraph = targetGraph;
   }
 
   public ImmutableMap<UnflavoredBuildTarget, MergedTargetNode> getIndex() {
     return index;
   }
 
+  @Override
+  public Iterable<MergedTargetNode> getNodesWithNoIncomingEdges() {
+    ImmutableSet<TargetNode<?>> nodes =
+        RichStream.from(targetGraph.getNodesWithNoIncomingEdges())
+            .collect(ImmutableSet.toImmutableSet());
+    return nodes.stream()
+        .map(n -> n.getBuildTarget().getUnflavoredBuildTarget())
+        .distinct()
+        .map(index::get)
+        .filter(n -> nodes.containsAll(n.getNodes()))
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  @Override
+  public Iterable<MergedTargetNode> getNodesWithNoOutgoingEdges() {
+    ImmutableSet<TargetNode<?>> nodes =
+        RichStream.from(targetGraph.getNodesWithNoOutgoingEdges())
+            .collect(ImmutableSet.toImmutableSet());
+    return nodes.stream()
+        .map(n -> n.getBuildTarget().getUnflavoredBuildTarget())
+        .distinct()
+        .map(index::get)
+        .filter(n -> nodes.containsAll(n.getNodes()))
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  @Override
+  public Iterable<MergedTargetNode> getIncomingNodesFor(MergedTargetNode sink) {
+    return sink.getNodes().stream()
+        .flatMap(n -> RichStream.from(targetGraph.getIncomingNodesFor(n)))
+        .map(n -> index.get(n.getBuildTarget().getUnflavoredBuildTarget()))
+        .distinct()
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  @Override
+  public Iterable<MergedTargetNode> getOutgoingNodesFor(MergedTargetNode source) {
+    return source.getNodes().stream()
+        .flatMap(n -> RichStream.from(targetGraph.getOutgoingNodesFor(n)))
+        .map(n -> index.get(n.getBuildTarget().getUnflavoredBuildTarget()))
+        .distinct()
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  @Override
+  public Iterable<MergedTargetNode> getNodes() {
+    return index.values();
+  }
+
   /** Group nodes by {@link UnflavoredBuildTarget}. */
   public static MergedTargetGraph merge(TraversableGraph<TargetNode<?>> targetGraph) {
-    ImmutableMap<UnflavoredBuildTarget, MergedTargetNode> index =
-        MergedTargetNode.group(targetGraph.getNodes());
-
-    MutableDirectedGraph<MergedTargetNode> graph = new MutableDirectedGraph<>();
-
-    for (MergedTargetNode node : index.values()) {
-      graph.addNode(node);
-    }
-
-    for (TargetNode<?> source : targetGraph.getNodes()) {
-      for (TargetNode<?> sink : targetGraph.getOutgoingNodesFor(source)) {
-        MergedTargetNode mergedSource =
-            Preconditions.checkNotNull(
-                index.get(source.getBuildTarget().getUnflavoredBuildTarget()),
-                "node must exist in index: %s",
-                source.getBuildTarget().getUnflavoredBuildTarget());
-        MergedTargetNode mergedSink =
-            Preconditions.checkNotNull(
-                index.get(sink.getBuildTarget().getUnflavoredBuildTarget()),
-                "node must exist in index: %s",
-                sink.getBuildTarget().getUnflavoredBuildTarget());
-        graph.addEdge(mergedSource, mergedSink);
-      }
-    }
-
-    return new MergedTargetGraph(graph, index);
+    return new MergedTargetGraph(MergedTargetNode.group(targetGraph.getNodes()), targetGraph);
   }
 }

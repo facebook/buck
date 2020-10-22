@@ -16,11 +16,10 @@
 
 package com.facebook.buck.core.model.targetgraph;
 
-import static org.junit.Assert.assertEquals;
-
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.google.common.collect.ImmutableSet;
+import org.hamcrest.Matchers;
+import org.hamcrest.junit.MatcherAssert;
 import org.junit.Test;
 
 public class MergedTargetGraphTest {
@@ -57,8 +56,8 @@ public class MergedTargetGraphTest {
     MergedTargetNode mb = merged.getIndex().get(b.getBuildTarget().getUnflavoredBuildTarget());
     MergedTargetNode mc = merged.getIndex().get(c1.getBuildTarget().getUnflavoredBuildTarget());
 
-    assertEquals(ImmutableSet.of(ma, mb), merged.getOutgoingNodesFor(mc));
-    assertEquals(ImmutableSet.of(mc), merged.getIncomingNodesFor(ma));
-    assertEquals(ImmutableSet.of(mc), merged.getIncomingNodesFor(mb));
+    MatcherAssert.assertThat(merged.getOutgoingNodesFor(mc), Matchers.containsInAnyOrder(ma, mb));
+    MatcherAssert.assertThat(merged.getIncomingNodesFor(ma), Matchers.containsInAnyOrder(mc));
+    MatcherAssert.assertThat(merged.getIncomingNodesFor(mb), Matchers.containsInAnyOrder(mc));
   }
 }
