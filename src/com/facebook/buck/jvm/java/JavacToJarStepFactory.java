@@ -20,10 +20,12 @@ import static com.facebook.buck.jvm.java.JavacOptions.SpoolMode;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -63,13 +65,15 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       CompilerParameters compilerParameters,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      SourcePathResolverAdapter resolver,
+      AbsPath rootCellRoot) {
     JavacOptions buildTimeOptions =
         javacOptions.withBootclasspathFromContext(extraClasspathProvider);
 
     return new JavacPipelineState(
         javac,
-        buildTimeOptions,
+        ResolvedJavacOptions.of(buildTimeOptions, resolver, rootCellRoot),
         invokingRule,
         new ClasspathChecker(),
         compilerParameters,
@@ -107,9 +111,9 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     steps.add(
         new JavacStep(
             javac,
-            buildTimeOptions,
+            ResolvedJavacOptions.of(
+                buildTimeOptions, context.getSourcePathResolver(), projectFilesystem.getRootPath()),
             invokingRule,
-            context.getSourcePathResolver(),
             projectFilesystem.getBuckPaths(),
             new ClasspathChecker(),
             parameters,
@@ -151,7 +155,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       recordDepFileIfNecessary(projectFilesystem, target, compilerParameters, buildableContext);
 
       // This adds the javac command, along with any supporting commands.
-      createPipelinedCompileStep(context, projectFilesystem, pipeline, target, steps);
+      createPipelinedCompileStep(projectFilesystem, pipeline, target, steps);
     }
 
     jarParameters.ifPresent(
@@ -209,9 +213,11 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       steps.add(
           new JavacStep(
               javac,
-              buildTimeOptions,
+              ResolvedJavacOptions.of(
+                  buildTimeOptions,
+                  context.getSourcePathResolver(),
+                  projectFilesystem.getRootPath()),
               invokingRule,
-              context.getSourcePathResolver(),
               projectFilesystem.getBuckPaths(),
               new ClasspathChecker(),
               compilerParameters,
@@ -234,7 +240,6 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   }
 
   public void createPipelinedCompileStep(
-      BuildContext context,
       ProjectFilesystem projectFilesystem,
       JavacPipelineState pipeline,
       BuildTarget invokingRule,
@@ -249,7 +254,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
               CompilerOutputPaths.getAnnotationPath(invokingRule, buckPaths)));
     }
 
-    steps.add(new JavacStep(pipeline, invokingRule, context.getSourcePathResolver(), buckPaths));
+    steps.add(new JavacStep(pipeline, invokingRule, buckPaths));
   }
 
   @VisibleForTesting

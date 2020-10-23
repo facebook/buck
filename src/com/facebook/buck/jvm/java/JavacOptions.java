@@ -30,13 +30,10 @@ import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -131,24 +128,6 @@ public abstract class JavacOptions implements AddsToRuleKey {
     return false;
   }
 
-  /** Validates classpath options */
-  public void validateOptions(Function<String, Boolean> classpathChecker) throws IOException {
-    Optional<String> bootclasspath = getBootclasspath();
-    if (!bootclasspath.isPresent()) {
-      return;
-    }
-    String bootClasspath = bootclasspath.get();
-
-    try {
-      if (!classpathChecker.apply(bootClasspath)) {
-        throw new IOException(
-            String.format("Bootstrap classpath %s contains no valid entries", bootClasspath));
-      }
-    } catch (UncheckedIOException e) {
-      throw e.getCause();
-    }
-  }
-
   public JavacOptions withBootclasspathFromContext(ExtraClasspathProvider extraClasspathProvider) {
     String extraClasspath =
         Joiner.on(File.pathSeparator).join(extraClasspathProvider.getExtraClasspath());
@@ -230,6 +209,27 @@ public abstract class JavacOptions implements AddsToRuleKey {
         getJavaAnnotationProcessorParams(),
         getStandardJavacPluginParams(),
         getExtraArguments());
+  }
+
+  /** Add options method */
+  public static void appendOptionsTo(
+      OptionsConsumer optionsConsumer,
+      ResolvedJavacOptions resolvedJavacOptions,
+      AbsPath rootCellRoot) {
+
+    appendOptionsTo(
+        rootCellRoot,
+        optionsConsumer,
+        getBootclasspathString(
+            rootCellRoot,
+            resolvedJavacOptions.getBootclasspath(),
+            resolvedJavacOptions.getBootclasspathList()),
+        resolvedJavacOptions.getLanguageLevelOptions(),
+        resolvedJavacOptions.isDebug(),
+        resolvedJavacOptions.isVerbose(),
+        resolvedJavacOptions.getJavaAnnotationProcessorParams(),
+        resolvedJavacOptions.getStandardJavacPluginParams(),
+        resolvedJavacOptions.getExtraArguments());
   }
 
   private static void appendOptionsTo(

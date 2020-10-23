@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
@@ -45,15 +44,12 @@ public class JavacStep implements Step {
   private final JavacPipelineState pipeline;
   private final BuildTarget invokingRule;
   private final boolean ownsPipelineObject;
-  // TODO: msemko : remove
-  private final SourcePathResolverAdapter resolver;
   private final BaseBuckPaths buckPaths;
 
   public JavacStep(
       Javac javac,
-      JavacOptions javacOptions,
+      ResolvedJavacOptions javacOptions,
       BuildTarget invokingRule,
-      SourcePathResolverAdapter resolver,
       BaseBuckPaths buckPaths,
       ClasspathChecker classpathChecker,
       CompilerParameters compilerParameters,
@@ -72,28 +68,21 @@ public class JavacStep implements Step {
             withDownwardApi),
         invokingRule,
         true,
-        resolver,
         buckPaths);
   }
 
-  public JavacStep(
-      JavacPipelineState pipeline,
-      BuildTarget invokingRule,
-      SourcePathResolverAdapter resolver,
-      BaseBuckPaths buckPaths) {
-    this(pipeline, invokingRule, false, resolver, buckPaths);
+  public JavacStep(JavacPipelineState pipeline, BuildTarget invokingRule, BaseBuckPaths buckPaths) {
+    this(pipeline, invokingRule, false, buckPaths);
   }
 
   private JavacStep(
       JavacPipelineState pipeline,
       BuildTarget invokingRule,
       boolean ownsPipelineObject,
-      SourcePathResolverAdapter resolver,
       BaseBuckPaths buckPaths) {
     this.pipeline = pipeline;
     this.invokingRule = invokingRule;
     this.ownsPipelineObject = ownsPipelineObject;
-    this.resolver = resolver;
     this.buckPaths = buckPaths;
   }
 
@@ -105,7 +94,7 @@ public class JavacStep implements Step {
     String firstOrderStderr;
     Optional<String> returnedStderr;
     try {
-      Javac.Invocation invocation = pipeline.getJavacInvocation(resolver, buckPaths, context);
+      Javac.Invocation invocation = pipeline.getJavacInvocation(buckPaths, context);
       if (JavaAbis.isSourceAbiTarget(invokingRule)) {
         declaredDepsBuildResult = invocation.buildSourceAbiJar();
       } else if (JavaAbis.isSourceOnlyAbiTarget(invokingRule)) {
@@ -207,7 +196,7 @@ public class JavacStep implements Step {
   @VisibleForTesting
   ImmutableList<String> getOptions(
       StepExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
-    return pipeline.getOptions(context, buildClasspathEntries, resolver);
+    return pipeline.getOptions(context, buildClasspathEntries);
   }
 
   /** @return The classpath entries used to invoke javac. */

@@ -545,7 +545,9 @@ public class JarBuildStepsFactory
         compilerParameters,
         getAbiJarParameters(firstRule, context, filesystem, compilerParameters).orElse(null),
         getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null),
-        withDownwardApi);
+        withDownwardApi,
+        context.getSourcePathResolver(),
+        filesystem.getRootPath());
   }
 
   public boolean hasAnnotationProcessing() {

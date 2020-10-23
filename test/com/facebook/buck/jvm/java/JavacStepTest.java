@@ -30,6 +30,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -73,12 +74,12 @@ public class JavacStepTest {
             "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    SourcePathResolverAdapter sourcePathResolver = buildRuleResolver.getSourcePathResolver();
     JavacStep step =
         new JavacStep(
             fakeJavac,
-            javacOptions,
+            ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
             target,
-            buildRuleResolver.getSourcePathResolver(),
             fakeFilesystem.getBuckPaths(),
             classpathChecker,
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
@@ -124,12 +125,12 @@ public class JavacStepTest {
             "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    SourcePathResolverAdapter sourcePathResolver = buildRuleResolver.getSourcePathResolver();
     JavacStep step =
         new JavacStep(
             fakeJavac,
-            javacOptions,
+            ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
             target,
-            buildRuleResolver.getSourcePathResolver(),
             fakeFilesystem.getBuckPaths(),
             classpathChecker,
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
@@ -183,12 +184,12 @@ public class JavacStepTest {
             "/", ":", Paths::get, dir -> true, file -> false, (path, glob) -> ImmutableSet.of());
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    SourcePathResolverAdapter sourcePathResolver = buildRuleResolver.getSourcePathResolver();
     JavacStep step =
         new JavacStep(
             fakeJavac,
-            javacOptions,
+            ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
             target,
-            buildRuleResolver.getSourcePathResolver(),
             fakeFilesystem.getBuckPaths(),
             classpathChecker,
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
@@ -234,12 +235,12 @@ public class JavacStepTest {
             "/", ":", Paths::get, dir -> true, file -> false, (path, glob) -> ImmutableSet.of());
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    SourcePathResolverAdapter sourcePathResolver = buildRuleResolver.getSourcePathResolver();
     JavacStep step =
         new JavacStep(
             fakeJavac,
-            javacOptions,
+            ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
             target,
-            buildRuleResolver.getSourcePathResolver(),
             fakeFilesystem.getBuckPaths(),
             classpathChecker,
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
@@ -291,12 +292,12 @@ public class JavacStepTest {
             "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    SourcePathResolverAdapter sourcePathResolver = buildRuleResolver.getSourcePathResolver();
     JavacStep step =
         new JavacStep(
             fakeJavac,
-            javacOptions,
+            ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
             target,
-            buildRuleResolver.getSourcePathResolver(),
             fakeFilesystem.getBuckPaths(),
             classpathChecker,
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),

@@ -44,6 +44,7 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
+import com.facebook.buck.jvm.java.ResolvedJavacOptions;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -144,11 +145,13 @@ public class DummyRDotJavaTest {
             .add(
                 new JavacStep(
                         DEFAULT_JAVAC,
-                        JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
-                            .setJavaAnnotationProcessorParams(JavacPluginParams.EMPTY)
-                            .build(),
+                        ResolvedJavacOptions.of(
+                            JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
+                                .setJavaAnnotationProcessorParams(JavacPluginParams.EMPTY)
+                                .build(),
+                            graphBuilder.getSourcePathResolver(),
+                            rootPath),
                         dummyRDotJava.getBuildTarget(),
-                        graphBuilder.getSourcePathResolver(),
                         filesystem.getBuckPaths(),
                         new ClasspathChecker(),
                         CompilerParameters.builder()

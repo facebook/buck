@@ -22,14 +22,12 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,7 +51,7 @@ public class JavacPipelineState implements RulePipelineState {
   private static final Logger LOG = Logger.get(JavacPipelineState.class);
 
   private final CompilerParameters compilerParameters;
-  private final JavacOptions javacOptions;
+  private final ResolvedJavacOptions resolvedJavacOptions;
   private final BuildTarget invokingRule;
   private final Javac javac;
   private final ClasspathChecker classpathChecker;
@@ -69,7 +67,7 @@ public class JavacPipelineState implements RulePipelineState {
 
   public JavacPipelineState(
       Javac javac,
-      JavacOptions javacOptions,
+      ResolvedJavacOptions resolvedJavacOptions,
       BuildTarget invokingRule,
       ClasspathChecker classpathChecker,
       CompilerParameters compilerParameters,
@@ -77,13 +75,13 @@ public class JavacPipelineState implements RulePipelineState {
       @Nullable JarParameters libraryJarParameters,
       boolean withDownwardApi) {
     this.javac = javac;
-    this.javacOptions = javacOptions;
     this.invokingRule = invokingRule;
     this.classpathChecker = classpathChecker;
     this.compilerParameters = compilerParameters;
     this.abiJarParameters = abiJarParameters;
     this.libraryJarParameters = libraryJarParameters;
     this.withDownwardApi = withDownwardApi;
+    this.resolvedJavacOptions = resolvedJavacOptions;
   }
 
   public boolean isRunning() {
@@ -91,11 +89,10 @@ public class JavacPipelineState implements RulePipelineState {
   }
 
   /** Get the invocation instance. */
-  public Javac.Invocation getJavacInvocation(
-      SourcePathResolverAdapter resolver, BaseBuckPaths buckPaths, StepExecutionContext context)
+  public Javac.Invocation getJavacInvocation(BaseBuckPaths buckPaths, StepExecutionContext context)
       throws IOException {
     if (invocation == null) {
-      javacOptions.validateOptions(classpathChecker::validateClasspath);
+      resolvedJavacOptions.validateClasspath(classpathChecker::validateClasspath);
 
       stdout = new CapturingPrintStream();
       closeables.add(stdout);
@@ -134,26 +131,14 @@ public class JavacPipelineState implements RulePipelineState {
               processExecutor,
               buckPaths);
 
-      ImmutableList<JavacPluginJsr199Fields> annotationProcessors =
-          ImmutableList.copyOf(
-              javacOptions.getJavaAnnotationProcessorParams().getPluginProperties().stream()
-                  .map(properties -> properties.getJavacPluginJsr199Fields(resolver, ruleCellRoot))
-                  .collect(Collectors.toList()));
-
-      ImmutableList<JavacPluginJsr199Fields> javaPlugins =
-          ImmutableList.copyOf(
-              javacOptions.getStandardJavacPluginParams().getPluginProperties().stream()
-                  .map(properties -> properties.getJavacPluginJsr199Fields(resolver, ruleCellRoot))
-                  .collect(Collectors.toList()));
-
       invocation =
           getJavac()
               .newBuildInvocation(
                   javacExecutionContext,
                   invokingRule,
-                  getOptions(context, compilerParameters.getClasspathEntries(), resolver),
-                  annotationProcessors,
-                  javaPlugins,
+                  getOptions(context, compilerParameters.getClasspathEntries()),
+                  resolvedJavacOptions.getAnnotationProcessors(),
+                  resolvedJavacOptions.getJavaPlugins(),
                   compilerParameters.getSourceFilePaths(),
                   compilerParameters.getOutputPaths().getPathToSourcesList(),
                   compilerParameters.getOutputPaths().getWorkingDirectory(),
@@ -197,7 +182,6 @@ public class JavacPipelineState implements RulePipelineState {
     invocation = null;
   }
 
-  @VisibleForTesting
   Javac getJavac() {
     return javac;
   }
@@ -208,23 +192,17 @@ public class JavacPipelineState implements RulePipelineState {
    *
    * @return list of String command-line options.
    */
-  @VisibleForTesting
   ImmutableList<String> getOptions(
-      StepExecutionContext context,
-      ImmutableSortedSet<Path> buildClasspathEntries,
-      SourcePathResolverAdapter resolver) {
+      StepExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
+    CompilerOutputPaths outputPaths = compilerParameters.getOutputPaths();
     return getOptions(
-        javacOptions,
-        resolver,
-        compilerParameters.getOutputPaths().getClassesDir(),
-        compilerParameters.getOutputPaths().getAnnotationPath().getPath(),
+        outputPaths.getClassesDir(),
+        outputPaths.getAnnotationPath().getPath(),
         context,
         buildClasspathEntries);
   }
 
-  public static ImmutableList<String> getOptions(
-      JavacOptions javacOptions,
-      SourcePathResolverAdapter pathResolver,
+  private ImmutableList<String> getOptions(
       RelPath outputDirectory,
       Path generatedCodeDirectory,
       StepExecutionContext context,
@@ -232,7 +210,7 @@ public class JavacPipelineState implements RulePipelineState {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     AbsPath ruleCellRoot = context.getRuleCellRoot();
-    javacOptions.appendOptionsTo(
+    JavacOptions.appendOptionsTo(
         new OptionsConsumer() {
           @Override
           public void addOptionValue(String option, String value) {
@@ -258,7 +236,7 @@ public class JavacPipelineState implements RulePipelineState {
             builder.addAll(extras);
           }
         },
-        pathResolver,
+        resolvedJavacOptions,
         ruleCellRoot);
 
     // verbose flag, if appropriate.
@@ -269,7 +247,7 @@ public class JavacPipelineState implements RulePipelineState {
     // Specify the output directory.
     builder.add("-d").add(ruleCellRoot.resolve(outputDirectory).toString());
 
-    if (!javacOptions.getJavaAnnotationProcessorParams().isEmpty()) {
+    if (resolvedJavacOptions.isJavaAnnotationProcessorParamsPresent()) {
       builder.add("-s").add(ruleCellRoot.resolve(generatedCodeDirectory).toString());
     }
 
