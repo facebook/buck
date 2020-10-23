@@ -2,5 +2,6 @@
   "targets": [
     "//xplat/build_infra/buck_client/buck_api/..."
   ],
-  "use_buck_builder": true
+  "use_buck_builder": true,
+  "version": "64ab406b07fe5d66fd53d4e520935aad3b0b351b"
 }
