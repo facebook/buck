@@ -1489,6 +1489,15 @@ public final class MainRunner {
       Path projectRootNormalizedPath,
       ImmutableMap<CellName, AbsPath> rootCellMapping,
       Cells cells) {
+
+    try {
+      String cwd = System.getProperty("user.dir");
+      LOG.info("JVM current working directory: '%s'", (cwd != null ? cwd : ""));
+    } catch (SecurityException e) {
+      LOG.warn(
+          "Access denied to read current working directory, explanation: '%s'", e.getMessage());
+    }
+
     LOG.info("Project root: '%s'", projectRoot.toString());
     LOG.info("Project root real path: '%s'", projectRootRealPath.toString());
     LOG.info("Project root normalized real path: '%s'", projectRootNormalizedPath.toString());
