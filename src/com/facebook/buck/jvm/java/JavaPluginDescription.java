@@ -61,7 +61,12 @@ public class JavaPluginDescription implements DescriptionWithTargetGraph<JavaPlu
     propsBuilder.setSupportsAbiGenerationFromSource(args.isSupportsAbiGenerationFromSource());
     JavacPluginProperties properties = propsBuilder.build();
 
-    return new StandardJavacPlugin(buildTarget, context.getProjectFilesystem(), params, properties);
+    return new StandardJavacPlugin(
+        buildTarget,
+        context.getProjectFilesystem(),
+        params,
+        properties,
+        context.getActionGraphBuilder().getSourcePathResolver());
   }
 
   @RuleArg

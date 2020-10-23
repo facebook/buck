@@ -228,7 +228,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                     .map(
                         resolvedJavacPluginProperties ->
                             resolvedJavacPluginProperties.getJavacPluginJsr199Fields(
-                                buildContext.getSourcePathResolver()))
+                                buildContext.getSourcePathResolver(),
+                                projectFilesystem.getRootPath()))
                     .map(JavacPluginJsr199Fields::getClasspath)
                     .flatMap(List::stream)
                     .map(url -> AP_CLASSPATH_ARG + urlToFile(url))

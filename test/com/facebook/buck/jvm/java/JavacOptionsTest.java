@@ -24,7 +24,9 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -90,7 +92,7 @@ public class JavacOptionsTest {
         JavacPluginParams.builder()
             .setLegacyAnnotationProcessorNames(Collections.singleton("processor"))
             .setProcessOnly(true)
-            .build();
+            .build(new TestActionGraphBuilder().getSourcePathResolver(), filesystem.getRootPath());
 
     JavacOptions options = createStandardBuilder().setJavaAnnotationProcessorParams(params).build();
 
@@ -108,10 +110,16 @@ public class JavacOptionsTest {
             .addProcessorNames("ThePlugin")
             .build();
 
-    ResolvedJavacPluginProperties resolvedProps = new ResolvedJavacPluginProperties(props);
+    SourcePathResolverAdapter sourcePathResolver =
+        new TestActionGraphBuilder().getSourcePathResolver();
+    AbsPath rootPath = filesystem.getRootPath();
+    ResolvedJavacPluginProperties resolvedProps =
+        new ResolvedJavacPluginProperties(props, sourcePathResolver, rootPath);
 
     JavacPluginParams params =
-        JavacPluginParams.builder().addPluginProperties(resolvedProps).build();
+        JavacPluginParams.builder()
+            .addPluginProperties(resolvedProps)
+            .build(sourcePathResolver, rootPath);
 
     JavacOptions options = createStandardBuilder().setStandardJavacPluginParams(params).build();
 
@@ -142,10 +150,16 @@ public class JavacOptionsTest {
             .addProcessorNames("ThePlugin")
             .build();
 
-    ResolvedJavacPluginProperties resolvedProps = new ResolvedJavacPluginProperties(props);
+    SourcePathResolverAdapter sourcePathResolver =
+        new TestActionGraphBuilder().getSourcePathResolver();
+    AbsPath rootPath = filesystem.getRootPath();
+    ResolvedJavacPluginProperties resolvedProps =
+        new ResolvedJavacPluginProperties(props, sourcePathResolver, rootPath);
 
     JavacPluginParams params =
-        JavacPluginParams.builder().addPluginProperties(resolvedProps).build();
+        JavacPluginParams.builder()
+            .addPluginProperties(resolvedProps)
+            .build(sourcePathResolver, rootPath);
 
     JavacOptions options = createStandardBuilder().setStandardJavacPluginParams(params).build();
 
@@ -165,7 +179,7 @@ public class JavacOptionsTest {
         JavacPluginParams.builder()
             .setLegacyAnnotationProcessorNames(Lists.newArrayList("myproc", "theirproc"))
             .setProcessOnly(true)
-            .build();
+            .build(new TestActionGraphBuilder().getSourcePathResolver(), filesystem.getRootPath());
 
     JavacOptions options = createStandardBuilder().setJavaAnnotationProcessorParams(params).build();
 

@@ -84,6 +84,7 @@ public class GroovyLibraryDescription
                 .getJavacOptions(),
             buildTarget,
             graphBuilder,
+            projectFilesystem.getRootPath(),
             args);
     DefaultJavaLibraryRules defaultJavaLibraryRules =
         new DefaultJavaLibraryRules.Builder(

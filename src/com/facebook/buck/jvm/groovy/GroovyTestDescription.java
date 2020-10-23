@@ -105,6 +105,7 @@ public class GroovyTestDescription
                 .getJavacOptions(),
             buildTarget,
             graphBuilder,
+            projectFilesystem.getRootPath(),
             args);
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =

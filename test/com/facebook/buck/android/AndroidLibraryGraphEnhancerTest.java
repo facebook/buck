@@ -182,15 +182,19 @@ public class AndroidLibraryGraphEnhancerTest {
                 .setRes(FakeSourcePath.of("android_res/com/example/res2"))
                 .build());
 
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             buildTarget,
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             ImmutableSortedSet.of(resourceRule1, resourceRule2),
             DEFAULT_JAVAC,
             JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
                 .setJavaAnnotationProcessorParams(
-                    JavacPluginParams.builder().setProcessOnly(true).build())
+                    JavacPluginParams.builder()
+                        .setProcessOnly(true)
+                        .build(
+                            graphBuilder.getSourcePathResolver(), projectFilesystem.getRootPath()))
                 .setLanguageLevelOptions(
                     JavacLanguageLevelOptions.builder()
                         .setSourceLevel("7")

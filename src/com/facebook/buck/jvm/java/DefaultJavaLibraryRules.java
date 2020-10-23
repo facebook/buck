@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -49,7 +50,9 @@ import org.immutables.value.Value;
 
 @BuckStyleValueWithBuilder
 public abstract class DefaultJavaLibraryRules {
+
   public interface DefaultJavaLibraryConstructor {
+
     DefaultJavaLibrary newInstance(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
@@ -542,25 +545,30 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Lazy
-  CompileToJarStepFactory getConfiguredCompilerForSourceOnlyAbi() {
+  CompileToJarStepFactory getConfiguredCompilerForSourceOnlyAbi(
+      SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
     return getConfiguredCompilerFactory()
         .configure(
             getArgs(),
-            getJavacOptionsForSourceOnlyAbi(),
+            getJavacOptionsForSourceOnlyAbi(resolver, ruleCellRoot),
             getActionGraphBuilder(),
             getInitialBuildTarget().getTargetConfiguration(),
             getToolchainProvider());
   }
 
   @Value.Lazy
-  JavacOptions getJavacOptionsForSourceOnlyAbi() {
+  JavacOptions getJavacOptionsForSourceOnlyAbi(
+      SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
     JavacOptions javacOptions = getJavacOptions();
     return javacOptions.withJavaAnnotationProcessorParams(
-        abiProcessorsOnly(javacOptions.getJavaAnnotationProcessorParams()));
+        abiProcessorsOnly(javacOptions.getJavaAnnotationProcessorParams(), resolver, ruleCellRoot));
   }
 
-  private JavacPluginParams abiProcessorsOnly(JavacPluginParams annotationProcessingParams) {
-    return annotationProcessingParams.withAbiProcessorsOnly();
+  private JavacPluginParams abiProcessorsOnly(
+      JavacPluginParams annotationProcessingParams,
+      SourcePathResolverAdapter resolver,
+      AbsPath ruleCellRoot) {
+    return annotationProcessingParams.withAbiProcessorsOnly(resolver, ruleCellRoot);
   }
 
   @Value.Lazy
@@ -603,7 +611,8 @@ public abstract class DefaultJavaLibraryRules {
   JarBuildStepsFactory getJarBuildStepsFactoryForSourceOnlyAbi() {
     return new JarBuildStepsFactory(
         getLibraryTarget(),
-        getConfiguredCompilerForSourceOnlyAbi(),
+        getConfiguredCompilerForSourceOnlyAbi(
+            getSourcePathResolver(), getProjectFilesystem().getRootPath()),
         getSrcs(),
         getResources(),
         getResourcesParameters(),
@@ -662,6 +671,7 @@ public abstract class DefaultJavaLibraryRules {
 
   @org.immutables.builder.Builder.AccessibleFields
   public static class Builder extends ImmutableDefaultJavaLibraryRules.Builder {
+
     public Builder(
         BuildTarget initialBuildTarget,
         ProjectFilesystem projectFilesystem,

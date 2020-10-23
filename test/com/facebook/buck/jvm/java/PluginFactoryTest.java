@@ -19,9 +19,12 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavacPluginProperties.Type;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -47,6 +50,10 @@ public class PluginFactoryTest {
     ClassLoader baseClassLoader = SynchronizedToolProvider.getSystemToolClassLoader();
     ClassLoaderCache classLoaderCache = new ClassLoaderCache();
 
+    AbsPath rootPath = new FakeProjectFilesystem().getRootPath();
+
+    SourcePathResolverAdapter sourcePathResolver =
+        new TestActionGraphBuilder().getSourcePathResolver();
     ResolvedJavacPluginProperties controlPluginGroup =
         new ResolvedJavacPluginProperties(
             JavacPluginProperties.builder()
@@ -56,7 +63,9 @@ public class PluginFactoryTest {
                 .setCanReuseClassLoader(true) // control can always reuse
                 .setDoesNotAffectAbi(false)
                 .setSupportsAbiGenerationFromSource(false)
-                .build());
+                .build(),
+            sourcePathResolver,
+            rootPath);
 
     ResolvedJavacPluginProperties variablePluginGroup =
         new ResolvedJavacPluginProperties(
@@ -67,16 +76,16 @@ public class PluginFactoryTest {
                 .setCanReuseClassLoader(canReuseClasspath)
                 .setDoesNotAffectAbi(false)
                 .setSupportsAbiGenerationFromSource(false)
-                .build());
+                .build(),
+            sourcePathResolver,
+            rootPath);
 
     try (PluginFactory factory1 = new PluginFactory(baseClassLoader, classLoaderCache);
         PluginFactory factory2 = new PluginFactory(baseClassLoader, classLoaderCache)) {
       ImmutableList<JavacPluginJsr199Fields> pluginGroups =
           ImmutableList.of(
-              controlPluginGroup.getJavacPluginJsr199Fields(
-                  new TestActionGraphBuilder().getSourcePathResolver()),
-              variablePluginGroup.getJavacPluginJsr199Fields(
-                  new TestActionGraphBuilder().getSourcePathResolver()));
+              controlPluginGroup.getJavacPluginJsr199Fields(sourcePathResolver, rootPath),
+              variablePluginGroup.getJavacPluginJsr199Fields(sourcePathResolver, rootPath));
       ClassLoader classLoader1 = factory1.getClassLoaderForProcessorGroups(pluginGroups);
       ClassLoader classLoader2 = factory2.getClassLoaderForProcessorGroups(pluginGroups);
       return classLoader1 == classLoader2;

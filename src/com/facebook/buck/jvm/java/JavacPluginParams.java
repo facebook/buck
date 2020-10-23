@@ -18,9 +18,11 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JavacPluginProperties.Type.ANNOTATION_PROCESSOR;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -44,7 +46,7 @@ import org.immutables.value.Value;
 @BuckStyleValueWithBuilder
 public abstract class JavacPluginParams implements AddsToRuleKey {
 
-  public static final JavacPluginParams EMPTY = builder().build();
+  public static final JavacPluginParams EMPTY = builder().build(null, null);
 
   @AddToRuleKey
   public abstract ImmutableList<ResolvedJavacPluginProperties> getPluginProperties();
@@ -67,7 +69,9 @@ public abstract class JavacPluginParams implements AddsToRuleKey {
     return new Builder();
   }
 
-  public JavacPluginParams withAbiProcessorsOnly() {
+  /** Creates {@link JavacPluginParams} with ABI processors only */
+  public JavacPluginParams withAbiProcessorsOnly(
+      SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
     return JavacPluginParams.builder()
         .setPluginProperties(
             getPluginProperties().stream()
@@ -75,22 +79,24 @@ public abstract class JavacPluginParams implements AddsToRuleKey {
                 .collect(ImmutableList.toImmutableList()))
         .setParameters(getParameters())
         .setProcessOnly(getProcessOnly())
-        .build();
+        .build(resolver, ruleCellRoot);
   }
 
   /** A customized Builder for JavacPluginParams. */
   @org.immutables.builder.Builder.AccessibleFields
   public static class Builder extends ImmutableJavacPluginParams.Builder {
+
     private Set<String> legacyAnnotationProcessorNames = new LinkedHashSet<>();
     private List<BuildRule> legacyAnnotationProcessorDeps = new ArrayList<>();
 
-    private List<ResolvedJavacPluginProperties> resolveLegacyProcessors() {
+    private List<ResolvedJavacPluginProperties> resolveLegacyProcessors(
+        SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
       if (getLegacyProcessors().isEmpty()) {
         return ImmutableList.of();
       }
 
       return getLegacyProcessors().stream()
-          .map(JavacPluginProperties::resolve)
+          .map(jpp -> jpp.resolve(resolver, ruleCellRoot))
           .collect(ImmutableList.toImmutableList());
     }
 
@@ -117,10 +123,15 @@ public abstract class JavacPluginParams implements AddsToRuleKey {
       return resultBuilder.build();
     }
 
+    public JavacPluginParams build(SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
+      addAllPluginProperties(resolveLegacyProcessors(resolver, ruleCellRoot));
+      return super.build();
+    }
+
     @Override
     public JavacPluginParams build() {
-      addAllPluginProperties(resolveLegacyProcessors());
-      return super.build();
+      throw new UnsupportedOperationException(
+          "Use build method with SourcePathResolverAdapter and AbsPath as params");
     }
 
     public Builder setLegacyAnnotationProcessorNames(Collection<String> annotationProcessors) {

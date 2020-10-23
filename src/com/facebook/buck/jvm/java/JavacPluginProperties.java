@@ -17,12 +17,14 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -73,8 +75,9 @@ abstract class JavacPluginProperties implements AddsToRuleKey {
     return getProcessorNames().isEmpty() && getClasspathEntries().isEmpty();
   }
 
-  public ResolvedJavacPluginProperties resolve() {
-    return new ResolvedJavacPluginProperties(this);
+  public ResolvedJavacPluginProperties resolve(
+      SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
+    return new ResolvedJavacPluginProperties(this, resolver, ruleCellRoot);
   }
 
   public static Builder builder() {

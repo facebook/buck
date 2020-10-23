@@ -138,6 +138,7 @@ public class JavaLibraryDescription
                 .getJavacOptions(),
             buildTarget,
             graphBuilder,
+            projectFilesystem.getRootPath(),
             args);
 
     Optional<Flavor> inferFlavor = InferJava.findSupportedFlavor(flavors);

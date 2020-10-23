@@ -17,9 +17,13 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
+import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.modern.EmptyMemoizerDeserialization;
@@ -36,14 +40,22 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class ResolvedJavacPluginProperties implements AddsToRuleKey {
+
   @AddToRuleKey private final JavacPluginProperties inner;
 
   @CustomFieldBehavior(EmptyMemoizerDeserialization.class)
-  private final Memoizer<URL[]> classpathSupplier;
+  private final Memoizer<ImmutableList<RelPath>> classpathSupplier;
 
-  public ResolvedJavacPluginProperties(JavacPluginProperties inner) {
+  @ExcludeFromRuleKey(
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  private ImmutableList<RelPath> classpath;
+
+  public ResolvedJavacPluginProperties(
+      JavacPluginProperties inner, SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
     this.inner = inner;
     this.classpathSupplier = new Memoizer<>();
+    this.classpath = getClasspath(resolver, ruleCellRoot);
   }
 
   public boolean getCanReuseClassLoader() {
@@ -63,26 +75,23 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
   }
 
   /** Get the classpath for the plugin. */
-  public URL[] getClasspath(SourcePathResolverAdapter resolver) {
+  public ImmutableList<RelPath> getClasspath(SourcePathResolverAdapter resolver, AbsPath root) {
     return classpathSupplier.get(
         () ->
             inner.getClasspathEntries().stream()
                 .map(resolver::getAbsolutePath)
-                .map(AbsPath::toUri)
-                .map(
-                    uri -> {
-                      try {
-                        return uri.toURL();
-                      } catch (MalformedURLException e) {
-                        // The paths we're being given should have all been resolved from the
-                        // file
-                        // system already. We'd need to be unfortunate to get here. Bubble up a
-                        // runtime
-                        // exception.
-                        throw new RuntimeException(e);
-                      }
-                    })
-                .toArray(size -> new URL[size]));
+                .map(root::relativize)
+                .collect(ImmutableList.toImmutableList()));
+  }
+
+  private URL toUrl(AbsPath absPath) {
+    try {
+      return absPath.toUri().toURL();
+    } catch (MalformedURLException e) {
+      // The paths we're being given should have all been resolved from the file system already.
+      // We'd need to be unfortunate to get here. Bubble up a runtime exception.
+      throw new RuntimeException(e);
+    }
   }
 
   public ImmutableSortedSet<SourcePath> getInputs() {
@@ -90,18 +99,18 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
   }
 
   /** Get the javac plugin fields. */
-  public JavacPluginJsr199Fields getJavacPluginJsr199Fields(SourcePathResolverAdapter resolver) {
+  public JavacPluginJsr199Fields getJavacPluginJsr199Fields(
+      SourcePathResolverAdapter resolver, AbsPath root) {
     return ImmutableJavacPluginJsr199Fields.ofImpl(
         getCanReuseClassLoader(),
         getProcessorNames(),
-        ImmutableList.copyOf(getClasspath(resolver)));
+        ImmutableList.copyOf(toURLArray(getClasspath(resolver, root), root)));
   }
 
   public static String getJoinedClasspath(
-      SourcePathResolverAdapter resolver,
-      ImmutableList<ResolvedJavacPluginProperties> resolvedProperties) {
+      ImmutableList<ResolvedJavacPluginProperties> resolvedProperties, AbsPath root) {
     return resolvedProperties.stream()
-        .map(properties -> properties.getClasspath(resolver))
+        .map(p -> p.toURLArray(p.classpath, root))
         .flatMap(Arrays::stream)
         .distinct()
         .map(
@@ -115,5 +124,14 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
         .map(Paths::get)
         .map(Path::toString)
         .collect(Collectors.joining(File.pathSeparator));
+  }
+
+  /** Get the classpath for the plugin. */
+  private URL[] toURLArray(ImmutableList<RelPath> classpath, AbsPath root) {
+    return classpath.stream()
+        .map(root::resolve)
+        .map(AbsPath::normalize)
+        .map(this::toUrl)
+        .toArray(size -> new URL[size]);
   }
 }

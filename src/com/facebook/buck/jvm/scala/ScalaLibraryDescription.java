@@ -134,6 +134,7 @@ public class ScalaLibraryDescription
                 .getJavacOptions(),
             buildTarget,
             context.getActionGraphBuilder(),
+            projectFilesystem.getRootPath(),
             args);
 
     DefaultJavaLibraryRules scalaLibraryBuilder =

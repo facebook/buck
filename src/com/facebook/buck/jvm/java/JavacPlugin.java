@@ -20,9 +20,11 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 
 abstract class JavacPlugin extends NoopBuildRuleWithDeclaredAndExtraDeps {
+
   @AddToRuleKey private final JavacPluginProperties properties;
   private final ResolvedJavacPluginProperties resolvedProperties;
 
@@ -30,10 +32,12 @@ abstract class JavacPlugin extends NoopBuildRuleWithDeclaredAndExtraDeps {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      JavacPluginProperties properties) {
+      JavacPluginProperties properties,
+      SourcePathResolverAdapter resolver) {
     super(buildTarget, projectFilesystem, params);
     this.properties = properties;
-    this.resolvedProperties = new ResolvedJavacPluginProperties(properties);
+    this.resolvedProperties =
+        new ResolvedJavacPluginProperties(properties, resolver, projectFilesystem.getRootPath());
   }
 
   public JavacPluginProperties getUnresolvedProperties() {

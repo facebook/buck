@@ -17,14 +17,17 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 
 public final class JavacOptionsFactory {
+
   public static JavacOptions create(
       JavacOptions defaultOptions,
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
+      AbsPath ruleCellRoot,
       JvmLibraryArg jvmLibraryArg) {
     if ((jvmLibraryArg.getSource().isPresent() || jvmLibraryArg.getTarget().isPresent())
         && jvmLibraryArg.getJavaVersion().isPresent()) {
@@ -58,11 +61,11 @@ public final class JavacOptionsFactory {
     builder.addAllExtraArguments(jvmLibraryArg.getExtraArguments());
 
     JavacPluginParams annotationParams =
-        jvmLibraryArg.buildJavaAnnotationProcessorParams(buildTarget, resolver);
+        jvmLibraryArg.buildJavaAnnotationProcessorParams(buildTarget, resolver, ruleCellRoot);
     builder.setJavaAnnotationProcessorParams(annotationParams);
 
     JavacPluginParams standardJavacPluginsParams =
-        jvmLibraryArg.buildStandardJavacParams(buildTarget, resolver);
+        jvmLibraryArg.buildStandardJavacParams(buildTarget, resolver, ruleCellRoot);
     builder.setStandardJavacPluginParams(standardJavacPluginsParams);
 
     return builder.build();

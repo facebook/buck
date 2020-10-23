@@ -178,6 +178,7 @@ public class RobolectricTestDescription
             defaultJavacOptions.getUnchecked(buildTarget.getTargetConfiguration()),
             buildTarget,
             graphBuilder,
+            projectFilesystem.getRootPath(),
             args);
 
     AndroidLibraryGraphEnhancer graphEnhancer =

@@ -115,6 +115,7 @@ public class KotlinTestDescription
             defaultJavacOptions.getUnchecked(buildTarget.getTargetConfiguration()),
             buildTarget,
             graphBuilder,
+            projectFilesystem.getRootPath(),
             args);
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =

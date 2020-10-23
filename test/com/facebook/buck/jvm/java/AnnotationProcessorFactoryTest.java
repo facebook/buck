@@ -19,11 +19,14 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavacPluginProperties.Type;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -31,6 +34,7 @@ import java.io.IOException;
 import org.junit.Test;
 
 public class AnnotationProcessorFactoryTest {
+
   @Test
   public void testAnnotationProcessorClassloadersNotReusedIfMarkedUnsafe() {
     assertFalse(
@@ -53,6 +57,9 @@ public class AnnotationProcessorFactoryTest {
     ClassLoader baseClassLoader = SynchronizedToolProvider.getSystemToolClassLoader();
     ClassLoaderCache classLoaderCache = new ClassLoaderCache();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:test");
+    SourcePathResolverAdapter sourcePathResolver =
+        new TestActionGraphBuilder().getSourcePathResolver();
+    AbsPath rootPath = new FakeProjectFilesystem().getRootPath();
     ResolvedJavacPluginProperties processorGroup =
         new ResolvedJavacPluginProperties(
             JavacPluginProperties.builder()
@@ -62,15 +69,16 @@ public class AnnotationProcessorFactoryTest {
                 .setCanReuseClassLoader(canReuseClasspath)
                 .setDoesNotAffectAbi(false)
                 .setSupportsAbiGenerationFromSource(false)
-                .build());
+                .build(),
+            sourcePathResolver,
+            rootPath);
 
     try (AnnotationProcessorFactory factory1 =
             new AnnotationProcessorFactory(null, baseClassLoader, classLoaderCache, buildTarget);
         AnnotationProcessorFactory factory2 =
             new AnnotationProcessorFactory(null, baseClassLoader, classLoaderCache, buildTarget)) {
       JavacPluginJsr199Fields fields =
-          processorGroup.getJavacPluginJsr199Fields(
-              new TestActionGraphBuilder().getSourcePathResolver());
+          processorGroup.getJavacPluginJsr199Fields(sourcePathResolver, rootPath);
       ClassLoader classLoader1 = factory1.getClassLoaderForProcessorGroup(fields);
       ClassLoader classLoader2 = factory2.getClassLoaderForProcessorGroup(fields);
       return classLoader1 == classLoader2;

@@ -146,6 +146,7 @@ public class JavaTestDescription
                 .getJavacOptions(),
             buildTarget,
             graphBuilder,
+            projectFilesystem.getRootPath(),
             args);
 
     CxxLibraryEnhancement cxxLibraryEnhancement =

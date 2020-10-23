@@ -1642,7 +1642,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       propsBuilder.setSupportsAbiGenerationFromSource(true);
       propsBuilder.setType(Type.ANNOTATION_PROCESSOR);
 
-      annotationProcessorParams.addPluginProperties(propsBuilder.build().resolve());
+      annotationProcessorParams.addPluginProperties(
+          propsBuilder
+              .build()
+              .resolve(graphBuilder.getSourcePathResolver(), AbsPath.get(tmp.getRoot().getPath())));
     }
 
     public void addAnnotationProcessorTarget(
@@ -1663,7 +1666,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       propsBuilder.setSupportsAbiGenerationFromSource(true);
       propsBuilder.setType(Type.JAVAC_PLUGIN);
 
-      standardJavacPluginParams.addPluginProperties(propsBuilder.build().resolve());
+      standardJavacPluginParams.addPluginProperties(
+          propsBuilder
+              .build()
+              .resolve(graphBuilder.getSourcePathResolver(), AbsPath.get(tmp.getRoot().getPath())));
     }
 
     public ImmutableList<String> buildAndGetCompileParameters()
@@ -1699,10 +1705,14 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       String src = "android/java/src/com/facebook/Main.java";
       tmp.newFile(src);
 
+      SourcePathResolverAdapter sourcePathResolver = graphBuilder.getSourcePathResolver();
+      AbsPath root = AbsPath.get(tmp.getRoot().getPath());
       JavacOptions options =
           JavacOptions.builder(DEFAULT_JAVAC_OPTIONS)
-              .setJavaAnnotationProcessorParams(annotationProcessorParams.build())
-              .setStandardJavacPluginParams(standardJavacPluginParams.build())
+              .setJavaAnnotationProcessorParams(
+                  annotationProcessorParams.build(sourcePathResolver, root))
+              .setStandardJavacPluginParams(
+                  standardJavacPluginParams.build(sourcePathResolver, root))
               .build();
 
       BuildRuleParams buildRuleParams = TestBuildRuleParams.create();

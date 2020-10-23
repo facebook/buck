@@ -136,6 +136,7 @@ public class AndroidLibraryDescription
                 .getJavacOptions(),
             buildTarget,
             context.getActionGraphBuilder(),
+            projectFilesystem.getRootPath(),
             args);
     ConfiguredCompilerFactory compilerFactory =
         this.compilerFactory.getCompiler(

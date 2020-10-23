@@ -141,6 +141,7 @@ public class KotlinLibraryDescription
                 .getJavacOptions(),
             buildTarget,
             graphBuilder,
+            projectFilesystem.getRootPath(),
             args);
 
     DefaultJavaLibraryRules defaultKotlinLibraryBuilder =

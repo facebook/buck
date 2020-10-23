@@ -131,17 +131,21 @@ public abstract class JavacOptions implements AddsToRuleKey {
     return false;
   }
 
+  /** Validates classpath options */
   public void validateOptions(Function<String, Boolean> classpathChecker) throws IOException {
-    if (getBootclasspath().isPresent()) {
-      String bootclasspath = getBootclasspath().get();
-      try {
-        if (!classpathChecker.apply(bootclasspath)) {
-          throw new IOException(
-              String.format("Bootstrap classpath %s contains no valid entries", bootclasspath));
-        }
-      } catch (UncheckedIOException e) {
-        throw e.getCause();
+    Optional<String> bootclasspath = getBootclasspath();
+    if (!bootclasspath.isPresent()) {
+      return;
+    }
+    String bootClasspath = bootclasspath.get();
+
+    try {
+      if (!classpathChecker.apply(bootClasspath)) {
+        throw new IOException(
+            String.format("Bootstrap classpath %s contains no valid entries", bootClasspath));
       }
+    } catch (UncheckedIOException e) {
+      throw e.getCause();
     }
   }
 
@@ -206,49 +210,66 @@ public abstract class JavacOptions implements AddsToRuleKey {
   }
 
   public void appendOptionsTo(
+      OptionsConsumer optionsConsumer, SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
+    ImmutableList<PathSourcePath> bootclasspath =
+        getSourceToBootclasspath().get(getLanguageLevelOptions().getSourceLevel());
+    Optional<List<AbsPath>> bootclasspathList = Optional.empty();
+    if (bootclasspath != null) {
+      bootclasspathList =
+          Optional.of(
+              bootclasspath.stream().map(resolver::getAbsolutePath).collect(Collectors.toList()));
+    }
+
+    appendOptionsTo(
+        ruleCellRoot,
+        optionsConsumer,
+        getBootclasspathString(ruleCellRoot, getBootclasspath(), bootclasspathList),
+        getLanguageLevelOptions(),
+        isDebug(),
+        isVerbose(),
+        getJavaAnnotationProcessorParams(),
+        getStandardJavacPluginParams(),
+        getExtraArguments());
+  }
+
+  private static void appendOptionsTo(
+      AbsPath ruleCellRoot,
       OptionsConsumer optionsConsumer,
-      SourcePathResolverAdapter pathResolver,
-      AbsPath ruleCellRoot) {
+      String bootclasspathString,
+      JavacLanguageLevelOptions languageLevelOptions,
+      boolean isDebug,
+      boolean isVerbose,
+      JavacPluginParams javaAnnotationProcessorParams,
+      JavacPluginParams standardJavacPluginParams,
+      List<String> extraArguments) {
 
     // Add some standard options.
-    optionsConsumer.addOptionValue("source", getLanguageLevelOptions().getSourceLevel());
-    optionsConsumer.addOptionValue("target", getLanguageLevelOptions().getTargetLevel());
+    String sourceLevel = languageLevelOptions.getSourceLevel();
+    optionsConsumer.addOptionValue("source", sourceLevel);
+    optionsConsumer.addOptionValue("target", languageLevelOptions.getTargetLevel());
 
     // Set the sourcepath to stop us reading source files out of jars by mistake.
     optionsConsumer.addOptionValue("sourcepath", "");
 
-    if (isDebug()) {
+    if (isDebug) {
       optionsConsumer.addFlag("g");
     }
 
-    if (isVerbose()) {
+    if (isVerbose) {
       optionsConsumer.addFlag("verbose");
     }
 
     // Override the bootclasspath if Buck is building Java code for Android.
-    if (getBootclasspath().isPresent()) {
-      optionsConsumer.addOptionValue("bootclasspath", getBootclasspath().get());
-    } else {
-      ImmutableList<PathSourcePath> bootclasspath =
-          getSourceToBootclasspath().get(getLanguageLevelOptions().getSourceLevel());
-      if (bootclasspath != null) {
-        String bcp =
-            bootclasspath.stream()
-                .map(pathResolver::getAbsolutePath)
-                .map(ruleCellRoot::relativize)
-                .map(RelPath::toString)
-                .collect(Collectors.joining(File.pathSeparator));
-        optionsConsumer.addOptionValue("bootclasspath", bcp);
-      }
+    if (bootclasspathString != null) {
+      optionsConsumer.addOptionValue("bootclasspath", bootclasspathString);
     }
 
     ImmutableList.Builder<ResolvedJavacPluginProperties> allPluginsBuilder =
         ImmutableList.builder();
     // Add annotation processors.
-    JavacPluginParams annotationProcessingParams = getJavaAnnotationProcessorParams();
-    if (!annotationProcessingParams.isEmpty()) {
+    if (!javaAnnotationProcessorParams.isEmpty()) {
       ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
-          annotationProcessingParams.getPluginProperties();
+          javaAnnotationProcessorParams.getPluginProperties();
       allPluginsBuilder.addAll(annotationProcessors);
 
       // Specify names of processors.
@@ -260,11 +281,11 @@ public abstract class JavacOptions implements AddsToRuleKey {
               .collect(Collectors.joining(",")));
 
       // Add processor parameters.
-      for (String parameter : annotationProcessingParams.getParameters()) {
+      for (String parameter : javaAnnotationProcessorParams.getParameters()) {
         optionsConsumer.addFlag("A" + parameter);
       }
 
-      if (annotationProcessingParams.getProcessOnly()) {
+      if (javaAnnotationProcessorParams.getProcessOnly()) {
         optionsConsumer.addFlag("proc:only");
       }
     } else {
@@ -272,7 +293,6 @@ public abstract class JavacOptions implements AddsToRuleKey {
       optionsConsumer.addFlag("proc:none");
     }
 
-    JavacPluginParams standardJavacPluginParams = getStandardJavacPluginParams();
     if (!standardJavacPluginParams.isEmpty()) {
       ImmutableList<ResolvedJavacPluginProperties> javacPlugins =
           standardJavacPluginParams.getPluginProperties();
@@ -291,11 +311,31 @@ public abstract class JavacOptions implements AddsToRuleKey {
     if (!allPlugins.isEmpty()) {
       optionsConsumer.addOptionValue(
           "processorpath",
-          ResolvedJavacPluginProperties.getJoinedClasspath(pathResolver, allPlugins));
+          ResolvedJavacPluginProperties.getJoinedClasspath(allPlugins, ruleCellRoot));
     }
 
     // Add extra arguments.
-    optionsConsumer.addExtras(getExtraArguments());
+    optionsConsumer.addExtras(extraArguments);
+  }
+
+  private static String getBootclasspathString(
+      AbsPath ruleCellRoot,
+      Optional<String> bootclasspathOptional,
+      Optional<List<AbsPath>> bootclasspathList) {
+    if (bootclasspathOptional.isPresent()) {
+      return bootclasspathOptional.get();
+    }
+
+    if (bootclasspathList.isPresent()) {
+      return bootclasspathList.get().stream()
+          .map(AbsPath::getPath)
+          .map(ruleCellRoot::resolve)
+          .map(ruleCellRoot::relativize)
+          .map(RelPath::toString)
+          .collect(Collectors.joining(File.pathSeparator));
+    }
+
+    return null;
   }
 
   static JavacOptions.Builder builderForUseInJavaBuckConfig() {

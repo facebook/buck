@@ -121,6 +121,7 @@ public class ScalaTestDescription
                 .getJavacOptions(),
             buildTarget,
             graphBuilder,
+            projectFilesystem.getRootPath(),
             args);
 
     CellPathResolver cellRoots = context.getCellPathResolver();

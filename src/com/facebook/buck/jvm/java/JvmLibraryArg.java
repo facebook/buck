@@ -21,6 +21,7 @@ import static com.facebook.buck.jvm.java.JavacPluginProperties.Type.JAVAC_PLUGIN
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -44,6 +45,7 @@ import org.immutables.value.Value;
 
 /** JVM library rule constructor arg */
 public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyAbiArg {
+
   Optional<String> getSource();
 
   Optional<String> getTarget();
@@ -174,7 +176,7 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
 
   @Value.Derived
   default JavacPluginParams buildStandardJavacParams(
-      BuildTarget owner, BuildRuleResolver resolver) {
+      BuildTarget owner, BuildRuleResolver resolver, AbsPath ruleCellRoot) {
 
     if (getPluginsOf(resolver, JAVAC_PLUGIN).isEmpty()) {
       return JavacPluginParams.EMPTY;
@@ -185,7 +187,7 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
     for (String processorParam : getJavaPluginParams()) {
       builder.addParameters(processorParam);
     }
-    return builder.build();
+    return builder.build(resolver.getSourcePathResolver(), ruleCellRoot);
   }
 
   default void addLegacyProcessors(JavacPluginParams.Builder builder, BuildRuleResolver resolver) {
@@ -199,7 +201,7 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
 
   @Value.Derived
   default JavacPluginParams buildJavaAnnotationProcessorParams(
-      BuildTarget owner, BuildRuleResolver resolver) {
+      BuildTarget owner, BuildRuleResolver resolver, AbsPath ruleCellRoot) {
     if (getAnnotationProcessors().isEmpty()
         && getAnnotationProcessorDeps().isEmpty()
         && getPluginsOf(resolver, ANNOTATION_PROCESSOR).isEmpty()) {
@@ -214,6 +216,6 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
     }
     builder.setProcessOnly(getAnnotationProcessorOnly().orElse(Boolean.FALSE));
 
-    return builder.build();
+    return builder.build(resolver.getSourcePathResolver(), ruleCellRoot);
   }
 }

@@ -53,6 +53,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class JvmLibraryArgInterpreterTest {
+
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private JavacOptions defaults;
   private ActionGraphBuilder graphBuilder;
@@ -255,7 +256,7 @@ public class JvmLibraryArgInterpreterTest {
 
   private JavacOptions createJavacOptions(JvmLibraryArg arg) {
     return JavacOptionsFactory.create(
-        defaults, BuildTargetFactory.newInstance("//not:real"), graphBuilder, arg);
+        defaults, BuildTargetFactory.newInstance("//not:real"), graphBuilder, tmp.getRoot(), arg);
   }
 
   @RuleArg

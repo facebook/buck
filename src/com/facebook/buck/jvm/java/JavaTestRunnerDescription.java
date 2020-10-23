@@ -86,6 +86,7 @@ public class JavaTestRunnerDescription
                 .getJavacOptions(),
             buildTarget,
             graphBuilder,
+            projectFilesystem.getRootPath(),
             args);
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =

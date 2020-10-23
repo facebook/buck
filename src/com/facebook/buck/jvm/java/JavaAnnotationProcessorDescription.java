@@ -36,6 +36,7 @@ import java.util.Optional;
 public class JavaAnnotationProcessorDescription
     implements DescriptionWithTargetGraph<JavaAnnotationProcessorDescriptionArg>,
         VersionPropagator<JavaAnnotationProcessorDescriptionArg> {
+
   @Override
   public Class<JavaAnnotationProcessorDescriptionArg> getConstructorArgType() {
     return JavaAnnotationProcessorDescriptionArg.class;
@@ -80,7 +81,11 @@ public class JavaAnnotationProcessorDescription
     JavacPluginProperties properties = propsBuilder.build();
 
     return new JavaAnnotationProcessor(
-        buildTarget, context.getProjectFilesystem(), params, properties);
+        buildTarget,
+        context.getProjectFilesystem(),
+        params,
+        properties,
+        context.getActionGraphBuilder().getSourcePathResolver());
   }
 
   @RuleArg
