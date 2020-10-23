@@ -44,6 +44,7 @@ import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.ClosedChannelException;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -100,7 +101,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
           new SynchronousQueue<>(),
           new MostExecutors.NamedThreadFactory("DownwardApi"));
 
-  private static final long SHUTDOWN_TIMEOUT = 1;
+  private static final long SHUTDOWN_TIMEOUT = 2;
   private static final TimeUnit SHUTDOWN_TIMEOUT_UNIT = TimeUnit.SECONDS;
 
   private final String isAnsiTerminal;
@@ -160,9 +161,31 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
         LOG.warn(e.getCause(), "Exception while cancelling named pipe events processing.");
       } catch (TimeoutException e) {
         LOG.error(
-            "Cannot shutdown downward api reader handler for named pipe: %s", namedPipe.getName());
+            "Cannot shutdown downward api reader handler for named pipe: '%s'. Timeout: %s",
+            namedPipe.getName(), humanReadableFormat(SHUTDOWN_TIMEOUT_UNIT, SHUTDOWN_TIMEOUT));
         readerThreadTerminated = false;
       }
+    }
+
+    /**
+     * Converts {@link TimeUnit} and {@code duration} into a human readable format.
+     *
+     * <p>The result will look like:
+     *
+     * <ul>
+     *   <li>5h
+     *   <li>7h 15m
+     *   <li>6h 50m 15s
+     *   <li>2h 5s
+     *   <li>0.1s
+     * </ul>
+     */
+    private static String humanReadableFormat(TimeUnit timeUnit, long duration) {
+      return Duration.ofMillis(timeUnit.toMillis(duration))
+          .toString()
+          .substring(2)
+          .replaceAll("(\\d[HMS])(?!$)", "$1 ")
+          .toLowerCase();
     }
 
     private void closeNamedPipe() {
