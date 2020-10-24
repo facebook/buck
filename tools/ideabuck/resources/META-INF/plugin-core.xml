@@ -81,6 +81,8 @@
       implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckBuildConfigurationType"/>
     <configurationType
       implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckRunConfigurationType"/>
+    <configurationType
+      implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckInstallConfigurationType"/>
     <programRunner
       implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckProgramRunner"/>
     <psi.referenceContributor implementation="com.facebook.buck.intellij.ideabuck.lang.BuckIdentifierReferenceContributor"/>
