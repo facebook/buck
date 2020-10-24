@@ -37,7 +37,7 @@ public class BuckInstallConfiguration
   @NotNull
   @Override
   public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
-    return null;
+    return new BuckInstallConfigurationEditor(getProject());
   }
 
   @Nullable
