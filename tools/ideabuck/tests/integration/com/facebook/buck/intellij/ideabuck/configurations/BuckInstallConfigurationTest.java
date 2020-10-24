@@ -33,6 +33,7 @@ public class BuckInstallConfigurationTest extends BuckTestCase {
     cfg.data.targets = "//src/com/facebook/buck:test";
     cfg.data.activitySetting = "Specify Activity";
     cfg.data.activityClass = "com.facebook.katana.activity.FbMainTabActivity";
+    cfg.data.processName = "com.facebook.wakizashi";
     cfg.data.additionalParams = "--num-threads 239";
     cfg.data.buckExecutablePath = "foo/bar/buck";
     final Element testElement = new Element("test_element");
@@ -44,6 +45,7 @@ public class BuckInstallConfigurationTest extends BuckTestCase {
     Assert.assertEquals("//src/com/facebook/buck:test", cfg2.data.targets);
     Assert.assertEquals("Specify Activity", cfg2.data.activitySetting);
     Assert.assertEquals("com.facebook.katana.activity.FbMainTabActivity", cfg2.data.activityClass);
+    Assert.assertEquals("com.facebook.wakizashi", cfg2.data.processName);
     Assert.assertEquals("--num-threads 239", cfg2.data.additionalParams);
     Assert.assertEquals("foo/bar/buck", cfg2.data.buckExecutablePath);
   }

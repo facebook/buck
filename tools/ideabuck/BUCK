@@ -43,6 +43,7 @@ kotlin_library(
     name = "ideabuck-lib",
     srcs = PLUGIN_SOURCE_FILES,
     provided_deps = [
+        "//third-party/java/android:ddmlib",
         "//third-party/java/intellij:intellij-plugin-sdk",
         "//third-party/java/kotlin:kotlin-compiler",
         "//third-party/java/kotlin:kotlin-plugin",

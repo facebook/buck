@@ -20,6 +20,7 @@ import com.facebook.buck.intellij.ideabuck.config.BuckExecutableSettingsProvider
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.RunProfile;
 import com.intellij.execution.configurations.RunProfileState;
+import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.DefaultProgramRunner;
 import com.intellij.execution.runners.ExecutionEnvironment;
@@ -63,6 +64,7 @@ public class BuckProgramRunner extends DefaultProgramRunner {
         || (profile instanceof BuckRunConfiguration
             && executorId.equals(DefaultRunExecutor.EXECUTOR_ID))
         || (profile instanceof BuckInstallConfiguration
-            && executorId.equals(DefaultRunExecutor.EXECUTOR_ID));
+            && (executorId.equals(DefaultRunExecutor.EXECUTOR_ID)
+                || executorId.equals(DefaultDebugExecutor.EXECUTOR_ID)));
   }
 }

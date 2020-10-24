@@ -19,16 +19,20 @@ package com.facebook.buck.intellij.ideabuck.configurations;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
+import com.facebook.buck.intellij.ideabuck.debug.BuckAndroidDebuggerUtil;
 import com.intellij.execution.DefaultExecutionResult;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.Executor;
+import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.process.OSProcessHandler;
+import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,14 +47,14 @@ class BuckInstallExecutionState extends AbstractExecutionState<BuckInstallConfig
   @Override
   public ExecutionResult execute(Executor executor, @NotNull ProgramRunner runner)
       throws ExecutionException {
-    ProcessHandler processHandler = runBuildCommand();
+    ProcessHandler processHandler = runBuildCommand(executor);
     ConsoleView console =
         TextConsoleBuilderFactory.getInstance().createBuilder(mProject).getConsole();
     console.attachToProcess(processHandler);
     return new DefaultExecutionResult(console, processHandler, AnAction.EMPTY_ARRAY);
   }
 
-  private ProcessHandler runBuildCommand() {
+  private ProcessHandler runBuildCommand(Executor executor) {
     BuckModule buckModule = mProject.getComponent(BuckModule.class);
     String targets = mConfiguration.data.targets;
     String additionalParams = mConfiguration.data.additionalParams;
@@ -64,7 +68,16 @@ class BuckInstallExecutionState extends AbstractExecutionState<BuckInstallConfig
 
     BuckBuildCommandHandler handler =
         new BuckBuildCommandHandler(
-            mProject, BuckCommand.INSTALL, /* doStartNotify */ false, buckExecutablePath);
+            mProject, BuckCommand.INSTALL, /* doStartNotify */ false, buckExecutablePath) {
+          @Override
+          protected void processTerminated(ProcessEvent event) {
+            if (processExitSuccesfull()
+                && executor.getId().equals(DefaultDebugExecutor.EXECUTOR_ID)) {
+              ApplicationManager.getApplication()
+                  .invokeLater(() -> BuckAndroidDebuggerUtil.getClientAndAttachDebugger(mProject));
+            }
+          }
+        };
     if (!targets.isEmpty()) {
       handler.command().addParameters(parseParamsIntoList(targets));
     }
@@ -75,6 +88,9 @@ class BuckInstallExecutionState extends AbstractExecutionState<BuckInstallConfig
       handler.command().addParameter("-r");
     } else if (activitySetting.equals(BuckInstallConfigurationEditor.ACTIVITY_SPECIFIED)) {
       handler.command().addParameters("-a", activityClass);
+    }
+    if (executor.getId().equals(DefaultDebugExecutor.EXECUTOR_ID)) {
+      handler.command().addParameter("-w");
     }
     handler.start();
     OSProcessHandler result = handler.getHandler();
