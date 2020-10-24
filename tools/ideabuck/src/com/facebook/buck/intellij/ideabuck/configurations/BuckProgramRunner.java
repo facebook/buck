@@ -61,6 +61,8 @@ public class BuckProgramRunner extends DefaultProgramRunner {
         || (profile instanceof BuckBuildConfiguration
             && executorId.equals(DefaultRunExecutor.EXECUTOR_ID))
         || (profile instanceof BuckRunConfiguration
+            && executorId.equals(DefaultRunExecutor.EXECUTOR_ID))
+        || (profile instanceof BuckInstallConfiguration
             && executorId.equals(DefaultRunExecutor.EXECUTOR_ID));
   }
 }

@@ -44,7 +44,7 @@ public class BuckInstallConfiguration
   @Override
   public RunProfileState getState(
       @NotNull Executor executor, @NotNull ExecutionEnvironment environment) {
-    return null;
+    return isBuckBuilding() ? null : new BuckInstallExecutionState(this, getProject());
   }
 
   @Override

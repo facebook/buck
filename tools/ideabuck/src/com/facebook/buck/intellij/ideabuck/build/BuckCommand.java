@@ -26,8 +26,9 @@ public class BuckCommand {
   public static final BuckCommand BUILD_V_0 =
       new BuckCommand("build", VERBOSITY_TAG, VERBOSITY_LEVEL);
   public static final BuckCommand BUILD = new BuckCommand("build");
-  public static final BuckCommand INSTALL =
+  public static final BuckCommand INSTALL_V_0 =
       new BuckCommand("install", VERBOSITY_TAG, VERBOSITY_LEVEL);
+  public static final BuckCommand INSTALL = new BuckCommand("install");
   public static final BuckCommand KILL = new BuckCommand("kill");
   public static final BuckCommand TEST = new BuckCommand("test", VERBOSITY_TAG, VERBOSITY_LEVEL);
   public static final BuckCommand UNINSTALL =
