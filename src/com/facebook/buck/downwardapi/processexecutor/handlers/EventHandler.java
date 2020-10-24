@@ -46,6 +46,7 @@ public interface EventHandler<T extends AbstractMessage> {
       case CHROME_TRACE_EVENT:
         return (EventHandler<T>) ChromeTraceEventHandler.INSTANCE;
 
+      case END_EVENT:
       case UNKNOWN:
       case UNRECOGNIZED:
       default:

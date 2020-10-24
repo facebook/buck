@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downward.model.ConsoleEvent;
+import com.facebook.buck.downward.model.EndEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.StepEvent;
@@ -98,6 +99,8 @@ enum JsonDownwardProtocol implements DownwardProtocol {
         return StepEvent.newBuilder();
       case CHROME_TRACE_EVENT:
         return ChromeTraceEvent.newBuilder();
+      case END_EVENT:
+        return EndEvent.newBuilder();
 
       case UNKNOWN:
       case UNRECOGNIZED:

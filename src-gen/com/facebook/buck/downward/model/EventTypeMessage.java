@@ -107,6 +107,10 @@ private static final long serialVersionUID = 0L;
      * <code>STEP_EVENT = 4;</code>
      */
     STEP_EVENT(4),
+    /**
+     * <code>END_EVENT = 100;</code>
+     */
+    END_EVENT(100),
     UNRECOGNIZED(-1),
     ;
 
@@ -130,6 +134,10 @@ private static final long serialVersionUID = 0L;
      * <code>STEP_EVENT = 4;</code>
      */
     public static final int STEP_EVENT_VALUE = 4;
+    /**
+     * <code>END_EVENT = 100;</code>
+     */
+    public static final int END_EVENT_VALUE = 100;
 
 
     public final int getNumber() {
@@ -155,6 +163,7 @@ private static final long serialVersionUID = 0L;
         case 2: return LOG_EVENT;
         case 3: return CHROME_TRACE_EVENT;
         case 4: return STEP_EVENT;
+        case 100: return END_EVENT;
         default: return null;
       }
     }

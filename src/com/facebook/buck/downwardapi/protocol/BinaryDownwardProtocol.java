@@ -18,6 +18,7 @@ package com.facebook.buck.downwardapi.protocol;
 
 import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downward.model.ConsoleEvent;
+import com.facebook.buck.downward.model.EndEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.StepEvent;
@@ -81,6 +82,8 @@ enum BinaryDownwardProtocol implements DownwardProtocol {
         return StepEvent.parseDelimitedFrom(inputStream);
       case CHROME_TRACE_EVENT:
         return ChromeTraceEvent.parseDelimitedFrom(inputStream);
+      case END_EVENT:
+        return EndEvent.parseDelimitedFrom(inputStream);
 
       case UNKNOWN:
       case UNRECOGNIZED:

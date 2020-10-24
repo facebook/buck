@@ -70,6 +70,7 @@ message EventTypeMessage {
         LOG_EVENT = 2;
         CHROME_TRACE_EVENT = 3;
         STEP_EVENT = 4;
+        END_EVENT = 100;
     }
 }
 
@@ -130,3 +131,6 @@ message ChromeTraceEvent {
         END = 2;
     }
 }
+
+// Empty event to indicate end of downward APi protocol
+message EndEvent {}
