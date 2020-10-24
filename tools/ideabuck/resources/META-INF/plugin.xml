@@ -274,6 +274,7 @@
 
   <depends>com.intellij.modules.platform</depends>
   <depends>com.intellij.modules.lang</depends>
+  <depends optional="true" config-file="plugin-android.xml">org.jetbrains.android</depends>
   <depends optional="true" config-file="plugin-kotlin.xml">org.jetbrains.kotlin</depends>
 
   <xi:include href="/META-INF/plugin-core.xml" xpointer="xpointer(/idea-plugin/*)" />

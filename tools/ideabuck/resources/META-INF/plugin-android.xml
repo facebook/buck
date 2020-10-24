@@ -1,0 +1,6 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <configurationType
+            implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckInstallConfigurationType"/>
+    </extensions>
+</idea-plugin>
