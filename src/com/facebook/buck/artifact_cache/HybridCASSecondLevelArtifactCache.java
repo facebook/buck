@@ -161,7 +161,7 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
     SecondLevelContentKey ck = SecondLevelContentKey.fromString(contentKey);
     boolean shouldReadCAS = shouldReadCAS(ck);
 
-    LOG.verbose(
+    LOG.debug(
         "Fetching content key %s [%s], (from cas? %s)", contentKey, ck.getType(), shouldReadCAS);
 
     if (shouldReadCAS) {
@@ -227,7 +227,7 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
     }
 
     boolean shouldCAS = shouldWriteCAS(digest.getHash());
-    LOG.verbose("Storing %s:%d (to cas? %s)", digest.getHash(), digest.getSizeBytes(), shouldCAS);
+    LOG.debug("Storing %s:%d (to cas? %s)", digest.getHash(), digest.getSizeBytes(), shouldCAS);
 
     SecondLevelContentKey contentKey;
     if (shouldCAS) {

@@ -129,6 +129,10 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
           LOG.verbose("Found a first-level artifact with metadata: %s", fetchResult.getMetadata());
 
           String contentHashKey = fetchResult.getMetadata().get(METADATA_KEY);
+          LOG.debug(
+              "First-level lookup finished using ruleKey: %s, "
+                  + "got second-level contentHashKey: %s",
+              ruleKey.toString(), contentHashKey);
           ListenableFuture<CacheResult> outputFileFetchResultFuture =
               Futures.catchingAsync(
                   secondLevelDelegate.fetchAsync(target, contentHashKey, output),
@@ -148,7 +152,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
                     outputFileFetchResult.withTwoLevelContentHashKey(Optional.of(contentHashKey));
 
                 if (!outputFileFetchResult.getType().isSuccess()) {
-                  LOG.verbose("Missed second-level lookup.");
+                  LOG.debug("Missed second-level lookup using contentHashKey: %s", contentHashKey);
                   secondLevelCacheMisses.inc();
 
                   // Note: for misses, the fetchResult metadata is not important, so we return
