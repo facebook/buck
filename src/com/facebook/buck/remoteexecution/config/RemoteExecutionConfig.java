@@ -163,6 +163,8 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final String USE_REMOTE_EXECUTION_FOR_GENRULE_IF_REQUESTED_FORMAT =
       "use_remote_execution_for_%s_if_requested";
 
+  public static final String METRICS_DUMP_PATH = "metrics_dump_path";
+
   // A non-exhaustive list of characters that might indicate that we're about to deal with a glob.
   private static final Pattern GLOB_CHARS = Pattern.compile("[*?{\\[]");
 
@@ -392,6 +394,8 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
             .getInteger("experiments", GRPC_KEEPALIVE_EXPERIMENT_KEY)
             .orElse(Integer.MAX_VALUE);
 
+    Optional<String> statsDumpPath = getDelegate().getValue(SECTION, METRICS_DUMP_PATH);
+
     // Some of these values are also limited by other ones (e.g. synchronous work is limited by the
     // number of threads). We detect some of these cases and log an error to the user to help them
     // understand the behavior.
@@ -418,6 +422,11 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
     }
 
     return new RemoteExecutionStrategyConfig() {
+      @Override
+      public Optional<String> getStatsDumpPath() {
+        return statsDumpPath;
+      }
+
       @Override
       public int getGrpcKeepAlivePeriodSeconds() {
         return grpcKeepAlivePeriodSeconds;

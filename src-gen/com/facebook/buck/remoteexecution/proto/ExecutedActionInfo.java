@@ -81,6 +81,26 @@ private static final long serialVersionUID = 0L;
             engineScheduledCount_ = input.readInt64();
             break;
           }
+          case 48: {
+
+            maxUsedMem_ = input.readInt64();
+            break;
+          }
+          case 56: {
+
+            hostTotalMem_ = input.readInt64();
+            break;
+          }
+          case 64: {
+
+            taskTotalMem_ = input.readInt64();
+            break;
+          }
+          case 72: {
+
+            executedOnElasticCapacity_ = input.readBool();
+            break;
+          }
           default: {
             if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -185,6 +205,58 @@ private static final long serialVersionUID = 0L;
     return engineScheduledCount_;
   }
 
+  public static final int MAX_USED_MEM_FIELD_NUMBER = 6;
+  private long maxUsedMem_;
+  /**
+   * <pre>
+   * max amount of memory used by task
+   * </pre>
+   *
+   * <code>int64 max_used_mem = 6;</code>
+   */
+  public long getMaxUsedMem() {
+    return maxUsedMem_;
+  }
+
+  public static final int HOST_TOTAL_MEM_FIELD_NUMBER = 7;
+  private long hostTotalMem_;
+  /**
+   * <pre>
+   * max amount of memory available on the host
+   * </pre>
+   *
+   * <code>int64 host_total_mem = 7;</code>
+   */
+  public long getHostTotalMem() {
+    return hostTotalMem_;
+  }
+
+  public static final int TASK_TOTAL_MEM_FIELD_NUMBER = 8;
+  private long taskTotalMem_;
+  /**
+   * <pre>
+   * max amount of memory available for the task
+   * </pre>
+   *
+   * <code>int64 task_total_mem = 8;</code>
+   */
+  public long getTaskTotalMem() {
+    return taskTotalMem_;
+  }
+
+  public static final int EXECUTED_ON_ELASTIC_CAPACITY_FIELD_NUMBER = 9;
+  private boolean executedOnElasticCapacity_;
+  /**
+   * <pre>
+   * reflects if the action was ran on elastic capacity
+   * </pre>
+   *
+   * <code>bool executed_on_elastic_capacity = 9;</code>
+   */
+  public boolean getExecutedOnElasticCapacity() {
+    return executedOnElasticCapacity_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -213,6 +285,18 @@ private static final long serialVersionUID = 0L;
     }
     if (engineScheduledCount_ != 0L) {
       output.writeInt64(5, engineScheduledCount_);
+    }
+    if (maxUsedMem_ != 0L) {
+      output.writeInt64(6, maxUsedMem_);
+    }
+    if (hostTotalMem_ != 0L) {
+      output.writeInt64(7, hostTotalMem_);
+    }
+    if (taskTotalMem_ != 0L) {
+      output.writeInt64(8, taskTotalMem_);
+    }
+    if (executedOnElasticCapacity_ != false) {
+      output.writeBool(9, executedOnElasticCapacity_);
     }
     unknownFields.writeTo(output);
   }
@@ -243,6 +327,22 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
         .computeInt64Size(5, engineScheduledCount_);
     }
+    if (maxUsedMem_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt64Size(6, maxUsedMem_);
+    }
+    if (hostTotalMem_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt64Size(7, hostTotalMem_);
+    }
+    if (taskTotalMem_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt64Size(8, taskTotalMem_);
+    }
+    if (executedOnElasticCapacity_ != false) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeBoolSize(9, executedOnElasticCapacity_);
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -271,6 +371,14 @@ private static final long serialVersionUID = 0L;
     }
     if (getEngineScheduledCount()
         != other.getEngineScheduledCount()) return false;
+    if (getMaxUsedMem()
+        != other.getMaxUsedMem()) return false;
+    if (getHostTotalMem()
+        != other.getHostTotalMem()) return false;
+    if (getTaskTotalMem()
+        != other.getTaskTotalMem()) return false;
+    if (getExecutedOnElasticCapacity()
+        != other.getExecutedOnElasticCapacity()) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -298,6 +406,18 @@ private static final long serialVersionUID = 0L;
     hash = (37 * hash) + ENGINE_SCHEDULED_COUNT_FIELD_NUMBER;
     hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
         getEngineScheduledCount());
+    hash = (37 * hash) + MAX_USED_MEM_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getMaxUsedMem());
+    hash = (37 * hash) + HOST_TOTAL_MEM_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getHostTotalMem());
+    hash = (37 * hash) + TASK_TOTAL_MEM_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getTaskTotalMem());
+    hash = (37 * hash) + EXECUTED_ON_ELASTIC_CAPACITY_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+        getExecutedOnElasticCapacity());
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -449,6 +569,14 @@ private static final long serialVersionUID = 0L;
       }
       engineScheduledCount_ = 0L;
 
+      maxUsedMem_ = 0L;
+
+      hostTotalMem_ = 0L;
+
+      taskTotalMem_ = 0L;
+
+      executedOnElasticCapacity_ = false;
+
       return this;
     }
 
@@ -484,6 +612,10 @@ private static final long serialVersionUID = 0L;
         result.isFallbackEnabledForCompletedAction_ = isFallbackEnabledForCompletedActionBuilder_.build();
       }
       result.engineScheduledCount_ = engineScheduledCount_;
+      result.maxUsedMem_ = maxUsedMem_;
+      result.hostTotalMem_ = hostTotalMem_;
+      result.taskTotalMem_ = taskTotalMem_;
+      result.executedOnElasticCapacity_ = executedOnElasticCapacity_;
       onBuilt();
       return result;
     }
@@ -546,6 +678,18 @@ private static final long serialVersionUID = 0L;
       }
       if (other.getEngineScheduledCount() != 0L) {
         setEngineScheduledCount(other.getEngineScheduledCount());
+      }
+      if (other.getMaxUsedMem() != 0L) {
+        setMaxUsedMem(other.getMaxUsedMem());
+      }
+      if (other.getHostTotalMem() != 0L) {
+        setHostTotalMem(other.getHostTotalMem());
+      }
+      if (other.getTaskTotalMem() != 0L) {
+        setTaskTotalMem(other.getTaskTotalMem());
+      }
+      if (other.getExecutedOnElasticCapacity() != false) {
+        setExecutedOnElasticCapacity(other.getExecutedOnElasticCapacity());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -838,6 +982,158 @@ private static final long serialVersionUID = 0L;
     public Builder clearEngineScheduledCount() {
       
       engineScheduledCount_ = 0L;
+      onChanged();
+      return this;
+    }
+
+    private long maxUsedMem_ ;
+    /**
+     * <pre>
+     * max amount of memory used by task
+     * </pre>
+     *
+     * <code>int64 max_used_mem = 6;</code>
+     */
+    public long getMaxUsedMem() {
+      return maxUsedMem_;
+    }
+    /**
+     * <pre>
+     * max amount of memory used by task
+     * </pre>
+     *
+     * <code>int64 max_used_mem = 6;</code>
+     */
+    public Builder setMaxUsedMem(long value) {
+      
+      maxUsedMem_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * max amount of memory used by task
+     * </pre>
+     *
+     * <code>int64 max_used_mem = 6;</code>
+     */
+    public Builder clearMaxUsedMem() {
+      
+      maxUsedMem_ = 0L;
+      onChanged();
+      return this;
+    }
+
+    private long hostTotalMem_ ;
+    /**
+     * <pre>
+     * max amount of memory available on the host
+     * </pre>
+     *
+     * <code>int64 host_total_mem = 7;</code>
+     */
+    public long getHostTotalMem() {
+      return hostTotalMem_;
+    }
+    /**
+     * <pre>
+     * max amount of memory available on the host
+     * </pre>
+     *
+     * <code>int64 host_total_mem = 7;</code>
+     */
+    public Builder setHostTotalMem(long value) {
+      
+      hostTotalMem_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * max amount of memory available on the host
+     * </pre>
+     *
+     * <code>int64 host_total_mem = 7;</code>
+     */
+    public Builder clearHostTotalMem() {
+      
+      hostTotalMem_ = 0L;
+      onChanged();
+      return this;
+    }
+
+    private long taskTotalMem_ ;
+    /**
+     * <pre>
+     * max amount of memory available for the task
+     * </pre>
+     *
+     * <code>int64 task_total_mem = 8;</code>
+     */
+    public long getTaskTotalMem() {
+      return taskTotalMem_;
+    }
+    /**
+     * <pre>
+     * max amount of memory available for the task
+     * </pre>
+     *
+     * <code>int64 task_total_mem = 8;</code>
+     */
+    public Builder setTaskTotalMem(long value) {
+      
+      taskTotalMem_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * max amount of memory available for the task
+     * </pre>
+     *
+     * <code>int64 task_total_mem = 8;</code>
+     */
+    public Builder clearTaskTotalMem() {
+      
+      taskTotalMem_ = 0L;
+      onChanged();
+      return this;
+    }
+
+    private boolean executedOnElasticCapacity_ ;
+    /**
+     * <pre>
+     * reflects if the action was ran on elastic capacity
+     * </pre>
+     *
+     * <code>bool executed_on_elastic_capacity = 9;</code>
+     */
+    public boolean getExecutedOnElasticCapacity() {
+      return executedOnElasticCapacity_;
+    }
+    /**
+     * <pre>
+     * reflects if the action was ran on elastic capacity
+     * </pre>
+     *
+     * <code>bool executed_on_elastic_capacity = 9;</code>
+     */
+    public Builder setExecutedOnElasticCapacity(boolean value) {
+      
+      executedOnElasticCapacity_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * reflects if the action was ran on elastic capacity
+     * </pre>
+     *
+     * <code>bool executed_on_elastic_capacity = 9;</code>
+     */
+    public Builder clearExecutedOnElasticCapacity() {
+      
+      executedOnElasticCapacity_ = false;
       onChanged();
       return this;
     }

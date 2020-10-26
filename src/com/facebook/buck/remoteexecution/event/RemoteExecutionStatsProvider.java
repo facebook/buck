@@ -52,6 +52,18 @@ public interface RemoteExecutionStatsProvider {
   /** Metadata for total time spent running actions remotely. */
   long getTotalRemoteTimeMs();
 
+  // Weighted mem usage: sum(used_mem) / sum(total_avaialble_mem)
+  float getWeightedMemUsage();
+
+  // Amount of memory that were used on the remote workers
+  long getTotalUsedRemoteMemory();
+
+  // Amount of memory that were available on the remote workers
+  long getTotalAvailableRemoteMemory();
+
+  // Amount of memory that were available for the task
+  long getTaskTotalAvailableRemoteMemory();
+
   /** Export all the above metadata in a Map format */
   ImmutableMap<String, String> exportFieldsToMap();
 }

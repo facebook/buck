@@ -77,6 +77,26 @@ public class TestRemoteExecutionStatsProvider implements RemoteExecutionStatsPro
   }
 
   @Override
+  public float getWeightedMemUsage() {
+    return 1.f;
+  }
+
+  @Override
+  public long getTotalUsedRemoteMemory() {
+    return 0;
+  }
+
+  @Override
+  public long getTotalAvailableRemoteMemory() {
+    return 0;
+  }
+
+  @Override
+  public long getTaskTotalAvailableRemoteMemory() {
+    return 0;
+  }
+
+  @Override
   public ImmutableMap<String, String> exportFieldsToMap() {
     ImmutableMap.Builder<String, String> retval = ImmutableMap.builderWithExpectedSize(16);
 
@@ -95,7 +115,13 @@ public class TestRemoteExecutionStatsProvider implements RemoteExecutionStatsPro
             "localfallback_locally_successful_executed_rules",
             Integer.toString(localFallbackStats.getLocallySuccessfulRules()))
         .put("remote_cpu_time_sec", Long.toString(getRemoteCpuTimeMs()))
-        .put("remote_queue_time_sec", Long.toString(getRemoteQueueTimeMs()));
+        .put("remote_queue_time_sec", Long.toString(getRemoteQueueTimeMs()))
+        .put("remote_total_used_mem", Long.toString(getTotalUsedRemoteMemory()))
+        .put("remote_total_available_used_mem", Long.toString(getTotalAvailableRemoteMemory()))
+        .put(
+            "remote_task_total_available_used_mem",
+            Long.toString(getTaskTotalAvailableRemoteMemory()))
+        .put("remote_weighted_mem_usage", Float.toString(getWeightedMemUsage()));
 
     for (ImmutableMap.Entry<State, Integer> entry : getActionsPerState().entrySet()) {
       retval.put(

@@ -56,4 +56,40 @@ public interface ExecutedActionInfoOrBuilder extends
    * <code>int64 engine_scheduled_count = 5;</code>
    */
   long getEngineScheduledCount();
+
+  /**
+   * <pre>
+   * max amount of memory used by task
+   * </pre>
+   *
+   * <code>int64 max_used_mem = 6;</code>
+   */
+  long getMaxUsedMem();
+
+  /**
+   * <pre>
+   * max amount of memory available on the host
+   * </pre>
+   *
+   * <code>int64 host_total_mem = 7;</code>
+   */
+  long getHostTotalMem();
+
+  /**
+   * <pre>
+   * max amount of memory available for the task
+   * </pre>
+   *
+   * <code>int64 task_total_mem = 8;</code>
+   */
+  long getTaskTotalMem();
+
+  /**
+   * <pre>
+   * reflects if the action was ran on elastic capacity
+   * </pre>
+   *
+   * <code>bool executed_on_elastic_capacity = 9;</code>
+   */
+  boolean getExecutedOnElasticCapacity();
 }

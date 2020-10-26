@@ -25,16 +25,22 @@ import com.facebook.buck.remoteexecution.event.LocalFallbackEvent.Result;
 import com.facebook.buck.remoteexecution.event.LocalFallbackStats;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionSessionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
 import com.facebook.buck.remoteexecution.proto.ExecutedActionInfo;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import com.google.protobuf.Duration;
 import com.google.protobuf.util.Timestamps;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.LongAdder;
@@ -55,13 +61,96 @@ public class RemoteExecutionEventListener
   private final LongAdder remoteQueueTimeMs;
   private final LongAdder totalRemoteTimeMs;
 
+  // mem used to execute action on remote workers
+  private final LongAdder remoteMemUsed;
+  // total mem was available on remote workers
+  private final LongAdder remoteTotalAvailableMem;
+  // total mem was available for tasks
+  private final LongAdder remoteTaskTotalAvailableMem;
+
   private final AtomicBoolean hasFirstRemoteActionStarted;
 
   private final LongAdder localFallbackTotalExecutions;
   private final LongAdder localFallbackLocalExecutions;
   private final LongAdder localFallbackSuccessfulLocalExecutions;
 
-  public RemoteExecutionEventListener() {
+  private static class REStatsDumpContext {
+    private final Optional<String> reStatsDumpPath;
+    private final JsonFactory jsonFactory;
+    private Optional<JsonGenerator> writer;
+
+    public REStatsDumpContext(Optional<String> reStatsDumpPath) {
+      this.reStatsDumpPath = reStatsDumpPath;
+      this.jsonFactory = new JsonFactory();
+    }
+
+    public void append(
+        long startTs,
+        long endTs,
+        boolean elastic,
+        long memUsed,
+        long memAvailable,
+        long totalMemAvailable,
+        long cpuUsedUsec) {
+      // if the result was loaded from the action cache we don't need to log this
+      if (startTs == 0) {
+        return;
+      }
+
+      writer.ifPresent(
+          w -> {
+            try {
+              synchronized (w) {
+                w.writeStartObject();
+
+                w.writeNumberField("start", startTs);
+                w.writeNumberField("end", endTs);
+                w.writeNumberField("memUsed", memUsed);
+                w.writeNumberField("memAvailable", memAvailable);
+                w.writeNumberField("hostTotalMem", totalMemAvailable);
+                w.writeNumberField("cpuUsedUsec", cpuUsedUsec);
+                w.writeBooleanField("elastic", elastic);
+
+                w.writeEndObject();
+              }
+
+            } catch (IOException ignored) {
+            }
+          });
+    }
+
+    public void initialize() {
+      try {
+        // non-functional way ti simplify excepction handling
+        if (reStatsDumpPath.isPresent()) {
+          writer =
+              Optional.of(
+                  jsonFactory.createGenerator(new FileOutputStream(reStatsDumpPath.get(), false)));
+          writer.get().writeStartArray();
+        } else {
+          writer = Optional.empty();
+        }
+      } catch (IOException ignored) {
+        // Unable to create the FOS
+        writer = Optional.empty();
+      }
+    }
+
+    public void close() {
+      writer.ifPresent(
+          w -> {
+            try {
+              w.writeEndArray();
+              w.close();
+            } catch (IOException ignored) {
+            }
+          });
+    }
+  }
+
+  private final REStatsDumpContext reStatsDumpContext;
+
+  public RemoteExecutionEventListener(Optional<String> reStatsDumpPath) {
     this.downloads = new LongAdder();
     this.downloadBytes = new LongAdder();
     this.uploads = new LongAdder();
@@ -76,13 +165,31 @@ public class RemoteExecutionEventListener
     localFallbackLocalExecutions = new LongAdder();
     localFallbackSuccessfulLocalExecutions = new LongAdder();
 
+    remoteMemUsed = new LongAdder();
+    remoteTotalAvailableMem = new LongAdder();
+    remoteTaskTotalAvailableMem = new LongAdder();
+
+    reStatsDumpContext = new REStatsDumpContext(reStatsDumpPath);
+
     this.actionStateCount = Maps.newConcurrentMap();
     for (State state : RemoteExecutionActionEvent.State.values()) {
       actionStateCount.put(state, new LongAdder());
     }
   }
 
-  /** Event specific subscriber method. */
+  /** Mark the start of a Remote Execution session */
+  @Subscribe
+  public void onRemoteExecutionSessionStarted(
+      @SuppressWarnings("unused") RemoteExecutionSessionEvent.Started event) {
+    reStatsDumpContext.initialize();
+  }
+
+  @Subscribe
+  public void onRemoteExecutionSessionFinished(
+      @SuppressWarnings("unused") RemoteExecutionSessionEvent.Finished event) {
+    reStatsDumpContext.close();
+  }
+
   @Subscribe
   public void onBuildRuleEvent(@SuppressWarnings("unused") BuildRuleEvent.Finished event) {
     totalBuildRules.increment();
@@ -138,6 +245,20 @@ public class RemoteExecutionEventListener
       totalRemoteTimeMs.add(
           TimeUnit.SECONDS.toMillis(totalDuration.getSeconds())
               + TimeUnit.NANOSECONDS.toMillis(totalDuration.getNanos()));
+
+      remoteMemUsed.add(executedActionInfo.getMaxUsedMem());
+      remoteTotalAvailableMem.add(executedActionInfo.getHostTotalMem());
+      remoteTaskTotalAvailableMem.add(executedActionInfo.getTaskTotalMem());
+
+      reStatsDumpContext.append(
+          Timestamps.toMillis(event.getExecutedActionMetadata().get().getWorkerStartTimestamp()),
+          Timestamps.toMillis(
+              event.getExecutedActionMetadata().get().getWorkerCompletedTimestamp()),
+          executedActionInfo.getExecutedOnElasticCapacity(),
+          executedActionInfo.getMaxUsedMem(),
+          executedActionInfo.getTaskTotalMem(),
+          executedActionInfo.getHostTotalMem(),
+          executedActionInfo.getCpuStatUsageUsec());
     }
   }
 
@@ -234,8 +355,31 @@ public class RemoteExecutionEventListener
   }
 
   @Override
+  public float getWeightedMemUsage() {
+    long totalAvailableMem = remoteTotalAvailableMem.sum();
+    return totalAvailableMem == 0
+        ? .0f
+        : (float) (remoteMemUsed.doubleValue() / remoteTaskTotalAvailableMem.sum());
+  }
+
+  @Override
+  public long getTotalUsedRemoteMemory() {
+    return remoteMemUsed.sum();
+  }
+
+  @Override
+  public long getTotalAvailableRemoteMemory() {
+    return remoteTotalAvailableMem.sum();
+  }
+
+  @Override
+  public long getTaskTotalAvailableRemoteMemory() {
+    return remoteTaskTotalAvailableMem.sum();
+  }
+
+  @Override
   public ImmutableMap<String, String> exportFieldsToMap() {
-    ImmutableMap.Builder<String, String> retval = ImmutableMap.builderWithExpectedSize(16);
+    ImmutableMap.Builder<String, String> retval = ImmutableMap.builderWithExpectedSize(32);
 
     retval
         .put("cas_downloads_count", Integer.toString(getCasDownloads()))
@@ -249,7 +393,13 @@ public class RemoteExecutionEventListener
             localFallbackSuccessfulLocalExecutions.toString())
         .put("remote_cpu_time_ms", Long.toString(getRemoteCpuTimeMs()))
         .put("remote_queue_time_ms", Long.toString(getRemoteQueueTimeMs()))
-        .put("remote_total_time_ms", Long.toString(getTotalRemoteTimeMs()));
+        .put("remote_total_time_ms", Long.toString(getTotalRemoteTimeMs()))
+        .put("remote_total_used_mem", Long.toString(getTotalUsedRemoteMemory()))
+        .put("remote_total_available_used_mem", Long.toString(getTotalAvailableRemoteMemory()))
+        .put(
+            "remote_task_total_available_used_mem",
+            Long.toString(getTaskTotalAvailableRemoteMemory()))
+        .put("remote_weighted_mem_usage", Float.toString(getWeightedMemUsage()));
 
     for (ImmutableMap.Entry<State, Integer> entry : getActionsPerState().entrySet()) {
       retval.put(

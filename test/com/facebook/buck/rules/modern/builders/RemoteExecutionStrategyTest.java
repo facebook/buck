@@ -314,6 +314,10 @@ public class RemoteExecutionStrategyTest {
   }
 
   private static class TestRemoteExecutionConfig implements RemoteExecutionStrategyConfig {
+    @Override
+    public Optional<String> getStatsDumpPath() {
+      return Optional.empty();
+    }
 
     @Override
     public int getGrpcKeepAlivePeriodSeconds() {

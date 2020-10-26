@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.kohsuke.args4j.Option;
 
 /** Command to measure performance of cas uploads. */
@@ -48,7 +49,7 @@ public class PerfCasUploadCommand extends AbstractCommand {
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
-    RemoteExecutionEventListener eventListener = new RemoteExecutionEventListener();
+    RemoteExecutionEventListener eventListener = new RemoteExecutionEventListener(Optional.empty());
     params.getBuckEventBus().register(eventListener);
 
     RemoteExecutionConfig remoteExecutionConfig =

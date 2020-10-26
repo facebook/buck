@@ -921,7 +921,9 @@ public final class MainRunner {
 
       Optional<RemoteExecutionEventListener> remoteExecutionListener =
           remoteExecutionConfig.isConsoleEnabled()
-              ? Optional.of(new RemoteExecutionEventListener())
+              ? Optional.of(
+                  new RemoteExecutionEventListener(
+                      remoteExecutionConfig.getStrategyConfig().getStatsDumpPath()))
               : Optional.empty();
       MetadataProvider metadataProvider =
           MetadataProviderFactory.minimalMetadataProviderForBuild(

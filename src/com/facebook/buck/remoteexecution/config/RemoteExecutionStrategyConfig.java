@@ -18,6 +18,7 @@ package com.facebook.buck.remoteexecution.config;
 
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
 import java.util.OptionalLong;
 
 /** Configuration for the remote execution strategy. */
@@ -51,4 +52,6 @@ public interface RemoteExecutionStrategyConfig {
   ImmutableSet<PathMatcher> getIgnorePaths();
 
   int getGrpcKeepAlivePeriodSeconds();
+
+  Optional<String> getStatsDumpPath();
 }
