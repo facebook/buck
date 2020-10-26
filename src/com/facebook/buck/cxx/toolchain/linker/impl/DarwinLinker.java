@@ -16,11 +16,17 @@
 
 package com.facebook.buck.cxx.toolchain.linker.impl;
 
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
@@ -32,20 +38,28 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.objectfile.LcUuidContentsScrubber;
 import com.facebook.buck.cxx.toolchain.objectfile.OsoSymbolsContentsScrubber;
 import com.facebook.buck.cxx.toolchain.objectfile.StripDebugSymbolTableScrubber;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -257,7 +271,22 @@ public class DarwinLinker extends DelegatingTool
       BuildTarget target,
       ImmutableList<? extends SourcePath> symbolFiles,
       ImmutableList<String> extraGlobals) {
-    return ImmutableList.of(new ExportedSymbolsArg(symbolFiles, extraGlobals));
+    ExportedSymbolsList rule =
+        graphBuilder.addToIndex(
+            new ExportedSymbolsList(
+                target,
+                projectFilesystem,
+                baseParams
+                    .withDeclaredDeps(
+                        ImmutableSortedSet.copyOf(graphBuilder.filterBuildRuleInputs(symbolFiles)))
+                    .withoutExtraDeps(),
+                symbolFiles,
+                extraGlobals));
+    return ImmutableList.of(
+        StringArg.of("-Xlinker"),
+        StringArg.of("-exported_symbols_list"),
+        StringArg.of("-Xlinker"),
+        SourcePathArg.of(rule.getSourcePathToOutput()));
   }
 
   @Override
@@ -301,25 +330,18 @@ public class DarwinLinker extends DelegatingTool
   }
 
   /**
-   * An {@link Arg} which reads symbols from files and propagates them to the Darwin linker via the
-   * argument returned by {@link SymbolsArg#getLinkerArgument()}.
+   * An {@link Arg} which reads undefined symbols from files and propagates them to the Darwin
+   * linker via the `-u` argument.
    *
-   * <p>NOTE: this is prone to overrunning command line argument limits.
+   * <p>NOTE: this is prone to overrunning command line argument limits, but it's not clear of
+   * another way to do this (perhaps other than creating a dummy object file whose symbol table only
+   * contains the undefined symbols listed in the symbol files).
    */
-  private abstract static class SymbolsArg implements Arg {
+  private static class UndefinedSymbolsArg implements Arg {
     @AddToRuleKey private final ImmutableList<? extends SourcePath> symbolFiles;
-    @AddToRuleKey private final ImmutableList<String> extraSymbols;
 
-    public SymbolsArg(
-        ImmutableList<? extends SourcePath> symbolFiles, ImmutableList<String> extraSymbols) {
+    public UndefinedSymbolsArg(ImmutableList<? extends SourcePath> symbolFiles) {
       this.symbolFiles = symbolFiles;
-      this.extraSymbols = extraSymbols;
-    }
-
-    abstract String getLinkerArgument();
-
-    String getSymbolPrefix() {
-      return "";
     }
 
     // Open all the symbol files and read in all undefined symbols, passing them to linker using the
@@ -334,12 +356,11 @@ public class DarwinLinker extends DelegatingTool
               Files.readAllLines(
                   pathResolver.getAbsolutePath(path).getPath(), StandardCharsets.UTF_8));
         }
-        symbols.addAll(extraSymbols);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
       for (String symbol : symbols) {
-        Linkers.iXlinker(getLinkerArgument(), getSymbolPrefix() + symbol).forEach(consumer);
+        Linkers.iXlinker("-u", symbol).forEach(consumer);
       }
     }
 
@@ -353,10 +374,10 @@ public class DarwinLinker extends DelegatingTool
       if (this == other) {
         return true;
       }
-      if (!(other instanceof SymbolsArg)) {
+      if (!(other instanceof UndefinedSymbolsArg)) {
         return false;
       }
-      SymbolsArg symbolsArg = (SymbolsArg) other;
+      UndefinedSymbolsArg symbolsArg = (UndefinedSymbolsArg) other;
       return Objects.equals(symbolFiles, symbolsArg.symbolFiles);
     }
 
@@ -367,56 +388,72 @@ public class DarwinLinker extends DelegatingTool
   }
 
   /**
-   * An {@link Arg} which reads undefined symbols from files and propagates them to the Darwin
-   * linker via the `-u` argument.
+   * * Write all symbols to a exported symbols list.
    *
-   * <p>NOTE: this is prone to overrunning command line argument limits, but it's not clear of
-   * another way to do this (perhaps other than creating a dummy object file whose symbol table only
-   * contains the undefined symbols listed in the symbol files).
+   * <p>NOTE: `-exported_symbols_list` fails with an undefined symbol error when it is passed a
+   * symbol that does not exist. Using a wildcard prefix * fixes this. But, it may over-export some
+   * symbols, especially with C linkage.
    */
-  private static class UndefinedSymbolsArg extends SymbolsArg {
+  private static class ExportedSymbolsList extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
-    public UndefinedSymbolsArg(ImmutableList<? extends SourcePath> symbolFiles) {
-      super(symbolFiles, ImmutableList.of());
+    @AddToRuleKey private final Iterable<? extends SourcePath> symbolFiles;
+    @AddToRuleKey private final ImmutableList<String> extraGlobals;
+
+    public ExportedSymbolsList(
+        BuildTarget buildTarget,
+        ProjectFilesystem projectFilesystem,
+        BuildRuleParams buildRuleParams,
+        Iterable<? extends SourcePath> symbolFiles,
+        ImmutableList<String> extraGlobals) {
+      super(buildTarget, projectFilesystem, buildRuleParams);
+      this.symbolFiles = symbolFiles;
+      this.extraGlobals = extraGlobals;
+    }
+
+    private RelPath getExportedSymbolsList() {
+      return BuildTargetPaths.getGenPath(
+          getProjectFilesystem(), getBuildTarget(), "%s/exported_symbols_list.txt");
     }
 
     @Override
-    String getLinkerArgument() {
-      return "-u";
-    }
-  }
-
-  /**
-   * An {@link Arg} which reads global symbols from files and propagates them to the Darwin linker
-   * via the `-exported_symbol` argument.
-   *
-   * <p>NOTE: this is prone to overrunning command line argument limits, and
-   * `-exported_symbols_list` argument should be leveraged to pass all symbols at once.
-   */
-  private static class ExportedSymbolsArg extends SymbolsArg {
-
-    public ExportedSymbolsArg(
-        ImmutableList<? extends SourcePath> symbolFiles, ImmutableList<String> extraGlobals) {
-      super(symbolFiles, extraGlobals);
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext context, BuildableContext buildableContext) {
+      RelPath linkerScript = getExportedSymbolsList();
+      buildableContext.recordArtifact(linkerScript.getPath());
+      return ImmutableList.of(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  linkerScript.getParent())),
+          WriteFileStep.of(
+              getProjectFilesystem().getRootPath(),
+              () -> {
+                Set<String> symbols = new LinkedHashSet<>();
+                for (SourcePath path : symbolFiles) {
+                  try {
+                    symbols.addAll(
+                        Files.readAllLines(
+                            context.getSourcePathResolver().getAbsolutePath(path).getPath(),
+                            StandardCharsets.UTF_8));
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                }
+                symbols.addAll(extraGlobals);
+                List<String> lines = new ArrayList<>();
+                for (String symbol : symbols) {
+                  lines.add(String.format("*%s", symbol));
+                }
+                return Joiner.on(System.lineSeparator()).join(lines);
+              },
+              linkerScript.getPath(),
+              /* executable */ false));
     }
 
     @Override
-    String getLinkerArgument() {
-      return "-exported_symbol";
-    }
-
-    /**
-     * *
-     *
-     * <p>NOTE: `-exported_symbol` fails with an undefined symbol error when it is passed a symbol
-     * that does not exist. Using a wildcard prefix * fixes this. But, it may over-export some
-     * symbols, especially with C linkage.
-     *
-     * @return A wildcard prefix for each symbol
-     */
-    @Override
-    String getSymbolPrefix() {
-      return "*";
+    public SourcePath getSourcePathToOutput() {
+      return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getExportedSymbolsList());
     }
   }
 }
