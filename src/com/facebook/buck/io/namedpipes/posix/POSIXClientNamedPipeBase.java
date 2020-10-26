@@ -49,6 +49,10 @@ abstract class POSIXClientNamedPipeBase extends BaseNamedPipe {
    * <p>Note that after calling {@link #close()}, the streams already obtained may throw {@link
    * ClosedChannelException} upon further operations (e.g. reads or writes). Users are expected to
    * to synchronize between {@link #close()} and further operations.
+   *
+   * <p>Also note that closing an associated {@link OutputStream} does not write an end of file
+   * token in the {@link RandomAccessFile}. Users should not rely on end of file tokens when using
+   * {@link RandomAccessFileWrapper}.
    */
   @NotThreadSafe
   protected static class RandomAccessFileWrapper implements Closeable {

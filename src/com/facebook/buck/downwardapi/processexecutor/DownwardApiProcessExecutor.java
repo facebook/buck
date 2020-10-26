@@ -43,6 +43,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -266,6 +267,49 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     return new NamedPipeEventHandler(namedPipe, context);
   }
 
+  /**
+   * Handler that continuously reads events from a named pipe and passes the events to their
+   * respective {@link EventHandler}s.
+   *
+   * <p>It does so by executing the following:
+   *
+   * <ol>
+   *   <li>Read the {@link DownwardProtocol} from the named pipe
+   *   <li>Once the protocol is read, read the event type from the named pipe with the given
+   *       protocol
+   *   <li>Once the event type is read, read the event with the associated event type and protocol
+   *   <li>Repeat steps 2 to 3 until termination
+   * </ol>
+   *
+   * <p>Termination occurs when one of the following conditions are met:
+   *
+   * <ol>
+   *   <li>Handler receives {@link EndEvent}. This event is written by buck in {@link
+   *       #terminateAndWait(long, TimeUnit)} after the subprocess has completed. Clients may also
+   *       choose to write this event themselves
+   *   <li>Handler encounters an exception before delegating the event to its respective {@link
+   *       EventHandler} Examples:
+   *       <ul>
+   *         <li>{@link IOException} due to named pipe's underlying random access file getting
+   *             deleted
+   *         <li>{@link InvalidProtocolBufferException} due to client not following the established
+   *             protocol
+   *       </ul>
+   *   <li>
+   * </ol>
+   *
+   * <p>Note that termination does not occur if this handler is able to delegate to an {@link
+   * EventHandler}, even if the delegated {@link EventHandler} is not able to process the event.
+   *
+   * <p>The reads from the named pipe are blocking reads. Consequently, if a client never writes
+   * anything into the named pipe, this handler is expected to hang at the read protocol line until
+   * buck arbitrarily writes a protocol into the named pipe to write the {@link EndEvent}.
+   *
+   * <p>Events are always expected to be written after the event type. It follows that hanging at
+   * reading the event is unexpected, while hanging at reading the event type is expected if the
+   * handler has finished reading all of the events written by the client (if any), but the
+   * subprocess has not completed.
+   */
   private static class NamedPipeEventHandler {
 
     private final NamedPipeReader namedPipe;
@@ -331,6 +375,24 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
       }
     }
 
+    /**
+     * Terminate and wait for {@link NamedPipeEventHandler} to finish processing events.
+     *
+     * <p>At this point, the {@link DownwardApiLaunchedProcess} has completed, and all of its {@link
+     * NamedPipeWriter} instances should be closed. This method connects a new instance of {@link
+     * NamedPipeWriter}, which should be the only connected writer now. This writer writes the
+     * {@link EndEvent} into the named pipe, which the {@link NamedPipeEventHandler} will consume as
+     * a signal for termination.
+     *
+     * <p>In case writing the {@link EndEvent} fails, fall back to terminating the event handler by
+     * canceling its associated {@link Future}. Note that on POSIX systems, canceling the future
+     * results in closing the {@link NamedPipeReader}'s {@link InputStream}, which means that there
+     * may be unread events left in the named pipe.
+     *
+     * <p>Warning: On Windows, the fallback flow is currently the expected flow if the client writes
+     * something into the named pipe. Additionally, the issue where events are orphaned in the named
+     * pipe is present on windows. Update this javadoc after updating the windows flow
+     */
     void terminateAndWait(long timeout, TimeUnit unit)
         throws CancellationException, InterruptedException, ExecutionException, TimeoutException {
       try (NamedPipeWriter writer =
