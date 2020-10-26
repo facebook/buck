@@ -1580,11 +1580,63 @@ public class XcodeNativeTargetGenerator {
    * Generates a merged native target containing source files from the dependencies of a target
    * node.
    *
-   * @param targetNode The node to generate
-   * @return A result with all of the data aggregated for this node.
-   * @throws IOException
+   * @param buildTargets The build target for which to generate
+   * @return A result with a set of all of the data aggregated for these nodes.
    */
-  public Optional<Result> generateMergedTargetDependencies(TargetNode<?> targetNode)
+  public ImmutableSet<Result> generateMergedTargetDependencies(
+      ImmutableSet<BuildTarget> buildTargets) {
+    ImmutableSet.Builder<Result> resultsBuilder = new ImmutableSet.Builder<>();
+    getRecursiveDependenciesMap(buildTargets)
+        .forEach(
+            (targetNode, dependencies) -> {
+              try {
+                generateMergedDependenciesForTargetNode(targetNode, dependencies)
+                    .ifPresent(resultsBuilder::add);
+              } catch (Exception e) {
+                LOG.debug(
+                    "Exception generating merged target dependencies for target '%s': '%s'",
+                    targetNode.getBuildTarget().getShortName(), e.getLocalizedMessage());
+              }
+            });
+    return resultsBuilder.build();
+  }
+
+  private Map<TargetNode<?>, ImmutableSet<TargetNode<?>>> getRecursiveDependenciesMap(
+      ImmutableSet<BuildTarget> buildTargets) {
+
+    HashMap<TargetNode<?>, ImmutableSet<TargetNode<?>>> dependenciesMap = new HashMap<>();
+    HashSet<BuildTarget> alreadyMergedDependencies = new HashSet<>();
+
+    for (BuildTarget buildTarget : buildTargets) {
+      // if the map already has this as a dependency we want to skip it
+      if (alreadyMergedDependencies.contains(buildTarget)) {
+        continue;
+      }
+
+      TargetNode<?> targetNode = targetGraph.get(buildTarget);
+      ImmutableSet<TargetNode<?>> targetNodeDependencies =
+          recursivelyGetBuildDependencies(targetNode);
+
+      // Remove any keys from map which exist in this nodes dependencies
+      dependenciesMap.keySet().stream()
+          .filter(targetNodeDependencies::contains)
+          .collect(ImmutableSet.toImmutableSet())
+          .forEach(dependenciesMap::remove);
+
+      // Add this to list of targets to skip
+      targetNodeDependencies.stream()
+          .map(TargetNode::getBuildTarget)
+          .forEach(alreadyMergedDependencies::add);
+
+      // add this dependency to the map
+      dependenciesMap.put(targetNode, targetNodeDependencies);
+    }
+
+    return dependenciesMap;
+  }
+
+  private Optional<Result> generateMergedDependenciesForTargetNode(
+      TargetNode<?> targetNode, ImmutableSet<TargetNode<?>> recursiveBuildDependencies)
       throws IOException {
 
     if (targetNode.getBuildTarget().isFlavored()) {
@@ -1640,8 +1692,6 @@ public class XcodeNativeTargetGenerator {
     ImmutableSet.Builder<String> targetConfigNamesBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
 
-    ImmutableSet<TargetNode<?>> recursiveBuildDependencies =
-        recursivelyGetBuildDependencies(targetNode);
     recursiveBuildDependencies.stream()
         .forEach(
             depTargetNode -> {
@@ -1733,12 +1783,9 @@ public class XcodeNativeTargetGenerator {
     }
     ImmutableSet.Builder<TargetNode<?>> buildDependenciesBuilder = ImmutableSet.builder();
     targetNode.getBuildDeps().forEach(t -> buildDependenciesBuilder.add(targetGraph.get(t)));
-    targetNode
-        .getTotalDeps()
-        .forEach(
-            t ->
-                buildDependenciesBuilder.addAll(
-                    recursivelyGetBuildDependencies(targetGraph.get(t))));
+    targetNode.getTotalDeps().stream()
+        .map(targetGraph::get)
+        .forEach(n -> buildDependenciesBuilder.addAll(recursivelyGetBuildDependencies(n)));
     ImmutableSet<TargetNode<?>> recursiveBuildDependencies = buildDependenciesBuilder.build();
     recursiveBuildDependenciesCache.put(targetNode, recursiveBuildDependencies);
     return recursiveBuildDependencies;

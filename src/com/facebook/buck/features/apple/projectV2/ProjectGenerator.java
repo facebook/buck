@@ -347,17 +347,9 @@ public class ProjectGenerator {
       }
 
       if (options.shouldMergeTargets()) {
-        for (BuildTarget t : projectTargets) {
-          try {
-            targetGenerator
-                .generateMergedTargetDependencies(targetGraph.get(t))
-                .ifPresent(generationResultsBuilder::add);
-          } catch (Exception e) {
-            LOG.debug(
-                "Exception generating merged target dependencies for target '%s': '%s'",
-                t.getShortName(), e.getLocalizedMessage());
-          }
-        }
+        ImmutableSet<XcodeNativeTargetGenerator.Result> mergedTargetsResults =
+            targetGenerator.generateMergedTargetDependencies(projectTargets);
+        generationResultsBuilder.addAll(mergedTargetsResults);
       }
 
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
