@@ -1,0 +1,5 @@
+{
+  "targets": [
+    "buck//test/com/facebook/buck/cxx/endtoend:e2e"
+  ]
+}
