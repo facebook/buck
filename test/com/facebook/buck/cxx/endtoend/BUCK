@@ -23,15 +23,3 @@ java_test(
     ],
 )
 
-pytest_test(
-    name = "e2e",
-    srcs = glob(["*test.py"]),
-    env = {
-        "TEST_BUCK_BINARY": "$(location //programs:buck)",
-        "TEST_REPO_DATA": "$(location //test/com/facebook/buck/testutil/endtoend:testdata)",
-    },
-    deps = [
-        "//buck_api:api",
-        "//buck_e2e:utilities",
-    ],
-)

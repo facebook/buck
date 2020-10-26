@@ -1,7 +1,0 @@
-python_library(
-    name = "api",
-    srcs = glob(["*.py"]),
-    visibility = [
-        "PUBLIC",
-    ],
-)
