@@ -169,6 +169,16 @@ message ExecutedActionInfo {
   // Fallback means we don't trust if this action failed and it may be flaky.
   google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;
   int64 engine_scheduled_count = 5;
+
+  // max amount of memory used by task
+  int64 max_used_mem = 6;
+  // max amount of memory available on the host
+  int64 host_total_mem = 7;
+  // max amount of memory available for the task
+  int64 task_total_mem = 8;
+
+  // reflects if the action was ran on elastic capacity
+  bool executed_on_elastic_capacity = 9;
 }
 
 message DebugInfo {
