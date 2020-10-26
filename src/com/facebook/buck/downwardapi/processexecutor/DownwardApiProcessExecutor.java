@@ -19,6 +19,7 @@ package com.facebook.buck.downwardapi.processexecutor;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downward.model.EndEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
@@ -28,6 +29,7 @@ import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
+import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.io.namedpipes.windows.PipeNotConnectedException;
 import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.DelegateLaunchedProcess;
@@ -43,7 +45,9 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.channels.ClosedChannelException;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -56,6 +60,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 
 /**
  * Runs external process with DownwardAPI protocol:
@@ -144,8 +149,8 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     @Override
     public void close() {
       super.close();
-      closeNamedPipe();
       cancelHandler();
+      closeNamedPipe();
     }
 
     private void cancelHandler() {
@@ -268,6 +273,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     private final SettableFuture<Void> done = SettableFuture.create();
 
     private Optional<Future<?>> running = Optional.empty();
+    @Nullable private volatile DownwardProtocol downwardProtocol = null;
 
     NamedPipeEventHandler(NamedPipeReader namedPipe, DownwardApiExecutionContext context) {
       this.namedPipe = namedPipe;
@@ -282,8 +288,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
       String namedPipeName = namedPipe.getName();
       try (InputStream inputStream = namedPipe.getInputStream()) {
         LOG.info("Trying to establish downward protocol for pipe %s", namedPipeName);
-        DownwardProtocol downwardProtocol = null;
-        while (!Thread.currentThread().isInterrupted()) {
+        while (true) {
           try {
             if (downwardProtocol == null) {
               downwardProtocol = DownwardProtocolType.readProtocol(inputStream);
@@ -292,6 +297,10 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
                   namedPipeName, downwardProtocol.getProtocolName());
             }
             EventTypeMessage.EventType eventType = downwardProtocol.readEventType(inputStream);
+            if (eventType.equals(EventTypeMessage.EventType.END_EVENT)) {
+              LOG.info("Received end event for named pipe %s", namedPipeName);
+              break;
+            }
             AbstractMessage event = downwardProtocol.readEvent(inputStream, eventType);
             EventHandler<AbstractMessage> eventHandler = EventHandler.getEventHandler(eventType);
             try {
@@ -301,8 +310,10 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
             }
           } catch (ClosedChannelException e) {
             LOG.info("Named pipe %s is closed", namedPipeName);
+            break;
           } catch (IOException e) {
             LOG.error(e, "Exception during processing events from named pipe: %s", namedPipeName);
+            break;
           }
         }
         LOG.info(
@@ -322,7 +333,37 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
 
     void terminateAndWait(long timeout, TimeUnit unit)
         throws CancellationException, InterruptedException, ExecutionException, TimeoutException {
-      running.map(future -> future.cancel(true));
+      try (NamedPipeWriter writer =
+              NamedPipeFactory.getFactory().connectAsWriter(Paths.get(namedPipe.getName()));
+          OutputStream outputStream = writer.getOutputStream()) {
+        // This null check is not perfectly synchronized with the handler, but in practice by the
+        // time the subprocess has finished, the handler should have read the protocol from the
+        // subprocess already, if any, so this is okay.
+        if (downwardProtocol == null) {
+          // Client has not written anything into named pipe. Arbitrarily pick binary protocol to
+          // communicate with handler
+          DownwardProtocolType.BINARY.writeDelimitedTo(outputStream);
+          DownwardProtocolType.BINARY
+              .getDownwardProtocol()
+              .write(
+                  EventTypeMessage.newBuilder()
+                      .setEventType(EventTypeMessage.EventType.END_EVENT)
+                      .build(),
+                  EndEvent.getDefaultInstance(),
+                  outputStream);
+        } else {
+          downwardProtocol.write(
+              EventTypeMessage.newBuilder()
+                  .setEventType(EventTypeMessage.EventType.END_EVENT)
+                  .build(),
+              EndEvent.getDefaultInstance(),
+              outputStream);
+        }
+      } catch (IOException e) {
+        // TODO: Windows currently follows this code path. We should fix this
+        LOG.error(e, "Failed to write protocol termination event. Canceling handler");
+        running.map(future -> future.cancel(true));
+      }
       done.get(timeout, unit);
     }
   }
