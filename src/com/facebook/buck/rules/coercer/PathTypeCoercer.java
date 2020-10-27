@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.cache.CacheBuilder;
@@ -29,7 +30,7 @@ import java.nio.file.Path;
 /** Coerce to {@link java.nio.file.Path}. */
 public class PathTypeCoercer extends LeafUnconfiguredOnlyCoercer<Path> {
 
-  private final LoadingCache<Path, LoadingCache<String, Path>> pathCache =
+  private final LoadingCache<RelPath, LoadingCache<String, Path>> pathCache =
       CacheBuilder.newBuilder()
           .build(
               CacheLoader.from(
@@ -59,7 +60,7 @@ public class PathTypeCoercer extends LeafUnconfiguredOnlyCoercer<Path> {
         throw new CoerceFailedException("invalid path");
       }
       try {
-        Path fsPath = pathRelativeToProjectRoot.toPath(filesystem.getFileSystem());
+        RelPath fsPath = pathRelativeToProjectRoot.toRelPath(filesystem.getFileSystem());
         Path resultPath = pathCache.getUnchecked(fsPath).getUnchecked(pathString);
         if (resultPath.isAbsolute()) {
           throw CoerceFailedException.simple(
