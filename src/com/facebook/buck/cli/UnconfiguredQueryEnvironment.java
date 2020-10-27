@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.facebook.buck.event.BuckEventBus;
@@ -373,7 +372,7 @@ public class UnconfiguredQueryEnvironment
                 .resolve(path.get())
                 .resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName()));
     Preconditions.checkState(rootCellFilesystem.exists(buildFilePath));
-    SourcePath sourcePath = PathSourcePath.of(cell.getFilesystem(), buildFilePath);
+    PathSourcePath sourcePath = PathSourcePath.of(cell.getFilesystem(), buildFilePath);
     return QueryFileTarget.of(sourcePath);
   }
 

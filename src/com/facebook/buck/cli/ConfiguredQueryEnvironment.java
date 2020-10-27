@@ -33,7 +33,6 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.file.MorePaths;
@@ -344,7 +343,7 @@ public class ConfiguredQueryEnvironment
                   .resolve(path.get())
                   .resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName()));
       Preconditions.checkState(cellFilesystem.exists(buildFilePath));
-      SourcePath sourcePath = PathSourcePath.of(cell.getFilesystem(), buildFilePath);
+      PathSourcePath sourcePath = PathSourcePath.of(cell.getFilesystem(), buildFilePath);
       builder.add(QueryFileTarget.of(sourcePath));
     }
     return builder.build();

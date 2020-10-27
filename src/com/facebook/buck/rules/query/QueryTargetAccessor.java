@@ -71,7 +71,7 @@ public class QueryTargetAccessor {
 
   public static ConfiguredQueryTarget extractSourcePath(SourcePath sourcePath) {
     if (sourcePath instanceof PathSourcePath) {
-      return QueryFileTarget.of(sourcePath);
+      return QueryFileTarget.of((PathSourcePath) sourcePath);
     } else if (sourcePath instanceof BuildTargetSourcePath) {
       return ConfiguredQueryBuildTarget.of(((BuildTargetSourcePath) sourcePath).getTarget());
     }

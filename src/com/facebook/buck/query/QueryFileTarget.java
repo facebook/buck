@@ -16,18 +16,18 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import javax.annotation.Nullable;
 
 /**
  * Implementation of {@link ConfiguredQueryTarget} and {@link UnconfiguredQueryTarget} that wraps a
- * {@link SourcePath}.
+ * {@link PathSourcePath}.
  */
 public final class QueryFileTarget implements ConfiguredQueryTarget, UnconfiguredQueryTarget {
 
-  private final SourcePath path;
+  private final PathSourcePath path;
 
-  private QueryFileTarget(SourcePath path) {
+  private QueryFileTarget(PathSourcePath path) {
     this.path = path;
   }
 
@@ -37,12 +37,12 @@ public final class QueryFileTarget implements ConfiguredQueryTarget, Unconfigure
    * @param path The value for the {@code path} attribute
    * @return An immutable QueryFileTarget instance
    */
-  public static QueryFileTarget of(SourcePath path) {
+  public static QueryFileTarget of(PathSourcePath path) {
     return new QueryFileTarget(path);
   }
 
   /** @return The value of the {@code path} attribute */
-  public SourcePath getPath() {
+  public PathSourcePath getPath() {
     return path;
   }
 
