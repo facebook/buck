@@ -25,6 +25,8 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.external.constants.ExternalBinaryBuckConstants;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
@@ -39,6 +41,7 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -60,6 +63,7 @@ public class ExternalActionsIntegrationTest {
   private static final ConsoleParams CONSOLE_PARAMS =
       ConsoleParams.of(false, Verbosity.STANDARD_INFORMATION);
 
+  private File buildableCommandFile;
   private ProcessExecutor defaultExecutor;
   private BuckEventBus eventBusForTests;
   private BuckEventBusForTests.CapturingEventListener eventBusListener;
@@ -70,6 +74,7 @@ public class ExternalActionsIntegrationTest {
 
   @Before
   public void setUp() throws Exception {
+    buildableCommandFile = temporaryFolder.newFile("buildable_command").toFile();
     defaultExecutor = new DefaultProcessExecutor(new TestConsole());
     eventBusForTests = BuckEventBusForTests.newInstance();
     eventBusListener = new BuckEventBusForTests.CapturingEventListener();
@@ -94,39 +99,16 @@ public class ExternalActionsIntegrationTest {
 
   @Test
   public void executingBinaryExecutesExternalActions() throws Exception {
-    File buildableCommandFile = temporaryFolder.newFile("buildable_command").toFile();
     BuildableCommand buildableCommand =
         BuildableCommand.newBuilder()
             .addAllArgs(ImmutableList.of("test_path"))
             .putAllEnv(ImmutableMap.of())
             .setExternalActionClass(FakeMkdirExternalAction.class.getName())
             .build();
-    try (OutputStream outputStream = new FileOutputStream(buildableCommandFile)) {
-      buildableCommand.writeTo(outputStream);
-    }
+    writeBuildableCommand(buildableCommand);
+    ProcessExecutorParams params = createProcessExecutorParams(createCmd());
 
-    ImmutableList<String> command =
-        ImmutableList.of(
-            "java", "-jar", testBinary.toString(), buildableCommandFile.getAbsolutePath());
-
-    ProcessExecutorParams params =
-        ProcessExecutorParams.builder()
-            .setCommand(command)
-            .setEnvironment(
-                EnvironmentSanitizer.getSanitizedEnvForTests(
-                    ImmutableMap.of(
-                        ExternalBinaryBuckConstants.ENV_RULE_CELL_ROOT,
-                        temporaryFolder.getRoot().toString())))
-            .build();
-
-    ProcessExecutor.Result result =
-        downwardApiProcessExecutor.launchAndExecute(
-            params,
-            ImmutableMap.of(),
-            ImmutableSet.of(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty());
+    ProcessExecutor.Result result = launchAndExecute(downwardApiProcessExecutor, params);
 
     assertThat(result.getExitCode(), equalTo(0));
     AbsPath actualOutput = temporaryFolder.getRoot().resolve("test_path");
@@ -140,5 +122,78 @@ public class ExternalActionsIntegrationTest {
     assertThat(actualStepEvents, hasSize(2));
     assertThat(actualStepEvents.get(0), equalTo(expectedStartEvent.toLogMessage()));
     assertThat(actualStepEvents.get(1), equalTo(expectedFinishEvent.toLogMessage()));
+  }
+
+  @Test
+  public void eventsAreSentBackToBuck() throws Exception {
+    BuildableCommand buildableCommand =
+        BuildableCommand.newBuilder()
+            .addAllArgs(ImmutableList.of("hello"))
+            .setExternalActionClass(FakeBuckEventWritingAction.class.getName())
+            .putAllEnv(ImmutableMap.of())
+            .build();
+    writeBuildableCommand(buildableCommand);
+
+    ProcessExecutorParams params = createProcessExecutorParams(createCmd());
+    ProcessExecutor.Result result = launchAndExecute(downwardApiProcessExecutor, params);
+
+    assertThat(result.getExitCode(), equalTo(0));
+
+    StepEvent.Started expectedStepStartEvent =
+        StepEvent.started("console_event_step", "console event: hello", UUID.randomUUID());
+    StepEvent.Finished expectedStepFinishEvent = StepEvent.finished(expectedStepStartEvent, 0);
+    List<String> actualStepEventLogs = eventBusListener.getStepEventLogMessages();
+    assertThat(actualStepEventLogs, hasSize(2));
+    assertThat(actualStepEventLogs.get(0), equalTo(expectedStepStartEvent.toLogMessage()));
+    assertThat(actualStepEventLogs.get(1), equalTo(expectedStepFinishEvent.toLogMessage()));
+
+    ConsoleEvent expectedConsoleEvent = ConsoleEvent.info("hello");
+    List<String> actualConsoleEventLogs = eventBusListener.getConsoleEventLogMessages();
+    assertThat(
+        Iterables.getOnlyElement(actualConsoleEventLogs),
+        equalTo(expectedConsoleEvent.toLogMessage()));
+
+    SimplePerfEvent.Started expectedPerfStartEvent =
+        SimplePerfEvent.started(SimplePerfEvent.PerfEventTitle.of("test_perf_event_title"));
+    List<String> actualPerfEvents = eventBusListener.getSimplePerfEvents();
+    assertThat(actualPerfEvents, hasSize(2));
+    assertThat(actualPerfEvents.get(0), equalTo(expectedPerfStartEvent.toLogMessage()));
+
+    // SimplePerfEvent.Finished is not exposed. Grab its #toLogMessage implementation directly from
+    // AbstractBuckEvent
+    assertThat(actualPerfEvents.get(1), equalTo("PerfEvent.test_perf_event_title.Finished()"));
+  }
+
+  private void writeBuildableCommand(BuildableCommand buildableCommand) throws Exception {
+    try (OutputStream outputStream = new FileOutputStream(buildableCommandFile)) {
+      buildableCommand.writeTo(outputStream);
+    }
+  }
+
+  private ImmutableList<String> createCmd() {
+    return ImmutableList.of(
+        "java", "-jar", testBinary.toString(), buildableCommandFile.getAbsolutePath());
+  }
+
+  private ProcessExecutorParams createProcessExecutorParams(ImmutableList<String> command) {
+    return ProcessExecutorParams.builder()
+        .setCommand(command)
+        .setEnvironment(
+            EnvironmentSanitizer.getSanitizedEnvForTests(
+                ImmutableMap.of(
+                    ExternalBinaryBuckConstants.ENV_RULE_CELL_ROOT,
+                    temporaryFolder.getRoot().toString())))
+        .build();
+  }
+
+  private ProcessExecutor.Result launchAndExecute(
+      ProcessExecutor processExecutor, ProcessExecutorParams params) throws Exception {
+    return processExecutor.launchAndExecute(
+        params,
+        ImmutableMap.of(),
+        ImmutableSet.of(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 }
