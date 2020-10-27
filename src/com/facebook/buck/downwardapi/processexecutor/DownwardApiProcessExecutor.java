@@ -401,26 +401,19 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
         // This null check is not perfectly synchronized with the handler, but in practice by the
         // time the subprocess has finished, the handler should have read the protocol from the
         // subprocess already, if any, so this is okay.
-        if (downwardProtocol == null) {
+        DownwardProtocol protocol = downwardProtocol;
+        if (protocol == null) {
           // Client has not written anything into named pipe. Arbitrarily pick binary protocol to
           // communicate with handler
           DownwardProtocolType.BINARY.writeDelimitedTo(outputStream);
-          DownwardProtocolType.BINARY
-              .getDownwardProtocol()
-              .write(
-                  EventTypeMessage.newBuilder()
-                      .setEventType(EventTypeMessage.EventType.END_EVENT)
-                      .build(),
-                  EndEvent.getDefaultInstance(),
-                  outputStream);
-        } else {
-          downwardProtocol.write(
-              EventTypeMessage.newBuilder()
-                  .setEventType(EventTypeMessage.EventType.END_EVENT)
-                  .build(),
-              EndEvent.getDefaultInstance(),
-              outputStream);
+          protocol = DownwardProtocolType.BINARY.getDownwardProtocol();
         }
+        protocol.write(
+            EventTypeMessage.newBuilder()
+                .setEventType(EventTypeMessage.EventType.END_EVENT)
+                .build(),
+            EndEvent.getDefaultInstance(),
+            outputStream);
       } catch (IOException e) {
         // TODO: Windows currently follows this code path. We should fix this
         LOG.error(e, "Failed to write protocol termination event. Canceling handler");
