@@ -14,6 +14,7 @@
 
 import datetime
 import getpass
+import glob
 import logging
 import multiprocessing
 import os
@@ -326,6 +327,38 @@ class SOSReport:
         self._cmd_dump_common(["edenfsctl", "status"])
         self._cmd_dump_common(["watchman", "debug-status"])
 
+    def _get_pstree(self):
+        if self.pfname == "Linux":
+            self._cmd_dump_common(["pstree", "-a", "-A", "-g", "-l", "-p", "-t", "-u"])
+        elif self.pfname == "Darwin":
+            # get away with PPID of 'ps -ef'
+            self._cmd_dump_common(["ps", "-ef"])
+
+    def _get_varlogs(self):
+        filename = os.path.join(
+            self.sos_outdir, "%s_%s" % (time_prefix(), "varlogs.tar.gz")
+        )
+        logging.info("Getting varlogs")
+        logfiles = []
+        if self.pfname == "Linux":
+            logfiles = glob.glob("/var/log/messages*") + glob.glob("/var/log/syslog*")
+        elif self.pfname == "Darwin":
+            logfiles = glob.glob("/var/log/system.log*")
+        if logfiles:
+            try:
+                res = subprocess.run(
+                    ["tar", "zcvf", filename] + logfiles, capture_output=True
+                )
+                if res.returncode != 0:
+                    logging.warning(
+                        "tar command failed: %s",
+                        repr(res.stderr.decode(errors="replace")),
+                    )
+            except FileNotFoundError as e:
+                logging.error("_get_varlogs failed: %s", repr(e))
+        else:
+            logging.warning("no logfile found to report")
+
     def gen_report(self):
         """
         Generate SOS report under log directory.
@@ -368,6 +401,8 @@ class SOSReport:
         self._get_top()
         self._get_ifconfig()
         self._get_daemon_status()
+        self._get_pstree()
+        self._get_varlogs()
 
         # TODO: other metrics
         return SOSReportExitCode.SUCCESS, "success"
