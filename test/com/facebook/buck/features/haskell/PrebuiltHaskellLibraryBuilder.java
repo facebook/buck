@@ -59,6 +59,11 @@ public class PrebuiltHaskellLibraryBuilder
     return this;
   }
 
+  public PrebuiltHaskellLibraryBuilder setPicStaticLibs(ImmutableList<SourcePath> libs) {
+    getArgForPopulating().setPicStaticLibs(libs);
+    return this;
+  }
+
   public PrebuiltHaskellLibraryBuilder setSharedLibs(ImmutableMap<String, SourcePath> libs) {
     getArgForPopulating().setSharedLibs(libs);
     return this;

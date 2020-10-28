@@ -75,6 +75,29 @@ public class HaskellPrebuiltLibraryDescription
       private final PlatformMappedCache<NativeLinkableInfo> linkableCache =
           new PlatformMappedCache<>();
 
+      private boolean usePicLibraries() {
+        // Only enable PIC libraries if they are set.
+        // This is to allow backwards compatibility to a time where this rule
+        // did not support PIC libraries separately.
+        return !args.getPicProfiledStaticLibs().isEmpty() || !args.getPicStaticLibs().isEmpty();
+      }
+
+      private ImmutableList<SourcePath> getProfiledStaticLibs(Linker.LinkableDepType depType) {
+        if (usePicLibraries() && depType == Linker.LinkableDepType.STATIC_PIC) {
+          return args.getPicProfiledStaticLibs();
+        } else {
+          return args.getProfiledStaticLibs();
+        }
+      }
+
+      private ImmutableList<SourcePath> getStaticLibs(Linker.LinkableDepType depType) {
+        if (usePicLibraries() && depType == Linker.LinkableDepType.STATIC_PIC) {
+          return args.getPicStaticLibs();
+        } else {
+          return args.getStaticLibs();
+        }
+      }
+
       @Override
       public Iterable<BuildRule> getCompileDeps(HaskellPlatform platform) {
         return RichStream.from(args.getDeps())
@@ -98,10 +121,10 @@ public class HaskellPrebuiltLibraryDescription
         if (Linker.LinkableDepType.SHARED == depType) {
           pkgBuilder.addAllLibraries(args.getSharedLibs().values());
         } else {
-          pkgBuilder.addAllLibraries(args.getStaticLibs());
+          pkgBuilder.addAllLibraries(getStaticLibs(depType));
           // If profiling is enabled, we also include their libs in the same package.
           if (args.isEnableProfiling() || hsProfile) {
-            pkgBuilder.addAllLibraries(args.getProfiledStaticLibs());
+            pkgBuilder.addAllLibraries(getProfiledStaticLibs(depType));
           }
         }
         HaskellPackage pkg = pkgBuilder.build();
@@ -128,7 +151,7 @@ public class HaskellPrebuiltLibraryDescription
           Linker linker = cxxPlatform.getLd().resolve(resolver, targetConfiguration);
           ImmutableList<Arg> libArgs =
               SourcePathArg.from(
-                  args.isEnableProfiling() ? args.getProfiledStaticLibs() : args.getStaticLibs());
+                  args.isEnableProfiling() ? getProfiledStaticLibs(type) : getStaticLibs(type));
           if (forceLinkWhole) {
             libArgs =
                 RichStream.from(libArgs)
@@ -232,6 +255,10 @@ public class HaskellPrebuiltLibraryDescription
     ImmutableList<SourcePath> getStaticLibs();
 
     ImmutableList<SourcePath> getProfiledStaticLibs();
+
+    ImmutableList<SourcePath> getPicStaticLibs();
+
+    ImmutableList<SourcePath> getPicProfiledStaticLibs();
 
     ImmutableMap<String, SourcePath> getSharedLibs();
 

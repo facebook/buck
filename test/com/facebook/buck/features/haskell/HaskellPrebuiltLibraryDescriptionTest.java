@@ -60,11 +60,49 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PrebuiltHaskellLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
+
+    // check both static and static_pic gives this library, as static_pic should fall back without
+    // an explicit one.
+    for (final Linker.LinkableDepType linkType :
+        new Linker.LinkableDepType[] {
+          Linker.LinkableDepType.STATIC, Linker.LinkableDepType.STATIC_PIC
+        }) {
+      NativeLinkableInput input =
+          library
+              .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+              .getNativeLinkableInput(
+                  linkType, graphBuilder, UnconfiguredTargetConfiguration.INSTANCE);
+      assertThat(
+          RichStream.from(input.getArgs())
+              .flatMap(
+                  a ->
+                      BuildableSupport.deriveInputs(a).collect(ImmutableList.toImmutableList())
+                          .stream())
+              .toImmutableSet(),
+          Matchers.contains(lib));
+    }
+  }
+
+  @Test
+  public void staticPicLibraries() {
+    PathSourcePath lib = FakeSourcePath.of("libfoo.a");
+    PathSourcePath picLib = FakeSourcePath.of("libfoo_pic.a");
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    PrebuiltHaskellLibraryBuilder builder =
+        new PrebuiltHaskellLibraryBuilder(target)
+            .setVersion("1.0.0")
+            .setDb(FakeSourcePath.of("package.conf.d"))
+            .setStaticLibs(ImmutableList.of(lib))
+            .setPicStaticLibs(ImmutableList.of(picLib));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    PrebuiltHaskellLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkableInput input =
         library
             .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableInput(
-                Linker.LinkableDepType.STATIC,
+                Linker.LinkableDepType.STATIC_PIC,
                 graphBuilder,
                 UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
@@ -74,7 +112,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
                     BuildableSupport.deriveInputs(a).collect(ImmutableList.toImmutableList())
                         .stream())
             .toImmutableSet(),
-        Matchers.contains(lib));
+        Matchers.contains(picLib));
   }
 
   @Test
