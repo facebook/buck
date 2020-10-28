@@ -19,6 +19,8 @@ package com.facebook.buck.intellij.ideabuck.debug;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.IDevice;
+import com.android.ddmlib.IShellEnabledDevice;
+import com.android.tools.idea.run.AndroidDevice;
 import com.android.tools.idea.run.AndroidProcessHandler;
 import com.android.tools.idea.run.editor.AndroidDebugger;
 import com.android.tools.idea.run.editor.AndroidJavaDebugger;
@@ -26,12 +28,22 @@ import com.google.common.base.Strings;
 import com.intellij.execution.ExecutionManager;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.process.ProcessOutputTypes;
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.ui.messages.MessagesService;
+import com.intellij.openapi.util.Key;
 import com.intellij.util.concurrency.AppExecutorUtil;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 import org.jetbrains.android.actions.AndroidProcessChooserDialog;
 import org.jetbrains.android.sdk.AndroidSdkUtils;
@@ -45,8 +57,10 @@ public final class BuckAndroidDebuggerUtil {
 
   private BuckAndroidDebuggerUtil() {}
 
-  public static Client getClientAndAttachDebugger(@NotNull Project project, String processName) {
-    Client clientFromProcessName = getDebugClient(project, processName);
+  @Nullable
+  public static Client getClientAndAttachDebugger(
+      @NotNull Project project, String processName, IDevice device) {
+    Client clientFromProcessName = device != null ? device.getClient(processName) : null;
     if (clientFromProcessName == null) {
       if (!Strings.isNullOrEmpty(processName)) {
         Messages.showErrorDialog(
@@ -78,21 +92,135 @@ public final class BuckAndroidDebuggerUtil {
   }
 
   @Nullable
-  private static Client getDebugClient(@NotNull Project project, String processName) {
-    if (Strings.isNullOrEmpty(processName)) {
+  public static Key<Boolean> getDeployToLocalKey() {
+    AnAction action = ActionManager.getInstance().getAction("DeviceAndSnapshotComboBox");
+    if (action == null) {
       return null;
     }
-    return Optional.ofNullable(getSelectedDevice(project))
-        .map(iDevice -> iDevice.getClient(processName))
+    try {
+      // This field is only available at runtime
+      Field field = action.getClass().getField("DEPLOYS_TO_LOCAL_DEVICE");
+      return (Key<Boolean>) field.get(null);
+    } catch (IllegalAccessException | NoSuchFieldException e) {
+      return null;
+    }
+  }
+
+  @Nullable
+  public static IDevice getSelectedDevice(Project project) {
+    // If this key is not null, it means we can enable the device selector
+    return getDeployToLocalKey() != null
+        ? getSelectedDeviceFromDropDown(project)
+        : getDeviceFromDebugBridge(project);
+  }
+
+  @Nullable
+  private static IDevice getSelectedDeviceFromDropDown(Project project) {
+    AndroidDevice androidDevice = getSelectedAndroidDeviceFromDropDown(project);
+    if (androidDevice == null) {
+      Messages.showErrorDialog(
+          project, "Please start an emulator or plug in your phone", "No Device Detected/Selected");
+      return null;
+    } else if (!androidDevice.isRunning()) {
+      Messages.showErrorDialog(
+          "<html>The selected device <b>"
+              + androidDevice.getName()
+              + "</b> is offline. Make sure it is started or connected.</html>",
+          "Device Not Connected/Started");
+      return null;
+    }
+    try {
+      return androidDevice.getLaunchedDevice().get();
+    } catch (InterruptedException | ExecutionException e) {
+      Messages.showErrorDialog(
+          "<html>Unable to connect to <b>"
+              + androidDevice.getName()
+              + "</b> because of exception: "
+              + e.getMessage()
+              + "</html>",
+          "Connection Failed");
+      return null;
+    }
+  }
+
+  @Nullable
+  public static AndroidDevice getSelectedAndroidDeviceFromDropDown(Project project) {
+    AnAction action = ActionManager.getInstance().getAction("DeviceAndSnapshotComboBox");
+    if (action == null) {
+      return null;
+    }
+    return getAccessibleSelectedDeviceMethod(action.getClass())
+        .map(selectedDeviceMethod -> invokeMethod(selectedDeviceMethod, action, project))
+        .flatMap(
+            device ->
+                getAccessibleGetAndroidDeviceMethod(device.getClass().getSuperclass())
+                    .map(getAndroidDeviceMethod -> invokeMethod(getAndroidDeviceMethod, device)))
+        .map(AndroidDevice.class::cast)
         .orElse(null);
   }
 
   @Nullable
-  private static IDevice getSelectedDevice(@NotNull Project project) {
-    return Optional.ofNullable(AndroidSdkUtils.getDebugBridge(project))
-        .map(AndroidDebugBridge::getDevices)
-        .flatMap(iDevices -> Arrays.stream(iDevices).findFirst())
-        .orElse(null);
+  private static IDevice getDeviceFromDebugBridge(Project project) {
+    List<IDevice> availableDevices = getDeviceList(project);
+    if (availableDevices.isEmpty()) {
+      Messages.showErrorDialog(
+          "Please start an emulator or plug in your phone", "No Device Detected");
+      return null;
+    }
+    if (availableDevices.size() > 1) {
+      String[] devicesNames =
+          availableDevices.stream().map(IShellEnabledDevice::getName).toArray(String[]::new);
+      int selectedIndex =
+          MessagesService.getInstance()
+              .showChooseDialog(
+                  project,
+                  null,
+                  "Choose a device to install the target",
+                  "Multiple Devices Detected",
+                  devicesNames,
+                  devicesNames[0],
+                  null);
+      if (selectedIndex != -1) {
+        return availableDevices.get(selectedIndex);
+      }
+    } else {
+      return availableDevices.get(0);
+    }
+    return null;
+  }
+
+  private static List<IDevice> getDeviceList(Project project) {
+    AndroidDebugBridge debugBridge = AndroidSdkUtils.getDebugBridge(project);
+    return debugBridge == null ? Collections.emptyList() : Arrays.asList(debugBridge.getDevices());
+  }
+
+  @Nullable
+  private static Object invokeMethod(Method method, Object object, Object... args) {
+    try {
+      return method.invoke(object, args);
+    } catch (IllegalAccessException | InvocationTargetException e) {
+      return null;
+    }
+  }
+
+  private static Optional<Method> getAccessibleSelectedDeviceMethod(Class<?> clazz) {
+    try {
+      Method method = clazz.getDeclaredMethod("getSelectedDevice", Project.class);
+      method.setAccessible(true);
+      return Optional.of(method);
+    } catch (NoSuchMethodException e) {
+      return Optional.empty();
+    }
+  }
+
+  private static Optional<Method> getAccessibleGetAndroidDeviceMethod(Class<?> clazz) {
+    try {
+      Method method = clazz.getDeclaredMethod("getAndroidDevice");
+      method.setAccessible(true);
+      return Optional.of(method);
+    } catch (NoSuchMethodException e) {
+      return Optional.empty();
+    }
   }
 
   @Nullable

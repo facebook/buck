@@ -17,10 +17,12 @@
 package com.facebook.buck.intellij.ideabuck.configurations;
 
 import com.android.ddmlib.Client;
+import com.android.ddmlib.IDevice;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
 import com.facebook.buck.intellij.ideabuck.debug.BuckAndroidDebuggerUtil;
+import com.google.common.base.Strings;
 import com.intellij.execution.DefaultExecutionResult;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
@@ -49,13 +51,22 @@ class BuckInstallExecutionState extends AbstractExecutionState<BuckInstallConfig
   public ExecutionResult execute(Executor executor, @NotNull ProgramRunner runner)
       throws ExecutionException {
     ProcessHandler processHandler = runBuildCommand(executor);
+    if (processHandler == null) {
+      return null;
+    }
     ConsoleView console =
         TextConsoleBuilderFactory.getInstance().createBuilder(mProject).getConsole();
     console.attachToProcess(processHandler);
     return new DefaultExecutionResult(console, processHandler, AnAction.EMPTY_ARRAY);
   }
 
+  @Nullable
   private ProcessHandler runBuildCommand(Executor executor) {
+    IDevice device = BuckAndroidDebuggerUtil.getSelectedDevice(mProject);
+    if (device == null) {
+      return null;
+    }
+
     BuckModule buckModule = mProject.getComponent(BuckModule.class);
     String targets = mConfiguration.data.targets;
     String additionalParams = mConfiguration.data.additionalParams;
@@ -63,6 +74,7 @@ class BuckInstallExecutionState extends AbstractExecutionState<BuckInstallConfig
     String activitySetting = mConfiguration.data.activitySetting;
     String activityClass = mConfiguration.data.activityClass;
     String processName = mConfiguration.data.processName;
+    String deviceSerialNumber = device.getSerialNumber();
 
     String title = "Buck Install " + targets;
 
@@ -80,7 +92,7 @@ class BuckInstallExecutionState extends AbstractExecutionState<BuckInstallConfig
                       () -> {
                         Client client =
                             BuckAndroidDebuggerUtil.getClientAndAttachDebugger(
-                                mProject, processName);
+                                mProject, processName, device);
                         if (client != null) {
                           mConfiguration.data.processName = client.getClientData().getPackageName();
                         }
@@ -101,6 +113,9 @@ class BuckInstallExecutionState extends AbstractExecutionState<BuckInstallConfig
     }
     if (executor.getId().equals(DefaultDebugExecutor.EXECUTOR_ID)) {
       handler.command().addParameter("-w");
+    }
+    if (!Strings.isNullOrEmpty(deviceSerialNumber)) {
+      handler.command().addParameters("-s", deviceSerialNumber);
     }
     handler.start();
     OSProcessHandler result = handler.getHandler();
