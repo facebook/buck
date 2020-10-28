@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.build.context;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
@@ -36,18 +37,22 @@ public abstract class BuildContext {
 
   public abstract boolean getShouldDeleteTemporaries();
 
+  public abstract CellPathResolver getCellPathResolver();
+
   public static BuildContext of(
       SourcePathResolverAdapter sourcePathResolver,
       Path buildCellRootPath,
       JavaPackageFinder javaPackageFinder,
       BuckEventBus eventBus,
-      boolean shouldDeleteTemporaries) {
+      boolean shouldDeleteTemporaries,
+      CellPathResolver cellPathResolver) {
     return ImmutableBuildContext.ofImpl(
         sourcePathResolver,
         buildCellRootPath,
         javaPackageFinder,
         eventBus,
-        shouldDeleteTemporaries);
+        shouldDeleteTemporaries,
+        cellPathResolver);
   }
 
   public BuildContext withBuildCellRootPath(Path buildCellRootPath) {
@@ -59,7 +64,8 @@ public abstract class BuildContext {
         buildCellRootPath,
         getJavaPackageFinder(),
         getEventBus(),
-        getShouldDeleteTemporaries());
+        getShouldDeleteTemporaries(),
+        getCellPathResolver());
   }
 
   public BuildContext withEventBus(BuckEventBus eventBus) {
@@ -71,7 +77,8 @@ public abstract class BuildContext {
         getBuildCellRootPath(),
         getJavaPackageFinder(),
         eventBus,
-        getShouldDeleteTemporaries());
+        getShouldDeleteTemporaries(),
+        getCellPathResolver());
   }
 
   public BuildContext withJavaPackageFinder(JavaPackageFinder javaPackageFinder) {
@@ -83,7 +90,8 @@ public abstract class BuildContext {
         getBuildCellRootPath(),
         javaPackageFinder,
         getEventBus(),
-        getShouldDeleteTemporaries());
+        getShouldDeleteTemporaries(),
+        getCellPathResolver());
   }
 
   public BuildContext withSourcePathResolver(SourcePathResolverAdapter sourcePathResolver) {
@@ -95,6 +103,7 @@ public abstract class BuildContext {
         getBuildCellRootPath(),
         getJavaPackageFinder(),
         getEventBus(),
-        getShouldDeleteTemporaries());
+        getShouldDeleteTemporaries(),
+        getCellPathResolver());
   }
 }

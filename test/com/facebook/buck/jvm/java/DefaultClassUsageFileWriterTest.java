@@ -140,7 +140,7 @@ public class DefaultClassUsageFileWriterTest {
         outputOne.getPath(),
         rootPath,
         homeFs.getBuckPaths().getConfiguredBuckOut(),
-        CellPathResolverUtils.getCellToMapMappings(rootPath, cellPathResolver));
+        CellPathResolverUtils.getCellToPathMappings(rootPath, cellPathResolver));
 
     // The xcell file should appear relative to the "home" filesystem, and the external class
     // which is not under any cell in the project should not appear at all.

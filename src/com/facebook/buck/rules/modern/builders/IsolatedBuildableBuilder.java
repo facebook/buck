@@ -239,7 +239,8 @@ public abstract class IsolatedBuildableBuilder {
             canonicalProjectRoot.getPath(),
             javaPackageFinder,
             eventBus,
-            buckConfig.getView(BuildBuckConfig.class).getShouldDeleteTemporaries());
+            buckConfig.getView(BuildBuckConfig.class).getShouldDeleteTemporaries(),
+            cellPathResolver);
 
     this.toolchainProviderFunction =
         cellName -> {

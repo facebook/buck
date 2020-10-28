@@ -61,7 +61,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       /* output params */
       Builder<Step> steps,
       BuildableContext buildableContext,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      ImmutableMap<String, RelPath> cellToPathMappings) {
     Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
 
     steps.addAll(
@@ -82,6 +83,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       // This adds the javac command, along with any supporting commands.
       createCompileToJarStepImpl(
           projectFilesystem,
+          cellToPathMappings,
           context,
           target,
           compilerParameters,
@@ -169,6 +171,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
 
   protected void createCompileToJarStepImpl(
       ProjectFilesystem projectFilesystem,
+      ImmutableMap<String, RelPath> cellToPathMappings,
       BuildContext context,
       BuildTarget target,
       CompilerParameters compilerParameters,
@@ -187,7 +190,13 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
                 .contains(compilerParameters.getOutputPaths().getClassesDir()));
 
     createCompileStep(
-        context, projectFilesystem, target, compilerParameters, steps, buildableContext);
+        context,
+        projectFilesystem,
+        cellToPathMappings,
+        target,
+        compilerParameters,
+        steps,
+        buildableContext);
 
     steps.addAll(
         addPostprocessClassesCommands(
@@ -282,6 +291,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
   public abstract void createCompileStep(
       BuildContext context,
       ProjectFilesystem projectFilesystem,
+      ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTarget invokingRule,
       CompilerParameters parameters,
       /* output params */

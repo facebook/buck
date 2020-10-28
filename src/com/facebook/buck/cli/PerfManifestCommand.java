@@ -20,6 +20,7 @@ import com.facebook.buck.cli.PerfManifestCommand.Context;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.manifest.Manifest;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -62,6 +63,7 @@ import org.kohsuke.args4j.Option;
  * depfile-supporting rules.
  */
 public class PerfManifestCommand extends AbstractPerfCommand<Context> {
+
   // TODO(cjhopman): We should consider a mode that does a --deep build and then computes these
   // keys... but this is so much faster and simpler.
   // TODO(cjhopman): We could actually get a build that just traverses the graph and builds only the
@@ -185,6 +187,7 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
               && ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys()) {
             try {
               Cell rootCell = params.getCells().getRootCell();
+              CellPathResolver cellPathResolver = rootCell.getCellPathResolver();
               usedInputs.put(
                   rule,
                   ImmutableSet.copyOf(
@@ -198,8 +201,9 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
                                       .getView(JavaBuckConfig.class)
                                       .createDefaultJavaPackageFinder(),
                                   params.getBuckEventBus(),
-                                  false),
-                              rootCell.getCellPathResolver())));
+                                  false,
+                                  cellPathResolver),
+                              cellPathResolver)));
             } catch (Exception e) {
               throw new BuckUncheckedExecutionException(
                   e, "When asking %s for its inputs.", rule.getBuildTarget());
@@ -211,6 +215,7 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
 
   /** Our test context. */
   public static class Context {
+
     private final ImmutableMap<
             SupportsDependencyFileRuleKey, DependencyFileRuleKeyFactory.RuleKeyAndInputs>
         manifestKeys;

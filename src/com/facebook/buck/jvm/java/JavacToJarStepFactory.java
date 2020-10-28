@@ -37,6 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -98,6 +99,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   public void createCompileStep(
       BuildContext context,
       ProjectFilesystem projectFilesystem,
+      ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTarget invokingRule,
       CompilerParameters parameters,
       /* output params */
@@ -108,23 +110,25 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
 
     addAnnotationGenFolderStep(invokingRule, projectFilesystem, steps, buildableContext);
 
+    AbsPath rootPath = projectFilesystem.getRootPath();
     steps.add(
         new JavacStep(
             javac,
-            ResolvedJavacOptions.of(
-                buildTimeOptions, context.getSourcePathResolver(), projectFilesystem.getRootPath()),
+            ResolvedJavacOptions.of(buildTimeOptions, context.getSourcePathResolver(), rootPath),
             invokingRule,
             projectFilesystem.getBuckPaths(),
             new ClasspathChecker(),
             parameters,
             null,
             null,
-            withDownwardApi));
+            withDownwardApi,
+            cellToPathMappings));
   }
 
   public final void createPipelinedCompileToJarStep(
       BuildContext context,
       ProjectFilesystem projectFilesystem,
+      ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTarget target,
       JavacPipelineState pipeline,
       ResourcesParameters resourcesParameters,
@@ -155,7 +159,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       recordDepFileIfNecessary(projectFilesystem, target, compilerParameters, buildableContext);
 
       // This adds the javac command, along with any supporting commands.
-      createPipelinedCompileStep(projectFilesystem, pipeline, target, steps);
+      createPipelinedCompileStep(projectFilesystem, cellToPathMappings, pipeline, target, steps);
     }
 
     jarParameters.ifPresent(
@@ -172,6 +176,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   @Override
   public void createCompileToJarStepImpl(
       ProjectFilesystem projectFilesystem,
+      ImmutableMap<String, RelPath> cellToPathMappings,
       BuildContext context,
       BuildTarget invokingRule,
       CompilerParameters compilerParameters,
@@ -223,10 +228,12 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
               compilerParameters,
               abiJarParameters,
               libraryJarParameters,
-              withDownwardApi));
+              withDownwardApi,
+              cellToPathMappings));
     } else {
       super.createCompileToJarStepImpl(
           projectFilesystem,
+          cellToPathMappings,
           context,
           invokingRule,
           compilerParameters,
@@ -241,6 +248,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
 
   public void createPipelinedCompileStep(
       ProjectFilesystem projectFilesystem,
+      ImmutableMap<String, RelPath> cellToPathMappings,
       JavacPipelineState pipeline,
       BuildTarget invokingRule,
       Builder<Step> steps) {
@@ -254,7 +262,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
               CompilerOutputPaths.getAnnotationPath(invokingRule, buckPaths)));
     }
 
-    steps.add(new JavacStep(pipeline, invokingRule, buckPaths));
+    steps.add(new JavacStep(pipeline, invokingRule, buckPaths, cellToPathMappings));
   }
 
   @VisibleForTesting

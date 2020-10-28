@@ -31,6 +31,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -45,6 +46,7 @@ public class JavacStep implements Step {
   private final BuildTarget invokingRule;
   private final boolean ownsPipelineObject;
   private final BaseBuckPaths buckPaths;
+  private final ImmutableMap<String, RelPath> cellToPathMappings;
 
   public JavacStep(
       Javac javac,
@@ -55,7 +57,8 @@ public class JavacStep implements Step {
       CompilerParameters compilerParameters,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      ImmutableMap<String, RelPath> cellToPathMappings) {
     this(
         new JavacPipelineState(
             javac,
@@ -68,22 +71,29 @@ public class JavacStep implements Step {
             withDownwardApi),
         invokingRule,
         true,
-        buckPaths);
+        buckPaths,
+        cellToPathMappings);
   }
 
-  public JavacStep(JavacPipelineState pipeline, BuildTarget invokingRule, BaseBuckPaths buckPaths) {
-    this(pipeline, invokingRule, false, buckPaths);
+  public JavacStep(
+      JavacPipelineState pipeline,
+      BuildTarget invokingRule,
+      BaseBuckPaths buckPaths,
+      ImmutableMap<String, RelPath> cellToPathMappings) {
+    this(pipeline, invokingRule, false, buckPaths, cellToPathMappings);
   }
 
   private JavacStep(
       JavacPipelineState pipeline,
       BuildTarget invokingRule,
       boolean ownsPipelineObject,
-      BaseBuckPaths buckPaths) {
+      BaseBuckPaths buckPaths,
+      ImmutableMap<String, RelPath> cellToPathMappings) {
     this.pipeline = pipeline;
     this.invokingRule = invokingRule;
     this.ownsPipelineObject = ownsPipelineObject;
     this.buckPaths = buckPaths;
+    this.cellToPathMappings = cellToPathMappings;
   }
 
   @Override
@@ -94,7 +104,8 @@ public class JavacStep implements Step {
     String firstOrderStderr;
     Optional<String> returnedStderr;
     try {
-      Javac.Invocation invocation = pipeline.getJavacInvocation(buckPaths, context);
+      Javac.Invocation invocation =
+          pipeline.getJavacInvocation(buckPaths, context, cellToPathMappings);
       if (JavaAbis.isSourceAbiTarget(invokingRule)) {
         declaredDepsBuildResult = invocation.buildSourceAbiJar();
       } else if (JavaAbis.isSourceOnlyAbiTarget(invokingRule)) {

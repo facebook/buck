@@ -38,7 +38,7 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
       Path relativePath,
       AbsPath rootPath,
       RelPath configuredBuckOut,
-      ImmutableMap<String, RelPath> cellToMapMappings) {
+      ImmutableMap<String, RelPath> cellToPathMappings) {
     ImmutableMap<Path, Map<Path, Integer>> classUsageMap = tracker.getClassUsageMap();
     try {
       Path parent = relativePath.getParent();
@@ -46,7 +46,7 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
           ProjectFilesystemUtils.exists(rootPath, parent), "directory must exist: %s", parent);
       ObjectMappers.WRITER.writeValue(
           rootPath.resolve(relativePath).toFile(),
-          relativizeMap(classUsageMap, rootPath, configuredBuckOut, cellToMapMappings));
+          relativizeMap(classUsageMap, rootPath, configuredBuckOut, cellToPathMappings));
     } catch (IOException e) {
       throw new HumanReadableException(e, "Unable to write used classes file.");
     }
@@ -56,7 +56,7 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
       ImmutableMap<Path, Map<Path, Integer>> classUsageMap,
       AbsPath rootPath,
       RelPath configuredBuckOut,
-      ImmutableMap<String, RelPath> cellToMapMappings) {
+      ImmutableMap<String, RelPath> cellToPathMappings) {
     ImmutableSortedMap.Builder<Path, Map<Path, Integer>> builder =
         ImmutableSortedMap.naturalOrder();
 
@@ -73,7 +73,7 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
       ProjectFilesystemUtils.getPathRelativeToProjectRoot(
               rootPath, configuredBuckOut, jarAbsolutePath)
           .map(Optional::of)
-          .orElseGet(() -> getCrossCellPath(jarAbsolutePath, rootPath, cellToMapMappings))
+          .orElseGet(() -> getCrossCellPath(jarAbsolutePath, rootPath, cellToPathMappings))
           .ifPresent(
               projectPath ->
                   builder.put(projectPath, ImmutableSortedMap.copyOf(jarClassesEntry.getValue())));

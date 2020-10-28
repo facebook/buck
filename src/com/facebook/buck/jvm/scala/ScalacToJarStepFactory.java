@@ -40,6 +40,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -86,6 +87,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
   public void createCompileStep(
       BuildContext context,
       ProjectFilesystem projectFilesystem,
+      ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTarget invokingRule,
       CompilerParameters parameters,
       /* output params */
@@ -150,7 +152,13 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
               .build();
       new JavacToJarStepFactory(javac, javacOptions, extraClasspathProvider, withDownwardApi)
           .createCompileStep(
-              context, projectFilesystem, invokingRule, javacParameters, steps, buildableContext);
+              context,
+              projectFilesystem,
+              cellToPathMappings,
+              invokingRule,
+              javacParameters,
+              steps,
+              buildableContext);
     }
   }
 

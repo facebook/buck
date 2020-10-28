@@ -30,6 +30,7 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -55,6 +56,7 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
   public void createCompileStep(
       BuildContext buildContext,
       ProjectFilesystem projectFilesystem,
+      ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTarget invokingRule,
       CompilerParameters parameters,
       /* output params */

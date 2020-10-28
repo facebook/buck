@@ -264,6 +264,7 @@ public class AndroidPrebuiltAarDescription
   @RuleArg
   interface AbstractAndroidPrebuiltAarDescriptionArg
       extends BuildRuleArg, HasDeclaredDeps, MaybeRequiredForSourceOnlyAbiArg {
+
     SourcePath getAar();
 
     Optional<SourcePath> getSourceJar();

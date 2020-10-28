@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -44,10 +45,11 @@ public class AndroidBuildConfigJavaLibraryTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = TestBuildRuleParams.create();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
         AndroidBuildConfigDescription.createBuildRule(
             buildTarget,
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             params,
             "com.example.buck",
             /* values */ BuildConfigFields.fromFieldDeclarations(
@@ -77,10 +79,11 @@ public class AndroidBuildConfigJavaLibraryTest {
     BuildConfigFields fields =
         BuildConfigFields.fromFieldDeclarations(Collections.singleton("String KEY = \"value\""));
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
         AndroidBuildConfigDescription.createBuildRule(
             buildTarget,
-            new FakeProjectFilesystem(),
+            projectFilesystem,
             params,
             "com.example.buck",
             /* values */ fields,

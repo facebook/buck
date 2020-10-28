@@ -192,6 +192,7 @@ public class AndroidBuildConfigDescription
 
   @RuleArg
   interface AbstractAndroidBuildConfigDescriptionArg extends BuildRuleArg {
+
     /** For R.java */
     String getPackage();
 

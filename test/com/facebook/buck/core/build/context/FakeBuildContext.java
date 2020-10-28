@@ -18,12 +18,16 @@ package com.facebook.buck.core.build.context;
 
 import static org.easymock.EasyMock.createMock;
 
+import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
+import com.facebook.buck.util.config.ConfigBuilder;
+import java.nio.file.Path;
 
 /**
  * Facilitates creating a fake {@link com.facebook.buck.core.build.context.BuildContext} for unit
@@ -39,12 +43,19 @@ public class FakeBuildContext {
       withSourcePathResolver(createMock(SourcePathResolverAdapter.class));
 
   public static BuildContext withSourcePathResolver(SourcePathResolverAdapter pathResolver) {
+
+    AbsPath rootPath = new FakeProjectFilesystem().getRootPath();
+    Path path = rootPath.getPath();
+    DefaultCellPathResolver cellPathResolver =
+        DefaultCellPathResolver.create(rootPath, ConfigBuilder.createFromText(""));
+
     return BuildContext.of(
         pathResolver,
-        new FakeProjectFilesystem().getRootPath().getPath(),
+        path,
         new FakeJavaPackageFinder(),
         BuckEventBusForTests.newInstance(),
-        false);
+        false,
+        cellPathResolver);
   }
 
   /**
@@ -53,21 +64,30 @@ public class FakeBuildContext {
    */
   public static BuildContext withSourcePathResolver(
       SourcePathResolverAdapter pathResolver, ProjectFilesystem filesystem) {
+
+    AbsPath rootPath = filesystem.getRootPath();
+    Path path = rootPath.getPath();
+    DefaultCellPathResolver cellPathResolver =
+        DefaultCellPathResolver.create(rootPath, ConfigBuilder.createFromText(""));
+
     return BuildContext.of(
         pathResolver,
-        filesystem.getRootPath().getPath(),
+        path,
         new FakeJavaPackageFinder(),
         BuckEventBusForTests.newInstance(),
-        false);
+        false,
+        cellPathResolver);
   }
 
   public static BuildContext create(
       SourcePathResolverAdapter pathResolver, BuckEventBus buckEventBus) {
+
+    AbsPath rootPath = new FakeProjectFilesystem().getRootPath();
+    Path path = rootPath.getPath();
+    DefaultCellPathResolver cellPathResolver =
+        DefaultCellPathResolver.create(rootPath, ConfigBuilder.createFromText(""));
+
     return BuildContext.of(
-        pathResolver,
-        new FakeProjectFilesystem().getRootPath().getPath(),
-        new FakeJavaPackageFinder(),
-        buckEventBus,
-        false);
+        pathResolver, path, new FakeJavaPackageFinder(), buckEventBus, false, cellPathResolver);
   }
 }

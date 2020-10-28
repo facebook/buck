@@ -43,6 +43,7 @@ import com.facebook.buck.util.FakeProcessExecutor;
 import com.google.common.base.Functions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.nio.file.Paths;
@@ -85,7 +86,8 @@ public class JavacStepTest {
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
             null,
-            false);
+            false,
+            ImmutableMap.of());
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
@@ -136,7 +138,8 @@ public class JavacStepTest {
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
             null,
-            false);
+            false,
+            ImmutableMap.of());
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
 
@@ -195,7 +198,8 @@ public class JavacStepTest {
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
             null,
-            false);
+            false,
+            ImmutableMap.of());
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
@@ -246,7 +250,8 @@ public class JavacStepTest {
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
             null,
-            false);
+            false,
+            ImmutableMap.of());
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
@@ -303,7 +308,8 @@ public class JavacStepTest {
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
             null,
-            false);
+            false,
+            ImmutableMap.of());
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
 

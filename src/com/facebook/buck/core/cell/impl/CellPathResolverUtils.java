@@ -31,7 +31,7 @@ public class CellPathResolverUtils {
   private CellPathResolverUtils() {}
 
   /** Returns cell to relative path mapping */
-  public static ImmutableMap<String, RelPath> getCellToMapMappings(
+  public static ImmutableMap<String, RelPath> getCellToPathMappings(
       AbsPath ruleCellRoot, CellPathResolver cellPathResolver) {
     return cellPathResolver.getCellPathsByRootCellExternalName().entrySet().stream()
         .collect(

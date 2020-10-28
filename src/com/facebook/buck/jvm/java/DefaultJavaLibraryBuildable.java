@@ -49,6 +49,7 @@ import javax.annotation.Nullable;
 
 /** Buildable for DefaultJavaLibrary. */
 class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineState> {
+
   @AddToRuleKey private final int buckJavaVersion = JavaVersion.getMajorVersion();
   @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
   @AddToRuleKey private final UnusedDependenciesAction unusedDependenciesAction;
@@ -172,7 +173,10 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         factory ->
             isolatedSteps.add(
                 getUnusedDependenciesStep(
-                    factory, filesystem, buildContext.getSourcePathResolver())));
+                    factory,
+                    filesystem,
+                    buildContext.getSourcePathResolver(),
+                    buildContext.getCellPathResolver())));
     isolatedSteps.add(getMakeMissingOutputsStep(outputPathResolver));
 
     return isolatedSteps.build();
@@ -181,8 +185,10 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   private IsolatedStep getUnusedDependenciesStep(
       UnusedDependenciesFinderFactory factory,
       ProjectFilesystem filesystem,
-      SourcePathResolverAdapter sourcePathResolver) {
-    return factory.create(buildTarget, filesystem, sourcePathResolver, unusedDependenciesAction);
+      SourcePathResolverAdapter sourcePathResolver,
+      CellPathResolver cellPathResolver) {
+    return factory.create(
+        buildTarget, filesystem, sourcePathResolver, unusedDependenciesAction, cellPathResolver);
   }
 
   private IsolatedStep getMakeMissingOutputsStep(OutputPathResolver outputPathResolver) {

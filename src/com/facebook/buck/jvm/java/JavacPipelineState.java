@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -89,7 +88,10 @@ public class JavacPipelineState implements RulePipelineState {
   }
 
   /** Get the invocation instance. */
-  public Javac.Invocation getJavacInvocation(BaseBuckPaths buckPaths, StepExecutionContext context)
+  public Javac.Invocation getJavacInvocation(
+      BaseBuckPaths buckPaths,
+      StepExecutionContext context,
+      ImmutableMap<String, RelPath> cellToPathMappings)
       throws IOException {
     if (invocation == null) {
       resolvedJavacOptions.validateClasspath(classpathChecker::validateClasspath);
@@ -113,11 +115,6 @@ public class JavacPipelineState implements RulePipelineState {
                 DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
       }
 
-      AbsPath ruleCellRoot = context.getRuleCellRoot();
-      ImmutableMap<String, RelPath> cellToMapMappings =
-          CellPathResolverUtils.getCellToMapMappings(
-              ruleCellRoot, firstOrderContext.getCellPathResolver());
-
       JavacExecutionContext javacExecutionContext =
           ImmutableJavacExecutionContext.ofImpl(
               new JavacEventSinkToBuckEventBusBridge(
@@ -125,7 +122,7 @@ public class JavacPipelineState implements RulePipelineState {
               stderr,
               firstOrderContext.getClassLoaderCache(),
               verbosity,
-              cellToMapMappings,
+              cellToPathMappings,
               context.getRuleCellRoot(),
               firstOrderContext.getEnvironment(),
               processExecutor,

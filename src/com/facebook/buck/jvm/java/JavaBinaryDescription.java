@@ -238,6 +238,7 @@ public class JavaBinaryDescription
 
   @RuleArg
   interface AbstractJavaBinaryDescriptionArg extends BuildRuleArg, HasDeclaredDeps, HasTests {
+
     Optional<String> getMainClass();
 
     Optional<SourcePath> getManifestFile();

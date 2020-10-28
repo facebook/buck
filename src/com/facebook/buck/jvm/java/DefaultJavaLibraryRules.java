@@ -441,7 +441,6 @@ public abstract class DefaultJavaLibraryRules {
       JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
       return Optional.of(
           new UnusedDependenciesFinderFactory(
-              getProjectFilesystem().getRootPath(),
               javaBuckConfig.getUnusedDependenciesBuildozerString(),
               javaBuckConfig.isUnusedDependenciesOnlyPrintCommands(),
               javaBuckConfig.isUnusedDependenciesUltralightChecking(),

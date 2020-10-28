@@ -83,6 +83,7 @@ public class CalculateSourceAbi
 
   /** Buildable implementation. */
   public static class SourceAbiBuildable implements PipelinedBuildable<JavacPipelineState> {
+
     @AddToRuleKey(stringify = true)
     @CustomFieldBehavior(DefaultFieldSerialization.class)
     private final BuildTarget buildTarget;

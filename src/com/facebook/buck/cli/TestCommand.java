@@ -28,6 +28,8 @@ import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -648,6 +650,8 @@ public class TestCommand extends BuildCommand {
         LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
             new LocalCachingBuildEngineDelegate(params.getFileHashCache());
         Console console = params.getConsole();
+        Cell rootCell = cells.getRootCell();
+        CellPathResolver cellPathResolver = rootCell.getCellPathResolver();
         try (CachingBuildEngine cachingBuildEngine =
                 new CachingBuildEngine(
                     localCachingBuildEngineDelegate,
@@ -655,8 +659,8 @@ public class TestCommand extends BuildCommand {
                         params.getBuckConfig().getView(ModernBuildRuleConfig.class),
                         params.getBuckConfig().getView(RemoteExecutionConfig.class),
                         actionGraphAndBuilder.getActionGraphBuilder(),
-                        cells.getRootCell(),
-                        cells.getRootCell().getCellPathResolver(),
+                        rootCell,
+                        cellPathResolver,
                         localCachingBuildEngineDelegate.getFileHashCache(),
                         params.getBuckEventBus(),
                         params.getMetadataProvider(),
@@ -731,7 +735,7 @@ public class TestCommand extends BuildCommand {
           BuildContext buildContext =
               BuildContext.of(
                   actionGraphAndBuilder.getActionGraphBuilder().getSourcePathResolver(),
-                  cells.getRootCell().getRoot().getPath(),
+                  rootCell.getRoot().getPath(),
                   cells
                       .getBuckConfig()
                       .getView(JavaBuckConfig.class)
@@ -740,7 +744,8 @@ public class TestCommand extends BuildCommand {
                   params
                       .getBuckConfig()
                       .getView(BuildBuckConfig.class)
-                      .getShouldDeleteTemporaries());
+                      .getShouldDeleteTemporaries(),
+                  cellPathResolver);
 
           TestBuckConfig testBuckConfig = params.getBuckConfig().getView(TestBuckConfig.class);
           // Once all of the rules are built, then run the tests.

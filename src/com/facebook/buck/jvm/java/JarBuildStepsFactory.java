@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -326,7 +327,9 @@ public class JarBuildStepsFactory
         getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null),
         steps,
         buildableContext,
-        withDownwardApi);
+        withDownwardApi,
+        CellPathResolverUtils.getCellToPathMappings(
+            filesystem.getRootPath(), context.getCellPathResolver()));
 
     return steps.build();
   }
@@ -342,6 +345,8 @@ public class JarBuildStepsFactory
         .createPipelinedCompileToJarStep(
             context,
             filesystem,
+            CellPathResolverUtils.getCellToPathMappings(
+                filesystem.getRootPath(), context.getCellPathResolver()),
             buildTarget,
             state,
             getResourcesParameters(),
@@ -374,7 +379,9 @@ public class JarBuildStepsFactory
         getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null),
         steps,
         buildableContext,
-        withDownwardApi);
+        withDownwardApi,
+        CellPathResolverUtils.getCellToPathMappings(
+            filesystem.getRootPath(), context.getCellPathResolver()));
 
     JavaLibraryRules.addAccumulateClassNamesStep(
         filesystem.getIgnoredPaths(),
@@ -397,6 +404,8 @@ public class JarBuildStepsFactory
         .createPipelinedCompileToJarStep(
             context,
             filesystem,
+            CellPathResolverUtils.getCellToPathMappings(
+                filesystem.getRootPath(), context.getCellPathResolver()),
             libraryTarget,
             state,
             getResourcesParameters(),

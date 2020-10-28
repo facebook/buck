@@ -103,13 +103,15 @@ public class Build implements Closeable {
 
   private BuildEngineBuildContext createBuildContext(boolean isKeepGoing) {
     BuildId buildId = executionContext.getBuildId();
+    Cell rootCell = cells.getRootCell();
     return BuildEngineBuildContext.of(
         BuildContext.of(
             graphBuilder.getSourcePathResolver(),
-            cells.getRootCell().getRoot().getPath(),
+            rootCell.getRoot().getPath(),
             javaPackageFinder,
             executionContext.getBuckEventBus(),
-            cells.getBuckConfig().getView(BuildBuckConfig.class).getShouldDeleteTemporaries()),
+            cells.getBuckConfig().getView(BuildBuckConfig.class).getShouldDeleteTemporaries(),
+            executionContext.getCellPathResolver()),
         artifactCache,
         clock,
         buildId,
@@ -170,10 +172,9 @@ public class Build implements Closeable {
         ImmutableMap<RelPath, RelPath> paths =
             ImmutableMap.of(
                 unconfiguredPaths.getGenDir(),
-                    configuredPaths.getSymlinkPathForDir(unconfiguredPaths.getGenDir().getPath()),
+                configuredPaths.getSymlinkPathForDir(unconfiguredPaths.getGenDir().getPath()),
                 unconfiguredPaths.getScratchDir(),
-                    configuredPaths.getSymlinkPathForDir(
-                        unconfiguredPaths.getScratchDir().getPath()));
+                configuredPaths.getSymlinkPathForDir(unconfiguredPaths.getScratchDir().getPath()));
         for (Map.Entry<RelPath, RelPath> entry : paths.entrySet()) {
           filesystem.deleteRecursivelyIfExists(entry.getKey());
           RelPath parent = entry.getKey().getParent();
@@ -199,12 +200,7 @@ public class Build implements Closeable {
     }
   }
 
-  /**
-   * * Converts given BuildTargetPaths into BuildRules
-   *
-   * @param targetish
-   * @return
-   */
+  /** * Converts given BuildTargetPaths into BuildRules */
   public ImmutableList<BuildRule> getRulesToBuild(Iterable<? extends BuildTarget> targetish) {
     // It is important to use this logic to determine the set of rules to build rather than
     // build.getActionGraph().getNodesWithNoIncomingEdges() because, due to graph enhancement,
@@ -222,6 +218,7 @@ public class Build implements Closeable {
 
   /** Represents an exceptional situation that happened while building requested rules. */
   private static class BuildExecutionException extends ExecutionException {
+
     private final ImmutableList<BuildRule> rulesToBuild;
     private final List<BuildResult> buildResults;
 

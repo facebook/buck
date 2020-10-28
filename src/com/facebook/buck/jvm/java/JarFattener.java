@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
@@ -209,7 +210,14 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             javac, javacOptions, ExtraClasspathProvider.EMPTY, withDownwardApi);
 
     compileStepFactory.createCompileStep(
-        context, filesystem, getBuildTarget(), compilerParameters, steps, buildableContext);
+        context,
+        filesystem,
+        CellPathResolverUtils.getCellToPathMappings(
+            filesystem.getRootPath(), context.getCellPathResolver()),
+        getBuildTarget(),
+        compilerParameters,
+        steps,
+        buildableContext);
 
     steps.add(zipStep);
     JarParameters jarParameters =

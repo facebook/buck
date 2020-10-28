@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -40,7 +39,6 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.modern.CellNameResolverSerialization;
 import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -76,13 +74,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
       inputs = IgnoredFieldInputs.class)
   private final CellNameResolver cellNameResolver;
 
-  @ExcludeFromRuleKey(
-      serialization = DefaultFieldSerialization.class,
-      inputs = IgnoredFieldInputs.class)
-  private final ImmutableMap<String, RelPath> cellToPathMappings;
-
   public UnusedDependenciesFinderFactory(
-      AbsPath ruleCellRoot,
       Optional<String> buildozerPath,
       boolean onlyPrintCommands,
       boolean doUltralightChecking,
@@ -99,8 +91,6 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
     this.exportedDeps = exportedDeps;
     this.doUltralightChecking = doUltralightChecking;
     this.cellNameResolver = cellPathResolver.getCellNameResolver();
-    this.cellToPathMappings =
-        CellPathResolverUtils.getCellToMapMappings(ruleCellRoot, cellPathResolver);
   }
 
   private ImmutableList<DependencyAndExportedDeps> getDependencies(
@@ -196,7 +186,8 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       SourcePathResolverAdapter resolver,
-      JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction) {
+      JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction,
+      CellPathResolver cellPathResolver) {
 
     Path depFilePath = CompilerOutputPaths.getDepFilePath(buildTarget, filesystem.getBuckPaths());
 
@@ -209,7 +200,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
         buildozerPath,
         onlyPrintCommands,
         cellNameResolver,
-        cellToPathMappings,
+        CellPathResolverUtils.getCellToPathMappings(filesystem.getRootPath(), cellPathResolver),
         filesystem.relativize(filesystem.resolve(depFilePath)),
         doUltralightChecking);
   }

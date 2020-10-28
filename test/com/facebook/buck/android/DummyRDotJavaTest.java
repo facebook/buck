@@ -50,6 +50,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -163,7 +164,8 @@ public class DummyRDotJavaTest {
                             .build(),
                         null,
                         null,
-                        false)
+                        false,
+                        ImmutableMap.of())
                     .getDescription(stepExecutionContext))
             .add(String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder))
             .add(String.format("check_dummy_r_jar_not_empty %s", rDotJavaOutputJar))
@@ -185,10 +187,11 @@ public class DummyRDotJavaTest {
   public void testRDotJavaBinFolder() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     DummyRDotJava dummyRDotJava =
         new DummyRDotJava(
             buildTarget,
-            new FakeProjectFilesystem(),
+            filesystem,
             ruleFinder,
             ImmutableSet.of(),
             new JavacToJarStepFactory(

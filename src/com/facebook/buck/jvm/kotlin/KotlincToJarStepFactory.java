@@ -147,6 +147,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   public void createCompileStep(
       BuildContext buildContext,
       ProjectFilesystem projectFilesystem,
+      ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTarget invokingRule,
       CompilerParameters parameters,
       /* output params */
@@ -394,6 +395,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         .createCompileStep(
             buildContext,
             projectFilesystem,
+            cellToPathMappings,
             invokingRule,
             javacParameters,
             steps,

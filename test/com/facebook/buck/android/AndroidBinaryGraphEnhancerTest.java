@@ -976,6 +976,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
   @BuckStyleValueWithBuilder
   abstract static class TestGraphEnhancerArgs {
+
     abstract BuildTarget getTarget();
 
     abstract BuildRuleParams getBuildRuleParams();

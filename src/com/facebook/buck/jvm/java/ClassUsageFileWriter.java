@@ -27,5 +27,5 @@ public interface ClassUsageFileWriter {
       Path relativePath,
       AbsPath rootPath,
       RelPath configuredBuckOut,
-      ImmutableMap<String, RelPath> cellToMapMappings);
+      ImmutableMap<String, RelPath> cellToPathMappings);
 }

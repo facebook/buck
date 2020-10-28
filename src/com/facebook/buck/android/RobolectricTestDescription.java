@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -181,6 +182,7 @@ public class RobolectricTestDescription
             projectFilesystem.getRootPath(),
             args);
 
+    CellPathResolver cellPathResolver = context.getCellPathResolver();
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             buildTarget,
@@ -201,7 +203,7 @@ public class RobolectricTestDescription
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
             buildTarget,
-            context.getCellPathResolver().getCellNameResolver(),
+            cellPathResolver.getCellNameResolver(),
             graphBuilder,
             JavaTestDescription.MACRO_EXPANDERS);
     ImmutableList<Arg> vmArgs =
@@ -376,7 +378,7 @@ public class RobolectricTestDescription
                     javaBuckConfig,
                     downwardApiConfig,
                     testLibraryArgs,
-                    context.getCellPathResolver())
+                    cellPathResolver)
                 .setJavacOptions(javacOptions)
                 .build()
                 .buildLibrary());
