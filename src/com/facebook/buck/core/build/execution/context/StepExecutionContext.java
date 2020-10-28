@@ -118,6 +118,7 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
     return getBuckEventBus().isolated();
   }
 
+  @Override
   public StepExecutionContext createSubContext(
       PrintStream newStdout, PrintStream newStderr, Optional<Verbosity> verbosityOverride) {
     Console console =

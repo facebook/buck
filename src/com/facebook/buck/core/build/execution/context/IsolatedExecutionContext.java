@@ -34,6 +34,7 @@ import com.google.common.io.Closer;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 /** The context exposed for executing {@code IsolatedStep}s */
@@ -135,5 +136,26 @@ public abstract class IsolatedExecutionContext implements Closeable {
 
   protected void registerCloseables(Closer closer) {
     closer.register(getClassLoaderCache()::close);
+  }
+
+  /** Creates SubContext */
+  public IsolatedExecutionContext createSubContext(
+      PrintStream newStdout, PrintStream newStderr, Optional<Verbosity> verbosityOverride) {
+    Console console =
+        new Console(
+            verbosityOverride.orElse(this.getConsole().getVerbosity()),
+            newStdout,
+            newStderr,
+            this.getConsole().getAnsi());
+
+    // This should replace (or otherwise retain) all of the closeable parts of the context.
+    return ImmutableIsolatedExecutionContext.builder()
+        .setIsolatedEventBus(getIsolatedEventBus())
+        .setConsole(console)
+        .setPlatform(getPlatform())
+        .setProcessExecutor(getProcessExecutor().cloneWithOutputStreams(newStdout, newStderr))
+        .setRuleCellRoot(getRuleCellRoot())
+        .setClassLoaderCache(getClassLoaderCache().addRef())
+        .build();
   }
 }
