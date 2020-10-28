@@ -55,5 +55,6 @@ public class BuckInstallConfiguration
   public static class InstallData extends AbstractConfiguration.Data {
     public String activitySetting = "";
     public String activityClass = "";
+    public String processName = "";
   }
 }

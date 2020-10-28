@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.configurations;
 
+import com.android.ddmlib.Client;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
@@ -61,6 +62,7 @@ class BuckInstallExecutionState extends AbstractExecutionState<BuckInstallConfig
     String buckExecutablePath = mConfiguration.data.buckExecutablePath;
     String activitySetting = mConfiguration.data.activitySetting;
     String activityClass = mConfiguration.data.activityClass;
+    String processName = mConfiguration.data.processName;
 
     String title = "Buck Install " + targets;
 
@@ -74,7 +76,15 @@ class BuckInstallExecutionState extends AbstractExecutionState<BuckInstallConfig
             if (processExitSuccesfull()
                 && executor.getId().equals(DefaultDebugExecutor.EXECUTOR_ID)) {
               ApplicationManager.getApplication()
-                  .invokeLater(() -> BuckAndroidDebuggerUtil.getClientAndAttachDebugger(mProject));
+                  .invokeLater(
+                      () -> {
+                        Client client =
+                            BuckAndroidDebuggerUtil.getClientAndAttachDebugger(
+                                mProject, processName);
+                        if (client != null) {
+                          mConfiguration.data.processName = client.getClientData().getPackageName();
+                        }
+                      });
             }
           }
         };

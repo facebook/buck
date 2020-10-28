@@ -16,16 +16,25 @@
 
 package com.facebook.buck.intellij.ideabuck.debug;
 
+import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
+import com.android.ddmlib.IDevice;
 import com.android.tools.idea.run.AndroidProcessHandler;
 import com.android.tools.idea.run.editor.AndroidDebugger;
+import com.android.tools.idea.run.editor.AndroidJavaDebugger;
+import com.google.common.base.Strings;
 import com.intellij.execution.ExecutionManager;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.util.concurrency.AppExecutorUtil;
+import java.util.Arrays;
+import java.util.Optional;
+import javax.annotation.Nullable;
 import org.jetbrains.android.actions.AndroidProcessChooserDialog;
+import org.jetbrains.android.sdk.AndroidSdkUtils;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -36,19 +45,64 @@ public final class BuckAndroidDebuggerUtil {
 
   private BuckAndroidDebuggerUtil() {}
 
-  public static Client getClientAndAttachDebugger(@NotNull Project project) {
-    final AndroidProcessChooserDialog dialog = new AndroidProcessChooserDialog(project, true);
-    dialog.show();
-    if (dialog.getExitCode() == DialogWrapper.OK_EXIT_CODE) {
-      Client client = dialog.getClient();
-      if (client == null) {
+  public static Client getClientAndAttachDebugger(@NotNull Project project, String processName) {
+    Client clientFromProcessName = getDebugClient(project, processName);
+    if (clientFromProcessName == null) {
+      if (!Strings.isNullOrEmpty(processName)) {
+        Messages.showErrorDialog(
+            project,
+            "No process exists with process name: " + processName + ", please select a process.",
+            "No Client Found for Debugging");
+      }
+      final AndroidProcessChooserDialog dialog = new AndroidProcessChooserDialog(project, true);
+      dialog.show();
+      if (dialog.getExitCode() == DialogWrapper.OK_EXIT_CODE) {
+        Client client = dialog.getClient();
+        if (client == null) {
+          return null;
+        }
+        AppExecutorUtil.getAppExecutorService()
+            .execute(() -> closeOldSessionAndRun(project, dialog.getAndroidDebugger(), client));
+        return client;
+      }
+    } else {
+      AndroidDebugger javaDebugger = getJavaDebugger(project);
+      if (javaDebugger == null) {
         return null;
       }
       AppExecutorUtil.getAppExecutorService()
-          .execute(() -> closeOldSessionAndRun(project, dialog.getAndroidDebugger(), client));
-      return client;
+          .execute(() -> closeOldSessionAndRun(project, javaDebugger, clientFromProcessName));
+      return clientFromProcessName;
     }
     return null;
+  }
+
+  @Nullable
+  private static Client getDebugClient(@NotNull Project project, String processName) {
+    if (Strings.isNullOrEmpty(processName)) {
+      return null;
+    }
+    return Optional.ofNullable(getSelectedDevice(project))
+        .map(iDevice -> iDevice.getClient(processName))
+        .orElse(null);
+  }
+
+  @Nullable
+  private static IDevice getSelectedDevice(@NotNull Project project) {
+    return Optional.ofNullable(AndroidSdkUtils.getDebugBridge(project))
+        .map(AndroidDebugBridge::getDevices)
+        .flatMap(iDevices -> Arrays.stream(iDevices).findFirst())
+        .orElse(null);
+  }
+
+  @Nullable
+  private static AndroidDebugger getJavaDebugger(@NotNull Project project) {
+    return AndroidDebugger.EP_NAME.getExtensionList().stream()
+        .filter(
+            debugger ->
+                debugger.supportsProject(project) && debugger instanceof AndroidJavaDebugger)
+        .findFirst()
+        .orElse(null);
   }
 
   private static void closeOldSessionAndRun(

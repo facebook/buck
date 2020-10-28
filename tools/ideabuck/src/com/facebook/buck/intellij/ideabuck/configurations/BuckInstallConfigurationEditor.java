@@ -26,6 +26,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.InheritanceUtil;
 import com.intellij.ui.EditorTextFieldWithBrowseButton;
 import com.intellij.ui.components.JBLabel;
+import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.JBUI;
 import java.awt.*;
 import java.awt.event.ItemEvent;
@@ -37,6 +38,7 @@ public class BuckInstallConfigurationEditor
 
   private final JComboBox<String> mActivitySetting;
   private final EditorTextFieldWithBrowseButton mActivityClass;
+  private final JBTextField mProcessName;
   private final JPanel root;
 
   public static final String ACTIVITY_NONE = "None";
@@ -50,6 +52,8 @@ public class BuckInstallConfigurationEditor
     activitySettingLabel.setText("Launch");
     JBLabel activityClassLabel = new JBLabel();
     activityClassLabel.setText("Specify Activity");
+    JBLabel processNameLabel = new JBLabel();
+    processNameLabel.setText("Process name for debugging");
 
     mActivityClass = new EditorTextFieldWithBrowseButton(project, true);
     ActivityClassBrowser browser = new ActivityClassBrowser(project, "Select Activity");
@@ -73,6 +77,10 @@ public class BuckInstallConfigurationEditor
           }
         });
     mActivitySetting.setSelectedItem(ACTIVITY_DEFAULT);
+    mProcessName = new JBTextField();
+    mProcessName
+        .getEmptyText()
+        .setText("If empty, a prompt for the process name will be shown during debugging");
 
     final GridBagConstraints constraints =
         new GridBagConstraints(
@@ -107,6 +115,18 @@ public class BuckInstallConfigurationEditor
     constraints.weightx = 1;
     constraints.fill = GridBagConstraints.HORIZONTAL;
     root.add(mActivityClass, constraints);
+
+    constraints.gridx = 0;
+    constraints.gridy = GridBagConstraints.RELATIVE;
+    constraints.weightx = 0;
+    constraints.fill = GridBagConstraints.NONE;
+    root.add(processNameLabel, constraints);
+
+    constraints.gridx = 1;
+    constraints.gridy = GridBagConstraints.RELATIVE;
+    constraints.weightx = 1;
+    constraints.fill = GridBagConstraints.HORIZONTAL;
+    root.add(mProcessName, constraints);
   }
 
   @Override
@@ -114,6 +134,7 @@ public class BuckInstallConfigurationEditor
     super.resetEditorFrom(configuration);
     mActivitySetting.setSelectedItem(configuration.data.activitySetting);
     mActivityClass.setText(configuration.data.activityClass);
+    mProcessName.setText(configuration.data.processName);
   }
 
   @Override
@@ -121,6 +142,7 @@ public class BuckInstallConfigurationEditor
     super.applyEditorTo(configuration);
     configuration.data.activitySetting = (String) mActivitySetting.getSelectedItem();
     configuration.data.activityClass = mActivityClass.getText();
+    configuration.data.processName = mProcessName.getText();
   }
 
   /** Browses through activity classes in the current project */
