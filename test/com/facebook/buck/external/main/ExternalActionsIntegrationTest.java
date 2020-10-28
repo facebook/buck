@@ -17,6 +17,7 @@
 package com.facebook.buck.external.main;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertTrue;
@@ -32,6 +33,7 @@ import com.facebook.buck.external.constants.ExternalBinaryBuckConstants;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.testutil.integration.EnvironmentSanitizer;
 import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -52,6 +54,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.logging.LogRecord;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -71,6 +74,14 @@ public class ExternalActionsIntegrationTest {
   private Path testBinary;
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
+
+  @Rule
+  public TestLogSink consoleEventLogSink =
+      new TestLogSink(FakeBuckEventWritingAction.ConsoleEventStep.class.getName());
+
+  @Rule
+  public TestLogSink logEventLogSink =
+      new TestLogSink(FakeBuckEventWritingAction.LogEventStep.class.getName());
 
   @Before
   public void setUp() throws Exception {
@@ -128,7 +139,7 @@ public class ExternalActionsIntegrationTest {
   public void eventsAreSentBackToBuck() throws Exception {
     BuildableCommand buildableCommand =
         BuildableCommand.newBuilder()
-            .addAllArgs(ImmutableList.of("hello"))
+            .addAllArgs(ImmutableList.of("sneaky", "beaky"))
             .setExternalActionClass(FakeBuckEventWritingAction.class.getName())
             .putAllEnv(ImmutableMap.of())
             .build();
@@ -140,14 +151,19 @@ public class ExternalActionsIntegrationTest {
     assertThat(result.getExitCode(), equalTo(0));
 
     StepEvent.Started expectedStepStartEvent =
-        StepEvent.started("console_event_step", "console event: hello", UUID.randomUUID());
+        StepEvent.started("console_event_step", "console event: sneaky", UUID.randomUUID());
     StepEvent.Finished expectedStepFinishEvent = StepEvent.finished(expectedStepStartEvent, 0);
     List<String> actualStepEventLogs = eventBusListener.getStepEventLogMessages();
-    assertThat(actualStepEventLogs, hasSize(2));
+    assertThat(actualStepEventLogs, hasSize(4));
     assertThat(actualStepEventLogs.get(0), equalTo(expectedStepStartEvent.toLogMessage()));
     assertThat(actualStepEventLogs.get(1), equalTo(expectedStepFinishEvent.toLogMessage()));
 
-    ConsoleEvent expectedConsoleEvent = ConsoleEvent.info("hello");
+    expectedStepStartEvent = StepEvent.started("log_event_step", "log: beaky", UUID.randomUUID());
+    expectedStepFinishEvent = StepEvent.finished(expectedStepStartEvent, 0);
+    assertThat(actualStepEventLogs.get(2), equalTo(expectedStepStartEvent.toLogMessage()));
+    assertThat(actualStepEventLogs.get(3), equalTo(expectedStepFinishEvent.toLogMessage()));
+
+    ConsoleEvent expectedConsoleEvent = ConsoleEvent.info("sneaky");
     List<String> actualConsoleEventLogs = eventBusListener.getConsoleEventLogMessages();
     assertThat(
         Iterables.getOnlyElement(actualConsoleEventLogs),
@@ -162,6 +178,17 @@ public class ExternalActionsIntegrationTest {
     // SimplePerfEvent.Finished is not exposed. Grab its #toLogMessage implementation directly from
     // AbstractBuckEvent
     assertThat(actualPerfEvents.get(1), equalTo("PerfEvent.test_perf_event_title.Finished()"));
+
+    String logMessagesFromConsoleEvent = getLogMessagesAsSingleString(consoleEventLogSink).get();
+    assertThat(
+        logMessagesFromConsoleEvent,
+        containsString("Starting ConsoleEventStep execution for message sneaky!"));
+    assertThat(
+        logMessagesFromConsoleEvent,
+        containsString("Finished ConsoleEventStep execution for message sneaky!"));
+
+    String logMessagesFromLogEvent = getLogMessagesAsSingleString(logEventLogSink).get();
+    assertThat(logMessagesFromLogEvent, containsString("beaky"));
   }
 
   private void writeBuildableCommand(BuildableCommand buildableCommand) throws Exception {
@@ -195,5 +222,11 @@ public class ExternalActionsIntegrationTest {
         Optional.empty(),
         Optional.empty(),
         Optional.empty());
+  }
+
+  private Optional<String> getLogMessagesAsSingleString(TestLogSink logSink) {
+    return logSink.getRecords().stream()
+        .map(LogRecord::getMessage)
+        .reduce((record, acc) -> String.join(System.lineSeparator(), record, acc));
   }
 }

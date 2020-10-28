@@ -17,9 +17,11 @@
 package com.facebook.buck.external.main;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.isolated.DefaultIsolatedEventBus;
+import com.facebook.buck.external.log.ExternalLogHandler;
 import com.facebook.buck.external.model.ExternalAction;
 import com.facebook.buck.external.model.ParsedArgs;
 import com.facebook.buck.external.parser.ExternalArgsParser;
@@ -59,7 +61,7 @@ public class ExternalActionsExecutable {
             NamedPipeFactory.getFactory().connectAsWriter(parsedEnvVars.getEventPipe());
         OutputStream outputStream = namedPipe.getOutputStream()) {
       DownwardProtocolType.BINARY.writeDelimitedTo(outputStream);
-      // TODO(irenewchen): add external log handler
+      Logger.get("").addHandler(new ExternalLogHandler(outputStream));
       executeSteps(args, parsedEnvVars, outputStream);
     } catch (Exception e) {
       handleExceptionAndTerminate(Thread.currentThread(), console, e);

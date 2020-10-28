@@ -17,6 +17,7 @@
 package com.facebook.buck.external.main;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -28,18 +29,25 @@ import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.collect.ImmutableList;
 
 /**
- * {@link ExternalAction} for testing purposes. Expects one arg from the {@link BuildableCommand}: a
- * message to be included in a {@link ConsoleEvent}.
+ * {@link ExternalAction} for testing purposes. Expects two args from {@link BuildableCommand}:
+ *
+ * <ol>
+ *   <li>String to be shown in the console;
+ *   <li>String to be written as log.
+ * </ol>
  */
 public class FakeBuckEventWritingAction implements ExternalAction {
 
   @Override
   public ImmutableList<IsolatedStep> getSteps(BuildableCommand buildableCommand) {
     ConsoleEventStep consoleEventStep = new ConsoleEventStep(buildableCommand.getArgs(0));
-    return ImmutableList.of(consoleEventStep);
+    LogEventStep logEventStep = new LogEventStep(buildableCommand.getArgs(1));
+    return ImmutableList.of(consoleEventStep, logEventStep);
   }
 
   static class ConsoleEventStep extends IsolatedStep {
+
+    private static final Logger LOG = Logger.get(ConsoleEventStep.class.getName());
 
     private final String message;
 
@@ -50,11 +58,13 @@ public class FakeBuckEventWritingAction implements ExternalAction {
     @Override
     public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context) {
       IsolatedEventBus isolatedEventBus = context.getIsolatedEventBus();
+      LOG.info("Starting ConsoleEventStep execution for message %s!", message);
       try (SimplePerfEvent.Scope scope =
           SimplePerfEvent.scope(
               isolatedEventBus, SimplePerfEvent.PerfEventTitle.of("test_perf_event_title"))) {
         isolatedEventBus.post(ConsoleEvent.info(message));
       }
+      LOG.info("Finished ConsoleEventStep execution for message %s!", message);
       return StepExecutionResults.SUCCESS;
     }
 
@@ -66,6 +76,33 @@ public class FakeBuckEventWritingAction implements ExternalAction {
     @Override
     public String getShortName() {
       return "console_event_step";
+    }
+  }
+
+  static class LogEventStep extends IsolatedStep {
+
+    private static final Logger LOG = Logger.get(LogEventStep.class.getName());
+
+    private final String message;
+
+    private LogEventStep(String message) {
+      this.message = message;
+    }
+
+    @Override
+    public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context) {
+      LOG.error(message);
+      return StepExecutionResults.SUCCESS;
+    }
+
+    @Override
+    public String getIsolatedStepDescription(IsolatedExecutionContext context) {
+      return String.format("log: %s", message);
+    }
+
+    @Override
+    public String getShortName() {
+      return "log_event_step";
     }
   }
 }

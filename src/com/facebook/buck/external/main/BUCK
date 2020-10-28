@@ -7,8 +7,10 @@ java_library(
     ],
     deps = [
         "//src-gen:buildable-command-model",
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/downwardapi/protocol:protocol",
         "//src/com/facebook/buck/event/isolated:isolated",
+        "//src/com/facebook/buck/external/log:log",
         "//src/com/facebook/buck/external/model:model",
         "//src/com/facebook/buck/external/parser:parser",
         "//src/com/facebook/buck/external/utils:utils",

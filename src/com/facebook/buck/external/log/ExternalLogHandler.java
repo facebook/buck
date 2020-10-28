@@ -34,7 +34,7 @@ public class ExternalLogHandler extends Handler {
   private final OutputStream outputStream;
   private volatile boolean closed = false;
 
-  ExternalLogHandler(OutputStream outputStream) {
+  public ExternalLogHandler(OutputStream outputStream) {
     this.outputStream = outputStream;
   }
 

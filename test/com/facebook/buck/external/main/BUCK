@@ -41,6 +41,7 @@ java_library(
     visibility = ["//test/..."],
     deps = [
         "//src-gen:buildable-command-model",
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/external/model:model",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//src/com/facebook/buck/step/isolatedsteps/common:common",
