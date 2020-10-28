@@ -283,8 +283,8 @@ public class RobolectricTestDescription
                     graphBuilder, aapt2LinkBuildTarget.getTargetConfiguration()),
                 ImmutableList.of(),
                 androidPlatformTarget.getAndroidJar(),
-                false,
-                ImmutableSet.of(),
+                !args.getLocalesForBinaryResources().isEmpty(),
+                args.getLocalesForBinaryResources(),
                 ImmutableSet.of(),
                 Optional.empty(),
                 downwardApiConfig.isEnabledForAndroid());
@@ -535,6 +535,8 @@ public class RobolectricTestDescription
     default boolean isUseBinaryResources() {
       return false;
     }
+
+    ImmutableSet<String> getLocalesForBinaryResources();
 
     default RobolectricTestDescriptionArg withDeps(Iterable<BuildTarget> deps) {
       if (getDeps().equals(deps)) {
