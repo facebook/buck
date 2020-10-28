@@ -320,6 +320,11 @@ public class UnconfiguredQueryEnvironment
     return targetGraph.filterAttributeContents(node, attribute, predicate);
   }
 
+  @Override
+  public Optional<BuckEventBus> getEventBus() {
+    return Optional.of(eventBus);
+  }
+
   public TraversableGraph<UnconfiguredTargetNode> getTargetGraph() {
     return targetGraph;
   }

@@ -33,6 +33,7 @@ import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversableWithPayloadAndDependencyStack;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -168,11 +169,6 @@ abstract class AbstractParser implements Parser {
       return TargetGraphCreationResult.of(TargetGraph.EMPTY, toExplore);
     }
 
-    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
-    Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
-    TemporaryUnconfiguredTargetToTargetUniquenessChecker checker =
-        TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(buckOutIncludeTargetConfigHash);
-
     ParseEvent.Started parseStart = ParseEvent.started(toExplore);
     eventBus.post(parseStart);
 
@@ -217,7 +213,15 @@ abstract class AbstractParser implements Parser {
                 traversable, DependencyStack::child);
 
     TargetGraph targetGraph = null;
-    try {
+    try (SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scope(eventBus.isolated(), "parser.create_target_graph")) {
+
+      MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
+      Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
+      TemporaryUnconfiguredTargetToTargetUniquenessChecker checker =
+          TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(
+              buckOutIncludeTargetConfigHash);
+
       for (Map.Entry<BuildTarget, Pair<TargetNode<?>, DependencyStack>> targetAndNode :
           targetNodeTraversal.traverse(toExplore).entrySet()) {
         BuildTarget target = targetAndNode.getKey();

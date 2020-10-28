@@ -30,6 +30,8 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
@@ -79,9 +81,15 @@ public class RdepsFunction<T> implements QueryFunction<T> {
   public Set<T> eval(
       QueryEvaluator<T> evaluator, QueryEnvironment<T> env, ImmutableList<Argument<T>> args)
       throws QueryException {
-    Set<T> universeSet = evaluator.eval(args.get(0).getExpression(), env);
-    env.buildTransitiveClosure(universeSet);
-    Set<T> transitiveClosureUniverse = env.getTransitiveClosure(universeSet);
+
+    Set<T> transitiveClosureUniverse;
+    try (SimplePerfEvent.Scope event =
+        SimplePerfEvent.scope(
+            env.getEventBus().map(BuckEventBus::isolated), "query.rdeps.calculacte_universe")) {
+      Set<T> universeSet = evaluator.eval(args.get(0).getExpression(), env);
+      env.buildTransitiveClosure(universeSet);
+      transitiveClosureUniverse = env.getTransitiveClosure(universeSet);
+    }
 
     // LinkedHashSet preserves the order of insertion when iterating over the values.
     // The order by which we traverse the result is meaningful because the dependencies are
@@ -96,15 +104,20 @@ public class RdepsFunction<T> implements QueryFunction<T> {
     Predicate<T> filter =
         target -> (transitiveClosureUniverse.contains(target) && visited.add(target));
 
-    int depthBound = args.size() > 2 ? args.get(2).getInteger() : Integer.MAX_VALUE;
-    // Iterating depthBound+1 times because the first one processes the given argument set.
-    for (int i = 0; i <= depthBound; i++) {
-      Set<T> next = env.getReverseDeps(Iterables.filter(current, filter));
-      if (next.isEmpty()) {
-        break;
+    try (SimplePerfEvent.Scope event =
+        SimplePerfEvent.scope(
+            env.getEventBus().map(BuckEventBus::isolated), "query.rdeps.calculate_rdeps")) {
+      int depthBound = args.size() > 2 ? args.get(2).getInteger() : Integer.MAX_VALUE;
+      // Iterating depthBound+1 times because the first one processes the given argument set.
+      for (int i = 0; i <= depthBound; i++) {
+        Set<T> next = env.getReverseDeps(Iterables.filter(current, filter));
+        if (next.isEmpty()) {
+          break;
+        }
+        current = next;
       }
-      current = next;
     }
+
     return visited;
   }
 }

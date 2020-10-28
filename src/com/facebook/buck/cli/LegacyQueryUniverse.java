@@ -32,6 +32,8 @@ import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TraversableGraph;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.PerBuildState;
@@ -75,16 +77,19 @@ public class LegacyQueryUniverse implements TargetUniverse {
   private MutableDirectedGraph<TargetNode<?>> graph = MutableDirectedGraph.createConcurrent();
   private Map<BuildTarget, TargetNode<?>> targetsToNodes = new ConcurrentHashMap<>();
   private TemporaryUnconfiguredTargetToTargetUniquenessChecker checker;
+  private final BuckEventBus eventBus;
 
   public LegacyQueryUniverse(
       Parser parser,
       PerBuildState parserState,
       Optional<TargetConfiguration> targetConfiguration,
-      TemporaryUnconfiguredTargetToTargetUniquenessChecker checker) {
+      TemporaryUnconfiguredTargetToTargetUniquenessChecker checker,
+      BuckEventBus eventBus) {
     this.parser = parser;
     this.parserState = parserState;
     this.targetConfiguration = targetConfiguration;
     this.checker = checker;
+    this.eventBus = eventBus;
   }
 
   /** Creates an LegacyQueryUniverse using the parser/config from the CommandRunnerParams */
@@ -95,7 +100,8 @@ public class LegacyQueryUniverse implements TargetUniverse {
         params.getTargetConfiguration(),
         TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(
             BuildBuckConfig.of(params.getCells().getRootCell().getBuckConfig())
-                .shouldBuckOutIncludeTargetConfigHash()));
+                .shouldBuckOutIncludeTargetConfigHash()),
+        params.getBuckEventBus());
   }
 
   public PerBuildState getParserState() {
@@ -180,7 +186,10 @@ public class LegacyQueryUniverse implements TargetUniverse {
 
     ConcurrentHashMap<BuildTarget, ListenableFuture<Unit>> jobsCache = new ConcurrentHashMap<>();
 
-    try {
+    try (SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scope(
+            eventBus.isolated(),
+            "legacy_query_universe.build_transitive_closure.discover_new_targets")) {
       List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
       for (BuildTarget buildTarget : newBuildTargets) {
         discoverNewTargetsConcurrently(buildTarget, DependencyStack.top(buildTarget), jobsCache)
@@ -223,7 +232,9 @@ public class LegacyQueryUniverse implements TargetUniverse {
 
     AcyclicDepthFirstPostOrderTraversalWithPayload<BuildTarget, TargetNode<?>> targetNodeTraversal =
         new AcyclicDepthFirstPostOrderTraversalWithPayload<>(traversable);
-    try {
+    try (SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scope(
+            eventBus.isolated(), "legacy_query_universe.build_transitive_closure.build_graph")) {
       for (Pair<BuildTarget, TargetNode<?>> entry : targetNodeTraversal.traverse(newBuildTargets)) {
         TargetNode<?> node = entry.getSecond();
         graph.addNode(node);

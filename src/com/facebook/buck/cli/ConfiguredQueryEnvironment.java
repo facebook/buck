@@ -35,6 +35,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -171,7 +172,8 @@ public class ConfiguredQueryEnvironment
   @Override
   public void preloadTargetPatterns(Iterable<String> patterns)
       throws QueryException, InterruptedException {
-    try {
+    try (SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scope(eventBus.isolated(), "query.preload_targets")) {
       targetPatternEvaluator.preloadTargetPatterns(patterns);
     } catch (IOException e) {
       throw new QueryException(
@@ -269,26 +271,34 @@ public class ConfiguredQueryEnvironment
   @Override
   public ImmutableSet<ConfiguredQueryTarget> getTransitiveClosure(
       Set<ConfiguredQueryTarget> targets) throws QueryException {
-    ImmutableSet<BuildTarget> buildTargets =
-        allBuildTargets(targets).stream()
-            .map(ConfiguredQueryBuildTarget::getBuildTarget)
-            .collect(ImmutableSet.toImmutableSet());
-    ImmutableSet<BuildTarget> transitiveClosure = targetUniverse.getTransitiveClosure(buildTargets);
-    return transitiveClosure.stream()
-        .map(this::getOrCreateQueryBuildTarget)
-        .collect(ImmutableSet.toImmutableSet());
+    try (SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scope(eventBus.isolated(), "configured_query_env.get_transitive_closure")) {
+      ImmutableSet<BuildTarget> buildTargets =
+          allBuildTargets(targets).stream()
+              .map(ConfiguredQueryBuildTarget::getBuildTarget)
+              .collect(ImmutableSet.toImmutableSet());
+      ImmutableSet<BuildTarget> transitiveClosure =
+          targetUniverse.getTransitiveClosure(buildTargets);
+      return transitiveClosure.stream()
+          .map(this::getOrCreateQueryBuildTarget)
+          .collect(ImmutableSet.toImmutableSet());
+    }
   }
 
   @Override
   public void buildTransitiveClosure(Set<ConfiguredQueryTarget> targets) throws QueryException {
-    // Filter QueryTargets that are build targets and not yet present in the build target graph.
-    ImmutableSet<BuildTarget> buildTargets =
-        targets.stream()
-            .filter(target -> target instanceof ConfiguredQueryBuildTarget)
-            .map(target -> ((ConfiguredQueryBuildTarget) target).getBuildTarget())
-            .collect(ImmutableSet.toImmutableSet());
+    try (SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scope(
+            eventBus.isolated(), "configured_query_env.build_transitive_closure")) {
+      // Filter QueryTargets that are build targets and not yet present in the build target graph.
+      ImmutableSet<BuildTarget> buildTargets =
+          targets.stream()
+              .filter(target -> target instanceof ConfiguredQueryBuildTarget)
+              .map(target -> ((ConfiguredQueryBuildTarget) target).getBuildTarget())
+              .collect(ImmutableSet.toImmutableSet());
 
-    targetUniverse.buildTransitiveClosure(buildTargets);
+      targetUniverse.buildTransitiveClosure(buildTargets);
+    }
   }
 
   @Override
@@ -476,6 +486,11 @@ public class ConfiguredQueryEnvironment
   @Override
   public QueryEnvironment.TargetEvaluator<ConfiguredQueryTarget> getTargetEvaluator() {
     return queryTargetEvaluator;
+  }
+
+  @Override
+  public Optional<BuckEventBus> getEventBus() {
+    return Optional.of(eventBus);
   }
 
   private static class TargetEvaluator

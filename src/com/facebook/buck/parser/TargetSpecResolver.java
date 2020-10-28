@@ -219,18 +219,21 @@ public class TargetSpecResolver implements AutoCloseable {
       PerBuildState perBuildState,
       TargetNodeFilterForSpecResolver<BuildTarget, TargetNodeMaybeIncompatible> targetNodeFilter)
       throws BuildFileParseException, InterruptedException {
-    return resolveSpecsGeneric(
-        cells,
-        specs,
-        (cell, path, spec) ->
-            handleTargetNodeSpec(
-                flavorEnhancer,
-                perBuildState,
-                targetNodeFilter,
-                cell,
-                targetConfiguration,
-                path,
-                spec));
+    try (SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scope(eventBus.isolated(), "target_spec_resolver.resolve_target_specs")) {
+      return resolveSpecsGeneric(
+          cells,
+          specs,
+          (cell, path, spec) ->
+              handleTargetNodeSpec(
+                  flavorEnhancer,
+                  perBuildState,
+                  targetNodeFilter,
+                  cell,
+                  targetConfiguration,
+                  path,
+                  spec));
+    }
   }
 
   /**

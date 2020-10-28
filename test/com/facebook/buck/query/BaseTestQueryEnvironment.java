@@ -16,6 +16,7 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.param.ParamName;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -98,5 +99,10 @@ public class BaseTestQueryEnvironment<NODE_TYPE> implements QueryEnvironment<NOD
   @Override
   public Iterable<QueryEnvironment.QueryFunction<NODE_TYPE>> getFunctions() {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Optional<BuckEventBus> getEventBus() {
+    return Optional.empty();
   }
 }

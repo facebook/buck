@@ -30,6 +30,7 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.param.ParamName;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -287,4 +288,6 @@ public interface QueryEnvironment<NODE_TYPE> {
   default Set<NODE_TYPE> resolveTargetVariable(String name) {
     throw new IllegalArgumentException(String.format("unexpected target variable \"%s\"", name));
   }
+
+  Optional<BuckEventBus> getEventBus();
 }

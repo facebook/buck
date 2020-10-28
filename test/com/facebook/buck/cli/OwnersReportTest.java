@@ -29,6 +29,7 @@ import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildFileTree;
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
@@ -41,6 +42,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -56,6 +58,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.stream.RichStream;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -305,7 +308,8 @@ public class OwnersReportTest {
             parser,
             perBuildState,
             Optional.empty(),
-            TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true));
+            TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true),
+            new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()));
     OwnersReport report =
         OwnersReport.builderForConfigured(
                 cell.getRootCell(), cell.getRootCell().getRoot().getPath(), targetUniverse)
@@ -344,7 +348,8 @@ public class OwnersReportTest {
             parser,
             perBuildState,
             Optional.empty(),
-            TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true));
+            TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true),
+            new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()));
 
     OwnersReport<TargetNode<?>> report =
         OwnersReport.builderForConfigured(cell.getRootCell(), workingDir, targetUniverse)

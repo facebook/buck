@@ -16,6 +16,7 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.param.ParamName;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -118,5 +119,10 @@ public class TargetVariablesQueryEnvironment<NODE_TYPE> implements QueryEnvironm
       return targets;
     }
     return delegate.resolveTargetVariable(name);
+  }
+
+  @Override
+  public Optional<BuckEventBus> getEventBus() {
+    return delegate.getEventBus();
   }
 }

@@ -28,6 +28,7 @@ import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetVi
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.jvm.core.HasClasspathDeps;
 import com.facebook.buck.query.AttrFilterFunction;
 import com.facebook.buck.query.AttrRegexFilterFunction;
@@ -282,6 +283,11 @@ public class GraphEnhancementQueryEnvironment
   @Override
   public Iterable<QueryEnvironment.QueryFunction<ConfiguredQueryTarget>> getFunctions() {
     return defaultFunctions();
+  }
+
+  @Override
+  public Optional<BuckEventBus> getEventBus() {
+    return Optional.empty();
   }
 
   /**
