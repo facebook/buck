@@ -18,8 +18,10 @@ package com.facebook.buck.external.main;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -30,6 +32,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.external.constants.ExternalBinaryBuckConstants;
+import com.facebook.buck.external.parser.ExternalArgsParser;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -189,6 +192,73 @@ public class ExternalActionsIntegrationTest {
 
     String logMessagesFromLogEvent = getLogMessagesAsSingleString(logEventLogSink).get();
     assertThat(logMessagesFromLogEvent, containsString("beaky"));
+  }
+
+  @Test
+  public void failsIfExpectedEnvVarsNotPresent() throws Exception {
+    BuildableCommand buildableCommand =
+        BuildableCommand.newBuilder()
+            .addAllArgs(ImmutableList.of("hello"))
+            .setExternalActionClass(FakeBuckEventWritingAction.class.getName())
+            .putAllEnv(ImmutableMap.of())
+            .build();
+    writeBuildableCommand(buildableCommand);
+    ProcessExecutorParams params =
+        ProcessExecutorParams.builder()
+            .setCommand(createCmd())
+            // Missing ExternalBinaryBuckConstants.ENV_RULE_CELL_ROOT environment variable
+            .setEnvironment(EnvironmentSanitizer.getSanitizedEnvForTests(ImmutableMap.of()))
+            .build();
+
+    ProcessExecutor.Result result = launchAndExecute(downwardApiProcessExecutor, params);
+
+    assertThat(result.getExitCode(), equalTo(1));
+    assertThat(result.getStderr().get(), containsString("Missing env var: BUCK_RULE_CELL_ROOT"));
+  }
+
+  @Test
+  public void failsIfExternalActionClassIsNotExternalAction() throws Exception {
+    BuildableCommand buildableCommand =
+        BuildableCommand.newBuilder()
+            .addAllArgs(ImmutableList.of("test_path"))
+            .putAllEnv(ImmutableMap.of())
+            .setExternalActionClass(ExternalArgsParser.class.getName())
+            .build();
+    writeBuildableCommand(buildableCommand);
+    ProcessExecutorParams params = createProcessExecutorParams(createCmd());
+
+    ProcessExecutor.Result result = launchAndExecute(downwardApiProcessExecutor, params);
+
+    assertThat(result.getExitCode(), equalTo(1));
+    assertThat(
+        result.getStderr().get(),
+        containsString(
+            "com.facebook.buck.external.parser.ExternalArgsParser does not implement ExternalAction"));
+  }
+
+  @Test
+  public void failsIfExpectedArgInBuildableCommandNotPresent() throws Exception {
+    BuildableCommand buildableCommand =
+        BuildableCommand.newBuilder()
+            .addAllArgs(ImmutableList.of())
+            .putAllEnv(ImmutableMap.of())
+            .setExternalActionClass(FakeMkdirExternalAction.class.getName())
+            .build();
+    writeBuildableCommand(buildableCommand);
+    ProcessExecutorParams params = createProcessExecutorParams(createCmd());
+
+    ProcessExecutor.Result result = launchAndExecute(downwardApiProcessExecutor, params);
+
+    assertThat(result.getExitCode(), equalTo(1));
+    assertThat(
+        result.getStderr().get(),
+        containsString(
+            String.format(
+                "Failed to get steps from external action %s",
+                FakeMkdirExternalAction.class.getName())));
+
+    List<String> actualStepEvents = eventBusListener.getStepEventLogMessages();
+    assertThat(actualStepEvents, is(empty()));
   }
 
   private void writeBuildableCommand(BuildableCommand buildableCommand) throws Exception {

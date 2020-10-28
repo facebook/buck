@@ -42,15 +42,23 @@ public class BuildStepsRetriever {
       Constructor<? extends ExternalAction> constructor =
           externalActionClass.getDeclaredConstructor();
       constructor.setAccessible(true);
-      ExternalAction ExternalAction = constructor.newInstance();
-      return ExternalAction.getSteps(parsedArgs.getBuildableCommand());
+      ExternalAction externalAction = constructor.newInstance();
+      return externalAction.getSteps(parsedArgs.getBuildableCommand());
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException(
           String.format(
               "External action %s must have empty constructor", externalActionClass.getName()));
+    } catch (ClassCastException e) {
+      throw new IllegalStateException(
+          String.format("%s does not implement ExternalAction", externalActionClass.getName()));
     } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
       throw new HumanReadableException(
           e, "Failed to instantiate external action %s", externalActionClass);
+    } catch (Exception e) {
+      throw new IllegalStateException(
+          String.format(
+              "Failed to get steps from external action %s", externalActionClass.getName()),
+          e);
     }
   }
 }

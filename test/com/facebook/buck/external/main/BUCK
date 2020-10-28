@@ -20,6 +20,7 @@ java_test(
         "//src/com/facebook/buck/downwardapi/processexecutor:processexecutor",
         "//src/com/facebook/buck/external/constants:constants",
         "//src/com/facebook/buck/external/model:model",
+        "//src/com/facebook/buck/external/parser:parser",
         "//src/com/facebook/buck/external/utils:utils",
         "//src/com/facebook/buck/rules/modern:modern",
         "//test/com/facebook/buck/event:testutil",
