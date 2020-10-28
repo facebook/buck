@@ -629,7 +629,10 @@ public final class MainRunner {
     // happens
     ExitCode exitCode = ExitCode.FATAL_GENERIC;
 
-    Path projectRootRealPath = projectRoot.toRealPath();
+    // Do not follow links, on Windows this has unexpected behaviour where a mount point (created
+    // in PowerShell via drive.AddMountPoint) would resolve back to the original drive. Hence,
+    // Buck ends up with a mixture of drives which breaks its core assumptions.
+    Path projectRootRealPath = projectRoot.toRealPath(LinkOption.NOFOLLOW_LINKS);
     Path projectRootNormalizedPath = projectRootRealPath.normalize();
 
     // Setup filesystem and buck config.
