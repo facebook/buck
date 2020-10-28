@@ -17,6 +17,7 @@
 package com.facebook.buck.io.namedpipes.posix;
 
 import com.facebook.buck.io.namedpipes.BaseNamedPipe;
+import com.facebook.buck.io.namedpipes.windows.PipeNotConnectedException;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,7 +67,8 @@ abstract class POSIXClientNamedPipeBase extends BaseNamedPipe {
     }
 
     InputStream getInputStream() {
-      InputStream inputStream = Channels.newInputStream(randomAccessFile.getChannel());
+      InputStream inputStream =
+          new POSIXNamedPipeInputStream(Channels.newInputStream(randomAccessFile.getChannel()));
       closeables.add(inputStream);
       return inputStream;
     }
@@ -83,6 +85,51 @@ abstract class POSIXClientNamedPipeBase extends BaseNamedPipe {
         closeable.close();
       }
       randomAccessFile.close();
+    }
+  }
+
+  /**
+   * Wrapper for an {@link InputStream} that replaces {@link ClosedChannelException} with {@link
+   * PipeNotConnectedException}. This is to make the exceptions consistent with Windows.
+   */
+  private static class POSIXNamedPipeInputStream extends InputStream {
+
+    private final InputStream inputStream;
+
+    private POSIXNamedPipeInputStream(InputStream inputStream) {
+      this.inputStream = inputStream;
+    }
+
+    @Override
+    public int read() throws IOException {
+      try {
+        return inputStream.read();
+      } catch (ClosedChannelException e) {
+        throw new PipeNotConnectedException(e.getMessage());
+      }
+    }
+
+    @Override
+    public int read(byte[] b) throws IOException {
+      try {
+        return inputStream.read(b);
+      } catch (ClosedChannelException e) {
+        throw new PipeNotConnectedException(e.getMessage());
+      }
+    }
+
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+      try {
+        return inputStream.read(b, off, len);
+      } catch (ClosedChannelException e) {
+        throw new PipeNotConnectedException(e.getMessage());
+      }
+    }
+
+    @Override
+    public void close() throws IOException {
+      inputStream.close();
     }
   }
 }

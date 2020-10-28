@@ -16,6 +16,9 @@
 
 package com.facebook.buck.io.namedpipes;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.junit.MatcherAssume.assumeThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -28,7 +31,9 @@ import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.StepEvent;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
+import com.facebook.buck.io.namedpipes.windows.PipeNotConnectedException;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
@@ -47,12 +52,16 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import org.hamcrest.junit.ExpectedException;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class NamedPipesTest {
+
+  @Rule public ExpectedException expectedThrownException = ExpectedException.none();
 
   private static final Logger LOG = Logger.get(NamedPipesTest.class);
 
@@ -117,6 +126,16 @@ public class NamedPipesTest {
               + sentInstant,
           receivedInstant.minus(Duration.ofSeconds(1)).isAfter(sentInstant));
     }
+  }
+
+  @Test
+  public void POSIXInputStreamThrowsPipeNotConnectedIfStreamIsClosed() throws IOException {
+    assumeThat(Platform.detect(), not(equalTo(Platform.WINDOWS)));
+    expectedThrownException.expect(PipeNotConnectedException.class);
+
+    InputStream inputStream = NamedPipeFactory.getFactory().createAsReader().getInputStream();
+    inputStream.close();
+    inputStream.read();
   }
 
   private void writeIntoNamedPipe(DownwardProtocolType protocolType, String namedPipeName)

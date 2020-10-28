@@ -47,7 +47,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.channels.ClosedChannelException;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Map;
@@ -332,14 +331,14 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
       String namedPipeName = namedPipe.getName();
       try (InputStream inputStream = namedPipe.getInputStream()) {
         LOG.info("Trying to establish downward protocol for pipe %s", namedPipeName);
+        if (downwardProtocol == null) {
+          downwardProtocol = DownwardProtocolType.readProtocol(inputStream);
+          LOG.info(
+              "Starting to read events from named pipe %s with protocol %s",
+              namedPipeName, downwardProtocol.getProtocolName());
+        }
         while (true) {
           try {
-            if (downwardProtocol == null) {
-              downwardProtocol = DownwardProtocolType.readProtocol(inputStream);
-              LOG.info(
-                  "Starting to read events from named pipe %s with protocol %s",
-                  namedPipeName, downwardProtocol.getProtocolName());
-            }
             EventTypeMessage.EventType eventType = downwardProtocol.readEventType(inputStream);
             if (eventType.equals(EventTypeMessage.EventType.END_EVENT)) {
               LOG.info("Received end event for named pipe %s", namedPipeName);
@@ -352,7 +351,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
             } catch (Exception e) {
               LOG.error(e, "Cannot handle event: %s", event);
             }
-          } catch (ClosedChannelException e) {
+          } catch (PipeNotConnectedException e) {
             LOG.info("Named pipe %s is closed", namedPipeName);
             break;
           } catch (IOException e) {
@@ -368,7 +367,6 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
       } catch (IOException e) {
         LOG.error(e, "Cannot read from named pipe: %s", namedPipeName);
       } catch (Exception e) {
-        // TODO: maybe the pipe closed too early, should investigate this more
         LOG.debug(e, "Cannot read from named pipe: %s", namedPipeName);
       } finally {
         done.set(null);

@@ -10,6 +10,7 @@ standard_java_test(
         "//src/com/facebook/buck/io/namedpipes:namedpipes",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
         "//third-party/java/junitparams:junitparams",
