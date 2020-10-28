@@ -287,6 +287,7 @@ public class RobolectricTestDescription
                 args.getLocalesForBinaryResources(),
                 ImmutableSet.of(),
                 Optional.empty(),
+                args.getPreferredDensityForBinaryResources(),
                 downwardApiConfig.isEnabledForAndroid());
 
         graphBuilder.addToIndex(aapt2Link);
@@ -537,6 +538,8 @@ public class RobolectricTestDescription
     }
 
     ImmutableSet<String> getLocalesForBinaryResources();
+
+    Optional<String> getPreferredDensityForBinaryResources();
 
     default RobolectricTestDescriptionArg withDeps(Iterable<BuildTarget> deps) {
       if (getDeps().equals(deps)) {
