@@ -24,19 +24,15 @@ import java.nio.file.Path;
 /** Named pipe reader implementation based on {@code RandomAccessFile}. */
 class POSIXClientNamedPipeReader extends POSIXClientNamedPipeBase implements NamedPipeReader {
 
-  private RandomAccessFileWrapper readFile = null;
+  private final RandomAccessFileWrapper readFile;
 
-  public POSIXClientNamedPipeReader(Path path) {
+  public POSIXClientNamedPipeReader(Path path) throws IOException {
     super(path);
+    readFile = new POSIXClientNamedPipeBase.RandomAccessFileWrapper(getName(), "rw");
   }
 
   @Override
-  public InputStream getInputStream() throws IOException {
-    synchronized (this) {
-      if (readFile == null) {
-        readFile = new POSIXClientNamedPipeBase.RandomAccessFileWrapper(getName(), "rw");
-      }
-    }
+  public InputStream getInputStream() {
     return readFile.getInputStream();
   }
 

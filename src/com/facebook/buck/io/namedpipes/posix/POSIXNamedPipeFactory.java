@@ -71,12 +71,12 @@ public enum POSIXNamedPipeFactory implements NamedPipeFactory {
   }
 
   @Override
-  public NamedPipeWriter connectAsWriter(Path namedPipePath) {
+  public NamedPipeWriter connectAsWriter(Path namedPipePath) throws IOException {
     return new POSIXClientNamedPipeWriter(namedPipePath);
   }
 
   @Override
-  public NamedPipeReader connectAsReader(Path namedPipePath) {
+  public NamedPipeReader connectAsReader(Path namedPipePath) throws IOException {
     return new POSIXClientNamedPipeReader(namedPipePath);
   }
 }

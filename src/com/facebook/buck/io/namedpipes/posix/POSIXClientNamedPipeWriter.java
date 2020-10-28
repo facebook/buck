@@ -24,19 +24,15 @@ import java.nio.file.Path;
 /** Named pipe writer implementation based on {@code RandomAccessFile}. */
 class POSIXClientNamedPipeWriter extends POSIXClientNamedPipeBase implements NamedPipeWriter {
 
-  private RandomAccessFileWrapper writer = null;
+  private final RandomAccessFileWrapper writer;
 
-  public POSIXClientNamedPipeWriter(Path path) {
+  public POSIXClientNamedPipeWriter(Path path) throws IOException {
     super(path);
+    writer = new RandomAccessFileWrapper(getName(), "rw");
   }
 
   @Override
-  public OutputStream getOutputStream() throws IOException {
-    synchronized (this) {
-      if (writer == null) {
-        writer = new RandomAccessFileWrapper(getName(), "rw");
-      }
-    }
+  public OutputStream getOutputStream() {
     return writer.getOutputStream();
   }
 

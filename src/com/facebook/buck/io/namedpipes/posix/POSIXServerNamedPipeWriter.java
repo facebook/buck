@@ -26,7 +26,7 @@ import java.nio.file.Path;
  */
 class POSIXServerNamedPipeWriter extends POSIXClientNamedPipeWriter {
 
-  POSIXServerNamedPipeWriter(Path path) {
+  POSIXServerNamedPipeWriter(Path path) throws IOException {
     super(path);
   }
 

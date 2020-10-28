@@ -25,7 +25,7 @@ import java.nio.file.Path;
  */
 class POSIXServerNamedPipeReader extends POSIXClientNamedPipeReader {
 
-  POSIXServerNamedPipeReader(Path path) {
+  POSIXServerNamedPipeReader(Path path) throws IOException {
     super(path);
   }
 

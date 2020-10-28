@@ -38,9 +38,7 @@ abstract class POSIXClientNamedPipeBase extends BaseNamedPipe {
   }
 
   protected void closeFileWrapper(RandomAccessFileWrapper fileWrapper) throws IOException {
-    if (fileWrapper != null) {
-      fileWrapper.close();
-    }
+    fileWrapper.close();
   }
 
   /**
