@@ -80,6 +80,7 @@ public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final ImmutableSet<String> extraFilteredResources;
   @AddToRuleKey private final Optional<SourcePath> resourceStableIds;
   @AddToRuleKey private final Optional<String> preferredDensity;
+  @AddToRuleKey private final Optional<Integer> minSdk;
   private final Path androidJar;
   private final BuildableSupport.DepsSupplier depsSupplier;
   @AddToRuleKey private final boolean withDownwardApi;
@@ -109,6 +110,7 @@ public class Aapt2Link extends AbstractBuildRule {
       ImmutableSet<String> extraFilteredResources,
       Optional<SourcePath> resourceStableIds,
       Optional<String> preferredDensity,
+      Optional<Integer> minSdk,
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.compileRules = compileRules;
@@ -131,6 +133,7 @@ public class Aapt2Link extends AbstractBuildRule {
     this.extraFilteredResources = extraFilteredResources;
     this.resourceStableIds = resourceStableIds;
     this.preferredDensity = preferredDensity;
+    this.minSdk = minSdk;
     this.withDownwardApi = withDownwardApi;
   }
 
@@ -369,6 +372,8 @@ public class Aapt2Link extends AbstractBuildRule {
       }
 
       preferredDensity.ifPresent(density -> builder.add("--preferred-density", density));
+
+      minSdk.ifPresent(minSdk -> builder.add("--min-sdk-version", Integer.toString(minSdk)));
 
       if (filterLocales && !locales.isEmpty()) {
         // "NONE" means "en", update the list of locales

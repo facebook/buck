@@ -272,7 +272,7 @@ public class RobolectricTestDescription
                 graphBuilder,
                 compileables,
                 robolectricManifest,
-                ManifestEntries.builder().build(),
+                args.getManifestEntries(),
                 0,
                 ImmutableList.of(),
                 false,
@@ -290,6 +290,7 @@ public class RobolectricTestDescription
                 ImmutableSet.of(),
                 Optional.empty(),
                 args.getPreferredDensityForBinaryResources(),
+                args.getManifestEntries().getMinSdkVersion(),
                 downwardApiConfig.isEnabledForAndroid());
 
         graphBuilder.addToIndex(aapt2Link);
@@ -542,6 +543,11 @@ public class RobolectricTestDescription
     ImmutableSet<String> getLocalesForBinaryResources();
 
     Optional<String> getPreferredDensityForBinaryResources();
+
+    @Value.Default
+    default ManifestEntries getManifestEntries() {
+      return ManifestEntries.empty();
+    }
 
     default RobolectricTestDescriptionArg withDeps(Iterable<BuildTarget> deps) {
       if (getDeps().equals(deps)) {

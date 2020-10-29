@@ -610,6 +610,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         extraFilteredResources,
         resourceStableIds,
         Optional.empty(),
+        Optional.empty(),
         withDownwardApi);
   }
 
