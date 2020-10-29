@@ -52,6 +52,7 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -68,6 +69,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.xml.sax.SAXException;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
@@ -100,6 +102,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   private final PackagedResource toolsCommonJar;
   private final boolean withDownwardApi;
   private final OptionalInt javaForTestsVersion;
+
+  @Nullable private InstrumentationStep externalInstrumentationTestStep;
 
   protected AndroidInstrumentationTest(
       BuildTarget buildTarget,
@@ -431,7 +435,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
    * symlink tree for the exopackage directory.
    */
   @Override
-  public void onPreTest(BuildContext buildContext) {
+  public void onPreTest(BuildContext buildContext) throws IOException {
+    Preconditions.checkNotNull(externalInstrumentationTestStep).ensureClasspathArgfile();
     new ExopackageSymlinkTreeStep(apk, getApkUnderTest(apk), buildContext).executeStep();
   }
 
@@ -454,7 +459,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
                 .getSourcePathResolver()
                 .getAbsolutePath(apk.getApkInfo().getApkPath())
                 .getPath());
-    InstrumentationStep step =
+    externalInstrumentationTestStep =
         getInstrumentationStep(
             buildContext.getSourcePathResolver(),
             androidPlatformTarget.getAdbExecutable().toString(),
@@ -486,7 +491,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
         .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())
         .setType("android_instrumentation")
-        .setCommand(step.getShellCommandInternal(executionContext))
+        .setCommand(externalInstrumentationTestStep.getShellCommandInternal(executionContext))
         .setLabels(getLabels())
         .setContacts(getContacts())
         .setRequiredPaths(requiredPaths)
