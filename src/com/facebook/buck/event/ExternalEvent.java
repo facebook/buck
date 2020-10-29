@@ -19,9 +19,10 @@ package com.facebook.buck.event;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * An {@link ExternalEvent} is an event that is intended to be propagated to consumers outside of Buck (currently via the Websocket).
- * Tools are able to create this event so that arbitrary can be propagated to any custom listener of the Websocket. 
- * Buck itself does not process these events in any way, and is unaware of its data.
+ * An {@link ExternalEvent} is an event that is intended to be propagated to consumers outside of
+ * Buck (currently via the Websocket). Tools are able to create this event so that arbitrary can be
+ * propagated to any custom listener of the Websocket. Buck itself does not process these events in
+ * any way, and is unaware of its data.
  *
  * <p>Ex. idea plugin could receive compilation error events from java compiler.
  */
