@@ -14,11 +14,7 @@
 
 from xplat.build_infra.buck_api.buck_repo import BuckRepo
 from xplat.build_infra.buck_e2e import asserts
-from xplat.build_infra.buck_e2e.repo_workspace import (  # noqa F401
-    buck_test,
-    exec_path,
-    repo,
-)
+from xplat.build_infra.buck_e2e.repo_workspace import buck_test, exec_path
 
 
 # TODO: Add decorator to run this with and without buckd
