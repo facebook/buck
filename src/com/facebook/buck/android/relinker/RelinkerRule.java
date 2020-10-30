@@ -199,6 +199,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
                   args,
                   Optional.empty(),
                   cxxBuckConfig.getLinkScheduleInfo(),
+                  cxxBuckConfig.getLinkerMapEnabled(),
                   cxxBuckConfig.shouldCacheLinks(),
                   /* thinLto */ false,
                   /* fatLto */ false,

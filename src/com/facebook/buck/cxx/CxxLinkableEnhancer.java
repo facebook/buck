@@ -99,7 +99,9 @@ public class CxxLinkableEnhancer {
     Linker linker = cxxPlatform.getLd().resolve(graphBuilder, target.getTargetConfiguration());
 
     // Add flags to generate linker map if supported.
-    if (linker instanceof HasLinkerMap && LinkerMapMode.isLinkerMapEnabledForBuildTarget(target)) {
+    if (cxxBuckConfig.getLinkerMapEnabled()
+        && linker instanceof HasLinkerMap
+        && LinkerMapMode.isLinkerMapEnabledForBuildTarget(target)) {
       argsBuilder.addAll(((HasLinkerMap) linker).linkerMap(output));
     }
 
@@ -220,7 +222,9 @@ public class CxxLinkableEnhancer {
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
 
     // Add flags to generate linker map if supported.
-    if (linker instanceof HasLinkerMap && LinkerMapMode.isLinkerMapEnabledForBuildTarget(target)) {
+    if (cxxBuckConfig.getLinkerMapEnabled()
+        && linker instanceof HasLinkerMap
+        && LinkerMapMode.isLinkerMapEnabledForBuildTarget(target)) {
       argsBuilder.addAll(((HasLinkerMap) linker).linkerMap(output));
     }
 
@@ -283,6 +287,7 @@ public class CxxLinkableEnhancer {
         ldArgs,
         postprocessor,
         linkScheduleInfo,
+        cxxBuckConfig.getLinkerMapEnabled(),
         cxxBuckConfig.shouldCacheLinks(),
         linkOptions.getThinLto(),
         linkOptions.getFatLto(),

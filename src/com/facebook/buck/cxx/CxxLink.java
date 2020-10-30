@@ -93,6 +93,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       ImmutableList<Arg> args,
       Optional<LinkOutputPostprocessor> postprocessor,
       Optional<RuleScheduleInfo> ruleScheduleInfo,
+      boolean linkerMapEnabled,
       boolean cacheable,
       boolean thinLto,
       boolean fatLto,
@@ -108,6 +109,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
         args,
         postprocessor,
         ruleScheduleInfo,
+        linkerMapEnabled,
         cacheable,
         thinLto,
         fatLto,
@@ -127,6 +129,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       ImmutableList<Arg> args,
       Optional<LinkOutputPostprocessor> postprocessor,
       Optional<RuleScheduleInfo> ruleScheduleInfo,
+      boolean linkerMapEnabled,
       boolean cacheable,
       boolean thinLto,
       boolean fatLto,
@@ -143,6 +146,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
             extraOutputs,
             args,
             postprocessor,
+            linkerMapEnabled,
             thinLto,
             fatLto,
             buildTarget,
@@ -217,6 +221,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
         ImmutableMap<String, Path> extraOutputs,
         ImmutableList<Arg> args,
         Optional<LinkOutputPostprocessor> postprocessor,
+        boolean linkerMapEnabled,
         boolean thinLto,
         boolean fatLto,
         BuildTarget buildTarget,
@@ -232,7 +237,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
               .collect(ImmutableList.toImmutableList());
       this.withDownwardApi = withDownwardApi;
       Optional<Path> linkerMapPath = getLinkerMapPath(linker, output);
-      if (linkerMapPath.isPresent()
+      if (linkerMapEnabled
+          && linkerMapPath.isPresent()
           && LinkerMapMode.isLinkerMapEnabledForBuildTarget(buildTarget)) {
         this.linkerMapPath = Optional.of(new PublicOutputPath(linkerMapPath.get()));
       } else {

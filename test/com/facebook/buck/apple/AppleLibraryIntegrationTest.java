@@ -63,6 +63,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
+import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -510,6 +511,83 @@ public class AppleLibraryIntegrationTest {
     assertThat(Files.exists(libraryPath), is(true));
     assertThat(
         workspace.runCommand("file", libraryPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
+  }
+
+  @Test
+  public void testAppleLibraryBuildsWithLinkerMap() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_library_builds_something", tmp);
+    workspace.setUp();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary#shared,macosx-x86_64");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+                .resolve("libLibraries_TestLibrary_TestLibrary.dylib"));
+    assertThat(Files.exists(outputPath), Matchers.is(true));
+    assertThat(Files.exists(Paths.get(outputPath + "-LinkMap.txt")), Matchers.is(true));
+    assertThat(
+        workspace.runCommand("file", outputPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
+  }
+
+  @Test
+  public void testAppleLibraryBuildsWithoutLinkerMapUsingFlavor() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_library_builds_something", tmp);
+    workspace.setUp();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance(
+            "//Libraries/TestLibrary:TestLibrary#shared,macosx-x86_64,no-linkermap");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+                .resolve("libLibraries_TestLibrary_TestLibrary.dylib"));
+    assertThat(Files.exists(outputPath), Matchers.is(true));
+    assertThat(Files.exists(Paths.get(outputPath + "-LinkMap.txt")), Matchers.is(false));
+    assertThat(
+        workspace.runCommand("file", outputPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
+  }
+
+  @Test
+  public void testAppleLibraryBuildsWithoutLinkerMapUsingConfigOption() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_library_builds_something", tmp);
+    workspace.addBuckConfigLocalOption("cxx", "linker_map_enabled", "false");
+    workspace.setUp();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary#shared,macosx-x86_64");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+                .resolve("libLibraries_TestLibrary_TestLibrary.dylib"));
+    assertThat(Files.exists(outputPath), Matchers.is(true));
+    assertThat(Files.exists(Paths.get(outputPath + "-LinkMap.txt")), Matchers.is(false));
+    assertThat(
+        workspace.runCommand("file", outputPath.toString()).getStdout().get(),
         containsString("dynamically linked shared library"));
   }
 

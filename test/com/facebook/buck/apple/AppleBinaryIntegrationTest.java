@@ -126,6 +126,30 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
+  public void testAppleBinaryBuildsBinaryWithoutLinkerMapUsingConfigOption() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_builds_something", tmp);
+    workspace.addBuckConfigLocalOption("cxx", "linker_map_enabled", "false");
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
+    assertThat(Files.exists(outputPath), is(true));
+    assertThat(Files.exists(Paths.get(outputPath + "-LinkMap.txt")), is(false));
+    assertThat(
+        workspace.runCommand("file", outputPath.toString()).getStdout().get(),
+        containsString("executable"));
+  }
+
+  @Test
   public void testAppleBinaryUsesDefaultPlatformFromArgs() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));

@@ -90,6 +90,7 @@ public class CxxBuckConfig {
   private static final String LINK_WEIGHT = "link_weight";
   private static final String OMNIBUS_ROOT_LINK_WEIGHT = "omnibus_root_link_weight";
   private static final String CACHE_LINKS = "cache_links";
+  private static final String LINKER_MAP_ENABLED = "linker_map_enabled";
   private static final String LINK_PATH_NORMALIZATION_ARGS_ENABLED =
       "link_path_normalization_args_enabled";
   private static final String CACHE_STRIPS = "cache_strips";
@@ -489,6 +490,10 @@ public class CxxBuckConfig {
 
   public boolean shouldCacheLinks() {
     return delegate.getBooleanValue(cxxSection, CACHE_LINKS, true);
+  }
+
+  public boolean getLinkerMapEnabled() {
+    return delegate.getBooleanValue(cxxSection, LINKER_MAP_ENABLED, true);
   }
 
   public boolean shouldCacheStrip() {
