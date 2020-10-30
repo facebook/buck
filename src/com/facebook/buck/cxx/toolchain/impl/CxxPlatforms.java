@@ -201,8 +201,8 @@ public class CxxPlatforms {
         .setUseArgFile(cxxBuckConfig.getUseArgFile())
         .setFilepathLengthLimited(cxxBuckConfig.getFilepathLengthLimited());
 
-    linkWithArchives.ifPresent(builder::setUseArchives);
-    cxxBuckConfig.getLinkWithArchives().ifPresent(builder::setUseArchives);
+    linkWithArchives.ifPresent(builder::setRequiresArchives);
+    cxxBuckConfig.getRequiresArchives().ifPresent(builder::setRequiresArchives);
 
     boolean withDownwardApi = downwardApiConfig.isEnabledForCxx();
     builder.setSymbolNameTool(
@@ -279,7 +279,7 @@ public class CxxPlatforms {
         defaultPlatform.getPublicHeadersSymlinksEnabled(),
         defaultPlatform.getPrivateHeadersSymlinksEnabled(),
         defaultPlatform.getPicTypeForSharedLinking(),
-        Optional.of(defaultPlatform.useArchives()));
+        Optional.of(defaultPlatform.getRequiresArchives()));
   }
 
   private static ImmutableMap<String, Flavor> getHostFlavorMap() {

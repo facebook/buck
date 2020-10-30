@@ -139,7 +139,7 @@ public class CxxBuckConfig {
   public static final String DEFAULT_FLAVOR_LIBRARY_TYPE = "type";
   public static final String DEFAULT_FLAVOR_PLATFORM = "platform";
 
-  private static final String LINK_WITH_ARCHIVES = "link_with_archives";
+  private static final String REQUIRES_ARCHIVES = "requires_archives";
 
   /**
    * Constructs set of flavors given in a .buckconfig file, as is specified by section names of the
@@ -741,7 +741,7 @@ public class CxxBuckConfig {
     }
   }
 
-  public Optional<Boolean> getLinkWithArchives() {
-    return delegate.getBoolean(cxxSection, LINK_WITH_ARCHIVES);
+  public Optional<Boolean> getRequiresArchives() {
+    return delegate.getBoolean(cxxSection, REQUIRES_ARCHIVES);
   }
 }

@@ -172,7 +172,7 @@ public interface CxxPlatform extends FlavorConvertible {
    *     -Wl,--start-lib foo.o -Wl,--end-lib</code>).
    */
   @Value.Default
-  default boolean useArchives() {
+  default boolean getRequiresArchives() {
     return true;
   }
 
@@ -304,11 +304,11 @@ public interface CxxPlatform extends FlavorConvertible {
     return builder().from(this).setLd(linkerProvider).build();
   }
 
-  default CxxPlatform withUseArchives(boolean useArchives) {
-    if (useArchives() == useArchives) {
+  default CxxPlatform withRequiresArchives(boolean useArchives) {
+    if (getRequiresArchives() == useArchives) {
       return this;
     }
-    return builder().from(this).setUseArchives(useArchives).build();
+    return builder().from(this).setRequiresArchives(useArchives).build();
   }
 
   class Builder extends ImmutableCxxPlatform.Builder {}

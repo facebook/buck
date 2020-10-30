@@ -1530,6 +1530,7 @@ public class CxxLibraryDescriptionTest {
   public void linkWithoutArchivesPlatform() {
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setUseArchive(false)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))));
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
@@ -1538,7 +1539,7 @@ public class CxxLibraryDescriptionTest {
     NativeLinkableInput input =
         library
             .getNativeLinkable(
-                CxxPlatformUtils.DEFAULT_PLATFORM.withUseArchives(false), graphBuilder)
+                CxxPlatformUtils.DEFAULT_PLATFORM.withRequiresArchives(false), graphBuilder)
             .getNativeLinkableInput(
                 Linker.LinkableDepType.STATIC,
                 true,
@@ -1565,7 +1566,8 @@ public class CxxLibraryDescriptionTest {
         (CxxLibraryGroup) graphBuilder.requireRule(cxxLibraryBuilder.getTarget());
     NativeLinkableInput input =
         library
-            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getNativeLinkable(
+                CxxPlatformUtils.DEFAULT_PLATFORM.withRequiresArchives(false), graphBuilder)
             .getNativeLinkableInput(
                 Linker.LinkableDepType.STATIC,
                 true,
@@ -1584,6 +1586,7 @@ public class CxxLibraryDescriptionTest {
   public void linkableInputPreferringStrippedObjects() {
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setUseArchive(false)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))));
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
@@ -1592,7 +1595,7 @@ public class CxxLibraryDescriptionTest {
     NativeLinkableInput input =
         library
             .getNativeLinkable(
-                CxxPlatformUtils.DEFAULT_PLATFORM.withUseArchives(false), graphBuilder)
+                CxxPlatformUtils.DEFAULT_PLATFORM.withRequiresArchives(false), graphBuilder)
             .getNativeLinkableInput(
                 Linker.LinkableDepType.STATIC,
                 true,

@@ -427,7 +427,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
           throw new IllegalStateException("unhandled linkage type: " + linkage);
       }
       if (isStatic) {
-        if (useArchive.orElse(cxxPlatform.useArchives())) {
+        if (useArchive.orElse(true) || cxxPlatform.getRequiresArchives()) {
           List<Flavor> archiveFlavors =
               Lists.newArrayList(
                   cxxPlatform.getFlavor(),
