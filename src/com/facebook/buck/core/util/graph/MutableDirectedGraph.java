@@ -24,12 +24,7 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import java.util.Collections;
-import java.util.Deque;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -159,7 +154,9 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
 
   public ImmutableSet<ImmutableSet<T>> findCycles() {
     ImmutableSet.Builder<ImmutableSet<T>> builder = ImmutableSet.builder();
-    findStronglyConnectedComponents().stream().filter(s -> s.size() > 1).forEach(builder::add);
+    TraversableGraphs.findStronglyConnectedComponents(this).stream()
+        .filter(s -> s.size() > 1)
+        .forEach(builder::add);
     // Tarjan's algorithm (as pseudo-coded on Wikipedia) does not appear to account for single-node
     // cycles. Therefore, we must check for them exclusively.
     for (T node : nodes) {
@@ -168,18 +165,6 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
       }
     }
     return builder.build();
-  }
-
-  /**
-   * For this graph, returns the set of strongly connected components using Tarjan's algorithm. Note
-   * this is {@code O(|V| + |E|)}.
-   *
-   * @return an unmodifiable {@link Set} of sets, each of which is also an unmodifiable {@link Set}
-   *     and represents a strongly connected component.
-   */
-  public ImmutableSet<ImmutableSet<T>> findStronglyConnectedComponents() {
-    Tarjan<T> tarjan = new Tarjan<T>(this);
-    return tarjan.findStronglyConnectedComponents();
   }
 
   @Override
@@ -202,75 +187,5 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
 
   ImmutableSetMultimap<T, T> createImmutableCopyOfIncomingEdges() {
     return ImmutableSetMultimap.copyOf(incomingEdges);
-  }
-
-  /**
-   * Implementation of
-   * http://en.wikipedia.org/wiki/Tarjan%E2%80%99s_strongly_connected_components_algorithm used to
-   * find cycles in the graph.
-   */
-  private static class Tarjan<S> {
-    private final MutableDirectedGraph<S> graph;
-    private final Map<S, Integer> indexes;
-    private final Map<S, Integer> lowlinks;
-    private final Deque<S> nodeStack;
-    private final ImmutableSet.Builder<ImmutableSet<S>> stronglyConnectedComponents;
-    private int index;
-
-    private Tarjan(MutableDirectedGraph<S> graph) {
-      this.graph = graph;
-      this.indexes = new HashMap<>();
-      this.lowlinks = new HashMap<>();
-      this.nodeStack = new LinkedList<>();
-      this.stronglyConnectedComponents = ImmutableSet.builder();
-      this.index = 0;
-    }
-
-    public ImmutableSet<ImmutableSet<S>> findStronglyConnectedComponents() {
-      for (S node : graph.nodes) {
-        if (!indexes.containsKey(node)) {
-          doStrongConnect(node);
-        }
-      }
-      return stronglyConnectedComponents.build();
-    }
-
-    private void doStrongConnect(S node) {
-      // Set the depth index for node to the smallest unused index.
-      indexes.put(node, index);
-      lowlinks.put(node, index);
-      index++;
-      nodeStack.push(node);
-
-      // Consider successors of node.
-      for (S sink : graph.getOutgoingNodesFor(node)) {
-        if (!indexes.containsKey(sink)) {
-          doStrongConnect(sink);
-          int lowlink =
-              Math.min(
-                  Objects.requireNonNull(lowlinks.get(node)),
-                  Objects.requireNonNull(lowlinks.get(sink)));
-          lowlinks.put(node, lowlink);
-        } else if (nodeStack.contains(sink)) {
-          // TODO(mbolin): contains() is O(N), consider maintaining an index so it is O(1)?
-          int lowlink =
-              Math.min(
-                  Objects.requireNonNull(lowlinks.get(node)),
-                  Objects.requireNonNull(indexes.get(sink)));
-          lowlinks.put(node, lowlink);
-        }
-      }
-
-      // If node is a root node, then pop the stack and generate a strongly connected component.
-      if (Objects.requireNonNull(lowlinks.get(node)).equals(indexes.get(node))) {
-        ImmutableSet.Builder<S> stronglyConnectedComponent = ImmutableSet.builder();
-        S componentElement;
-        do {
-          componentElement = nodeStack.pop();
-          stronglyConnectedComponent.add(componentElement);
-        } while (componentElement != node);
-        stronglyConnectedComponents.add(stronglyConnectedComponent.build());
-      }
-    }
   }
 }
