@@ -56,6 +56,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.hash.Hashing;
+import com.google.common.io.BaseEncoding;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -83,8 +86,24 @@ public class Omnibus {
   }
 
   private static BuildTarget getRootTarget(BuildTarget base, BuildTarget root) {
-    return base.withAppendedFlavors(
-        InternalFlavor.of(Flavor.replaceInvalidCharacters(root.toString())));
+    StringBuilder builder = new StringBuilder();
+
+    // If the root target is really long, shorten it via hashing to avoid excessively long
+    // path names from concatenating it with the base target.
+    String fullRootName = root.getFullyQualifiedName();
+    if (fullRootName.length() > 20) {
+      builder.append(Flavor.replaceInvalidCharacters(root.getShortName()));
+      builder.append("-");
+      builder.append(
+          BaseEncoding.base64Url()
+              .omitPadding()
+              .encode(Hashing.sha1().hashString(root.toString(), StandardCharsets.UTF_8).asBytes()),
+          0,
+          10);
+    } else {
+      builder.append(Flavor.replaceInvalidCharacters(root.toString()));
+    }
+    return base.withAppendedFlavors(InternalFlavor.of(builder.toString()));
   }
 
   private static BuildTarget getDummyRootTarget(BuildTarget root) {
