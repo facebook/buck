@@ -1379,7 +1379,7 @@ public class TargetsCommand extends AbstractCommand {
       Pair<TargetGraph, Iterable<TargetNode<?>>> targetGraphAndTargetNodes,
       TargetResultBuilders resultBuilders)
       throws IOException, InterruptedException, BuildFileParseException, CycleException {
-    LOG.debug("Getting target hash for %s", targetGraphAndTargetNodes.getSecond());
+    LOG.verbose("Getting target hash for %s", targetGraphAndTargetNodes.getSecond());
 
     Pair<TargetGraph, Iterable<TargetNode<?>>> targetGraphAndNodesWithTests =
         computeTargetsAndGraphToShowTargetHash(params, executor, targetGraphAndTargetNodes);
@@ -1470,7 +1470,7 @@ public class TargetsCommand extends AbstractCommand {
     hasher.putBytes(nodeHashCode.asBytes());
 
     Iterable<BuildTarget> dependentTargets = node.getParseDeps();
-    LOG.debug("Hashing target %s with dependent nodes %s", node, dependentTargets);
+    LOG.verbose("Hashing target %s with dependent nodes %s", node, dependentTargets);
     for (BuildTarget targetToHash : dependentTargets) {
       HashCode dependencyHash = getHashCodeOrThrow(hashesWithTests, targetToHash);
       hasher.putBytes(dependencyHash.asBytes());
