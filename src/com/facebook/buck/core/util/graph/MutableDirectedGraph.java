@@ -19,7 +19,6 @@ package com.facebook.buck.core.util.graph;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
@@ -27,7 +26,6 @@ import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Map;
@@ -160,16 +158,10 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
   }
 
   public ImmutableSet<ImmutableSet<T>> findCycles() {
-    Set<Set<T>> cycles =
-        Sets.filter(
-            findStronglyConnectedComponents(),
-            stronglyConnectedComponent -> stronglyConnectedComponent.size() > 1);
-    Iterable<ImmutableSet<T>> immutableCycles = Iterables.transform(cycles, ImmutableSet::copyOf);
-
+    ImmutableSet.Builder<ImmutableSet<T>> builder = ImmutableSet.builder();
+    findStronglyConnectedComponents().stream().filter(s -> s.size() > 1).forEach(builder::add);
     // Tarjan's algorithm (as pseudo-coded on Wikipedia) does not appear to account for single-node
     // cycles. Therefore, we must check for them exclusively.
-    ImmutableSet.Builder<ImmutableSet<T>> builder = ImmutableSet.builder();
-    builder.addAll(immutableCycles);
     for (T node : nodes) {
       if (containsEdge(node, node)) {
         builder.add(ImmutableSet.of(node));
@@ -185,7 +177,7 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
    * @return an unmodifiable {@link Set} of sets, each of which is also an unmodifiable {@link Set}
    *     and represents a strongly connected component.
    */
-  public Set<Set<T>> findStronglyConnectedComponents() {
+  public ImmutableSet<ImmutableSet<T>> findStronglyConnectedComponents() {
     Tarjan<T> tarjan = new Tarjan<T>(this);
     return tarjan.findStronglyConnectedComponents();
   }
@@ -222,7 +214,7 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
     private final Map<S, Integer> indexes;
     private final Map<S, Integer> lowlinks;
     private final Deque<S> nodeStack;
-    private final Set<Set<S>> stronglyConnectedComponents;
+    private final ImmutableSet.Builder<ImmutableSet<S>> stronglyConnectedComponents;
     private int index;
 
     private Tarjan(MutableDirectedGraph<S> graph) {
@@ -230,17 +222,17 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
       this.indexes = new HashMap<>();
       this.lowlinks = new HashMap<>();
       this.nodeStack = new LinkedList<>();
-      this.stronglyConnectedComponents = new HashSet<>();
+      this.stronglyConnectedComponents = ImmutableSet.builder();
       this.index = 0;
     }
 
-    public Set<Set<S>> findStronglyConnectedComponents() {
+    public ImmutableSet<ImmutableSet<S>> findStronglyConnectedComponents() {
       for (S node : graph.nodes) {
         if (!indexes.containsKey(node)) {
           doStrongConnect(node);
         }
       }
-      return Collections.unmodifiableSet(stronglyConnectedComponents);
+      return stronglyConnectedComponents.build();
     }
 
     private void doStrongConnect(S node) {
@@ -271,13 +263,13 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
 
       // If node is a root node, then pop the stack and generate a strongly connected component.
       if (Objects.requireNonNull(lowlinks.get(node)).equals(indexes.get(node))) {
-        Set<S> stronglyConnectedComponent = new HashSet<>();
+        ImmutableSet.Builder<S> stronglyConnectedComponent = ImmutableSet.builder();
         S componentElement;
         do {
           componentElement = nodeStack.pop();
           stronglyConnectedComponent.add(componentElement);
         } while (componentElement != node);
-        stronglyConnectedComponents.add(Collections.unmodifiableSet(stronglyConnectedComponent));
+        stronglyConnectedComponents.add(stronglyConnectedComponent.build());
       }
     }
   }
