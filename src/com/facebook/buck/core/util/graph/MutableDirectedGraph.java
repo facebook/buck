@@ -149,7 +149,7 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
   }
 
   public boolean isAcyclic() {
-    return findCycles().isEmpty();
+    return TraversableGraphs.isAcyclic(nodes, incomingEdges::get);
   }
 
   public ImmutableSet<ImmutableSet<T>> findCycles() {
