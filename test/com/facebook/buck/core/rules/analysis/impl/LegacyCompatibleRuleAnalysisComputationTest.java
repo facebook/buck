@@ -45,6 +45,7 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
+import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -75,10 +76,11 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
         FakeTargetNodeBuilder.newBuilder(new FakeTargetNodeBuilder.FakeDescription(), buildTarget)
             .build();
 
-    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
         ImmutableMap.of(buildTarget, targetNode);
-    TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
+    TargetGraph targetGraph =
+        new TargetGraph(
+            DirectedAcyclicGraph.<TargetNode<?>>serialBuilder().build(), targetNodeIndex);
 
     LegacyCompatibleRuleAnalysisComputation transformer =
         new LegacyCompatibleRuleAnalysisComputation(
@@ -126,10 +128,11 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
                 buildTarget)
             .build();
 
-    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
         ImmutableMap.of(buildTarget, targetNode);
-    TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
+    TargetGraph targetGraph =
+        new TargetGraph(
+            DirectedAcyclicGraph.<TargetNode<?>>serialBuilder().build(), targetNodeIndex);
 
     AtomicBoolean pdepsCalled = new AtomicBoolean();
     AtomicBoolean depsCalled = new AtomicBoolean();
@@ -205,11 +208,12 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             RuleType.of("fake", RuleType.Kind.BUILD));
-    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
-    graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
         ImmutableMap.of(buildTarget, targetNode);
-    TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
+    TargetGraph targetGraph =
+        new TargetGraph(
+            DirectedAcyclicGraph.<TargetNode<?>>serialBuilder().addNode(targetNode).build(),
+            targetNodeIndex);
 
     AtomicBoolean transformCalled = new AtomicBoolean();
     LegacyCompatibleRuleAnalysisComputation transformer =
@@ -274,7 +278,10 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
         ImmutableMap.of(buildTarget, targetNode);
-    TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
+    TargetGraph targetGraph =
+        new TargetGraph(
+            DirectedAcyclicGraph.<TargetNode<?>>serialBuilder().addNode(targetNode).build(),
+            targetNodeIndex);
 
     LegacyCompatibleRuleAnalysisComputation transformer =
         new LegacyCompatibleRuleAnalysisComputation(

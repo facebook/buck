@@ -21,7 +21,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.rules.visibility.VisibilityError;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.collect.ImmutableList;
@@ -38,14 +37,15 @@ import javax.annotation.Nullable;
 public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?>> {
 
   public static final TargetGraph EMPTY =
-      new TargetGraph(new MutableDirectedGraph<>(), ImmutableMap.of());
+      new TargetGraph(
+          DirectedAcyclicGraph.<TargetNode<?>>serialBuilder().build(), ImmutableMap.of());
 
   private final ImmutableMap<BuildTarget, TargetNode<?>> targetsToNodes;
 
   private OptionalInt cachedHashCode = OptionalInt.empty();
 
   public TargetGraph(
-      MutableDirectedGraph<TargetNode<?>> graph, ImmutableMap<BuildTarget, TargetNode<?>> index) {
+      DirectedAcyclicGraph<TargetNode<?>> graph, ImmutableMap<BuildTarget, TargetNode<?>> index) {
     super(graph);
     this.targetsToNodes = index;
 
@@ -149,7 +149,7 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?>> {
    * @return A subgraph of the current graph.
    */
   public <T> TargetGraph getSubgraph(Iterable<? extends TargetNode<? extends T>> roots) {
-    MutableDirectedGraph<TargetNode<?>> subgraph = new MutableDirectedGraph<>();
+    DirectedAcyclicGraph.Builder<TargetNode<?>> subgraph = DirectedAcyclicGraph.serialBuilder();
     Map<BuildTarget, TargetNode<?>> index = new LinkedHashMap<>();
 
     new AbstractBreadthFirstTraversal<TargetNode<?>>(roots) {
@@ -172,7 +172,7 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?>> {
       }
     }.start();
 
-    return new TargetGraph(subgraph, ImmutableMap.copyOf(index));
+    return new TargetGraph(subgraph.build(), ImmutableMap.copyOf(index));
   }
 
   public int getSize() {

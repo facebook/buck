@@ -17,7 +17,7 @@
 package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.HashMap;
@@ -39,14 +39,14 @@ public class TargetGraphFactory {
     }
     ImmutableMap<BuildTarget, TargetNode<?>> map = ImmutableMap.copyOf(builder);
 
-    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
+    DirectedAcyclicGraph.Builder<TargetNode<?>> graph = DirectedAcyclicGraph.serialBuilder();
     for (TargetNode<?> node : map.values()) {
       graph.addNode(node);
       for (BuildTarget dep : node.getBuildDeps()) {
         graph.addEdge(node, Objects.requireNonNull(map.get(dep), dep::toString));
       }
     }
-    return new TargetGraph(graph, map);
+    return new TargetGraph(graph.build(), map);
   }
 
   /**
@@ -60,14 +60,14 @@ public class TargetGraphFactory {
     }
     ImmutableMap<BuildTarget, TargetNode<?>> map = ImmutableMap.copyOf(builder);
 
-    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
+    DirectedAcyclicGraph.Builder<TargetNode<?>> graph = DirectedAcyclicGraph.serialBuilder();
     for (TargetNode<?> node : map.values()) {
       graph.addNode(node);
       for (BuildTarget dep : node.getBuildDeps()) {
         graph.addEdge(node, Objects.requireNonNull(map.get(dep), dep::toString));
       }
     }
-    return new TargetGraph(graph, map);
+    return new TargetGraph(graph.build(), map);
   }
 
   public static TargetGraph newInstance(TargetNode<?>... nodes) {

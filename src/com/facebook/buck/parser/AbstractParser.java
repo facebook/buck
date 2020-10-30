@@ -30,8 +30,8 @@ import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayloadAndDependencyStack;
 import com.facebook.buck.core.util.graph.CycleException;
+import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.GraphTraversableWithPayloadAndDependencyStack;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -216,7 +216,7 @@ abstract class AbstractParser implements Parser {
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(eventBus.isolated(), "parser.create_target_graph")) {
 
-      MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
+      DirectedAcyclicGraph.Builder<TargetNode<?>> graph = DirectedAcyclicGraph.serialBuilder();
       Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
       TemporaryUnconfiguredTargetToTargetUniquenessChecker checker =
           TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(
@@ -246,7 +246,7 @@ abstract class AbstractParser implements Parser {
         }
       }
 
-      targetGraph = new TargetGraph(graph, ImmutableMap.copyOf(index));
+      targetGraph = new TargetGraph(graph.build(), ImmutableMap.copyOf(index));
       return TargetGraphCreationResult.of(targetGraph, toExplore);
     } catch (CycleException e) {
       throw new HumanReadableException(e.getMessage());

@@ -51,7 +51,7 @@ import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -138,12 +138,10 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
             ImmutableSet.of(),
             RuleType.of("fake", RuleType.Kind.BUILD));
 
-    MutableDirectedGraph<TargetNode<?>> mutableDirectedGraph =
-        MutableDirectedGraph.createConcurrent();
-    mutableDirectedGraph.addNode(targetNode);
-
     TargetGraph targetGraph =
-        new TargetGraph(mutableDirectedGraph, ImmutableMap.of(target, targetNode));
+        new TargetGraph(
+            DirectedAcyclicGraph.<TargetNode<?>>serialBuilder().addNode(targetNode).build(),
+            ImmutableMap.of(target, targetNode));
 
     AtomicBoolean delegateActionGraphBuilderCalled = new AtomicBoolean();
     AtomicBoolean delegateRuleAnalysisComputationCalled = new AtomicBoolean();

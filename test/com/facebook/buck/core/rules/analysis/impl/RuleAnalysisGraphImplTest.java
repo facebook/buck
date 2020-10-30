@@ -42,7 +42,7 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.cache.RuleAnalysisCache;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -115,11 +115,12 @@ public class RuleAnalysisGraphImplTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             RuleType.of("fake", RuleType.Kind.BUILD));
-    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
-    graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
         ImmutableMap.of(buildTarget, targetNode);
-    TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
+    TargetGraph targetGraph =
+        new TargetGraph(
+            DirectedAcyclicGraph.<TargetNode<?>>serialBuilder().addNode(targetNode).build(),
+            targetNodeIndex);
 
     RuleAnalysisGraphImpl ruleAnalysisComputation =
         RuleAnalysisGraphImpl.of(targetGraph, depsAwareExecutor, cache, eventBus);
@@ -199,13 +200,16 @@ public class RuleAnalysisGraphImplTest {
             ImmutableSet.of(),
             RuleType.of("fake", RuleType.Kind.BUILD));
 
-    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
-    graph.addNode(targetNode);
-    graph.addNode(targetNode2);
-    graph.addEdge(targetNode, targetNode2);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
         ImmutableMap.of(buildTarget, targetNode, buildTarget2, targetNode2);
-    TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
+    TargetGraph targetGraph =
+        new TargetGraph(
+            DirectedAcyclicGraph.<TargetNode<?>>serialBuilder()
+                .addNode(targetNode)
+                .addNode(targetNode2)
+                .addEdge(targetNode, targetNode2)
+                .build(),
+            targetNodeIndex);
 
     RuleAnalysisGraphImpl ruleAnalysisComputation =
         RuleAnalysisGraphImpl.of(targetGraph, depsAwareExecutor, cache, eventBus);
@@ -280,13 +284,16 @@ public class RuleAnalysisGraphImplTest {
             ImmutableSet.of(),
             RuleType.of("fake", RuleType.Kind.BUILD));
 
-    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
-    graph.addNode(targetNode);
-    graph.addNode(targetNode2);
-    graph.addEdge(targetNode, targetNode2);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
         ImmutableMap.of(buildTarget, targetNode, buildTarget2, targetNode2);
-    TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
+    TargetGraph targetGraph =
+        new TargetGraph(
+            DirectedAcyclicGraph.<TargetNode<?>>serialBuilder()
+                .addNode(targetNode)
+                .addNode(targetNode2)
+                .addEdge(targetNode, targetNode2)
+                .build(),
+            targetNodeIndex);
 
     RuleAnalysisGraphImpl ruleAnalysisComputation =
         RuleAnalysisGraphImpl.of(

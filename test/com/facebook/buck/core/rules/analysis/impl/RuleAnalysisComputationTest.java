@@ -38,7 +38,7 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -89,11 +89,12 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             RuleType.of("fake", RuleType.Kind.BUILD));
-    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
-    graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
         ImmutableMap.of(buildTarget, targetNode);
-    TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
+    TargetGraph targetGraph =
+        new TargetGraph(
+            DirectedAcyclicGraph.<TargetNode<?>>serialBuilder().addNode(targetNode).build(),
+            targetNodeIndex);
 
     RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph, eventBus);
     assertEquals(
@@ -158,14 +159,17 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             RuleType.of("fake", RuleType.Kind.BUILD));
-    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
-    graph.addNode(targetNode1);
-    graph.addNode(targetNode2);
-    graph.addNode(targetNode3);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
         ImmutableMap.of(
             buildTarget1, targetNode1, buildTarget2, targetNode2, buildTarget3, targetNode3);
-    TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
+    TargetGraph targetGraph =
+        new TargetGraph(
+            DirectedAcyclicGraph.<TargetNode<?>>serialBuilder()
+                .addNode(targetNode1)
+                .addNode(targetNode2)
+                .addNode(targetNode3)
+                .build(),
+            targetNodeIndex);
 
     RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph, eventBus);
     assertEquals(
@@ -211,11 +215,12 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             RuleType.of("fake", RuleType.Kind.BUILD));
-    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
-    graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
         ImmutableMap.of(buildTarget, targetNode);
-    TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
+    TargetGraph targetGraph =
+        new TargetGraph(
+            DirectedAcyclicGraph.<TargetNode<?>>serialBuilder().addNode(targetNode).build(),
+            targetNodeIndex);
 
     RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph, eventBus);
 
@@ -296,13 +301,16 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(),
             RuleType.of("fake", RuleType.Kind.BUILD));
 
-    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
-    graph.addNode(targetNode);
-    graph.addNode(targetNode2);
-    graph.addEdge(targetNode, targetNode2);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
         ImmutableMap.of(buildTarget, targetNode, buildTarget2, targetNode2);
-    TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
+    TargetGraph targetGraph =
+        new TargetGraph(
+            DirectedAcyclicGraph.<TargetNode<?>>serialBuilder()
+                .addNode(targetNode)
+                .addNode(targetNode2)
+                .addEdge(targetNode, targetNode2)
+                .build(),
+            targetNodeIndex);
 
     RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph, eventBus);
 

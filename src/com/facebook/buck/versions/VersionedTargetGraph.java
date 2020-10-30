@@ -20,7 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
@@ -42,7 +42,7 @@ public class VersionedTargetGraph extends TargetGraph {
   private final LoadingCache<BuildTarget, TargetNode<?>> internalTargetCache;
 
   private VersionedTargetGraph(
-      MutableDirectedGraph<TargetNode<?>> graph, FlavorSearchTargetNodeFinder nodeFinder) {
+      DirectedAcyclicGraph<TargetNode<?>> graph, FlavorSearchTargetNodeFinder nodeFinder) {
     super(
         graph,
         graph.getNodes().stream()
@@ -75,8 +75,8 @@ public class VersionedTargetGraph extends TargetGraph {
 
   public static class Builder {
 
-    private final MutableDirectedGraph<TargetNode<?>> graph =
-        MutableDirectedGraph.createConcurrent();
+    private final DirectedAcyclicGraph.Builder<TargetNode<?>> graph =
+        DirectedAcyclicGraph.concurrentBuilder();
     private final Map<BuildTarget, TargetNode<?>> index = new ConcurrentHashMap<>();
 
     private Builder() {}
@@ -88,7 +88,8 @@ public class VersionedTargetGraph extends TargetGraph {
     }
 
     @Nullable
-    private TargetNode<?> getVersionedSubGraphParent(TargetNode<?> node) {
+    private static TargetNode<?> getVersionedSubGraphParent(
+        TraversableGraph<TargetNode<?>> graph, TargetNode<?> node) {
 
       // If this node is a root node in the versioned subgraph, there's no dependent and we return
       // `null`.
@@ -102,13 +103,14 @@ public class VersionedTargetGraph extends TargetGraph {
       return Iterables.getFirst(ImmutableSortedSet.copyOf(graph.getIncomingNodesFor(node)), null);
     }
 
-    private HumanReadableException getUnexpectedVersionedNodeError(TargetNode<?> node) {
+    private static HumanReadableException getUnexpectedVersionedNodeError(
+        TraversableGraph<TargetNode<?>> graph, TargetNode<?> node) {
       String msg =
           String.format(
               "Found versioned node %s from unversioned, top-level target:%s",
               node.getBuildTarget(), System.lineSeparator());
       ArrayList<TargetNode<?>> trace = new ArrayList<>();
-      for (TargetNode<?> n = node; n != null; n = getVersionedSubGraphParent(n)) {
+      for (TargetNode<?> n = node; n != null; n = getVersionedSubGraphParent(graph, n)) {
         trace.add(n);
       }
       msg +=
@@ -118,10 +120,10 @@ public class VersionedTargetGraph extends TargetGraph {
       return new HumanReadableException(msg);
     }
 
-    private void checkGraph(TraversableGraph<TargetNode<?>> graph) {
+    private static void checkGraph(TraversableGraph<TargetNode<?>> graph) {
       for (TargetNode<?> node : graph.getNodes()) {
         if (TargetGraphVersionTransformations.getVersionedNode(node).isPresent()) {
-          throw getUnexpectedVersionedNodeError(node);
+          throw getUnexpectedVersionedNodeError(graph, node);
         }
       }
     }
@@ -132,6 +134,7 @@ public class VersionedTargetGraph extends TargetGraph {
     }
 
     public VersionedTargetGraph build() {
+      DirectedAcyclicGraph<TargetNode<?>> graph = this.graph.build();
       checkGraph(graph);
       return new VersionedTargetGraph(
           graph, ImmutableFlavorSearchTargetNodeFinder.ofImpl(ImmutableMap.copyOf(index)));

@@ -57,7 +57,7 @@ import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -102,9 +102,10 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
 
     BuildRule fakeDepRule = new FakeBuildRule(depTarget);
     TargetNode<?> depNode = FakeTargetNodeBuilder.build(fakeDepRule);
-    MutableDirectedGraph<TargetNode<?>> graph = MutableDirectedGraph.createConcurrent();
-    graph.addNode(depNode);
-    TargetGraph targetGraph = new TargetGraph(graph, ImmutableMap.of(depTarget, depNode));
+    TargetGraph targetGraph =
+        new TargetGraph(
+            DirectedAcyclicGraph.<TargetNode<?>>serialBuilder().addNode(depNode).build(),
+            ImmutableMap.of(depTarget, depNode));
 
     ActionGraphBuilder actionGraphBuilder =
         new TestActionGraphBuilder(
