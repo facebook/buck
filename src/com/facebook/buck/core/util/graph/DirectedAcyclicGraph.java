@@ -68,9 +68,9 @@ public class DirectedAcyclicGraph<T> implements TraversableGraph<T> {
         TraversableGraphs.isAcyclic(graph.getNodes(), graph::getOutgoingNodesFor),
         "Graph must by acyclic");
     this.nodes = graph.createImmutableCopyOfNodes();
-    this.outgoingEdges = (ImmutableMap) graph.createImmutableCopyOfOutgoingEdges().asMap();
+    this.outgoingEdges = graph.createImmutableCopyOfOutgoingEdges();
     this.incomingEdges =
-        Suppliers.ofInstance((ImmutableMap) graph.createImmutableCopyOfIncomingEdges().asMap());
+        Suppliers.ofInstance((ImmutableMap) graph.createImmutableCopyOfIncomingEdges());
   }
 
   /**

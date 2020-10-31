@@ -16,6 +16,9 @@
 
 package com.facebook.buck.core.util.graph;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.emptyIterable;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -63,8 +66,8 @@ public class MutableDirectedGraphTest {
     assertEquals(1, graph.getEdgeCount());
     assertTrue(graph.containsNode("A"));
     assertTrue(graph.containsEdge("A", "A"));
-    assertEquals(ImmutableSet.of("A"), graph.getOutgoingNodesFor("A"));
-    assertEquals(ImmutableSet.of("A"), graph.getIncomingNodesFor("A"));
+    assertThat(graph.getOutgoingNodesFor("A"), containsInAnyOrder("A"));
+    assertThat(graph.getIncomingNodesFor("A"), containsInAnyOrder("A"));
     assertTrue(graph.hasIncomingEdges("A"));
     assertFalse(graph.isAcyclic());
     assertEquals(ImmutableSet.of(ImmutableSet.of("A")), graph.findCycles());
@@ -74,8 +77,8 @@ public class MutableDirectedGraphTest {
     assertEquals(0, graph.getEdgeCount());
     assertFalse(graph.containsNode("A"));
     assertFalse(graph.containsEdge("A", "A"));
-    assertEquals(ImmutableSet.<String>of(), graph.getOutgoingNodesFor("A"));
-    assertEquals(ImmutableSet.<String>of(), graph.getIncomingNodesFor("A"));
+    assertThat(graph.getOutgoingNodesFor("A"), emptyIterable());
+    assertThat(graph.getIncomingNodesFor("A"), emptyIterable());
     assertTrue(graph.isAcyclic());
   }
 

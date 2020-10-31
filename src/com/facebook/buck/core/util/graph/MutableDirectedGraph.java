@@ -16,17 +16,19 @@
 
 package com.facebook.buck.core.util.graph;
 
-import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * Represents a directed graph with unweighted edges. For a given source and sink node pair, there
@@ -47,30 +49,38 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
   /**
    * Represents the edges in the graph. Keys are source nodes; values are corresponding sync nodes.
    */
-  private final SetMultimap<T, T> outgoingEdges;
+  private final Map<T, Collection<T>> outgoingEdges;
 
   /**
    * Represents the edges in the graph. Keys are sink nodes; values are corresponding source nodes.
    */
-  private final SetMultimap<T, T> incomingEdges;
+  private final Map<T, Collection<T>> incomingEdges;
+
+  /** Creates a new edge list. Used when a edge is added for a node for the first time. */
+  private final Supplier<Collection<T>> createEdgeCollection;
 
   private MutableDirectedGraph(
-      Set<T> nodes, SetMultimap<T, T> outgoingEdges, SetMultimap<T, T> incomingEdges) {
+      Set<T> nodes,
+      Map<T, Collection<T>> outgoingEdges,
+      Map<T, Collection<T>> incomingEdges,
+      Supplier<Collection<T>> createEdgeCollection) {
     this.nodes = nodes;
     this.outgoingEdges = outgoingEdges;
     this.incomingEdges = incomingEdges;
+    this.createEdgeCollection = createEdgeCollection;
   }
 
   /** Creates a new graph with no nodes or edges. */
   public MutableDirectedGraph() {
-    this(new LinkedHashSet<>(), LinkedHashMultimap.create(), LinkedHashMultimap.create());
+    this(new LinkedHashSet<>(), new HashMap<>(), new HashMap<>(), LinkedHashSet::new);
   }
 
   public static <T> MutableDirectedGraph<T> createConcurrent() {
     return new MutableDirectedGraph<>(
-        Collections.newSetFromMap(new ConcurrentHashMap<T, Boolean>()),
-        Multimaps.synchronizedSetMultimap(HashMultimap.create()),
-        Multimaps.synchronizedSetMultimap(HashMultimap.create()));
+        Collections.newSetFromMap(new ConcurrentHashMap<>()),
+        new ConcurrentHashMap<>(),
+        new ConcurrentHashMap<>(),
+        () -> Collections.synchronizedSet(new HashSet<>()));
   }
 
   /** @return the number of nodes in the graph */
@@ -90,7 +100,7 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
 
   /** @return whether an edge from the source to the sink is present in the graph */
   public boolean containsEdge(T source, T sink) {
-    return outgoingEdges.containsEntry(source, sink);
+    return outgoingEdges.getOrDefault(source, ImmutableSet.of()).contains(sink);
   }
 
   /** Adds the specified node to the graph. */
@@ -101,9 +111,11 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
   /** Removes the specified node from the graph. */
   public boolean removeNode(T node) {
     boolean isRemoved = nodes.remove(node);
-    Set<T> nodesReachableFromTheSpecifiedNode = outgoingEdges.removeAll(node);
-    for (T reachableNode : nodesReachableFromTheSpecifiedNode) {
-      incomingEdges.remove(reachableNode, node);
+    Collection<T> nodesReachableFromTheSpecifiedNode = outgoingEdges.remove(node);
+    if (nodesReachableFromTheSpecifiedNode != null) {
+      for (T reachableNode : nodesReachableFromTheSpecifiedNode) {
+        incomingEdges.get(reachableNode).remove(node);
+      }
     }
     return isRemoved;
   }
@@ -115,8 +127,8 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
   public void addEdge(T source, T sink) {
     nodes.add(source);
     nodes.add(sink);
-    outgoingEdges.put(source, sink);
-    incomingEdges.put(sink, source);
+    outgoingEdges.computeIfAbsent(source, s -> createEdgeCollection.get()).add(sink);
+    incomingEdges.computeIfAbsent(sink, s -> createEdgeCollection.get()).add(source);
   }
 
   /**
@@ -125,18 +137,19 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
    * as unconnected nodes in the graph.
    */
   public void removeEdge(T source, T sink) {
-    outgoingEdges.remove(source, sink);
-    incomingEdges.remove(sink, source);
+    outgoingEdges.get(source).remove(sink);
+    incomingEdges.get(sink).remove(source);
   }
 
   @Override
   public Iterable<T> getOutgoingNodesFor(T source) {
-    return outgoingEdges.get(source);
+    return Collections.unmodifiableCollection(
+        outgoingEdges.getOrDefault(source, ImmutableList.of()));
   }
 
   @Override
   public Iterable<T> getIncomingNodesFor(T sink) {
-    return incomingEdges.get(sink);
+    return Collections.unmodifiableCollection(incomingEdges.getOrDefault(sink, ImmutableList.of()));
   }
 
   public boolean hasIncomingEdges(T node) {
@@ -149,7 +162,7 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
   }
 
   public boolean isAcyclic() {
-    return TraversableGraphs.isAcyclic(nodes, incomingEdges::get);
+    return TraversableGraphs.isAcyclic(nodes, this::getOutgoingNodesFor);
   }
 
   public ImmutableSet<ImmutableSet<T>> findCycles() {
@@ -181,11 +194,21 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
     return ImmutableSet.copyOf(nodes);
   }
 
-  ImmutableSetMultimap<T, T> createImmutableCopyOfOutgoingEdges() {
-    return ImmutableSetMultimap.copyOf(outgoingEdges);
+  ImmutableMap<T, ImmutableSet<T>> createImmutableCopyOfOutgoingEdges() {
+    ImmutableMap.Builder<T, ImmutableSet<T>> builder =
+        ImmutableMap.builderWithExpectedSize(outgoingEdges.size());
+    outgoingEdges.forEach(
+        (n, e) ->
+            builder.put(n, ImmutableSet.<T>builderWithExpectedSize(e.size()).addAll(e).build()));
+    return builder.build();
   }
 
-  ImmutableSetMultimap<T, T> createImmutableCopyOfIncomingEdges() {
-    return ImmutableSetMultimap.copyOf(incomingEdges);
+  ImmutableMap<T, ImmutableSet<T>> createImmutableCopyOfIncomingEdges() {
+    ImmutableMap.Builder<T, ImmutableSet<T>> builder =
+        ImmutableMap.builderWithExpectedSize(incomingEdges.size());
+    incomingEdges.forEach(
+        (n, e) ->
+            builder.put(n, ImmutableSet.<T>builderWithExpectedSize(e.size()).addAll(e).build()));
+    return builder.build();
   }
 }
