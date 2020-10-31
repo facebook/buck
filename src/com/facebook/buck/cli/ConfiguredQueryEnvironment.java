@@ -64,12 +64,14 @@ import com.facebook.buck.query.TestsOfFunction;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.query.QueryTargetAccessor;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -80,6 +82,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * QueryEnvironment implementation that operates over the configured target graph.
@@ -227,7 +231,7 @@ public class ConfiguredQueryEnvironment
   @Override
   public ImmutableSet<ConfiguredQueryTarget> getFwdDeps(Iterable<ConfiguredQueryTarget> targets)
       throws QueryException {
-    return allBuildTargets(targets).stream()
+    return allBuildTargets(Streams.stream(targets))
         .map(ConfiguredQueryBuildTarget::getBuildTarget)
         .flatMap(target -> targetUniverse.getAllTargetsFromOutgoingEdgesOf(target).stream())
         .map(this::getOrCreateQueryBuildTarget)
@@ -237,7 +241,7 @@ public class ConfiguredQueryEnvironment
   @Override
   public Set<ConfiguredQueryTarget> getReverseDeps(Iterable<ConfiguredQueryTarget> targets)
       throws QueryException {
-    return allBuildTargets(targets).stream()
+    return allBuildTargets(Streams.stream(targets))
         .map(ConfiguredQueryBuildTarget::getBuildTarget)
         .flatMap(target -> targetUniverse.getAllTargetsFromIncomingEdgesOf(target).stream())
         .map(this::getOrCreateQueryBuildTarget)
@@ -274,7 +278,7 @@ public class ConfiguredQueryEnvironment
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(eventBus.isolated(), "configured_query_env.get_transitive_closure")) {
       ImmutableSet<BuildTarget> buildTargets =
-          allBuildTargets(targets).stream()
+          allBuildTargets(targets.stream())
               .map(ConfiguredQueryBuildTarget::getBuildTarget)
               .collect(ImmutableSet.toImmutableSet());
       ImmutableSet<BuildTarget> transitiveClosure =
@@ -319,15 +323,9 @@ public class ConfiguredQueryEnvironment
 
   // TODO: This should be moved closer to ConfiguredQueryTarget itself, not a helper on
   // BuckQueryEnvironment.
-  private ImmutableSet<ConfiguredQueryBuildTarget> allBuildTargets(
-      Iterable<ConfiguredQueryTarget> targets) {
-    ImmutableSet.Builder<ConfiguredQueryBuildTarget> builder = ImmutableSet.builder();
-    for (ConfiguredQueryTarget target : targets) {
-      if (target instanceof ConfiguredQueryBuildTarget) {
-        builder.add((ConfiguredQueryBuildTarget) target);
-      }
-    }
-    return builder.build();
+  private Stream<ConfiguredQueryBuildTarget> allBuildTargets(
+      Stream<ConfiguredQueryTarget> targets) {
+    return RichStream.from(targets).filter(ConfiguredQueryBuildTarget.class);
   }
 
   @Override
@@ -337,7 +335,8 @@ public class ConfiguredQueryEnvironment
 
     ImmutableSet.Builder<ConfiguredQueryTarget> builder =
         ImmutableSet.builderWithExpectedSize(targets.size());
-    for (ConfiguredQueryBuildTarget target : allBuildTargets(targets)) {
+    for (ConfiguredQueryBuildTarget target :
+        allBuildTargets(targets.stream()).collect(Collectors.toList())) {
       BuildTarget buildTarget = target.getBuildTarget();
       Cell cell = cells.getCell(buildTarget.getCell());
       BuildFileTree buildFileTree = Objects.requireNonNull(buildFileTrees.get(cell));
