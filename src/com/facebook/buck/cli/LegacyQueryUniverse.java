@@ -26,8 +26,8 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
+import com.facebook.buck.core.util.graph.ConsumingTraverser;
 import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
@@ -55,7 +55,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -153,25 +153,26 @@ public class LegacyQueryUniverse implements TargetUniverse {
   }
 
   @Override
-  public ImmutableSet<BuildTarget> getTransitiveClosure(Set<BuildTarget> targets) {
-    Set<TargetNode<?>> nodes = new LinkedHashSet<>(targets.size());
-    for (BuildTarget target : targets) {
-      getNode(target).ifPresent(nodes::add);
+  public ImmutableSet<BuildTarget> getTransitiveClosure(Collection<BuildTarget> targets) {
+    ArrayList<TargetNode<?>> nodes = new ArrayList<>(targets.size());
+    try (SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scope(
+            eventBus.isolated(), "legacy_query_env.get_transitive_closure.get_roots")) {
+      for (BuildTarget target : targets) {
+        getNode(target).ifPresent(nodes::add);
+      }
     }
 
-    ImmutableSet.Builder<BuildTarget> result = ImmutableSet.builder();
-
-    new AbstractBreadthFirstTraversal<TargetNode<?>>(nodes) {
-      @Override
-      public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
-        result.add(node.getBuildTarget());
-        return node.getParseDeps().stream()
-            .map(targetsToNodes::get)
-            .collect(ImmutableSet.toImmutableSet());
-      }
-    }.start();
-
-    return result.build();
+    try (SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scope(
+            eventBus.isolated(), "legacy_query_env.get_transitive_closure.walk_nodes")) {
+      ImmutableSet.Builder<BuildTarget> result =
+          ImmutableSet.builderWithExpectedSize(targets.size());
+      ConsumingTraverser.breadthFirst(
+              nodes, (node, consumer) -> graph.getOutgoingNodesFor(node).forEach(consumer))
+          .forEach(node -> result.add(node.getBuildTarget()));
+      return result.build();
+    }
   }
 
   @Override

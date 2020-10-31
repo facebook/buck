@@ -26,14 +26,16 @@ import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.path.ForwardRelativePath;
-import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
+import com.facebook.buck.core.util.graph.ConsumingTraverser;
 import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.PerBuildState;
@@ -61,7 +63,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -88,6 +90,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
   private final Map<BuildTarget, TargetNode<?>> targetToNodeIndex;
   private final SetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex;
   private final BuildFileDescendantsIndex descendantsIndex;
+  private final BuckEventBus eventBus;
 
   /** Creates a `PrecomputedTargetUniverse` by parsing the transitive closure of `targets`. */
   public static PrecomputedTargetUniverse createFromRootTargets(
@@ -200,18 +203,21 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
         graph,
         targetToNodeIndex,
         pathToBuildTargetIndex,
-        BuildFileDescendantsIndex.createFromLeafPaths(pathToBuildTargetIndex.keySet()));
+        BuildFileDescendantsIndex.createFromLeafPaths(pathToBuildTargetIndex.keySet()),
+        params.getBuckEventBus());
   }
 
   private PrecomputedTargetUniverse(
       TraversableGraph<TargetNode<?>> graph,
       Map<BuildTarget, TargetNode<?>> targetToNodeIndex,
       SetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex,
-      BuildFileDescendantsIndex descendantsIndex) {
+      BuildFileDescendantsIndex descendantsIndex,
+      BuckEventBus eventBus) {
     this.graph = graph;
     this.targetToNodeIndex = targetToNodeIndex;
     this.pathToBuildTargetIndex = pathToBuildTargetIndex;
     this.descendantsIndex = descendantsIndex;
+    this.eventBus = eventBus;
   }
 
   /**
@@ -266,26 +272,28 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
   }
 
   @Override
-  public ImmutableSet<BuildTarget> getTransitiveClosure(Set<BuildTarget> targets)
+  public ImmutableSet<BuildTarget> getTransitiveClosure(Collection<BuildTarget> targets)
       throws QueryException {
-    Set<TargetNode<?>> nodes = new LinkedHashSet<>(targets.size());
-    for (BuildTarget target : targets) {
-      getNode(target).ifPresent(nodes::add);
+
+    ArrayList<TargetNode<?>> nodes = new ArrayList<>(targets.size());
+    try (SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scope(
+            eventBus.isolated(), "precomputed_query_env.get_transitive_closure.get_roots")) {
+      for (BuildTarget target : targets) {
+        getNode(target).ifPresent(nodes::add);
+      }
     }
 
-    ImmutableSet.Builder<BuildTarget> result = ImmutableSet.builder();
-
-    new AbstractBreadthFirstTraversal<TargetNode<?>>(nodes) {
-      @Override
-      public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
-        result.add(node.getBuildTarget());
-        return node.getParseDeps().stream()
-            .map(targetToNodeIndex::get)
-            .collect(ImmutableSet.toImmutableSet());
-      }
-    }.start();
-
-    return result.build();
+    try (SimplePerfEvent.Scope scope =
+        SimplePerfEvent.scope(
+            eventBus.isolated(), "precomputed_query_env.get_transitive_closure.walk_nodes")) {
+      ImmutableSet.Builder<BuildTarget> result =
+          ImmutableSet.builderWithExpectedSize(targets.size());
+      ConsumingTraverser.breadthFirst(
+              nodes, (node, consumer) -> graph.getOutgoingNodesFor(node).forEach(consumer))
+          .forEach(node -> result.add(node.getBuildTarget()));
+      return result.build();
+    }
   }
 
   @Override

@@ -277,15 +277,20 @@ public class ConfiguredQueryEnvironment
       Set<ConfiguredQueryTarget> targets) throws QueryException {
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(eventBus.isolated(), "configured_query_env.get_transitive_closure")) {
-      ImmutableSet<BuildTarget> buildTargets =
-          allBuildTargets(targets.stream())
-              .map(ConfiguredQueryBuildTarget::getBuildTarget)
-              .collect(ImmutableSet.toImmutableSet());
-      ImmutableSet<BuildTarget> transitiveClosure =
-          targetUniverse.getTransitiveClosure(buildTargets);
-      return transitiveClosure.stream()
+
+      ImmutableList.Builder<BuildTarget> buildTargetsBuilder =
+          ImmutableList.builderWithExpectedSize(targets.size());
+      allBuildTargets(targets.stream())
+          .map(ConfiguredQueryBuildTarget::getBuildTarget)
+          .forEach(buildTargetsBuilder::add);
+      ImmutableList<BuildTarget> buildTargets = buildTargetsBuilder.build();
+
+      ImmutableSet.Builder<ConfiguredQueryTarget> result =
+          ImmutableSet.builderWithExpectedSize(buildTargets.size());
+      targetUniverse.getTransitiveClosure(buildTargets).stream()
           .map(this::getOrCreateQueryBuildTarget)
-          .collect(ImmutableSet.toImmutableSet());
+          .forEach(result::add);
+      return result.build();
     }
   }
 

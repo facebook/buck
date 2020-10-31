@@ -26,6 +26,7 @@ import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.query.QueryException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 
@@ -58,7 +59,8 @@ public interface TargetUniverse {
    * Returns the forward transitive closure of all of the targets in "targets". Callers must ensure
    * that {@link #buildTransitiveClosure} has been called for the relevant subgraph.
    */
-  ImmutableSet<BuildTarget> getTransitiveClosure(Set<BuildTarget> targets) throws QueryException;
+  ImmutableSet<BuildTarget> getTransitiveClosure(Collection<BuildTarget> targets)
+      throws QueryException;
 
   /**
    * Construct the dependency graph for a depth-bounded forward transitive closure of all nodes in
