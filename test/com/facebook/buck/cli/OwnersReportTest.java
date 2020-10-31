@@ -64,6 +64,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -309,7 +310,8 @@ public class OwnersReportTest {
             perBuildState,
             Optional.empty(),
             TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true),
-            new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()));
+            new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()),
+            MoreExecutors.newDirectExecutorService());
     OwnersReport report =
         OwnersReport.builderForConfigured(
                 cell.getRootCell(), cell.getRootCell().getRoot().getPath(), targetUniverse)
@@ -349,7 +351,8 @@ public class OwnersReportTest {
             perBuildState,
             Optional.empty(),
             TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true),
-            new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()));
+            new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()),
+            MoreExecutors.newDirectExecutorService());
 
     OwnersReport<TargetNode<?>> report =
         OwnersReport.builderForConfigured(cell.getRootCell(), workingDir, targetUniverse)

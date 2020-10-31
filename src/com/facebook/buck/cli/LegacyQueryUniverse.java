@@ -26,10 +26,9 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
+import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.core.util.graph.ConsumingTraverser;
 import com.facebook.buck.core.util.graph.CycleException;
-import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.facebook.buck.event.BuckEventBus;
@@ -43,12 +42,12 @@ import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.parser.temporarytargetuniquenesschecker.TemporaryUnconfiguredTargetToTargetUniquenessChecker;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.util.MoreExceptions;
-import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -62,6 +61,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 /**
  * A `TargetUniverse` implementation that parses new files as necessary. This is the target universe
@@ -74,26 +75,30 @@ public class LegacyQueryUniverse implements TargetUniverse {
   private final Optional<TargetConfiguration> targetConfiguration;
   // Query execution is single threaded, however the buildTransitiveClosure implementation
   // traverses the graph in parallel.
-  private MutableDirectedGraph<TargetNode<?>> graph = MutableDirectedGraph.createConcurrent();
-  private Map<BuildTarget, TargetNode<?>> targetsToNodes = new ConcurrentHashMap<>();
-  private TemporaryUnconfiguredTargetToTargetUniquenessChecker checker;
+  private final MutableDirectedGraph<BuildTarget> graph = MutableDirectedGraph.createConcurrent();
+  private final Map<BuildTarget, TargetNode<?>> targetsToNodes = new ConcurrentHashMap<>();
+  private final TemporaryUnconfiguredTargetToTargetUniquenessChecker checker;
   private final BuckEventBus eventBus;
+  private final ExecutorService service;
 
   public LegacyQueryUniverse(
       Parser parser,
       PerBuildState parserState,
       Optional<TargetConfiguration> targetConfiguration,
       TemporaryUnconfiguredTargetToTargetUniquenessChecker checker,
-      BuckEventBus eventBus) {
+      BuckEventBus eventBus,
+      ExecutorService service) {
     this.parser = parser;
     this.parserState = parserState;
     this.targetConfiguration = targetConfiguration;
     this.checker = checker;
     this.eventBus = eventBus;
+    this.service = service;
   }
 
   /** Creates an LegacyQueryUniverse using the parser/config from the CommandRunnerParams */
-  public static LegacyQueryUniverse from(CommandRunnerParams params, PerBuildState parserState) {
+  public static LegacyQueryUniverse from(
+      CommandRunnerParams params, PerBuildState parserState, ExecutorService service) {
     return new LegacyQueryUniverse(
         params.getParser(),
         parserState,
@@ -101,7 +106,8 @@ public class LegacyQueryUniverse implements TargetUniverse {
         TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(
             BuildBuckConfig.of(params.getCells().getRootCell().getBuckConfig())
                 .shouldBuckOutIncludeTargetConfigHash()),
-        params.getBuckEventBus());
+        params.getBuckEventBus(),
+        service);
   }
 
   public PerBuildState getParserState() {
@@ -117,7 +123,34 @@ public class LegacyQueryUniverse implements TargetUniverse {
    */
   @Override
   public TraversableGraph<TargetNode<?>> getTargetGraph() {
-    return graph;
+    return new TraversableGraph<TargetNode<?>>() {
+      @Override
+      public Iterable<TargetNode<?>> getNodesWithNoIncomingEdges() {
+        return Iterables.transform(graph.getNodesWithNoIncomingEdges(), targetsToNodes::get);
+      }
+
+      @Override
+      public Iterable<TargetNode<?>> getNodesWithNoOutgoingEdges() {
+        return Iterables.transform(graph.getNodesWithNoOutgoingEdges(), targetsToNodes::get);
+      }
+
+      @Override
+      public Iterable<TargetNode<?>> getIncomingNodesFor(TargetNode<?> sink) {
+        return Iterables.transform(
+            graph.getIncomingNodesFor(sink.getBuildTarget()), targetsToNodes::get);
+      }
+
+      @Override
+      public Iterable<TargetNode<?>> getOutgoingNodesFor(TargetNode<?> source) {
+        return Iterables.transform(
+            graph.getOutgoingNodesFor(source.getBuildTarget()), targetsToNodes::get);
+      }
+
+      @Override
+      public Iterable<TargetNode<?>> getNodes() {
+        return Iterables.transform(graph.getNodes(), targetsToNodes::get);
+      }
+    };
   }
 
   @Override
@@ -154,48 +187,37 @@ public class LegacyQueryUniverse implements TargetUniverse {
 
   @Override
   public ImmutableSet<BuildTarget> getTransitiveClosure(Collection<BuildTarget> targets) {
-    ArrayList<TargetNode<?>> nodes = new ArrayList<>(targets.size());
     try (SimplePerfEvent.Scope scope =
-        SimplePerfEvent.scope(
-            eventBus.isolated(), "legacy_query_env.get_transitive_closure.get_roots")) {
-      for (BuildTarget target : targets) {
-        getNode(target).ifPresent(nodes::add);
-      }
-    }
-
-    try (SimplePerfEvent.Scope scope =
-        SimplePerfEvent.scope(
-            eventBus.isolated(), "legacy_query_env.get_transitive_closure.walk_nodes")) {
+        SimplePerfEvent.scope(eventBus.isolated(), "legacy_query_env.get_transitive_closure")) {
       ImmutableSet.Builder<BuildTarget> result =
           ImmutableSet.builderWithExpectedSize(targets.size());
       ConsumingTraverser.breadthFirst(
-              nodes, (node, consumer) -> graph.getOutgoingNodesFor(node).forEach(consumer))
-          .forEach(node -> result.add(node.getBuildTarget()));
+              targets.stream()
+                  .filter(target -> getNode(target).isPresent())
+                  .collect(Collectors.toList()),
+              (target, consumer) ->
+                  Streams.stream(graph.getOutgoingNodesFor(target)).forEach(consumer))
+          .forEach(result::add);
       return result.build();
     }
   }
 
   @Override
   public void buildTransitiveClosure(Set<BuildTarget> targets) throws QueryException {
-    ImmutableSet<BuildTarget> newBuildTargets =
-        targets.stream()
-            .filter(buildTarget -> !targetsToNodes.containsKey(buildTarget))
-            .collect(ImmutableSet.toImmutableSet());
-
     // TODO(mkosiba): This looks more and more like the Parser.buildTargetGraph method. Unify the
     // two.
-
-    ConcurrentHashMap<BuildTarget, ListenableFuture<Unit>> jobsCache = new ConcurrentHashMap<>();
-
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(
-            eventBus.isolated(),
-            "legacy_query_universe.build_transitive_closure.discover_new_targets")) {
+            eventBus.isolated(), "legacy_query_universe.build_transitive_closure")) {
+      ConcurrentHashMap<BuildTarget, ListenableFuture<Unit>> jobsCache = new ConcurrentHashMap<>();
       List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
-      for (BuildTarget buildTarget : newBuildTargets) {
-        discoverNewTargetsConcurrently(buildTarget, DependencyStack.top(buildTarget), jobsCache)
-            .ifPresent(dep -> depsFuture.add(dep));
-      }
+      targets.stream()
+          .filter(buildTarget -> !targetsToNodes.containsKey(buildTarget))
+          .forEach(
+              buildTarget ->
+                  discoverNewTargetsConcurrently(
+                          buildTarget, DependencyStack.top(buildTarget), jobsCache)
+                      .ifPresent(depsFuture::add));
       Futures.allAsList(depsFuture).get();
     } catch (ExecutionException e) {
       if (e.getCause() != null) {
@@ -210,41 +232,13 @@ public class LegacyQueryUniverse implements TargetUniverse {
           e, "Failed parsing: " + MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }
 
-    GraphTraversableWithPayload<BuildTarget, TargetNode<?>> traversable =
-        target -> {
-          TargetNode<?> node =
-              Preconditions.checkNotNull(
-                  targetsToNodes.get(target),
-                  "Node %s should have been discovered by `discoverNewTargetsConcurrently`.",
-                  target);
-
-          // If a node has been added to the graph it means it and all of its children have been
-          // visited by an acyclic traversal and added to the graph. From this it follows that there
-          // are no outgoing edges from the graph (as it had been "fully" explored before) back out
-          // to the set of nodes we're currently exploring. Based on that:
-          //  - we can't have a cycle involving the "old" nodes,
-          //  - there are no new edges or nodes to be discovered by descending into the "old" nodes,
-          // making this node safe to skip.
-          if (graph.getNodes().contains(node)) {
-            return new Pair<>(node, ImmutableSet.<BuildTarget>of().iterator());
-          }
-          return new Pair<>(node, node.getParseDeps().iterator());
-        };
-
-    AcyclicDepthFirstPostOrderTraversalWithPayload<BuildTarget, TargetNode<?>> targetNodeTraversal =
-        new AcyclicDepthFirstPostOrderTraversalWithPayload<>(traversable);
     try (SimplePerfEvent.Scope scope =
-        SimplePerfEvent.scope(
-            eventBus.isolated(), "legacy_query_universe.build_transitive_closure.build_graph")) {
-      for (Pair<BuildTarget, TargetNode<?>> entry : targetNodeTraversal.traverse(newBuildTargets)) {
-        TargetNode<?> node = entry.getSecond();
-        graph.addNode(node);
-        for (BuildTarget dep : node.getParseDeps()) {
-          graph.addEdge(
-              node,
-              Preconditions.checkNotNull(
-                  targetsToNodes.get(dep), "Couldn't find TargetNode for %s", dep));
-        }
+        SimplePerfEvent.scope(eventBus.isolated(), "legacy_query_universe.detect_cycles")) {
+      if (!graph.isAcyclic()) {
+        AcyclicDepthFirstPostOrderTraversal<BuildTarget> targetTraversal =
+            new AcyclicDepthFirstPostOrderTraversal<>(
+                target -> graph.getOutgoingNodesFor(target).iterator());
+        targetTraversal.traverse(graph.getNodes());
       }
     } catch (CycleException e) {
       throw new QueryException(e, e.getMessage());
@@ -258,11 +252,10 @@ public class LegacyQueryUniverse implements TargetUniverse {
       return ImmutableSet.of();
     }
 
-    TargetNode<?> node = maybeNode.get();
     ImmutableSet.Builder<BuildTarget> result = ImmutableSet.builder();
 
-    for (TargetNode<?> parentNode : graph.getOutgoingNodesFor(node)) {
-      result.add(parentNode.getBuildTarget());
+    for (BuildTarget parentTarget : graph.getOutgoingNodesFor(target)) {
+      result.add(parentTarget);
     }
 
     return result.build();
@@ -275,11 +268,10 @@ public class LegacyQueryUniverse implements TargetUniverse {
       return ImmutableSet.of();
     }
 
-    TargetNode<?> node = maybeNode.get();
     ImmutableSet.Builder<BuildTarget> result = ImmutableSet.builder();
 
-    for (TargetNode<?> parentNode : graph.getIncomingNodesFor(node)) {
-      result.add(parentNode.getBuildTarget());
+    for (BuildTarget parentTarget : graph.getIncomingNodesFor(target)) {
+      result.add(parentTarget);
     }
 
     return result.build();
@@ -303,23 +295,38 @@ public class LegacyQueryUniverse implements TargetUniverse {
         Futures.transformAsync(
             parser.getTargetNodeJobAssertCompatible(parserState, buildTarget, dependencyStack),
             targetNode -> {
-              targetsToNodes.put(buildTarget, targetNode);
+              Preconditions.checkNotNull(targetNode);
+              if (targetsToNodes.putIfAbsent(buildTarget, targetNode) != null) {
+                return Futures.immediateFuture(Unit.UNIT);
+              }
+              graph.addNode(buildTarget);
               checker.addTarget(buildTarget, dependencyStack);
-              List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
-              Set<BuildTarget> parseDeps = targetNode.getParseDeps();
+
+              // `TargetNode.getParseDeps()` is expensive (as it's layers of `Sets.union()`), so we
+              // avoid it when possible and parallelize it here via the executor.
+              ImmutableList<BuildTarget> parseDeps =
+                  ImmutableList.copyOf(targetNode.getParseDeps());
+              graph.setEdges(buildTarget, parseDeps);
+
+              List<ListenableFuture<Unit>> depsFutures = new ArrayList<>();
               for (BuildTarget parseDep : parseDeps) {
                 discoverNewTargetsConcurrently(parseDep, dependencyStack.child(parseDep), jobsCache)
                     .ifPresent(
-                        depWork ->
-                            depsFuture.add(
-                                attachParentNodeToErrorMessage(buildTarget, parseDep, depWork)));
+                        parseDepJob ->
+                            depsFutures.add(
+                                attachParentNodeToErrorMessage(
+                                    buildTarget, parseDep, parseDepJob)));
+              }
+              if (depsFutures.isEmpty()) {
+                return Futures.immediateFuture(Unit.UNIT);
               }
               return Futures.transform(
-                  Futures.allAsList(depsFuture),
-                  Functions.constant(null),
+                  Futures.allAsList(depsFutures),
+                  unused -> Unit.UNIT,
                   MoreExecutors.directExecutor());
-            });
-    newJob.setFuture(future);
+            },
+            service);
+    Preconditions.checkState(newJob.setFuture(future));
     return Optional.of(newJob);
   }
 

@@ -57,6 +57,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Optional;
@@ -130,7 +131,8 @@ public class QueryCommandTest {
                     .setSpeculativeParsing(SpeculativeParsing.ENABLED)
                     .build(),
                 params.getParser().getPermState());
-    LegacyQueryUniverse targetUniverse = LegacyQueryUniverse.from(params, perBuildState);
+    LegacyQueryUniverse targetUniverse =
+        LegacyQueryUniverse.from(params, perBuildState, MoreExecutors.newDirectExecutorService());
     TargetConfigurationFactory targetConfigurationFactory =
         new TargetConfigurationFactory(
             buildTargetViewFactory, cell.getRootCell().getCellPathResolver().getCellNameResolver());

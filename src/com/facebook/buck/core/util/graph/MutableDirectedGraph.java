@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.util.graph;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -129,6 +130,19 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
     nodes.add(sink);
     outgoingEdges.computeIfAbsent(source, s -> createEdgeCollection.get()).add(sink);
     incomingEdges.computeIfAbsent(sink, s -> createEdgeCollection.get()).add(source);
+  }
+
+  /**
+   * Sets all outgoing edges between {@code source} and {@code sinks} to the given collections. Note
+   * that the given collection is used as-is -- the caller must make sure it can be used safely by
+   * this graph (e.g. concurrent modifications when used with a concurrent builder).
+   */
+  public void setEdges(T source, Collection<T> sinks) {
+    nodes.add(source);
+    nodes.addAll(sinks);
+    Preconditions.checkState(outgoingEdges.putIfAbsent(source, sinks) == null);
+    sinks.forEach(
+        sink -> incomingEdges.computeIfAbsent(sink, s -> createEdgeCollection.get()).add(source));
   }
 
   /**
