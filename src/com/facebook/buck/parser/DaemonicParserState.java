@@ -472,13 +472,9 @@ public class DaemonicParserState {
   }
 
   private DaemonicCellState getOrCreateCellState(Cell cell) {
-    try (AutoCloseableLock writeLock = cellStateLock.writeLock()) {
-      DaemonicCellState state = cellPathToDaemonicState.get(cell.getRoot());
-      if (state == null) {
-        state = new DaemonicCellState(cell, parsingThreads);
-        cellPathToDaemonicState.put(cell.getRoot(), state);
-      }
-      return state;
+    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+      return cellPathToDaemonicState.computeIfAbsent(
+          cell.getRoot(), r -> new DaemonicCellState(cell, parsingThreads));
     }
   }
 
