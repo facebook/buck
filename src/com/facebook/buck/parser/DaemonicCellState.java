@@ -41,12 +41,11 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import javax.annotation.concurrent.GuardedBy;
@@ -77,32 +76,38 @@ class DaemonicCellState {
      * build file that produced those build targets has changed.
      */
     @GuardedBy("cachesLock")
-    private final SetMultimap<UnflavoredBuildTarget, K> targetsCornucopia = HashMultimap.create();
+    private final ConcurrentHashMap<UnflavoredBuildTarget, Set<K>> targetsCornucopia =
+        new ConcurrentHashMap<>();
 
     Cache(CellCacheType<K, T> type) {
       this.type = type;
     }
 
+    // Assumes caller has a write lock on `cachesLock`.
     private void invalidateFor(UnflavoredBuildTarget target) {
-      Set<K> keys = targetsCornucopia.removeAll(target);
-      allComputedNodes.invalidateAll(keys);
-    }
-
-    public Optional<T> lookupComputedNode(K target) throws BuildTargetException {
-      try (AutoCloseableLock readLock = cachesLock.readLock()) {
-        return Optional.ofNullable(allComputedNodes.getIfPresent(target));
+      Set<K> keys = targetsCornucopia.remove(target);
+      if (keys != null) {
+        allComputedNodes.invalidateAll(keys);
       }
     }
 
+    public Optional<T> lookupComputedNode(K target) throws BuildTargetException {
+      return Optional.ofNullable(allComputedNodes.getIfPresent(target));
+    }
+
     public T putComputedNodeIfNotPresent(K target, T targetNode) throws BuildTargetException {
-      try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
+      try (AutoCloseableLock readLock = cachesLock.readLock()) {
         T updatedNode = allComputedNodes.putIfAbsentAndGet(target, targetNode);
         Preconditions.checkState(
             allRawNodeTargets.contains(type.keyToUnflavoredBuildTargetView.apply(target)),
             "Added %s to computed nodes, which isn't present in raw nodes",
             target);
         if (updatedNode.equals(targetNode)) {
-          targetsCornucopia.put(type.keyToUnflavoredBuildTargetView.apply(target), target);
+          targetsCornucopia
+              .computeIfAbsent(
+                  type.keyToUnflavoredBuildTargetView.apply(target),
+                  t -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
+              .add(target);
         }
         return updatedNode;
       }
@@ -137,7 +142,7 @@ class DaemonicCellState {
    * changed.
    */
   @GuardedBy("cachesLock")
-  private final Map<AbsPath, ImmutableMap<String, Optional<String>>> buildFileEnv;
+  private final ConcurrentHashMap<AbsPath, ImmutableMap<String, Optional<String>>> buildFileEnv;
 
   /** Used as an unbounded cache to stored build file manifests by build file path. */
   @GuardedBy("cachesLock")
@@ -209,10 +214,10 @@ class DaemonicCellState {
     this.cellCanonicalName = cell.getCanonicalName();
     this.buildFileDependents = HashMultimap.create();
     this.packageFileDependents = HashMultimap.create();
-    this.buildFileEnv = new HashMap<>();
+    this.buildFileEnv = new ConcurrentHashMap<>();
     this.allBuildFileManifests = new ConcurrentMapCache<>(parsingThreads);
     this.allPackageFileManifests = new ConcurrentMapCache<>(parsingThreads);
-    this.allRawNodeTargets = new HashSet<>();
+    this.allRawNodeTargets = Collections.newSetFromMap(new ConcurrentHashMap<>());
     this.cachesLock = new AutoCloseableReadWriteUpdateLock();
     this.targetNodeCache = new Cache<>(TARGET_NODE_CACHE_TYPE);
     this.rawTargetNodeCache = new Cache<>(RAW_TARGET_NODE_CACHE_TYPE);
@@ -232,9 +237,7 @@ class DaemonicCellState {
   }
 
   Optional<BuildFileManifest> lookupBuildFileManifest(AbsPath buildFile) {
-    try (AutoCloseableLock readLock = cachesLock.readLock()) {
-      return Optional.ofNullable(allBuildFileManifests.getIfPresent(buildFile));
-    }
+    return Optional.ofNullable(allBuildFileManifests.getIfPresent(buildFile));
   }
 
   BuildFileManifest putBuildFileManifestIfNotPresent(
@@ -242,7 +245,7 @@ class DaemonicCellState {
       BuildFileManifest buildFileManifest,
       ImmutableSet<AbsPath> dependentsOfEveryNode,
       ImmutableMap<String, Optional<String>> env) {
-    try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
+    try (AutoCloseableLock readLock = cachesLock.readLock()) {
       BuildFileManifest updated =
           allBuildFileManifests.putIfAbsentAndGet(buildFile, buildFileManifest);
       for (RawTargetNode node : updated.getTargets().values()) {
@@ -263,9 +266,7 @@ class DaemonicCellState {
   }
 
   Optional<PackageFileManifest> lookupPackageFileManifest(AbsPath packageFile) {
-    try (AutoCloseableLock readLock = cachesLock.readLock()) {
-      return Optional.ofNullable(allPackageFileManifests.getIfPresent(packageFile));
-    }
+    return Optional.ofNullable(allPackageFileManifests.getIfPresent(packageFile));
   }
 
   PackageFileManifest putPackageFileManifestIfNotPresent(
@@ -273,11 +274,11 @@ class DaemonicCellState {
       PackageFileManifest packageFileManifest,
       ImmutableSet<AbsPath> packageDependents,
       ImmutableMap<String, Optional<String>> env) {
-    try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
+    try (AutoCloseableLock readLock = cachesLock.readLock()) {
       PackageFileManifest updated =
           allPackageFileManifests.putIfAbsentAndGet(packageFile, packageFileManifest);
-      buildFileEnv.put(packageFile, env);
       if (updated == packageFileManifest) {
+        buildFileEnv.put(packageFile, env);
         // The package file will depend on all dependents and we keep a reverse mapping to know
         // which package files to invalidate if a dependent changes.
         for (AbsPath dependent : packageDependents) {
@@ -400,10 +401,7 @@ class DaemonicCellState {
 
   Optional<MapDifference<String, String>> invalidateIfEnvHasChanged(Cell cell, AbsPath buildFile) {
     // Invalidate if env vars have changed.
-    ImmutableMap<String, Optional<String>> usedEnv;
-    try (AutoCloseableLock readLock = cachesLock.readLock()) {
-      usedEnv = buildFileEnv.get(buildFile);
-    }
+    ImmutableMap<String, Optional<String>> usedEnv = buildFileEnv.get(buildFile);
     if (usedEnv == null) {
       this.cell.set(cell);
       return Optional.empty();
