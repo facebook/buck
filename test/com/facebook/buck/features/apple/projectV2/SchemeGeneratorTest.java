@@ -1238,10 +1238,10 @@ public class SchemeGeneratorTest {
     XPath buildActionXpath = xpathFactory.newXPath();
     XPathExpression buildActionExpr =
       buildActionXpath.compile("//LaunchAction/CommandLineArguments/CommandLineArgument");
-    NodeList envVariableList = (NodeList) buildActionExpr.evaluate(scheme, XPathConstants.NODESET);
+    NodeList commandLineArgsList = (NodeList) buildActionExpr.evaluate(scheme, XPathConstants.NODESET);
 
-    assertThat(envVariableList.getLength(), is(1));
-    Node commandLineArgument = envVariableList.item(0);
+    assertThat(commandLineArgsList.getLength(), is(1));
+    Node commandLineArgument = commandLineArgsList.item(0);
     assertThat(commandLineArgument.getAttributes().getNamedItem("argument").getNodeValue(), equalTo("COMMAND_ARG"));
     assertThat(commandLineArgument.getAttributes().getNamedItem("isEnabled").getNodeValue(), equalTo("YES"));
   }
