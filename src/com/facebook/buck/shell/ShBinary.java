@@ -67,6 +67,12 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 
+// TODO(cjhopman): Don't allow people to just write complex, hard to follow behavior without
+// documenting it.
+// TODO(cjhopman): Figure out wtf this code does. It's creating symlinks all over the place, some of
+// them within this things own getBuildSteps, others by passing information into the generated
+// template and then creating them when invoked. It looks like it's creating multiple symlinks for
+// everything that appears in resources. Why does it do that? And where are they going?
 public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule, HasRuntimeDeps {
 
@@ -185,6 +191,8 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     valuesBuilder.put("cell_names", cellsNamesBuilder.build());
     valuesBuilder.put("cell_paths", cellsPathsStringsBuilder.build());
 
+    // TODO(cjhopman): Why is this so similar to the resource path construction above? What's the
+    // difference and why?
     Path defaultRuntimeResourcesPath =
         runtimeResourcesDir
             .resolve(ROOT_CELL_LINK_NAME)

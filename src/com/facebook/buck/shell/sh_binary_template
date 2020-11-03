@@ -1,3 +1,17 @@
+<!
+This template creates a shell script that invokes a user shell script in a simple sandbox.
+
+Expects the following template arguments:
+
+path_to_project_root_file - path relative to this script's directory to the "project_root" file
+    in buck-out. That file is expected to contain the path of the project root.
+script_to_run - path (relative to the __default__ cell link) for the script to run
+resources - TODO(cjhopman): Figure out what these two resources mean and why they both exist
+default_runtime_resources - TODO(cjhopman): Figure out what these two resources mean and why they both exist
+cell_names - list of cell names (including a __default__ for this script's own cell)
+cell_paths - list of paths corresponding to the names in cell_names
+
+!><\\>
 #!/bin/bash
 # Run with -e so the script will fail if any of the steps fail.
 set -e
@@ -94,6 +108,13 @@ trap "rm -rf $BUCK_TMP_ROOT" EXIT HUP INT TERM
   <cell_paths:{x|   <x><\n>}>
   )
 
+  # TODO(cjhopman): This is crazy. we are modifying the binary's own output directory here. Why
+  # wouldn't this have just been done in java?
+  # I think this code is creating a symlink for each cell at a path of basically
+  # `dirname <<THIS_SCRIPT>>`/cells/<cell_name>. But there's no reason to do that here, and it
+  # forces us to do really complex stuff to get it correct. The code is hard to follow, so I came
+  # to the conclusion based on observation.
+  # Also, what are these even used for? The path that they are at isn't exported to the user script?
   # The following operation needs to be atomic.
   if [ ! -d "$BUCK_REAL_ROOT/cells/" ] ; then
     tmpfolder="`mktemp -d "$BUCK_REAL_ROOT/tmp.XXXXXXXXXX"`"
@@ -111,11 +132,19 @@ trap "rm -rf $BUCK_TMP_ROOT" EXIT HUP INT TERM
     "__default__/$SCRIPT_TO_RUN"
   )
 
+  # TODO(cjhopman): Why do we do this here? We already create links for these in Java.
+  # This code appears to be creating links for all of our resources in the invocation-specific
+  # directory pointing back at the files through the cell symlinks we created above... Why do we do
+  # this? And how do we expect people to access these paths?
   for path in "${SYMLINK_PATHS[@]}"; do
     mkdir -p "$(dirname "$path")"
     ln -sf "$BUCK_REAL_ROOT/cells/$path" "$BUCK_TMP_ROOT/$path"
   done
 )
 
+# It seems like people can access resources through either BUCK_PROJECT_ROOT, in which case they
+# are accessing invocation-specific links or through BUCK_DEFAULT_RUNTIME_RESOURCES in which case
+# they are accessing the links created in Java. #1, there's no reason to have invocation-specific
+# links. #2 there's also no reason to have multiple structures of these links laid out.
 export BUCK_PROJECT_ROOT="$BUCK_TMP_ROOT/__default__"
 exec "$BUCK_TMP_ROOT/__default__/$SCRIPT_TO_RUN" "$@"
