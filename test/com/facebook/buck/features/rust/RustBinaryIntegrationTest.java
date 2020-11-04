@@ -998,10 +998,12 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
-  public void procmacroCompile() throws IOException {
+  public void procmacroCompile() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "procmacro", tmp);
     workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.42");
 
     assertThat(
         // Check that we can build a procmacro crate
@@ -1011,10 +1013,12 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
-  public void procmacroCompileCheck() throws IOException {
+  public void procmacroCompileCheck() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "procmacro", tmp);
     workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.42");
 
     workspace.runBuckBuild("//:test#check").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
@@ -1022,10 +1026,12 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
-  public void procmacroCompileShared() throws IOException {
+  public void procmacroCompileShared() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "procmacro", tmp);
     workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.42");
 
     assertThat(
         // Check that we can build a procmacro crate
@@ -1038,10 +1044,12 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
-  public void procmacroCompileSharedForceRlib() throws IOException {
+  public void procmacroCompileSharedForceRlib() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "procmacro", tmp);
     workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.42");
 
     assertThat(
         // Check that we can build a procmacro crate

@@ -6,6 +6,13 @@ rust_library(
 )
 
 rust_library(
+    name = "helloworld_derive_no_extern",
+    srcs = ["helloworld_derive_no_extern.rs"],
+    deps = [":hellodep"],
+    proc_macro = True,
+)
+
+rust_library(
     name = "hellodep",
     srcs = ["hellodep.rs"],
 )
@@ -15,6 +22,7 @@ rust_binary(
     srcs = ["main.rs"],
     deps = [
         ":helloworld_derive",
+        ":helloworld_derive_no_extern",
     ],
 )
 
@@ -24,5 +32,6 @@ rust_binary(
     link_style = "shared",
     deps = [
         ":helloworld_derive",
+        ":helloworld_derive_no_extern",
     ],
 )

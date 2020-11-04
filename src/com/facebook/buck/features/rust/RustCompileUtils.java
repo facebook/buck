@@ -294,6 +294,13 @@ public class RustCompileUtils {
       args.add(StringArg.of("-Zsave-analysis"));
     }
 
+    // Don't require "extern crate proc_macro"
+    if (crateType == CrateType.PROC_MACRO) {
+      // pathless extern was stabilized in 1.42
+      // https://blog.rust-lang.org/2020/03/12/Rust-1.42.html#use-proc_macrotokenstream-now-works
+      args.add(StringArg.of("--extern=proc_macro"));
+    }
+
     if (incremental.isPresent()) {
       Path path =
           projectFilesystem
