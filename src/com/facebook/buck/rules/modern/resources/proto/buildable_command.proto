@@ -59,13 +59,21 @@ option java_outer_classname = "BuildableCommandProto";
 // best practice to include version number in package
 package modern.v1;
 
+/*
+ * Data object for holding parameters for instantiating IsolatedSteps associated with a particular
+ * ExternalAction.
+ */
 message BuildableCommand {
 
+ // Strings that represent command line arguments
  repeated string args = 1;
 
+ // Environment variables to propagate to the ExternalAction
  map<string, string> env = 2;
 
+ // The name of the ExternalAction class that will use this BuildableCommand to create IsolatedSteps
  string external_action_class = 3;
 
+ // Any additional files the ExternalAction may need. Often used to pass JSON objects. Prefer using a relative path under buck-out.
  repeated string extra_files = 4;
 }
