@@ -24,6 +24,7 @@ import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
+import com.facebook.buck.downwardapi.protocol.InvalidDownwardProtocolException;
 import com.facebook.buck.downwardapi.utils.DownwardApiConstants;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.io.namedpipes.NamedPipe;
@@ -366,8 +367,10 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
         LOG.info("Named pipe %s is closed", namedPipeName);
       } catch (IOException e) {
         LOG.error(e, "Cannot read from named pipe: %s", namedPipeName);
+      } catch (InvalidDownwardProtocolException e) {
+        LOG.error(e, "Received invalid downward protocol");
       } catch (Exception e) {
-        LOG.debug(e, "Cannot read from named pipe: %s", namedPipeName);
+        LOG.debug(e, "Unhandled exception while reading from named pipe: %s", namedPipeName);
       } finally {
         done.set(null);
       }

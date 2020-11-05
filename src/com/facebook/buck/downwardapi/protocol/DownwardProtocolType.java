@@ -49,7 +49,9 @@ public enum DownwardProtocolType {
                     .findFirst()
                     // Do not remove this cast as it caused an exception on JDK versions under 8u60
                     .<IllegalStateException>orElseThrow(
-                        () -> new IllegalStateException("Not valid protocol type: " + protocolId)))
+                        () ->
+                            new InvalidDownwardProtocolException(
+                                "Invalid protocol type: " + protocolId)))
         .getDownwardProtocol();
   }
 
