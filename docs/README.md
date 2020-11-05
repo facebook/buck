@@ -10,7 +10,7 @@ command:
 
     ./docs/soyweb-local.sh
 
-and then navigating to <http://localhost:9811/> in your browser. 
+and then navigating to <http://localhost:9811/> in your browser.
 
 The typical edit/refresh style of web development applies for editing
 these docs: edit a documentation source file, then refresh the
@@ -26,7 +26,7 @@ changes is clear.
 Publishing Documentation
 ========================
 
-This documentation is hosted publicly at <http://facebookexperimental.github.com/buck-dev/>
+This documentation is hosted publicly at <http://facebookexperimental.github.io/buck-dev/>
 using [GitHub Pages](http://pages.github.com/).
 Therefore, to publish this documentation, you must commit it on the
 `gh-pages` branch of the GitHub repository by running:
@@ -53,9 +53,9 @@ the Javadoc with `ant`:
 
     ant javadoc-with-android
 
-To view the generated Javadoc, either open 
+To view the generated Javadoc, either open
 
-    ant-out/javadoc-with-android/index.html 
+    ant-out/javadoc-with-android/index.html
 
 in your browser, or to use the local web server on your computer, copy
 the Javadoc to the `docs` directory:
