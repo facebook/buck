@@ -33,12 +33,10 @@ import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
-import com.google.common.collect.SetMultimap;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
@@ -124,7 +122,7 @@ class DaemonicCellState {
    * files to invalidate when a dependent file changes.
    */
   @GuardedBy("cachesLock")
-  private final SetMultimap<AbsPath, AbsPath> buildFileDependents;
+  private final ConcurrentHashMap<AbsPath, Set<AbsPath>> buildFileDependents;
 
   /**
    * A mapping from dependent files (typically .bzl files) to all PACKAGE files which include that
@@ -132,7 +130,7 @@ class DaemonicCellState {
    * invalidate when a dependent file changes.
    */
   @GuardedBy("cachesLock")
-  private final SetMultimap<AbsPath, AbsPath> packageFileDependents;
+  private final ConcurrentHashMap<AbsPath, Set<AbsPath>> packageFileDependents;
 
   /**
    * Contains environment variables used during parsing of a particular build file.
@@ -212,8 +210,8 @@ class DaemonicCellState {
     this.parsingThreads = parsingThreads;
     this.cellRoot = cell.getRoot();
     this.cellCanonicalName = cell.getCanonicalName();
-    this.buildFileDependents = HashMultimap.create();
-    this.packageFileDependents = HashMultimap.create();
+    this.buildFileDependents = new ConcurrentHashMap<>();
+    this.packageFileDependents = new ConcurrentHashMap<>();
     this.buildFileEnv = new ConcurrentHashMap<>();
     this.allBuildFileManifests = new ConcurrentMapCache<>(parsingThreads);
     this.allPackageFileManifests = new ConcurrentMapCache<>(parsingThreads);
@@ -258,7 +256,9 @@ class DaemonicCellState {
         // We now know all the nodes. They all implicitly depend on everything in
         // the "dependentsOfEveryNode" set.
         for (AbsPath dependent : dependentsOfEveryNode) {
-          buildFileDependents.put(dependent, buildFile);
+          buildFileDependents
+              .computeIfAbsent(dependent, p -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
+              .add(buildFile);
         }
       }
       return updated;
@@ -282,7 +282,9 @@ class DaemonicCellState {
         // The package file will depend on all dependents and we keep a reverse mapping to know
         // which package files to invalidate if a dependent changes.
         for (AbsPath dependent : packageDependents) {
-          this.packageFileDependents.put(dependent, packageFile);
+          this.packageFileDependents
+              .computeIfAbsent(dependent, p -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
+              .add(packageFile);
         }
       }
       return updated;
@@ -350,7 +352,7 @@ class DaemonicCellState {
       }
 
       // We may have been given a file that other build files depend on. Invalidate accordingly.
-      Set<AbsPath> dependents = buildFileDependents.get(path);
+      Set<AbsPath> dependents = buildFileDependents.getOrDefault(path, ImmutableSet.of());
       boolean pathIsPackageFile = PackagePipeline.isPackageFile(path.getPath());
       LOG.verbose("Invalidating dependents for path %s: %s", path, dependents);
       for (AbsPath dependent : dependents) {
@@ -370,13 +372,13 @@ class DaemonicCellState {
       if (!pathIsPackageFile) {
         // Package files do not invalidate the build file (as the build file does not need to be
         // re-parsed). This means the dependents of the package remain intact.
-        buildFileDependents.removeAll(path);
+        buildFileDependents.remove(path);
         buildFileEnv.remove(path);
       }
 
       // We may have been given a file that package files depends on. Iteratively invalidate those
       // package files.
-      dependents = packageFileDependents.get(path);
+      dependents = packageFileDependents.getOrDefault(path, ImmutableSet.of());
       for (AbsPath dependent : dependents) {
         if (dependent.equals(path)) {
           continue;
@@ -392,7 +394,7 @@ class DaemonicCellState {
       // Dependents of package files are build files and other package files, neither of which
       // we want to invalidate.
       if (!pathIsPackageFile) {
-        packageFileDependents.removeAll(path);
+        packageFileDependents.remove(path);
       }
 
       return invalidatedRawNodes;
@@ -426,6 +428,7 @@ class DaemonicCellState {
 
   /** @return {@code true} if the given path has dependencies that are present in the given set. */
   boolean pathDependentPresentIn(Path path, Set<AbsPath> buildFiles) {
-    return !Collections.disjoint(buildFileDependents.get(cellRoot.resolve(path)), buildFiles);
+    return !Collections.disjoint(
+        buildFileDependents.getOrDefault(cellRoot.resolve(path), ImmutableSet.of()), buildFiles);
   }
 }
