@@ -24,6 +24,7 @@ import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.downwardapi.utils.DownwardApiUtils;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.ExternalEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StepEvent;
@@ -93,6 +94,17 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
   public void post(ConsoleEvent event, long threadId) {
     timestamp(event, threadId);
     writeConsoleEvent(event);
+  }
+
+  @Override
+  public void post(ExternalEvent event) {
+    post(event, Thread.currentThread().getId());
+  }
+
+  @Override
+  public void post(ExternalEvent event, long threadId) {
+    timestamp(event, threadId);
+    writeExternalEvent(event);
   }
 
   @Override
@@ -183,6 +195,18 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
         clock.threadUserNanoTime(threadId),
         threadId,
         buildId);
+  }
+
+  private void writeExternalEvent(ExternalEvent event) {
+    EventTypeMessage eventTypeMessage =
+        EventTypeMessage.newBuilder()
+            .setEventType(EventTypeMessage.EventType.EXTERNAL_EVENT)
+            .build();
+    com.facebook.buck.downward.model.ExternalEvent externalEvent =
+        com.facebook.buck.downward.model.ExternalEvent.newBuilder()
+            .putAllData(event.getData())
+            .build();
+    writeToNamedPipe(eventTypeMessage, externalEvent);
   }
 
   private void writeConsoleEvent(ConsoleEvent event) {

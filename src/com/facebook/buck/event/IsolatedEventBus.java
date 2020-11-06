@@ -32,6 +32,12 @@ public interface IsolatedEventBus extends Closeable {
   /** Post a {@link ConsoleEvent} that occurred in the given {@code threadId} to this event bus. */
   void post(ConsoleEvent event, long threadId);
 
+  /** Post a {@link ExternalEvent} to the this event bus. */
+  void post(ExternalEvent event);
+
+  /** Post a {@link ExternalEvent} that occurred in the given {@code threadId} to this event bus. */
+  void post(ExternalEvent event, long threadId);
+
   /** Post a {@link StepEvent} to the this event bus. */
   void post(StepEvent event);
 

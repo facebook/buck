@@ -45,6 +45,16 @@ public class ForwardingIsolatedEventBus implements IsolatedEventBus {
   }
 
   @Override
+  public void post(ExternalEvent event) {
+    buckEventBus.post(event);
+  }
+
+  @Override
+  public void post(ExternalEvent event, long threadId) {
+    buckEventBus.post(event, threadId);
+  }
+
+  @Override
   public void post(StepEvent event) {
     buckEventBus.post(event);
   }
