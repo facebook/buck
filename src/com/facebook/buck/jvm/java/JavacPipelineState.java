@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -90,7 +90,7 @@ public class JavacPipelineState implements RulePipelineState {
   /** Get the invocation instance. */
   public Javac.Invocation getJavacInvocation(
       BaseBuckPaths buckPaths,
-      StepExecutionContext context,
+      IsolatedExecutionContext context,
       ImmutableMap<String, RelPath> cellToPathMappings)
       throws IOException {
     if (invocation == null) {
@@ -104,7 +104,7 @@ public class JavacPipelineState implements RulePipelineState {
           context.getVerbosity().isSilent()
               ? Verbosity.STANDARD_INFORMATION
               : context.getVerbosity();
-      StepExecutionContext firstOrderContext =
+      IsolatedExecutionContext firstOrderContext =
           context.createSubContext(stdout, stderr, Optional.of(verbosity));
       closeables.add(firstOrderContext);
 
@@ -112,13 +112,12 @@ public class JavacPipelineState implements RulePipelineState {
       if (withDownwardApi) {
         processExecutor =
             processExecutor.withDownwardAPI(
-                DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
+                DownwardApiProcessExecutor.FACTORY, context.getIsolatedEventBus());
       }
 
       JavacExecutionContext javacExecutionContext =
           ImmutableJavacExecutionContext.ofImpl(
-              new JavacEventSinkToBuckEventBusBridge(
-                  firstOrderContext.getBuckEventBus().isolated()),
+              new JavacEventSinkToBuckEventBusBridge(firstOrderContext.getIsolatedEventBus()),
               stderr,
               firstOrderContext.getClassLoaderCache(),
               verbosity,
@@ -190,7 +189,7 @@ public class JavacPipelineState implements RulePipelineState {
    * @return list of String command-line options.
    */
   ImmutableList<String> getOptions(
-      StepExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
+      IsolatedExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
     CompilerOutputPaths outputPaths = compilerParameters.getOutputPaths();
     return getOptions(
         outputPaths.getClassesDir(),
@@ -202,7 +201,7 @@ public class JavacPipelineState implements RulePipelineState {
   private ImmutableList<String> getOptions(
       RelPath outputDirectory,
       Path generatedCodeDirectory,
-      StepExecutionContext context,
+      IsolatedExecutionContext context,
       ImmutableSortedSet<Path> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 

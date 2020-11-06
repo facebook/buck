@@ -16,19 +16,19 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ExternalEvent;
+import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.event.external.events.CompilerErrorEventExternalInterface;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.jvm.core.JavaAbis;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
@@ -41,7 +41,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Command used to compile java libraries with a variety of ways to handle dependencies. */
-public class JavacStep implements Step {
+public class JavacStep extends IsolatedStep {
 
   private final JavacPipelineState pipeline;
   private final BuildTarget invokingRule;
@@ -98,7 +98,7 @@ public class JavacStep implements Step {
   }
 
   @Override
-  public final StepExecutionResult execute(StepExecutionContext context)
+  public final StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
     int declaredDepsBuildResult;
     String firstOrderStdout;
@@ -123,7 +123,7 @@ public class JavacStep implements Step {
     }
     if (declaredDepsBuildResult != StepExecutionResults.SUCCESS_EXIT_CODE) {
       returnedStderr =
-          processBuildFailure(context.getBuckEventBus(), firstOrderStdout, firstOrderStderr);
+          processBuildFailure(context.getIsolatedEventBus(), firstOrderStdout, firstOrderStderr);
     } else {
       returnedStderr = Optional.empty();
     }
@@ -134,7 +134,7 @@ public class JavacStep implements Step {
   }
 
   private Optional<String> processBuildFailure(
-      BuckEventBus buckEventBus, String stdOut, String stdErr) {
+      IsolatedEventBus buckEventBus, String stdOut, String stdErr) {
     ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
     errorMessage.add(stdErr);
 
@@ -163,7 +163,7 @@ public class JavacStep implements Step {
   }
 
   @Override
-  public String getDescription(StepExecutionContext context) {
+  public String getIsolatedStepDescription(IsolatedExecutionContext context) {
     String description =
         getJavac()
             .getDescription(
@@ -214,7 +214,7 @@ public class JavacStep implements Step {
    */
   @VisibleForTesting
   ImmutableList<String> getOptions(
-      StepExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
+      IsolatedExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
     return pipeline.getOptions(context, buildClasspathEntries);
   }
 
