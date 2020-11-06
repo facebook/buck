@@ -22,6 +22,7 @@ import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downward.model.ConsoleEvent;
 import com.facebook.buck.downward.model.EndEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
+import com.facebook.buck.downward.model.ExternalEvent;
 import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.StepEvent;
 import com.google.common.base.Preconditions;
@@ -56,14 +57,22 @@ class DownwardProtocolUtils {
     switch (eventType.getEventType()) {
       case CONSOLE_EVENT:
         return ConsoleEvent.class;
+
       case LOG_EVENT:
         return LogEvent.class;
+
       case STEP_EVENT:
         return StepEvent.class;
+
       case CHROME_TRACE_EVENT:
         return ChromeTraceEvent.class;
+
       case END_EVENT:
         return EndEvent.class;
+
+      case EXTERNAL_EVENT:
+        return ExternalEvent.class;
+
       case UNKNOWN:
       case UNRECOGNIZED:
       default:

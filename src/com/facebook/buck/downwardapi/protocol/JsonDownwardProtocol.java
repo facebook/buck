@@ -22,6 +22,7 @@ import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downward.model.ConsoleEvent;
 import com.facebook.buck.downward.model.EndEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
+import com.facebook.buck.downward.model.ExternalEvent;
 import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.StepEvent;
 import com.google.protobuf.AbstractMessage;
@@ -93,14 +94,21 @@ enum JsonDownwardProtocol implements DownwardProtocol {
     switch (eventType) {
       case CONSOLE_EVENT:
         return ConsoleEvent.newBuilder();
+
       case LOG_EVENT:
         return LogEvent.newBuilder();
+
       case STEP_EVENT:
         return StepEvent.newBuilder();
+
       case CHROME_TRACE_EVENT:
         return ChromeTraceEvent.newBuilder();
+
       case END_EVENT:
         return EndEvent.newBuilder();
+
+      case EXTERNAL_EVENT:
+        return ExternalEvent.newBuilder();
 
       case UNKNOWN:
       case UNRECOGNIZED:

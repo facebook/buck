@@ -39,13 +39,19 @@
 //----------------------------------------------
 //  Generate command
 //----------------------------------------------
-//        protoc \
-//        --java_out=src-gen/ \
-//        --java_opt=annotate_code \
-//        src/com/facebook/buck/downwardapi/resources/proto/downward_api.proto \
-//        --plugin=protoc-gen-grpc-java=third-party/java/grpc/protoc-gen-grpc-java-1.10.1-osx-x86_64.exe \
-//        --grpc-java_out=src/ \
-//        && yes | rm src-gen/com/facebook/buck/downward/model/*.meta
+//
+//      TMP_DIR=$(mktemp -d)
+//      unzip third-party/java/protobuf/protobuf-java-3.7.0.jar -d $TMP_DIR
+//
+//      protoc --java_out=src-gen/ \
+//      --java_opt=annotate_code \
+//      --plugin=protoc-gen-grpc-java=third-party/java/grpc/protoc-gen-grpc-java-1.10.1-osx-x86_64.exe \
+//      --grpc-java_out=src/ \
+//      --proto_path=$TMP_DIR \
+//      --proto_path=src/com/facebook/buck/downwardapi/resources/proto/ \
+//      downward_api.proto \
+//      && yes | rm src-gen/com/facebook/buck/downward/model/*.meta \
+//      && yes | rm -rf $TMP_DIR
 //
 //-----------------------
 //
@@ -70,6 +76,7 @@ message EventTypeMessage {
         LOG_EVENT = 2;
         CHROME_TRACE_EVENT = 3;
         STEP_EVENT = 4;
+        EXTERNAL_EVENT = 5;
         END_EVENT = 100;
     }
 }
@@ -134,3 +141,10 @@ message ChromeTraceEvent {
 
 // Empty event to indicate end of downward APi protocol
 message EndEvent {}
+
+// An ExternalEvent is an event that is intended to be propagated to consumers outside of Buck (currently via the Websocket).
+// Tools are able to create this event so that arbitrary data can be propagated to any custom listener of the Websocket.
+// Buck itself does not process these events in any way, and is unaware of its data.
+message ExternalEvent {
+    map<string, string> data = 1;
+}
