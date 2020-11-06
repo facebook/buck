@@ -20,8 +20,10 @@ import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.ExternalEvent;
+import com.facebook.buck.event.external.events.BuckEventExternalInterface;
+import com.facebook.buck.event.external.events.CompilerErrorEventExternalInterface;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.step.Step;
@@ -32,7 +34,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -133,18 +134,25 @@ public class JavacStep implements Step {
   }
 
   private Optional<String> processBuildFailure(
-      BuckEventBus buckEventBus, String firstOrderStdout, String firstOrderStderr) {
+      BuckEventBus buckEventBus, String stdOut, String stdErr) {
     ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
-    errorMessage.add(firstOrderStderr);
+    errorMessage.add(stdErr);
 
-    ImmutableSet<String> suggestions = ImmutableSet.of();
-    CompilerErrorEvent evt =
-        CompilerErrorEvent.create(
-            invokingRule, firstOrderStderr, CompilerErrorEvent.CompilerType.Java, suggestions);
-    buckEventBus.post(evt);
+    ExternalEvent errorEvent =
+        new ExternalEvent(
+            ImmutableMap.of(
+                BuckEventExternalInterface.EVENT_TYPE_KEY,
+                CompilerErrorEventExternalInterface.COMPILER_ERROR_EVENT,
+                CompilerErrorEventExternalInterface.ERROR_MESSAGE_KEY,
+                stdErr,
+                CompilerErrorEventExternalInterface.BUILD_TARGET_NAME_KEY,
+                invokingRule.getFullyQualifiedName(),
+                CompilerErrorEventExternalInterface.COMPILER_NAME_KEY,
+                getClass().getSimpleName()));
+    buckEventBus.post(errorEvent);
 
-    if (!firstOrderStdout.isEmpty()) {
-      buckEventBus.post(ConsoleEvent.info("%s", firstOrderStdout));
+    if (!stdOut.isEmpty()) {
+      buckEventBus.post(ConsoleEvent.info("%s", stdOut));
     }
     return Optional.of(Joiner.on("\n").join(errorMessage.build()));
   }

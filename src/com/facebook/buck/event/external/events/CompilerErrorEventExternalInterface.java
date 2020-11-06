@@ -25,6 +25,11 @@ import com.google.common.collect.ImmutableSet;
 public interface CompilerErrorEventExternalInterface extends BuckEventExternalInterface {
   // Sent when a compiler error has been found
   String COMPILER_ERROR_EVENT = "CompilerErrorEvent";
+
+  String ERROR_MESSAGE_KEY = "ErrorMessage";
+  String BUILD_TARGET_NAME_KEY = "BuildTargetName";
+  String COMPILER_NAME_KEY = "CompilerName";
+
   /** @return the stacktrace of the error that occurred. */
   String getError();
   /** @return the target on which the error occurred. */

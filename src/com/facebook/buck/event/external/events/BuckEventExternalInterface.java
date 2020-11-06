@@ -48,6 +48,9 @@ public interface BuckEventExternalInterface {
   String CACHE_RATE_STATS_UPDATE_EVENT = "CacheRateStatsUpdateEvent";
   // Updates about the status of the current build
   String BUILD_STATUS_EVENT = "BuildStatus";
+  // Key for an event type
+  String EVENT_TYPE_KEY = "EventType";
+
   /** @return the time at which the event has been created, in milliseconds. */
   long getTimestampMillis();
   /** @return the type of the event. */

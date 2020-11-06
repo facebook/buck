@@ -16,12 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.isEmptyString;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
@@ -31,7 +31,11 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.event.ExternalEvent;
+import com.facebook.buck.event.external.events.CompilerErrorEventExternalInterface;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.StepExecutionResult;
@@ -45,10 +49,15 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.eventbus.Subscribe;
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -56,6 +65,17 @@ import org.junit.rules.ExpectedException;
 public class JavacStepTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
+
+  private static class ExternalEventListener {
+
+    private final AtomicInteger counter = new AtomicInteger(-1);
+    private final Map<Integer, BuckEvent> events = new HashMap<>();
+
+    @Subscribe
+    private void externalEvent(ExternalEvent event) {
+      events.put(counter.incrementAndGet(), event);
+    }
+  }
 
   @Test
   public void successfulCompileDoesNotSendStdoutAndStderrToConsole() throws Exception {
@@ -153,7 +173,10 @@ public class JavacStepTest {
             .build();
     BuckEventBusForTests.CapturingEventListener listener =
         new BuckEventBusForTests.CapturingEventListener();
-    executionContext.getBuckEventBus().register(listener);
+    ExternalEventListener externalEventListener = new ExternalEventListener();
+    BuckEventBus buckEventBus = executionContext.getBuckEventBus();
+    buckEventBus.register(listener);
+    buckEventBus.register(externalEventListener);
     StepExecutionResult result = step.execute(executionContext);
 
     // JavacStep itself writes stdout to the console on error; we expect the Build class to write
@@ -166,6 +189,22 @@ public class JavacStepTest {
                 .setStderr(Optional.of("javac stderr\n"))
                 .build()));
     assertThat(listener.getConsoleEventLogMessages(), equalTo(ImmutableList.of("javac stdout\n")));
+
+    Map<Integer, BuckEvent> events = externalEventListener.events;
+    assertThat(events.keySet(), hasSize(1));
+
+    BuckEvent buckEvent = events.get(0);
+    assertTrue(buckEvent instanceof ExternalEvent);
+    ExternalEvent externalEvent = (ExternalEvent) buckEvent;
+
+    ImmutableMap<String, String> data = externalEvent.getData();
+    assertThat(
+        data.get(ExternalEvent.EVENT_TYPE_KEY),
+        equalTo(CompilerErrorEventExternalInterface.COMPILER_ERROR_EVENT));
+
+    assertThat(
+        data.get(CompilerErrorEventExternalInterface.COMPILER_NAME_KEY).toLowerCase(),
+        containsString("java"));
   }
 
   @Test
@@ -272,7 +311,7 @@ public class JavacStepTest {
     assertThat(options, hasItem("-bootclasspath"));
     int bootclasspathIndex = options.indexOf("-bootclasspath");
     String bootclasspath = options.get(bootclasspathIndex + 1);
-    assertThat(bootclasspath, not(isEmptyString()));
+    assertThat(bootclasspath, Matchers.not(Matchers.emptyOrNullString()));
     for (String path : Splitter.on(File.pathSeparator).split(bootclasspath)) {
       assertTrue(Paths.get(path).isAbsolute());
     }

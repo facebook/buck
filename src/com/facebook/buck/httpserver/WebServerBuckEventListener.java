@@ -25,14 +25,18 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.ExternalEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProgressEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
+import com.facebook.buck.event.external.events.CompilerErrorEventExternalInterface;
 import com.facebook.buck.event.listener.stats.cache.CacheRateStatsKeeper;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.util.timing.Clock;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -155,8 +159,36 @@ public class WebServerBuckEventListener implements BuckEventListener {
   }
 
   @Subscribe
-  public void compilerErrorEvent(CompilerErrorEvent event) {
-    streamingWebSocketServlet.tellClients(event);
+  public void externalEvent(ExternalEvent event) {
+    String eventType = event.getData().getOrDefault(BuckEventExternalInterface.EVENT_TYPE_KEY, "");
+    if (eventType.equals(CompilerErrorEventExternalInterface.COMPILER_ERROR_EVENT)) {
+      processCompilerErrorEvent(event);
+    } else {
+      LOG.debug(
+          "Skipping handling of event type: %s for received external event id: %s",
+          eventType, event.getEventKey().getValue());
+    }
+  }
+
+  private void processCompilerErrorEvent(ExternalEvent event) {
+    ImmutableMap<String, String> eventData = event.getData();
+
+    String target =
+        eventData.getOrDefault(
+            CompilerErrorEventExternalInterface.BUILD_TARGET_NAME_KEY, "UNKNOWN");
+    String compilerName =
+        eventData.getOrDefault(CompilerErrorEventExternalInterface.COMPILER_NAME_KEY, "");
+    String errorMessage =
+        eventData.getOrDefault(CompilerErrorEventExternalInterface.ERROR_MESSAGE_KEY, "");
+
+    streamingWebSocketServlet.tellClients(
+        CompilerErrorEvent.builder()
+            .setError(errorMessage)
+            .setTarget(target)
+            .setTimestampMillis(event.getTimestampMillis())
+            .setCompilerType(CompilerErrorEvent.CompilerType.determineCompilerType(compilerName))
+            .setSuggestions(ImmutableSet.of())
+            .build());
   }
 
   @Subscribe
@@ -284,6 +316,7 @@ public class WebServerBuckEventListener implements BuckEventListener {
   /** NOT posted to the Buck event bus; only sent to WebSocket clients. */
   @SuppressWarnings("unused") // Jackson JSON introspection uses the fields
   private static class BuildStatusEvent implements BuckEventExternalInterface {
+
     private final long timestamp;
     public final BuildState state;
     public final int totalRulesCount;

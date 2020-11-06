@@ -16,46 +16,38 @@
 
 package com.facebook.buck.event;
 
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.event.external.events.CompilerErrorEventExternalInterface;
 import com.google.common.collect.ImmutableSet;
 
-public class CompilerErrorEvent extends AbstractBuckEvent
-    implements CompilerErrorEventExternalInterface {
-  private final BuildTarget target;
-  private final String error;
-  private final ImmutableSet<String> suggestions;
+/** Compiler Error Event that used in ideabuck plugin. */
+@BuckStyleValueWithBuilder
+public abstract class CompilerErrorEvent implements CompilerErrorEventExternalInterface {
 
   public enum CompilerType {
-    Java
-  }
+    JAVA("java"),
+    UNKNOWN("unknown");
 
-  CompilerType compilerType;
+    private final String name;
 
-  private CompilerErrorEvent(
-      BuildTarget buildTarget,
-      String error,
-      CompilerType compilerType,
-      ImmutableSet<String> suggestions) {
-    super(EventKey.unique());
-    this.target = buildTarget;
-    this.error = error;
-    this.compilerType = compilerType;
-    this.suggestions = suggestions;
-  }
+    CompilerType(String name) {
+      this.name = name;
+    }
 
-  public static CompilerErrorEvent create(
-      BuildTarget target,
-      String error,
-      CompilerType compilerType,
-      ImmutableSet<String> suggestions) {
-    return new CompilerErrorEvent(target, error, compilerType, suggestions);
+    /** Returns {@link CompilerType} */
+    public static CompilerType determineCompilerType(String compilerName) {
+      String lowerCasedCompilerName = compilerName.toLowerCase();
+      for (CompilerType compilerType : values()) {
+        if (lowerCasedCompilerName.contains(compilerType.name)) {
+          return compilerType;
+        }
+      }
+      return UNKNOWN;
+    }
   }
 
   @Override
-  protected String getValueString() {
-    return "";
-  }
+  public abstract long getTimestampMillis();
 
   @Override
   public String getEventName() {
@@ -63,21 +55,17 @@ public class CompilerErrorEvent extends AbstractBuckEvent
   }
 
   @Override
-  public String getError() {
-    return error;
-  }
+  public abstract String getError();
 
   @Override
-  public String getTarget() {
-    return target.getFullyQualifiedName();
-  }
+  public abstract String getTarget();
 
-  public CompilerType getCompilerType() {
-    return compilerType;
-  }
+  public abstract CompilerType getCompilerType();
 
   @Override
-  public ImmutableSet<String> getSuggestions() {
-    return suggestions;
+  public abstract ImmutableSet<String> getSuggestions();
+
+  public static ImmutableCompilerErrorEvent.Builder builder() {
+    return ImmutableCompilerErrorEvent.builder();
   }
 }
