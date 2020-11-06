@@ -18,6 +18,7 @@ package com.facebook.buck.downwardapi.processexecutor;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.ExternalEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StepEvent;
@@ -46,6 +47,10 @@ public abstract class DownwardApiExecutionContext {
 
   public ConcurrentHashMap<Integer, StepEvent.Started> getStepStartedEvents() {
     return stepStartedEvents;
+  }
+
+  public final void postEvent(ExternalEvent event) {
+    getBuckEventBus().post(event, getInvokingThreadId());
   }
 
   public final void postEvent(ConsoleEvent event) {

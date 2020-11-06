@@ -18,6 +18,7 @@ package com.facebook.buck.downwardapi.processexecutor;
 
 import static com.facebook.buck.downward.model.EventTypeMessage.EventType.CHROME_TRACE_EVENT;
 import static com.facebook.buck.downward.model.EventTypeMessage.EventType.CONSOLE_EVENT;
+import static com.facebook.buck.downward.model.EventTypeMessage.EventType.EXTERNAL_EVENT;
 import static com.facebook.buck.downward.model.EventTypeMessage.EventType.LOG_EVENT;
 import static com.facebook.buck.downward.model.EventTypeMessage.EventType.STEP_EVENT;
 import static com.facebook.buck.downward.model.StepEvent.StepStatus.FINISHED;
@@ -36,6 +37,7 @@ import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downward.model.ChromeTraceEvent.ChromeTraceEventStatus;
 import com.facebook.buck.downward.model.ConsoleEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
+import com.facebook.buck.downward.model.ExternalEvent;
 import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.LogLevel;
 import com.facebook.buck.downward.model.StepEvent;
@@ -126,6 +128,11 @@ public class DownwardApiProcessExecutorTest {
       handleEvent(event);
     }
 
+    @Subscribe
+    public void external(com.facebook.buck.event.ExternalEvent event) {
+      handleEvent(event);
+    }
+
     private void handleEvent(BuckEvent event) {
       events.put(counter.incrementAndGet(), event);
     }
@@ -182,7 +189,7 @@ public class DownwardApiProcessExecutorTest {
     assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
 
     Map<Integer, BuckEvent> events = listener.events;
-    assertEquals(5, events.size());
+    assertEquals(6, events.size());
 
     long currentThreadId = Thread.currentThread().getId();
     for (BuckEvent buckEvent : events.values()) {
@@ -236,7 +243,23 @@ public class DownwardApiProcessExecutorTest {
     // log event
     verifyLogEvent();
 
+    // verify error event
+    verifyExternalEvent(events.get(5));
+
     assertFalse("Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipe.getName())));
+  }
+
+  private void verifyExternalEvent(BuckEvent buckEvent) {
+    assertTrue(buckEvent instanceof com.facebook.buck.event.ExternalEvent);
+    com.facebook.buck.event.ExternalEvent externalEvent =
+        (com.facebook.buck.event.ExternalEvent) buckEvent;
+    assertEquals(
+        ImmutableMap.of(
+            "errorMessageKey",
+            "error message! show me to user!!!!",
+            "buildTarget",
+            "//test/foo:bar"),
+        externalEvent.getData());
   }
 
   @Test(timeout = 10_000)
@@ -512,8 +535,7 @@ public class DownwardApiProcessExecutorTest {
     try (NamedPipeWriter namedPipe =
         NamedPipeFactory.getFactory().connectAsWriter(Paths.get(namedPipeName))) {
       try (OutputStream outputStream = namedPipe.getOutputStream()) {
-        List<String> messages = getJsonMessages();
-        for (String message : messages) {
+        for (String message : getMessages()) {
           LOG.info("Writing into named pipe: %s%s", System.lineSeparator(), message);
           outputStream.write(message.getBytes(StandardCharsets.UTF_8));
           TimeUnit.MILLISECONDS.sleep(100);
@@ -522,7 +544,7 @@ public class DownwardApiProcessExecutorTest {
     }
   }
 
-  private ImmutableList<String> getJsonMessages() throws IOException {
+  private ImmutableList<String> getMessages() throws IOException {
     DownwardProtocolType protocolType = DownwardProtocolType.JSON;
     DownwardProtocol downwardProtocol = protocolType.getDownwardProtocol();
 
@@ -553,6 +575,7 @@ public class DownwardApiProcessExecutorTest {
             "category_123",
             150,
             ImmutableMap.of("key3", "value3")));
+    builder.add(externalEvent(downwardProtocol));
 
     return builder.build();
   }
@@ -573,6 +596,20 @@ public class DownwardApiProcessExecutorTest {
             .build();
 
     return write(downwardProtocol, STEP_EVENT, stepEvent);
+  }
+
+  private String externalEvent(DownwardProtocol downwardProtocol) throws IOException {
+    ExternalEvent externalEvent =
+        ExternalEvent.newBuilder()
+            .putAllData(
+                ImmutableMap.of(
+                    "errorMessageKey",
+                    "error message! show me to user!!!!",
+                    "buildTarget",
+                    "//test/foo:bar"))
+            .build();
+
+    return write(downwardProtocol, EXTERNAL_EVENT, externalEvent);
   }
 
   private String consoleEvent(DownwardProtocol downwardProtocol) throws IOException {

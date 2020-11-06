@@ -47,8 +47,7 @@ public interface EventHandler<T extends AbstractMessage> {
         return (EventHandler<T>) ChromeTraceEventHandler.INSTANCE;
 
       case EXTERNAL_EVENT:
-        throw new UnsupportedOperationException(
-            "Event type: " + eventType + " is not yet supported!");
+        return (EventHandler<T>) ExternalEventHandler.INSTANCE;
 
       case END_EVENT:
       case UNKNOWN:
