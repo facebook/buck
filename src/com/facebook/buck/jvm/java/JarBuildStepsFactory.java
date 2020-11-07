@@ -295,6 +295,15 @@ public class JarBuildStepsFactory
     };
   }
 
+  /**
+   * Returns whether factory creates steps that all converted into {@link
+   * com.facebook.buck.step.isolatedsteps.IsolatedStep}s.
+   */
+  public boolean areAllStepsConvertedToIsolatedSteps() {
+    // TODO: msemko: convert Kotlin, Scala and Groovy steps
+    return configuredCompiler instanceof JavacToJarStepFactory;
+  }
+
   public boolean useRulePipelining() {
     return configuredCompiler instanceof JavacToJarStepFactory
         && abiGenerationMode.isSourceAbi()
@@ -356,14 +365,15 @@ public class JarBuildStepsFactory
     return steps.build();
   }
 
-  public ImmutableList<Step> getBuildStepsForLibraryJar(
+  /** Adds build steps for library jar */
+  public void addBuildStepsForLibraryJar(
       BuildContext context,
       ProjectFilesystem filesystem,
       RecordArtifactVerifier buildableContext,
       BuildTarget buildTarget,
-      RelPath pathToClassHashes) {
+      RelPath pathToClassHashes,
+      ImmutableList.Builder<Step> steps) {
     Preconditions.checkArgument(buildTarget.equals(libraryTarget));
-    ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     CompilerParameters compilerParameters = getCompilerParameters(context, filesystem, buildTarget);
     ResourcesParameters resourcesParameters = getResourcesParameters();
@@ -389,17 +399,16 @@ public class JarBuildStepsFactory
         Optional.ofNullable(getSourcePathToOutput(buildTarget, filesystem))
             .map(sourcePath -> context.getSourcePathResolver().getCellUnsafeRelPath(sourcePath)),
         pathToClassHashes);
-
-    return steps.build();
   }
 
-  public ImmutableList<Step> getPipelinedBuildStepsForLibraryJar(
+  /** Adds pipeline build steps for library jar */
+  public void addPipelinedBuildStepsForLibraryJar(
       BuildContext context,
       ProjectFilesystem filesystem,
       RecordArtifactVerifier buildableContext,
       JavacPipelineState state,
-      RelPath pathToClassHashes) {
-    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+      RelPath pathToClassHashes,
+      ImmutableList.Builder<Step> steps) {
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
             context,
@@ -419,8 +428,6 @@ public class JarBuildStepsFactory
         Optional.ofNullable(getSourcePathToOutput(libraryTarget, filesystem))
             .map(sourcePath -> context.getSourcePathResolver().getCellUnsafeRelPath(sourcePath)),
         pathToClassHashes);
-
-    return steps.build();
   }
 
   protected CompilerParameters getCompilerParameters(

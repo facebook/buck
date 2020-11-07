@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /** Buildable for DefaultJavaLibrary. */
@@ -120,22 +121,20 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       ProjectFilesystem filesystem,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
-    ImmutableList<Step> factoryBuildSteps =
-        jarBuildStepsFactory.getBuildStepsForLibraryJar(
-            buildContext,
-            filesystem,
-            ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
-            buildTarget,
-            outputPathResolver.resolvePath(pathToClassHashesOutputPath));
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    ImmutableList<IsolatedStep> isolatedSteps =
-        getIsolatedSteps(buildContext, outputPathResolver, filesystem);
+    jarBuildStepsFactory.addBuildStepsForLibraryJar(
+        buildContext,
+        filesystem,
+        ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
+        buildTarget,
+        outputPathResolver.resolvePath(pathToClassHashesOutputPath),
+        steps);
 
-    ImmutableList.Builder<Step> steps =
-        ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + 1 + isolatedSteps.size());
-    steps.addAll(factoryBuildSteps);
-    steps.addAll(isolatedSteps);
-    return steps.build();
+    maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(
+        buildContext, outputPathResolver, filesystem, steps);
+
+    return buildAndMaybeVerifySteps(steps, false);
   }
 
   @Override
@@ -145,41 +144,63 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       JavacPipelineState state,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
-    ImmutableList<Step> factoryBuildSteps =
-        jarBuildStepsFactory.getPipelinedBuildStepsForLibraryJar(
-            buildContext,
-            filesystem,
-            ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
-            state,
-            outputPathResolver.resolvePath(pathToClassHashesOutputPath));
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    ImmutableList<IsolatedStep> isolatedSteps =
-        getIsolatedSteps(buildContext, outputPathResolver, filesystem);
+    jarBuildStepsFactory.addPipelinedBuildStepsForLibraryJar(
+        buildContext,
+        filesystem,
+        ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
+        state,
+        outputPathResolver.resolvePath(pathToClassHashesOutputPath),
+        steps);
 
-    ImmutableList.Builder<Step> steps =
-        ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + 1 + isolatedSteps.size());
-    steps.addAll(factoryBuildSteps);
-    steps.addAll(isolatedSteps);
-    return steps.build();
+    maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(
+        buildContext, outputPathResolver, filesystem, steps);
+
+    return buildAndMaybeVerifySteps(steps, true);
   }
 
-  private ImmutableList<IsolatedStep> getIsolatedSteps(
+  private ImmutableList<Step> buildAndMaybeVerifySteps(
+      ImmutableList.Builder<Step> steps, boolean isPipelineSteps) {
+    ImmutableList<Step> stepList = steps.build();
+    if (jarBuildStepsFactory.areAllStepsConvertedToIsolatedSteps()) {
+      verifyThatStepsAreIsolated(stepList, isPipelineSteps);
+    }
+    return stepList;
+  }
+
+  private void verifyThatStepsAreIsolated(ImmutableList<Step> stepList, boolean isPipelineSteps) {
+    Predicate<Step> isolatedStepPredicate = item -> item instanceof IsolatedStep;
+    boolean allIsolatedSteps = stepList.stream().allMatch(isolatedStepPredicate);
+    if (!allIsolatedSteps) {
+      String notIsolatedSteps =
+          stepList.stream()
+              .filter(isolatedStepPredicate.negate())
+              .map(step -> step.getClass().getSimpleName() + ": " + step.getShortName())
+              .collect(Collectors.joining());
+      throw new IllegalStateException(
+          "Found not isolated steps: "
+              + notIsolatedSteps
+              + ". Is pipeline steps: "
+              + isPipelineSteps);
+    }
+  }
+
+  private void maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(
       BuildContext buildContext,
       OutputPathResolver outputPathResolver,
-      ProjectFilesystem filesystem) {
+      ProjectFilesystem filesystem,
+      ImmutableList.Builder<Step> steps) {
 
-    ImmutableList.Builder<IsolatedStep> isolatedSteps = ImmutableList.builder();
     unusedDependenciesFinderFactory.ifPresent(
         factory ->
-            isolatedSteps.add(
+            steps.add(
                 getUnusedDependenciesStep(
                     factory,
                     filesystem,
                     buildContext.getSourcePathResolver(),
                     buildContext.getCellPathResolver())));
-    isolatedSteps.add(getMakeMissingOutputsStep(outputPathResolver));
-
-    return isolatedSteps.build();
+    steps.add(getMakeMissingOutputsStep(outputPathResolver));
   }
 
   private IsolatedStep getUnusedDependenciesStep(
