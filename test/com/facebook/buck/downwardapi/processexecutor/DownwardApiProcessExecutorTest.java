@@ -83,9 +83,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 public class DownwardApiProcessExecutorTest {
 
@@ -96,6 +98,8 @@ public class DownwardApiProcessExecutorTest {
       ConsoleParams.of(false, Verbosity.STANDARD_INFORMATION);
   private static final String TEST_COMMAND = "test_command";
   private static final String TEST_ACTION_ID = "test_action_id";
+
+  @Rule public TestName testName = new TestName();
 
   @Rule public TestLogSink logSinkFromTest = new TestLogSink(TEST_LOGGER_NAME);
 
@@ -151,7 +155,7 @@ public class DownwardApiProcessExecutorTest {
   @Test(timeout = 10_000)
   public void downwardApiWithNoWriters() throws IOException, InterruptedException {
     // do nothing
-    FakeProcess fakeProcess = new FakeProcess(Optional.of(() -> Optional.empty()));
+    FakeProcess fakeProcess = new FakeProcess(Optional.of(Optional::empty));
 
     DownwardApiProcessExecutor processExecutor =
         getDownwardApiProcessExecutor(namedPipe, buckEventBus, params, fakeProcess);
@@ -323,7 +327,7 @@ public class DownwardApiProcessExecutorTest {
     DownwardApiExecutionResult result = launchAndExecute(processExecutor);
 
     assertThat(
-        getLogMessagesAsSingleString(logSinkFromExecutor).get(),
+        getLogMessagesAsSingleString(logSinkFromExecutor),
         stringContainsInOrder("Named pipe", namedPipe.getName(), "is closed"));
     assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
     assertFalse("Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipe.getName())));
@@ -331,7 +335,7 @@ public class DownwardApiProcessExecutorTest {
 
   @Test(timeout = 10_000)
   public void otherIOException() throws IOException, InterruptedException {
-    namedPipe =
+    NamedPipeReader namedPipeReader =
         new NamedPipeReader() {
           @Override
           public InputStream getInputStream() throws IOException {
@@ -340,30 +344,38 @@ public class DownwardApiProcessExecutorTest {
 
           @Override
           public String getName() {
-            return "unused";
+            return "unused_" + testName.getMethodName();
           }
 
           @Override
-          public void close() {}
+          public void close() throws IOException {
+            Files.deleteIfExists(Paths.get(getName()));
+          }
         };
-    params = getProcessExecutorParams(namedPipe, buckEventBus);
+    String namedPipeName = namedPipeReader.getName();
+    ProcessExecutorParams params = getProcessExecutorParams(namedPipeReader, buckEventBus);
 
     FakeProcess fakeProcess = new FakeProcess(0);
 
     DownwardApiProcessExecutor processExecutor =
-        getDownwardApiProcessExecutor(namedPipe, buckEventBus, params, fakeProcess);
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, params, fakeProcess);
 
-    DownwardApiExecutionResult result = launchAndExecute(processExecutor);
+    DownwardApiExecutionResult result;
+    try {
+      result = launchAndExecute(processExecutor);
+    } finally {
+      namedPipeReader.close();
+    }
 
     assertThat(
-        getLogMessagesAsSingleString(logSinkFromExecutor).get(),
-        stringContainsInOrder("Cannot read from named pipe: ", namedPipe.getName()));
+        getLogMessagesAsSingleString(logSinkFromExecutor),
+        stringContainsInOrder("Cannot read from named pipe: ", namedPipeName));
     assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
   }
 
   @Test(timeout = 10_000)
   public void generalUnhandledException() throws IOException, InterruptedException {
-    namedPipe =
+    NamedPipeReader namedPipeReader =
         new NamedPipeReader() {
           @Override
           public InputStream getInputStream() {
@@ -372,25 +384,33 @@ public class DownwardApiProcessExecutorTest {
 
           @Override
           public String getName() {
-            return "unused";
+            return "unused_" + testName.getMethodName();
           }
 
           @Override
-          public void close() {}
+          public void close() throws IOException {
+            Files.deleteIfExists(Paths.get(getName()));
+          }
         };
-    params = getProcessExecutorParams(namedPipe, buckEventBus);
+    String namedPipeName = namedPipeReader.getName();
+    ProcessExecutorParams params = getProcessExecutorParams(namedPipeReader, buckEventBus);
 
     FakeProcess fakeProcess = new FakeProcess(0);
 
     DownwardApiProcessExecutor processExecutor =
-        getDownwardApiProcessExecutor(namedPipe, buckEventBus, params, fakeProcess);
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, params, fakeProcess);
 
-    DownwardApiExecutionResult result = launchAndExecute(processExecutor);
+    DownwardApiExecutionResult result;
+    try {
+      result = launchAndExecute(processExecutor);
+    } finally {
+      namedPipeReader.close();
+    }
 
     assertThat(
-        getLogMessagesAsSingleString(logSinkFromExecutor).get(),
+        getLogMessagesAsSingleString(logSinkFromExecutor),
         stringContainsInOrder(
-            "Unhandled exception while reading from named pipe: ", namedPipe.getName()));
+            "Unhandled exception while reading from named pipe: ", namedPipeName));
     assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
   }
 
@@ -664,9 +684,9 @@ public class DownwardApiProcessExecutorTest {
     return outputStream.toString(StandardCharsets.UTF_8.name());
   }
 
-  private Optional<String> getLogMessagesAsSingleString(TestLogSink logSink) {
+  private String getLogMessagesAsSingleString(TestLogSink logSink) {
     return logSink.getRecords().stream()
         .map(LogRecord::getMessage)
-        .reduce((record, acc) -> String.join(System.lineSeparator(), record, acc));
+        .collect(Collectors.joining(System.lineSeparator()));
   }
 }

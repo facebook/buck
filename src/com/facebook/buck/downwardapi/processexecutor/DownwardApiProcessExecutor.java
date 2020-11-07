@@ -370,7 +370,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
       } catch (InvalidDownwardProtocolException e) {
         LOG.error(e, "Received invalid downward protocol");
       } catch (Exception e) {
-        LOG.debug(e, "Unhandled exception while reading from named pipe: %s", namedPipeName);
+        LOG.warn(e, "Unhandled exception while reading from named pipe: %s", namedPipeName);
       } finally {
         done.set(null);
       }
