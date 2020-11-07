@@ -260,7 +260,6 @@ public class HaskellGhciDescription
           // Add to graphBuilder
           return CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
               graphBuilder,
-              cxxBuckConfig,
               downwardApiConfig,
               cxxPlatform,
               projectFilesystem,
@@ -272,7 +271,9 @@ public class HaskellGhciDescription
               Optional.of("libghci_dependencies.so"),
               linkFlagsBuilder.build(),
               cellPathResolver,
-              cxxBuckConfig.getLinkScheduleInfo());
+              cxxBuckConfig.getLinkScheduleInfo(),
+              cxxBuckConfig.getLinkerMapEnabled(),
+              cxxBuckConfig.shouldCacheLinks());
         });
   }
 

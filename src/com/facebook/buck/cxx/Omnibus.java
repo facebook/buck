@@ -276,7 +276,6 @@ public class Omnibus {
         graphBuilder.addToIndex(
             CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
                 graphBuilder,
-                cxxBuckConfig,
                 downwardApiConfig,
                 cxxPlatform,
                 projectFilesystem,
@@ -288,7 +287,9 @@ public class Omnibus {
                 Optional.of(omnibusSoname),
                 extraLdflags,
                 cellPathResolver,
-                cxxBuckConfig.getOmnibusRootLinkScheduleInfo()));
+                cxxBuckConfig.getOmnibusRootLinkScheduleInfo(),
+                cxxBuckConfig.getLinkerMapEnabled(),
+                cxxBuckConfig.shouldCacheOmnibusRootLinks()));
     return rule.getSourcePathToOutput();
   }
 
@@ -402,7 +403,6 @@ public class Omnibus {
           rootLinkRule =
               CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
                   graphBuilder,
-                  cxxBuckConfig,
                   downwardApiConfig,
                   cxxPlatform,
                   projectFilesystem,
@@ -420,7 +420,9 @@ public class Omnibus {
                   rootSoname,
                   argsBuilder.build(),
                   cellPathResolver,
-                  cxxBuckConfig.getOmnibusRootLinkScheduleInfo());
+                  cxxBuckConfig.getOmnibusRootLinkScheduleInfo(),
+                  cxxBuckConfig.getLinkerMapEnabled(),
+                  cxxBuckConfig.shouldCacheOmnibusRootLinks());
           break;
         }
 
@@ -748,7 +750,6 @@ public class Omnibus {
         graphBuilder.addToIndex(
             CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
                 graphBuilder,
-                cxxBuckConfig,
                 downwardApiConfig,
                 cxxPlatform,
                 projectFilesystem,
@@ -760,7 +761,9 @@ public class Omnibus {
                 Optional.of(omnibusSoname),
                 argsBuilder.build(),
                 cellPathResolver,
-                cxxBuckConfig.getLinkScheduleInfo()));
+                cxxBuckConfig.getLinkScheduleInfo(),
+                cxxBuckConfig.getLinkerMapEnabled(),
+                cxxBuckConfig.shouldCacheLinks()));
 
     return ImmutableOmnibusLibrary.ofImpl(omnibusSoname, omnibusRule.getSourcePathToOutput());
   }

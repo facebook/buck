@@ -179,7 +179,6 @@ public class CxxLinkableEnhancer {
     return createCxxLinkableBuildRule(
         graphBuilder,
         cellPathResolver,
-        cxxBuckConfig,
         downwardApiConfig,
         cxxPlatform,
         projectFilesystem,
@@ -193,14 +192,15 @@ public class CxxLinkableEnhancer {
         postprocessor,
         CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY,
         CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY,
-        cxxBuckConfig.getLinkScheduleInfo());
+        cxxBuckConfig.getLinkScheduleInfo(),
+        cxxBuckConfig.getLinkerMapEnabled(),
+        cxxBuckConfig.shouldCacheLinks());
   }
 
   /** Creates a {@link CxxLink} rule which supports an optional relinking strategy. */
   public static CxxLink createCxxLinkableBuildRule(
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellPathResolver,
-      CxxBuckConfig cxxBuckConfig,
       DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ProjectFilesystem projectFilesystem,
@@ -214,7 +214,9 @@ public class CxxLinkableEnhancer {
       Optional<LinkOutputPostprocessor> postprocessor,
       CxxConditionalLinkStrategyFactory linkStrategyFactory,
       CxxDebugSymbolLinkStrategyFactory debugSymbolLinkStrategyFactory,
-      Optional<RuleScheduleInfo> linkScheduleInfo) {
+      Optional<RuleScheduleInfo> linkScheduleInfo,
+      boolean useLinkerMaps,
+      boolean cacheLinks) {
 
     Linker linker = cxxPlatform.getLd().resolve(ruleResolver, target.getTargetConfiguration());
 
@@ -222,7 +224,7 @@ public class CxxLinkableEnhancer {
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
 
     // Add flags to generate linker map if supported.
-    if (cxxBuckConfig.getLinkerMapEnabled()
+    if (useLinkerMaps
         && linker instanceof HasLinkerMap
         && LinkerMapMode.isLinkerMapEnabledForBuildTarget(target)) {
       argsBuilder.addAll(((HasLinkerMap) linker).linkerMap(output));
@@ -287,8 +289,8 @@ public class CxxLinkableEnhancer {
         ldArgs,
         postprocessor,
         linkScheduleInfo,
-        cxxBuckConfig.getLinkerMapEnabled(),
-        cxxBuckConfig.shouldCacheLinks(),
+        useLinkerMaps,
+        cacheLinks,
         linkOptions.getThinLto(),
         linkOptions.getFatLto(),
         downwardApiConfig.isEnabledForCxx(),
@@ -529,7 +531,6 @@ public class CxxLinkableEnhancer {
     return createCxxLinkableBuildRule(
         graphBuilder,
         cellPathResolver,
-        cxxBuckConfig,
         downwardApiConfig,
         cxxPlatform,
         projectFilesystem,
@@ -543,7 +544,9 @@ public class CxxLinkableEnhancer {
         postprocessor,
         linkStrategyFactory,
         debugSymbolLinkStrategyFactory,
-        cxxBuckConfig.getLinkScheduleInfo());
+        cxxBuckConfig.getLinkScheduleInfo(),
+        cxxBuckConfig.getLinkerMapEnabled(),
+        cxxBuckConfig.shouldCacheLinks());
   }
 
   private static void addSharedLibrariesLinkerArgs(
@@ -583,7 +586,6 @@ public class CxxLinkableEnhancer {
 
   public static CxxLink createCxxLinkableSharedBuildRule(
       ActionGraphBuilder graphBuilder,
-      CxxBuckConfig cxxBuckConfig,
       DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ProjectFilesystem projectFilesystem,
@@ -594,7 +596,9 @@ public class CxxLinkableEnhancer {
       Optional<String> soname,
       ImmutableList<? extends Arg> args,
       CellPathResolver cellPathResolver,
-      Optional<RuleScheduleInfo> linkScheduleInfo) {
+      Optional<RuleScheduleInfo> linkScheduleInfo,
+      boolean useLinkerMaps,
+      boolean cacheLinks) {
     ImmutableList.Builder<Arg> linkArgsBuilder = ImmutableList.builder();
     linkArgsBuilder.addAll(
         cxxPlatform
@@ -614,7 +618,6 @@ public class CxxLinkableEnhancer {
     return createCxxLinkableBuildRule(
         graphBuilder,
         cellPathResolver,
-        cxxBuckConfig,
         downwardApiConfig,
         cxxPlatform,
         projectFilesystem,
@@ -628,7 +631,9 @@ public class CxxLinkableEnhancer {
         Optional.empty(),
         CxxConditionalLinkStrategyFactoryAlwaysLink.FACTORY,
         CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY,
-        linkScheduleInfo);
+        linkScheduleInfo,
+        useLinkerMaps,
+        cacheLinks);
   }
 
   /**
