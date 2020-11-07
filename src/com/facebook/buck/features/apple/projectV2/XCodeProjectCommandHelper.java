@@ -21,6 +21,7 @@ import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescription;
+import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.XCodeDescriptionsFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
@@ -508,7 +509,7 @@ public class XCodeProjectCommandHelper {
         workspaceArgs = createImplicitWorkspaceArgs(inputNode);
       } else {
         throw new HumanReadableException(
-            "%s must be a xcode_workspace_config, apple_binary, apple_bundle, or apple_library",
+            "%s must be a xcode_workspace_config, apple_binary, apple_bundle, apple_library, or apple_test",
             inputNode);
       }
 
@@ -763,7 +764,8 @@ public class XCodeProjectCommandHelper {
     // case we still want to generate a workspace.
     return description instanceof AppleBinaryDescription
         || description instanceof AppleBundleDescription
-        || description instanceof AppleLibraryDescription;
+        || description instanceof AppleLibraryDescription
+        || description instanceof AppleTestDescription;
   }
 
   /**

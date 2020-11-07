@@ -3,4 +3,5 @@ apple_library(
     srcs = glob(["*.m"]),
     visibility = ["PUBLIC"],
     deps = ["//res:res"],
+    tests = ["//test:test"],
 )

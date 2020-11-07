@@ -184,6 +184,16 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testGeneratesWorkspaceFromTest() throws IOException {
+    ProjectWorkspace workspace = createWorkspace(this, "project_implicit_workspace_generation");
+
+    ProcessResult result = workspace.runBuckCommand("project", "//test:test");
+    result.assertSuccess();
+    Files.exists(workspace.resolve("test/test.xcworkspace/contents.xcworkspacedata"));
+    Files.exists(workspace.resolve("test/test.xcodeproj/project.pbxproj"));
+  }
+
+  @Test
   public void testAttemptingToGenerateWorkspaceFromResourceTargetIsABuildError()
       throws IOException {
     ProjectWorkspace workspace = createWorkspace(this, "project_implicit_workspace_generation");
@@ -193,7 +203,7 @@ public class ProjectIntegrationTest {
     assertThat(
         processResult.getStderr(),
         containsString(
-            "//res:res must be a xcode_workspace_config, apple_binary, apple_bundle, or apple_library"));
+            "//res:res must be a xcode_workspace_config, apple_binary, apple_bundle, apple_library, or apple_test"));
   }
 
   @Test
