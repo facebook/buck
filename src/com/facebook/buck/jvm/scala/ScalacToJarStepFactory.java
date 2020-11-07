@@ -25,6 +25,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -85,7 +86,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
 
   @Override
   protected boolean areAllStepsConvertedToIsolatedSteps() {
-    return false;
+    return true;
   }
 
   @Override
@@ -104,20 +105,24 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
     RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
 
     if (sourceFilePaths.stream().anyMatch(SCALA_PATH_MATCHER::matches)) {
+      AbsPath rootPath = projectFilesystem.getRootPath();
+
+      SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
+      ImmutableList<String> commandPrefix = scalac.getCommandPrefix(sourcePathResolver);
+      ImmutableMap<String, String> environment = scalac.getEnvironment(sourcePathResolver);
+
       steps.add(
           new ScalacStep(
-              scalac,
+              commandPrefix,
+              environment,
               ImmutableList.<String>builder()
                   .addAll(configCompilerFlags)
                   .addAll(extraArguments)
                   .addAll(
                       Iterables.transform(
                           compilerPlugins,
-                          input ->
-                              "-Xplugin:"
-                                  + context.getSourcePathResolver().getCellUnsafeRelPath(input)))
+                          input -> "-Xplugin:" + sourcePathResolver.getCellUnsafeRelPath(input)))
                   .build(),
-              context.getSourcePathResolver(),
               outputDirectory.getPath(),
               sourceFilePaths,
               ImmutableSortedSet.<Path>naturalOrder()
@@ -127,9 +132,8 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
                           .iterator())
                   .addAll(classpathEntries)
                   .build(),
-              projectFilesystem,
-              ProjectFilesystemUtils.relativize(
-                  projectFilesystem.getRootPath(), context.getBuildCellRootPath()),
+              rootPath,
+              ProjectFilesystemUtils.relativize(rootPath, context.getBuildCellRootPath()),
               withDownwardApi));
     }
 

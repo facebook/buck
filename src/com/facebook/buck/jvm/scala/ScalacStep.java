@@ -17,10 +17,8 @@
 package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
@@ -32,33 +30,31 @@ import java.nio.file.Path;
 import java.util.stream.Collectors;
 
 public class ScalacStep extends IsolatedShellStep {
-  private final Tool scalac;
+
+  private final ImmutableList<String> commandPrefix;
+  private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> extraArguments;
-  private final SourcePathResolverAdapter resolver;
   private final Path outputDirectory;
   private final ImmutableSortedSet<Path> sourceFilePaths;
   private final ImmutableSortedSet<Path> classpathEntries;
-  private final ProjectFilesystem filesystem;
 
   ScalacStep(
-      Tool scalac,
+      ImmutableList<String> commandPrefix,
+      ImmutableMap<String, String> environment,
       ImmutableList<String> extraArguments,
-      SourcePathResolverAdapter resolver,
       Path outputDirectory,
       ImmutableSortedSet<Path> sourceFilePaths,
       ImmutableSortedSet<Path> classpathEntries,
-      ProjectFilesystem filesystem,
+      AbsPath ruleCellRoot,
       RelPath cellPath,
       boolean withDownwardApi) {
-    super(filesystem.getRootPath(), cellPath, withDownwardApi);
-
-    this.scalac = scalac;
+    super(ruleCellRoot, cellPath, withDownwardApi);
+    this.commandPrefix = commandPrefix;
+    this.environment = environment;
     this.extraArguments = extraArguments;
-    this.resolver = resolver;
     this.outputDirectory = outputDirectory;
     this.sourceFilePaths = sourceFilePaths;
     this.classpathEntries = classpathEntries;
-    this.filesystem = filesystem;
   }
 
   @Override
@@ -68,10 +64,10 @@ public class ScalacStep extends IsolatedShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
+    AbsPath ruleCellRoot = context.getRuleCellRoot();
+
     ImmutableList.Builder<String> commandBuilder =
-        ImmutableList.<String>builder()
-            .addAll(scalac.getCommandPrefix(resolver))
-            .addAll(extraArguments);
+        ImmutableList.<String>builder().addAll(commandPrefix).addAll(extraArguments);
 
     Verbosity verbosity = context.getVerbosity();
     if (verbosity.shouldUseVerbosityFlagIfAvailable()) {
@@ -79,12 +75,12 @@ public class ScalacStep extends IsolatedShellStep {
     }
 
     // Specify the output directory.
-    commandBuilder.add("-d").add(filesystem.resolve(outputDirectory).toString());
+    commandBuilder.add("-d").add(ruleCellRoot.resolve(outputDirectory).toString());
 
     String classpath =
         classpathEntries.stream()
-            .map(filesystem::resolve)
-            .map(Path::toString)
+            .map(ruleCellRoot::resolve)
+            .map(AbsPath::toString)
             .collect(Collectors.joining(File.pathSeparator));
     if (classpath.isEmpty()) {
       commandBuilder.add("-classpath", "''");
@@ -98,6 +94,6 @@ public class ScalacStep extends IsolatedShellStep {
 
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
-    return scalac.getEnvironment(resolver);
+    return environment;
   }
 }
