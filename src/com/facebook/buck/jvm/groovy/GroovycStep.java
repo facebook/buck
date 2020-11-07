@@ -19,17 +19,16 @@ package com.facebook.buck.jvm.groovy;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.OptionsConsumer;
-import com.facebook.buck.step.Step;
+import com.facebook.buck.jvm.java.ResolvedJavacOptions;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
@@ -43,44 +42,39 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 
-class GroovycStep implements Step {
+/** Groovy compile step. */
+class GroovycStep extends IsolatedStep {
 
-  private final Tool groovyc;
+  private final ImmutableList<String> commandPrefix;
   private final Optional<ImmutableList<String>> extraArguments;
-  private final JavacOptions javacOptions;
-  private final SourcePathResolverAdapter resolver;
+  private final ResolvedJavacOptions javacOptions;
   private final Path outputDirectory;
   private final ImmutableSortedSet<Path> sourceFilePaths;
   private final Path pathToSrcsList;
   private final ImmutableSortedSet<Path> declaredClasspathEntries;
-  private final ProjectFilesystem filesystem;
   private final boolean withDownwardApi;
 
   GroovycStep(
-      Tool groovyc,
+      ImmutableList<String> commandPrefix,
       Optional<ImmutableList<String>> extraArguments,
-      JavacOptions javacOptions,
-      SourcePathResolverAdapter resolver,
+      ResolvedJavacOptions javacOptions,
       Path outputDirectory,
       ImmutableSortedSet<Path> sourceFilePaths,
       Path pathToSrcsList,
       ImmutableSortedSet<Path> declaredClasspathEntries,
-      ProjectFilesystem filesystem,
       boolean withDownwardApi) {
-    this.groovyc = groovyc;
+    this.commandPrefix = commandPrefix;
     this.extraArguments = extraArguments;
     this.javacOptions = javacOptions;
-    this.resolver = resolver;
     this.outputDirectory = outputDirectory;
     this.sourceFilePaths = sourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
     this.declaredClasspathEntries = declaredClasspathEntries;
-    this.filesystem = filesystem;
     this.withDownwardApi = withDownwardApi;
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context)
+  public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
     AbsPath ruleCellRoot = context.getRuleCellRoot();
     ProcessExecutorParams params =
@@ -89,30 +83,30 @@ class GroovycStep implements Step {
             .setEnvironment(context.getEnvironment())
             .setDirectory(ruleCellRoot.getPath())
             .build();
-    writePathToSourcesList(sourceFilePaths);
+    writePathToSourcesList(context.getRuleCellRoot(), sourceFilePaths);
     ProcessExecutor processExecutor = context.getProcessExecutor();
     if (withDownwardApi) {
       processExecutor =
           processExecutor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
+              DownwardApiProcessExecutor.FACTORY, context.getIsolatedEventBus());
     }
     return StepExecutionResult.of(processExecutor.launchAndExecute(params));
   }
 
   @Override
   public String getShortName() {
-    return Joiner.on(" ").join(groovyc.getCommandPrefix(resolver));
+    return Joiner.on(" ").join(commandPrefix);
   }
 
   @Override
-  public String getDescription(StepExecutionContext context) {
+  public String getIsolatedStepDescription(IsolatedExecutionContext context) {
     return Joiner.on(" ").join(createCommand(context.getRuleCellRoot()));
   }
 
   private ImmutableList<String> createCommand(AbsPath ruleCellRoot) {
     ImmutableList.Builder<String> command = ImmutableList.builder();
 
-    command.addAll(groovyc.getCommandPrefix(resolver));
+    command.addAll(commandPrefix);
 
     String classpath =
         Joiner.on(File.pathSeparator).join(transform(declaredClasspathEntries, Object::toString));
@@ -130,8 +124,10 @@ class GroovycStep implements Step {
     return command.build();
   }
 
-  private void writePathToSourcesList(Iterable<Path> expandedSources) throws IOException {
-    filesystem.writeLinesToPath(
+  private void writePathToSourcesList(AbsPath rootCellRoot, Iterable<Path> expandedSources)
+      throws IOException {
+    ProjectFilesystemUtils.writeLinesToPath(
+        rootCellRoot,
         FluentIterable.from(expandedSources)
             .transform(Object::toString)
             .transform(Javac.ARGFILES_ESCAPER::apply),
@@ -142,7 +138,7 @@ class GroovycStep implements Step {
       ImmutableList.Builder<String> command, AbsPath ruleCellRoot) {
     if (shouldCrossCompile()) {
       command.add("-j");
-      javacOptions.appendOptionsTo(
+      JavacOptions.appendOptionsTo(
           new OptionsConsumer() {
             @Override
             public void addOptionValue(String option, String value) {
@@ -174,7 +170,7 @@ class GroovycStep implements Step {
               }
             }
           },
-          resolver,
+          javacOptions,
           ruleCellRoot);
     }
   }

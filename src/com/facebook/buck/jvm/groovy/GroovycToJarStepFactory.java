@@ -22,11 +22,13 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.ResolvedJavacOptions;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -35,7 +37,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
+/** Factory that creates Groovy related compile build steps. */
 class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
+
   @AddToRuleKey private final Tool groovyc;
   @AddToRuleKey private final Optional<ImmutableList<String>> extraArguments;
   @AddToRuleKey private final JavacOptions javacOptions;
@@ -50,6 +54,11 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
     this.extraArguments = extraArguments;
     this.javacOptions = javacOptions;
     this.withDownwardApi = withDownwardApi;
+  }
+
+  @Override
+  protected boolean areAllStepsConvertedToIsolatedSteps() {
+    return true;
   }
 
   @Override
@@ -68,17 +77,19 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
     RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
     Path pathToSrcsList = parameters.getOutputPaths().getPathToSourcesList();
 
+    SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
+    ImmutableList<String> commandPrefix = groovyc.getCommandPrefix(sourcePathResolver);
+
     steps.add(
         new GroovycStep(
-            groovyc,
+            commandPrefix,
             extraArguments,
-            javacOptions,
-            buildContext.getSourcePathResolver(),
+            ResolvedJavacOptions.of(
+                javacOptions, sourcePathResolver, projectFilesystem.getRootPath()),
             outputDirectory.getPath(),
             sourceFilePaths,
             pathToSrcsList,
             declaredClasspathEntries,
-            projectFilesystem,
             withDownwardApi));
   }
 

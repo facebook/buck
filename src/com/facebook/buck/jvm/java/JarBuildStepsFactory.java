@@ -300,8 +300,7 @@ public class JarBuildStepsFactory
    * com.facebook.buck.step.isolatedsteps.IsolatedStep}s.
    */
   public boolean areAllStepsConvertedToIsolatedSteps() {
-    // TODO: msemko: convert Kotlin, Scala and Groovy steps
-    return configuredCompiler instanceof JavacToJarStepFactory;
+    return configuredCompiler.areAllStepsConvertedToIsolatedSteps();
   }
 
   public boolean useRulePipelining() {

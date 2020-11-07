@@ -416,6 +416,11 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   }
 
   @Override
+  protected boolean areAllStepsConvertedToIsolatedSteps() {
+    return false;
+  }
+
+  @Override
   protected Optional<String> getBootClasspath(BuildContext context) {
     return javacOptions.withBootclasspathFromContext(extraClasspathProvider).getBootclasspath();
   }
