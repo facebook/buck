@@ -88,7 +88,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -1111,7 +1110,8 @@ public class AppleDescriptions {
                             codeSignPrepRule.getBuildTarget(),
                             graphBuilder,
                             projectFilesystem,
-                            shouldCacheFileHashes)));
+                            shouldCacheFileHashes,
+                            false)));
               });
       if (dryRunCodeSigning) {
         final boolean codeSignOnCopy = false;
@@ -1127,7 +1127,8 @@ public class AppleDescriptions {
                     codeSignPrepRule.getBuildTarget(),
                     graphBuilder,
                     projectFilesystem,
-                    shouldCacheFileHashes),
+                    shouldCacheFileHashes,
+                    false),
                 codeSignOnCopy,
                 Optional.of("BUCK_code_sign_entitlements.plist"),
                 ignoreMissingSource));
@@ -1152,7 +1153,8 @@ public class AppleDescriptions {
                     codeSignPrepRule.getBuildTarget(),
                     graphBuilder,
                     projectFilesystem,
-                    shouldCacheFileHashes),
+                    shouldCacheFileHashes,
+                    false),
                 codeSignOnCopy,
                 newNameAfterCopy,
                 ignoreIfMissing));
@@ -1181,7 +1183,8 @@ public class AppleDescriptions {
                   buildTarget,
                   graphBuilder,
                   projectFilesystem,
-                  shouldCacheFileHashes)));
+                  shouldCacheFileHashes,
+                  true)));
       infoPlistFileBundlePath =
           RelPath.of(destination.getPath(destinations)).resolveRel("Info.plist");
     }
@@ -1195,7 +1198,8 @@ public class AppleDescriptions {
               unwrappedBinary.getBuildTarget(),
               graphBuilder,
               projectFilesystem,
-              shouldCacheFileHashes);
+              shouldCacheFileHashes,
+              true);
       {
         final boolean codeSignOnCopy = false;
         final boolean ignoreIfMissing = false;
@@ -1249,7 +1253,8 @@ public class AppleDescriptions {
                       buildTarget,
                       graphBuilder,
                       projectFilesystem,
-                      shouldCacheFileHashes),
+                      shouldCacheFileHashes,
+                      true),
                   codeSignOnCopy));
         }
       }
@@ -1408,7 +1413,8 @@ public class AppleDescriptions {
                           buildRule.getBuildTarget(),
                           graphBuilder,
                           projectFilesystem,
-                          shouldCacheFileHashes),
+                          shouldCacheFileHashes,
+                          true),
                       codeSignOnCopy,
                       newNameAfterCopy,
                       ignoreIfMissing);
@@ -1422,24 +1428,21 @@ public class AppleDescriptions {
       BuildTarget baseTarget,
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
-      boolean shouldCacheFileHashes) {
+      boolean shouldCacheFileHashes,
+      boolean sourcePathIsTheOnlyFileToBeHashedFromGeneratingTarget) {
     if (!incrementalBundlingEnabled) {
       return Optional.empty();
     }
-    ImmutableBiMap<SourcePath, BuildTarget> sourcePathToContentHashTarget =
-        SourcePathSupport.generateAndCheckUniquenessOfBuildTargetsForSourcePaths(
-            ImmutableSet.of(sourcePath), baseTarget, "hash-");
-    BuildTarget calculateHashTarget =
-        sourcePathToContentHashTarget.values().stream()
-            .findFirst()
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "Expected to generate target name for content hash calculation"));
+    BuildTarget hashTarget =
+        SourcePathSupport.generateBuildTargetForSourcePathWithoutUniquenessCheck(
+            sourcePath,
+            baseTarget,
+            "ib-hash-",
+            sourcePathIsTheOnlyFileToBeHashedFromGeneratingTarget);
     AppleWriteFileHash calculateHash =
         (AppleWriteFileHash)
             graphBuilder.computeIfAbsent(
-                calculateHashTarget,
+                hashTarget,
                 target ->
                     new AppleWriteFileHash(
                         target,
@@ -1504,7 +1507,8 @@ public class AppleDescriptions {
                 pkgInfoBuildTarget,
                 graphBuilder,
                 projectFilesystem,
-                shouldCacheFileHashes)));
+                shouldCacheFileHashes,
+                true)));
   }
 
   /**
@@ -1735,7 +1739,8 @@ public class AppleDescriptions {
                             appleBundle.getBuildTarget(),
                             graphBuilder,
                             projectFilesystem,
-                            shouldCacheFileHashes),
+                            shouldCacheFileHashes,
+                            true),
                         codeSignOnCopy));
               }
             });

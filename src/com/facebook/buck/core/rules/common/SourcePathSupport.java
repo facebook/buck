@@ -38,9 +38,11 @@ import java.util.function.Function;
 public class SourcePathSupport {
 
   /**
-   * Generates a map of {@link SourcePath} to {@link BuildTarget}. It guarantees that all {@link
-   * BuildTarget}s are unique, so can be safely used in calls to {@link
+   * Generates a map of {@link SourcePath} to {@link BuildTarget}. It guarantees (only if there is a
+   * single call of this method per base target) that all {@link BuildTarget}s are unique, so can be
+   * safely used in calls to {@link
    * com.facebook.buck.core.rules.ActionGraphBuilder#computeIfAbsent(BuildTarget, Function)}.
+   * Guarantee is made by throwing an exception when there is a target name collision.
    *
    * <p>For example, given a PathSourcePath (e.g., "/Users/fb/repo/file.c"), a base target (e.g.,
    * "//A:B") and a prefix of "hash-", it will produce a mapping like "/Users/fb/repo/file.c" ->
@@ -51,12 +53,26 @@ public class SourcePathSupport {
           ImmutableSet<SourcePath> sourcePaths, BuildTarget baseTarget, String prefix) {
     ImmutableBiMap.Builder<SourcePath, BuildTarget> sourcePathToNameMap = ImmutableBiMap.builder();
     for (SourcePath sourcePath : sourcePaths) {
-      String flavorName = generateFlavorNameForSourcePath(sourcePath);
-      InternalFlavor flavor = InternalFlavor.of(String.format("%s%s", prefix, flavorName));
-      sourcePathToNameMap.put(sourcePath, baseTarget.withAppendedFlavors(flavor));
+      sourcePathToNameMap.put(
+          sourcePath,
+          generateBuildTargetForSourcePathWithoutUniquenessCheck(
+              sourcePath, baseTarget, prefix, false));
     }
 
     return sourcePathToNameMap.build();
+  }
+
+  /**
+   * Unsafe method to generate a {@link BuildTarget} to use for {@link SourcePath} content hashing.
+   * Uniqueness is not guaranteed, so the caller of the method should use it on their own risk (e.g.
+   * there is no chance of target name collision if the caller can guarantee that only one file is
+   * hashed from the generating target).
+   */
+  public static BuildTarget generateBuildTargetForSourcePathWithoutUniquenessCheck(
+      SourcePath sourcePath, BuildTarget baseTarget, String prefix, boolean omitName) {
+    String flavorName = generateFlavorNameForSourcePath(sourcePath, omitName);
+    InternalFlavor flavor = InternalFlavor.of(String.format("%s%s", prefix, flavorName));
+    return baseTarget.withAppendedFlavors(flavor);
   }
 
   /**
@@ -66,25 +82,26 @@ public class SourcePathSupport {
    * <p>For example, for a PathSourcePath (e.g., "/Users/fb/repo/file.c"), it will generate a string
    * like "file.c.7a128b3d".
    */
-  private static String generateFlavorNameForSourcePath(SourcePath sourcePath) {
+  private static String generateFlavorNameForSourcePath(
+      SourcePath sourcePath, boolean omitFileName) {
     if (sourcePath instanceof PathSourcePath) {
-      return generateFlavorName((PathSourcePath) sourcePath);
+      return generateFlavorName((PathSourcePath) sourcePath, omitFileName);
     }
 
     if (sourcePath instanceof ExplicitBuildTargetSourcePath) {
-      return generateFlavorName((ExplicitBuildTargetSourcePath) sourcePath);
+      return generateFlavorName((ExplicitBuildTargetSourcePath) sourcePath, omitFileName);
     }
 
     if (sourcePath instanceof DefaultBuildTargetSourcePath) {
-      return generateFlavorName((DefaultBuildTargetSourcePath) sourcePath);
+      return generateFlavorName((DefaultBuildTargetSourcePath) sourcePath, omitFileName);
     }
 
     if (sourcePath instanceof ForwardingBuildTargetSourcePath) {
-      return generateFlavorName((ForwardingBuildTargetSourcePath) sourcePath);
+      return generateFlavorName((ForwardingBuildTargetSourcePath) sourcePath, omitFileName);
     }
 
     if (sourcePath instanceof ArchiveMemberSourcePath) {
-      return generateFlavorName((ArchiveMemberSourcePath) sourcePath);
+      return generateFlavorName((ArchiveMemberSourcePath) sourcePath, omitFileName);
     }
 
     throw new RuntimeException(
@@ -92,53 +109,69 @@ public class SourcePathSupport {
             "Encountered unknown SourcePath subclass: %s", sourcePath.getClass().getName()));
   }
 
-  private static String generateFlavorName(DefaultBuildTargetSourcePath sourcePath) {
+  private static String generateFlavorName(
+      DefaultBuildTargetSourcePath sourcePath, boolean omitFileName) {
     return sanitizeBuildTargetWithOutputs(
-        sourcePath.getTargetWithOutputs(), Optional.empty(), Optional.empty());
+        sourcePath.getTargetWithOutputs(), Optional.empty(), Optional.empty(), omitFileName);
   }
 
-  private static String generateFlavorName(ForwardingBuildTargetSourcePath sourcePath) {
-    String delegateName = generateFlavorNameForSourcePath(sourcePath.getDelegate());
+  private static String generateFlavorName(
+      ForwardingBuildTargetSourcePath sourcePath, boolean omitFileName) {
+    String delegateName = generateFlavorNameForSourcePath(sourcePath.getDelegate(), omitFileName);
     return sanitizeBuildTargetWithOutputs(
-        sourcePath.getTargetWithOutputs(), Optional.empty(), Optional.of(delegateName));
+        sourcePath.getTargetWithOutputs(),
+        Optional.empty(),
+        Optional.of(delegateName),
+        omitFileName);
   }
 
-  private static String generateFlavorName(ExplicitBuildTargetSourcePath sourcePath) {
+  private static String generateFlavorName(
+      ExplicitBuildTargetSourcePath sourcePath, boolean omitFileName) {
     Path path = sourcePath.getResolvedPath();
     String fileName = path.getFileName().toString();
     return sanitizeBuildTargetWithOutputs(
-        sourcePath.getTargetWithOutputs(), Optional.of(fileName), Optional.of(path.toString()));
+        sourcePath.getTargetWithOutputs(),
+        Optional.of(fileName),
+        Optional.of(path.toString()),
+        omitFileName);
   }
 
   private static String sanitizeBuildTargetWithOutputs(
       BuildTargetWithOutputs buildTargetWithOutputs,
       Optional<String> inputfileName,
-      Optional<String> maybeFullNameSuffix) {
+      Optional<String> maybeFullNameSuffix,
+      boolean omitFileName) {
     BuildTarget buildTarget = buildTargetWithOutputs.getBuildTarget();
     String fullyQualifiedNameWithOptionalOutputSuffix = buildTargetWithOutputs.toString();
-    String fileName = inputfileName.orElse(buildTarget.getShortName());
+    Optional<String> maybeFileName =
+        omitFileName
+            ? Optional.empty()
+            : Optional.of(inputfileName.orElse(buildTarget.getShortName()));
     String fullName = fullyQualifiedNameWithOptionalOutputSuffix + maybeFullNameSuffix.orElse("");
-    return sanitize(fileName, fullName);
+    return sanitize(maybeFileName, fullName);
   }
 
-  private static String generateFlavorName(ArchiveMemberSourcePath sourcePath) {
-    String archiveName = generateFlavorNameForSourcePath(sourcePath.getArchiveSourcePath());
+  private static String generateFlavorName(
+      ArchiveMemberSourcePath sourcePath, boolean omitFileName) {
+    String archiveName =
+        generateFlavorNameForSourcePath(sourcePath.getArchiveSourcePath(), omitFileName);
     Path memberPath = sourcePath.getMemberPath();
-    String memberName = memberPath.getFileName().toString();
-    return sanitize(memberName, archiveName + memberPath.toString());
+    Optional<String> maybeFileName =
+        omitFileName ? Optional.empty() : Optional.of(memberPath.getFileName().toString());
+    return sanitize(maybeFileName, archiveName + memberPath.toString());
   }
 
-  private static String generateFlavorName(PathSourcePath sourcePath) {
+  private static String generateFlavorName(PathSourcePath sourcePath, boolean omitFileName) {
     Path path = sourcePath.getRelativePath();
-    String fileName = path.getFileName().toString();
-    return sanitize(fileName, path.toString());
+    Optional<String> maybeFileName =
+        omitFileName ? Optional.empty() : Optional.of(path.getFileName().toString());
+    return sanitize(maybeFileName, path.toString());
   }
 
-  private static String sanitize(String fileName, String fullName) {
+  private static String sanitize(Optional<String> fileName, String fullName) {
     // The hash prevents collisions when fileName is the same,
     // e.g., "an/example.c", "an_example.c" etc.
-    return Flavor.replaceInvalidCharacters(fileName)
-        + "."
+    return fileName.map(Flavor::replaceInvalidCharacters).map(f -> f + ".").orElse("")
         + Hashing.murmur3_32().hashString(fullName, StandardCharsets.UTF_8);
   }
 }
