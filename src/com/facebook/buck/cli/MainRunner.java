@@ -72,7 +72,6 @@ import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
 import com.facebook.buck.doctor.DefaultDefectReporter;
 import com.facebook.buck.doctor.config.DoctorConfig;
-import com.facebook.buck.edenfs.EdenProjectFilesystemDelegate;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.BuckInitializationDurationEvent;
@@ -120,7 +119,6 @@ import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanDiagnosticEventListener;
@@ -773,8 +771,6 @@ public final class MainRunner {
       Watchman watchman =
           buildWatchman(
               daemonMode, parserConfig, projectWatchList, clientEnvironment, printConsole, clock);
-
-      setWatchmanIfEdenProjectFileSystemDelegate(filesystem, watchman);
 
       ImmutableList<ConfigurationRuleDescription<?, ?>> knownConfigurationDescriptions =
           PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager);
@@ -1618,21 +1614,6 @@ public final class MainRunner {
       return new NanosAdjustedClock(nanosEpoch, enableThreadCpuTime);
     } else {
       return new DefaultClock(enableThreadCpuTime);
-    }
-  }
-
-  private void setWatchmanIfEdenProjectFileSystemDelegate(
-      ProjectFilesystem filesystem, Watchman watchman) {
-    if (filesystem instanceof DefaultProjectFilesystem
-        && !WatchmanFactory.NULL_WATCHMAN.equals(watchman)) {
-      DefaultProjectFilesystem defaultProjectFilesystem = (DefaultProjectFilesystem) filesystem;
-      if (defaultProjectFilesystem.getDelegate() instanceof EdenProjectFilesystemDelegate) {
-        EdenProjectFilesystemDelegate edenProjectFilesystemDelegate =
-            ((EdenProjectFilesystemDelegate) defaultProjectFilesystem.getDelegate());
-        if (!edenProjectFilesystemDelegate.isEdenWatchmanInit()) {
-          edenProjectFilesystemDelegate.initEdenWatchman(watchman, filesystem);
-        }
-      }
     }
   }
 

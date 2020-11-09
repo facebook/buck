@@ -36,6 +36,7 @@ import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanCursor;
 import com.facebook.buck.io.watchman.WatchmanFactory;
@@ -83,6 +84,11 @@ public class BuckGlobalStateFactory {
     EventBus fileEventBus = new EventBus("file-change-events");
 
     ImmutableList<Cell> allCells = cells.getAllCells();
+    allCells.forEach(
+        cell ->
+            DefaultProjectFilesystemDelegate.setWatchmanIfEdenProjectFileSystemDelegate(
+                cell.getFilesystem(), watchman));
+
     BuildBuckConfig buildBuckConfig =
         cells.getRootCell().getBuckConfig().getView(BuildBuckConfig.class);
 

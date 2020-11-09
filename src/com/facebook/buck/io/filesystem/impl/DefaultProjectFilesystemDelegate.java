@@ -18,7 +18,11 @@ package com.facebook.buck.io.filesystem.impl;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.edenfs.EdenProjectFilesystemDelegate;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
+import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
@@ -108,5 +112,19 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
       return root.resolve(pathRelativeToProjectRoot);
     }
     return root.resolve(pathRelativeToProjectRoot.toString());
+  }
+
+  /** Delayed-initialize Eden FS with watchman since watchman is initialized after FS is created. */
+  public static void setWatchmanIfEdenProjectFileSystemDelegate(
+      ProjectFilesystem filesystem, Watchman watchman) {
+    if (filesystem instanceof DefaultProjectFilesystem
+        && !WatchmanFactory.NULL_WATCHMAN.equals(watchman)) {
+      DefaultProjectFilesystem defaultProjectFilesystem = (DefaultProjectFilesystem) filesystem;
+      if (defaultProjectFilesystem.getDelegate() instanceof EdenProjectFilesystemDelegate) {
+        EdenProjectFilesystemDelegate edenProjectFilesystemDelegate =
+            ((EdenProjectFilesystemDelegate) defaultProjectFilesystem.getDelegate());
+        edenProjectFilesystemDelegate.initEdenWatchman(watchman, filesystem);
+      }
+    }
   }
 }
