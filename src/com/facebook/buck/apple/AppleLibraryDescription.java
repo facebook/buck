@@ -576,7 +576,8 @@ public class AppleLibraryDescription
         appleConfig.getIncrementalBundlingEnabled(),
         appleConfig.getCodeSignTypeOverride(),
         appleConfig.getBundleInputBasedRulekeyEnabled(),
-        appleConfig.getIncrementalHashCacheEnabled());
+        appleConfig.getIncrementalHashCacheEnabled(),
+        appleConfig.getParallelCodeSignOnCopyEnabled());
   }
 
   /**

@@ -387,7 +387,8 @@ public class AppleTestDescription
                         appleConfig.getIncrementalBundlingEnabled(),
                         appleConfig.getCodeSignTypeOverride(),
                         appleConfig.getBundleInputBasedRulekeyEnabled(),
-                        appleConfig.getIncrementalHashCacheEnabled()));
+                        appleConfig.getIncrementalHashCacheEnabled(),
+                        appleConfig.getParallelCodeSignOnCopyEnabled()));
 
     Optional<SourcePath> xctool =
         getXctool(projectFilesystem, params, targetConfiguration, graphBuilder);

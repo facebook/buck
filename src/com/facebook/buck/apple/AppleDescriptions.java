@@ -774,7 +774,8 @@ public class AppleDescriptions {
       boolean incrementalBundlingEnabled,
       Optional<AppleCodeSignType> codeSignTypeOverride,
       boolean bundleInputBasedRulekeyEnabled,
-      boolean shouldCacheFileHashes) {
+      boolean shouldCacheFileHashes,
+      boolean parallelCodeSignOnCopyEnabled) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             graphBuilder,
@@ -1371,7 +1372,8 @@ public class AppleDescriptions {
         nonProcessedResourcesContentHashesFileSourcePath,
         processResources.getSourcePathToContentHashes(),
         incrementalBundlingEnabled,
-        bundleInputBasedRulekeyEnabled);
+        bundleInputBasedRulekeyEnabled,
+        parallelCodeSignOnCopyEnabled);
   }
 
   private static Optional<SourcePath> frameworkIncrementalInfo(
