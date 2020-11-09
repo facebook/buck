@@ -50,6 +50,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import org.junit.Before;
@@ -474,7 +475,7 @@ public class CompileStringsStepTest {
       super(
           CanonicalCellName.rootCell(),
           root,
-          new DefaultProjectFilesystemDelegate(root.getPath()),
+          new DefaultProjectFilesystemDelegate(root.getPath(), Optional.empty()),
           TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
     }
 

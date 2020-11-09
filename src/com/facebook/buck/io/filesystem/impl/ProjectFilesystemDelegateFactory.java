@@ -38,10 +38,15 @@ public final class ProjectFilesystemDelegateFactory {
   /** Utility class: do not instantiate. */
   private ProjectFilesystemDelegateFactory() {}
 
+  private static Optional<Long> getSHA1LoggingThresholdMicroseconds(Config config) {
+    return config.getLong("build", "sha1_logging_threshold");
+  }
+
   /** Must always create a new delegate for the specified {@code root}. */
   public static ProjectFilesystemDelegatePair newInstance(Path root, Config config) {
     return new ProjectFilesystemDelegatePair(
-        getGeneralDelegate(root, config), new DefaultProjectFilesystemDelegate(root));
+        getGeneralDelegate(root, config),
+        new DefaultProjectFilesystemDelegate(root, getSHA1LoggingThresholdMicroseconds(config)));
   }
 
   private static ProjectFilesystemDelegate getGeneralDelegate(Path root, Config config) {
@@ -53,7 +58,8 @@ public final class ProjectFilesystemDelegateFactory {
         LOG.debug("Created eden mount for %s: %s", root, mount.get());
         return new EdenProjectFilesystemDelegate(
             mount.get(),
-            new DefaultProjectFilesystemDelegate(mount.get().getProjectRoot()),
+            new DefaultProjectFilesystemDelegate(
+                mount.get().getProjectRoot(), getSHA1LoggingThresholdMicroseconds(config)),
             config);
       } else {
         LOG.error("Failed to find Eden client for %s.", root);
@@ -61,6 +67,6 @@ public final class ProjectFilesystemDelegateFactory {
     }
 
     // No Eden or Mercurial info available, use the default
-    return new DefaultProjectFilesystemDelegate(root);
+    return new DefaultProjectFilesystemDelegate(root, getSHA1LoggingThresholdMicroseconds(config));
   }
 }

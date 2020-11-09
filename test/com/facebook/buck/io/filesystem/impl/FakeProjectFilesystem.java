@@ -257,7 +257,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     return new DefaultProjectFilesystem(
         CanonicalCellName.rootCell(),
         root,
-        new DefaultProjectFilesystemDelegate(root.getPath()),
+        new DefaultProjectFilesystemDelegate(root.getPath(), Optional.empty()),
         TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST) {
       @Override
       public Path resolve(Path path) {
@@ -275,7 +275,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
         ImmutableSet.of(),
         BuckPaths.createDefaultBuckPaths(
             CanonicalCellName.rootCell(), root.getPath(), buckOutIncludeTargetConfigHash),
-        new DefaultProjectFilesystemDelegate(root.getPath()));
+        new DefaultProjectFilesystemDelegate(root.getPath(), Optional.empty()));
   }
 
   public FakeProjectFilesystem() {
@@ -313,7 +313,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     super(
         cellName,
         root,
-        new DefaultProjectFilesystemDelegate(root.getPath()),
+        new DefaultProjectFilesystemDelegate(root.getPath(), Optional.empty()),
         TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
     // We use LinkedHashMap to preserve insertion order, so the
     // behavior of this test is consistent across versions. (It also lets

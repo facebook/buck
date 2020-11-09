@@ -17,6 +17,7 @@
 package com.facebook.buck.io.filesystem.impl;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableMap;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Default implementation of {@link ProjectFilesystemDelegate} that talks to the filesystem via
@@ -34,14 +36,21 @@ import java.nio.file.Path;
  */
 public final class DefaultProjectFilesystemDelegate implements ProjectFilesystemDelegate {
 
-  private final AbsPath root;
+  private static final Logger LOG = Logger.get(DefaultProjectFilesystemDelegate.class);
 
-  public DefaultProjectFilesystemDelegate(Path root) {
-    this(AbsPath.of(root));
+  private final AbsPath root;
+  private final boolean loggingEnabled;
+  private final long loggingThresholdMicroseconds;
+
+  public DefaultProjectFilesystemDelegate(Path root, Optional<Long> loggingThresholdMicroseconds) {
+    this(AbsPath.of(root), loggingThresholdMicroseconds);
   }
 
-  public DefaultProjectFilesystemDelegate(AbsPath root) {
+  public DefaultProjectFilesystemDelegate(
+      AbsPath root, Optional<Long> loggingThresholdMicroseconds) {
     this.root = root;
+    this.loggingEnabled = loggingThresholdMicroseconds.isPresent();
+    this.loggingThresholdMicroseconds = Math.max(loggingThresholdMicroseconds.orElse(0L), 0L);
   }
 
   @Override
@@ -65,7 +74,20 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
               return Files.newInputStream(fileToHash.getPath());
             }
           };
+
+      long startTime = loggingEnabled ? System.nanoTime() : 0;
       HashCode hashCode = source.hash(Hashing.sha1());
+      long endTime = loggingEnabled ? System.nanoTime() : 0;
+
+      if (loggingEnabled) {
+        long timeElapsedMicroseconds = (endTime - startTime) / 1000L;
+        if (timeElapsedMicroseconds >= loggingThresholdMicroseconds) {
+          LOG.info(
+              String.format(
+                  "SHA1: took %d microseconds to hash file at '%s'",
+                  timeElapsedMicroseconds, fileToHash));
+        }
+      }
 
       return Sha1HashCode.fromHashCode(hashCode);
 

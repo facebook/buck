@@ -422,7 +422,7 @@ public class FakeProjectFilesystemTest {
         new DefaultProjectFilesystem(
             CanonicalCellName.rootCell(),
             tempDir,
-            new DefaultProjectFilesystemDelegate(tempDir.getPath()),
+            new DefaultProjectFilesystemDelegate(tempDir.getPath(), Optional.empty()),
             false);
 
     byte[] contents = "contents".getBytes(StandardCharsets.UTF_8);

@@ -94,7 +94,8 @@ public class EdenProjectFilesystemDelegateTest {
   public void computeSha1ForOrdinaryFileUnderMount() throws IOException, EdenError, TException {
     FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
     Path root = fs.getPath(JIMFS_WORKING_DIRECTORY);
-    ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(root);
+    ProjectFilesystemDelegate delegate =
+        new DefaultProjectFilesystemDelegate(root, Optional.empty());
 
     EdenMount mount = createMock(EdenMount.class);
     Path path = fs.getPath("foo/bar");
@@ -113,7 +114,8 @@ public class EdenProjectFilesystemDelegateTest {
       throws EdenError, TException, IOException {
     FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
     Path root = fs.getPath(JIMFS_WORKING_DIRECTORY);
-    ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(root);
+    ProjectFilesystemDelegate delegate =
+        new DefaultProjectFilesystemDelegate(root, Optional.empty());
 
     // Create a symlink within the project root.
     Path link = fs.getPath("/work/link");
@@ -141,7 +143,8 @@ public class EdenProjectFilesystemDelegateTest {
       throws IOException, EdenError, TException {
     FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
     Path root = fs.getPath(JIMFS_WORKING_DIRECTORY);
-    ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(root);
+    ProjectFilesystemDelegate delegate =
+        new DefaultProjectFilesystemDelegate(root, Optional.empty());
 
     // Create a symlink within the project root.
     Path link = fs.getPath("/work/link");
@@ -173,7 +176,8 @@ public class EdenProjectFilesystemDelegateTest {
   public void computeSha1ForOrdinaryFileOutsideMount() throws IOException {
     FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
     Path root = fs.getPath(JIMFS_WORKING_DIRECTORY);
-    ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(root);
+    ProjectFilesystemDelegate delegate =
+        new DefaultProjectFilesystemDelegate(root, Optional.empty());
     Path target = fs.getPath("/example");
     Files.createFile(target);
     byte[] bytes = new byte[] {66, 85, 67, 75};
@@ -198,7 +202,8 @@ public class EdenProjectFilesystemDelegateTest {
     FileSystem fs =
         Jimfs.newFileSystem(Configuration.unix().toBuilder().setAttributeViews("user").build());
     Path root = fs.getPath(JIMFS_WORKING_DIRECTORY);
-    ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(root);
+    ProjectFilesystemDelegate delegate =
+        new DefaultProjectFilesystemDelegate(root, Optional.empty());
 
     Path path = fs.getPath("/foo");
     Files.createFile(path);
@@ -219,7 +224,8 @@ public class EdenProjectFilesystemDelegateTest {
     FileSystem fs =
         Jimfs.newFileSystem(Configuration.unix().toBuilder().setAttributeViews("user").build());
     Path root = fs.getPath(JIMFS_WORKING_DIRECTORY);
-    ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(root);
+    ProjectFilesystemDelegate delegate =
+        new DefaultProjectFilesystemDelegate(root, Optional.empty());
 
     Path path = fs.getPath("/foo");
     Files.createFile(path);
@@ -246,7 +252,8 @@ public class EdenProjectFilesystemDelegateTest {
     FileSystem fs =
         Jimfs.newFileSystem(Configuration.unix().toBuilder().setAttributeViews("user").build());
     Path root = fs.getPath(JIMFS_WORKING_DIRECTORY);
-    ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(root);
+    ProjectFilesystemDelegate delegate =
+        new DefaultProjectFilesystemDelegate(root, Optional.empty());
 
     Path path = fs.getPath("/foo");
     Files.createFile(path);
@@ -266,7 +273,8 @@ public class EdenProjectFilesystemDelegateTest {
 
   @Test
   public void computeSha1ViaWatchman() throws IOException {
-    ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(tmp.getRoot());
+    ProjectFilesystemDelegate delegate =
+        new DefaultProjectFilesystemDelegate(tmp.getRoot(), Optional.empty());
     Path path = tmp.newFile("foo").getPath();
     EdenMount mount = createMock(EdenMount.class);
 
@@ -292,7 +300,8 @@ public class EdenProjectFilesystemDelegateTest {
       throws IOException, TException, EdenError {
     FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
     Path root = fs.getPath(JIMFS_WORKING_DIRECTORY);
-    ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(root);
+    ProjectFilesystemDelegate delegate =
+        new DefaultProjectFilesystemDelegate(root, Optional.empty());
 
     Config configWithWatchman =
         ConfigBuilder.createFromText(
