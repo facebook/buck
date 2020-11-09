@@ -422,7 +422,7 @@ public class DefaultRuleKeyFactoryTest {
             new StackedFileHashCache(
                 ImmutableList.of(
                     DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.DEFAULT))),
+                        filesystem, FileHashCacheMode.DEFAULT, false))),
             ruleFinder,
             noopRuleKeyCache,
             Optional.empty());
@@ -474,7 +474,7 @@ public class DefaultRuleKeyFactoryTest {
             new StackedFileHashCache(
                 ImmutableList.of(
                     DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.DEFAULT))),
+                        filesystem, FileHashCacheMode.DEFAULT, false))),
             ruleFinder,
             noopRuleKeyCache,
             Optional.empty());
@@ -535,7 +535,7 @@ public class DefaultRuleKeyFactoryTest {
             new StackedFileHashCache(
                 ImmutableList.of(
                     DefaultFileHashCache.createDefaultFileHashCache(
-                        filesystem, FileHashCacheMode.DEFAULT))),
+                        filesystem, FileHashCacheMode.DEFAULT, false))),
             ruleFinder,
             noopRuleKeyCache,
             Optional.empty());

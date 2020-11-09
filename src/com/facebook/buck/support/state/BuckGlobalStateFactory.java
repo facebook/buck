@@ -91,13 +91,18 @@ public class BuckGlobalStateFactory {
         ImmutableList.builderWithExpectedSize(allCells.size() + 1);
     for (Cell subCell : allCells) {
       WatchedFileHashCache watchedCache =
-          new WatchedFileHashCache(subCell.getFilesystem(), buildBuckConfig.getFileHashCacheMode());
+          new WatchedFileHashCache(
+              subCell.getFilesystem(),
+              buildBuckConfig.getFileHashCacheMode(),
+              buildBuckConfig.getFileSystemMapLoggingEnabled());
       fileEventBus.register(watchedCache);
       hashCachesBuilder.add(watchedCache);
     }
     hashCachesBuilder.add(
         DefaultFileHashCache.createBuckOutFileHashCache(
-            cells.getRootCell().getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
+            cells.getRootCell().getFilesystem(),
+            buildBuckConfig.getFileHashCacheMode(),
+            buildBuckConfig.getFileSystemMapLoggingEnabled()));
     ImmutableList<ProjectFileHashCache> hashCaches = hashCachesBuilder.build();
 
     // Setup file list cache and file tree cache from all cells

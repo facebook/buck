@@ -579,7 +579,7 @@ public class CxxTestDescriptionTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT)));
+                    rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT, false)));
     DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashLoader, resolver);
     return factory.build(rule);
   }

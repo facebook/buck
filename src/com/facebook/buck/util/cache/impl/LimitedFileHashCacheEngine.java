@@ -163,12 +163,13 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
       ProjectFilesystem filesystem,
       ValueLoader<HashCode> fileHashLoader,
       ValueLoader<HashCodeAndFileType> dirHashLoader,
-      ValueLoader<Long> sizeLoader) {
+      ValueLoader<Long> sizeLoader,
+      boolean fsMapLoggingEnabled) {
     this.filesystem = filesystem;
     this.fileHashLoader = fileHashLoader;
     this.dirHashLoader = dirHashLoader;
     this.sizeLoader = sizeLoader;
-    this.fileSystemMap = new FileSystemMap<>(Data::new, filesystem);
+    this.fileSystemMap = new FileSystemMap<>(Data::new, filesystem, fsMapLoggingEnabled);
   }
 
   private byte loadType(Path path) {

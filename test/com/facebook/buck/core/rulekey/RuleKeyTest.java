@@ -107,7 +107,7 @@ public class RuleKeyTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    filesystem, FileHashCacheMode.DEFAULT)));
+                    filesystem, FileHashCacheMode.DEFAULT, false)));
     ActionGraphBuilder graphBuilder1 = new TestActionGraphBuilder();
     ActionGraphBuilder graphBuilder2 = new TestActionGraphBuilder();
     DefaultRuleKeyFactory ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, graphBuilder1);
@@ -520,7 +520,7 @@ public class RuleKeyTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT)));
+                    new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT, false)));
 
     BuildRule buildRule1 =
         new TestRuleKeyAppendableBuildRule(target, projectFilesystem, params, "bar");
@@ -571,7 +571,7 @@ public class RuleKeyTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT)));
+                    new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT, false)));
 
     RuleKey ruleKey1 =
         new TestDefaultRuleKeyFactory(0, hashCache, ruleFinder)
@@ -593,7 +593,7 @@ public class RuleKeyTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT)));
+                    new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT, false)));
 
     BuildRule buildRule1 =
         new TestRuleKeyAppendableBuildRule(target, projectFilesystem, params, "bar");

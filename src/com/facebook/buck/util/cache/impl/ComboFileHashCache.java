@@ -37,10 +37,12 @@ class ComboFileHashCache implements FileHashCacheEngine {
   public ComboFileHashCache(
       ValueLoader<HashCodeAndFileType> hashLoader,
       ValueLoader<Long> sizeLoader,
-      ProjectFilesystem filesystem) {
+      ProjectFilesystem filesystem,
+      boolean fsMapLoggingEnabled) {
     this(
         LoadingCacheFileHashCache.createWithStats(hashLoader, sizeLoader),
-        FileSystemMapFileHashCache.createWithStats(hashLoader, sizeLoader, filesystem));
+        FileSystemMapFileHashCache.createWithStats(
+            hashLoader, sizeLoader, filesystem, fsMapLoggingEnabled));
   }
 
   public ComboFileHashCache(FileHashCacheEngine... engines) {

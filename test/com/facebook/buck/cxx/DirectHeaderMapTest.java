@@ -174,7 +174,8 @@ public class DirectHeaderMapTest {
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
                     TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
-                    FileHashCacheMode.DEFAULT)));
+                    FileHashCacheMode.DEFAULT,
+                    false)));
     RuleKey key1 = new TestDefaultRuleKeyFactory(hashCache, ruleFinder).build(buildRule);
     RuleKey key2 = new TestDefaultRuleKeyFactory(hashCache, ruleFinder).build(modifiedBuildRule);
     assertNotEquals(key1, key2);
@@ -192,7 +193,8 @@ public class DirectHeaderMapTest {
     DefaultFileHashCache hashCache =
         DefaultFileHashCache.createDefaultFileHashCache(
             TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
-            FileHashCacheMode.DEFAULT);
+            FileHashCacheMode.DEFAULT,
+            false);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
 
     RuleKey defaultKey1 = new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(buildRule);

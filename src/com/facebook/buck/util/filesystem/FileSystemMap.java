@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.filesystem;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
@@ -51,6 +52,8 @@ import javax.annotation.Nullable;
  */
 public class FileSystemMap<T> {
 
+  private static final Logger LOG = Logger.get(FileSystemMap.class);
+
   /**
    * Wrapper class that implements a method for loading a value in the leaves of the trie.
    *
@@ -83,8 +86,26 @@ public class FileSystemMap<T> {
 
     private Entry() {}
 
-    private void set(@Nullable T value) {
+    private void setAndOptionallyLog(@Nullable T value, Path path, boolean loggingEnabled) {
+      // Deliberately use reference equivalence for value
+      boolean logChangedValue = loggingEnabled && (this.value != value);
       this.value = value;
+      if (logChangedValue) {
+        if (value == null) {
+          LOG.info("Filesystem Map: reset value to null for path: %s", path);
+        } else {
+          LOG.info("Filesystem Map: updated value for path: %s", path);
+        }
+      }
+    }
+
+    // This will be called when the whole entry object gets removed from the map.
+    // Even though the value itself doesn't change, the fact that it gets removed
+    // from the map effectively means the value is reset.
+    private void logEntryRemoved(Path path) {
+      if (this.value != null) {
+        LOG.info("Filesystem Map: value dropped for path: %s", path);
+      }
     }
 
     @VisibleForTesting
@@ -93,12 +114,18 @@ public class FileSystemMap<T> {
       return this.value;
     }
 
-    private void load(ValueLoader<T> loader, Path path) {
+    private void load(ValueLoader<T> loader, Path path, boolean loggingEnabled) {
       if (this.value == null) {
+        boolean valueChanged = false;
         synchronized (this) {
           if (this.value == null) {
             this.value = loader.load(path);
+            valueChanged = this.value != null;
           }
+        }
+
+        if (valueChanged && loggingEnabled) {
+          LOG.info("Loaded filesystem map value for path: %s", path.toString());
         }
       }
     }
@@ -115,10 +142,13 @@ public class FileSystemMap<T> {
   @VisibleForTesting final ConcurrentHashMap<Path, Entry<T>> map = new ConcurrentHashMap<>();
 
   private final ValueLoader<T> loader;
+  private final boolean loggingEnabled;
 
-  public FileSystemMap(ValueLoader<T> loader, ProjectFilesystem filesystem) {
+  public FileSystemMap(
+      ValueLoader<T> loader, ProjectFilesystem filesystem, boolean loggingEnabled) {
     this.loader = loader;
     this.rootPath = filesystem.getPath("");
+    this.loggingEnabled = loggingEnabled;
   }
 
   /**
@@ -134,7 +164,8 @@ public class FileSystemMap<T> {
         maybe = map.computeIfAbsent(path, this::putEntry);
       }
     }
-    maybe.set(value);
+
+    maybe.setAndOptionallyLog(value, path, loggingEnabled);
   }
 
   // Creates the intermediate (and/or the leaf node) if needed and returns the leaf associated
@@ -212,7 +243,7 @@ public class FileSystemMap<T> {
         Pair<Path, Entry<T>> current = stack.pop();
 
         // dump value on all nodes up, including a root one
-        current.getSecond().set(null);
+        current.getSecond().setAndOptionallyLog(null, current.getFirst(), loggingEnabled);
 
         // remove all parent nodes that do not have children anymore
         if (current.getSecond().size() == 0 && !stack.empty()) {
@@ -225,6 +256,11 @@ public class FileSystemMap<T> {
   private void removeChild(Entry<T> parent, Path childPath) {
     map.remove(childPath);
     Entry<T> child = parent.subLevels.remove(childPath);
+
+    if (loggingEnabled) {
+      child.logEntryRemoved(childPath);
+    }
+
     if (parent.subLevels.isEmpty()) {
       parent.subLevels = null;
     }
@@ -271,7 +307,7 @@ public class FileSystemMap<T> {
       // Those methods might acquire the root lock. If there's any flow that calls maybe.load()
       // while already holding that lock, there's likely a flow w/ lock inversion.
       Preconditions.checkState(!Thread.holdsLock(root));
-      maybe.load(loader, path);
+      maybe.load(loader, path, loggingEnabled);
     }
     return maybe.value;
   }

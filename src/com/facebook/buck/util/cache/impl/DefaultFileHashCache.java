@@ -60,7 +60,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   protected DefaultFileHashCache(
       ProjectFilesystem projectFilesystem,
       Predicate<Path> ignoredPredicate,
-      FileHashCacheMode fileHashCacheMode) {
+      FileHashCacheMode fileHashCacheMode,
+      boolean fsMapLoggingEnabled) {
     this.projectFilesystem = projectFilesystem;
     this.ignoredPredicate = ignoredPredicate;
     FileHashCacheEngine.ValueLoader<HashCodeAndFileType> hashLoader =
@@ -100,20 +101,26 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
         };
     switch (fileHashCacheMode) {
       case PARALLEL_COMPARISON:
-        fileHashCacheEngine = new ComboFileHashCache(hashLoader, sizeLoader, projectFilesystem);
+        fileHashCacheEngine =
+            new ComboFileHashCache(hashLoader, sizeLoader, projectFilesystem, fsMapLoggingEnabled);
         break;
       case LOADING_CACHE:
         fileHashCacheEngine = LoadingCacheFileHashCache.createWithStats(hashLoader, sizeLoader);
         break;
       case PREFIX_TREE:
         fileHashCacheEngine =
-            FileSystemMapFileHashCache.createWithStats(hashLoader, sizeLoader, projectFilesystem);
+            FileSystemMapFileHashCache.createWithStats(
+                hashLoader, sizeLoader, projectFilesystem, fsMapLoggingEnabled);
         break;
       case LIMITED_PREFIX_TREE:
         fileHashCacheEngine =
             new StatsTrackingFileHashCacheEngine(
                 new LimitedFileHashCacheEngine(
-                    projectFilesystem, fileHashLoader, dirHashLoader, sizeLoader),
+                    projectFilesystem,
+                    fileHashLoader,
+                    dirHashLoader,
+                    sizeLoader,
+                    fsMapLoggingEnabled),
                 "limited");
         break;
       case LIMITED_PREFIX_TREE_PARALLEL:
@@ -122,7 +129,11 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
                 LoadingCacheFileHashCache.createWithStats(hashLoader, sizeLoader),
                 new StatsTrackingFileHashCacheEngine(
                     new LimitedFileHashCacheEngine(
-                        projectFilesystem, fileHashLoader, dirHashLoader, sizeLoader),
+                        projectFilesystem,
+                        fileHashLoader,
+                        dirHashLoader,
+                        sizeLoader,
+                        fsMapLoggingEnabled),
                     "limited"));
         break;
       default:
@@ -131,17 +142,25 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   }
 
   public static DefaultFileHashCache createBuckOutFileHashCache(
-      ProjectFilesystem projectFilesystem, FileHashCacheMode fileHashCacheMode) {
+      ProjectFilesystem projectFilesystem,
+      FileHashCacheMode fileHashCacheMode,
+      boolean fsMapLoggingEnabled) {
     return new DefaultFileHashCache(
         projectFilesystem.createBuckOutProjectFilesystem(),
         (path) -> !isInBuckOut(projectFilesystem, path),
-        fileHashCacheMode);
+        fileHashCacheMode,
+        fsMapLoggingEnabled);
   }
 
   public static DefaultFileHashCache createDefaultFileHashCache(
-      ProjectFilesystem projectFilesystem, FileHashCacheMode fileHashCacheMode) {
+      ProjectFilesystem projectFilesystem,
+      FileHashCacheMode fileHashCacheMode,
+      boolean fsMapLoggingEnabled) {
     return new DefaultFileHashCache(
-        projectFilesystem, getDefaultPathPredicate(projectFilesystem), fileHashCacheMode);
+        projectFilesystem,
+        getDefaultPathPredicate(projectFilesystem),
+        fileHashCacheMode,
+        fsMapLoggingEnabled);
   }
 
   /**
@@ -167,7 +186,9 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   }
 
   public static ImmutableList<? extends ProjectFileHashCache> createOsRootDirectoriesCaches(
-      ProjectFilesystemFactory projectFilesystemFactory, FileHashCacheMode fileHashCacheMode) {
+      ProjectFilesystemFactory projectFilesystemFactory,
+      FileHashCacheMode fileHashCacheMode,
+      boolean fsMapLoggingEnabled) {
     ImmutableList.Builder<ProjectFileHashCache> allCaches = ImmutableList.builder();
     for (Path root : FileSystems.getDefault().getRootDirectories()) {
       if (!root.toFile().exists()) {
@@ -188,7 +209,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
       // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
       // multiple times in a single run.
       allCaches.add(
-          DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem, fileHashCacheMode));
+          DefaultFileHashCache.createDefaultFileHashCache(
+              projectFilesystem, fileHashCacheMode, fsMapLoggingEnabled));
     }
 
     return allCaches.build();

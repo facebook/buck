@@ -1068,7 +1068,7 @@ public class PythonBinaryDescriptionTest {
         new DefaultRuleKeyFactory(
             new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create()),
             StackedFileHashCache.createDefaultHashCaches(
-                rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT),
+                rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT, false),
             ruleResolver);
     return ruleKeyFactory.build(rule);
   }

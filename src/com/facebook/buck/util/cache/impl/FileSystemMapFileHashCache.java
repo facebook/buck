@@ -39,17 +39,25 @@ class FileSystemMapFileHashCache implements FileHashCacheEngine {
   private FileSystemMapFileHashCache(
       ValueLoader<HashCodeAndFileType> hashLoader,
       ValueLoader<Long> sizeLoader,
-      ProjectFilesystem filesystem) {
-    this.loadingCache = new FileSystemMap<>(path -> hashLoader.load(path), filesystem);
-    this.sizeCache = new FileSystemMap<>(path -> sizeLoader.load(path), filesystem);
+      ProjectFilesystem filesystem,
+      boolean fsMapLoggingEnabled) {
+    this.loadingCache =
+        new FileSystemMap<>(path -> hashLoader.load(path), filesystem, fsMapLoggingEnabled);
+    this.sizeCache =
+        new FileSystemMap<>(
+            path -> sizeLoader.load(path), filesystem, false
+            /** loggingEnabled */
+            );
   }
 
   public static FileHashCacheEngine createWithStats(
       ValueLoader<HashCodeAndFileType> hashLoader,
       ValueLoader<Long> sizeLoader,
-      ProjectFilesystem filesystem) {
+      ProjectFilesystem filesystem,
+      boolean fsMapLoggingEnabled) {
     return new StatsTrackingFileHashCacheEngine(
-        new FileSystemMapFileHashCache(hashLoader, sizeLoader, filesystem), "new");
+        new FileSystemMapFileHashCache(hashLoader, sizeLoader, filesystem, fsMapLoggingEnabled),
+        "new");
   }
 
   @Override

@@ -872,7 +872,9 @@ public final class MainRunner {
                 if (cell.getCanonicalName() != CanonicalCellName.rootCell()) {
                   allCaches.add(
                       DefaultFileHashCache.createBuckOutFileHashCache(
-                          cell.getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
+                          cell.getFilesystem(),
+                          buildBuckConfig.getFileHashCacheMode(),
+                          buildBuckConfig.getFileSystemMapLoggingEnabled()));
                 }
               });
 
@@ -881,10 +883,14 @@ public final class MainRunner {
       // times in a single run.
       allCaches.add(
           DefaultFileHashCache.createDefaultFileHashCache(
-              rootCellProjectFilesystem, buildBuckConfig.getFileHashCacheMode()));
+              rootCellProjectFilesystem,
+              buildBuckConfig.getFileHashCacheMode(),
+              buildBuckConfig.getFileSystemMapLoggingEnabled()));
       allCaches.addAll(
           DefaultFileHashCache.createOsRootDirectoriesCaches(
-              projectFilesystemFactory, buildBuckConfig.getFileHashCacheMode()));
+              projectFilesystemFactory,
+              buildBuckConfig.getFileHashCacheMode(),
+              buildBuckConfig.getFileSystemMapLoggingEnabled()));
 
       StackedFileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());
       stackedFileHashCache = Optional.of(fileHashCache);

@@ -87,11 +87,15 @@ public class StackedFileHashCache implements FileHashCache {
   }
 
   public static StackedFileHashCache createDefaultHashCaches(
-      ProjectFilesystem filesystem, FileHashCacheMode fileHashCacheMode) {
+      ProjectFilesystem filesystem,
+      FileHashCacheMode fileHashCacheMode,
+      boolean fsMapHashingEnabled) {
     return new StackedFileHashCache(
         ImmutableList.of(
-            DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode),
-            DefaultFileHashCache.createBuckOutFileHashCache(filesystem, fileHashCacheMode)));
+            DefaultFileHashCache.createDefaultFileHashCache(
+                filesystem, fileHashCacheMode, fsMapHashingEnabled),
+            DefaultFileHashCache.createBuckOutFileHashCache(
+                filesystem, fileHashCacheMode, fsMapHashingEnabled)));
   }
 
   /**

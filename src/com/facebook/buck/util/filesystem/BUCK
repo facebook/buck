@@ -8,6 +8,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/core/util/log:log",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
     ],

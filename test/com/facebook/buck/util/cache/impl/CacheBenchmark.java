@@ -48,7 +48,11 @@ public class CacheBenchmark {
   public void setUpTest() {
     setUpBenchmark();
     projectFilesystem = new FakeProjectFilesystem();
-    cache = new WatchedFileHashCache(projectFilesystem, FileHashCacheMode.DEFAULT);
+    cache =
+        new WatchedFileHashCache(
+            projectFilesystem, FileHashCacheMode.DEFAULT, false
+            /** loggingEnabled * */
+            );
   }
 
   private static String generateRandomString() {

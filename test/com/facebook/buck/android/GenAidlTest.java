@@ -169,7 +169,7 @@ public class GenAidlTest {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     StackedFileHashCache hashCache =
         StackedFileHashCache.createDefaultHashCaches(
-            stubFilesystem, FileHashCacheMode.LOADING_CACHE);
+            stubFilesystem, FileHashCacheMode.LOADING_CACHE, false);
     DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(hashCache, ruleFinder);
     stubFilesystem.touch(
         stubFilesystem.getRootPath().resolve(pathToAidl.getRelativePath()).getPath());

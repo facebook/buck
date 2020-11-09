@@ -45,7 +45,7 @@ public class SanitizedArgTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    projectFilesystem, FileHashCacheMode.DEFAULT)));
+                    projectFilesystem, FileHashCacheMode.DEFAULT, false)));
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     return new UncachedRuleKeyBuilder(
         ruleFinder, fileHashLoader, new TestDefaultRuleKeyFactory(fileHashLoader, ruleFinder));

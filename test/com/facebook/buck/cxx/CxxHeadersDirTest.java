@@ -46,7 +46,7 @@ public class CxxHeadersDirTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    filesystem, FileHashCacheMode.DEFAULT)));
+                    filesystem, FileHashCacheMode.DEFAULT, false)));
     DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashLoader, ruleFinder);
     UncachedRuleKeyBuilder builder =
         new UncachedRuleKeyBuilder(ruleFinder, fileHashLoader, factory);

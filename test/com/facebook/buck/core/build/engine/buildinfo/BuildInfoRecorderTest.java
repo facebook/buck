@@ -127,7 +127,7 @@ public class BuildInfoRecorderTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    filesystem, FileHashCacheMode.DEFAULT)));
+                    filesystem, FileHashCacheMode.DEFAULT, false)));
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder();
 
     byte[] contents = "contents".getBytes();

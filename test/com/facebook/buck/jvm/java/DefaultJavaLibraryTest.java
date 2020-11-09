@@ -1020,7 +1020,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .addSrc(genSrc.getSourcePathToOutput())
             .build(graphBuilder, filesystem);
     FileHashLoader originalHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     InputBasedRuleKeyFactory factory =
         new TestInputBasedRuleKeyFactory(originalHashCache, ruleFinder);
     RuleKey originalRuleKey = factory.build(library);
@@ -1039,7 +1039,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .addSrc(genSrc.getSourcePathToOutput())
             .build(graphBuilder, filesystem);
     FileHashLoader unaffectedHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     factory = new TestInputBasedRuleKeyFactory(unaffectedHashCache, ruleFinder);
     RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
@@ -1058,7 +1058,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .addSrc(genSrc.getSourcePathToOutput())
             .build(graphBuilder, filesystem);
     FileHashLoader affectedHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     factory = new TestInputBasedRuleKeyFactory(affectedHashCache, ruleFinder);
     RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
@@ -1096,7 +1096,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "Source.class",
         "ABI JAR contents");
     FileHashLoader originalHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     InputBasedRuleKeyFactory factory =
         new TestInputBasedRuleKeyFactory(originalHashCache, ruleFinder);
     RuleKey originalRuleKey = factory.build(library);
@@ -1120,7 +1120,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     filesystem.writeContentsToPath(
         "different JAR contents", pathResolver.getCellUnsafeRelPath(dep.getSourcePathToOutput()));
     FileHashLoader unaffectedHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     factory = new TestInputBasedRuleKeyFactory(unaffectedHashCache, ruleFinder);
     RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
@@ -1141,7 +1141,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "Source.class",
         "changed ABI JAR contents");
     FileHashLoader affectedHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     factory = new TestInputBasedRuleKeyFactory(affectedHashCache, ruleFinder);
     RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
@@ -1189,7 +1189,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "ABI JAR contents");
 
     FileHashLoader originalHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     InputBasedRuleKeyFactory factory =
         new TestInputBasedRuleKeyFactory(originalHashCache, ruleFinder);
     RuleKey originalRuleKey = factory.build(library);
@@ -1215,7 +1215,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "different JAR contents",
         pathResolver.getCellUnsafeRelPath(exportedDep.getSourcePathToOutput()));
     FileHashLoader unaffectedHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     factory = new TestInputBasedRuleKeyFactory(unaffectedHashCache, ruleFinder);
     RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
@@ -1237,7 +1237,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "Source1.class",
         "changed ABI JAR contents");
     FileHashLoader affectedHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     factory = new TestInputBasedRuleKeyFactory(affectedHashCache, ruleFinder);
     RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
@@ -1290,7 +1290,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "Source1.class",
         "ABI JAR contents");
     FileHashLoader originalHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     InputBasedRuleKeyFactory factory =
         new TestInputBasedRuleKeyFactory(originalHashCache, ruleFinder);
     RuleKey originalRuleKey = factory.build(library);
@@ -1316,7 +1316,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "different JAR contents",
         pathResolver.getCellUnsafeRelPath(exportedDep.getSourcePathToOutput()));
     FileHashLoader unaffectedHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     factory = new TestInputBasedRuleKeyFactory(unaffectedHashCache, ruleFinder);
     RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
@@ -1338,7 +1338,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "Source1.class",
         "changed ABI JAR contents");
     FileHashLoader affectedHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     factory = new TestInputBasedRuleKeyFactory(affectedHashCache, ruleFinder);
     RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));

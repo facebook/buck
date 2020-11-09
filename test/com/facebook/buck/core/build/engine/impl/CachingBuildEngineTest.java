@@ -282,7 +282,10 @@ public class CachingBuildEngineTest {
           filesystem.resolve(filesystem.getBuckPaths().getScratchDir()).getPath());
       buildInfoStore = buildInfoStoreManager.get(filesystem);
       fileHashCache =
-          StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+          StackedFileHashCache.createDefaultHashCaches(
+              filesystem, FileHashCacheMode.DEFAULT, false
+              /** loggingEnabled */
+              );
       buildContext =
           BuildEngineBuildContext.of(
               FakeBuildContext.NOOP_CONTEXT,

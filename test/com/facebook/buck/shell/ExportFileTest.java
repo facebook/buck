@@ -241,7 +241,7 @@ public class ExportFileTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    filesystem, FileHashCacheMode.DEFAULT)));
+                    filesystem, FileHashCacheMode.DEFAULT, false)));
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     DefaultRuleKeyFactory ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, ruleFinder);
 
@@ -265,7 +265,7 @@ public class ExportFileTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    filesystem, FileHashCacheMode.DEFAULT)));
+                    filesystem, FileHashCacheMode.DEFAULT, false)));
     ruleFinder = new TestActionGraphBuilder();
     ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, ruleFinder);
     RuleKey refreshed = ruleKeyFactory.build(rule);

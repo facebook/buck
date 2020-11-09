@@ -82,7 +82,7 @@ public class DefaultFileHashCacheTest {
     filesystem.touch(path);
 
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     assertTrue("Cache should contain path", cache.getIfPresent(path).isPresent());
@@ -95,7 +95,7 @@ public class DefaultFileHashCacheTest {
     filesystem.touch(path);
 
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     assertEquals("Cache should contain hash", value.getHashCode(), cache.get(path));
@@ -108,7 +108,7 @@ public class DefaultFileHashCacheTest {
     filesystem.touch(path);
 
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     assertTrue("Cache should contain path", cache.getIfPresent(path).isPresent());
@@ -121,7 +121,7 @@ public class DefaultFileHashCacheTest {
   public void invalidatingNonExistentEntryDoesNotThrow() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
     Path path = new File("SomeClass.java").toPath();
     assertFalse("Cache should not contain pain", cache.getIfPresent(path).isPresent());
     cache.invalidate(path);
@@ -132,7 +132,7 @@ public class DefaultFileHashCacheTest {
   public void getMissingPathThrows() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
     expectedException.expect(RuntimeException.class);
     cache.get(filesystem.getPath("hello.java"));
   }
@@ -141,7 +141,7 @@ public class DefaultFileHashCacheTest {
   public void whenPathsArePutThenInvalidateAllRemovesThem() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
 
     Path path1 = Paths.get("path1");
     filesystem.writeContentsToPath("contents1", path1);
@@ -165,7 +165,7 @@ public class DefaultFileHashCacheTest {
       throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
 
     Path dir = filesystem.getPath("dir");
     filesystem.mkdirs(dir);
@@ -190,7 +190,7 @@ public class DefaultFileHashCacheTest {
       throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
 
     Path abiJarPath = Paths.get("test-abi.jar");
     Path memberPath = Paths.get("SomeClass.class");
@@ -216,7 +216,7 @@ public class DefaultFileHashCacheTest {
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
 
     Path abiJarPath = Paths.get("test-abi.jar");
     Path memberPath = Paths.get("Unhashed.txt");
@@ -240,7 +240,7 @@ public class DefaultFileHashCacheTest {
   public void whenJarMemberWithoutManifestIsQueriedThenThrow() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
 
     Path abiJarPath = Paths.get("no-manifest.jar");
     Path memberPath = Paths.get("Empty.class");
@@ -260,7 +260,7 @@ public class DefaultFileHashCacheTest {
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.LIMITED_PREFIX_TREE_PARALLEL);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
 
     Path abiJarPath = Paths.get("empty-manifest.jar");
     Path memberPath = Paths.get("Empty.class");
@@ -281,7 +281,7 @@ public class DefaultFileHashCacheTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path input = filesystem.getPath("input");
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
     expectedException.expect(RuntimeException.class);
     cache.getSize(input);
   }
@@ -292,7 +292,7 @@ public class DefaultFileHashCacheTest {
     Path input = filesystem.getPath("input");
     filesystem.writeBytesToPath(new byte[123], input);
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
     assertThat(cache.getSize(input), Matchers.equalTo(123L));
   }
 
@@ -304,7 +304,7 @@ public class DefaultFileHashCacheTest {
     filesystem.writeBytesToPath(new byte[123], input.resolve("file1"));
     filesystem.writeBytesToPath(new byte[123], input.resolve("file2"));
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
     assertThat(cache.getSize(input), Matchers.equalTo(246L));
   }
 
@@ -314,7 +314,7 @@ public class DefaultFileHashCacheTest {
     Path input = filesystem.getPath("input");
     filesystem.writeBytesToPath(new byte[123], input);
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
     cache.getSize(input);
     cache.invalidate(input);
     assertNull(cache.fileHashCacheEngine.getSizeIfPresent(input));
@@ -330,7 +330,7 @@ public class DefaultFileHashCacheTest {
     filesystem.writeContentsToPath("data", buckOutFile);
     filesystem.writeContentsToPath("other data", otherFile);
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createBuckOutFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createBuckOutFileHashCache(filesystem, fileHashCacheMode, false);
     assertTrue(cache.willGet(filesystem.getPath("buck-out/file.txt")));
     assertFalse(cache.willGet(filesystem.getPath("buck-out/cells/file.txt")));
     assertFalse(cache.willGet(filesystem.getPath("file.txt")));
@@ -346,7 +346,7 @@ public class DefaultFileHashCacheTest {
     filesystem.writeContentsToPath("data", buckOutFile);
     filesystem.writeContentsToPath("other data", otherFile);
     DefaultFileHashCache cache =
-        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
     assertFalse(cache.willGet(filesystem.getPath("buck-out/file.txt")));
     assertFalse(cache.willGet(filesystem.getPath("buck-out/cells/file.txt")));
     assertTrue(cache.willGet(filesystem.getPath("file.txt")));
@@ -362,7 +362,7 @@ public class DefaultFileHashCacheTest {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     DefaultFileHashCache buckOutCache =
-        DefaultFileHashCache.createBuckOutFileHashCache(filesystem, fileHashCacheMode);
+        DefaultFileHashCache.createBuckOutFileHashCache(filesystem, fileHashCacheMode, false);
 
     Class<?> buckOutCacheClass = buckOutCache.getFilesystem().getClass();
     Field buckOutCacheClassDelegate = buckOutCacheClass.getDeclaredField("delegate");

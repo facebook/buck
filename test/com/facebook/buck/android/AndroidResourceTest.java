@@ -183,7 +183,7 @@ public class AndroidResourceTest {
         (AndroidResource) graphBuilder.requireRule(resourceNode.getBuildTarget());
 
     FileHashCache fileHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     filesystem.writeContentsToPath(
         "something",
         graphBuilder.getSourcePathResolver().getCellUnsafeRelPath(dep.getPathToTextSymbolsFile()));

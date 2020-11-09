@@ -231,13 +231,9 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
    * delegate.
    */
   protected StackedFileHashCache createStackedFileHashCache(CommandRunnerParams params) {
-    FileHashCacheMode cacheMode =
-        params
-            .getCells()
-            .getRootCell()
-            .getBuckConfig()
-            .getView(BuildBuckConfig.class)
-            .getFileHashCacheMode();
+    BuildBuckConfig buildBuckConfig =
+        params.getCells().getRootCell().getBuckConfig().getView(BuildBuckConfig.class);
+    FileHashCacheMode cacheMode = buildBuckConfig.getFileHashCacheMode();
 
     return new StackedFileHashCache(
         ImmutableList.<ProjectFileHashCache>builder()
@@ -298,20 +294,24 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                             cellName, path, buckOutIncludeTargetCofigHash);
                       }
                     },
-                    cacheMode))
+                    cacheMode,
+                    buildBuckConfig.getFileSystemMapLoggingEnabled()))
             .build());
   }
 
   private Stream<? extends ProjectFileHashCache> createFileHashCaches(Cell cell) {
     ProjectFilesystem realFilesystem = cell.getFilesystem();
     // Just use the root cell's mode.
-    FileHashCacheMode cacheMode =
-        cell.getBuckConfig().getView(BuildBuckConfig.class).getFileHashCacheMode();
+    BuildBuckConfig buildBuckConfig = cell.getBuckConfig().getView(BuildBuckConfig.class);
+    FileHashCacheMode cacheMode = buildBuckConfig.getFileHashCacheMode();
+    boolean fsMapLoggingEnabled = buildBuckConfig.getFileSystemMapLoggingEnabled();
     ProjectFilesystem hashFakingFilesystem = createHashFakingFilesystem(realFilesystem);
 
     return Stream.of(
-        DefaultFileHashCache.createBuckOutFileHashCache(hashFakingFilesystem, cacheMode),
-        DefaultFileHashCache.createDefaultFileHashCache(hashFakingFilesystem, cacheMode));
+        DefaultFileHashCache.createBuckOutFileHashCache(
+            hashFakingFilesystem, cacheMode, fsMapLoggingEnabled),
+        DefaultFileHashCache.createDefaultFileHashCache(
+            hashFakingFilesystem, cacheMode, fsMapLoggingEnabled));
   }
 
   private DefaultProjectFilesystem createHashFakingFilesystem(ProjectFilesystem realFilesystem) {

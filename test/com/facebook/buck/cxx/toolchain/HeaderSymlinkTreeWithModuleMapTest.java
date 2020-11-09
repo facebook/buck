@@ -200,7 +200,8 @@ public class HeaderSymlinkTreeWithModuleMapTest {
     DefaultFileHashCache hashCache =
         DefaultFileHashCache.createDefaultFileHashCache(
             TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
-            FileHashCacheMode.DEFAULT);
+            FileHashCacheMode.DEFAULT,
+            false);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     RuleKey key1 =
         new TestDefaultRuleKeyFactory(hashLoader, ruleResolver).build(symlinkTreeBuildRule);

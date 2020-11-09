@@ -30,8 +30,14 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
   private static final Logger LOG = Logger.get(WatchedFileHashCache.class);
 
   public WatchedFileHashCache(
-      ProjectFilesystem projectFilesystem, FileHashCacheMode fileHashCacheMode) {
-    super(projectFilesystem, getDefaultPathPredicate(projectFilesystem), fileHashCacheMode);
+      ProjectFilesystem projectFilesystem,
+      FileHashCacheMode fileHashCacheMode,
+      boolean fsMapLoggingEnabled) {
+    super(
+        projectFilesystem,
+        getDefaultPathPredicate(projectFilesystem),
+        fileHashCacheMode,
+        fsMapLoggingEnabled);
   }
 
   /**

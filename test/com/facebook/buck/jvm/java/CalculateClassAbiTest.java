@@ -88,7 +88,7 @@ public class CalculateClassAbiTest {
             target, graphBuilder, filesystem, DefaultBuildTargetSourcePath.of(javaLibraryTarget));
 
     FileHashLoader initialHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     DefaultRuleKeyFactory initialRuleKeyFactory =
         new TestDefaultRuleKeyFactory(initialHashCache, graphBuilder);
     RuleKey initialKey = initialRuleKeyFactory.build(calculateAbi);
@@ -105,7 +105,7 @@ public class CalculateClassAbiTest {
     builder.build(graphBuilder, filesystem);
 
     FileHashLoader alteredHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     DefaultRuleKeyFactory alteredRuleKeyFactory =
         new TestDefaultRuleKeyFactory(alteredHashCache, graphBuilder);
     RuleKey alteredKey = alteredRuleKeyFactory.build(calculateAbi);
@@ -144,7 +144,7 @@ public class CalculateClassAbiTest {
             target, ruleFinder, filesystem, DefaultBuildTargetSourcePath.of(javaLibraryTarget));
 
     FileHashLoader initialHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     DefaultRuleKeyFactory initialRuleKeyFactory =
         new TestDefaultRuleKeyFactory(initialHashCache, ruleFinder);
     RuleKey initialKey = initialRuleKeyFactory.build(calculateAbi);
@@ -160,7 +160,7 @@ public class CalculateClassAbiTest {
     builder.build(graphBuilder, filesystem);
 
     FileHashLoader alteredHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     DefaultRuleKeyFactory alteredRuleKeyFactory =
         new TestDefaultRuleKeyFactory(alteredHashCache, ruleFinder);
     RuleKey alteredKey = alteredRuleKeyFactory.build(calculateAbi);

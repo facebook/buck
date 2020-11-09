@@ -250,4 +250,10 @@ public abstract class BuildBuckConfig implements ConfigView<BuckConfig> {
   public boolean areExternalActionsEnabled() {
     return getDelegate().getBooleanValue(BUILD_SECTION, "are_external_actions_enabled", false);
   }
+
+  /** @return whether to enable filesystem map logging for hashes. */
+  @Value.Lazy
+  public boolean getFileSystemMapLoggingEnabled() {
+    return getDelegate().getBooleanValue(BUILD_SECTION, "fsmap_logging_enabled", false);
+  }
 }
