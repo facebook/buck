@@ -46,8 +46,8 @@ import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessin
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.CopyStep.DirectoryMode;
-import com.facebook.buck.step.fs.ZipStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
+import com.facebook.buck.step.isolatedsteps.common.ZipIsolatedStep;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.google.common.base.Joiner;
@@ -153,6 +153,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       Builder<Step> steps,
       BuildableContext buildableContext) {
 
+    AbsPath rootPath = projectFilesystem.getRootPath();
+
     ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
     RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
@@ -228,8 +230,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                     .map(
                         resolvedJavacPluginProperties ->
                             resolvedJavacPluginProperties.getJavacPluginJsr199Fields(
-                                buildContext.getSourcePathResolver(),
-                                projectFilesystem.getRootPath()))
+                                buildContext.getSourcePathResolver(), rootPath))
                     .map(JavacPluginJsr199Fields::getClasspath)
                     .flatMap(List::stream)
                     .map(url -> AP_CLASSPATH_ARG + urlToFile(url))
@@ -292,9 +293,10 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 DirectoryMode.CONTENTS_ONLY));
 
         postKotlinCompilationSteps.add(
-            ZipStep.of(
-                projectFilesystem,
+            ZipIsolatedStep.of(
+                rootPath,
                 genOutput.getPath(),
+                projectFilesystem.getIgnoredPaths(),
                 ImmutableSet.of(),
                 false,
                 ZipCompressionLevel.DEFAULT,
