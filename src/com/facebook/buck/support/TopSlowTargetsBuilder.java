@@ -40,7 +40,7 @@ public final class TopSlowTargetsBuilder {
 
   /** Constructs a TopSlowTargetsBuilder with a N of 10. */
   public TopSlowTargetsBuilder() {
-    this(10);
+    this(20);
   }
 
   /**
