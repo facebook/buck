@@ -46,7 +46,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.CxxHeaderTreeMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.rules.modern.OutputPath;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimaps;
@@ -288,37 +287,13 @@ public class CxxLibraryMetadataFactory {
 
             // Generate stripped objects from them.
             ImmutableList<SourcePath> strippedObjects =
-                objects.stream()
-                    .map(
-                        object ->
-                            graphBuilder
-                                .computeIfAbsent(
-                                    graphBuilder
-                                        .getRule(object)
-                                        .orElseThrow(IllegalStateException::new)
-                                        .getBuildTarget()
-                                        .withAppendedFlavors(
-                                            CxxStrip.RULE_FLAVOR, stripStyle.get().getFlavor()),
-                                    target ->
-                                        new CxxStrip(
-                                            target,
-                                            projectFilesystem,
-                                            object,
-                                            graphBuilder,
-                                            stripStyle.get(),
-                                            cxxPlatform
-                                                .getStrip()
-                                                .resolve(
-                                                    graphBuilder, target.getTargetConfiguration()),
-                                            true,
-                                            new OutputPath(
-                                                graphBuilder
-                                                    .getSourcePathResolver()
-                                                    .getIdeallyRelativePath(object)
-                                                    .getFileName()),
-                                            downwardApiConfig.isEnabledForCxx()))
-                                .getSourcePathToOutput())
-                    .collect(ImmutableList.toImmutableList());
+                CxxDescriptionEnhancer.requireStrippedObjects(
+                    graphBuilder,
+                    projectFilesystem,
+                    cxxPlatform,
+                    downwardApiConfig.isEnabledForCxx(),
+                    stripStyle.get(),
+                    objects);
 
             return Optional.of(strippedObjects).map(metadataClass::cast);
           }

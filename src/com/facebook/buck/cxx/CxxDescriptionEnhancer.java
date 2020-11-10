@@ -78,6 +78,7 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.OutputMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.rules.modern.SourcePathResolverSerialization;
 import com.facebook.buck.shell.ExportFile;
@@ -88,6 +89,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -1941,5 +1943,50 @@ public class CxxDescriptionEnhancer {
         Mode.COPY,
         ExplicitBuildTargetSourcePath.of(cxxLink.getBuildTarget(), linkerMap.get()),
         ExportFileDirectoryAction.FAIL);
+  }
+
+  /**
+   * Generates and returns rules (as {@link SourcePath}s) which strip the given {@code object}s
+   * using the specified {@code stripStyle}.
+   *
+   * @return {@link SourcePath}s wrapping {@link CxxStrip} rules which strip the given {@code
+   *     objects}.
+   */
+  public static ImmutableList<SourcePath> requireStrippedObjects(
+      ActionGraphBuilder graphBuilder,
+      ProjectFilesystem filesystem,
+      CxxPlatform cxxPlatform,
+      boolean withDownwardApi,
+      StripStyle stripStyle,
+      ImmutableCollection<SourcePath> objects) {
+    return objects.stream()
+        .map(
+            object ->
+                graphBuilder
+                    .computeIfAbsent(
+                        graphBuilder
+                            .getRule(object)
+                            .orElseThrow(IllegalStateException::new)
+                            .getBuildTarget()
+                            .withAppendedFlavors(CxxStrip.RULE_FLAVOR, stripStyle.getFlavor()),
+                        target ->
+                            new CxxStrip(
+                                target,
+                                filesystem,
+                                object,
+                                graphBuilder,
+                                stripStyle,
+                                cxxPlatform
+                                    .getStrip()
+                                    .resolve(graphBuilder, target.getTargetConfiguration()),
+                                true,
+                                new OutputPath(
+                                    graphBuilder
+                                        .getSourcePathResolver()
+                                        .getIdeallyRelativePath(object)
+                                        .getFileName()),
+                                withDownwardApi))
+                    .getSourcePathToOutput())
+        .collect(ImmutableList.toImmutableList());
   }
 }
