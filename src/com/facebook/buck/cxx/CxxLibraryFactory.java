@@ -429,7 +429,11 @@ public class CxxLibraryFactory {
               .concat(RichStream.from(delegatePostExportedLinkerFlags))
               .toImmutableList();
         },
-        (cxxPlatform, ruleResolverInner, pathResolverInner, includePrivateLinkerFlags) ->
+        (cxxPlatform,
+            ruleResolverInner,
+            pathResolverInner,
+            includePrivateLinkerFlags,
+            preferStripped) ->
             getSharedLibraryNativeLinkTargetInput(
                 buildTarget,
                 projectFilesystem,
@@ -459,7 +463,8 @@ public class CxxLibraryFactory {
                 args.getFrameworks(),
                 args.getLibraries(),
                 transitiveCxxPreprocessorInputFunction,
-                delegate.requireDelegate(buildTarget, cxxPlatform, ruleResolverInner)),
+                delegate.requireDelegate(buildTarget, cxxPlatform, ruleResolverInner),
+                preferStripped ? Optional.of(StripStyle.DEBUGGING_SYMBOLS) : Optional.empty()),
         args.getSupportedPlatformsRegex(),
         args.getFrameworks(),
         args.getLibraries(),
@@ -653,27 +658,40 @@ public class CxxLibraryFactory {
       ImmutableSet<FrameworkPath> libraries,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction
           transitiveCxxPreprocessorInputFunction,
-      Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> delegate) {
+      Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> delegate,
+      Optional<StripStyle> stripStyle) {
 
     StringWithMacrosConverter macrosConverter =
         CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
             buildTarget, cellRoots, graphBuilder, cxxPlatform);
 
     // Create rules for compiling the PIC object files.
-    ImmutableList<SourcePath> objects =
-        requireObjects(
-            buildTarget,
-            projectFilesystem,
-            graphBuilder,
-            cellRoots,
-            cxxBuckConfig,
-            downwardApiConfig,
-            cxxPlatform,
-            cxxPlatform.getPicTypeForSharedLinking(),
-            arg,
-            deps,
-            transitiveCxxPreprocessorInputFunction,
-            delegate);
+    ImmutableList<SourcePath> objects;
+    if (!stripStyle.isPresent()) {
+      objects =
+          requireObjects(
+              buildTarget,
+              projectFilesystem,
+              graphBuilder,
+              cellRoots,
+              cxxBuckConfig,
+              downwardApiConfig,
+              cxxPlatform,
+              cxxPlatform.getPicTypeForSharedLinking(),
+              arg,
+              deps,
+              transitiveCxxPreprocessorInputFunction,
+              delegate);
+    } else {
+      Preconditions.checkState(!delegate.isPresent());
+      objects =
+          CxxLibraryMetadataFactory.requireObjects(
+              buildTarget,
+              graphBuilder,
+              cxxPlatform,
+              cxxPlatform.getPicTypeForSharedLinking(),
+              stripStyle);
+    }
 
     return NativeLinkableInput.builder()
         .addAllArgs(
@@ -906,20 +924,9 @@ public class CxxLibraryFactory {
               delegate);
     } else {
       Preconditions.checkState(!delegate.isPresent());
-
-      // Create rules for compiling the object files.
-      BuildTarget objectsTarget =
-          buildTarget.withAppendedFlavors(
-              CxxLibraryDescription.MetadataType.OBJECTS.getFlavor(), pic.getFlavor());
-      if (stripStyle.isPresent()) {
-        objectsTarget = objectsTarget.withAppendedFlavors(stripStyle.get().getFlavor());
-      }
-      @SuppressWarnings("unchecked")
-      ImmutableList<SourcePath> unstrippedObjects =
-          graphBuilder
-              .requireMetadata(objectsTarget, ImmutableList.class)
-              .orElseThrow(IllegalStateException::new);
-      objects = unstrippedObjects;
+      objects =
+          CxxLibraryMetadataFactory.requireObjects(
+              buildTarget, graphBuilder, cxxPlatform, pic, stripStyle);
     }
 
     // Write a build rule to create the archive for this C/C++ library.
@@ -1056,7 +1063,7 @@ public class CxxLibraryFactory {
     NativeLinkTarget linkTarget =
         ((NativeLinkTargetGroup)
                 graphBuilder.requireRule(baseTarget.withoutFlavors(cxxPlatform.getFlavor())))
-            .getTargetForPlatform(cxxPlatform, true);
+            .getTargetForPlatform(cxxPlatform, true, false);
 
     NativeLinkTargetMode linkTargetMode = linkTarget.getNativeLinkTargetMode();
     Preconditions.checkArgument(linkTargetMode.getType().equals(LinkType.SHARED));

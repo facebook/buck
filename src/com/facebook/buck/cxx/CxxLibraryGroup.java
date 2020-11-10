@@ -48,7 +48,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.function.QuadFunction;
+import com.facebook.buck.util.function.QuintFunction;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -93,10 +93,11 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
       exportedLinkerFlags;
   private final BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
       postExportedLinkerFlags;
-  private final QuadFunction<
+  private final QuintFunction<
           ? super CxxPlatform,
           ActionGraphBuilder,
           SourcePathResolverAdapter,
+          Boolean,
           Boolean,
           NativeLinkableInput>
       linkTargetInput;
@@ -140,10 +141,11 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
           exportedLinkerFlags,
       BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
           postExportedLinkerFlags,
-      QuadFunction<
+      QuintFunction<
               ? super CxxPlatform,
               ActionGraphBuilder,
               SourcePathResolverAdapter,
+              Boolean,
               Boolean,
               NativeLinkableInput>
           linkTargetInput,
@@ -367,21 +369,14 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @VisibleForTesting
-  @SuppressWarnings("unchecked")
   ImmutableList<SourcePath> getObjects(
       ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform, PicType picType, boolean stripped) {
-    BuildTarget objectsTarget =
-        getBuildTarget()
-            .withAppendedFlavors(
-                CxxLibraryDescription.MetadataType.OBJECTS.getFlavor(),
-                cxxPlatform.getFlavor(),
-                picType.getFlavor());
-    if (stripped) {
-      objectsTarget = objectsTarget.withAppendedFlavors(StripStyle.DEBUGGING_SYMBOLS.getFlavor());
-    }
-    return graphBuilder
-        .requireMetadata(objectsTarget, ImmutableList.class)
-        .orElseThrow(IllegalStateException::new);
+    return CxxLibraryMetadataFactory.requireObjects(
+        getBuildTarget(),
+        graphBuilder,
+        cxxPlatform,
+        picType,
+        stripped ? Optional.of(StripStyle.DEBUGGING_SYMBOLS) : Optional.empty());
   }
 
   private NativeLinkableInput computeNativeLinkableInputUncached(
@@ -605,13 +600,14 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
       SourcePathResolverAdapter pathResolver,
-      boolean includePrivateLinkerFlags) {
+      boolean includePrivateLinkerFlags,
+      boolean preferStripped) {
     if (!isPlatformSupported(cxxPlatform)) {
       LOG.verbose("Skipping library %s on platform %s", this, cxxPlatform.getFlavor());
       return NativeLinkableInput.of();
     }
     return linkTargetInput.apply(
-        cxxPlatform, graphBuilder, pathResolver, includePrivateLinkerFlags);
+        cxxPlatform, graphBuilder, pathResolver, includePrivateLinkerFlags, preferStripped);
   }
 
   @Override

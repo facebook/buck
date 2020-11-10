@@ -52,10 +52,14 @@ public interface LegacyNativeLinkTargetGroup extends NativeLinkTargetGroup {
   @Deprecated
   Optional<Path> getNativeLinkTargetOutputPath();
 
+  /**
+   * @param preferStripped when possible, use stripped objects in returned {@link NativeLinkTarget}.
+   */
   @Override
   default NativeLinkTarget getTargetForPlatform(
-      CxxPlatform cxxPlatform, boolean includePrivateLinkerFlags) {
-    return new PlatformLockedNativeLinkTargetGroup(this, cxxPlatform, includePrivateLinkerFlags);
+      CxxPlatform cxxPlatform, boolean includePrivateLinkerFlags, boolean preferStripped) {
+    return new PlatformLockedNativeLinkTargetGroup(
+        this, cxxPlatform, includePrivateLinkerFlags, preferStripped);
   }
 
   /** @return the {@link NativeLinkableInput} used to link this target. */
@@ -63,5 +67,6 @@ public interface LegacyNativeLinkTargetGroup extends NativeLinkTargetGroup {
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
       SourcePathResolverAdapter pathResolver,
-      boolean includePrivateLinkerFlags);
+      boolean includePrivateLinkerFlags,
+      boolean preferStripped);
 }

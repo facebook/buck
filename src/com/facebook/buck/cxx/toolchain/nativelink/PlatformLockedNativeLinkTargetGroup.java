@@ -32,14 +32,17 @@ public class PlatformLockedNativeLinkTargetGroup implements NativeLinkTarget {
   private final LegacyNativeLinkTargetGroup underlyingGroup;
   private final CxxPlatform cxxPlatform;
   boolean includePrivateLinkerFlags;
+  boolean preferStripped;
 
   public PlatformLockedNativeLinkTargetGroup(
       LegacyNativeLinkTargetGroup underlyingGroup,
       CxxPlatform cxxPlatform,
-      boolean includePrivateLinkerFlags) {
+      boolean includePrivateLinkerFlags,
+      boolean preferStripped) {
     this.underlyingGroup = underlyingGroup;
     this.cxxPlatform = cxxPlatform;
     this.includePrivateLinkerFlags = includePrivateLinkerFlags;
+    this.preferStripped = preferStripped;
   }
 
   @Override
@@ -64,7 +67,7 @@ public class PlatformLockedNativeLinkTargetGroup implements NativeLinkTarget {
   public NativeLinkableInput getNativeLinkTargetInput(
       ActionGraphBuilder graphBuilder, SourcePathResolverAdapter pathResolver) {
     return underlyingGroup.getNativeLinkTargetInput(
-        cxxPlatform, graphBuilder, pathResolver, includePrivateLinkerFlags);
+        cxxPlatform, graphBuilder, pathResolver, includePrivateLinkerFlags, preferStripped);
   }
 
   @Override

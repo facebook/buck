@@ -328,7 +328,7 @@ public class CxxLuaExtensionDescription
 
       @Override
       public NativeLinkTarget getTargetForPlatform(
-          CxxPlatform cxxPlatform, boolean includePrivateLinkerFlags) {
+          CxxPlatform cxxPlatform, boolean includePrivateLinkerFlags, boolean preferStripped) {
         return targetsCache.get(
             cxxPlatform,
             includePrivateLinkerFlags,

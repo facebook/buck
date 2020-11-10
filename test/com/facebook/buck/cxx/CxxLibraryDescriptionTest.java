@@ -1145,7 +1145,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         Arg.stringify(
             linkable
-                .getNativeLinkTarget(graphBuilder, true)
+                .getNativeLinkTarget(graphBuilder, true, false)
                 .get()
                 .getNativeLinkTargetInput(graphBuilder, graphBuilder.getSourcePathResolver())
                 .getArgs(),
@@ -1154,7 +1154,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         Arg.stringify(
             linkable
-                .getNativeLinkTarget(graphBuilder, false)
+                .getNativeLinkTarget(graphBuilder, false, false)
                 .get()
                 .getNativeLinkTargetInput(graphBuilder, graphBuilder.getSourcePathResolver())
                 .getArgs(),
@@ -1235,7 +1235,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         library
             .getNativeLinkTargetInput(
-                platform, graphBuilder, graphBuilder.getSourcePathResolver(), true)
+                platform, graphBuilder, graphBuilder.getSourcePathResolver(), true, false)
             .getLibraries(),
         equalTo(libraries));
   }
@@ -1637,6 +1637,26 @@ public class CxxLibraryDescriptionTest {
     MatcherAssert.assertThat(archive.getInputs(), Matchers.hasSize(1));
     MatcherAssert.assertThat(
         graphBuilder.getRule(archive.getInputs().get(0)).orElseThrow(AssertionError::new),
+        instanceOf(CxxStrip.class));
+  }
+
+  @Test
+  public void linkTargetInputPreferringStrippedObjects() {
+    CxxLibraryBuilder cxxLibraryBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))));
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
+    CxxLibraryGroup library =
+        (CxxLibraryGroup) graphBuilder.requireRule(cxxLibraryBuilder.getTarget());
+    NativeLinkableInput input =
+        library
+            .getTargetForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM, false, true)
+            .getNativeLinkTargetInput(graphBuilder, graphBuilder.getSourcePathResolver());
+    ImmutableList<Arg> args = input.getArgs();
+    Arg object = args.get(args.size() - 1);
+    MatcherAssert.assertThat(
+        graphBuilder.getRule(((HasSourcePath) object).getPath()).orElseThrow(AssertionError::new),
         instanceOf(CxxStrip.class));
   }
 

@@ -368,12 +368,12 @@ public class LuaBinaryDescription
         } else if (rule instanceof CxxLuaExtension) {
           CxxLuaExtension extension = (CxxLuaExtension) rule;
           luaExtensions.put(extension.getBuildTarget(), extension);
-          omnibusRoots.addIncludedRoot(extension.getTargetForPlatform(cxxPlatform, false));
+          omnibusRoots.addIncludedRoot(extension.getTargetForPlatform(cxxPlatform, false, false));
         } else if (rule instanceof NativeLinkableGroup) {
           NativeLinkable linkable =
               ((NativeLinkableGroup) rule).getNativeLinkable(cxxPlatform, graphBuilder);
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
-          omnibusRoots.addPotentialRoot(linkable, false);
+          omnibusRoots.addPotentialRoot(linkable, false, false);
         }
         return deps;
       }
@@ -475,7 +475,7 @@ public class LuaBinaryDescription
         nativeLinkableRoots.putAll(
             Maps.uniqueIndex(
                 extension
-                    .getTargetForPlatform(cxxPlatform, true)
+                    .getTargetForPlatform(cxxPlatform, true, false)
                     .getNativeLinkTargetDeps(graphBuilder),
                 NativeLinkable::getBuildTarget));
       }

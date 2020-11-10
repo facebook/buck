@@ -61,7 +61,7 @@ public class OmnibusRootsTest {
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     OmnibusRoots.Builder builder = OmnibusRoots.builder(ImmutableSet.of(), graphBuilder);
-    builder.addPotentialRoot(root, false);
+    builder.addPotentialRoot(root, false, false);
     OmnibusRoots roots = builder.build();
 
     assertThat(roots.getExcludedRoots().keySet(), Matchers.contains(root.getBuildTarget()));

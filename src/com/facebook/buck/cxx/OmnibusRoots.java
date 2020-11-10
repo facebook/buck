@@ -76,9 +76,10 @@ public abstract class OmnibusRoots {
      *
      * @return whether the node was added as a root.
      */
-    public void addPotentialRoot(NativeLinkable node, boolean includePrivateLinkerFlags) {
+    public void addPotentialRoot(
+        NativeLinkable node, boolean includePrivateLinkerFlags, boolean preferStrippedObjects) {
       Optional<NativeLinkTarget> target =
-          node.getNativeLinkTarget(graphBuilder, includePrivateLinkerFlags);
+          node.getNativeLinkTarget(graphBuilder, includePrivateLinkerFlags, preferStrippedObjects);
       if (target.isPresent()
           && !excludes.contains(node.getBuildTarget())
           && node.supportsOmnibusLinking()) {

@@ -57,14 +57,14 @@ public class CxxLuaExtensionDescriptionTest {
     CxxLuaExtension rule = builder.build(graphBuilder);
     assertThat(
         Arg.stringify(
-            rule.getTargetForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM, true)
+            rule.getTargetForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM, true, false)
                 .getNativeLinkTargetInput(graphBuilder, pathResolver)
                 .getArgs(),
             pathResolver),
         Matchers.hasItems("--flag"));
     assertThat(
         Arg.stringify(
-            rule.getTargetForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM, false)
+            rule.getTargetForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM, false, false)
                 .getNativeLinkTargetInput(graphBuilder, pathResolver)
                 .getArgs(),
             pathResolver),

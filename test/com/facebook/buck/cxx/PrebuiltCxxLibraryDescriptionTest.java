@@ -839,7 +839,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertFalse(
         rule.getNativeLinkable(CXX_PLATFORM, graphBuilder)
-            .getNativeLinkTarget(graphBuilder, true)
+            .getNativeLinkTarget(graphBuilder, true, false)
             .isPresent());
   }
 
@@ -856,7 +856,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertFalse(
         rule.getNativeLinkable(CXX_PLATFORM, graphBuilder)
-            .getNativeLinkTarget(graphBuilder, true)
+            .getNativeLinkTarget(graphBuilder, true, false)
             .isPresent());
   }
 
@@ -872,7 +872,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertTrue(
         rule.getNativeLinkable(CXX_PLATFORM, graphBuilder)
-            .getNativeLinkTarget(graphBuilder, true)
+            .getNativeLinkTarget(graphBuilder, true, false)
             .isPresent());
   }
 
@@ -889,7 +889,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         rule.getNativeLinkable(CXX_PLATFORM, graphBuilder)
-            .getNativeLinkTarget(graphBuilder, true)
+            .getNativeLinkTarget(graphBuilder, true, false)
             .get()
             .getNativeLinkTargetMode(),
         Matchers.equalTo(NativeLinkTargetMode.library("libsoname.so")));
@@ -923,7 +923,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertThat(
         FluentIterable.from(
                 rule.getNativeLinkable(CXX_PLATFORM, graphBuilder)
-                    .getNativeLinkTarget(graphBuilder, true)
+                    .getNativeLinkTarget(graphBuilder, true, false)
                     .get()
                     .getNativeLinkTargetDeps(graphBuilder))
             .transform(NativeLinkable::getBuildTarget),
@@ -944,7 +944,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) ruleBuilder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkableInput input =
         rule.getNativeLinkable(CXX_PLATFORM, graphBuilder)
-            .getNativeLinkTarget(graphBuilder, true)
+            .getNativeLinkTarget(graphBuilder, true, false)
             .get()
             .getNativeLinkTargetInput(graphBuilder, pathResolver);
     assertThat(Arg.stringify(input.getArgs(), pathResolver), Matchers.hasItems("--exported-flag"));

@@ -69,9 +69,11 @@ public interface NativeLinkable {
    * themselves instances of NativeLinkTarget.
    *
    * @param includePrivateLinkerFlags whether to include rule-specific non-exported linker flags.
+   * @param preferStripped when possible, use stripped object in the returned {@link
+   *     NativeLinkableInput}.
    */
   Optional<NativeLinkTarget> getNativeLinkTarget(
-      ActionGraphBuilder graphBuilder, boolean includePrivateLinkerFlags);
+      ActionGraphBuilder graphBuilder, boolean includePrivateLinkerFlags, boolean preferStripped);
 
   /** @return The preferred {@link NativeLinkableGroup.Linkage} for this linkable. */
   NativeLinkableGroup.Linkage getPreferredLinkage();

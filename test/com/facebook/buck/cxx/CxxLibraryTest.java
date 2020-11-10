@@ -198,7 +198,8 @@ public class CxxLibraryTest {
             /* headerOnly */ x -> true,
             (unused1, unused2) -> StringArg.from("-ldl"),
             (unused1, unused2) -> StringArg.from("-lfoobarbaz"),
-            /* linkTargetInput */ (unused1, unused2, unused3, unused4) -> NativeLinkableInput.of(),
+            /* linkTargetInput */ (unused1, unused2, unused3, unused4, unused5) ->
+                NativeLinkableInput.of(),
             /* supportedPlatformsRegex */ Optional.empty(),
             ImmutableSet.of(frameworkPath),
             ImmutableSet.of(),
@@ -260,7 +261,8 @@ public class CxxLibraryTest {
             /* headerOnly */ x -> true,
             (unused1, unused2) -> StringArg.from("-ldl"),
             (unused1, unused2) -> StringArg.from("-lfoobarbaz"),
-            /* linkTargetInput */ (unused1, unused2, unused3, unused4) -> NativeLinkableInput.of(),
+            /* linkTargetInput */ (unused1, unused2, unused3, unused4, unused5) ->
+                NativeLinkableInput.of(),
             /* supportedPlatformsRegex */ Optional.empty(),
             ImmutableSet.of(frameworkPath),
             ImmutableSet.of(),

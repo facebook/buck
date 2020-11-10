@@ -26,5 +26,6 @@ public interface NativeLinkTargetGroup {
   /**
    * @param includePrivateLinkerFlags whether to include rule-specific non-exported linker flags.
    */
-  NativeLinkTarget getTargetForPlatform(CxxPlatform cxxPlatform, boolean includePrivateLinkerFlags);
+  NativeLinkTarget getTargetForPlatform(
+      CxxPlatform cxxPlatform, boolean includePrivateLinkerFlags, boolean preferStrippedObjects);
 }

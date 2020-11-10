@@ -93,7 +93,7 @@ class OmnibusNode implements NativeLinkable {
 
   @Override
   public Optional<NativeLinkTarget> getNativeLinkTarget(
-      ActionGraphBuilder graphBuilder, boolean includePrivateLinkerFlags) {
+      ActionGraphBuilder graphBuilder, boolean includePrivateLinkerFlags, boolean preferStripped) {
     return Optional.empty();
   }
 

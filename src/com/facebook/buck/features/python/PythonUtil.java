@@ -447,7 +447,7 @@ public class PythonUtil {
         linkableGroup -> {
           NativeLinkable linkable = linkableGroup.getNativeLinkable(cxxPlatform, graphBuilder);
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
-          omnibusRoots.addPotentialRoot(linkable, false);
+          omnibusRoots.addPotentialRoot(linkable, false, preferStrippedNativeObjects);
         });
 
     // For the merged strategy, build up the lists of included native linkable roots, and the

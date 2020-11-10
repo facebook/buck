@@ -90,6 +90,35 @@ public class CxxLibraryMetadataFactory {
     return platform.getValue().resolve(graphBuilder, buildTarget.getTargetConfiguration());
   }
 
+  /**
+   * A wrapper around the metadata API for getting C++ object files, which is backed by and caches
+   * calls to {@link CxxLibraryFactory#requireObjects}.
+   *
+   * @return load and create object file rules through the metadata interface.
+   */
+  public static ImmutableList<SourcePath> requireObjects(
+      BuildTarget buildTarget,
+      ActionGraphBuilder graphBuilder,
+      CxxPlatform cxxPlatform,
+      PicType picType,
+      Optional<StripStyle> stripStyle) {
+    // Create rules for compiling the object files.
+    BuildTarget objectsTarget =
+        buildTarget.withAppendedFlavors(
+            cxxPlatform.getFlavor(),
+            CxxLibraryDescription.MetadataType.OBJECTS.getFlavor(),
+            picType.getFlavor());
+    if (stripStyle.isPresent()) {
+      objectsTarget = objectsTarget.withAppendedFlavors(stripStyle.get().getFlavor());
+    }
+    @SuppressWarnings("unchecked")
+    ImmutableList<SourcePath> objectsFromMetadata =
+        graphBuilder
+            .requireMetadata(objectsTarget, ImmutableList.class)
+            .orElseThrow(IllegalStateException::new);
+    return objectsFromMetadata;
+  }
+
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
@@ -275,15 +304,9 @@ public class CxxLibraryMetadataFactory {
             baseTarget = buildTarget.withoutFlavors(stripStyle.get().getFlavor());
 
             // Get the original, unstripped objects.
-            @SuppressWarnings("unchecked")
             ImmutableList<SourcePath> objects =
-                graphBuilder
-                    .requireMetadata(
-                        baseTarget.withAppendedFlavors(
-                            CxxLibraryDescription.MetadataType.OBJECTS.getFlavor(),
-                            picType.getValue().getFlavor()),
-                        ImmutableList.class)
-                    .orElseThrow(IllegalStateException::new);
+                requireObjects(
+                    baseTarget, graphBuilder, cxxPlatform, picType.getValue(), Optional.empty());
 
             // Generate stripped objects from them.
             ImmutableList<SourcePath> strippedObjects =
