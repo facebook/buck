@@ -77,9 +77,18 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
           @Override
           public boolean execute(
               Project project, PsiReference reference, Editor editor, PsiClass psiClass) {
+            if (psiClass == null || !psiClass.isValid()) return false;
             return new AddImportAction(project, reference, editor, psiClass).execute();
           }
         });
+  }
+
+  // Need to keep this method's signeture for backwards compatibility reasons
+  @Nullable
+  public static BuckAddDependencyIntention create(
+      PsiReference reference, PsiClass psiClass, @Nullable BuckAddImportAction addImportAction) {
+    return create(
+        reference, psiClass.getContainingFile().getVirtualFile(), psiClass, addImportAction);
   }
   /**
    * Creates an {@link com.intellij.codeInsight.intention.IntentionAction} that will create an
@@ -93,9 +102,12 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
    */
   @Nullable
   public static BuckAddDependencyIntention create(
-      PsiReference reference, PsiClass psiClass, @Nullable BuckAddImportAction addImportAction) {
+      PsiReference reference,
+      VirtualFile importSourceFile,
+      @Nullable PsiClass psiClass,
+      @Nullable BuckAddImportAction addImportAction) {
     VirtualFile editSourceFile = reference.getElement().getContainingFile().getVirtualFile();
-    if (editSourceFile == null) {
+    if (importSourceFile == null || editSourceFile == null) {
       return null;
     }
     Project project = reference.getElement().getProject();
@@ -105,10 +117,7 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
     if (editBuildFile == null) {
       return null;
     }
-    VirtualFile importSourceFile = psiClass.getContainingFile().getVirtualFile();
-    if (importSourceFile == null) {
-      return null;
-    }
+
     VirtualFile importBuildFile =
         buckTargetLocator.findBuckFileForVirtualFile(importSourceFile).orElse(null);
     if (importBuildFile == null) {
@@ -168,7 +177,7 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
   private Module editModule;
 
   // Fields pertaining to the dependency that should be resolved/imported
-  private PsiClass psiClass;
+  private @Nullable PsiClass psiClass;
   private VirtualFile importBuildFile;
   private VirtualFile importSourceFile;
   private BuckTarget importSourceTarget;
@@ -185,7 +194,7 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
       VirtualFile editSourceFile,
       BuckTarget editSourceTarget,
       Module editModule,
-      PsiClass psiClass,
+      @Nullable PsiClass psiClass,
       VirtualFile importBuildFile,
       VirtualFile importSourceFile,
       BuckTarget importSourceTarget,
@@ -428,18 +437,21 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
                     + importModule.getName());
           }
         }));
-    if (addImportAction == null || !psiClass.isValid()) {
-      // If the element is no longer valid, so Add Import Action won't work here anyway.
-      // user will have to manually add the import.
+    if (addImportAction == null) {
       return;
     }
     // Add import will run main thread since it's a write action and will block the IDE
     DumbService.getInstance(project)
         .smartInvokeLater(
             () -> {
-              if (psiClass.isValid()) {
+              if (isImportedValid()) {
                 addImportAction.execute(project, reference, editor, psiClass);
               }
             });
+  }
+
+  private boolean isImportedValid() {
+    // null means the imported component is not a class (e.g. kotlin extension function)
+    return psiClass == null || psiClass.isValid();
   }
 }

@@ -20,9 +20,10 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiReference;
+import org.jetbrains.annotations.Nullable;
 
 /** Base class for custom "Add Import" action */
 public abstract class BuckAddImportAction {
   public abstract boolean execute(
-      Project project, PsiReference reference, Editor editor, PsiClass psiClass);
+      Project project, PsiReference reference, Editor editor, @Nullable PsiClass psiClass);
 }
