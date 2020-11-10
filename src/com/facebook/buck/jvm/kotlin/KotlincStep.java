@@ -18,12 +18,12 @@ package com.facebook.buck.jvm.kotlin;
 
 import static com.google.common.collect.Iterables.transform;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
@@ -36,7 +36,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class KotlincStep implements Step {
+/** Kotlin compile Step */
+public class KotlincStep extends IsolatedStep {
 
   private static final String CLASSPATH_FLAG = "-classpath";
   private static final String DESTINATION_FLAG = "-d";
@@ -50,7 +51,6 @@ public class KotlincStep implements Step {
   private final ImmutableList<String> extraArguments;
   private final ImmutableList<String> verboseModeOnlyExtraArguments;
   private final ImmutableSortedSet<Path> sourceFilePaths;
-  private final ProjectFilesystem filesystem;
   private final Path pathToSrcsList;
   private final BuildTarget invokingRule;
   private final Optional<Path> workingDirectory;
@@ -65,7 +65,6 @@ public class KotlincStep implements Step {
       Kotlinc kotlinc,
       ImmutableList<String> extraArguments,
       ImmutableList<String> verboseModeOnlyExtraArguments,
-      ProjectFilesystem filesystem,
       Optional<Path> workingDirectory,
       boolean withDownwardApi) {
     this.invokingRule = invokingRule;
@@ -76,7 +75,6 @@ public class KotlincStep implements Step {
     this.combinedClassPathEntries = combinedClassPathEntries;
     this.extraArguments = extraArguments;
     this.verboseModeOnlyExtraArguments = verboseModeOnlyExtraArguments;
-    this.filesystem = filesystem;
     this.workingDirectory = workingDirectory;
     this.withDownwardApi = withDownwardApi;
   }
@@ -87,14 +85,14 @@ public class KotlincStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context)
+  public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
     Verbosity verbosity =
         context.getVerbosity().isSilent() ? Verbosity.STANDARD_INFORMATION : context.getVerbosity();
 
     try (CapturingPrintStream stdout = new CapturingPrintStream();
         CapturingPrintStream stderr = new CapturingPrintStream();
-        StepExecutionContext firstOrderContext =
+        IsolatedExecutionContext firstOrderContext =
             context.createSubContext(stdout, stderr, Optional.of(verbosity))) {
 
       int declaredDepsBuildResult =
@@ -105,7 +103,7 @@ public class KotlincStep implements Step {
               sourceFilePaths,
               pathToSrcsList,
               workingDirectory,
-              filesystem,
+              context.getRuleCellRoot(),
               withDownwardApi);
 
       String firstOrderStderr = stderr.getContentsAsString(StandardCharsets.UTF_8);
@@ -128,7 +126,7 @@ public class KotlincStep implements Step {
   }
 
   @Override
-  public String getDescription(StepExecutionContext context) {
+  public String getIsolatedStepDescription(IsolatedExecutionContext context) {
     return getKotlinc()
         .getDescription(
             getOptions(context, getClasspathEntries()), sourceFilePaths, pathToSrcsList);
@@ -143,11 +141,13 @@ public class KotlincStep implements Step {
    */
   @VisibleForTesting
   ImmutableList<String> getOptions(
-      StepExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
+      IsolatedExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
+    AbsPath ruleCellRoot = context.getRuleCellRoot();
+
     if (outputDirectory != null) {
-      builder.add(DESTINATION_FLAG, filesystem.resolve(outputDirectory).toString());
+      builder.add(DESTINATION_FLAG, ruleCellRoot.resolve(outputDirectory).toString());
     }
 
     if (!buildClasspathEntries.isEmpty()) {
@@ -155,9 +155,7 @@ public class KotlincStep implements Step {
           CLASSPATH_FLAG,
           Joiner.on(File.pathSeparator)
               .join(
-                  transform(
-                      buildClasspathEntries,
-                      path -> filesystem.resolve(path).toAbsolutePath().toString())));
+                  transform(buildClasspathEntries, path -> ruleCellRoot.resolve(path).toString())));
     }
 
     builder.add(INCLUDE_RUNTIME_FLAG);
@@ -188,10 +186,5 @@ public class KotlincStep implements Step {
   @VisibleForTesting
   ImmutableSortedSet<Path> getClasspathEntries() {
     return combinedClassPathEntries;
-  }
-
-  @VisibleForTesting
-  ImmutableSortedSet<Path> getSrcs() {
-    return sourceFilePaths;
   }
 }

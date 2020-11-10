@@ -18,8 +18,9 @@ package com.facebook.buck.jvm.kotlin;
 
 import static com.google.common.collect.Iterables.transform;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -27,7 +28,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckTracingEventBusBridge;
 import com.facebook.buck.event.api.BuckTracing;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.base.Joiner;
@@ -119,19 +119,19 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
 
   @Override
   public int buildWithClasspath(
-      StepExecutionContext context,
+      IsolatedExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableSortedSet<Path> kotlinSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      ProjectFilesystem projectFilesystem,
+      AbsPath ruleCellRoot,
       boolean withDownwardApi) {
 
     ImmutableList<Path> expandedSources;
     try {
       expandedSources =
-          getExpandedSourcePaths(projectFilesystem, kotlinSourceFilePaths, workingDirectory);
+          getExpandedSourcePaths(ruleCellRoot, kotlinSourceFilePaths, workingDirectory);
     } catch (Throwable throwable) {
       throwable.printStackTrace();
       throw new HumanReadableException(
@@ -141,15 +141,12 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
     ImmutableList<String> args =
         ImmutableList.<String>builder()
             .addAll(options)
-            .addAll(
-                transform(
-                    expandedSources,
-                    path -> projectFilesystem.resolve(path).toAbsolutePath().toString()))
+            .addAll(transform(expandedSources, path -> ruleCellRoot.resolve(path).toString()))
             .build();
 
     try {
       BuckTracing.setCurrentThreadTracingInterface(
-          new BuckTracingEventBusBridge(context.getBuckEventBus().isolated(), invokingRule));
+          new BuckTracingEventBusBridge(context.getIsolatedEventBus(), invokingRule));
 
       Object compilerShim = loadCompilerShim(context);
 
@@ -176,7 +173,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
     }
   }
 
-  private Object loadCompilerShim(StepExecutionContext context) throws IOException {
+  private Object loadCompilerShim(IsolatedExecutionContext context) throws IOException {
     ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
     classLoaderCache.addRef();
     try {
@@ -203,6 +200,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   }
 
   private static class UncloseablePrintStream extends PrintStream {
+
     UncloseablePrintStream(PrintStream delegate) {
       super(delegate);
     }

@@ -342,7 +342,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               kotlinc,
               extraArguments.build(),
               ImmutableList.of(VERBOSE),
-              projectFilesystem,
               Optional.of(parameters.getOutputPaths().getWorkingDirectory()),
               withDownwardApi));
 

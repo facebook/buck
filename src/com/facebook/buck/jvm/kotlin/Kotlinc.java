@@ -19,11 +19,11 @@ package com.facebook.buck.jvm.kotlin;
 import static com.facebook.buck.jvm.java.JavaPaths.SRC_JAR;
 import static com.facebook.buck.jvm.java.JavaPaths.SRC_ZIP;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.collect.ImmutableList;
@@ -39,13 +39,13 @@ public interface Kotlinc extends Tool {
   KotlincVersion getVersion();
 
   int buildWithClasspath(
-      StepExecutionContext context,
+      IsolatedExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableSortedSet<Path> kotlinSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      ProjectFilesystem fileSystem,
+      AbsPath ruleCellRoot,
       boolean withDownwardApi)
       throws InterruptedException;
 
@@ -64,7 +64,7 @@ public interface Kotlinc extends Tool {
       SourcePathResolverAdapter sourcePathResolverAdapter);
 
   default ImmutableList<Path> getExpandedSourcePaths(
-      ProjectFilesystem projectFilesystem,
+      AbsPath ruleCellRoot,
       ImmutableSet<Path> kotlinSourceFilePaths,
       Optional<Path> workingDirectory)
       throws IOException {
@@ -83,9 +83,9 @@ public interface Kotlinc extends Tool {
             ArchiveFormat.ZIP
                 .getUnarchiver()
                 .extractArchive(
-                    projectFilesystem.getRootPath(),
-                    projectFilesystem.resolve(path),
-                    projectFilesystem.resolve(workingDirectory.orElse(path)),
+                    ruleCellRoot,
+                    ruleCellRoot.resolve(path).getPath(),
+                    ruleCellRoot.resolve(workingDirectory.orElse(path)).getPath(),
                     ExistingFileMode.OVERWRITE);
         sources.addAll(
             zipPaths.stream()
