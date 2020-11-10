@@ -59,5 +59,6 @@ public abstract class CxxPythonExtension extends NoopBuildRuleWithDeclaredAndExt
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
-      boolean includePrivateLinkerFlags);
+      boolean includePrivateLinkerFlags,
+      boolean preferStrippedNativeObjects);
 }

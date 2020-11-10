@@ -439,7 +439,8 @@ public class PythonUtil {
         },
         extension -> {
           NativeLinkTarget target =
-              extension.getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder, false);
+              extension.getNativeLinkTarget(
+                  pythonPlatform, cxxPlatform, graphBuilder, false, preferStrippedNativeObjects);
           extensions.put(target.getBuildTarget(), extension);
           omnibusRoots.addIncludedRoot(target);
         },
@@ -531,7 +532,12 @@ public class PythonUtil {
             Maps.uniqueIndex(
                 entry
                     .getValue()
-                    .getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder, false)
+                    .getNativeLinkTarget(
+                        pythonPlatform,
+                        cxxPlatform,
+                        graphBuilder,
+                        false,
+                        preferStrippedNativeObjects)
                     .getNativeLinkTargetDeps(graphBuilder),
                 NativeLinkable::getBuildTarget));
       }

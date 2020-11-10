@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.python;
 
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
@@ -67,6 +68,14 @@ public class CxxPythonExtensionBuilder
         target);
   }
 
+  public CxxPythonExtensionBuilder(BuildTarget target) {
+    this(
+        target,
+        PythonTestUtils.PYTHON_PLATFORMS,
+        new CxxBuckConfig(FakeBuckConfig.empty()),
+        CxxPlatformUtils.DEFAULT_PLATFORMS);
+  }
+
   public CxxPythonExtensionBuilder setBaseModule(String baseModule) {
     getArgForPopulating().setBaseModule(Optional.of(baseModule));
     return this;
@@ -83,8 +92,9 @@ public class CxxPythonExtensionBuilder
     return this;
   }
 
-  public void setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
+  public CxxPythonExtensionBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
     getArgForPopulating().setSrcs(srcs);
+    return this;
   }
 
   public CxxPythonExtensionBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {

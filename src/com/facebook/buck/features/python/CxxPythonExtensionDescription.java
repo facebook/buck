@@ -56,6 +56,7 @@ import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PicType;
+import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
@@ -265,7 +266,8 @@ public class CxxPythonExtensionDescription
       CxxPlatform cxxPlatform,
       CxxPythonExtensionDescriptionArg args,
       ImmutableSet<BuildRule> deps,
-      boolean includePrivateLinkerFlags) {
+      boolean includePrivateLinkerFlags,
+      boolean preferStrippedCxxObjects) {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
 
@@ -295,10 +297,21 @@ public class CxxPythonExtensionDescription
     }
 
     // Add object files into the args.
-    ImmutableMap<CxxPreprocessAndCompile, SourcePath> picObjects =
+    ImmutableCollection<SourcePath> picObjects =
         requireCxxObjects(
-            target, projectFilesystem, graphBuilder, cellRoots, cxxPlatform, args, deps);
-    argsBuilder.addAll(SourcePathArg.from(picObjects.values()));
+                target, projectFilesystem, graphBuilder, cellRoots, cxxPlatform, args, deps)
+            .values();
+    if (preferStrippedCxxObjects) {
+      picObjects =
+          CxxDescriptionEnhancer.requireStrippedObjects(
+              graphBuilder,
+              projectFilesystem,
+              cxxPlatform,
+              downwardApiConfig.isEnabledForCxx(),
+              StripStyle.DEBUGGING_SYMBOLS,
+              picObjects);
+    }
+    argsBuilder.addAll(SourcePathArg.from(picObjects));
 
     return argsBuilder.build();
   }
@@ -374,7 +387,8 @@ public class CxxPythonExtensionDescription
                     cxxPlatform,
                     args,
                     deps,
-                    true))
+                    true,
+                    false))
             .setFrameworks(args.getFrameworks())
             .setLibraries(args.getLibraries())
             .build(),
@@ -517,7 +531,8 @@ public class CxxPythonExtensionDescription
           PythonPlatform pythonPlatform,
           CxxPlatform cxxPlatform,
           ActionGraphBuilder graphBuilder,
-          boolean includePrivateLinkerFlags) {
+          boolean includePrivateLinkerFlags,
+          boolean preferStrippedNativeObjects) {
         ImmutableList<NativeLinkable> linkTargetDeps =
             args.getLinkStyle().orElse(Linker.LinkableDepType.SHARED)
                     == Linker.LinkableDepType.SHARED
@@ -539,7 +554,8 @@ public class CxxPythonExtensionDescription
                         cxxPlatform,
                         args,
                         getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args),
-                        includePrivateLinkerFlags))
+                        includePrivateLinkerFlags,
+                        preferStrippedNativeObjects))
                 .addAllFrameworks(args.getFrameworks())
                 .build();
         return new NativeLinkTargetInfo(

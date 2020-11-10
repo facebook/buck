@@ -335,7 +335,8 @@ public class LuaBinaryDescription
         } else if (rule instanceof CxxPythonExtension) {
           CxxPythonExtension extension = (CxxPythonExtension) rule;
           NativeLinkTarget target =
-              extension.getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder, false);
+              extension.getNativeLinkTarget(
+                  pythonPlatform, cxxPlatform, graphBuilder, false, false);
           pythonExtensions.put(target.getBuildTarget(), (CxxPythonExtension) rule);
           omnibusRoots.addIncludedRoot(target);
         } else if (rule instanceof PythonPackagable) {
@@ -504,7 +505,7 @@ public class LuaBinaryDescription
             Maps.uniqueIndex(
                 entry
                     .getValue()
-                    .getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder, true)
+                    .getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder, true, false)
                     .getNativeLinkTargetDeps(graphBuilder),
                 NativeLinkable::getBuildTarget));
       }
