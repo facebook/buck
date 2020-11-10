@@ -31,6 +31,7 @@ import com.facebook.buck.core.util.graph.ConsumingTraverser;
 import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TraversableGraph;
+import com.facebook.buck.core.util.graph.TraversableGraphs;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.Parser;
@@ -204,6 +205,11 @@ public class LegacyQueryUniverse implements TargetUniverse {
 
   @Override
   public void buildTransitiveClosure(Set<BuildTarget> targets) throws QueryException {
+    ImmutableList<BuildTarget> newTargets =
+        targets.stream()
+            .filter(target -> !targetsToNodes.containsKey(target))
+            .collect(ImmutableList.toImmutableList());
+
     // TODO(mkosiba): This looks more and more like the Parser.buildTargetGraph method. Unify the
     // two.
     try (SimplePerfEvent.Scope scope =
@@ -211,13 +217,11 @@ public class LegacyQueryUniverse implements TargetUniverse {
             eventBus.isolated(), "legacy_query_universe.build_transitive_closure")) {
       ConcurrentHashMap<BuildTarget, ListenableFuture<Unit>> jobsCache = new ConcurrentHashMap<>();
       List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
-      targets.stream()
-          .filter(buildTarget -> !targetsToNodes.containsKey(buildTarget))
-          .forEach(
-              buildTarget ->
-                  discoverNewTargetsConcurrently(
-                          buildTarget, DependencyStack.top(buildTarget), jobsCache)
-                      .ifPresent(depsFuture::add));
+      newTargets.forEach(
+          buildTarget ->
+              discoverNewTargetsConcurrently(
+                      buildTarget, DependencyStack.top(buildTarget), jobsCache)
+                  .ifPresent(depsFuture::add));
       Futures.allAsList(depsFuture).get();
     } catch (ExecutionException e) {
       if (e.getCause() != null) {
@@ -234,11 +238,11 @@ public class LegacyQueryUniverse implements TargetUniverse {
 
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(eventBus.isolated(), "legacy_query_universe.detect_cycles")) {
-      if (!graph.isAcyclic()) {
+      if (!TraversableGraphs.isAcyclic(newTargets, graph::getOutgoingNodesFor)) {
         AcyclicDepthFirstPostOrderTraversal<BuildTarget> targetTraversal =
             new AcyclicDepthFirstPostOrderTraversal<>(
                 target -> graph.getOutgoingNodesFor(target).iterator());
-        targetTraversal.traverse(graph.getNodes());
+        targetTraversal.traverse(newTargets);
       }
     } catch (CycleException e) {
       throw new QueryException(e, e.getMessage());
