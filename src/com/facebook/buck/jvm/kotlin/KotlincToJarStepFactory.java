@@ -29,7 +29,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -47,8 +46,8 @@ import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessin
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.CopyStep.DirectoryMode;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.ZipStep;
+import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.google.common.base.Joiner;
@@ -189,13 +188,13 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               projectFilesystem, invokingRule, "__%s_gen_sources__/generated" + SRC_ZIP);
 
       // Javac requires that the root directory for generated sources already exist.
-      addCreateFolderStep(steps, projectFilesystem, buildContext, stubsOutput);
-      addCreateFolderStep(steps, projectFilesystem, buildContext, classesOutput);
-      addCreateFolderStep(steps, projectFilesystem, buildContext, kaptGeneratedOutput);
-      addCreateFolderStep(steps, projectFilesystem, buildContext, kotlincPluginGeneratedOutput);
-      addCreateFolderStep(steps, projectFilesystem, buildContext, sourcesOutput);
-      addCreateFolderStep(steps, projectFilesystem, buildContext, annotationGenFolder);
-      addCreateFolderStep(steps, projectFilesystem, buildContext, genOutputFolder);
+      steps.addAll(MakeCleanDirectoryIsolatedStep.of(stubsOutput));
+      steps.addAll(MakeCleanDirectoryIsolatedStep.of(classesOutput));
+      steps.addAll(MakeCleanDirectoryIsolatedStep.of(kaptGeneratedOutput));
+      steps.addAll(MakeCleanDirectoryIsolatedStep.of(kotlincPluginGeneratedOutput));
+      steps.addAll(MakeCleanDirectoryIsolatedStep.of(sourcesOutput));
+      steps.addAll(MakeCleanDirectoryIsolatedStep.of(annotationGenFolder));
+      steps.addAll(MakeCleanDirectoryIsolatedStep.of(genOutputFolder));
 
       ImmutableSortedSet<Path> allClasspaths =
           ImmutableSortedSet.<Path>naturalOrder()
@@ -430,17 +429,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     kaptApOptionsToEncode.putAll(kaptApOptions);
 
     return encodeOptions(kaptApOptionsToEncode);
-  }
-
-  private void addCreateFolderStep(
-      ImmutableList.Builder<Step> steps,
-      ProjectFilesystem filesystem,
-      BuildContext buildContext,
-      RelPath location) {
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                buildContext.getBuildCellRootPath(), filesystem, location)));
   }
 
   private String encodeOptions(Map<String, String> options) {
