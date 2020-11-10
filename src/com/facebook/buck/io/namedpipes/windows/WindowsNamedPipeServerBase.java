@@ -22,6 +22,7 @@ import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.cr
 import com.facebook.buck.io.namedpipes.BaseNamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
+import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
 import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinError;
 import com.sun.jna.platform.win32.WinNT;

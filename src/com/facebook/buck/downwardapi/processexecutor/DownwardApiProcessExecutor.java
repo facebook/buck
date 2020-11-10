@@ -31,7 +31,7 @@ import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
-import com.facebook.buck.io.namedpipes.windows.PipeNotConnectedException;
+import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
 import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.DelegateLaunchedProcess;
 import com.facebook.buck.util.DelegateProcessExecutor;
@@ -338,28 +338,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
               "Starting to read events from named pipe %s with protocol %s",
               namedPipeName, downwardProtocol.getProtocolName());
         }
-        while (true) {
-          try {
-            EventTypeMessage.EventType eventType = downwardProtocol.readEventType(inputStream);
-            if (eventType.equals(EventTypeMessage.EventType.END_EVENT)) {
-              LOG.info("Received end event for named pipe %s", namedPipeName);
-              break;
-            }
-            AbstractMessage event = downwardProtocol.readEvent(inputStream, eventType);
-            EventHandler<AbstractMessage> eventHandler = EventHandler.getEventHandler(eventType);
-            try {
-              eventHandler.handleEvent(context, event);
-            } catch (Exception e) {
-              LOG.error(e, "Cannot handle event: %s", event);
-            }
-          } catch (PipeNotConnectedException e) {
-            LOG.info("Named pipe %s is closed", namedPipeName);
-            break;
-          } catch (IOException e) {
-            LOG.error(e, "Exception during processing events from named pipe: %s", namedPipeName);
-            break;
-          }
-        }
+        processEvents(namedPipeName, inputStream);
         LOG.info(
             "Finishing reader thread for pipe: %s; interrupted = %s",
             namedPipeName, Thread.currentThread().isInterrupted());
@@ -373,6 +352,31 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
         LOG.warn(e, "Unhandled exception while reading from named pipe: %s", namedPipeName);
       } finally {
         done.set(null);
+      }
+    }
+
+    private void processEvents(String namedPipeName, InputStream inputStream) {
+      while (true) {
+        try {
+          EventTypeMessage.EventType eventType = downwardProtocol.readEventType(inputStream);
+          if (eventType.equals(EventTypeMessage.EventType.END_EVENT)) {
+            LOG.info("Received end event for named pipe %s", namedPipeName);
+            break;
+          }
+          AbstractMessage event = downwardProtocol.readEvent(inputStream, eventType);
+          EventHandler<AbstractMessage> eventHandler = EventHandler.getEventHandler(eventType);
+          try {
+            eventHandler.handleEvent(context, event);
+          } catch (Exception e) {
+            LOG.error(e, "Cannot handle event: %s", event);
+          }
+        } catch (PipeNotConnectedException e) {
+          LOG.info("Named pipe %s is closed", namedPipeName);
+          break;
+        } catch (IOException e) {
+          LOG.error(e, "Exception during processing events from named pipe: %s", namedPipeName);
+          break;
+        }
       }
     }
 
@@ -396,31 +400,35 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
      */
     void terminateAndWait(long timeout, TimeUnit unit)
         throws CancellationException, InterruptedException, ExecutionException, TimeoutException {
+      NamedPipeFactory namedPipeFactory = NamedPipeFactory.getFactory();
       try (NamedPipeWriter writer =
-              NamedPipeFactory.getFactory().connectAsWriter(Paths.get(namedPipe.getName()));
+              namedPipeFactory.connectAsWriter(Paths.get(namedPipe.getName()));
           OutputStream outputStream = writer.getOutputStream()) {
-        // This null check is not perfectly synchronized with the handler, but in practice by the
-        // time the subprocess has finished, the handler should have read the protocol from the
-        // subprocess already, if any, so this is okay.
-        DownwardProtocol protocol = downwardProtocol;
-        if (protocol == null) {
-          // Client has not written anything into named pipe. Arbitrarily pick binary protocol to
-          // communicate with handler
-          DownwardProtocolType.BINARY.writeDelimitedTo(outputStream);
-          protocol = DownwardProtocolType.BINARY.getDownwardProtocol();
-        }
-        protocol.write(
-            EventTypeMessage.newBuilder()
-                .setEventType(EventTypeMessage.EventType.END_EVENT)
-                .build(),
-            EndEvent.getDefaultInstance(),
-            outputStream);
+        writeEndEvent(outputStream);
       } catch (IOException e) {
         // TODO: Windows currently follows this code path. We should fix this
         LOG.error(e, "Failed to write protocol termination event. Canceling handler");
         running.map(future -> future.cancel(true));
       }
       done.get(timeout, unit);
+    }
+
+    private void writeEndEvent(OutputStream outputStream) throws IOException {
+      // This null check is not perfectly synchronized with the handler, but in practice by the
+      // time the subprocess has finished, the handler should have read the protocol from the
+      // subprocess already, if any, so this is okay.
+      DownwardProtocol protocol = downwardProtocol;
+      if (protocol == null) {
+        // Client has not written anything into named pipe. Arbitrarily pick binary protocol to
+        // communicate with handler
+        DownwardProtocolType protocolType = DownwardProtocolType.BINARY;
+        protocolType.writeDelimitedTo(outputStream);
+        protocol = protocolType.getDownwardProtocol();
+      }
+      protocol.write(
+          EventTypeMessage.newBuilder().setEventType(EventTypeMessage.EventType.END_EVENT).build(),
+          EndEvent.getDefaultInstance(),
+          outputStream);
     }
   }
 

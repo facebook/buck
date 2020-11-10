@@ -17,7 +17,7 @@
 package com.facebook.buck.io.namedpipes.posix;
 
 import com.facebook.buck.io.namedpipes.BaseNamedPipe;
-import com.facebook.buck.io.namedpipes.windows.PipeNotConnectedException;
+import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;

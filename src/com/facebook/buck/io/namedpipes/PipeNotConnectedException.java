@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.io.namedpipes.windows;
+package com.facebook.buck.io.namedpipes;
 
 import java.io.IOException;
 

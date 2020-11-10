@@ -31,7 +31,6 @@ import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.StepEvent;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
-import com.facebook.buck.io.namedpipes.windows.PipeNotConnectedException;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
