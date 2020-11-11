@@ -224,6 +224,10 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         !buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR));
   }
 
+  protected boolean shouldSerializeDebuggingOptions() {
+    return true;
+  }
+
   /** Creates the list of arguments to pass to the Swift compiler */
   protected ImmutableList<String> constructCompilerArgs(SourcePathResolverAdapter resolver) {
     ImmutableList.Builder<String> compilerArgs = ImmutableList.builder();
@@ -270,7 +274,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         "-c",
         enableObjcInterop ? "-enable-objc-interop" : "",
         hasMainEntry ? "" : "-parse-as-library",
-        "-serialize-debugging-options",
+        shouldSerializeDebuggingOptions() ? "-serialize-debugging-options" : "",
         "-module-name",
         moduleName,
         "-emit-module",
