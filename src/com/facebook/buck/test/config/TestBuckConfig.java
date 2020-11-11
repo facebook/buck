@@ -111,6 +111,10 @@ public abstract class TestBuckConfig implements ConfigView<BuckConfig> {
     return getDelegate().getBooleanValue(TEST_SECTION_HEADER, "incl_no_location_classes", false);
   }
 
+  public OptionalInt getJavaForTestsVersion() {
+    return getDelegate().getInteger(TEST_SECTION_HEADER, "java_for_tests_version");
+  }
+
   public Optional<ImmutableList<String>> getCoverageIncludes() {
     return getDelegate().getOptionalListWithoutComments("test", "coverageIncludes", ',');
   }

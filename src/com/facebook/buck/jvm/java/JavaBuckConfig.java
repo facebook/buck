@@ -98,10 +98,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         .orElseGet(this::getDefaultJavaOptionsForTests);
   }
 
-  public OptionalInt getJavaForTestsVersion() {
-    return delegate.getInteger("tools", "java_for_tests_version");
-  }
-
   public JavaOptions getDefaultJavaOptionsForCodeCoverage() {
     return getToolForExecutable("java_for_code_coverage")
         .map(ConstantToolProvider::new)
