@@ -359,11 +359,11 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
       while (true) {
         try {
           EventTypeMessage.EventType eventType = downwardProtocol.readEventType(inputStream);
+          AbstractMessage event = downwardProtocol.readEvent(inputStream, eventType);
           if (eventType.equals(EventTypeMessage.EventType.END_EVENT)) {
             LOG.info("Received end event for named pipe %s", namedPipeName);
             break;
           }
-          AbstractMessage event = downwardProtocol.readEvent(inputStream, eventType);
           EventHandler<AbstractMessage> eventHandler = EventHandler.getEventHandler(eventType);
           try {
             eventHandler.handleEvent(context, event);
