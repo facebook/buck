@@ -158,7 +158,7 @@ public class AppleCodeSignPreparation extends ModernBuildRule<AppleCodeSignPrepa
       {
         Path infoPlistPath =
             buildContext.getSourcePathResolver().getCellUnsafeRelPath(infoPlist).getPath();
-        stepsBuilder.add(CopyStep.forFile(filesystem, infoPlistPath, outputInfoPlistPath));
+        stepsBuilder.add(CopyStep.forFile(infoPlistPath, outputInfoPlistPath));
       }
 
       Optional<Path> maybeEntitlementsPath =

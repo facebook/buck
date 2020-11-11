@@ -192,10 +192,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), manifestPath.getParent())));
     steps.add(
-        CopyStep.forFile(
-            getProjectFilesystem(),
-            pathResolver.getCellUnsafeRelPath(androidManifestPath),
-            manifestPath));
+        CopyStep.forFile(pathResolver.getCellUnsafeRelPath(androidManifestPath), manifestPath));
     buildableContext.recordArtifact(manifestPath.getPath());
 
     dexFilesInfo.proguardTextFilesPath.ifPresent(
@@ -654,10 +651,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
                 .getCellUnsafeRelPath(nativeFilesInfo.nativeLibsAssetsDirs.get().get(module));
         steps.add(
             CopyStep.forDirectory(
-                getProjectFilesystem(),
-                cxxNativeLibsSrc,
-                libSubdirectory,
-                CopyStep.DirectoryMode.CONTENTS_ONLY));
+                cxxNativeLibsSrc, libSubdirectory, CopyStep.DirectoryMode.CONTENTS_ONLY));
       }
 
       // Step that populates a list of libraries and writes a metadata.txt to decompress.
@@ -804,7 +798,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   private CopyStep createCopyProguardFilesStep(
       SourcePathResolverAdapter pathResolver, SourcePath proguardTextFilesPath) {
     return CopyStep.forDirectory(
-        getProjectFilesystem(),
         pathResolver.getCellUnsafeRelPath(proguardTextFilesPath),
         getProguardTextFilesPath(),
         CopyStep.DirectoryMode.CONTENTS_ONLY);

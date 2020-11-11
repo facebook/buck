@@ -149,7 +149,6 @@ public class PrebuiltJarDescription
                     context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
         steps.add(
             CopyStep.forFile(
-                getProjectFilesystem(),
                 context.getSourcePathResolver().getAbsolutePath(source).getPath(),
                 output.getPath()));
 

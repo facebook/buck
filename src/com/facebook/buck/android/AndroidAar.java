@@ -110,14 +110,12 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // put manifest into tmp folder
     commands.add(
         CopyStep.forFile(
-            filesystem,
             sourcePathResolver.getCellUnsafeRelPath(manifest.getSourcePathToOutput()),
             temp.resolveRel("AndroidManifest.xml")));
 
     // put R.txt into tmp folder
     commands.add(
         CopyStep.forFile(
-            filesystem,
             sourcePathResolver
                 .getAbsolutePath(Objects.requireNonNull(androidResource.getPathToTextSymbolsFile()))
                 .getPath(),
@@ -126,13 +124,11 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // put res/ and assets/ into tmp folder
     commands.add(
         CopyStep.forDirectory(
-            filesystem,
             sourcePathResolver.getCellUnsafeRelPath(assembledResourceDirectory),
             temp.resolveRel("res"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
     commands.add(
         CopyStep.forDirectory(
-            filesystem,
             sourcePathResolver.getCellUnsafeRelPath(assembledAssetsDirectory),
             temp.resolveRel("assets"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
@@ -152,7 +148,6 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         sourcePath ->
             commands.add(
                 CopyStep.forDirectory(
-                    filesystem,
                     sourcePathResolver.getCellUnsafeRelPath(sourcePath),
                     temp.resolveRel("jni"),
                     CopyStep.DirectoryMode.CONTENTS_ONLY)));
@@ -162,7 +157,6 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         sourcePath ->
             commands.add(
                 CopyStep.forDirectory(
-                    filesystem,
                     sourcePathResolver.getCellUnsafeRelPath(sourcePath),
                     temp.resolveRel("assets").resolveRel("lib"),
                     CopyStep.DirectoryMode.CONTENTS_ONLY)));

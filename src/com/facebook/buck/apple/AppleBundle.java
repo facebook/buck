@@ -1135,7 +1135,6 @@ public class AppleBundle extends AbstractBuildRule
     if (appleDsymSourcePath.isPresent()) {
       stepsBuilder.add(
           CopyStep.forDirectory(
-              getProjectFilesystem(),
               buildContext
                   .getSourcePathResolver()
                   .getAbsolutePath(appleDsymSourcePath.get())

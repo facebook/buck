@@ -262,8 +262,7 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
           // Not processable, just copy
           RelPath destinationPath =
               outputDirPath.resolveRel(rawVariantFilePath.getFileName().toString());
-          processStepsBuilder.add(
-              CopyStep.forFile(filesystem, rawVariantFilePath, destinationPath));
+          processStepsBuilder.add(CopyStep.forFile(rawVariantFilePath, destinationPath));
         }
       }
 

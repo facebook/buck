@@ -130,10 +130,7 @@ public class SceneKitAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       } else {
         stepsBuilder.add(
             CopyStep.forDirectory(
-                getProjectFilesystem(),
-                absoluteInputPath.getPath(),
-                outputDir,
-                CopyStep.DirectoryMode.CONTENTS_ONLY));
+                absoluteInputPath.getPath(), outputDir, CopyStep.DirectoryMode.CONTENTS_ONLY));
       }
     }
     buildableContext.recordArtifact(

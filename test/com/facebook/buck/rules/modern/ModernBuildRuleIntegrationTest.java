@@ -134,7 +134,7 @@ public class ModernBuildRuleIntegrationTest {
       Path tmp = outputPathResolver.getTempPath("temporary_writing_rule_temp");
       return ImmutableList.of(
           WriteFileStep.of(filesystem.getRootPath(), "", tmp, false),
-          CopyStep.forFile(filesystem, tmp, outputPathResolver.resolvePath(output).getPath()));
+          CopyStep.forFile(tmp, outputPathResolver.resolvePath(output).getPath()));
     }
   }
 }

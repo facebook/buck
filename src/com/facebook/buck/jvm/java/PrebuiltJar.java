@@ -309,7 +309,6 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   context.getBuildCellRootPath(), projectFilesystem, copiedBinaryJar)));
       steps.add(
           CopyStep.forDirectory(
-              projectFilesystem,
               resolvedBinaryJar.getPath(),
               copiedBinaryJar.getPath(),
               CopyStep.DirectoryMode.CONTENTS_ONLY));
@@ -331,9 +330,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(), projectFilesystem, copiedBinaryJar.getParent())));
-      steps.add(
-          CopyStep.forFile(
-              projectFilesystem, resolvedBinaryJar.getPath(), copiedBinaryJar.getPath()));
+      steps.add(CopyStep.forFile(resolvedBinaryJar.getPath(), copiedBinaryJar.getPath()));
     }
     buildableContext.recordArtifact(copiedBinaryJar.getPath());
 

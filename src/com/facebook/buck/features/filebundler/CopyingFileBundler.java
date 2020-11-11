@@ -42,6 +42,6 @@ public class CopyingFileBundler extends FileBundler {
     if (destination.getParent() != null) {
       steps.add(MkdirStep.of(buildCellRelativePathFactory.from(destination.getParent())));
     }
-    steps.add(CopyStep.forFile(filesystem, absolutePath, destination));
+    steps.add(CopyStep.forFile(absolutePath, destination));
   }
 }

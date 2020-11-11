@@ -155,7 +155,6 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     outputResourcePath.getParent())));
         steps.add(
             CopyStep.forDirectory(
-                getProjectFilesystem(),
                 resolver.getCellUnsafeRelPath(resource),
                 outputResourcePath.getParent(),
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
@@ -166,11 +165,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
                     outputResourcePath.getParent())));
-        steps.add(
-            CopyStep.forFile(
-                getProjectFilesystem(),
-                resolver.getCellUnsafeRelPath(resource),
-                outputResourcePath));
+        steps.add(CopyStep.forFile(resolver.getCellUnsafeRelPath(resource), outputResourcePath));
       }
     }
 

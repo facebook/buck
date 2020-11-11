@@ -123,7 +123,7 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
           if (maybeLinkerMapPath.isPresent()) {
             Path source = maybeLinkerMapPath.get();
             Path dest = linkMapDir.resolve(source.getFileName());
-            steps.add(CopyStep.forFile(getProjectFilesystem(), source, dest));
+            steps.add(CopyStep.forFile(source, dest));
             buildableContext.recordArtifact(dest);
           }
         }

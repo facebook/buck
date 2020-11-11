@@ -149,7 +149,7 @@ public class IntraDexReorderStep implements Step {
     } else {
       // copy dex
       // apply reorder directly on dex
-      steps.add(CopyStep.forFile(filesystem, inputPrimaryDexPath, outputPrimaryDexPath));
+      steps.add(CopyStep.forFile(inputPrimaryDexPath, outputPrimaryDexPath));
       steps.add(
           new DefaultShellStep(
               filesystem.getRootPath(),

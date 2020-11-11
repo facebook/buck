@@ -77,8 +77,7 @@ public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.sha1 = FileHash.ofSha1(sha1);
     this.downloader = downloader;
     this.type = type;
-
-    output = BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s/" + out);
+    this.output = BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s/" + out);
   }
 
   @Override
@@ -111,7 +110,7 @@ public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           new UnzipStep(
               getProjectFilesystem(), tempFile.getPath(), output.getPath(), Optional.empty()));
     } else {
-      steps.add(CopyStep.forFile(getProjectFilesystem(), tempFile, output));
+      steps.add(CopyStep.forFile(tempFile, output));
     }
     if (type == Type.EXECUTABLE) {
       steps.add(new MakeExecutableStep(getProjectFilesystem(), output));

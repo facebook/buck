@@ -163,13 +163,11 @@ public class ExportFile extends AbstractBuildRule
       if (resolver.getFilesystem(src).isDirectory(resolver.getCellUnsafeRelPath(src))) {
         builder.add(
             CopyStep.forDirectory(
-                getProjectFilesystem(),
                 resolver.getAbsolutePath(src).getPath(),
                 out,
                 CopyStep.DirectoryMode.CONTENTS_ONLY));
       } else {
-        builder.add(
-            CopyStep.forFile(getProjectFilesystem(), resolver.getAbsolutePath(src).getPath(), out));
+        builder.add(CopyStep.forFile(resolver.getAbsolutePath(src).getPath(), out));
       }
       buildableContext.recordArtifact(out);
     }

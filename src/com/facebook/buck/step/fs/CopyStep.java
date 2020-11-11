@@ -18,19 +18,15 @@ package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.CopySourceMode;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.common.CopyIsolatedStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 
-public class CopyStep implements Step {
+/** Copy step that delegates to {@link CopyIsolatedStep} */
+@BuckStyleValue
+public abstract class CopyStep extends DelegateStep<CopyIsolatedStep> {
 
   /**
    * When copying a directory, this specifies whether only the contents of the directory should be
@@ -50,48 +46,41 @@ public class CopyStep implements Step {
     DIRECTORY_AND_CONTENTS
   }
 
-  private final ProjectFilesystem filesystem;
-  private final Path source;
-  private final Path destination;
-  private final CopySourceMode copySourceMode;
+  abstract Path getSource();
 
-  private CopyStep(
-      ProjectFilesystem filesystem, Path source, Path destination, CopySourceMode copySourceMode) {
-    this.filesystem = filesystem;
-    this.source = source;
-    this.destination = destination;
-    this.copySourceMode = copySourceMode;
+  abstract Path getDestination();
+
+  abstract CopySourceMode getCopySourceMode();
+
+  /** Creates a CopyStep which copies a single file from 'source' to 'destination'. */
+  public static CopyStep forFile(Path source, Path destination) {
+    return ImmutableCopyStep.ofImpl(source, destination, CopySourceMode.FILE);
   }
 
   /** Creates a CopyStep which copies a single file from 'source' to 'destination'. */
-  public static CopyStep forFile(ProjectFilesystem filesystem, Path source, Path destination) {
-    return new CopyStep(filesystem, source, destination, CopySourceMode.FILE);
-  }
-
-  /** Creates a CopyStep which copies a single file from 'source' to 'destination'. */
-  public static CopyStep forFile(
-      ProjectFilesystem filesystem, RelPath source, RelPath destination) {
-    return forFile(filesystem, source.getPath(), destination.getPath());
+  public static CopyStep forFile(RelPath source, RelPath destination) {
+    return forFile(source.getPath(), destination.getPath());
   }
 
   /**
    * Creates a CopyStep which recursively copies a directory from 'source' to 'destination'. See
    * {@link DirectoryMode} for options to control the copy.
    */
-  public static CopyStep forDirectory(
-      ProjectFilesystem filesystem, Path source, Path destination, DirectoryMode directoryMode) {
-    CopySourceMode copySourceMode;
+  public static CopyStep forDirectory(Path source, Path destination, DirectoryMode directoryMode) {
+    return ImmutableCopyStep.ofImpl(source, destination, getCopySourceMode(directoryMode));
+  }
+
+  private static CopySourceMode getCopySourceMode(DirectoryMode directoryMode) {
     switch (directoryMode) {
       case CONTENTS_ONLY:
-        copySourceMode = CopySourceMode.DIRECTORY_CONTENTS_ONLY;
-        break;
+        return CopySourceMode.DIRECTORY_CONTENTS_ONLY;
+
       case DIRECTORY_AND_CONTENTS:
-        copySourceMode = CopySourceMode.DIRECTORY_AND_CONTENTS;
-        break;
+        return CopySourceMode.DIRECTORY_AND_CONTENTS;
+
       default:
         throw new IllegalArgumentException("Invalid directory mode: " + directoryMode);
     }
-    return new CopyStep(filesystem, source, destination, copySourceMode);
   }
 
   /**
@@ -99,65 +88,22 @@ public class CopyStep implements Step {
    * {@link DirectoryMode} for options to control the copy.
    */
   public static CopyStep forDirectory(
-      ProjectFilesystem filesystem,
-      RelPath source,
-      RelPath destination,
-      DirectoryMode directoryMode) {
-    return forDirectory(filesystem, source.getPath(), destination.getPath(), directoryMode);
+      RelPath source, RelPath destination, DirectoryMode directoryMode) {
+    return forDirectory(source.getPath(), destination.getPath(), directoryMode);
   }
 
   @Override
-  public String getShortName() {
+  protected CopyIsolatedStep createDelegate(StepExecutionContext context) {
+    return CopyIsolatedStep.of(getSource(), getDestination(), getCopySourceMode());
+  }
+
+  @Override
+  protected String getShortNameSuffix() {
     return "cp";
   }
 
-  @Override
-  public String getDescription(StepExecutionContext context) {
-    ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.add("cp");
-    switch (copySourceMode) {
-      case FILE:
-        args.add(source.toString());
-        break;
-      case DIRECTORY_AND_CONTENTS:
-        args.add("-R");
-        args.add(source.toString());
-        break;
-      case DIRECTORY_CONTENTS_ONLY:
-        args.add("-R");
-        // BSD and GNU cp have different behaviors with -R:
-        // http://jondavidjohn.com/blog/2012/09/linux-vs-osx-the-cp-command
-        //
-        // To work around this, we use "sourceDir/*" as the source to
-        // copy in this mode.
-
-        // N.B., on Windows, java.nio.AbstractPath does not resolve *
-        // as a path, causing InvalidPathException. Since this is purely a
-        // description, manually create the source argument.
-        args.add(source + File.separator + "*");
-        break;
-    }
-    args.add(destination.toString());
-    return Joiner.on(" ").join(args.build());
-  }
-
   @VisibleForTesting
-  Path getSource() {
-    return source;
-  }
-
-  @VisibleForTesting
-  Path getDestination() {
-    return destination;
-  }
-
-  public boolean isRecursive() {
-    return copySourceMode != CopySourceMode.FILE;
-  }
-
-  @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-    filesystem.copy(source, destination, copySourceMode);
-    return StepExecutionResults.SUCCESS;
+  boolean isRecursive() {
+    return getCopySourceMode() != CopySourceMode.FILE;
   }
 }

@@ -196,7 +196,6 @@ public class PreDexSplitDexMerge extends PreDexMerge {
     for (PreDexSplitDexGroup partialDex : preDexDeps) {
       steps.add(
           CopyStep.forDirectory(
-              getProjectFilesystem(),
               partialDex.getSecondaryDexRoot(),
               paths.getSecondaryDexPathForModule(partialDex.apkModule),
               CopyStep.DirectoryMode.CONTENTS_ONLY));

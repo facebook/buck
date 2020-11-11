@@ -256,8 +256,7 @@ public class AaptPackageResources extends AbstractBuildRule {
           new ReplaceManifestPlaceholdersStep(
               projectFilesystem, rawManifestPath, finalManifestPath.getPath(), placeholders.get()));
     } else {
-      stepBuilder.add(
-          CopyStep.forFile(projectFilesystem, rawManifestPath, finalManifestPath.getPath()));
+      stepBuilder.add(CopyStep.forFile(rawManifestPath, finalManifestPath.getPath()));
     }
   }
 

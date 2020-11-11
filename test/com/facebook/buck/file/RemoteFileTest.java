@@ -38,13 +38,13 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.file.downloader.impl.ExplodingDownloader;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
@@ -60,10 +60,11 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class RemoteFileTest {
 
-  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
   @Test
   public void ensureOutputIsAddedToBuildableContextSoItIsCached() {
@@ -578,7 +579,8 @@ public class RemoteFileTest {
           };
     }
 
-    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    AbsPath root = AbsPath.of(tmp.getRoot().toPath().toAbsolutePath());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(root);
 
     BuildTarget target = BuildTargetFactory.newInstance("//cake:walk");
     BuildRuleParams params = TestBuildRuleParams.create();
@@ -590,19 +592,23 @@ public class RemoteFileTest {
             downloader,
             new URI("http://example.com"),
             hashCode,
-            "output.txt",
+            "output",
             type);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(remoteFile);
 
+    SourcePathResolverAdapter sourcePathResolver = graphBuilder.getSourcePathResolver();
     ImmutableList<Step> buildSteps =
         remoteFile.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
+            FakeBuildContext.withSourcePathResolver(sourcePathResolver, filesystem),
             new FakeBuildableContext());
     StepExecutionContext context =
         TestExecutionContext.newBuilder()
+            .setRuleCellRoot(root)
+            .setBuildCellRootPath(root.getPath())
             .setCellPathResolver(TestCellPathResolver.get(filesystem))
             .build();
+
     for (Step buildStep : buildSteps) {
       int result;
       try {
@@ -615,6 +621,6 @@ public class RemoteFileTest {
       }
     }
 
-    return graphBuilder.getSourcePathResolver().getAbsolutePath(remoteFile.getSourcePathToOutput());
+    return sourcePathResolver.getAbsolutePath(remoteFile.getSourcePathToOutput());
   }
 }

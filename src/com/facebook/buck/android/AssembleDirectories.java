@@ -81,7 +81,6 @@ public class AssembleDirectories extends AbstractBuildRule {
       AbsPath resolvedPath = context.getSourcePathResolver().getAbsolutePath(directory);
       steps.add(
           CopyStep.forDirectory(
-              getProjectFilesystem(),
               resolvedPath.getPath(),
               destinationDirectory.getPath(),
               CopyStep.DirectoryMode.CONTENTS_ONLY));

@@ -150,7 +150,6 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     for (SourcePath odir : outputDirs) {
       steps.add(
           CopyStep.forDirectory(
-              getProjectFilesystem(),
               resolver.getCellUnsafeRelPath(odir),
               haddockOutputDir,
               CopyStep.DirectoryMode.CONTENTS_ONLY));

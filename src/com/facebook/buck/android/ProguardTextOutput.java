@@ -76,10 +76,7 @@ class ProguardTextOutput extends AbstractBuildRule {
                 buildContext.getBuildCellRootPath(), getProjectFilesystem(), getOutputPath())));
     for (String file : ImmutableList.of("configuration.txt", "mapping.txt")) {
       builder.add(
-          CopyStep.forFile(
-              getProjectFilesystem(),
-              configPath.resolve(file).getPath(),
-              getOutputPath().resolve(file)));
+          CopyStep.forFile(configPath.resolve(file).getPath(), getOutputPath().resolve(file)));
     }
     buildableContext.recordArtifact(getOutputPath().getPath());
     return builder.build();

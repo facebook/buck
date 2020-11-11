@@ -103,9 +103,7 @@ public class JavaSourceJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), packageDir)));
       }
-      steps.add(
-          CopyStep.forFile(
-              getProjectFilesystem(), source, packageDir.resolve(source.getFileName())));
+      steps.add(CopyStep.forFile(source, packageDir.resolve(source.getFileName())));
     }
     steps.add(
         ZipStep.of(

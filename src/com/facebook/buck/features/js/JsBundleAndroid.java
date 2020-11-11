@@ -106,28 +106,24 @@ public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     getProjectFilesystem(),
                     miscDirPath.getParent())),
             CopyStep.forDirectory(
-                getProjectFilesystem(),
                 sourcePathResolverAdapter
                     .getAbsolutePath(delegate.getSourcePathToOutput())
                     .getPath(),
                 jsDir.getPath().getParent(),
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS),
             CopyStep.forDirectory(
-                getProjectFilesystem(),
                 sourcePathResolverAdapter
                     .getAbsolutePath(delegate.getSourcePathToResources())
                     .getPath(),
                 resourcesDir.getPath().getParent(),
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS),
             CopyStep.forDirectory(
-                getProjectFilesystem(),
                 sourcePathResolverAdapter
                     .getAbsolutePath(delegate.getSourcePathToSourceMap())
                     .getPath(),
                 sourceMapFile.getPath().getParent(),
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS),
             CopyStep.forDirectory(
-                getProjectFilesystem(),
                 sourcePathResolverAdapter.getAbsolutePath(delegate.getSourcePathToMisc()).getPath(),
                 miscDirPath.getPath().getParent(),
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS))

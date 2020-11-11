@@ -100,10 +100,7 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
 
     commands.add(
         CopyStep.forDirectory(
-            getProjectFilesystem(),
-            bundleOutputPath,
-            payloadDir,
-            CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+            bundleOutputPath, payloadDir, CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
 
     appendAdditionalSwiftSteps(context.getSourcePathResolver(), commands);
 

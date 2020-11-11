@@ -29,6 +29,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -44,8 +45,8 @@ import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.ResolvedJavacPluginProperties;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.CopyStep;
-import com.facebook.buck.step.fs.CopyStep.DirectoryMode;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.facebook.buck.step.isolatedsteps.common.CopyIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.ZipIsolatedStep;
 import com.facebook.buck.util.stream.RichStream;
@@ -213,7 +214,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       String moduleName = getModuleName(invokingRule);
 
       ImmutableList.Builder<String> annotationProcessingOptionsBuilder = ImmutableList.builder();
-      Builder<Step> postKotlinCompilationSteps = ImmutableList.builder();
+      Builder<IsolatedStep> postKotlinCompilationSteps = ImmutableList.builder();
 
       if (generatingCode && annotationProcessingTool.equals(AnnotationProcessingTool.KAPT)) {
         ImmutableList<String> annotationProcessors =
@@ -274,23 +275,14 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             .add(KAPT3_PLUGIN + APT_MODE + "compile," + Joiner.on(",").join(kaptPluginOptions));
 
         postKotlinCompilationSteps.add(
-            CopyStep.forDirectory(
-                projectFilesystem,
-                sourcesOutput,
-                annotationGenFolder,
-                DirectoryMode.CONTENTS_ONLY));
+            CopyIsolatedStep.forDirectory(
+                sourcesOutput, annotationGenFolder, CopySourceMode.DIRECTORY_CONTENTS_ONLY));
         postKotlinCompilationSteps.add(
-            CopyStep.forDirectory(
-                projectFilesystem,
-                classesOutput,
-                annotationGenFolder,
-                DirectoryMode.CONTENTS_ONLY));
+            CopyIsolatedStep.forDirectory(
+                classesOutput, annotationGenFolder, CopySourceMode.DIRECTORY_CONTENTS_ONLY));
         postKotlinCompilationSteps.add(
-            CopyStep.forDirectory(
-                projectFilesystem,
-                kaptGeneratedOutput,
-                annotationGenFolder,
-                DirectoryMode.CONTENTS_ONLY));
+            CopyIsolatedStep.forDirectory(
+                kaptGeneratedOutput, annotationGenFolder, CopySourceMode.DIRECTORY_CONTENTS_ONLY));
 
         postKotlinCompilationSteps.add(
             ZipIsolatedStep.of(
@@ -305,11 +297,10 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         // Generated classes should be part of the output. This way generated files
         // such as META-INF dirs will also be added to the final jar.
         postKotlinCompilationSteps.add(
-            CopyStep.forDirectory(
-                projectFilesystem,
+            CopyIsolatedStep.forDirectory(
                 classesOutput.getPath(),
                 outputDirectory.getPath(),
-                DirectoryMode.CONTENTS_ONLY));
+                CopySourceMode.DIRECTORY_CONTENTS_ONLY));
 
         sourceBuilder.add(genOutput.getPath());
       }

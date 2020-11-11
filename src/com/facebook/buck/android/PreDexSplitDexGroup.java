@@ -224,7 +224,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
     result.primaryDexInputs.forEach(
         (key, value) -> {
           Path input = sourcePathResolverAdapter.getCellUnsafeRelPath(filesystem, value).getPath();
-          steps.add(CopyStep.forFile(filesystem, input, primaryDexDir.resolve(key)));
+          steps.add(CopyStep.forFile(input, primaryDexDir.resolve(key)));
         });
 
     steps.add(

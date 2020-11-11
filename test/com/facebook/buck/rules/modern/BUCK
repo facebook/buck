@@ -51,6 +51,7 @@ java_test(
         "//src/com/facebook/buck/step/buildables:buildables",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
+        "//src/com/facebook/buck/step/isolatedsteps/common:common",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/console:console",
         "//src/com/facebook/buck/util/env:env",

@@ -174,7 +174,6 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
 
   private void addStepsForCopyingStrippedNativeLibrariesOrAssets(
       BuildContext context,
-      ProjectFilesystem filesystem,
       ImmutableSet<StrippedObjectDescription> strippedNativeLibrariesOrAssets,
       Path destinationRootDir,
       ImmutableList.Builder<Step> steps) {
@@ -196,7 +195,6 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
                   destination.getParent())));
       steps.add(
           CopyStep.forFile(
-              filesystem,
               context
                   .getSourcePathResolver()
                   .getAbsolutePath(strippedObject.getSourcePath())
@@ -250,10 +248,10 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
     }
 
     addStepsForCopyingStrippedNativeLibrariesOrAssets(
-        context, getProjectFilesystem(), stripLibRules, pathToNativeLibs, steps);
+        context, stripLibRules, pathToNativeLibs, steps);
 
     addStepsForCopyingStrippedNativeLibrariesOrAssets(
-        context, getProjectFilesystem(), stripLibAssetRules, pathToNativeLibsAssets, steps);
+        context, stripLibAssetRules, pathToNativeLibsAssets, steps);
 
     Path pathToMetadataTxt = getPathToMetadataTxt();
     steps.add(
@@ -301,10 +299,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
     if (cpuFilters.isEmpty()) {
       steps.add(
           CopyStep.forDirectory(
-              filesystem,
-              sourceDir.getPath(),
-              destinationDir,
-              CopyStep.DirectoryMode.CONTENTS_ONLY));
+              sourceDir.getPath(), destinationDir, CopyStep.DirectoryMode.CONTENTS_ONLY));
     } else {
       for (TargetCpuType cpuType : cpuFilters) {
         Optional<String> abiDirectoryComponent = getAbiDirectoryComponent(cpuType);
@@ -319,10 +314,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
                     context.getBuildCellRootPath(), filesystem, libDestinationDir));
         CopyStep copyStep =
             CopyStep.forDirectory(
-                filesystem,
-                libSourceDir.getPath(),
-                libDestinationDir,
-                CopyStep.DirectoryMode.CONTENTS_ONLY);
+                libSourceDir.getPath(), libDestinationDir, CopyStep.DirectoryMode.CONTENTS_ONLY);
         steps.add(
             new Step() {
               @Override

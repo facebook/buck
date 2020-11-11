@@ -187,8 +187,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         new ExtractFromAndroidManifestStep(
             getAndroidManifest(), getProjectFilesystem(), pathToRDotJavaPackageFile));
-    steps.add(
-        CopyStep.forFile(getProjectFilesystem(), getTextSymbolsFile(), pathToTextSymbolsFile));
+    steps.add(CopyStep.forFile(getTextSymbolsFile(), pathToTextSymbolsFile));
 
     buildableContext.recordArtifact(unpackDirectory.getPath());
     buildableContext.recordArtifact(uberClassesJar.getPath());

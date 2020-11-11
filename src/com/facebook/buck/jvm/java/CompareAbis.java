@@ -76,7 +76,6 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    ProjectFilesystem filesystem = getProjectFilesystem();
     SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
 
     AbsPath classAbiPath = sourcePathResolverAdapter.getAbsolutePath(correctAbi);
@@ -89,7 +88,7 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
         DiffAbisStep.of(classAbiPath.getPath(), sourceAbiPath.getPath(), verificationMode),
         // We use the "safe" ABI as our output to prevent ABI generation problems from potentially
         // cascading and resulting in confusing diff results in dependent rules
-        CopyStep.forFile(filesystem, classAbiPath.getPath(), outputPath));
+        CopyStep.forFile(classAbiPath.getPath(), outputPath));
   }
 
   @Nullable

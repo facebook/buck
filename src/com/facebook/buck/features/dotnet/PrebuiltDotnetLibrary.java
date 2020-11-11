@@ -72,9 +72,7 @@ public class PrebuiltDotnetLibrary extends AbstractBuildRuleWithDeclaredAndExtra
                 context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
     steps.add(
         CopyStep.forFile(
-            getProjectFilesystem(),
-            context.getSourcePathResolver().getAbsolutePath(assembly).getPath(),
-            output));
+            context.getSourcePathResolver().getAbsolutePath(assembly).getPath(), output));
 
     buildableContext.recordArtifact(output);
 

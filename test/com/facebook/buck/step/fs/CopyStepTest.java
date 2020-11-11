@@ -20,27 +20,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.junit.Before;
 import org.junit.Test;
 
 public class CopyStepTest {
-
-  private ProjectFilesystem filesystem;
-
-  @Before
-  public void setUp() {
-    filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-  }
 
   @Test
   public void testGetShellCommandInternalPath() {
     Path source = Paths.get("path/to/source.txt");
     Path destination = Paths.get("path/to/destination.txt");
-    CopyStep copyCommand = CopyStep.forFile(filesystem, source, destination);
+    CopyStep copyCommand = CopyStep.forFile(source, destination);
     assertEquals(source, copyCommand.getSource());
     assertEquals(destination, copyCommand.getDestination());
     assertFalse(copyCommand.isRecursive());
@@ -50,7 +40,7 @@ public class CopyStepTest {
   public void testGetShellCommandInternal() {
     Path source = Paths.get("path/to/source.txt");
     Path destination = Paths.get("path/to/destination.txt");
-    CopyStep copyCommand = CopyStep.forFile(filesystem, source, destination);
+    CopyStep copyCommand = CopyStep.forFile(source, destination);
     assertEquals(source, copyCommand.getSource());
     assertEquals(destination, copyCommand.getDestination());
     assertFalse(copyCommand.isRecursive());
@@ -61,8 +51,7 @@ public class CopyStepTest {
     Path source = Paths.get("path/to/source");
     Path destination = Paths.get("path/to/destination");
     CopyStep copyCommand =
-        CopyStep.forDirectory(
-            filesystem, source, destination, CopyStep.DirectoryMode.CONTENTS_ONLY);
+        CopyStep.forDirectory(source, destination, CopyStep.DirectoryMode.CONTENTS_ONLY);
     assertEquals(source, copyCommand.getSource());
     assertEquals(destination, copyCommand.getDestination());
     assertTrue(copyCommand.isRecursive());
@@ -70,7 +59,7 @@ public class CopyStepTest {
 
   @Test
   public void testGetShortName() {
-    CopyStep copyCommand = CopyStep.forFile(filesystem, Paths.get("here"), Paths.get("there"));
-    assertEquals("cp", copyCommand.getShortName());
+    CopyStep copyCommand = CopyStep.forFile(Paths.get("here"), Paths.get("there"));
+    assertEquals("delegated_cp", copyCommand.getShortName());
   }
 }

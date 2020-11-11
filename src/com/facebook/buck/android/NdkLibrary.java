@@ -187,10 +187,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 context.getBuildCellRootPath(), getProjectFilesystem(), genDirectory)));
     steps.add(
         CopyStep.forDirectory(
-            getProjectFilesystem(),
-            binDirectory,
-            genDirectory.getPath(),
-            CopyStep.DirectoryMode.CONTENTS_ONLY));
+            binDirectory, genDirectory.getPath(), CopyStep.DirectoryMode.CONTENTS_ONLY));
 
     buildableContext.recordArtifact(genDirectory.getPath());
     // Some tools need to inspect .so files whose symbols haven't been stripped, so cache these too.

@@ -664,8 +664,7 @@ public class ProjectFilesystemUtils {
     if (exists(root, file)) {
       return file;
     }
-    throw new RuntimeException(
-        String.format("Not an ordinary file: '%s'.", pathRelativeToProjectRoot));
+    throw new RuntimeException(String.format("Not an ordinary file: '%s'.", file));
   }
 
   /** Merges children. */

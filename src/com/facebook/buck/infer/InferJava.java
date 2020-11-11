@@ -344,12 +344,10 @@ public final class InferJava extends ModernBuildRule<InferJava.Impl> {
       if (this.limitToOutputFile.isPresent()) {
         Path outputTarget = inferOutPath.resolve(this.limitToOutputFile.get());
         steps.add(
-            CopyStep.forFile(
-                filesystem, outputTarget, outputPathResolver.resolvePath(this.output).getPath()));
+            CopyStep.forFile(outputTarget, outputPathResolver.resolvePath(this.output).getPath()));
       } else {
         steps.add(
             CopyStep.forDirectory(
-                filesystem,
                 inferOutPath,
                 outputPathResolver.resolvePath(this.output),
                 CopyStep.DirectoryMode.CONTENTS_ONLY));
