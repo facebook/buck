@@ -111,7 +111,7 @@ trap "rm -rf $BUCK_TMP_ROOT" EXIT HUP INT TERM
   # TODO(cjhopman): This is crazy. we are modifying the binary's own output directory here. Why
   # wouldn't this have just been done in java?
   # I think this code is creating a symlink for each cell at a path of basically
-  # `dirname <<THIS_SCRIPT>>`/cells/<cell_name>. But there's no reason to do that here, and it
+  # `dirname [[THIS_SCRIPT]]`/cells/[[cell_name]]. But there's no reason to do that here, and it
   # forces us to do really complex stuff to get it correct. The code is hard to follow, so I came
   # to the conclusion based on observation.
   # Also, what are these even used for? The path that they are at isn't exported to the user script?
