@@ -283,6 +283,7 @@ public class TestCommand extends BuildCommand {
             .setDebugEnabled(isDebugEnabled)
             .setDefaultTestTimeoutMillis(testBuckConfig.getDefaultTestTimeoutMillis())
             .setInclNoLocationClassesEnabled(testBuckConfig.isInclNoLocationClassesEnabled())
+            .setJavaForTestsVersion(testBuckConfig.getJavaForTestsVersion())
             .setRunWithDownwardApi(downwardApiConfig.isEnabledForTests());
 
     Optional<ImmutableList<String>> coverageIncludes = testBuckConfig.getCoverageIncludes();

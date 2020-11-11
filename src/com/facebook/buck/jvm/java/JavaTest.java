@@ -248,6 +248,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .setDefaultTestTimeoutMillis(options.getDefaultTestTimeoutMillis())
             .setDebugEnabled(options.isDebugEnabled())
             .setPathToJavaAgent(options.getPathToJavaAgent())
+            .setJavaForTestsVersion(options.getJavaForTestsVersion())
             .setBuildId(buildId)
             .setBuckModuleBaseSourceCodePath(
                 getBuildTarget()

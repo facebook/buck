@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import org.immutables.value.Value;
@@ -135,6 +136,9 @@ abstract class JUnitJvmArgs {
   /** @return Test selectors with which to filter the tests to run. */
   abstract Optional<TestSelectorList> getTestSelectorList();
 
+  /** @return The version of Java that we are using to run the tests, if specified */
+  abstract OptionalInt getJavaForTestsVersion();
+
   /** Formats the JVM arguments in this object suitable to pass on the command line. */
   public void formatCommandLineArgsToList(
       ImmutableList.Builder<String> args,
@@ -154,13 +158,18 @@ abstract class JUnitJvmArgs {
     }
 
     if (isCodeCoverageEnabled()) {
+      String exclClassLoader =
+          getJavaForTestsVersion().isPresent() && getJavaForTestsVersion().getAsInt() >= 9
+              ? ",exclclassloader=jdk.internal.reflect.DelegatingClassLoader"
+              : "";
       args.add(
           String.format(
-              "-javaagent:%s=destfile=%s/%s,append=true,inclnolocationclasses=%b",
+              "-javaagent:%s=destfile=%s/%s,append=true,inclnolocationclasses=%b%s",
               JacocoConstants.PATH_TO_JACOCO_AGENT_JAR,
               JacocoConstants.getJacocoOutputDir(filesystem),
               JacocoConstants.JACOCO_EXEC_COVERAGE_FILE,
-              isInclNoLocationClassesEnabled()));
+              isInclNoLocationClassesEnabled(),
+              exclClassLoader));
     }
 
     if (getPathToJavaAgent().isPresent()) {
