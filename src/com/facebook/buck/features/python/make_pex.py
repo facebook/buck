@@ -48,7 +48,6 @@ if not zipfile.is_zipfile(sys.argv[0]):
     append_sys_path(find_buck_root())
 
 import pkg_resources  # noqa isort:skip
-
 from pex.interpreter import PythonIdentity, PythonInterpreter  # noqa isort:skip
 from pex.pex_builder import PEXBuilder  # noqa isort:skip
 
