@@ -295,14 +295,6 @@ public class JarBuildStepsFactory
     };
   }
 
-  /**
-   * Returns whether factory creates steps that all converted into {@link
-   * com.facebook.buck.step.isolatedsteps.IsolatedStep}s.
-   */
-  public boolean areAllStepsConvertedToIsolatedSteps() {
-    return configuredCompiler.areAllStepsConvertedToIsolatedSteps();
-  }
-
   public boolean useRulePipelining() {
     return configuredCompiler instanceof JavacToJarStepFactory
         && abiGenerationMode.isSourceAbi()

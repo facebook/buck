@@ -49,8 +49,6 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
 
   protected CompileToJarStepFactory() {}
 
-  protected abstract boolean areAllStepsConvertedToIsolatedSteps();
-
   public final void createCompileToJarStep(
       BuildContext context,
       ProjectFilesystem projectFilesystem,

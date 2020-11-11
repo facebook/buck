@@ -174,11 +174,6 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   }
 
   @Override
-  protected boolean areAllStepsConvertedToIsolatedSteps() {
-    return true;
-  }
-
-  @Override
   public void createCompileToJarStepImpl(
       ProjectFilesystem projectFilesystem,
       ImmutableMap<String, RelPath> cellToPathMappings,

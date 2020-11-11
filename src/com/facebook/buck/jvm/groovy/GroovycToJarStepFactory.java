@@ -57,11 +57,6 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
   }
 
   @Override
-  protected boolean areAllStepsConvertedToIsolatedSteps() {
-    return true;
-  }
-
-  @Override
   public void createCompileStep(
       BuildContext buildContext,
       ProjectFilesystem projectFilesystem,

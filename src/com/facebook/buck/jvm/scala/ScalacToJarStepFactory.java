@@ -85,11 +85,6 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
   }
 
   @Override
-  protected boolean areAllStepsConvertedToIsolatedSteps() {
-    return true;
-  }
-
-  @Override
   public void createCompileStep(
       BuildContext context,
       ProjectFilesystem projectFilesystem,

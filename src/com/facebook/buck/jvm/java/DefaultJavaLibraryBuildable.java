@@ -163,9 +163,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   private ImmutableList<Step> buildAndMaybeVerifySteps(
       ImmutableList.Builder<Step> steps, boolean isPipelineSteps) {
     ImmutableList<Step> stepList = steps.build();
-    if (jarBuildStepsFactory.areAllStepsConvertedToIsolatedSteps()) {
-      verifyThatStepsAreIsolated(stepList, isPipelineSteps);
-    }
+    verifyThatStepsAreIsolated(stepList, isPipelineSteps);
     return stepList;
   }
 
