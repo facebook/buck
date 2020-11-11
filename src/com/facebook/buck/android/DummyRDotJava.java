@@ -50,6 +50,7 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -271,6 +272,7 @@ public class DummyRDotJava extends AbstractBuildRule
                 compilerParameters.getOutputPaths().getPathToSourcesList().getParent())));
 
     // Compile the .java files.
+    ImmutableList.Builder<IsolatedStep> isolatedSteps = ImmutableList.builder();
     compileStepFactory.createCompileStep(
         context,
         getProjectFilesystem(),
@@ -278,8 +280,9 @@ public class DummyRDotJava extends AbstractBuildRule
             getProjectFilesystem().getRootPath(), context.getCellPathResolver()),
         getBuildTarget(),
         compilerParameters,
-        steps,
+        isolatedSteps,
         buildableContext);
+    steps.addAll(isolatedSteps.build());
     buildableContext.recordArtifact(rDotJavaClassesFolder.getPath());
 
     JarParameters jarParameters =

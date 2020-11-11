@@ -37,7 +37,7 @@ import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
-import com.facebook.buck.step.Step;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -92,7 +92,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
       BuildTarget invokingRule,
       CompilerParameters parameters,
       /* output params */
-      Builder<Step> steps,
+      Builder<IsolatedStep> steps,
       BuildableContext buildableContext) {
 
     ImmutableSortedSet<Path> classpathEntries = parameters.getClasspathEntries();

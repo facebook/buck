@@ -29,7 +29,7 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.ResolvedJavacOptions;
-import com.facebook.buck.step.Step;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
@@ -64,7 +64,7 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
       BuildTarget invokingRule,
       CompilerParameters parameters,
       /* output params */
-      Builder<Step> steps,
+      Builder<IsolatedStep> steps,
       BuildableContext buildableContext) {
 
     ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();

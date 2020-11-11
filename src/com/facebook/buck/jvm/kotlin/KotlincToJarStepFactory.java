@@ -44,7 +44,6 @@ import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.ResolvedJavacPluginProperties;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.CopyIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
@@ -151,7 +150,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       BuildTarget invokingRule,
       CompilerParameters parameters,
       /* output params */
-      Builder<Step> steps,
+      Builder<IsolatedStep> steps,
       BuildableContext buildableContext) {
 
     AbsPath rootPath = projectFilesystem.getRootPath();

@@ -45,7 +45,7 @@ import com.facebook.buck.rules.modern.CustomFieldInputs;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueVisitor;
-import com.facebook.buck.step.Step;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -301,7 +301,11 @@ public class JarBuildStepsFactory
         && abiGenerationMode.usesDependencies();
   }
 
-  public ImmutableList<Step> getBuildStepsForAbiJar(
+  /**
+   * Returns build steps for ABI jar as list of {@link
+   * com.facebook.buck.step.isolatedsteps.IsolatedStep}s.
+   */
+  public ImmutableList<IsolatedStep> getBuildStepsForAbiJar(
       BuildContext context,
       ProjectFilesystem filesystem,
       RecordArtifactVerifier buildableContext,
@@ -310,7 +314,7 @@ public class JarBuildStepsFactory
     Preconditions.checkArgument(
         buildTarget.equals(JavaAbis.getSourceAbiJar(libraryTarget))
             || buildTarget.equals(JavaAbis.getSourceOnlyAbiJar(libraryTarget)));
-    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    ImmutableList.Builder<IsolatedStep> steps = ImmutableList.builder();
 
     CompilerParameters compilerParameters = getCompilerParameters(context, filesystem, buildTarget);
 
@@ -334,13 +338,17 @@ public class JarBuildStepsFactory
     return steps.build();
   }
 
-  public ImmutableList<Step> getPipelinedBuildStepsForAbiJar(
+  /**
+   * Returns pipeline build steps for ABI jar as list of {@link
+   * com.facebook.buck.step.isolatedsteps.IsolatedStep}s.
+   */
+  public ImmutableList<IsolatedStep> getPipelinedBuildStepsForAbiJar(
       BuildTarget buildTarget,
       BuildContext context,
       ProjectFilesystem filesystem,
       RecordArtifactVerifier buildableContext,
       JavacPipelineState state) {
-    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    ImmutableList.Builder<IsolatedStep> steps = ImmutableList.builder();
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
             context,
@@ -363,7 +371,7 @@ public class JarBuildStepsFactory
       RecordArtifactVerifier buildableContext,
       BuildTarget buildTarget,
       RelPath pathToClassHashes,
-      ImmutableList.Builder<Step> steps) {
+      ImmutableList.Builder<IsolatedStep> steps) {
     Preconditions.checkArgument(buildTarget.equals(libraryTarget));
 
     CompilerParameters compilerParameters = getCompilerParameters(context, filesystem, buildTarget);
@@ -399,7 +407,7 @@ public class JarBuildStepsFactory
       RecordArtifactVerifier buildableContext,
       JavacPipelineState state,
       RelPath pathToClassHashes,
-      ImmutableList.Builder<Step> steps) {
+      ImmutableList.Builder<IsolatedStep> steps) {
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
             context,

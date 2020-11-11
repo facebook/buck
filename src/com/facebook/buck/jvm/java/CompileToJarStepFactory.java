@@ -25,7 +25,6 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.shell.BashStep;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
@@ -59,7 +58,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       /* output params */
-      Builder<Step> steps,
+      Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       boolean withDownwardApi,
       ImmutableMap<String, RelPath> cellToPathMappings) {
@@ -142,7 +141,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
     return filesystem.relativize(filesystem.resolve(path));
   }
 
-  protected void addJarSetupSteps(JarParameters jarParameters, Builder<Step> steps) {
+  protected void addJarSetupSteps(JarParameters jarParameters, Builder<IsolatedStep> steps) {
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(jarParameters.getJarPath().getParent()));
   }
 
@@ -159,7 +158,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
 
   protected void addJarCreationSteps(
       CompilerParameters compilerParameters,
-      Builder<Step> steps,
+      Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       JarParameters jarParameters) {
     // No source files, only resources
@@ -179,7 +178,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       /* output params */
-      Builder<Step> steps,
+      Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       boolean withDownwardApi) {
     Preconditions.checkArgument(abiJarParameters == null);
@@ -211,7 +210,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
     createJarStep(libraryJarParameters, steps);
   }
 
-  public void createJarStep(JarParameters parameters, Builder<Step> steps) {
+  public void createJarStep(JarParameters parameters, Builder<IsolatedStep> steps) {
     steps.add(new JarDirectoryStep(parameters));
   }
 
@@ -295,7 +294,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       BuildTarget invokingRule,
       CompilerParameters parameters,
       /* output params */
-      Builder<Step> steps,
+      Builder<IsolatedStep> steps,
       BuildableContext buildableContext);
 
   public abstract boolean hasAnnotationProcessing();

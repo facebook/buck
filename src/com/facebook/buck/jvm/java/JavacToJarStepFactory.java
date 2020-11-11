@@ -30,7 +30,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
-import com.facebook.buck.step.Step;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.SymlinkIsolatedStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -86,7 +86,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   private static void addAnnotationGenFolderStep(
       BuildTarget invokingTarget,
       ProjectFilesystem filesystem,
-      Builder<Step> steps,
+      Builder<IsolatedStep> steps,
       BuildableContext buildableContext) {
     RelPath annotationGenFolder =
         CompilerOutputPaths.getAnnotationPath(invokingTarget, filesystem.getBuckPaths());
@@ -103,7 +103,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       BuildTarget invokingRule,
       CompilerParameters parameters,
       /* output params */
-      Builder<Step> steps,
+      Builder<IsolatedStep> steps,
       BuildableContext buildableContext) {
     JavacOptions buildTimeOptions =
         javacOptions.withBootclasspathFromContext(extraClasspathProvider);
@@ -133,7 +133,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       JavacPipelineState pipeline,
       ResourcesParameters resourcesParameters,
       ImmutableList<String> postprocessClassesCommands,
-      Builder<Step> steps,
+      Builder<IsolatedStep> steps,
       BuildableContext buildableContext) {
     Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
     CompilerParameters compilerParameters = pipeline.getCompilerParameters();
@@ -184,7 +184,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       /* output params */
-      Builder<Step> steps,
+      Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       boolean withDownwardApi) {
     Preconditions.checkArgument(
@@ -251,7 +251,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       ImmutableMap<String, RelPath> cellToPathMappings,
       JavacPipelineState pipeline,
       BuildTarget invokingRule,
-      Builder<Step> steps) {
+      Builder<IsolatedStep> steps) {
     boolean generatingCode = !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
     BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     if (generatingCode && pipeline.isRunning()) {

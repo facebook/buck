@@ -112,11 +112,12 @@ public class CalculateSourceAbi
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      return jarBuildStepsFactory.getBuildStepsForAbiJar(
-          buildContext,
-          filesystem,
-          ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
-          buildTarget);
+      return ImmutableList.copyOf(
+          jarBuildStepsFactory.getBuildStepsForAbiJar(
+              buildContext,
+              filesystem,
+              ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
+              buildTarget));
     }
 
     @Override
@@ -126,12 +127,13 @@ public class CalculateSourceAbi
         JavacPipelineState state,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      return jarBuildStepsFactory.getPipelinedBuildStepsForAbiJar(
-          buildTarget,
-          buildContext,
-          filesystem,
-          ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
-          state);
+      return ImmutableList.copyOf(
+          jarBuildStepsFactory.getPipelinedBuildStepsForAbiJar(
+              buildTarget,
+              buildContext,
+              filesystem,
+              ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
+              state));
     }
   }
 

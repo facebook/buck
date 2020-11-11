@@ -44,6 +44,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.ZipStep;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.google.common.base.Preconditions;
@@ -209,6 +210,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         new JavacToJarStepFactory(
             javac, javacOptions, ExtraClasspathProvider.EMPTY, withDownwardApi);
 
+    ImmutableList.Builder<IsolatedStep> isolatedSteps = ImmutableList.builder();
     compileStepFactory.createCompileStep(
         context,
         filesystem,
@@ -216,8 +218,9 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             filesystem.getRootPath(), context.getCellPathResolver()),
         getBuildTarget(),
         compilerParameters,
-        steps,
+        isolatedSteps,
         buildableContext);
+    steps.addAll(isolatedSteps.build());
 
     steps.add(zipStep);
     JarParameters jarParameters =

@@ -48,6 +48,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -337,11 +338,13 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     RelPath pathToClassHashes = getPathToClassHashes();
     buildableContext.recordArtifact(pathToClassHashes.getPath());
 
+    ImmutableList.Builder<IsolatedStep> isolatedSteps = ImmutableList.builder();
     JavaLibraryRules.addAccumulateClassNamesStep(
         projectFilesystem.getIgnoredPaths(),
-        steps,
+        isolatedSteps,
         Optional.of(context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput())),
         pathToClassHashes);
+    steps.addAll(isolatedSteps.build());
 
     return steps.build();
   }

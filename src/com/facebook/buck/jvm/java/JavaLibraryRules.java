@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.AccumulateClassNamesStep;
@@ -40,7 +39,7 @@ public class JavaLibraryRules {
 
   static void addAccumulateClassNamesStep(
       ImmutableSet<PathMatcher> ignorePaths,
-      ImmutableList.Builder<Step> steps,
+      ImmutableList.Builder<IsolatedStep> steps,
       Optional<RelPath> pathToClasses,
       RelPath pathToClassHashes) {
 
