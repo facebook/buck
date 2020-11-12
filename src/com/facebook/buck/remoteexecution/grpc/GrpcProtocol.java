@@ -61,8 +61,8 @@ public class GrpcProtocol implements Protocol {
     }
 
     @Override
-    public int getSize() {
-      return (int) digest.getSizeBytes();
+    public long getSize() {
+      return digest.getSizeBytes();
     }
 
     @Override

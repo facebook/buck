@@ -228,7 +228,7 @@ public class OutputsMaterializer {
 
   private void processFetchAndMaterialize() {
     ImmutableList.Builder<PendingMaterialization> builder = ImmutableList.builder();
-    int size = 0;
+    long size = 0;
     int items = 0;
     while (!waitingMaterialization.isEmpty()) {
       PendingMaterialization data = waitingMaterialization.poll();

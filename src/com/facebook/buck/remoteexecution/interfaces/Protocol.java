@@ -38,7 +38,7 @@ public interface Protocol {
   interface Digest {
     String getHash();
 
-    int getSize();
+    long getSize();
   }
 
   /** Represents a tree node */

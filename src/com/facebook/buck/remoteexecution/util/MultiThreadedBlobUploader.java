@@ -89,7 +89,7 @@ public class MultiThreadedBlobUploader {
       return uploadData.getDigest().getHash();
     }
 
-    int getSize() {
+    long getSize() {
       return uploadData.getDigest().getSize();
     }
   }
