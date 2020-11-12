@@ -47,6 +47,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.python.PythonBuckConfig.PackageStyle;
 import com.facebook.buck.features.python.toolchain.PexToolProvider;
@@ -443,7 +444,7 @@ public class PythonBinaryDescription
                       .stream()
                       .map(macrosConverter::convert)
                       .collect(ImmutableList.toImmutableList()),
-                  pythonBuckConfig.getNativeLinkStrategy(),
+                  args.getNativeLinkStrategy().orElse(pythonBuckConfig.getNativeLinkStrategy()),
                   args.getPreloadDeps(),
                   args.getCompile().orElse(false),
                   args.getPreferStrippedNativeObjects());
@@ -499,6 +500,8 @@ public class PythonBinaryDescription
     default boolean getPreferStrippedNativeObjects() {
       return false;
     }
+
+    Optional<NativeLinkStrategy> getNativeLinkStrategy();
   }
 
   @RuleArg

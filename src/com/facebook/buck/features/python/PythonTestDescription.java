@@ -427,7 +427,7 @@ public class PythonTestDescription
                       .stream()
                       .map(macrosConverter::convert)
                       .collect(ImmutableList.toImmutableList()),
-                  pythonBuckConfig.getNativeLinkStrategy(),
+                  args.getNativeLinkStrategy().orElse(pythonBuckConfig.getNativeLinkStrategy()),
                   args.getPreloadDeps(),
                   args.getCompile().orElse(false),
                   args.getPreferStrippedNativeObjects());
