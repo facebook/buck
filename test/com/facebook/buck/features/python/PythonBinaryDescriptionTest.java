@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.python;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -92,6 +93,9 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -1061,6 +1065,54 @@ public class PythonBinaryDescriptionTest {
                     CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
                     PythonLibraryDescription.LibraryType.SOURCE_DB.getFlavor()));
     assertThat(db, Matchers.instanceOf(PythonSourceDatabase.class));
+  }
+
+  @Test
+  public void deduplicateMergedLinkRoots() {
+    CxxLibraryBuilder cxxBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxx"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("cxx.c"))));
+
+    PythonBuckConfig config =
+        new PythonBuckConfig(FakeBuckConfig.empty()) {
+          @Override
+          public NativeLinkStrategy getNativeLinkStrategy() {
+            return NativeLinkStrategy.MERGED;
+          }
+        };
+
+    PythonBinaryBuilder binary1Builder =
+        PythonBinaryBuilder.create(
+                BuildTargetFactory.newInstance("//:bin1"), config, PythonTestUtils.PYTHON_PLATFORMS)
+            .setMainModule("main")
+            .setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()))
+            .setDeduplicateMergedLinkRoots(true);
+
+    PythonBinaryBuilder binary2Builder =
+        PythonBinaryBuilder.create(
+                BuildTargetFactory.newInstance("//:bin2"), config, PythonTestUtils.PYTHON_PLATFORMS)
+            .setMainModule("main")
+            .setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()))
+            .setDeduplicateMergedLinkRoots(true);
+
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(
+            TargetGraphFactory.newInstance(
+                cxxBuilder.build(), binary1Builder.build(), binary2Builder.build()));
+
+    PythonBinary binary1 = (PythonBinary) graphBuilder.requireRule(binary1Builder.getTarget());
+    List<SourcePath> binary1Libs = new ArrayList<>();
+    binary1.getComponents().getNativeLibraries().getComponents().values().stream()
+        .flatMap(Collection::stream)
+        .forEach(pythonComponents -> pythonComponents.forEachInput(binary1Libs::add));
+
+    PythonBinary binary2 = (PythonBinary) graphBuilder.requireRule(binary2Builder.getTarget());
+    List<SourcePath> binary2Libs = new ArrayList<>();
+    binary2.getComponents().getNativeLibraries().getComponents().values().stream()
+        .flatMap(Collection::stream)
+        .forEach(pythonComponents -> pythonComponents.forEachInput(binary2Libs::add));
+
+    assertEquals(binary1Libs, binary2Libs);
   }
 
   private RuleKey calculateRuleKey(BuildRuleResolver ruleResolver, BuildRule rule) {

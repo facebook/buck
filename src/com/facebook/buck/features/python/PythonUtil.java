@@ -391,7 +391,8 @@ public class PythonUtil {
       NativeLinkStrategy nativeLinkStrategy,
       ImmutableSet<BuildTarget> preloadDeps,
       boolean compile,
-      boolean preferStrippedNativeObjects) {
+      boolean preferStrippedNativeObjects,
+      Optional<Boolean> deduplicateOmnibusRoots) {
 
     PythonPackageComponents.Builder allComponents = new PythonPackageComponents.Builder();
 
@@ -467,7 +468,8 @@ public class PythonUtil {
               extraLdflags,
               roots.getIncludedRoots().values(),
               roots.getExcludedRoots().values(),
-              preferStrippedNativeObjects);
+              preferStrippedNativeObjects,
+              deduplicateOmnibusRoots);
 
       // Add all the roots from the omnibus link.  If it's an extension, add it as a module.
       // Otherwise, add it as a native library.

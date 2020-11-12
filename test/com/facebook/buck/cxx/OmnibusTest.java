@@ -43,6 +43,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -86,7 +87,8 @@ public class OmnibusTest {
                 ImmutableList.of(),
                 ImmutableList.of(root),
                 ImmutableList.of(),
-                false));
+                false,
+                Optional.empty()));
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(root.getBuildTarget().toString(), "libomnibus.so"));
@@ -141,7 +143,8 @@ public class OmnibusTest {
                 ImmutableList.of(),
                 ImmutableList.of(root),
                 ImmutableList.of(),
-                false));
+                false,
+                Optional.empty()));
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(
@@ -201,7 +204,8 @@ public class OmnibusTest {
                 ImmutableList.of(),
                 ImmutableList.of(root),
                 ImmutableList.of(),
-                false));
+                false,
+                Optional.empty()));
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(
@@ -268,7 +272,8 @@ public class OmnibusTest {
                 ImmutableList.of(),
                 ImmutableList.of(root),
                 ImmutableList.of(excludedRoot),
-                false));
+                false,
+                Optional.empty()));
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(
@@ -332,7 +337,8 @@ public class OmnibusTest {
                 ImmutableList.of(),
                 ImmutableList.of(root),
                 ImmutableList.of(excludedRoot),
-                false));
+                false,
+                Optional.empty()));
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(
@@ -387,7 +393,8 @@ public class OmnibusTest {
                 ImmutableList.of(),
                 ImmutableList.of(root),
                 ImmutableList.of(),
-                false));
+                false,
+                Optional.empty()));
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(root.getBuildTarget().toString(), "libomnibus.so"));
@@ -446,7 +453,8 @@ public class OmnibusTest {
                 ImmutableList.of(),
                 ImmutableList.of(includedRoot),
                 ImmutableList.of(excludedRoot),
-                false));
+                false,
+                Optional.empty()));
     assertThat(libs.keySet(), Matchers.hasItem(excludedRoot.getBuildTarget().toString()));
   }
 
@@ -475,7 +483,8 @@ public class OmnibusTest {
                 ImmutableList.of(StringArg.of(flag)),
                 ImmutableList.of(root),
                 ImmutableList.of(),
-                false));
+                false,
+                Optional.empty()));
     assertThat(
         Arg.stringify(
             getCxxLinkRule(graphBuilder, libs.get(root.getBuildTarget().toString())).getArgs(),

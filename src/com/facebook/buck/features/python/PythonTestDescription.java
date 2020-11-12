@@ -430,7 +430,8 @@ public class PythonTestDescription
                   args.getNativeLinkStrategy().orElse(pythonBuckConfig.getNativeLinkStrategy()),
                   args.getPreloadDeps(),
                   args.getCompile().orElse(false),
-                  args.getPreferStrippedNativeObjects());
+                  args.getPreferStrippedNativeObjects(),
+                  args.getDeduplicateMergedLinkRoots());
 
           // Build the PEX using a python binary rule with the minimum dependencies.
           PythonBinary binary =

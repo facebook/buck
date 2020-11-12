@@ -152,3 +152,15 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .deduplicate_merged_link_roots}
+{call buck.arg}
+  {param name : 'deduplicate_merged_link_roots' /}
+  {param default : 'None' /}
+  {param desc}
+  When linking multiple top-level binaries with the <code>merged</code> <code>{call buckconfig.python_native_link_strategy /}</code>,
+  coalesce root link rules which are identical across independent merged links.
+  {/param}
+{/call}
+{/template}

@@ -89,6 +89,7 @@ public class CxxBuckConfig {
   private static final String HEADERS_SYMLINKS_ENABLED = "headers_symlinks_enabled";
   private static final String LINK_WEIGHT = "link_weight";
   private static final String OMNIBUS_ROOT_LINK_WEIGHT = "omnibus_root_link_weight";
+  private static final String OMNIBUS_DEDUPLICATE_ROOTS = "omnibus_deduplicate_roots";
   private static final String CACHE_LINKS = "cache_links";
   private static final String LINKER_MAP_ENABLED = "linker_map_enabled";
   private static final String CACHE_OMNIBUS_ROOT_LINKS = "cache_omnibus_root_links";
@@ -478,6 +479,14 @@ public class CxxBuckConfig {
       return linkWeight;
     }
     return getLinkScheduleInfo();
+  }
+
+  /**
+   * @return whether to deduplicate root link rules which are identically across multiple
+   *     independent omnibus links.
+   */
+  public boolean getOmnibusDeduplicateRoots() {
+    return delegate.getBooleanValue(cxxSection, OMNIBUS_DEDUPLICATE_ROOTS, false);
   }
 
   /**

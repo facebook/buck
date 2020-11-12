@@ -59,7 +59,7 @@ public class NativeLinkables {
   /**
    * @return the first-order dependencies to consider when linking the given {@link NativeLinkable}.
    */
-  private static Iterable<? extends NativeLinkable> getDepsForLink(
+  public static Iterable<? extends NativeLinkable> getDepsForLink(
       ActionGraphBuilder graphBuilder,
       NativeLinkable nativeLinkable,
       Linker.LinkableDepType linkStyle) {

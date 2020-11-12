@@ -447,7 +447,8 @@ public class PythonBinaryDescription
                   args.getNativeLinkStrategy().orElse(pythonBuckConfig.getNativeLinkStrategy()),
                   args.getPreloadDeps(),
                   args.getCompile().orElse(false),
-                  args.getPreferStrippedNativeObjects());
+                  args.getPreferStrippedNativeObjects(),
+                  args.getDeduplicateMergedLinkRoots());
           return createPackageRule(
               cellRoots,
               buildTarget,
@@ -502,6 +503,8 @@ public class PythonBinaryDescription
     }
 
     Optional<NativeLinkStrategy> getNativeLinkStrategy();
+
+    Optional<Boolean> getDeduplicateMergedLinkRoots();
   }
 
   @RuleArg

@@ -209,4 +209,9 @@ public class PythonBinaryBuilder
   public void setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
     getArgForPopulating().setLinkerFlags(linkerFlags);
   }
+
+  public PythonBinaryBuilder setDeduplicateMergedLinkRoots(boolean deduplicateMergedLinkRoots) {
+    getArgForPopulating().setDeduplicateMergedLinkRoots(deduplicateMergedLinkRoots);
+    return this;
+  }
 }
