@@ -56,6 +56,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.collect.Streams;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import java.nio.charset.StandardCharsets;
@@ -154,24 +155,28 @@ public class Omnibus {
 
     // Process all the roots included in the omnibus link.
     Map<BuildTarget, NativeLinkTarget> roots = new LinkedHashMap<>();
-    Map<BuildTarget, NativeLinkable> rootDeps = new LinkedHashMap<>();
     for (NativeLinkTarget root : includedRoots) {
       roots.put(root.getBuildTarget(), root);
-      for (NativeLinkable dep :
-          NativeLinkables.getNativeLinkables(
-              actionGraphBuilder,
-              root.getNativeLinkTargetDeps(actionGraphBuilder),
-              Linker.LinkableDepType.SHARED)) {
-        Linker.LinkableDepType linkStyle =
-            NativeLinkableGroups.getLinkStyle(
-                dep.getPreferredLinkage(), Linker.LinkableDepType.SHARED);
-        Preconditions.checkState(linkStyle != Linker.LinkableDepType.STATIC);
+    }
 
-        // We only consider deps which aren't *only* statically linked.
-        if (linkStyle == Linker.LinkableDepType.SHARED) {
-          rootDeps.put(dep.getBuildTarget(), dep);
-          nativeLinkables.put(dep.getBuildTarget(), dep);
-        }
+    // Find all transitive root deps.
+    Map<BuildTarget, NativeLinkable> rootDeps = new LinkedHashMap<>();
+    for (NativeLinkable dep :
+        NativeLinkables.getNativeLinkables(
+            actionGraphBuilder,
+            Streams.stream(includedRoots)
+                .flatMap(root -> Streams.stream(root.getNativeLinkTargetDeps(actionGraphBuilder)))
+                .collect(ImmutableList.toImmutableList()),
+            Linker.LinkableDepType.SHARED)) {
+      Linker.LinkableDepType linkStyle =
+          NativeLinkableGroups.getLinkStyle(
+              dep.getPreferredLinkage(), Linker.LinkableDepType.SHARED);
+      Preconditions.checkState(linkStyle != Linker.LinkableDepType.STATIC);
+
+      // We only consider deps which aren't *only* statically linked.
+      if (linkStyle == Linker.LinkableDepType.SHARED) {
+        rootDeps.put(dep.getBuildTarget(), dep);
+        nativeLinkables.put(dep.getBuildTarget(), dep);
       }
     }
 
