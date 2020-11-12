@@ -313,8 +313,9 @@ public class Omnibus {
 
   // Create a build rule which links the given root node against the merged omnibus library
   // described by the given spec file.
-  private static OmnibusRoot createRoot(
+  private static CxxLink createRootRule(
       BuildTarget target,
+      BuildTarget baseTarget,
       ProjectFilesystem projectFilesystem,
       CellPathResolver cellPathResolver,
       ActionGraphBuilder graphBuilder,
@@ -325,7 +326,6 @@ public class Omnibus {
       OmnibusSpec spec,
       SourcePath omnibus,
       NativeLinkTarget root,
-      BuildTarget rootTargetBase,
       Optional<Path> output) {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
@@ -384,7 +384,7 @@ public class Omnibus {
       if (spec.getRoots().containsKey(linkableTarget)) {
         argsBuilder.add(
             SourcePathArg.of(
-                DefaultBuildTargetSourcePath.of(getRootTarget(target, linkableTarget))));
+                DefaultBuildTargetSourcePath.of(getRootTarget(baseTarget, linkableTarget))));
         continue;
       }
 
@@ -409,7 +409,6 @@ public class Omnibus {
     }
 
     // Create the root library rule using the arguments assembled above.
-    BuildTarget rootTarget = getRootTarget(target, rootTargetBase);
     NativeLinkTargetMode rootTargetMode = root.getNativeLinkTargetMode();
     CxxLink rootLinkRule;
     switch (rootTargetMode.getType()) {
@@ -425,14 +424,14 @@ public class Omnibus {
                   cxxPlatform,
                   projectFilesystem,
                   graphBuilder,
-                  rootTarget,
+                  target,
                   output.orElse(
-                      BuildTargetPaths.getGenPath(projectFilesystem, rootTarget, "%s")
+                      BuildTargetPaths.getGenPath(projectFilesystem, target, "%s")
                           .resolve(
                               rootSoname.orElse(
                                   String.format(
                                       "%s.%s",
-                                      rootTarget.getShortName(),
+                                      target.getShortName(),
                                       cxxPlatform.getSharedLibraryExtension())))),
                   ImmutableMap.of(),
                   rootSoname,
@@ -456,10 +455,10 @@ public class Omnibus {
                   cxxPlatform,
                   projectFilesystem,
                   graphBuilder,
-                  rootTarget,
+                  target,
                   output.orElse(
-                      BuildTargetPaths.getGenPath(projectFilesystem, rootTarget, "%s")
-                          .resolve(rootTarget.getShortName())),
+                      BuildTargetPaths.getGenPath(projectFilesystem, target, "%s")
+                          .resolve(target.getShortName())),
                   ImmutableMap.of(),
                   argsBuilder.build(),
                   Linker.LinkableDepType.SHARED,
@@ -472,16 +471,16 @@ public class Omnibus {
       default:
         throw new IllegalStateException(
             String.format(
-                "%s: unexpected omnibus root type: %s %s",
-                target, root.getBuildTarget(), rootTargetMode.getType()));
+                "%s: %s: unexpected omnibus root type: %s",
+                baseTarget, target, rootTargetMode.getType()));
     }
 
-    CxxLink rootRule = graphBuilder.addToIndex(rootLinkRule);
-    return ImmutableOmnibusRoot.ofImpl(rootRule.getSourcePathToOutput());
+    return rootLinkRule;
   }
 
   private static OmnibusRoot createRoot(
       BuildTarget buildTarget,
+      BuildTarget baseTarget,
       ProjectFilesystem projectFilesystem,
       CellPathResolver cellPathResolver,
       ActionGraphBuilder graphBuilder,
@@ -492,24 +491,31 @@ public class Omnibus {
       OmnibusSpec spec,
       SourcePath omnibus,
       NativeLinkTarget root) {
-    return createRoot(
-        buildTarget,
-        projectFilesystem,
-        cellPathResolver,
-        graphBuilder,
-        cxxBuckConfig,
-        downwardApiConfig,
-        cxxPlatform,
-        extraLdFlags,
-        spec,
-        omnibus,
-        root,
-        root.getBuildTarget(),
-        root.getNativeLinkTargetOutputPath());
+    CxxLink link =
+        (CxxLink)
+            graphBuilder.computeIfAbsent(
+                buildTarget,
+                target ->
+                    createRootRule(
+                        target,
+                        baseTarget,
+                        projectFilesystem,
+                        cellPathResolver,
+                        graphBuilder,
+                        cxxBuckConfig,
+                        downwardApiConfig,
+                        cxxPlatform,
+                        extraLdFlags,
+                        spec,
+                        omnibus,
+                        root,
+                        root.getNativeLinkTargetOutputPath()));
+    return ImmutableOmnibusRoot.ofImpl(Preconditions.checkNotNull(link.getSourcePathToOutput()));
   }
 
   private static OmnibusRoot createDummyRoot(
-      BuildTarget target,
+      BuildTarget buildTarget,
+      BuildTarget baseTarget,
       ProjectFilesystem projectFilesystem,
       CellPathResolver cellPathResolver,
       ActionGraphBuilder graphBuilder,
@@ -520,20 +526,26 @@ public class Omnibus {
       OmnibusSpec spec,
       SourcePath omnibus,
       NativeLinkTarget root) {
-    return createRoot(
-        target,
-        projectFilesystem,
-        cellPathResolver,
-        graphBuilder,
-        cxxBuckConfig,
-        downwardApiConfig,
-        cxxPlatform,
-        extraLdFlags,
-        spec,
-        omnibus,
-        root,
-        getDummyRootTarget(root.getBuildTarget()),
-        Optional.empty());
+    CxxLink link =
+        (CxxLink)
+            graphBuilder.computeIfAbsent(
+                buildTarget,
+                target ->
+                    createRootRule(
+                        target,
+                        baseTarget,
+                        projectFilesystem,
+                        cellPathResolver,
+                        graphBuilder,
+                        cxxBuckConfig,
+                        downwardApiConfig,
+                        cxxPlatform,
+                        extraLdFlags,
+                        spec,
+                        omnibus,
+                        root,
+                        Optional.empty()));
+    return ImmutableOmnibusRoot.ofImpl(Preconditions.checkNotNull(link.getSourcePathToOutput()));
   }
 
   private static ImmutableList<Arg> createUndefinedSymbolsArgs(
@@ -840,6 +852,7 @@ public class Omnibus {
             target -> {
               OmnibusRoot root =
                   createRoot(
+                      getRootTarget(buildTarget, target.getBuildTarget()),
                       buildTarget,
                       projectFilesystem,
                       cellPathResolver,
@@ -861,6 +874,7 @@ public class Omnibus {
     for (NativeLinkTarget target : spec.getRoots().values()) {
       if (shouldCreateDummyRoot(target)) {
         createDummyRoot(
+            getRootTarget(buildTarget, getDummyRootTarget(target.getBuildTarget())),
             buildTarget,
             projectFilesystem,
             cellPathResolver,
@@ -901,6 +915,7 @@ public class Omnibus {
       if (shouldCreateDummyRoot(target)) {
         OmnibusRoot root =
             createRoot(
+                getRootTarget(buildTarget, target.getBuildTarget()),
                 buildTarget,
                 projectFilesystem,
                 cellPathResolver,
