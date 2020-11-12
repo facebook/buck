@@ -99,22 +99,15 @@ public class GrpcExecutionFactory {
       BuckEventBus buckEventBus)
       throws SSLException {
 
-    ManagedChannel executionEngineChannel;
+    NettyChannelBuilder executionEngineChannel;
     if (insecure) {
       executionEngineChannel =
           GrpcChannelFactory.createInsecureChannel(
-                  executionEngineHost, executionEnginePort, strategyConfig)
-              .build();
+              executionEngineHost, executionEnginePort, strategyConfig);
     } else {
       executionEngineChannel =
           GrpcChannelFactory.createSecureChannel(
-                  executionEngineHost,
-                  executionEnginePort,
-                  certPath,
-                  keyPath,
-                  caPath,
-                  strategyConfig)
-              .build();
+              executionEngineHost, executionEnginePort, certPath, keyPath, caPath, strategyConfig);
     }
 
     NettyChannelBuilder casChannelBuilder;
@@ -131,6 +124,7 @@ public class GrpcExecutionFactory {
     return new GrpcRemoteExecutionClients(
         "buck",
         executionEngineChannel,
+        strategyConfig.getNumEngineConnections(),
         casChannelBuilder.build(),
         casDeadline,
         metadataProvider,

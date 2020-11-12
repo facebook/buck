@@ -41,6 +41,8 @@ public interface RemoteExecutionStrategyConfig {
 
   boolean isLocalFallbackEnabledForCompletedAction();
 
+  int getNumEngineConnections();
+
   OptionalLong maxInputSizeBytes();
 
   OptionalLong largeBlobSizeBytes();

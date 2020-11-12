@@ -63,6 +63,7 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final boolean DEFAULT_IS_LOCAL_FALLBACK_ENABLED = false;
   public static final boolean DEFAULT_IS_LOCAL_FALLBACK_DISABLED_ON_CORRUPT_ARTIFACTS = false;
   public static final boolean DEFAULT_IS_LOCAL_FALLBACK_ENABLED_FOR_COMPLETED_ACTION = true;
+  public static final int DEFAULT_NUM_ENGINE_CONNECTIONS = 1;
 
   private static final String CONFIG_CERT = "cert";
   private static final String CONFIG_KEY = "key";
@@ -135,6 +136,8 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
   // Should retry actions locally if action exit code is returned and is not 0.
   public static final String IS_LOCAL_FALLBACK_ENABLED_FOR_COMPLETED_ACTION_KEY =
       "is_local_fallback_enabled_for_completed_actions";
+
+  public static final String NUM_ENGINE_CONNECTIONS_KEY = "num_engine_connections";
 
   public static final String AUTO_RE_BUILD_PROJECTS_WHITELIST_KEY =
       "auto_re_build_projects_whitelist";
@@ -358,6 +361,11 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
                 IS_LOCAL_FALLBACK_ENABLED_FOR_COMPLETED_ACTION_KEY,
                 DEFAULT_IS_LOCAL_FALLBACK_ENABLED_FOR_COMPLETED_ACTION);
 
+    int numEngineConnections =
+        getDelegate()
+            .getInteger(SECTION, NUM_ENGINE_CONNECTIONS_KEY)
+            .orElse(DEFAULT_NUM_ENGINE_CONNECTIONS);
+
     OptionalLong maxInputSizeBytes =
         getDelegate()
             .getValue(SECTION, MAX_INPUT_SIZE_BYTES)
@@ -465,6 +473,11 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
       @Override
       public boolean isLocalFallbackEnabled() {
         return isLocalFallbackEnabled;
+      }
+
+      @Override
+      public int getNumEngineConnections() {
+        return numEngineConnections;
       }
 
       @Override

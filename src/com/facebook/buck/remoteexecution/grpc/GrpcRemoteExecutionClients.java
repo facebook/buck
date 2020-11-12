@@ -42,20 +42,25 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /** A RemoteExecution that sends jobs to a grpc-based remote execution service. */
 public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
   private static final Logger LOG = Logger.get(GrpcRemoteExecutionClients.class);
   public static final Protocol PROTOCOL = new GrpcProtocol();
   private final ContentAddressedStorageClient storage;
-  private final GrpcRemoteExecutionServiceClient executionService;
-  private final ManagedChannel executionEngineChannel;
+  private final ManagedChannel[] executionEngineChannels;
+  private AtomicLong executionEngineChannelCtr;
   private final ManagedChannel casChannel;
   private final MetadataProvider metadataProvider;
+  private final String instanceName;
+  private final int casDeadline;
+  private final ByteStreamStub byteStreamStub;
 
   /** A parsed read resource path. */
   @BuckStyleValue
@@ -73,24 +78,70 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
       MetadataProvider metadataProvider,
       BuckEventBus buckEventBus,
       RemoteExecutionStrategyConfig strategyConfig) {
-    this.executionEngineChannel = executionEngineChannel;
+    this(
+        instanceName,
+        new ManagedChannel[] {executionEngineChannel},
+        casChannel,
+        casDeadline,
+        metadataProvider,
+        buckEventBus,
+        strategyConfig);
+  }
+
+  private static ManagedChannel[] createExecutionChannels(
+      NettyChannelBuilder executionEngineChannel, int num_engine_channels) {
+    ManagedChannel[] channels = new ManagedChannel[num_engine_channels];
+    for (int i = 0; i < num_engine_channels; ++i) {
+      channels[i] = executionEngineChannel.build();
+    }
+    return channels;
+  }
+
+  /** Creates multiple channels to engine for load balancing */
+  public GrpcRemoteExecutionClients(
+      String instanceName,
+      NettyChannelBuilder executionEngineChannel,
+      int numEngineConnections,
+      ManagedChannel casChannel,
+      int casDeadline,
+      MetadataProvider metadataProvider,
+      BuckEventBus buckEventBus,
+      RemoteExecutionStrategyConfig strategyConfig) {
+    this(
+        instanceName,
+        createExecutionChannels(executionEngineChannel, numEngineConnections),
+        casChannel,
+        casDeadline,
+        metadataProvider,
+        buckEventBus,
+        strategyConfig);
+  }
+
+  private GrpcRemoteExecutionClients(
+      String instanceName,
+      ManagedChannel[] executionEngineChannels,
+      ManagedChannel casChannel,
+      int casDeadline,
+      MetadataProvider metadataProvider,
+      BuckEventBus buckEventBus,
+      RemoteExecutionStrategyConfig strategyConfig) {
+    this.executionEngineChannels = executionEngineChannels;
+    this.executionEngineChannelCtr = new AtomicLong(0);
     this.casChannel = casChannel;
     this.metadataProvider = metadataProvider;
+    this.instanceName = instanceName;
+    this.casDeadline = casDeadline;
 
-    ByteStreamStub byteStreamStub = ByteStreamGrpc.newStub(casChannel);
+    this.byteStreamStub = ByteStreamGrpc.newStub(casChannel);
     this.storage =
         createStorage(
             ContentAddressableStorageGrpc.newFutureStub(casChannel),
-            byteStreamStub,
+            this.byteStreamStub,
             casDeadline,
             instanceName,
             PROTOCOL,
             buckEventBus,
             strategyConfig);
-    ExecutionStub executionStub = ExecutionGrpc.newStub(executionEngineChannel);
-    this.executionService =
-        new GrpcRemoteExecutionServiceClient(
-            executionStub, byteStreamStub, instanceName, getProtocol(), casDeadline);
   }
 
   public static String getResourceName(String instanceName, Protocol.Digest digest) {
@@ -153,7 +204,12 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
 
   @Override
   public RemoteExecutionServiceClient getRemoteExecutionService() {
-    return executionService;
+    long len = this.executionEngineChannels.length;
+    long ctr = this.executionEngineChannelCtr.getAndIncrement() % len;
+
+    ExecutionStub executionStub = ExecutionGrpc.newStub(this.executionEngineChannels[(int) ctr]);
+    return new GrpcRemoteExecutionServiceClient(
+        executionStub, this.byteStreamStub, this.instanceName, getProtocol(), this.casDeadline);
   }
 
   @Override
@@ -168,7 +224,9 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
 
   @Override
   public void close() throws IOException {
-    closeChannel(executionEngineChannel);
+    for (ManagedChannel c : executionEngineChannels) {
+      closeChannel(c);
+    }
     closeChannel(casChannel);
   }
 

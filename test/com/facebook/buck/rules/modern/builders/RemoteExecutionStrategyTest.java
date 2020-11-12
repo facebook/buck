@@ -385,6 +385,11 @@ public class RemoteExecutionStrategyTest {
     }
 
     @Override
+    public int getNumEngineConnections() {
+      return 1;
+    }
+
+    @Override
     public boolean tryLargerWorkerOnOom() {
       return false;
     }
