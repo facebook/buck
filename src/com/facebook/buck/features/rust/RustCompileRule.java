@@ -32,6 +32,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.CxxPrepareForLinkStep;
+import com.facebook.buck.cxx.CxxWriteArgsToFileStep;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.features.rust.RustBuckConfig.RemapSrcPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -236,8 +237,10 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
 
       SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
-      AbsPath argFilePath =
-          filesystem.getRootPath().resolve(outputPathResolver.getTempPath("argsfile.txt"));
+      AbsPath linkerArgFilePath =
+          filesystem.getRootPath().resolve(outputPathResolver.getTempPath("link-argsfile.txt"));
+      AbsPath depArgFilePath =
+          filesystem.getRootPath().resolve(outputPathResolver.getTempPath("dep-argsfile.txt"));
       AbsPath fileListPath =
           filesystem.getRootPath().resolve(outputPathResolver.getTempPath("filelist.txt"));
 
@@ -267,7 +270,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
                           ent -> resolver.getAbsolutePath(ent.getKey()).getPath()))));
       steps.addAll(
           CxxPrepareForLinkStep.create(
-              argFilePath.getPath(),
+              linkerArgFilePath.getPath(),
               fileListPath.getPath(),
               linker.fileList(fileListPath),
               outputPath.getPath(),
@@ -277,6 +280,18 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
               filesystem.getRootPath().getPath(),
               resolver,
               ImmutableMap.of()));
+
+      // Accumulate Args into set to dedup them while retaining their order,
+      // since there are often many duplicates for things like library paths.
+      //
+      // NOTE: this means that all logical args should be a single string on the command
+      // line (ie "-Lfoo", not ["-L", "foo"])
+      ImmutableSet.Builder<String> dedupArgs = ImmutableSet.builder();
+      dedupArgs.addAll(Arg.stringify(depArgs, buildContext.getSourcePathResolver()));
+      steps.add(
+          CxxWriteArgsToFileStep.create(
+              depArgFilePath.getPath(),
+              dedupArgs.build().stream().collect(ImmutableList.toImmutableList())));
 
       steps.add(
           new IsolatedShellStep(
@@ -290,16 +305,6 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
                 IsolatedExecutionContext executionContext) {
               ImmutableList<String> linkerCmd = linker.getCommandPrefix(resolver);
               ImmutableList.Builder<String> cmd = ImmutableList.builder();
-
-              // Accumulate Args into set to dedup them while retaining their order,
-              // since there are often many duplicates for things like library paths.
-              //
-              // NOTE: this means that all logical args should be a single string on the command
-              // line (ie "-Lfoo", not ["-L", "foo"])
-              ImmutableSet.Builder<String> dedupArgs = ImmutableSet.builder();
-
-              dedupArgs.addAll(Arg.stringify(depArgs, buildContext.getSourcePathResolver()));
-
               Path src = scratchDir.resolve(rootModule);
               cmd.addAll(compiler.getCommandPrefix(resolver));
               if (executionContext.getAnsi().isAnsiTerminal()) {
@@ -317,12 +322,12 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
                       linkerCmd.subList(1, linkerCmd.size()).stream()
                           .map(l -> String.format("-Clink-arg=%s", l))
                           .iterator())
-                  .add(String.format("-Clink-arg=@%s", argFilePath))
+                  .add(String.format("-Clink-arg=@%s", linkerArgFilePath))
                   .add(String.format("-Cmetadata=%s", metadata))
                   .add(String.format("-Cextra-filename=-%s", metadata))
                   .addAll(Arg.stringify(args, buildContext.getSourcePathResolver()))
-                  .addAll(dedupArgs.build())
                   .add("--out-dir", outputdir.toString())
+                  .add(String.format("@%s", depArgFilePath))
                   .add(src.toString());
 
               return cmd.build();

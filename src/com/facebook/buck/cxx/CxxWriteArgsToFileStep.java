@@ -40,7 +40,7 @@ import java.util.function.Function;
  * This step takes a list of args, stringify, escape them (if escaper is present), and finally store
  * to a file {@link #argFilePath}.
  */
-class CxxWriteArgsToFileStep implements Step {
+public class CxxWriteArgsToFileStep implements Step {
 
   private final Path argFilePath;
   private final ImmutableList<String> argFileContents;
@@ -58,6 +58,11 @@ class CxxWriteArgsToFileStep implements Step {
       argFileContents =
           argFileContents.stream().map(escaper.get()).collect(ImmutableList.toImmutableList());
     }
+    return new CxxWriteArgsToFileStep(argFilePath, argFileContents);
+  }
+
+  public static CxxWriteArgsToFileStep create(
+      Path argFilePath, ImmutableList<String> argFileContents) {
     return new CxxWriteArgsToFileStep(argFilePath, argFileContents);
   }
 
