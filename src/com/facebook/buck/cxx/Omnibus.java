@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
@@ -269,7 +270,7 @@ public class Omnibus {
   // Build a dummy library with the omnibus SONAME.  We'll need this to break any dep cycle between
   // the omnibus roots and the merged omnibus body, by first linking the roots against this
   // dummy lib (ignoring missing symbols), then linking the omnibus body with the roots.
-  private static SourcePath requireDummyOmnibus(
+  private static BuildTargetSourcePath requireDummyOmnibus(
       TargetConfiguration targetConfiguration,
       ProjectFilesystem projectFilesystem,
       CellPathResolver cellPathResolver,
@@ -278,36 +279,36 @@ public class Omnibus {
       DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags) {
-    return graphBuilder
-        .computeIfAbsent(
-            // We create and use a global common omnibus target to deduplicate dummy omnibus
-            // libs across all
-            // callers.
-            UnconfiguredBuildTarget.of(
-                    cellPathResolver.getCurrentCellName(),
-                    BaseName.of("//__builtin__"),
-                    "dummy-omnibus",
-                    FlavorSet.of())
-                .configure(targetConfiguration),
-            dummyOmnibusTarget -> {
-              String omnibusSoname = getOmnibusSoname(cxxPlatform);
-              return CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
-                  graphBuilder,
-                  downwardApiConfig,
-                  cxxPlatform,
-                  projectFilesystem,
-                  graphBuilder,
-                  dummyOmnibusTarget,
-                  BuildTargetPaths.getGenPath(projectFilesystem, dummyOmnibusTarget, "%s")
-                      .resolve(omnibusSoname),
-                  ImmutableMap.of(),
-                  Optional.of(omnibusSoname),
-                  extraLdflags,
-                  cellPathResolver,
-                  cxxBuckConfig.getOmnibusRootLinkScheduleInfo(),
-                  cxxBuckConfig.getLinkerMapEnabled(),
-                  cxxBuckConfig.shouldCacheOmnibusRootLinks());
-            })
+    return ((CxxLink)
+            graphBuilder.computeIfAbsent(
+                // We create and use a global common omnibus target to deduplicate dummy omnibus
+                // libs across all
+                // callers.
+                UnconfiguredBuildTarget.of(
+                        cellPathResolver.getCurrentCellName(),
+                        BaseName.of("//__builtin__"),
+                        "dummy-omnibus",
+                        FlavorSet.of())
+                    .configure(targetConfiguration),
+                dummyOmnibusTarget -> {
+                  String omnibusSoname = getOmnibusSoname(cxxPlatform);
+                  return CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
+                      graphBuilder,
+                      downwardApiConfig,
+                      cxxPlatform,
+                      projectFilesystem,
+                      graphBuilder,
+                      dummyOmnibusTarget,
+                      BuildTargetPaths.getGenPath(projectFilesystem, dummyOmnibusTarget, "%s")
+                          .resolve(omnibusSoname),
+                      ImmutableMap.of(),
+                      Optional.of(omnibusSoname),
+                      extraLdflags,
+                      cellPathResolver,
+                      cxxBuckConfig.getOmnibusRootLinkScheduleInfo(),
+                      cxxBuckConfig.getLinkerMapEnabled(),
+                      cxxBuckConfig.shouldCacheOmnibusRootLinks());
+                }))
         .getSourcePathToOutput();
   }
 
@@ -831,7 +832,7 @@ public class Omnibus {
     // Create an empty dummy omnibus library, to give the roots something to link against before
     // we have the actual omnibus library available.  Note that this requires that the linker
     // supports linking shared libraries with undefined references.
-    SourcePath dummyOmnibus =
+    BuildTargetSourcePath dummyOmnibus =
         requireDummyOmnibus(
             buildTarget.getTargetConfiguration(),
             projectFilesystem,

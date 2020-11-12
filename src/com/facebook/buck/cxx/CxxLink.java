@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
 import com.facebook.buck.core.rules.schedule.OverrideScheduleRule;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
@@ -394,7 +395,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
   }
 
   @Override
-  public SourcePath getSourcePathToOutput() {
+  public BuildTargetSourcePath getSourcePathToOutput() {
     return getSourcePath(getBuildable().output);
   }
 
