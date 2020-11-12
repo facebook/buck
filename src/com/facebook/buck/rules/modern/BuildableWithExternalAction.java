@@ -34,9 +34,12 @@ import com.google.common.collect.ImmutableList;
 public abstract class BuildableWithExternalAction implements Buildable {
 
   private final boolean shouldExecuteInSeparateProcess;
+  private final ImmutableList<String> javaCommandPrefix;
 
-  public BuildableWithExternalAction(boolean shouldExecuteInSeparateProcess) {
+  public BuildableWithExternalAction(
+      boolean shouldExecuteInSeparateProcess, ImmutableList<String> javaCommandPrefix) {
     this.shouldExecuteInSeparateProcess = shouldExecuteInSeparateProcess;
+    this.javaCommandPrefix = javaCommandPrefix;
   }
 
   @Override
@@ -51,7 +54,9 @@ public abstract class BuildableWithExternalAction implements Buildable {
     if (shouldExecuteInSeparateProcess) {
       return ImmutableList.of(
           new BuildableCommandExecutionStep(
-              getBuildableCommand(filesystem, outputPathResolver, buildContext), filesystem));
+              getBuildableCommand(filesystem, outputPathResolver, buildContext),
+              filesystem,
+              javaCommandPrefix));
     }
     String externalActionClassName = buildableCommand.getExternalActionClass();
     try {

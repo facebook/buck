@@ -105,6 +105,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final Optional<SourcePath> resourceStableIds;
   private final boolean withDownwardApi;
   private final boolean shouldExecuteInSeparateProcess;
+  private final ImmutableList<String> javaCommandPrefix;
 
   public AndroidBinaryResourcesGraphEnhancer(
       BuildTarget buildTarget,
@@ -141,7 +142,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       ImmutableSet<String> extraFilteredResources,
       Optional<SourcePath> resourceStableIds,
       boolean withDownwardApi,
-      boolean shouldExecuteInSeparateProcess) {
+      boolean shouldExecuteInSeparateProcess,
+      ImmutableList<String> javaCommandPrefix) {
     this.androidPlatformTarget = androidPlatformTarget;
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
@@ -177,6 +179,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.resourceStableIds = resourceStableIds;
     this.withDownwardApi = withDownwardApi;
     this.shouldExecuteInSeparateProcess = shouldExecuteInSeparateProcess;
+    this.javaCommandPrefix = javaCommandPrefix;
   }
 
   @BuckStyleValueWithBuilder
@@ -444,7 +447,8 @@ class AndroidBinaryResourcesGraphEnhancer {
               aaptOutputInfo.getPrimaryResourcesApkPath(),
               aaptOutputInfo.getPathToRDotTxt(),
               withDownwardApi,
-              shouldExecuteInSeparateProcess);
+              shouldExecuteInSeparateProcess,
+              javaCommandPrefix);
       MergeThirdPartyJarResources mergeThirdPartyJarResource =
           createMergeThirdPartyJarResources(
               packageableCollection.getPathsToThirdPartyJars().values());
@@ -536,7 +540,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       SourcePath aaptOutputPath,
       SourcePath aaptRDotTxtPath,
       boolean withDownwardApi,
-      boolean shouldExecuteInSeparateProcess) {
+      boolean shouldExecuteInSeparateProcess,
+      ImmutableList<String> javaCommandPrefix) {
     BuildTarget target = buildTarget.withAppendedFlavors(SPLIT_RESOURCES_FLAVOR);
     return new SplitResources(
         target,
@@ -548,7 +553,8 @@ class AndroidBinaryResourcesGraphEnhancer {
             .getZipalignToolProvider()
             .resolve(graphBuilder, target.getTargetConfiguration()),
         withDownwardApi,
-        shouldExecuteInSeparateProcess);
+        shouldExecuteInSeparateProcess,
+        javaCommandPrefix);
   }
 
   private Aapt2Link createAapt2Link(

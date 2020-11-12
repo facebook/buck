@@ -50,28 +50,35 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
   public static final String EXTERNAL_ACTIONS_PROPERTY_NAME = "buck.external_actions";
   private static final String EXTERNAL_ACTIONS_MAIN =
       "com.facebook.buck.external.main.ExternalActionsExecutable";
-  private static final ImmutableList<String> COMMAND_PREFIX = ImmutableList.of("java", "-cp");
   private static final String TEMP_FILE_NAME_PREFIX = "buildable_command_";
 
   private final String mainToInvoke;
   private final BuildableCommand buildableCommand;
   private final ProjectFilesystem projectFilesystem;
+  private final ImmutableList<String> javaCommandPrefix;
 
   public BuildableCommandExecutionStep(
-      BuildableCommand buildableCommand, ProjectFilesystem projectFilesystem) {
-    this(EXTERNAL_ACTIONS_MAIN, buildableCommand, projectFilesystem);
+      BuildableCommand buildableCommand,
+      ProjectFilesystem projectFilesystem,
+      ImmutableList<String> javaCommandPrefix) {
+    this(EXTERNAL_ACTIONS_MAIN, buildableCommand, projectFilesystem, javaCommandPrefix);
   }
 
   /**
    * Used for testing only. Production code should use the constructor {@link
-   * #BuildableCommandExecutionStep(BuildableCommand, ProjectFilesystem)}.
+   * #BuildableCommandExecutionStep(BuildableCommand, ProjectFilesystem, ImmutableList)}.
    */
   @VisibleForTesting
   public BuildableCommandExecutionStep(
-      String mainToInvoke, BuildableCommand buildableCommand, ProjectFilesystem projectFilesystem) {
+      String mainToInvoke,
+      BuildableCommand buildableCommand,
+      ProjectFilesystem projectFilesystem,
+      ImmutableList<String> javaCommandPrefix) {
     this.mainToInvoke = mainToInvoke;
     this.buildableCommand = buildableCommand;
     this.projectFilesystem = projectFilesystem;
+    this.javaCommandPrefix =
+        ImmutableList.<String>builder().addAll(javaCommandPrefix).add("-cp").build();
   }
 
   @Override
@@ -125,9 +132,8 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
   }
 
   private ImmutableList<String> getCommand(Path buildableCommandPath) {
-    return ImmutableList.<String>builderWithExpectedSize(
-            COMMAND_PREFIX.size() + buildableCommand.getArgsList().size())
-        .addAll(COMMAND_PREFIX)
+    return ImmutableList.<String>builderWithExpectedSize(javaCommandPrefix.size() + 3)
+        .addAll(javaCommandPrefix)
         .add(getJarPath().toString())
         .add(mainToInvoke)
         .add(buildableCommandPath.toString())

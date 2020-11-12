@@ -36,6 +36,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import java.io.FileOutputStream;
@@ -65,7 +66,8 @@ public class BuildableCommandExecutionStepTest {
         new BuildableCommandExecutionStep(
             "com.facebook.buck.step.buildables.FakeExternalActionsMain",
             BuildableCommand.getDefaultInstance(),
-            new FakeProjectFilesystem()) {
+            new FakeProjectFilesystem(),
+            ImmutableList.of("java")) {
           @Override
           protected AbsPath getJarPath() {
             return testBinary;

@@ -35,6 +35,7 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -68,7 +69,8 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
       SourcePath pathToOriginalRDotTxt,
       Tool zipalignTool,
       boolean withDownwardApi,
-      boolean shouldExecuteInSeparateProcess) {
+      boolean shouldExecuteInSeparateProcess,
+      ImmutableList<String> javaCommandPrefix) {
     super(
         buildTarget,
         projectFilesystem,
@@ -82,7 +84,8 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
             Paths.get(PRIMARY_RESOURCES_APK_FILE_NAME),
             Paths.get(R_TXT_FILE_NAME),
             withDownwardApi,
-            shouldExecuteInSeparateProcess));
+            shouldExecuteInSeparateProcess,
+            javaCommandPrefix));
   }
 
   SourcePath getPathToRDotTxt() {
@@ -122,8 +125,9 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
         Path primaryResourcesOutputPath,
         Path rDotTxtOutputPath,
         boolean withDownwardApi,
-        boolean shouldExecuteInSeparateProcess) {
-      super(shouldExecuteInSeparateProcess);
+        boolean shouldExecuteInSeparateProcess,
+        ImmutableList<String> javaCommandPrefix) {
+      super(shouldExecuteInSeparateProcess, javaCommandPrefix);
       this.buildTarget = buildTarget;
       this.exoResourcesOutputPath = new OutputPath(exoResourcesOutputPath);
       this.primaryResourcesOutputPath = new OutputPath(primaryResourcesOutputPath);

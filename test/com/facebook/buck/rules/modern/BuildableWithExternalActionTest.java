@@ -95,7 +95,7 @@ public class BuildableWithExternalActionTest {
     private final String arg;
 
     private FakeBuildable(boolean shouldUseExternalActions, String arg) {
-      super(shouldUseExternalActions);
+      super(shouldUseExternalActions, ImmutableList.of("java"));
       this.arg = arg;
     }
 

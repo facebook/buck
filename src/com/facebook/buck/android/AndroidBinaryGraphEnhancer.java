@@ -313,7 +313,11 @@ public class AndroidBinaryGraphEnhancer {
             extraFilteredResources,
             resourceStableIds,
             downwardApiConfig.isEnabledForAndroid(),
-            buildBuckConfig.areExternalActionsEnabled());
+            buildBuckConfig.areExternalActionsEnabled(),
+            javaBuckConfig
+                .getDefaultJavaOptions()
+                .getJavaRuntimeLauncher(graphBuilder, originalBuildTarget.getTargetConfiguration())
+                .getCommandPrefix(graphBuilder.getSourcePathResolver()));
     this.apkModuleGraph = apkModuleGraph;
     this.dxConfig = dxConfig;
     this.nonPreDexedDexBuildableArgs = nonPreDexedDexBuildableArgs;
