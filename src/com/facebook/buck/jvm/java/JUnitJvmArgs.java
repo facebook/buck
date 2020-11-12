@@ -265,7 +265,8 @@ abstract class JUnitJvmArgs {
 
   /** Whether or not we should use an argfile for the classpath when invoking Java. */
   public boolean shouldUseClasspathArgfile() {
-    return getTargetJavaVersion() >= 9;
+    return getTargetJavaVersion() >= 9
+        || (getJavaForTestsVersion().isPresent() && getJavaForTestsVersion().getAsInt() >= 9);
   }
 
   /** Writes an argfile for the classpath to a file, which is supported in Java 9+. */
