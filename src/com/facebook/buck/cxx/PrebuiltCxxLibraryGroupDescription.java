@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.RuleArg;
@@ -59,6 +59,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimaps;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 public class PrebuiltCxxLibraryGroupDescription
@@ -164,7 +165,7 @@ public class PrebuiltCxxLibraryGroupDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       PrebuiltCxxLibraryGroupDescriptionArg args) {
-    return new CustomPrebuiltCxxLibrary(buildTarget, context.getProjectFilesystem(), params, args);
+    return new CustomPrebuiltCxxLibrary(buildTarget, context.getProjectFilesystem(), args);
   }
 
   @Override
@@ -177,7 +178,7 @@ public class PrebuiltCxxLibraryGroupDescription
    * providing the various interfaces to make it consumable by C/C++ preprocessing and native
    * linkable rules.
    */
-  public static class CustomPrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
+  public static class CustomPrebuiltCxxLibrary extends NoopBuildRule
       implements AbstractCxxLibraryGroup, LegacyNativeLinkableGroup {
 
     private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
@@ -191,9 +192,8 @@ public class PrebuiltCxxLibraryGroupDescription
     public CustomPrebuiltCxxLibrary(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
-        BuildRuleParams params,
         PrebuiltCxxLibraryGroupDescriptionArg args) {
-      super(buildTarget, projectFilesystem, params);
+      super(buildTarget, projectFilesystem);
       this.args = args;
       this.allExportedDeps =
           CxxDeps.builder()
@@ -260,7 +260,10 @@ public class PrebuiltCxxLibraryGroupDescription
     @Override
     public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
         BuildRuleResolver ruleResolver) {
-      return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkableGroup.class);
+      return RichStream.from(args.getDeps())
+          .map(ruleResolver::getRule)
+          .filter(NativeLinkableGroup.class)
+          .collect(Collectors.toList());
     }
 
     @Override
