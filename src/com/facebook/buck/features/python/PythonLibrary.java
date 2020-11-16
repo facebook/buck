@@ -19,10 +19,9 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.io.file.MorePaths;
@@ -31,21 +30,24 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements PythonPackagable, HasRuntimeDeps {
+public class PythonLibrary extends NoopBuildRule implements PythonPackagable, HasRuntimeDeps {
 
+  private final Supplier<? extends SortedSet<BuildRule>> declareDeps;
   private Optional<Boolean> zipSafe;
   private boolean excludeDepsFromOmnibus;
 
   PythonLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      Supplier<? extends SortedSet<BuildRule>> declareDeps,
       Optional<Boolean> zipSafe,
       boolean excludeDepsFromOmnibus) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem);
+    this.declareDeps = declareDeps;
     this.zipSafe = zipSafe;
     this.excludeDepsFromOmnibus = excludeDepsFromOmnibus;
   }
@@ -149,7 +151,7 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
-    return getDeclaredDeps().stream().map(BuildRule::getBuildTarget);
+    return declareDeps.get().stream().map(BuildRule::getBuildTarget);
   }
 
   @Override

@@ -213,7 +213,7 @@ public class PythonLibraryDescription
     return new PythonLibrary(
         buildTarget,
         context.getProjectFilesystem(),
-        params,
+        params.getDeclaredDeps(),
         args.getZipSafe(),
         args.isExcludeDepsFromMergedLinking());
   }
