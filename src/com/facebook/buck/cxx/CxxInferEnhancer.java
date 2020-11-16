@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /** Handles infer flavors for {@link CxxLibraryGroup} and {@link CxxBinary}. */
 public final class CxxInferEnhancer {
@@ -220,7 +221,10 @@ public final class CxxInferEnhancer {
               (ruleClass.cast(
                   library.requireBuildRule(
                       graphBuilder, requiredFlavor, cxxPlatform.getFlavor()))));
-          return buildRule.getBuildDeps();
+          return RichStream.from(
+                  ((CxxLibraryGroup) buildRule).getCxxPreprocessorDeps(cxxPlatform, graphBuilder))
+              .filter(BuildRule.class)
+              .collect(Collectors.toList());
         }
         return ImmutableSet.of();
       }

@@ -23,10 +23,9 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
@@ -65,10 +64,12 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -77,7 +78,7 @@ import java.util.stream.Stream;
  * An action graph representation of a C/C++ library from the target graph, providing the various
  * interfaces to make it consumable by C/C++ preprocessing and native linkable rules.
  */
-public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
+public class CxxLibraryGroup extends NoopBuildRule
     implements AbstractCxxLibraryGroup,
         HasRuntimeDeps,
         NativeTestable,
@@ -86,6 +87,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   private static final Logger LOG = Logger.get(CxxLibraryGroup.class);
 
+  private final Supplier<? extends SortedSet<BuildRule>> declaredDeps;
   private final CxxDeps deps;
   private final CxxDeps exportedDeps;
   private final Predicate<CxxPlatform> headerOnly;
@@ -133,7 +135,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
   public CxxLibraryGroup(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      Supplier<? extends SortedSet<BuildRule>> declaredDeps,
       CxxDeps deps,
       CxxDeps exportedDeps,
       Predicate<CxxPlatform> headerOnly,
@@ -163,7 +165,8 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
       boolean supportsOmnibusLinking,
       Optional<Boolean> useArchive,
       CxxLibraryDescriptionDelegate delegate) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem);
+    this.declaredDeps = declaredDeps;
     this.deps = deps;
     this.exportedDeps = exportedDeps;
     this.headerOnly = headerOnly;
@@ -632,7 +635,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
     // will pull in runtime deps (e.g. other binaries) or transitive C/C++ libraries.  Since the
     // `CxxLibrary` rules themselves are noop meta rules, they shouldn't add any unnecessary
     // overhead.
-    return RichStream.from(getDeclaredDeps().stream())
+    return RichStream.from(declaredDeps.get().stream())
         // Make sure to use the rule ruleFinder that's passed in rather than the field we're
         // holding, since we need to access nodes already created by the previous build rule
         // ruleFinder in the incremental action graph scenario, and {@see #updateBuildRuleResolver}
