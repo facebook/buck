@@ -334,7 +334,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
           "Out path required in cxx_genrule when CMD has no CxxPlatform");
     }
 
-    return new CxxGenrule(buildTarget, context.getProjectFilesystem(), params, args.getOut().get());
+    return new CxxGenrule(buildTarget, context.getProjectFilesystem(), args.getOut().get());
   }
 
   @Override

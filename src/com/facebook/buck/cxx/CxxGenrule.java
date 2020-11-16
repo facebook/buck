@@ -20,24 +20,19 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.Genrule;
 
 /** Genrule with C++ aware macros. */
-public class CxxGenrule extends NoopBuildRuleWithDeclaredAndExtraDeps implements HasOutputName {
+public class CxxGenrule extends NoopBuildRule implements HasOutputName {
 
   private final String output;
 
-  public CxxGenrule(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      String output) {
-    super(buildTarget, projectFilesystem, params);
+  public CxxGenrule(BuildTarget buildTarget, ProjectFilesystem projectFilesystem, String output) {
+    super(buildTarget, projectFilesystem);
     this.output = output;
   }
 
