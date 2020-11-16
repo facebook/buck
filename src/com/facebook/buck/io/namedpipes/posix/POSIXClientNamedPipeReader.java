@@ -22,11 +22,12 @@ import java.io.InputStream;
 import java.nio.file.Path;
 
 /** Named pipe reader implementation based on {@code RandomAccessFile}. */
-class POSIXClientNamedPipeReader extends POSIXClientNamedPipeBase implements NamedPipeReader {
+public class POSIXClientNamedPipeReader extends POSIXClientNamedPipeBase
+    implements NamedPipeReader {
 
   private final RandomAccessFileWrapper readFile;
 
-  public POSIXClientNamedPipeReader(Path path) throws IOException {
+  protected POSIXClientNamedPipeReader(Path path) throws IOException {
     super(path);
     readFile = new POSIXClientNamedPipeBase.RandomAccessFileWrapper(getName(), "rw");
   }

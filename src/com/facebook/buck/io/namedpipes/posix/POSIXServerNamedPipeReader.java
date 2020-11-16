@@ -23,9 +23,9 @@ import java.nio.file.Path;
 /**
  * POSIX name pipe reader that creates and removes a physical file corresponding to the named pipe.
  */
-class POSIXServerNamedPipeReader extends POSIXClientNamedPipeReader {
+public class POSIXServerNamedPipeReader extends POSIXClientNamedPipeReader {
 
-  POSIXServerNamedPipeReader(Path path) throws IOException {
+  protected POSIXServerNamedPipeReader(Path path) throws IOException {
     super(path);
   }
 

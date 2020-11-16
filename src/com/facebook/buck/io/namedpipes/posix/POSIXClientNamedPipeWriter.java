@@ -22,11 +22,12 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 
 /** Named pipe writer implementation based on {@code RandomAccessFile}. */
-class POSIXClientNamedPipeWriter extends POSIXClientNamedPipeBase implements NamedPipeWriter {
+public class POSIXClientNamedPipeWriter extends POSIXClientNamedPipeBase
+    implements NamedPipeWriter {
 
   private final RandomAccessFileWrapper writer;
 
-  public POSIXClientNamedPipeWriter(Path path) throws IOException {
+  protected POSIXClientNamedPipeWriter(Path path) throws IOException {
     super(path);
     writer = new RandomAccessFileWrapper(getName(), "rw");
   }
