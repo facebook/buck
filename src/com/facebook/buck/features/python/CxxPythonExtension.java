@@ -19,9 +19,8 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
@@ -30,12 +29,11 @@ import com.google.common.annotations.VisibleForTesting;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public abstract class CxxPythonExtension extends NoopBuildRuleWithDeclaredAndExtraDeps
+public abstract class CxxPythonExtension extends NoopBuildRule
     implements PythonPackagable, HasRuntimeDeps {
 
-  public CxxPythonExtension(
-      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
-    super(buildTarget, projectFilesystem, params);
+  public CxxPythonExtension(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
+    super(buildTarget, projectFilesystem);
   }
 
   @VisibleForTesting

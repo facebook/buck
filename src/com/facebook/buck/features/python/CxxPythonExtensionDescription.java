@@ -486,7 +486,7 @@ public class CxxPythonExtensionDescription
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
-    return new CxxPythonExtension(buildTarget, projectFilesystem, params) {
+    return new CxxPythonExtension(buildTarget, projectFilesystem) {
 
       @Override
       protected BuildRule getExtension(
@@ -568,7 +568,7 @@ public class CxxPythonExtensionDescription
 
       @Override
       public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
-        return getDeclaredDeps().stream().map(BuildRule::getBuildTarget);
+        return params.getDeclaredDeps().get().stream().map(BuildRule::getBuildTarget);
       }
     };
   }
