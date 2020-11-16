@@ -367,7 +367,8 @@ public class Omnibus {
       SourcePath omnibus,
       Function<BuildTarget, BuildTarget> rootLinkTargetFn,
       NativeLinkTarget root,
-      Optional<Path> output) {
+      Optional<Path> output,
+      boolean preferStrippedObjects) {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
 
@@ -416,7 +417,12 @@ public class Omnibus {
         Preconditions.checkState(linkStyle == Linker.LinkableDepType.STATIC_PIC);
         argsBuilder.addAll(
             nativeLinkable
-                .getNativeLinkableInput(linkStyle, graphBuilder, target.getTargetConfiguration())
+                .getNativeLinkableInput(
+                    linkStyle,
+                    false,
+                    graphBuilder,
+                    target.getTargetConfiguration(),
+                    preferStrippedObjects)
                 .getArgs());
         continue;
       }
@@ -445,7 +451,12 @@ public class Omnibus {
       Preconditions.checkState(spec.getExcluded().containsKey(linkableTarget));
       argsBuilder.addAll(
           nativeLinkable
-              .getNativeLinkableInput(linkStyle, graphBuilder, target.getTargetConfiguration())
+              .getNativeLinkableInput(
+                  linkStyle,
+                  false,
+                  graphBuilder,
+                  target.getTargetConfiguration(),
+                  preferStrippedObjects)
               .getArgs());
     }
 
@@ -530,7 +541,8 @@ public class Omnibus {
       OmnibusSpec spec,
       SourcePath omnibus,
       Function<BuildTarget, BuildTarget> rootLinkTargetFn,
-      NativeLinkTarget root) {
+      NativeLinkTarget root,
+      boolean preferStrippedObjects) {
     CxxLink link =
         (CxxLink)
             graphBuilder.computeIfAbsent(
@@ -549,7 +561,8 @@ public class Omnibus {
                         omnibus,
                         rootLinkTargetFn,
                         root,
-                        root.getNativeLinkTargetOutputPath()));
+                        root.getNativeLinkTargetOutputPath(),
+                        preferStrippedObjects));
     return ImmutableOmnibusRoot.ofImpl(Preconditions.checkNotNull(link.getSourcePathToOutput()));
   }
 
@@ -565,7 +578,8 @@ public class Omnibus {
       OmnibusSpec spec,
       SourcePath omnibus,
       Function<BuildTarget, BuildTarget> rootLinkTargetFn,
-      NativeLinkTarget root) {
+      NativeLinkTarget root,
+      boolean preferStrippedObjects) {
     CxxLink link =
         (CxxLink)
             graphBuilder.computeIfAbsent(
@@ -584,7 +598,8 @@ public class Omnibus {
                         omnibus,
                         rootLinkTargetFn,
                         root,
-                        Optional.empty()));
+                        Optional.empty(),
+                        preferStrippedObjects));
     return ImmutableOmnibusRoot.ofImpl(Preconditions.checkNotNull(link.getSourcePathToOutput()));
   }
 
@@ -998,7 +1013,8 @@ public class Omnibus {
                       spec,
                       dummyOmnibus,
                       rootLinkTargetFn,
-                      target);
+                      target,
+                      preferStrippedObjects);
               return new AbstractMap.SimpleEntry<>(target.getBuildTarget(), root);
             })
         .forEach(libs::putRoots);
@@ -1020,7 +1036,8 @@ public class Omnibus {
             spec,
             dummyOmnibus,
             rootLinkTargetFn,
-            target);
+            target,
+            preferStrippedObjects);
       }
     }
 
@@ -1062,7 +1079,8 @@ public class Omnibus {
                 spec,
                 realOmnibus.orElse(dummyOmnibus),
                 rootLinkTargetFn,
-                target);
+                target,
+                preferStrippedObjects);
         libs.putRoots(target.getBuildTarget(), root);
       }
     }
