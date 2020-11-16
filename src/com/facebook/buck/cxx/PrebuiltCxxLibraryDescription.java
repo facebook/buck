@@ -501,7 +501,7 @@ public class PrebuiltCxxLibraryDescription
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     PrebuiltCxxLibraryPaths paths = getPaths(buildTarget, args);
-    return new PrebuiltCxxLibrary(buildTarget, projectFilesystem, params) {
+    return new PrebuiltCxxLibrary(buildTarget, projectFilesystem) {
 
       private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
           new TransitiveCxxPreprocessorInputCache(this);
