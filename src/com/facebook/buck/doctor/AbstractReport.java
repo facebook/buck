@@ -313,9 +313,9 @@ public abstract class AbstractReport {
   Optional<DefectReporter.FileChangesIgnoredReport> runWatchmanDiagReportCollector(UserInput input)
       throws IOException, InterruptedException {
     if (!watchmanDiagReportCollector.isPresent()
-        || !input.confirm(
-            "Is buck not picking up changes to files? "
-                + "(saying 'yes' will run extra consistency checks)")) {
+        || input.confirm(
+            "Is buck picking up changes to files? "
+                + "(saying 'no' will run extra consistency checks)")) {
       return Optional.empty();
     }
 

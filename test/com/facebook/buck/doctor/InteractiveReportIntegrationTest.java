@@ -158,7 +158,7 @@ public class InteractiveReportIntegrationTest {
 
   @Test
   public void testWatchmanDiagReport() throws Exception {
-    UserInputFixture userInputFixture = new UserInputFixture("0\n\n\ny");
+    UserInputFixture userInputFixture = new UserInputFixture("0\nn\n\ny");
     DoctorConfig doctorConfig = DoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
     DoctorReportHelper helper =
         DoctorTestUtils.createDoctorHelper(
