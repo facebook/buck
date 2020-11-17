@@ -326,6 +326,7 @@ public class JarBuildStepsFactory
     ImmutableSortedSet<Path> compileTimeClasspathPaths =
         getCompileTimeClasspathPaths(sourcePathResolver);
     ImmutableSortedSet<Path> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
+    AbsPath rootPath = filesystem.getRootPath();
     BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
 
     ImmutableList<BaseJavaAbiInfo> fullJarInfos =
@@ -348,7 +349,13 @@ public class JarBuildStepsFactory
             resourcesParameters,
             buildTarget);
 
-    // ----//
+    ImmutableMap<String, RelPath> cellToPathMappings =
+        CellPathResolverUtils.getCellToPathMappings(rootPath, context.getCellPathResolver());
+
+    JarParameters abiJarParameters =
+        getAbiJarParameters(buildTarget, context, filesystem, compilerOutputPaths).orElse(null);
+    JarParameters libraryJarParameters =
+        getLibraryJarParameters(context, filesystem, compilerOutputPaths).orElse(null);
 
     CompilerParameters compilerParameters =
         getCompilerParameters(
@@ -370,13 +377,12 @@ public class JarBuildStepsFactory
         buildTarget,
         compilerParameters,
         ImmutableList.of(),
-        getAbiJarParameters(buildTarget, context, filesystem, compilerParameters).orElse(null),
-        getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null),
+        abiJarParameters,
+        libraryJarParameters,
         steps,
         buildableContext,
         withDownwardApi,
-        CellPathResolverUtils.getCellToPathMappings(
-            filesystem.getRootPath(), context.getCellPathResolver()),
+        cellToPathMappings,
         resourcesMap);
 
     return steps.build();
@@ -402,11 +408,14 @@ public class JarBuildStepsFactory
             resourcesParameters,
             buildTarget);
 
+    ImmutableMap<String, RelPath> cellToPathMappings =
+        CellPathResolverUtils.getCellToPathMappings(
+            filesystem.getRootPath(), context.getCellPathResolver());
+
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
             filesystem,
-            CellPathResolverUtils.getCellToPathMappings(
-                filesystem.getRootPath(), context.getCellPathResolver()),
+            cellToPathMappings,
             buildTarget,
             state,
             postprocessClassesCommands,
@@ -430,6 +439,7 @@ public class JarBuildStepsFactory
     ImmutableSortedSet<Path> compileTimeClasspathPaths =
         getCompileTimeClasspathPaths(sourcePathResolver);
     ImmutableSortedSet<Path> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
+    AbsPath rootPath = filesystem.getRootPath();
     BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
 
     ImmutableList<BaseJavaAbiInfo> fullJarInfos =
@@ -453,6 +463,12 @@ public class JarBuildStepsFactory
             resourcesParameters,
             buildTarget);
 
+    ImmutableMap<String, RelPath> cellToPathMappings =
+        CellPathResolverUtils.getCellToPathMappings(rootPath, context.getCellPathResolver());
+
+    JarParameters libraryJarParameters =
+        getLibraryJarParameters(context, filesystem, compilerOutputPaths).orElse(null);
+
     CompilerParameters compilerParameters =
         getCompilerParameters(
             compileTimeClasspathPaths,
@@ -474,12 +490,11 @@ public class JarBuildStepsFactory
         compilerParameters,
         postprocessClassesCommands,
         null,
-        getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null),
+        libraryJarParameters,
         steps,
         buildableContext,
         withDownwardApi,
-        CellPathResolverUtils.getCellToPathMappings(
-            filesystem.getRootPath(), context.getCellPathResolver()),
+        cellToPathMappings,
         resourcesMap);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
@@ -507,13 +522,14 @@ public class JarBuildStepsFactory
             resourcesParameters,
             libraryTarget);
 
-    // ----//
+    ImmutableMap<String, RelPath> cellToPathMappings =
+        CellPathResolverUtils.getCellToPathMappings(
+            filesystem.getRootPath(), context.getCellPathResolver());
 
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
             filesystem,
-            CellPathResolverUtils.getCellToPathMappings(
-                filesystem.getRootPath(), context.getCellPathResolver()),
+            cellToPathMappings,
             libraryTarget,
             state,
             postprocessClassesCommands,
@@ -579,31 +595,31 @@ public class JarBuildStepsFactory
     return compileTimeClasspathPaths;
   }
 
-  protected Optional<JarParameters> getLibraryJarParameters(
-      BuildContext context, ProjectFilesystem filesystem, CompilerParameters compilerParameters) {
-    return getJarParameters(context, filesystem, libraryTarget, compilerParameters);
+  private Optional<JarParameters> getLibraryJarParameters(
+      BuildContext context, ProjectFilesystem filesystem, CompilerOutputPaths compilerOutputPaths) {
+    return getJarParameters(context, filesystem, libraryTarget, compilerOutputPaths);
   }
 
-  protected Optional<JarParameters> getAbiJarParameters(
+  private Optional<JarParameters> getAbiJarParameters(
       BuildTarget target,
       BuildContext context,
       ProjectFilesystem filesystem,
-      CompilerParameters compilerParameters) {
+      CompilerOutputPaths compilerOutputPaths) {
     if (JavaAbis.isLibraryTarget(target)) {
       return Optional.empty();
     }
     Preconditions.checkState(
         JavaAbis.isSourceAbiTarget(target) || JavaAbis.isSourceOnlyAbiTarget(target));
-    return getJarParameters(context, filesystem, target, compilerParameters);
+    return getJarParameters(context, filesystem, target, compilerOutputPaths);
   }
 
   private Optional<JarParameters> getJarParameters(
       BuildContext context,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
-      CompilerParameters compilerParameters) {
+      CompilerOutputPaths compilerOutputPaths) {
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
-    RelPath classesDir = compilerParameters.getOutputPaths().getClassesDir();
+    RelPath classesDir = compilerOutputPaths.getClassesDir();
     ImmutableSortedSet<RelPath> entriesToJar =
         ImmutableSortedSet.orderedBy(RelPath.comparator()).add(classesDir).build();
     Optional<RelPath> manifestRelFile =
@@ -701,6 +717,11 @@ public class JarBuildStepsFactory
             .collect(ImmutableList.toImmutableList());
 
     CompilerOutputPaths compilerOutputPaths = CompilerOutputPaths.of(firstRule, baseBuckPaths);
+    JarParameters abiJarParameters =
+        getAbiJarParameters(firstRule, context, filesystem, compilerOutputPaths).orElse(null);
+    JarParameters libraryJarParameters =
+        getLibraryJarParameters(context, filesystem, compilerOutputPaths).orElse(null);
+
     CompilerParameters compilerParameters =
         getCompilerParameters(
             compileTimeClasspathPaths,
@@ -718,8 +739,8 @@ public class JarBuildStepsFactory
     return javacToJarStepFactory.createPipelineState(
         firstRule,
         compilerParameters,
-        getAbiJarParameters(firstRule, context, filesystem, compilerParameters).orElse(null),
-        getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null),
+        abiJarParameters,
+        libraryJarParameters,
         withDownwardApi,
         sourcePathResolver,
         filesystem.getRootPath());
