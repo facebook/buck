@@ -85,10 +85,18 @@ public class BuckAutoDepsQuickFixProvider
     String className = referenceElement.getQualifiedName();
     List<IntentionAction> results = new ArrayList<>();
     if (className != null) {
-      findPsiClasses(project, className).stream()
+      Set<PsiClass> psiClasses = findPsiClasses(project, className);
+      psiClasses.stream()
           .map(
               psiClass ->
                   BuckAddDependencyIntentionFactory.createAddModuleDependencyIntention(
+                      referenceElement, psiClass))
+          .filter(Objects::nonNull)
+          .forEach(results::add);
+      psiClasses.stream()
+          .map(
+              psiClass ->
+                  BuckAddDependencyIntentionFactory.getAddLibraryDependencyIntention(
                       referenceElement, psiClass))
           .filter(Objects::nonNull)
           .forEach(results::add);
