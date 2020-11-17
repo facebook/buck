@@ -59,23 +59,25 @@ public class CopyResourcesStepTest {
 
     ImmutableList<IsolatedStep> steps =
         CopyResourcesStep.of(
-            filesystem,
-            buildContext,
-            buildTarget,
-            ResourcesParameters.of(
-                ResourcesParameters.getNamedResources(
-                    ruleFinder,
-                    filesystem,
-                    ImmutableSortedSet.of(
-                        FakeSourcePath.of(
-                            filesystem, "android/java/src/com/facebook/base/data.json"),
-                        FakeSourcePath.of(
-                            filesystem, "android/java/src/com/facebook/common/util/data.json"))),
-                Optional.empty()),
-            filesystem
-                .getBuckPaths()
-                .getScratchDir()
-                .resolve("android/java/lib__resources__classes"));
+            CopyResourcesStep.getResourcesMap(
+                buildContext,
+                filesystem,
+                filesystem
+                    .getBuckPaths()
+                    .getScratchDir()
+                    .resolve("android/java/lib__resources__classes"),
+                ResourcesParameters.of(
+                    ResourcesParameters.getNamedResources(
+                        ruleFinder,
+                        filesystem,
+                        ImmutableSortedSet.of(
+                            FakeSourcePath.of(
+                                filesystem, "android/java/src/com/facebook/base/data.json"),
+                            FakeSourcePath.of(
+                                filesystem,
+                                "android/java/src/com/facebook/common/util/data.json"))),
+                    Optional.empty()),
+                buildTarget));
 
     RelPath target =
         filesystem
@@ -120,23 +122,25 @@ public class CopyResourcesStepTest {
 
     ImmutableList<IsolatedStep> steps =
         CopyResourcesStep.of(
-            filesystem,
-            buildContext,
-            buildTarget,
-            ResourcesParameters.of(
-                ResourcesParameters.getNamedResources(
-                    ruleFinder,
-                    filesystem,
-                    ImmutableSortedSet.of(
-                        FakeSourcePath.of(
-                            filesystem, "android/java/src/com/facebook/base/data.json"),
-                        FakeSourcePath.of(
-                            filesystem, "android/java/src/com/facebook/common/util/data.json"))),
-                Optional.empty()),
-            filesystem
-                .getBuckPaths()
-                .getScratchDir()
-                .resolve("android/java/src/lib__resources__classes"));
+            CopyResourcesStep.getResourcesMap(
+                buildContext,
+                filesystem,
+                filesystem
+                    .getBuckPaths()
+                    .getScratchDir()
+                    .resolve("android/java/src/lib__resources__classes"),
+                ResourcesParameters.of(
+                    ResourcesParameters.getNamedResources(
+                        ruleFinder,
+                        filesystem,
+                        ImmutableSortedSet.of(
+                            FakeSourcePath.of(
+                                filesystem, "android/java/src/com/facebook/base/data.json"),
+                            FakeSourcePath.of(
+                                filesystem,
+                                "android/java/src/com/facebook/common/util/data.json"))),
+                    Optional.empty()),
+                buildTarget));
 
     RelPath target =
         filesystem
@@ -183,23 +187,25 @@ public class CopyResourcesStepTest {
 
     ImmutableList<IsolatedStep> steps =
         CopyResourcesStep.of(
-            filesystem,
-            buildContext,
-            buildTarget,
-            ResourcesParameters.of(
-                ResourcesParameters.getNamedResources(
-                    ruleFinder,
-                    filesystem,
-                    ImmutableSortedSet.of(
-                        FakeSourcePath.of(
-                            filesystem, "android/java/src/com/facebook/base/data.json"),
-                        FakeSourcePath.of(
-                            filesystem, "android/java/src/com/facebook/common/util/data.json"))),
-                Optional.empty()),
-            filesystem
-                .getBuckPaths()
-                .getScratchDir()
-                .resolve("android/java/src/com/facebook/lib__resources__classes"));
+            CopyResourcesStep.getResourcesMap(
+                buildContext,
+                filesystem,
+                filesystem
+                    .getBuckPaths()
+                    .getScratchDir()
+                    .resolve("android/java/src/com/facebook/lib__resources__classes"),
+                ResourcesParameters.of(
+                    ResourcesParameters.getNamedResources(
+                        ruleFinder,
+                        filesystem,
+                        ImmutableSortedSet.of(
+                            FakeSourcePath.of(
+                                filesystem, "android/java/src/com/facebook/base/data.json"),
+                            FakeSourcePath.of(
+                                filesystem,
+                                "android/java/src/com/facebook/common/util/data.json"))),
+                    Optional.empty()),
+                buildTarget));
 
     RelPath target =
         filesystem

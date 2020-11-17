@@ -53,20 +53,19 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       ProjectFilesystem projectFilesystem,
       BuildTarget target,
       CompilerParameters compilerParameters,
-      ResourcesParameters resourcesParameters,
       ImmutableList<String> postprocessClassesCommands,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
-      /* output params */
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       boolean withDownwardApi,
-      ImmutableMap<String, RelPath> cellToPathMappings) {
+      ImmutableMap<String, RelPath> cellToPathMappings,
+      ImmutableMap<RelPath, RelPath> resourcesMap) {
     Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
 
     steps.addAll(
         getCompilerSetupIsolatedSteps(
-            context, projectFilesystem, target, compilerParameters, resourcesParameters));
+            resourcesMap, projectFilesystem.getRootPath(), compilerParameters));
 
     JarParameters jarParameters =
         abiJarParameters != null ? abiJarParameters : libraryJarParameters;
@@ -101,11 +100,9 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
 
   /** Returns Compiler Setup steps */
   protected ImmutableList<IsolatedStep> getCompilerSetupIsolatedSteps(
-      BuildContext context,
-      ProjectFilesystem filesystem,
-      BuildTarget target,
-      CompilerParameters compilerParameters,
-      ResourcesParameters resourcesParameters) {
+      ImmutableMap<RelPath, RelPath> resourcesMap,
+      AbsPath rootCellRoot,
+      CompilerParameters compilerParameters) {
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
     CompilerOutputPaths outputPaths = compilerParameters.getOutputPaths();
@@ -114,31 +111,25 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
 
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(outputPaths.getClassesDir()));
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(outputPaths.getAnnotationPath()));
-    steps.add(MkdirIsolatedStep.of(getRelPath(filesystem, outputPaths.getOutputJarDirPath())));
+    steps.add(MkdirIsolatedStep.of(getRelPath(rootCellRoot, outputPaths.getOutputJarDirPath())));
 
     // If there are resources, then link them to the appropriate place in the classes directory.
-    steps.addAll(
-        CopyResourcesStep.of(
-            filesystem,
-            context,
-            target,
-            resourcesParameters,
-            compilerParameters.getOutputPaths().getClassesDir().getPath()));
+    steps.addAll(CopyResourcesStep.of(resourcesMap));
 
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
       steps.add(
           MkdirIsolatedStep.of(
-              getRelPath(filesystem, outputPaths.getPathToSourcesList().getParent())));
+              getRelPath(rootCellRoot, outputPaths.getPathToSourcesList().getParent())));
       steps.addAll(
           MakeCleanDirectoryIsolatedStep.of(
-              getRelPath(filesystem, outputPaths.getWorkingDirectory())));
+              getRelPath(rootCellRoot, outputPaths.getWorkingDirectory())));
     }
 
     return steps.build();
   }
 
-  private RelPath getRelPath(ProjectFilesystem filesystem, Path path) {
-    return filesystem.relativize(filesystem.resolve(path));
+  private RelPath getRelPath(AbsPath rootCellRoot, Path path) {
+    return rootCellRoot.relativize(rootCellRoot.resolve(path));
   }
 
   protected void addJarSetupSteps(JarParameters jarParameters, Builder<IsolatedStep> steps) {

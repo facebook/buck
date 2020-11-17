@@ -41,18 +41,7 @@ public class CopyResourcesStep {
   private CopyResourcesStep() {}
 
   /** Copies (by creating symlinks) resources from existing paths to desired paths. */
-  public static ImmutableList<IsolatedStep> of(
-      ProjectFilesystem filesystem,
-      BuildContext buildContext,
-      BuildTarget target,
-      ResourcesParameters parameters,
-      Path outputDirectory) {
-    return toIsolatedSteps(
-        getResourcesMap(buildContext, filesystem, outputDirectory, parameters, target));
-  }
-
-  private static ImmutableList<IsolatedStep> toIsolatedSteps(
-      ImmutableMap<RelPath, RelPath> resources) {
+  public static ImmutableList<IsolatedStep> of(ImmutableMap<RelPath, RelPath> resources) {
     ImmutableList.Builder<IsolatedStep> steps =
         ImmutableList.builderWithExpectedSize(resources.size() * 2);
     for (Map.Entry<RelPath, RelPath> entry : resources.entrySet()) {
@@ -69,7 +58,7 @@ public class CopyResourcesStep {
    * Returns discovered resources as a map, where the key is the an actual path to the resource and
    * a value is a desired path to it.
    */
-  private static ImmutableMap<RelPath, RelPath> getResourcesMap(
+  public static ImmutableMap<RelPath, RelPath> getResourcesMap(
       BuildContext buildContext,
       ProjectFilesystem filesystem,
       Path outputDirectory,

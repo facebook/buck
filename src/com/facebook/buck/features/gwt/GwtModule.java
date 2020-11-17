@@ -87,14 +87,15 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     RelPath tempJarFolder = workingDirectory.resolveRel("tmp");
     steps.addAll(
         CopyResourcesStep.of(
-            getProjectFilesystem(),
-            context,
-            getBuildTarget(),
-            ResourcesParameters.of(
-                ResourcesParameters.getNamedResources(
-                    ruleFinder, getProjectFilesystem(), filesForGwtModule),
-                resourcesRoot),
-            tempJarFolder.getPath()));
+            CopyResourcesStep.getResourcesMap(
+                context,
+                getProjectFilesystem(),
+                tempJarFolder.getPath(),
+                ResourcesParameters.of(
+                    ResourcesParameters.getNamedResources(
+                        ruleFinder, getProjectFilesystem(), filesForGwtModule),
+                    resourcesRoot),
+                getBuildTarget())));
 
     steps.add(
         new JarDirectoryStep(

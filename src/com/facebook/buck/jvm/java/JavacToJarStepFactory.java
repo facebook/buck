@@ -125,16 +125,16 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
             cellToPathMappings));
   }
 
-  public final void createPipelinedCompileToJarStep(
-      BuildContext context,
+  /** Creates pipelined compile to jar steps and adds them into a {@code steps} builder */
+  public void createPipelinedCompileToJarStep(
       ProjectFilesystem projectFilesystem,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTarget target,
       JavacPipelineState pipeline,
-      ResourcesParameters resourcesParameters,
       ImmutableList<String> postprocessClassesCommands,
       Builder<IsolatedStep> steps,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      ImmutableMap<RelPath, RelPath> resourcesMap) {
     Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
     CompilerParameters compilerParameters = pipeline.getCompilerParameters();
 
@@ -143,7 +143,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     if (!pipeline.isRunning()) {
       steps.addAll(
           getCompilerSetupIsolatedSteps(
-              context, projectFilesystem, target, compilerParameters, resourcesParameters));
+              resourcesMap, projectFilesystem.getRootPath(), compilerParameters));
     }
 
     Optional<JarParameters> jarParameters =
