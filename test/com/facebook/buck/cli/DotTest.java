@@ -21,7 +21,6 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.Dot.OutputOrder;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.google.common.base.Functions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -55,15 +54,16 @@ public class DotTest {
 
   @Test
   public void testGenerateDotOutput() throws IOException {
-    MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
-    mutableGraph.addEdge("A", "B");
-    mutableGraph.addEdge("B", "C");
-    mutableGraph.addEdge("B", "D");
-    mutableGraph.addEdge("C", "E");
-    mutableGraph.addEdge("D", "E");
-    mutableGraph.addEdge("A", "E");
-    mutableGraph.addEdge("F", "E");
-    DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
+    DirectedAcyclicGraph<String> graph =
+        DirectedAcyclicGraph.<String>serialBuilder()
+            .addEdge("A", "B")
+            .addEdge("B", "C")
+            .addEdge("B", "D")
+            .addEdge("C", "E")
+            .addEdge("D", "E")
+            .addEdge("A", "E")
+            .addEdge("F", "E")
+            .build();
 
     StringBuilder output = new StringBuilder();
     Dot.builder(graph, "the_graph")
@@ -98,15 +98,16 @@ public class DotTest {
     // might be completely different and therefore you get different edges than you expect.
     assumeTrue(outputOrder != Dot.OutputOrder.UNDEFINED);
 
-    MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
-    mutableGraph.addEdge("A", "B");
-    mutableGraph.addEdge("B", "C");
-    mutableGraph.addEdge("B", "D");
-    mutableGraph.addEdge("C", "E");
-    mutableGraph.addEdge("D", "E");
-    mutableGraph.addEdge("A", "E");
-    mutableGraph.addEdge("F", "E");
-    DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
+    DirectedAcyclicGraph<String> graph =
+        DirectedAcyclicGraph.<String>serialBuilder()
+            .addEdge("A", "B")
+            .addEdge("B", "C")
+            .addEdge("B", "D")
+            .addEdge("C", "E")
+            .addEdge("D", "E")
+            .addEdge("A", "E")
+            .addEdge("F", "E")
+            .build();
 
     StringBuilder output = new StringBuilder();
     Dot.builder(graph, "the_graph")
@@ -158,14 +159,15 @@ public class DotTest {
 
   @Test
   public void testGenerateDotOutputFilter() throws IOException {
-    MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
-    mutableGraph.addEdge("A", "B");
-    mutableGraph.addEdge("B", "C");
-    mutableGraph.addEdge("B", "D");
-    mutableGraph.addEdge("C", "E");
-    mutableGraph.addEdge("D", "E");
-    mutableGraph.addEdge("A", "E");
-    DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
+    DirectedAcyclicGraph<String> graph =
+        DirectedAcyclicGraph.<String>serialBuilder()
+            .addEdge("A", "B")
+            .addEdge("B", "C")
+            .addEdge("B", "D")
+            .addEdge("C", "E")
+            .addEdge("D", "E")
+            .addEdge("A", "E")
+            .build();
 
     ImmutableSet<String> filter =
         ImmutableSet.<String>builder().add("A").add("B").add("C").add("D").build();
@@ -187,9 +189,8 @@ public class DotTest {
 
   @Test
   public void testGenerateDotOutputWithColors() throws IOException {
-    MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
-    mutableGraph.addEdge("A", "B");
-    DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
+    DirectedAcyclicGraph<String> graph =
+        DirectedAcyclicGraph.<String>serialBuilder().addEdge("A", "B").build();
 
     StringBuilder output = new StringBuilder();
     Dot.builder(graph, "the_graph")
@@ -210,9 +211,8 @@ public class DotTest {
 
   @Test
   public void testGenerateDotOutputWithCustomAttributes() throws IOException {
-    MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
-    mutableGraph.addEdge("A", "B");
-    DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
+    DirectedAcyclicGraph<String> graph =
+        DirectedAcyclicGraph.<String>serialBuilder().addEdge("A", "B").build();
 
     StringBuilder output = new StringBuilder();
     ImmutableMap<String, ImmutableSortedMap<String, Object>> nodeToAttributeProvider =
@@ -237,19 +237,21 @@ public class DotTest {
 
   @Test
   public void testEscaping() throws IOException {
-    MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
-    mutableGraph.addEdge("A", "//B");
-    mutableGraph.addEdge("//B", "C1 C2");
-    mutableGraph.addEdge("//B", "D\"");
-    mutableGraph.addEdge("Z//E", "Z//F");
-    mutableGraph.addEdge("A", "A.B");
-    mutableGraph.addEdge("A", "A,B");
-    mutableGraph.addEdge("A", "[A]");
-    mutableGraph.addEdge("A", "");
+    DirectedAcyclicGraph<String> graph =
+        DirectedAcyclicGraph.<String>serialBuilder()
+            .addEdge("A", "//B")
+            .addEdge("//B", "C1 C2")
+            .addEdge("//B", "D\"")
+            .addEdge("Z//E", "Z//F")
+            .addEdge("A", "A.B")
+            .addEdge("A", "A,B")
+            .addEdge("A", "[A]")
+            .addEdge("A", "")
+            .build();
 
     StringBuilder output = new StringBuilder();
 
-    Dot.builder(new DirectedAcyclicGraph<>(mutableGraph), "the_graph")
+    Dot.builder(graph, "the_graph")
         .setNodeToName(Functions.identity())
         .setNodeToTypeName(name -> name.equals("A") ? "android_library" : "java_library")
         .setOutputOrder(outputOrder)

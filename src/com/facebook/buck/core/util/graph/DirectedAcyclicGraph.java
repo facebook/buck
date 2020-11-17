@@ -61,7 +61,13 @@ public class DirectedAcyclicGraph<T> implements TraversableGraph<T> {
     this.incomingEdges = other.incomingEdges;
   }
 
-  /** Legacy constructor to convert form {@link MutableDirectedGraph}. */
+  /**
+   * Legacy constructor to convert form {@link MutableDirectedGraph}.
+   *
+   * @deprecated Use {@link DirectedAcyclicGraph#serialBuilder()} or {@link
+   *     DirectedAcyclicGraph#concurrentBuilder()} to build a graph.
+   */
+  @Deprecated
   @SuppressWarnings({"unchecked", "rawtypes"})
   public DirectedAcyclicGraph(MutableDirectedGraph<T> graph) {
     Preconditions.checkState(

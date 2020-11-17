@@ -32,7 +32,6 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TopologicalSort;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
@@ -268,7 +267,7 @@ public class Omnibus {
 
     // And then we can do one last walk to create the actual graph which contain only root and body
     // nodes to include in the omnibus link.
-    MutableDirectedGraph<BuildTarget> graphBuilder = new MutableDirectedGraph<>();
+    DirectedAcyclicGraph.Builder<BuildTarget> graphBuilder = DirectedAcyclicGraph.serialBuilder();
     Set<BuildTarget> deps = new LinkedHashSet<>();
     new AbstractBreadthFirstTraversal<BuildTarget>(Sets.difference(rootDeps.keySet(), excluded)) {
       @Override
@@ -289,7 +288,7 @@ public class Omnibus {
         return keep;
       }
     }.start();
-    DirectedAcyclicGraph<BuildTarget> graph = new DirectedAcyclicGraph<>(graphBuilder);
+    DirectedAcyclicGraph<BuildTarget> graph = graphBuilder.build();
 
     // Since we add all undefined root symbols into the omnibus library, we also need to include
     // any excluded root deps as deps of omnibus, as they may fulfill these undefined symbols.

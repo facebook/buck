@@ -60,7 +60,6 @@ import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
@@ -574,7 +573,8 @@ public class TargetsCommand extends AbstractCommand {
             .getActionGraph(TargetGraphCreationResult.of(targetGraph, ImmutableSet.of()));
 
     // construct real graph
-    MutableDirectedGraph<BuildRule> actionGraphMutable = new MutableDirectedGraph<>();
+    DirectedAcyclicGraph.Builder<BuildRule> actionGraphMutable =
+        DirectedAcyclicGraph.serialBuilder();
 
     for (BuildRule rule : result.getActionGraph().getNodes()) {
       actionGraphMutable.addNode(rule);
@@ -600,7 +600,7 @@ public class TargetsCommand extends AbstractCommand {
               Optional.empty());
 
       // it is time to construct DOT output
-      Dot.builder(new DirectedAcyclicGraph<>(actionGraphMutable), "action_graph")
+      Dot.builder(actionGraphMutable.build(), "action_graph")
           .setNodeToName(
               node ->
                   node.getFullyQualifiedName()

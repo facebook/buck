@@ -38,7 +38,7 @@ public class TopologicalSortTest {
   // Nodes and edges are added in weird orders to avoid default insertion orders happening to be
   // sorted.
   private DirectedAcyclicGraph<String> makeGraph() {
-    MutableDirectedGraph<String> graph = new MutableDirectedGraph<>();
+    DirectedAcyclicGraph.Builder<String> graph = DirectedAcyclicGraph.serialBuilder();
     graph.addNode("C");
     graph.addNode("B");
     graph.addNode("E");
@@ -54,7 +54,7 @@ public class TopologicalSortTest {
     graph.addEdge("A", "B");
     graph.addEdge("C", "E");
     graph.addEdge("C", "G");
-    return new DirectedAcyclicGraph<>(graph);
+    return graph.build();
   }
 
   public void assertTopologicallySorted(ImmutableList<? extends String> sorted) {

@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -262,7 +261,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
       DirtyPrintStreamDecorator out,
       boolean compactMode)
       throws IOException {
-    MutableDirectedGraph<BuildRule> dag = new MutableDirectedGraph<>();
+    DirectedAcyclicGraph.Builder<BuildRule> dag = DirectedAcyclicGraph.serialBuilder();
     graph.getNodes().forEach(dag::addNode);
     graph.getNodes().forEach(from -> from.getBuildDeps().forEach(to -> dag.addEdge(from, to)));
     if (includeRuntimeDeps) {
@@ -273,7 +272,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
                   getRuntimeDeps(from, actionGraphBuilder).forEach(to -> dag.addEdge(from, to)));
     }
     Dot.Builder<BuildRule> builder =
-        Dot.builder(new DirectedAcyclicGraph<>(dag), "action_graph")
+        Dot.builder(dag.build(), "action_graph")
             .setNodeToName(BuildRule::getFullyQualifiedName)
             .setNodeToTypeName(BuildRule::getType)
             .setCompactMode(compactMode);

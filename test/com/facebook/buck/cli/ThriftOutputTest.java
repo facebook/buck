@@ -25,7 +25,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraphNode;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
@@ -46,14 +45,15 @@ public class ThriftOutputTest {
 
   @Test
   public void testGenerateThriftOutput() throws IOException {
-    MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
-    mutableGraph.addEdge("A", "B");
-    mutableGraph.addEdge("B", "C");
-    mutableGraph.addEdge("B", "D");
-    mutableGraph.addEdge("C", "E");
-    mutableGraph.addEdge("D", "E");
-    mutableGraph.addEdge("A", "E");
-    DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
+    DirectedAcyclicGraph<String> graph =
+        DirectedAcyclicGraph.<String>serialBuilder()
+            .addEdge("A", "B")
+            .addEdge("B", "C")
+            .addEdge("B", "D")
+            .addEdge("C", "E")
+            .addEdge("D", "E")
+            .addEdge("A", "E")
+            .build();
 
     byte[] byteArray;
     try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
@@ -81,14 +81,15 @@ public class ThriftOutputTest {
 
   @Test
   public void testGenerateThriftOutputWithFilterPredicate() throws IOException {
-    MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
-    mutableGraph.addEdge("A", "B");
-    mutableGraph.addEdge("B", "C");
-    mutableGraph.addEdge("B", "D");
-    mutableGraph.addEdge("C", "E");
-    mutableGraph.addEdge("D", "E");
-    mutableGraph.addEdge("A", "E");
-    DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
+    DirectedAcyclicGraph<String> graph =
+        DirectedAcyclicGraph.<String>serialBuilder()
+            .addEdge("A", "B")
+            .addEdge("B", "C")
+            .addEdge("B", "D")
+            .addEdge("C", "E")
+            .addEdge("D", "E")
+            .addEdge("A", "E")
+            .build();
 
     Set<String> filterSet = new HashSet<>(Arrays.asList("A", "B", "C"));
 
@@ -117,9 +118,8 @@ public class ThriftOutputTest {
 
   @Test
   public void testGenerateThriftOutputWithCustomAttributes() throws IOException {
-    MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
-    mutableGraph.addEdge("A", "B");
-    DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
+    DirectedAcyclicGraph<String> graph =
+        DirectedAcyclicGraph.<String>serialBuilder().addEdge("A", "B").build();
 
     ImmutableMap<String, ImmutableSortedMap<String, Object>> nodeToAttributeProvider =
         ImmutableMap.of("A", ImmutableSortedMap.of("x", "foo", "y", "b.r"));

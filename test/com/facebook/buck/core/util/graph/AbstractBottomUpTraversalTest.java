@@ -55,21 +55,21 @@ public class AbstractBottomUpTraversalTest {
     //  D     E
     //    \ /
     //     F
-    MutableDirectedGraph<Node> mutableGraph = new MutableDirectedGraph<>();
+    DirectedAcyclicGraph.Builder<Node> graphBuilder = DirectedAcyclicGraph.serialBuilder();
     Set<Node> nodes = ImmutableSet.of(Node.A, Node.B, Node.C, Node.D, Node.E, Node.F);
     for (Node node : nodes) {
-      mutableGraph.addNode(node);
+      graphBuilder.addNode(node);
     }
-    mutableGraph.addEdge(Node.A, Node.B);
-    mutableGraph.addEdge(Node.A, Node.C);
-    mutableGraph.addEdge(Node.B, Node.D);
-    mutableGraph.addEdge(Node.B, Node.E);
-    mutableGraph.addEdge(Node.C, Node.D);
-    mutableGraph.addEdge(Node.C, Node.E);
-    mutableGraph.addEdge(Node.D, Node.F);
-    mutableGraph.addEdge(Node.E, Node.F);
+    graphBuilder.addEdge(Node.A, Node.B);
+    graphBuilder.addEdge(Node.A, Node.C);
+    graphBuilder.addEdge(Node.B, Node.D);
+    graphBuilder.addEdge(Node.B, Node.E);
+    graphBuilder.addEdge(Node.C, Node.D);
+    graphBuilder.addEdge(Node.C, Node.E);
+    graphBuilder.addEdge(Node.D, Node.F);
+    graphBuilder.addEdge(Node.E, Node.F);
 
-    DirectedAcyclicGraph<Node> immutableGraph = new DirectedAcyclicGraph<>(mutableGraph);
+    DirectedAcyclicGraph<Node> immutableGraph = graphBuilder.build();
 
     List<Node> visitedNodes = new LinkedList<>();
     AbstractBottomUpTraversal<Node, RuntimeException> traversal =
@@ -102,18 +102,18 @@ public class AbstractBottomUpTraversalTest {
     //   Y
     //  /
     // Z
-    MutableDirectedGraph<Node> mutableGraph = new MutableDirectedGraph<>();
+    DirectedAcyclicGraph.Builder<Node> graphBuilder = DirectedAcyclicGraph.<Node>serialBuilder();
     Set<Node> nodes = ImmutableSet.of(Node.A, Node.V, Node.W, Node.X, Node.Y, Node.Z);
     for (Node node : nodes) {
-      mutableGraph.addNode(node);
+      graphBuilder.addNode(node);
     }
-    mutableGraph.addEdge(Node.V, Node.W);
-    mutableGraph.addEdge(Node.W, Node.X);
-    mutableGraph.addEdge(Node.X, Node.Y);
-    mutableGraph.addEdge(Node.Y, Node.Z);
-    mutableGraph.addEdge(Node.V, Node.A);
+    graphBuilder.addEdge(Node.V, Node.W);
+    graphBuilder.addEdge(Node.W, Node.X);
+    graphBuilder.addEdge(Node.X, Node.Y);
+    graphBuilder.addEdge(Node.Y, Node.Z);
+    graphBuilder.addEdge(Node.V, Node.A);
 
-    DirectedAcyclicGraph<Node> immutableGraph = new DirectedAcyclicGraph<>(mutableGraph);
+    DirectedAcyclicGraph<Node> immutableGraph = graphBuilder.build();
 
     Map<Node, Integer> visitedNodes = new HashMap<>();
     AbstractBottomUpTraversal<Node, RuntimeException> traversal =

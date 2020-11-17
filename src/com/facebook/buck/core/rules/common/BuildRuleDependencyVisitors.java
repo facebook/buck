@@ -19,7 +19,6 @@ package com.facebook.buck.core.rules.common;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.google.common.collect.ImmutableSet;
 import java.util.function.Predicate;
 
@@ -42,7 +41,7 @@ public class BuildRuleDependencyVisitors {
 
     // Build up a graph of the inputs and their transitive dependencies, we'll use the graph
     // to topologically sort the dependencies.
-    MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<>();
+    DirectedAcyclicGraph.Builder<BuildRule> graph = DirectedAcyclicGraph.serialBuilder();
     AbstractBreadthFirstTraversal<BuildRule> visitor =
         new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
           @Override
@@ -59,6 +58,6 @@ public class BuildRuleDependencyVisitors {
           }
         };
     visitor.start();
-    return new DirectedAcyclicGraph<>(graph);
+    return graph.build();
   }
 }

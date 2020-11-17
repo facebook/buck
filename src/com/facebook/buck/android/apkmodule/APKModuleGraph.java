@@ -425,7 +425,7 @@ public class APKModuleGraph implements AddsToRuleKey {
 
   private DirectedAcyclicGraph<String> generateDetectedDependencyAndDeclaredDependencyGraph() {
     final DirectedAcyclicGraph<String> declaredDependencies = generateDeclaredDependencyGraph();
-    final MutableDirectedGraph<String> graph = new MutableDirectedGraph<>();
+    final DirectedAcyclicGraph.Builder<String> graph = DirectedAcyclicGraph.serialBuilder();
     for (final String node : declaredDependencies.getNodes()) {
       graph.addNode(node);
       for (final String outgoingNode : declaredDependencies.getOutgoingNodesFor(node)) {
@@ -435,11 +435,12 @@ public class APKModuleGraph implements AddsToRuleKey {
     for (final UndeclaredDependency undeclaredDependency : undeclaredDependencies) {
       graph.addEdge(undeclaredDependency.sourceModule, undeclaredDependency.depModule);
     }
-    return new DirectedAcyclicGraph<>(graph);
+    return graph.build();
   }
 
   private DirectedAcyclicGraph<String> generateDeclaredDependencyGraph() {
-    MutableDirectedGraph<String> declaredDependencyGraph = new MutableDirectedGraph<>();
+    DirectedAcyclicGraph.Builder<String> declaredDependencyGraph =
+        DirectedAcyclicGraph.serialBuilder();
 
     if (appModuleDependencies.isPresent()) {
       for (Map.Entry<String, ImmutableList<String>> moduleDependencies :
@@ -450,7 +451,7 @@ public class APKModuleGraph implements AddsToRuleKey {
       }
     }
 
-    DirectedAcyclicGraph<String> result = new DirectedAcyclicGraph<>(declaredDependencyGraph);
+    DirectedAcyclicGraph<String> result = declaredDependencyGraph.build();
     verifyNoUnrecognizedModulesInDependencyGraph(result);
     return result;
   }
@@ -516,7 +517,7 @@ public class APKModuleGraph implements AddsToRuleKey {
    */
   private Multimap<BuildTarget, String> mapTargetsToContainingModules() {
     final DirectedAcyclicGraph<String> declaredDependencies = getDeclaredDependencyGraph();
-    final MutableDirectedGraph<String> moduleGraph = new MutableDirectedGraph<>();
+    final DirectedAcyclicGraph.Builder<String> moduleGraph = DirectedAcyclicGraph.serialBuilder();
     Multimap<BuildTarget, String> targetToContainingApkModuleNameMap =
         MultimapBuilder.treeKeys().treeSetValues().build();
     for (Map.Entry<String, ImmutableList<BuildTarget>> seedConfig :
@@ -553,8 +554,7 @@ public class APKModuleGraph implements AddsToRuleKey {
         }.start();
       }
     }
-    undeclaredDependencies.addAll(
-        getUndeclaredDeps(new DirectedAcyclicGraph<>(moduleGraph), declaredDependencies));
+    undeclaredDependencies.addAll(getUndeclaredDeps(moduleGraph.build(), declaredDependencies));
 
     // Now to generate the minimal covers of APKModules for each set of APKModules that contain
     // a buildTarget

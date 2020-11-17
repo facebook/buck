@@ -33,7 +33,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TopologicalSort;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
@@ -121,7 +120,7 @@ public class OcamlRuleBuilder {
       BuildRuleResolver buildRuleResolver,
       OcamlPlatform platform,
       Iterable<? extends BuildRule> deps) {
-    MutableDirectedGraph<OcamlLibrary> graph = new MutableDirectedGraph<>();
+    DirectedAcyclicGraph.Builder<OcamlLibrary> graph = DirectedAcyclicGraph.serialBuilder();
 
     new AbstractBreadthFirstTraversal<OcamlLibrary>(
         RichStream.from(deps).filter(OcamlLibrary.class).toImmutableList()) {
@@ -139,7 +138,7 @@ public class OcamlRuleBuilder {
       }
     }.start();
 
-    return TopologicalSort.sort(new DirectedAcyclicGraph<>(graph));
+    return TopologicalSort.sort(graph.build());
   }
 
   private static NativeLinkableInput getNativeLinkableInput(
