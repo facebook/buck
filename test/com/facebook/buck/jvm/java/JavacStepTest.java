@@ -103,7 +103,9 @@ public class JavacStepTest {
             target,
             fakeFilesystem.getBuckPaths(),
             classpathChecker,
-            CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
+            CompilerParameters.builder()
+                .setOutputPaths(CompilerOutputPaths.of(target, fakeFilesystem.getBuckPaths()))
+                .build(),
             null,
             null,
             false,
@@ -155,7 +157,9 @@ public class JavacStepTest {
             target,
             fakeFilesystem.getBuckPaths(),
             classpathChecker,
-            CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
+            CompilerParameters.builder()
+                .setOutputPaths(CompilerOutputPaths.of(target, fakeFilesystem.getBuckPaths()))
+                .build(),
             null,
             null,
             false,
@@ -234,7 +238,9 @@ public class JavacStepTest {
             target,
             fakeFilesystem.getBuckPaths(),
             classpathChecker,
-            CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
+            CompilerParameters.builder()
+                .setOutputPaths(CompilerOutputPaths.of(target, fakeFilesystem.getBuckPaths()))
+                .build(),
             null,
             null,
             false,
@@ -286,7 +292,9 @@ public class JavacStepTest {
             target,
             fakeFilesystem.getBuckPaths(),
             classpathChecker,
-            CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
+            CompilerParameters.builder()
+                .setOutputPaths(CompilerOutputPaths.of(target, fakeFilesystem.getBuckPaths()))
+                .build(),
             null,
             null,
             false,
@@ -344,7 +352,9 @@ public class JavacStepTest {
             target,
             fakeFilesystem.getBuckPaths(),
             classpathChecker,
-            CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
+            CompilerParameters.builder()
+                .setOutputPaths(CompilerOutputPaths.of(target, fakeFilesystem.getBuckPaths()))
+                .build(),
             null,
             null,
             false,

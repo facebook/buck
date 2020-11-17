@@ -156,9 +156,10 @@ public class DummyRDotJavaTest {
                         filesystem.getBuckPaths(),
                         new ClasspathChecker(),
                         CompilerParameters.builder()
-                            .setScratchPaths(
-                                dummyRDotJava.getBuildTarget(),
-                                dummyRDotJava.getProjectFilesystem())
+                            .setOutputPaths(
+                                CompilerOutputPaths.of(
+                                    dummyRDotJava.getBuildTarget(),
+                                    dummyRDotJava.getProjectFilesystem().getBuckPaths()))
                             .setSourceFilePaths(javaSourceFiles)
                             .setClasspathEntries(ImmutableSortedSet.of())
                             .build(),

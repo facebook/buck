@@ -16,9 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.google.common.collect.ImmutableSortedSet;
@@ -63,15 +61,7 @@ public abstract class CompilerParameters {
   @Nullable
   public abstract SourceOnlyAbiRuleInfoFactory getSourceOnlyAbiRuleInfoFactory();
 
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder extends ImmutableCompilerParameters.Builder {
-
-    public Builder setScratchPaths(BuildTarget target, ProjectFilesystem projectFilesystem) {
-      CompilerOutputPaths paths = CompilerOutputPaths.of(target, projectFilesystem.getBuckPaths());
-      return this.setOutputPaths(paths);
-    }
+  public static ImmutableCompilerParameters.Builder builder() {
+    return ImmutableCompilerParameters.builder();
   }
 }

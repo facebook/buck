@@ -258,7 +258,8 @@ public class DummyRDotJava extends AbstractBuildRule
         CompilerParameters.builder()
             .setClasspathEntries(ImmutableSortedSet.of())
             .setSourceFilePaths(javaSourceFilePaths)
-            .setScratchPaths(getBuildTarget(), getProjectFilesystem())
+            .setOutputPaths(
+                CompilerOutputPaths.of(getBuildTarget(), getProjectFilesystem().getBuckPaths()))
             .build();
 
     Preconditions.checkState(
