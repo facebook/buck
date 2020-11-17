@@ -16,20 +16,15 @@
 
 package com.facebook.buck.jvm.core;
 
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.google.common.collect.ImmutableSortedSet;
-import java.io.IOException;
+/**
+ * Provides a basic information about a java abi. Doesn't include any {@link
+ * com.facebook.buck.core.sourcepath.SourcePath}-es
+ */
+public interface BaseJavaAbiInfo {
 
-/** Provides information about a java abi. */
-public interface JavaAbiInfo extends BaseJavaAbiInfo {
+  /** Returns unflavored build target name */
+  String getUnflavoredBuildTargetName();
 
-  BuildTarget getBuildTarget();
-
-  ImmutableSortedSet<SourcePath> getJarContents();
-
-  void load(SourcePathResolverAdapter pathResolver) throws IOException;
-
-  void invalidate();
+  /** Returns {@code true} if java abi jar contains the specified path. */
+  boolean jarContains(String path);
 }

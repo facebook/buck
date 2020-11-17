@@ -61,13 +61,13 @@ class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
 
     fullJarInfos =
         classPathInfo.stream()
-            .map(info -> new DefaultJavaAbiInfo(info.compileTimeJar))
+            .map(info -> DefaultJavaAbiInfo.of(info.compileTimeJar))
             .collect(ImmutableList.toImmutableList());
 
     abiJarInfos =
         classPathInfo.stream()
             .filter(info -> info.isRequiredForSourceOnlyAbi)
-            .map(info -> new DefaultJavaAbiInfo(info.compileTimeJar))
+            .map(info -> DefaultJavaAbiInfo.of(info.compileTimeJar))
             .collect(ImmutableList.toImmutableList());
   }
 
@@ -106,7 +106,7 @@ class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
 
     for (JavaAbiInfo info : classpath) {
       if (info.jarContains(classFilePath)) {
-        return info.getBuildTarget().getUnflavoredBuildTarget().toString();
+        return info.getUnflavoredBuildTargetName();
       }
     }
 

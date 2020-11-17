@@ -69,7 +69,7 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
         BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
             .resolve(String.format("%s-abi.jar", getBuildTarget().getShortName()));
 
-    this.javaAbiInfo = new DefaultJavaAbiInfo(getSourcePathToOutput());
+    this.javaAbiInfo = DefaultJavaAbiInfo.of(getSourcePathToOutput());
     buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 

@@ -60,7 +60,7 @@ public class CalculateClassAbi extends ModernBuildRule<CalculateClassAbi.Impl>
             compatibilityMode,
             projectFilesystem,
             String.format("%s-abi.jar", buildTarget.getShortName())));
-    this.javaAbiInfo = new DefaultJavaAbiInfo(getSourcePathToOutput());
+    this.javaAbiInfo = DefaultJavaAbiInfo.of(getSourcePathToOutput());
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 

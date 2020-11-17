@@ -32,22 +32,36 @@ import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.jar.JarFile;
 import javax.annotation.Nullable;
 
-/** The default inmplementation of JavaAbiInfo. */
-public class DefaultJavaAbiInfo implements JavaAbiInfo {
-  private final BuildTarget buildTarget;
+/** The default implementation of JavaAbiInfo. */
+public class DefaultJavaAbiInfo extends DefaultBaseJavaAbiInfo implements JavaAbiInfo {
+
   private final SourcePath jarSourcePath;
+  private final BuildTarget buildTarget;
   @Nullable private volatile JarContents jarContents;
 
-  public DefaultJavaAbiInfo(SourcePath jarPath) {
-    Objects.requireNonNull(jarPath);
-    Preconditions.checkState(jarPath instanceof BuildTargetSourcePath);
-    buildTarget = ((BuildTargetSourcePath) jarPath).getTarget();
-    jarSourcePath = jarPath;
+  private DefaultJavaAbiInfo(SourcePath jarPath, BuildTarget buildTarget) {
+    super(buildTarget.getUnflavoredBuildTarget().toString());
+    this.buildTarget = buildTarget;
+    this.jarSourcePath = jarPath;
+  }
+
+  /** Creates {@link DefaultJavaAbiInfo} */
+  public static DefaultJavaAbiInfo of(SourcePath jarPath) {
+    return new DefaultJavaAbiInfo(jarPath, extractBuildTargetFromSourcePath(jarPath));
+  }
+
+  /**
+   * Extracts {@link BuildTarget} from a given {@code sourcePath} assuming that source path type is
+   * {@link BuildTargetSourcePath}
+   */
+  public static BuildTarget extractBuildTargetFromSourcePath(SourcePath sourcePath) {
+    Objects.requireNonNull(sourcePath);
+    Preconditions.checkState(sourcePath instanceof BuildTargetSourcePath);
+    return ((BuildTargetSourcePath) sourcePath).getTarget();
   }
 
   @Override
@@ -57,14 +71,7 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
 
   @Override
   public ImmutableSortedSet<SourcePath> getJarContents() {
-    return Objects.requireNonNull(jarContents, "Must call load first.").contents;
-  }
-
-  @Override
-  public boolean jarContains(String path) {
-    return Objects.requireNonNull(jarContents, "Must call load first.")
-        .contentPaths
-        .contains(Paths.get(path));
+    return Objects.requireNonNull(jarContents, "Must call load() first.").contents;
   }
 
   @Override
@@ -75,14 +82,17 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
             + "that a rule is calling load in initializeFromDisk() but failing to call "
             + "invalidate() in invalidateInitializeFromDiskState().");
     jarContents = JarContents.load(pathResolver, jarSourcePath);
+    setContentPaths(jarContents.contentPaths);
   }
 
   @Override
   public void invalidate() {
     jarContents = null;
+    setContentPaths(null);
   }
 
   private static class JarContents {
+
     private final ImmutableSortedSet<SourcePath> contents;
     private final ImmutableSet<Path> contentPaths;
 

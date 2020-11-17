@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 /** The implementation of JavaAbiInfo for targets that have no sources. */
 public class EmptyJavaAbiInfo implements JavaAbiInfo {
+
   private final BuildTarget buildTarget;
 
   public EmptyJavaAbiInfo(BuildTarget buildTarget) {
@@ -32,6 +33,11 @@ public class EmptyJavaAbiInfo implements JavaAbiInfo {
   @Override
   public BuildTarget getBuildTarget() {
     return buildTarget;
+  }
+
+  @Override
+  public String getUnflavoredBuildTargetName() {
+    return buildTarget.getUnflavoredBuildTarget().toString();
   }
 
   @Override

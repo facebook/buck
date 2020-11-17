@@ -223,7 +223,7 @@ public class DefaultJavaLibrary
     this.javaAbiInfo =
         getSourcePathToOutput() == null
             ? new EmptyJavaAbiInfo(buildTarget)
-            : new DefaultJavaAbiInfo(getSourcePathToOutput());
+            : DefaultJavaAbiInfo.of(getSourcePathToOutput());
     this.abiJar = abiJar;
     this.sourceOnlyAbiJar = sourceOnlyAbiJar;
     this.neverMarkAsUnusedDependency = neverMarkAsUnusedDependency;

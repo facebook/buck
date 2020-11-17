@@ -145,7 +145,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.copiedBinaryJar =
         BuildTargetPaths.getGenPath(
             getProjectFilesystem(), buildTarget, "__%s__/" + fileNameWithJarExtension);
-    this.javaAbiInfo = new DefaultJavaAbiInfo(getSourcePathToOutput());
+    this.javaAbiInfo = DefaultJavaAbiInfo.of(getSourcePathToOutput());
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
 

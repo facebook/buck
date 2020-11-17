@@ -146,7 +146,7 @@ public class DummyRDotJava extends AbstractBuildRule
     this.unionPackage = unionPackage;
     this.finalRName = finalRName;
     this.abiInputs = abiInputs;
-    this.javaAbiInfo = new DefaultJavaAbiInfo(getSourcePathToOutput());
+    this.javaAbiInfo = DefaultJavaAbiInfo.of(getSourcePathToOutput());
     buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
 
     buildDeps =
