@@ -406,7 +406,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   }
 
   @Override
-  protected Optional<String> getBootClasspath(BuildContext context) {
+  protected Optional<String> getBootClasspath() {
     return javacOptions.withBootclasspathFromContext(extraClasspathProvider).getBootclasspath();
   }
 

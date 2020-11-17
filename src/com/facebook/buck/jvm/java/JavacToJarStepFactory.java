@@ -167,7 +167,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   }
 
   @Override
-  protected Optional<String> getBootClasspath(BuildContext context) {
+  protected Optional<String> getBootClasspath() {
     JavacOptions buildTimeOptions =
         javacOptions.withBootclasspathFromContext(extraClasspathProvider);
     return buildTimeOptions.getBootclasspath();

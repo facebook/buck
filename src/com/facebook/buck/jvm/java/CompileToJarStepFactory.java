@@ -194,7 +194,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
             postprocessClassesCommands,
             compilerParameters.getOutputPaths().getClassesDir(),
             compilerParameters.getClasspathEntries(),
-            getBootClasspath(context),
+            getBootClasspath(),
             withDownwardApi,
             context.getBuildCellRootPath()));
 
@@ -210,8 +210,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
    *
    * @return the bootclasspath.
    */
-  @SuppressWarnings("unused")
-  protected Optional<String> getBootClasspath(BuildContext context) {
+  protected Optional<String> getBootClasspath() {
     return Optional.empty();
   }
 
