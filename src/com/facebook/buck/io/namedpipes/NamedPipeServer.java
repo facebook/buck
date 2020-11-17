@@ -18,7 +18,9 @@ package com.facebook.buck.io.namedpipes;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 
 /** Named pipe server that creates the named pipe. Can either read or write to the named pipe. */
 public interface NamedPipeServer extends Closeable {
@@ -28,5 +30,6 @@ public interface NamedPipeServer extends Closeable {
    * The given {@link Future} is used to signal when {@link #close()} can be called. {@link
    * #close()} is safe to call upon successful completion of this future.
    */
-  void prepareToClose(Future<Void> readyToClose) throws IOException;
+  void prepareToClose(Future<Void> readyToClose)
+      throws IOException, ExecutionException, TimeoutException, InterruptedException;
 }
