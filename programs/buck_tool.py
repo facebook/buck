@@ -335,6 +335,7 @@ class BuckStatusReporter(object):
     are allowed in the reporter except for report() function which can throw
     """
 
+
     def __init__(self, argv):
         self.argv = argv
         self.build_id = None
