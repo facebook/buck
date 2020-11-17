@@ -52,4 +52,16 @@ public interface NamedPipeFactory {
     }
     return POSIXNamedPipeFactory.INSTANCE;
   }
+
+  /**
+   * Returns platform specific implementation of {@code NamedPipeFactory} based on the given
+   * factories.
+   */
+  static NamedPipeFactory getFactory(
+      NamedPipeFactory posixFactory, NamedPipeFactory windowsFactory) {
+    if (Platform.detect() == Platform.WINDOWS) {
+      return windowsFactory;
+    }
+    return posixFactory;
+  }
 }
