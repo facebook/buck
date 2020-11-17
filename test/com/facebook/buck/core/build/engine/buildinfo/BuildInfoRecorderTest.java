@@ -40,6 +40,7 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -218,6 +219,6 @@ public class BuildInfoRecorderTest {
   }
 
   private SQLiteBuildInfoStore createBuildInfoStore() throws IOException {
-    return new SQLiteBuildInfoStore(filesystem);
+    return new SQLiteBuildInfoStore(filesystem, Optional.empty());
   }
 }

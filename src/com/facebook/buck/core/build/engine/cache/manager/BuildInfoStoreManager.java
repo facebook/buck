@@ -16,17 +16,28 @@
 
 package com.facebook.buck.core.build.engine.cache.manager;
 
+import com.facebook.buck.core.build.engine.buildinfo.BuildInfoCache;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
 import com.facebook.buck.core.build.engine.buildinfo.SQLiteBuildInfoStore;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** Manages the lifetimes of all {@link BuildInfoStore}s used in the build. */
 public class BuildInfoStoreManager implements AutoCloseable {
   private final ConcurrentHashMap<AbsPath, BuildInfoStore> buildInfoStores =
       new ConcurrentHashMap<>();
+
+  // In memory cache for build info to enable fast retrieval during the early phases of
+  // a Buck build. Should be held by BuckGlobalState to persist it between different Buck
+  // runs using the same daemon.
+  private final Optional<BuildInfoCache> buildInfoCache;
+
+  public BuildInfoStoreManager(Optional<BuildInfoCache> buildInfoCache) {
+    this.buildInfoCache = buildInfoCache;
+  }
 
   @Override
   public void close() {
@@ -40,7 +51,9 @@ public class BuildInfoStoreManager implements AutoCloseable {
         filesystem.getRootPath(),
         path -> {
           try {
-            return new SQLiteBuildInfoStore(filesystem);
+            return new SQLiteBuildInfoStore(
+                filesystem,
+                buildInfoCache.map(buildInfoCache -> buildInfoCache.getMetaDataCache(path)));
           } catch (IOException e) {
             throw new RuntimeException(e);
           }

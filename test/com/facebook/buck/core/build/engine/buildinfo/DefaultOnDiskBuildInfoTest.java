@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.build.engine.buildinfo;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildId;
@@ -30,6 +31,7 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -127,6 +129,122 @@ public class DefaultOnDiskBuildInfoTest {
     onDiskBuildInfo.getMetadataForArtifact();
   }
 
+  @Test
+  public void testMetaDataNoCacheInvalidatedUponUpdate() throws IOException {
+    SQLiteBuildInfoStore buildInfoStore = createBuildInfoStore();
+
+    DefaultOnDiskBuildInfo onDiskBuildInfo =
+        new DefaultOnDiskBuildInfo(buildTarget, projectFilesystem, buildInfoStore);
+    BuildInfoRecorder buildInfoRecorder =
+        new BuildInfoRecorder(
+            buildTarget,
+            projectFilesystem,
+            buildInfoStore,
+            new DefaultClock(),
+            new BuildId(),
+            ImmutableMap.of());
+
+    String ruleKey = "fa";
+    setBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, ruleKey, buildInfoRecorder);
+
+    assertEquals(
+        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
+        Optional.of(new RuleKey(ruleKey)));
+
+    String newRuleKey = "beef";
+    setBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, newRuleKey);
+
+    assertEquals(
+        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
+        Optional.of(new RuleKey(newRuleKey)));
+  }
+
+  @Test
+  public void testMetaDataNoCacheInvalidatedUponDelete() throws IOException {
+    SQLiteBuildInfoStore buildInfoStore = createBuildInfoStore();
+
+    DefaultOnDiskBuildInfo onDiskBuildInfo =
+        new DefaultOnDiskBuildInfo(buildTarget, projectFilesystem, buildInfoStore);
+    BuildInfoRecorder buildInfoRecorder =
+        new BuildInfoRecorder(
+            buildTarget,
+            projectFilesystem,
+            buildInfoStore,
+            new DefaultClock(),
+            new BuildId(),
+            ImmutableMap.of());
+
+    String ruleKey = "fa";
+    setBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, ruleKey, buildInfoRecorder);
+
+    assertEquals(
+        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
+        Optional.of(new RuleKey(ruleKey)));
+
+    onDiskBuildInfo.deleteExistingMetadata();
+
+    assertEquals(onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY), Optional.empty());
+  }
+
+  @Test
+  public void testMetadataCacheInvalidatedUponUpdate() throws IOException {
+    SQLiteBuildInfoStore buildInfoStore =
+        new SQLiteBuildInfoStore(projectFilesystem, Optional.of(new HashMap<>()));
+
+    DefaultOnDiskBuildInfo onDiskBuildInfo =
+        new DefaultOnDiskBuildInfo(buildTarget, projectFilesystem, buildInfoStore);
+    BuildInfoRecorder buildInfoRecorder =
+        new BuildInfoRecorder(
+            buildTarget,
+            projectFilesystem,
+            buildInfoStore,
+            new DefaultClock(),
+            new BuildId(),
+            ImmutableMap.of());
+
+    String ruleKey = "fa";
+    setBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, ruleKey, buildInfoRecorder);
+
+    assertEquals(
+        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
+        Optional.of(new RuleKey(ruleKey)));
+
+    String newRuleKey = "beef";
+    setBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, newRuleKey, buildInfoRecorder);
+
+    assertEquals(
+        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
+        Optional.of(new RuleKey(newRuleKey)));
+  }
+
+  @Test
+  public void testMetadataCacheInvalidatedUponDelete() throws IOException {
+    SQLiteBuildInfoStore buildInfoStore =
+        new SQLiteBuildInfoStore(projectFilesystem, Optional.of(new HashMap<>()));
+
+    DefaultOnDiskBuildInfo onDiskBuildInfo =
+        new DefaultOnDiskBuildInfo(buildTarget, projectFilesystem, buildInfoStore);
+    BuildInfoRecorder buildInfoRecorder =
+        new BuildInfoRecorder(
+            buildTarget,
+            projectFilesystem,
+            buildInfoStore,
+            new DefaultClock(),
+            new BuildId(),
+            ImmutableMap.of());
+
+    String ruleKey = "fa";
+    setBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, ruleKey, buildInfoRecorder);
+
+    assertEquals(
+        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
+        Optional.of(new RuleKey(ruleKey)));
+
+    onDiskBuildInfo.deleteExistingMetadata();
+
+    assertEquals(onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY), Optional.empty());
+  }
+
   private void setMetadata(String key, String value) throws IOException {
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder();
     buildInfoRecorder.addMetadata(key, value);
@@ -135,6 +253,12 @@ public class DefaultOnDiskBuildInfoTest {
 
   private void setBuildMetadata(String key, String value) throws IOException {
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder();
+    buildInfoRecorder.addBuildMetadata(key, value);
+    buildInfoRecorder.writeMetadataToDisk(true);
+  }
+
+  private void setBuildMetadata(String key, String value, BuildInfoRecorder buildInfoRecorder)
+      throws IOException {
     buildInfoRecorder.addBuildMetadata(key, value);
     buildInfoRecorder.writeMetadataToDisk(true);
   }
@@ -154,6 +278,6 @@ public class DefaultOnDiskBuildInfoTest {
   }
 
   private SQLiteBuildInfoStore createBuildInfoStore() throws IOException {
-    return new SQLiteBuildInfoStore(projectFilesystem);
+    return new SQLiteBuildInfoStore(projectFilesystem, Optional.empty());
   }
 }

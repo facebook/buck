@@ -27,6 +27,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.sqlite.BusyHandler;
@@ -38,7 +39,14 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
   private final PreparedStatement updateStmt;
   private final PreparedStatement deleteStmt;
 
-  public SQLiteBuildInfoStore(ProjectFilesystem filesystem) throws IOException {
+  private final boolean shouldCacheInMemory;
+  private final Map<BuildTarget, Map<String, String>> metaDataCache;
+
+  private static final String EMPTY_VALUE = "EMPTY";
+
+  public SQLiteBuildInfoStore(
+      ProjectFilesystem filesystem, Optional<Map<BuildTarget, Map<String, String>>> metaDataCache)
+      throws IOException {
     SQLiteUtils.initialize();
     String dbPath =
         filesystem
@@ -71,6 +79,13 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
     } catch (ClassNotFoundException | SQLException e) {
       throw new IOException(e);
     }
+
+    shouldCacheInMemory = metaDataCache.isPresent();
+    if (shouldCacheInMemory) {
+      this.metaDataCache = metaDataCache.get();
+    } else {
+      this.metaDataCache = null;
+    }
   }
 
   @Override
@@ -84,6 +99,30 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
 
   @Override
   public synchronized Optional<String> readMetadata(BuildTarget buildTarget, String key) {
+    if (shouldCacheInMemory) {
+      return readMetaDataFromCache(buildTarget, key);
+    } else {
+      return readMetaDataFromSQLite(buildTarget, key);
+    }
+  }
+
+  private Optional<String> readMetaDataFromCache(BuildTarget buildTarget, String key) {
+    Optional<String> cachedValue =
+        Optional.ofNullable(metaDataCache.get(buildTarget)).map(metaData -> metaData.get(key));
+    if (cachedValue.isPresent()) {
+      if (cachedValue.get().equals(EMPTY_VALUE)) {
+        return Optional.empty();
+      } else {
+        return cachedValue;
+      }
+    }
+
+    Optional<String> metaData = readMetaDataFromSQLite(buildTarget, key);
+    writeValueToCache(buildTarget, key, metaData);
+    return metaData;
+  }
+
+  private Optional<String> readMetaDataFromSQLite(BuildTarget buildTarget, String key) {
     try {
       selectStmt.setString(1, cellRelativeName(buildTarget));
       selectStmt.setString(2, key);
@@ -92,10 +131,22 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
           return Optional.empty();
         }
         String value = rs.getString(1);
+
         return Optional.of(value);
       }
     } catch (SQLException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  private void writeValueToCache(BuildTarget buildTarget, String key, Optional<String> value) {
+    if (!metaDataCache.containsKey(buildTarget)) {
+      metaDataCache.put(buildTarget, new HashMap<>());
+    }
+    if (value.isPresent()) {
+      metaDataCache.get(buildTarget).put(key, value.get());
+    } else {
+      metaDataCache.get(buildTarget).put(key, EMPTY_VALUE);
     }
   }
 
@@ -129,6 +180,11 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
     } catch (SQLException e) {
       throw new IOException(e);
     }
+
+    if (shouldCacheInMemory) {
+      Map<String, String> mutableMetaDataForCaching = new HashMap<>(metadata);
+      metaDataCache.put(buildTarget, mutableMetaDataForCaching);
+    }
   }
 
   @Override
@@ -138,6 +194,10 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
       deleteStmt.executeUpdate();
     } catch (SQLException e) {
       throw new IOException(e);
+    }
+
+    if (shouldCacheInMemory) {
+      metaDataCache.remove(buildTarget);
     }
   }
 

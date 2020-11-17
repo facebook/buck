@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.Assume;
@@ -484,7 +485,7 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
 
   private void doClean() throws IOException {
     buildInfoStoreManager.close();
-    buildInfoStoreManager = new BuildInfoStoreManager();
+    buildInfoStoreManager = new BuildInfoStoreManager(Optional.empty());
     filesystem.deleteRecursivelyIfExists(filesystem.getBuckPaths().getBuckOut());
     Files.createDirectories(
         filesystem.resolve(filesystem.getBuckPaths().getScratchDir()).getPath());

@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.command.config.BuildBuckConfig;
+import com.facebook.buck.core.build.engine.buildinfo.BuildInfoCache;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.Cells;
@@ -136,6 +137,8 @@ public class BuckGlobalStateFactory {
             new DefaultRuleKeyCache<>(),
             RichStream.from(allCells).map(Cell::getFilesystem).toImmutableSet());
 
+    BuildInfoCache buildInfoCache = new BuildInfoCache();
+
     Optional<WebServer> webServer;
     if (webServerToReuse.isPresent()) {
       webServer = webServerToReuse;
@@ -183,6 +186,7 @@ public class BuckGlobalStateFactory {
         versionedTargetGraphCache,
         actionGraphCache,
         defaultRuleKeyFactoryCacheRecycler,
+        buildInfoCache,
         cursor,
         knownRuleTypesProvider,
         clock,

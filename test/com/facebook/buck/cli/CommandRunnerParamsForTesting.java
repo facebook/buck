@@ -196,7 +196,7 @@ public class CommandRunnerParamsForTesting {
             .withDepsAwareExecutorSupplier(depsAwareExecutorSupplier)
             .build(),
         knownRuleTypesProvider,
-        new BuildInfoStoreManager(),
+        new BuildInfoStoreManager(Optional.empty()),
         Optional.empty(),
         Optional.empty(),
         new DefaultProjectFilesystemFactory(),

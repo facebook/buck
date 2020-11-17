@@ -82,6 +82,11 @@ public abstract class BuildBuckConfig implements ConfigView<BuckConfig> {
     return getDefaultMaximumNumberOfThreads(Runtime.getRuntime().availableProcessors());
   }
 
+  @Value.Lazy
+  public boolean getBuildInfoCacheEnabled() {
+    return getDelegate().getBoolean(BUILD_SECTION, "use_build_info_cache").orElse(Boolean.FALSE);
+  }
+
   @VisibleForTesting
   int getDefaultMaximumNumberOfThreads(int detectedProcessorCount) {
     double ratio =

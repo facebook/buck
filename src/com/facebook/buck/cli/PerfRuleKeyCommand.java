@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
@@ -280,7 +281,8 @@ public class PerfRuleKeyCommand extends AbstractPerfCommand<PreparedState> {
       ImmutableList<BuildRule> rulesInGraph) {
     Map<BuildEngineAction, ImmutableList<DependencyFileEntry>> usedInputs =
         new ConcurrentHashMap<>();
-    try (BuildInfoStoreManager buildInfoStoreManager = new BuildInfoStoreManager()) {
+    try (BuildInfoStoreManager buildInfoStoreManager =
+        new BuildInfoStoreManager(Optional.empty())) {
       rulesInGraph.forEach(
           rule -> {
             if (rule instanceof SupportsDependencyFileRuleKey

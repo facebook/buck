@@ -1056,7 +1056,11 @@ public final class MainRunner {
                                 buckConfig.getView(BuildBuckConfig.class).getNumThreads())),
                         ExecutorPool.PROJECT.toString(),
                         EXECUTOR_SERVICES_TIMEOUT_SECONDS);
-            BuildInfoStoreManager storeManager = new BuildInfoStoreManager();
+            BuildInfoStoreManager storeManager =
+                new BuildInfoStoreManager(
+                    buckConfig.getView(BuildBuckConfig.class).getBuildInfoCacheEnabled()
+                        ? Optional.of(buckGlobalState.getBuildInfoCache())
+                        : Optional.empty());
             AbstractConsoleEventBusListener fileLoggerConsoleListener =
                 new SimpleConsoleEventBusListener(
                     new RenderingConsole(clock, simpleLogConsole),

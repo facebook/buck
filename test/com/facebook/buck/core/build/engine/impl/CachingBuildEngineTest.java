@@ -277,7 +277,7 @@ public class CachingBuildEngineTest {
     @Before
     public void setUp() throws Exception {
       filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-      buildInfoStoreManager = new BuildInfoStoreManager();
+      buildInfoStoreManager = new BuildInfoStoreManager(Optional.empty());
       Files.createDirectories(
           filesystem.resolve(filesystem.getBuckPaths().getScratchDir()).getPath());
       buildInfoStore = buildInfoStoreManager.get(filesystem);

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.support.state;
 
+import com.facebook.buck.core.build.engine.buildinfo.BuildInfoCache;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.files.DirectoryListCache;
@@ -79,6 +80,7 @@ public final class BuckGlobalState implements Closeable {
   private final VersionedTargetGraphCache versionedTargetGraphCache;
   private final ActionGraphCache actionGraphCache;
   private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
+  private final BuildInfoCache buildInfoCache;
   private final ImmutableMap<AbsPath, WatchmanCursor> cursor;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final Clock clock;
@@ -99,6 +101,7 @@ public final class BuckGlobalState implements Closeable {
       VersionedTargetGraphCache versionedTargetGraphCache,
       ActionGraphCache actionGraphCache,
       RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler,
+      BuildInfoCache buildInfoCache,
       ImmutableMap<AbsPath, WatchmanCursor> cursor,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Clock clock,
@@ -116,6 +119,7 @@ public final class BuckGlobalState implements Closeable {
     this.versionedTargetGraphCache = versionedTargetGraphCache;
     this.actionGraphCache = actionGraphCache;
     this.defaultRuleKeyFactoryCacheRecycler = defaultRuleKeyFactoryCacheRecycler;
+    this.buildInfoCache = buildInfoCache;
     this.cursor = cursor;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.clock = clock;
@@ -275,5 +279,9 @@ public final class BuckGlobalState implements Closeable {
   /** @return the length of time in millis since this daemon was started */
   public long getUptime() {
     return clock.currentTimeMillis() - startTime;
+  }
+
+  public BuildInfoCache getBuildInfoCache() {
+    return this.buildInfoCache;
   }
 }

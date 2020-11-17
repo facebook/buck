@@ -20,6 +20,7 @@ java_library(
         "//src/com/facebook/buck/artifact_cache:impl",
         "//src/com/facebook/buck/artifact_cache/config:config",
         "//src/com/facebook/buck/command/config:config",
+        "//src/com/facebook/buck/core/build/engine/buildinfo:buildinfo",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/files:files",
         "//src/com/facebook/buck/core/model/actiongraph/computation:computation",

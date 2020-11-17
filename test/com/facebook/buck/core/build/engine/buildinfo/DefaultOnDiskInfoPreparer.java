@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class DefaultOnDiskInfoPreparer {
   public final ProjectFilesystem projectFilesystem;
@@ -55,7 +56,7 @@ public class DefaultOnDiskInfoPreparer {
 
     Clock clock = FakeClock.doNotCare();
     BuildId buildId = new BuildId("cat");
-    BuildInfoStore buildInfoStore = new SQLiteBuildInfoStore(projectFilesystem);
+    BuildInfoStore buildInfoStore = new SQLiteBuildInfoStore(projectFilesystem, Optional.empty());
 
     BuildInfoRecorder recorder =
         new BuildInfoRecorder(
