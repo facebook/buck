@@ -22,34 +22,22 @@ import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.build.BuckJsonCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckJsonCommandHandler.Callback;
 import com.facebook.buck.intellij.ideabuck.notification.BuckNotification;
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 import com.intellij.notification.Notification;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootModificationUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.pom.Navigatable;
-import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.util.IncorrectOperationException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import javax.swing.event.HyperlinkEvent;
-import org.jetbrains.annotations.Nls;
-import org.jetbrains.annotations.Nls.Capitalization;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -103,33 +91,17 @@ public class BuckAddDependencyIntention extends AbstractBuckAddDependencyIntenti
     setText(message);
   }
 
-  @Nls(capitalization = Capitalization.Sentence)
-  @NotNull
-  @Override
-  public String getFamilyName() {
-    return this.getClass().getSimpleName();
-  }
-
-  @Override
-  public boolean isAvailable(@NotNull Project project, Editor editor, PsiFile psiFile) {
-    return true;
-  }
-
   @Override
   public void invoke(@NotNull Project project, Editor editor, PsiFile psiFile)
       throws IncorrectOperationException {
     String msg = "Invoked for project " + project.getName() + " and file " + psiFile.getName();
     LOGGER.info(msg);
-    // will run buck query in the background, no need to block the ui for that
-    ApplicationManager.getApplication()
-        .executeOnPooledThread(
-            () -> {
-              queryBuckForTargets(editor);
-            });
+    super.invoke(project, editor, psiFile);
   }
 
   /** Queries buck for targets that own the editSourceFile and the importSourceFile. */
-  private void queryBuckForTargets(Editor editor) {
+  @Override
+  protected void queryBuckForTargets(Editor editor) {
     BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
     String editPath = editSourceFile.getPath();
     String importPath = importSourceFile.getPath();
@@ -140,18 +112,7 @@ public class BuckAddDependencyIntention extends AbstractBuckAddDependencyIntenti
             new Callback<List<TargetMetadata>>() {
               @Override
               public List<TargetMetadata> deserialize(JsonElement jsonElement) {
-                Type type = new TypeToken<Map<String, JsonObject>>() {}.getType();
-                Map<String, JsonObject> raw = new Gson().fromJson(jsonElement, type);
-                List<TargetMetadata> results = new ArrayList<>();
-                for (Entry<String, JsonObject> entry : raw.entrySet()) {
-                  BuckTarget.parse(entry.getKey())
-                      .map(buckTargetLocator::resolve)
-                      .map(
-                          target ->
-                              TargetMetadata.from(buckTargetLocator, target, entry.getValue()))
-                      .ifPresent(results::add);
-                }
-                return results;
+                return parseJson(jsonElement, buckTargetLocator);
               }
 
               @Override
@@ -197,79 +158,46 @@ public class BuckAddDependencyIntention extends AbstractBuckAddDependencyIntenti
    * Implementation of {@link
    * com.intellij.notification.NotificationListener#hyperlinkUpdate(Notification, HyperlinkEvent)}.
    */
-  private void hyperlinkActivated(
+  @Override
+  protected void hyperlinkActivated(
       @NotNull Notification notification, @NotNull HyperlinkEvent event) {
     String href = event.getDescription();
     switch (href) {
-      case "editTarget":
-        if (BuckTargetLocator.getInstance(project)
-            .findElementForTarget(editTarget)
-            .filter(target -> target instanceof NavigatablePsiElement)
-            .map(target -> (NavigatablePsiElement) target)
-            .filter(Navigatable::canNavigate)
-            .map(
-                e -> {
-                  e.navigate(true);
-                  return true;
-                })
-            .orElse(false)) {
-          break;
-        }
-        // fallthrough
-      case "editBuildFile":
-        FileEditorManager.getInstance(project).openFile(editBuildFile, true);
-        break;
-      case "editSourceFile":
-        FileEditorManager.getInstance(project).openFile(editSourceFile, true);
-        break;
-      case "importTarget":
-        if (BuckTargetLocator.getInstance(project)
-            .findElementForTarget(importTarget)
-            .filter(target -> target instanceof NavigatablePsiElement)
-            .map(target -> (NavigatablePsiElement) target)
-            .filter(Navigatable::canNavigate)
-            .map(
-                e -> {
-                  e.navigate(true);
-                  return true;
-                })
-            .orElse(false)) {
-          break;
-        }
-        // fallthrough
       case "importBuildFile":
         FileEditorManager.getInstance(project).openFile(importBuildFile, true);
         break;
       case "importSourceFile":
         FileEditorManager.getInstance(project).openFile(importSourceFile, true);
         break;
+      default:
+        super.hyperlinkActivated(notification, event);
     }
   }
 
   private void updateDependencies(
       Editor editor, List<TargetMetadata> editTargets, List<TargetMetadata> importTargets) {
-    if (editTargets.size() == 0) {
-      String message =
-          "<html><b>Add dependency failed</b>: Couldn't determine a Buck owner for <a href='editSourceFile'>"
-              + editSourceTarget
-              + "</a> in <a href='editBuildFile'>"
-              + editBuildFile.getPath()
-              + "</a>";
-      BuckNotification.getInstance(project).showErrorBalloon(message, this::hyperlinkActivated);
+    TargetMetadata editTargetMetadata =
+        getTargetMetaDataFromList(
+            editTargets,
+            "<html><b>Add dependency failed</b>: Couldn't determine a Buck owner for <a href='editSourceFile'>"
+                + editSourceTarget
+                + "</a> in <a href='editBuildFile'>"
+                + editBuildFile.getPath()
+                + "</a>");
+    if (editTargetMetadata == null) {
       return;
     }
-    if (importTargets.size() == 0) {
-      String message =
-          "<html><b>Add dependency failed</b>: Couldn't determine a Buck owner for <a href='importSourceFile'>"
-              + importSourceTarget
-              + "</a> in <a href='importBuildFile'>"
-              + importBuildFile.getPath()
-              + "</a></html>";
-      BuckNotification.getInstance(project).showErrorBalloon(message, this::hyperlinkActivated);
+    TargetMetadata importTargetMetadata =
+        getTargetMetaDataFromList(
+            importTargets,
+            "<html><b>Add dependency failed</b>: Couldn't determine a Buck owner for <a href='importSourceFile'>"
+                + importSourceTarget
+                + "</a> in <a href='importBuildFile'>"
+                + importBuildFile.getPath()
+                + "</a></html>");
+    if (importTargetMetadata == null) {
       return;
     }
-    TargetMetadata editTargetMetadata = editTargets.get(0);
-    TargetMetadata importTargetMetadata = importTargets.get(0);
     editTarget = editTargetMetadata.target;
     importTarget = importTargetMetadata.target;
 
@@ -283,28 +211,8 @@ public class BuckAddDependencyIntention extends AbstractBuckAddDependencyIntenti
       BuckNotification.getInstance(project).showErrorBalloon(message, this::hyperlinkActivated);
       return;
     }
-    if (!editTargetMetadata.hasDependencyOn(importTarget)) {
-      if (!BuckDeps.modifyTargetToAddDependency(
-          editBuildFile, editTarget.toString(), importTarget.toString())) {
-        String message =
-            "<html><b>Add dependency failed</b>:  Could not add modify build file for <a href='editTarget'>"
-                + editTarget
-                + "</a> to add dependency on <a href='importTarget'>"
-                + importTarget
-                + "</a></html>";
-        BuckNotification.getInstance(project).showErrorBalloon(message, this::hyperlinkActivated);
-        return;
-      }
-    } else {
-      String message =
-          "<html>No need to modify build file <a href='editBuildFile'>"
-              + editBuildFile
-              + "</a>, already has dependency from <a href='editTarget'>"
-              + editTarget
-              + "</a> to <a href='importTarget'>"
-              + importTarget
-              + "</a></html>";
-      BuckNotification.getInstance(project).showInfoBalloon(message, this::hyperlinkActivated);
+    if (!tryToAddBuckDependency(editTargetMetadata)) {
+      return;
     }
     ModuleRootModificationUtil.updateModel(
         editModule,
@@ -324,21 +232,6 @@ public class BuckAddDependencyIntention extends AbstractBuckAddDependencyIntenti
                     + importModule.getName());
           }
         }));
-    if (addImportAction == null) {
-      return;
-    }
-    // Add import will run main thread since it's a write action and will block the IDE
-    DumbService.getInstance(project)
-        .smartInvokeLater(
-            () -> {
-              if (isImportedValid()) {
-                addImportAction.execute(project, reference, editor, psiClass);
-              }
-            });
-  }
-
-  private boolean isImportedValid() {
-    // null means the imported component is not a class (e.g. kotlin extension function)
-    return psiClass == null || psiClass.isValid();
+    invokeAddImport(editor);
   }
 }
