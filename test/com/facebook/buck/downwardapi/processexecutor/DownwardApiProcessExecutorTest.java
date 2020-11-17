@@ -26,11 +26,11 @@ import static com.facebook.buck.downward.model.StepEvent.StepStatus.STARTED;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ChromeTraceEvent;
@@ -43,12 +43,12 @@ import com.facebook.buck.downward.model.LogLevel;
 import com.facebook.buck.downward.model.StepEvent;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
+import com.facebook.buck.downwardapi.testutil.LogRecordMatcher;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.external.events.StepEventExternalInterface;
-import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
@@ -79,19 +79,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import java.util.stream.Collectors;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+import org.junit.rules.Timeout;
 
 public class DownwardApiProcessExecutorTest {
 
   private static final Logger LOG = Logger.get(DownwardApiProcessExecutorTest.class);
+
+  private static final Logger DOWNWARD_API_LOGGER = DownwardApiProcessExecutor.LOG;
+  private static Level DOWNWARD_API_LOGGER_INITIAL_LEVEL;
 
   private static final String TEST_LOGGER_NAME = "crazy.tool.name";
   private static final ConsoleParams CONSOLE_PARAMS =
@@ -99,15 +105,30 @@ public class DownwardApiProcessExecutorTest {
   private static final String TEST_COMMAND = "test_command";
   private static final String TEST_ACTION_ID = "test_action_id";
 
+  @BeforeClass
+  public static void beforeClass() {
+    // store the initial log level in the variable
+    DOWNWARD_API_LOGGER_INITIAL_LEVEL = DOWNWARD_API_LOGGER.getLevel();
+    // add ability to check all level of logs from class under the test.
+    DOWNWARD_API_LOGGER.setLevel(Level.ALL);
+  }
+
+  @AfterClass
+  public static void afterClass() {
+    // set the initial log level back
+    DOWNWARD_API_LOGGER.setLevel(DOWNWARD_API_LOGGER_INITIAL_LEVEL);
+  }
+
+  @Rule public Timeout globalTestTimeout = Timeout.seconds(10);
+
   @Rule public TestName testName = new TestName();
 
-  @Rule public TestLogSink logSinkFromTest = new TestLogSink(TEST_LOGGER_NAME);
+  @Rule public TestLogSink testToolLogSink = new TestLogSink(TEST_LOGGER_NAME);
 
   @Rule
-  public TestLogSink logSinkFromExecutor =
-      new TestLogSink(DownwardApiProcessExecutor.class.getName());
+  public TestLogSink executorLogSink = new TestLogSink(DownwardApiProcessExecutor.class.getName());
 
-  private NamedPipeReader namedPipe;
+  private NamedPipeReader namedPipeReader;
   private Instant instant;
   private BuckEventBus buckEventBus;
   private ProcessExecutorParams params;
@@ -144,41 +165,44 @@ public class DownwardApiProcessExecutorTest {
 
   @Before
   public void setUp() throws Exception {
-    namedPipe = NamedPipeFactory.getFactory().createAsReader();
+    namedPipeReader = NamedPipeFactory.getFactory().createAsReader();
     instant = Instant.now();
     buckEventBus =
         BuckEventBusForTests.newInstance(
             new SettableFakeClock(instant.toEpochMilli(), instant.getNano()));
-    params = getProcessExecutorParams(namedPipe, buckEventBus);
+    params = getProcessExecutorParams(namedPipeReader.getName(), buckEventBus);
   }
 
-  @Test(timeout = 10_000)
+  @Test
   public void downwardApiWithNoWriters() throws IOException, InterruptedException {
     // do nothing
     FakeProcess fakeProcess = new FakeProcess(Optional.of(Optional::empty));
 
     DownwardApiProcessExecutor processExecutor =
-        getDownwardApiProcessExecutor(namedPipe, buckEventBus, params, fakeProcess);
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, params, fakeProcess);
 
     DownwardApiExecutionResult result = launchAndExecute(processExecutor);
-    assertEquals(0, result.getExitCode());
+    assertEquals("Process should exit with EXIT_SUCCESS", 0, result.getExitCode());
     assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
+    assertFalse(
+        "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
   }
 
-  @Test(timeout = 10_000)
+  @Test
   public void downwardApi() throws IOException, InterruptedException {
     TestListener listener = new TestListener();
     long epochSecond = instant.getEpochSecond();
     buckEventBus.register(listener);
 
-    ProcessExecutorParams params = getProcessExecutorParams(namedPipe, buckEventBus);
+    ProcessExecutorParams params =
+        getProcessExecutorParams(namedPipeReader.getName(), buckEventBus);
 
     FakeProcess fakeProcess =
         new FakeProcess(
             Optional.of(
                 () -> {
                   try {
-                    writeIntoNamedPipeProcess(namedPipe.getName());
+                    writeIntoNamedPipeProcess(namedPipeReader.getName());
                   } catch (Exception e) {
                     throw new RuntimeException(e);
                   }
@@ -186,12 +210,21 @@ public class DownwardApiProcessExecutorTest {
                 }));
 
     DownwardApiProcessExecutor processExecutor =
-        getDownwardApiProcessExecutor(namedPipe, buckEventBus, params, fakeProcess);
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, params, fakeProcess);
 
     DownwardApiExecutionResult result = launchAndExecute(processExecutor);
-    assertEquals(0, result.getExitCode());
+    assertEquals("Process should exit with EXIT_SUCCESS", 0, result.getExitCode());
     assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
+    assertFalse(
+        "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
 
+    int attempt = 0;
+    ThreadPoolExecutor handlerThreadPool =
+        (ThreadPoolExecutor) DownwardApiProcessExecutor.HANDLER_THREAD_POOL;
+    while (handlerThreadPool.getActiveCount() > 0 && ++attempt < 10) {
+      Thread.sleep(100L);
+      LOG.info("Waiting till handler pool process all events tasks. Attempt: " + attempt);
+    }
     Map<Integer, BuckEvent> events = listener.events;
     assertEquals(6, events.size());
 
@@ -250,23 +283,23 @@ public class DownwardApiProcessExecutorTest {
     // verify error event
     verifyExternalEvent(events.get(5));
 
-    assertFalse("Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipe.getName())));
+    assertThat(
+        "Did not find debug log message about processing on a handler thread pool",
+        executorLogSink.getRecords(),
+        hasItem(
+            new LogRecordMatcher(Level.FINE) {
+
+              @Override
+              protected boolean marchesLogRecord(LogRecord logRecord) {
+                String message = logRecord.getMessage();
+                return message.contains("Processing event of type")
+                    && message.contains(
+                        "in the thread: " + DownwardApiProcessExecutor.HANDLER_THREAD_POOL_NAME);
+              }
+            }));
   }
 
-  private void verifyExternalEvent(BuckEvent buckEvent) {
-    assertTrue(buckEvent instanceof com.facebook.buck.event.ExternalEvent);
-    com.facebook.buck.event.ExternalEvent externalEvent =
-        (com.facebook.buck.event.ExternalEvent) buckEvent;
-    assertEquals(
-        ImmutableMap.of(
-            "errorMessageKey",
-            "error message! show me to user!!!!",
-            "buildTarget",
-            "//test/foo:bar"),
-        externalEvent.getData());
-  }
-
-  @Test(timeout = 10_000)
+  @Test
   public void invalidProtocol() throws IOException, InterruptedException {
     FakeProcess fakeProcess =
         new FakeProcess(
@@ -275,7 +308,7 @@ public class DownwardApiProcessExecutorTest {
                 () -> {
                   try (NamedPipeWriter writer =
                           NamedPipeFactory.getFactory()
-                              .connectAsWriter(Paths.get(namedPipe.getName()));
+                              .connectAsWriter(Paths.get(namedPipeReader.getName()));
                       OutputStream outputStream = writer.getOutputStream()) {
                     // "u" is not a valid protocol
                     outputStream.write("u".getBytes(StandardCharsets.UTF_8));
@@ -287,26 +320,32 @@ public class DownwardApiProcessExecutorTest {
                 }));
 
     DownwardApiProcessExecutor processExecutor =
-        getDownwardApiProcessExecutor(namedPipe, buckEventBus, params, fakeProcess);
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, params, fakeProcess);
 
     DownwardApiExecutionResult result = launchAndExecute(processExecutor);
-
-    boolean foundRecord = false;
-    for (LogRecord logRecord : logSinkFromExecutor.getRecords()) {
-      if (logRecord.getMessage().contains("Received invalid downward protocol")) {
-        assertThat(logRecord.getThrown().getMessage(), containsString("Invalid protocol type: u"));
-        foundRecord = true;
-        break;
-      }
-    }
-    if (!foundRecord) {
-      fail("Did not find log message about unexpected protocol");
-    }
+    assertEquals("Process should exit with an exception", 1, result.getExitCode());
     assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
-    assertFalse("Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipe.getName())));
+    assertFalse(
+        "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
+
+    assertThat(
+        "Did not find log message about unexpected protocol",
+        executorLogSink.getRecords(),
+        hasItem(
+            new LogRecordMatcher(Level.SEVERE) {
+
+              @Override
+              public boolean marchesLogRecord(LogRecord logRecord) {
+                String message = logRecord.getMessage();
+                if (message.contains("Received invalid downward protocol")) {
+                  return logRecord.getThrown().getMessage().contains("Invalid protocol type: u");
+                }
+                return false;
+              }
+            }));
   }
 
-  @Test(timeout = 10_000)
+  @Test
   public void namedPipeClosedTooEarly() throws IOException, InterruptedException {
     FakeProcess fakeProcess =
         new FakeProcess(
@@ -314,7 +353,7 @@ public class DownwardApiProcessExecutorTest {
             Optional.of(
                 () -> {
                   try {
-                    namedPipe.close();
+                    namedPipeReader.close();
                   } catch (Exception e) {
                     throw new RuntimeException(e);
                   }
@@ -322,18 +361,22 @@ public class DownwardApiProcessExecutorTest {
                 }));
 
     DownwardApiProcessExecutor processExecutor =
-        getDownwardApiProcessExecutor(namedPipe, buckEventBus, params, fakeProcess);
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, params, fakeProcess);
 
     DownwardApiExecutionResult result = launchAndExecute(processExecutor);
+    assertEquals("Process should exit with an exception", 1, result.getExitCode());
+    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
+    assertFalse(
+        "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
 
     assertThat(
-        getLogMessagesAsSingleString(logSinkFromExecutor),
-        stringContainsInOrder("Named pipe", namedPipe.getName(), "is closed"));
-    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
-    assertFalse("Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipe.getName())));
+        executorLogSink.getRecords(),
+        hasItem(
+            TestLogSink.logRecordWithMessage(
+                stringContainsInOrder("Named pipe", namedPipeReader.getName(), "is closed"))));
   }
 
-  @Test(timeout = 10_000)
+  @Test
   public void otherIOException() throws IOException, InterruptedException {
     NamedPipeReader namedPipeReader =
         new NamedPipeReader() {
@@ -353,7 +396,7 @@ public class DownwardApiProcessExecutorTest {
           }
         };
     String namedPipeName = namedPipeReader.getName();
-    ProcessExecutorParams params = getProcessExecutorParams(namedPipeReader, buckEventBus);
+    ProcessExecutorParams params = getProcessExecutorParams(namedPipeName, buckEventBus);
 
     FakeProcess fakeProcess = new FakeProcess(0);
 
@@ -366,14 +409,19 @@ public class DownwardApiProcessExecutorTest {
     } finally {
       namedPipeReader.close();
     }
+    assertEquals("Process should exit with EXIT_SUCCESS", 0, result.getExitCode());
+    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
+    assertFalse("Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeName)));
 
     assertThat(
-        getLogMessagesAsSingleString(logSinkFromExecutor),
-        stringContainsInOrder("Cannot read from named pipe: ", namedPipeName));
+        executorLogSink.getRecords(),
+        hasItem(
+            TestLogSink.logRecordWithMessage(
+                stringContainsInOrder("Cannot read from named pipe: ", namedPipeName))));
     assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
   }
 
-  @Test(timeout = 10_000)
+  @Test
   public void generalUnhandledException() throws IOException, InterruptedException {
     NamedPipeReader namedPipeReader =
         new NamedPipeReader() {
@@ -393,7 +441,7 @@ public class DownwardApiProcessExecutorTest {
           }
         };
     String namedPipeName = namedPipeReader.getName();
-    ProcessExecutorParams params = getProcessExecutorParams(namedPipeReader, buckEventBus);
+    ProcessExecutorParams params = getProcessExecutorParams(namedPipeName, buckEventBus);
 
     FakeProcess fakeProcess = new FakeProcess(0);
 
@@ -406,11 +454,16 @@ public class DownwardApiProcessExecutorTest {
     } finally {
       namedPipeReader.close();
     }
+    assertEquals("Process should exit with EXIT_SUCCESS", 0, result.getExitCode());
+    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
+    assertFalse("Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeName)));
 
     assertThat(
-        getLogMessagesAsSingleString(logSinkFromExecutor),
-        stringContainsInOrder(
-            "Unhandled exception while reading from named pipe: ", namedPipeName));
+        executorLogSink.getRecords(),
+        hasItem(
+            TestLogSink.logRecordWithMessage(
+                stringContainsInOrder(
+                    "Unhandled exception while reading from named pipe: ", namedPipeName))));
     assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
   }
 
@@ -473,7 +526,7 @@ public class DownwardApiProcessExecutorTest {
   }
 
   private ProcessExecutorParams getProcessExecutorParams(
-      NamedPipe namedPipe, BuckEventBus buckEventBus) {
+      String namedPipeName, BuckEventBus buckEventBus) {
     ImmutableMap.Builder<String, String> envsBuilder = ImmutableMap.builder();
     envsBuilder.put("SOME_ENV1", "VALUE1");
     envsBuilder.put("SOME_ENV2", "VALUE2");
@@ -481,7 +534,7 @@ public class DownwardApiProcessExecutorTest {
     envsBuilder.put("BUCK_ANSI_ENABLED", CONSOLE_PARAMS.isAnsiEscapeSequencesEnabled());
     envsBuilder.put("BUCK_BUILD_UUID", buckEventBus.getBuildId().toString());
     envsBuilder.put("BUCK_ACTION_ID", TEST_ACTION_ID);
-    envsBuilder.put("BUCK_EVENT_PIPE", namedPipe.getName());
+    envsBuilder.put("BUCK_EVENT_PIPE", namedPipeName);
     ImmutableMap<String, String> envs = envsBuilder.build();
 
     return ProcessExecutorParams.builder()
@@ -491,7 +544,7 @@ public class DownwardApiProcessExecutorTest {
   }
 
   private void verifyLogEvent() {
-    List<LogRecord> records = logSinkFromTest.getRecords();
+    List<LogRecord> records = testToolLogSink.getRecords();
     LogRecord logRecord = Iterables.getOnlyElement(records);
     assertThat(logRecord.getLevel(), equalTo(Level.WARNING));
     assertThat(
@@ -539,6 +592,19 @@ public class DownwardApiProcessExecutorTest {
     verifyDuration(epochSecond, expectedRelativeTime, simplePerfEvent.getNanoTime());
   }
 
+  private void verifyExternalEvent(BuckEvent buckEvent) {
+    assertTrue(buckEvent instanceof com.facebook.buck.event.ExternalEvent);
+    com.facebook.buck.event.ExternalEvent externalEvent =
+        (com.facebook.buck.event.ExternalEvent) buckEvent;
+    assertEquals(
+        ImmutableMap.of(
+            "errorMessageKey",
+            "error message! show me to user!!!!",
+            "buildTarget",
+            "//test/foo:bar"),
+        externalEvent.getData());
+  }
+
   private void verifyDuration(long epochSecond, int expectedRelativeDuration, long nanoTime) {
     long eventTimeInSeconds = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
     long relativeTimeInSeconds = eventTimeInSeconds - epochSecond;
@@ -551,15 +617,13 @@ public class DownwardApiProcessExecutorTest {
 
   private void writeIntoNamedPipeProcess(String namedPipeName)
       throws IOException, InterruptedException {
-
-    try (NamedPipeWriter namedPipe =
-        NamedPipeFactory.getFactory().connectAsWriter(Paths.get(namedPipeName))) {
-      try (OutputStream outputStream = namedPipe.getOutputStream()) {
-        for (String message : getMessages()) {
-          LOG.info("Writing into named pipe: %s%s", System.lineSeparator(), message);
-          outputStream.write(message.getBytes(StandardCharsets.UTF_8));
-          TimeUnit.MILLISECONDS.sleep(100);
-        }
+    NamedPipeFactory namedPipeFactory = NamedPipeFactory.getFactory();
+    try (NamedPipeWriter namedPipe = namedPipeFactory.connectAsWriter(Paths.get(namedPipeName));
+        OutputStream outputStream = namedPipe.getOutputStream()) {
+      for (String message : getMessages()) {
+        LOG.info("Writing into named pipe: %s%s", System.lineSeparator(), message);
+        outputStream.write(message.getBytes(StandardCharsets.UTF_8));
+        TimeUnit.MILLISECONDS.sleep(100);
       }
     }
   }
@@ -682,11 +746,5 @@ public class DownwardApiProcessExecutorTest {
     downwardProtocol.write(
         EventTypeMessage.newBuilder().setEventType(eventType).build(), message, outputStream);
     return outputStream.toString(StandardCharsets.UTF_8.name());
-  }
-
-  private String getLogMessagesAsSingleString(TestLogSink logSink) {
-    return logSink.getRecords().stream()
-        .map(LogRecord::getMessage)
-        .collect(Collectors.joining(System.lineSeparator()));
   }
 }

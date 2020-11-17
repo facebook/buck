@@ -67,14 +67,7 @@ public class MostExecutors {
   }
 
   public static ExecutorService newSingleThreadExecutor(ThreadFactory threadFactory) {
-    return new ThreadPoolExecutor(
-        /* corePoolSize */ 1,
-        /* maximumPoolSize */ 1,
-        /* keepAliveTime */ 0L,
-        TimeUnit.MILLISECONDS,
-        /* workQueue */ new LinkedBlockingQueue<Runnable>(),
-        /* threadFactory */ threadFactory,
-        /* handler */ new ThreadPoolExecutor.DiscardPolicy());
+    return newMultiThreadExecutor(threadFactory, 1);
   }
 
   /**
@@ -94,7 +87,7 @@ public class MostExecutors {
         /* maximumPoolSize */ count,
         /* keepAliveTime */ 0L,
         TimeUnit.MILLISECONDS,
-        /* workQueue */ new LinkedBlockingQueue<Runnable>(),
+        /* workQueue */ new LinkedBlockingQueue<>(),
         /* threadFactory */ threadFactory,
         /* handler */ new ThreadPoolExecutor.DiscardPolicy());
   }

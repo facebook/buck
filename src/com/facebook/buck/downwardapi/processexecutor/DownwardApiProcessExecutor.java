@@ -55,6 +55,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -80,7 +81,7 @@ import javax.annotation.Nullable;
  */
 public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
 
-  private static final Logger LOG = Logger.get(DownwardApiProcessExecutor.class);
+  @VisibleForTesting static final Logger LOG = Logger.get(DownwardApiProcessExecutor.class);
 
   public static final DownwardApiProcessExecutorFactory FACTORY = Factory.INSTANCE;
 
@@ -98,14 +99,20 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     }
   }
 
-  private static final ThreadPoolExecutor DOWNWARD_API_THREAD_POOL =
+  @VisibleForTesting static final String HANDLER_THREAD_POOL_NAME = "DownwardApiHandler";
+
+  @VisibleForTesting
+  static final ExecutorService HANDLER_THREAD_POOL =
+      MostExecutors.newSingleThreadExecutor(HANDLER_THREAD_POOL_NAME);
+
+  private static final ThreadPoolExecutor DOWNWARD_API_READER_THREAD_POOL =
       new ThreadPoolExecutor(
           0,
           Integer.MAX_VALUE,
           1,
           TimeUnit.SECONDS,
           new SynchronousQueue<>(),
-          new MostExecutors.NamedThreadFactory("DownwardApi"));
+          new MostExecutors.NamedThreadFactory("DownwardApiReader"));
 
   private static final long SHUTDOWN_TIMEOUT = 2;
   private static final TimeUnit SHUTDOWN_TIMEOUT_UNIT = TimeUnit.SECONDS;
@@ -217,7 +224,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
 
     NamedPipeEventHandler namedPipeEventHandler =
         getNamedPipeEventHandler(namedPipe, DownwardApiExecutionContext.of(buckEventBus));
-    namedPipeEventHandler.runOn(DOWNWARD_API_THREAD_POOL);
+    namedPipeEventHandler.runOn(DOWNWARD_API_READER_THREAD_POOL);
 
     ProcessExecutorParams updatedParams =
         ProcessExecutorParams.builder()
@@ -328,7 +335,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
       running = Optional.of(threadPool.submit(this::run));
     }
 
-    void run() {
+    private void run() {
       String namedPipeName = namedPipe.getName();
       try (InputStream inputStream = namedPipe.getInputStream()) {
         LOG.info("Trying to establish downward protocol for pipe %s", namedPipeName);
@@ -338,6 +345,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
               "Starting to read events from named pipe %s with protocol %s",
               namedPipeName, downwardProtocol.getProtocolName());
         }
+
         processEvents(namedPipeName, inputStream);
         LOG.info(
             "Finishing reader thread for pipe: %s; interrupted = %s",
@@ -364,12 +372,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
             LOG.info("Received end event for named pipe %s", namedPipeName);
             break;
           }
-          EventHandler<AbstractMessage> eventHandler = EventHandler.getEventHandler(eventType);
-          try {
-            eventHandler.handleEvent(context, event);
-          } catch (Exception e) {
-            LOG.error(e, "Cannot handle event: %s", event);
-          }
+          HANDLER_THREAD_POOL.execute(() -> processEvent(eventType, event));
         } catch (PipeNotConnectedException e) {
           LOG.info("Named pipe %s is closed", namedPipeName);
           break;
@@ -377,6 +380,19 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
           LOG.error(e, "Exception during processing events from named pipe: %s", namedPipeName);
           break;
         }
+      }
+    }
+
+    private void processEvent(EventTypeMessage.EventType eventType, AbstractMessage event) {
+      LOG.debug(
+          "Processing event of type %s in the thread: %s",
+          eventType, Thread.currentThread().getName());
+
+      EventHandler<AbstractMessage> eventHandler = EventHandler.getEventHandler(eventType);
+      try {
+        eventHandler.handleEvent(context, event);
+      } catch (Exception e) {
+        LOG.error(e, "Cannot handle event: %s", event);
       }
     }
 
