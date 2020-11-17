@@ -18,7 +18,6 @@ package com.facebook.buck.intellij.ideabuck.autodeps;
 
 import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
-import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.build.BuckJsonCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckJsonCommandHandler.Callback;
@@ -27,8 +26,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-import com.intellij.codeInsight.daemon.impl.actions.AddImportAction;
-import com.intellij.codeInsight.intention.impl.BaseIntentionAction;
 import com.intellij.notification.Notification;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
@@ -38,7 +35,6 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootModificationUtil;
-import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.Navigatable;
 import com.intellij.psi.NavigatablePsiElement;
@@ -61,157 +57,48 @@ import org.jetbrains.annotations.Nullable;
  * An intention that will attempt to add a dependency edge to both the Buck graph and the IntelliJ
  * module graph.
  */
-public class BuckAddDependencyIntention extends BaseIntentionAction {
+public class BuckAddDependencyIntention extends AbstractBuckAddDependencyIntention {
   private static Logger LOGGER = Logger.getInstance(BuckAddDependencyIntention.class);
 
-  /**
-   * Creates an {@link com.intellij.codeInsight.intention.IntentionAction} with {@link
-   * AddImportAction}
-   */
+  private final VirtualFile importBuildFile;
+  private final VirtualFile importSourceFile;
+  private final Module importModule;
+
+  // These methods are here to keep the method signatures the same
   @Nullable
   public static BuckAddDependencyIntention create(PsiReference reference, PsiClass psiClass) {
-    return create(
-        reference,
-        psiClass,
-        new BuckAddImportAction() {
-          @Override
-          public boolean execute(
-              Project project, PsiReference reference, Editor editor, PsiClass psiClass) {
-            if (psiClass == null || !psiClass.isValid()) return false;
-            return new AddImportAction(project, reference, editor, psiClass).execute();
-          }
-        });
+    return BuckAddDependencyIntentionFactory.createAddModuleDependencyIntention(
+        reference, psiClass);
   }
 
-  // Need to keep this method's signeture for backwards compatibility reasons
   @Nullable
   public static BuckAddDependencyIntention create(
-      PsiReference reference, PsiClass psiClass, @Nullable BuckAddImportAction addImportAction) {
-    return create(
-        reference, psiClass.getContainingFile().getVirtualFile(), psiClass, addImportAction);
+      PsiReference reference, PsiClass psiClass, BuckAddImportAction importAction) {
+    return BuckAddDependencyIntentionFactory.createAddModuleDependencyIntention(
+        reference, psiClass, importAction);
   }
-  /**
-   * Creates an {@link com.intellij.codeInsight.intention.IntentionAction} that will create an
-   * dependency edge in both the Buck target graph and IntelliJ module graph from the nodes for the
-   * given reference element to those of the given psiClass.
-   *
-   * <p>Note that this intention can fail to be created if either side of the edge cannot be
-   * resolved to a buck file in a buck cell, in which case this method returns null. Also, invoking
-   * this intention may fail to create edges in either the Buck target graph or the IntelliJ module
-   * graph (or both).
-   */
+
   @Nullable
   public static BuckAddDependencyIntention create(
       PsiReference reference,
       VirtualFile importSourceFile,
       @Nullable PsiClass psiClass,
-      @Nullable BuckAddImportAction addImportAction) {
-    VirtualFile editSourceFile = reference.getElement().getContainingFile().getVirtualFile();
-    if (importSourceFile == null || editSourceFile == null) {
-      return null;
-    }
-    Project project = reference.getElement().getProject();
-    BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
-    VirtualFile editBuildFile =
-        buckTargetLocator.findBuckFileForVirtualFile(editSourceFile).orElse(null);
-    if (editBuildFile == null) {
-      return null;
-    }
-
-    VirtualFile importBuildFile =
-        buckTargetLocator.findBuckFileForVirtualFile(importSourceFile).orElse(null);
-    if (importBuildFile == null) {
-      return null;
-    }
-    if (importBuildFile.equals(editBuildFile)) {
-      return null;
-    }
-    ProjectFileIndex projectFileIndex = ProjectFileIndex.getInstance(project);
-    Module editModule = projectFileIndex.getModuleForFile(editSourceFile);
-    if (editModule == null) {
-      return null;
-    }
-    Module importModule = projectFileIndex.getModuleForFile(importSourceFile);
-    if (importModule == null) {
-      return null;
-    }
-    BuckTarget editSourceTarget =
-        buckTargetLocator
-            .findTargetPatternForVirtualFile(editSourceFile)
-            .flatMap(BuckTargetPattern::asBuckTarget)
-            .orElse(null);
-    if (editSourceTarget == null) {
-      return null;
-    }
-    BuckTarget importSourceTarget =
-        buckTargetLocator
-            .findTargetPatternForVirtualFile(importSourceFile)
-            .flatMap(BuckTargetPattern::asBuckTarget)
-            .orElse(null);
-    if (importSourceTarget == null) {
-      return null;
-    }
-    return new BuckAddDependencyIntention(
-        project,
-        reference,
-        editBuildFile,
-        editSourceFile,
-        editSourceTarget,
-        editModule,
-        psiClass,
-        importBuildFile,
-        importSourceFile,
-        importSourceTarget,
-        importModule,
-        addImportAction);
+      BuckAddImportAction importAction) {
+    return BuckAddDependencyIntentionFactory.createAddModuleDependencyIntention(
+        reference, importSourceFile, psiClass, importAction);
   }
-
-  private Project project;
-
-  // Fields pertaining to the PsiReference in the file being edited
-  private PsiReference reference;
-  private VirtualFile editBuildFile;
-  private VirtualFile editSourceFile;
-  private BuckTarget editSourceTarget;
-  private BuckTarget editTarget;
-  private Module editModule;
-
-  // Fields pertaining to the dependency that should be resolved/imported
-  private @Nullable PsiClass psiClass;
-  private VirtualFile importBuildFile;
-  private VirtualFile importSourceFile;
-  private BuckTarget importSourceTarget;
-  private BuckTarget importTarget;
-  private Module importModule;
-
-  // Add import action
-  private @Nullable BuckAddImportAction addImportAction;
 
   BuckAddDependencyIntention(
-      Project project,
-      PsiReference reference,
-      VirtualFile editBuildFile,
-      VirtualFile editSourceFile,
-      BuckTarget editSourceTarget,
-      Module editModule,
-      @Nullable PsiClass psiClass,
-      VirtualFile importBuildFile,
+      CommonAddDependencyDataWrapper wrapper,
       VirtualFile importSourceFile,
-      BuckTarget importSourceTarget,
+      VirtualFile importBuildFile,
       Module importModule,
-      @Nullable BuckAddImportAction addImportAction) {
-    this.project = project;
-    this.reference = reference;
-    this.editBuildFile = editBuildFile;
-    this.editSourceFile = editSourceFile;
-    this.editSourceTarget = editSourceTarget;
-    this.editModule = editModule;
-    this.psiClass = psiClass;
+      BuckTarget importSourceTarget) {
+    super(wrapper);
     this.importBuildFile = importBuildFile;
     this.importSourceFile = importSourceFile;
     this.importSourceTarget = importSourceTarget;
     this.importModule = importModule;
-    this.addImportAction = addImportAction;
     String message = "Add BUCK dependency on owner(" + importSourceTarget + ")";
     setText(message);
   }
