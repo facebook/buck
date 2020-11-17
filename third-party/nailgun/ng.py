@@ -25,6 +25,7 @@ import select
 import socket
 import struct
 import sys
+import time
 from io import BytesIO
 from threading import Condition, Event, Thread, RLock
 
@@ -442,6 +443,9 @@ class WindowsNamedPipeTransport(Transport):
                 or monotonic_time_nanos() - start > timeout_nanos
             ):
                 return readable, exceptional
+
+            # Sleep a bit to avoid busy looping for no reason.
+            time.sleep(0.05)
 
     def select_now(self):
         available_total = wintypes.DWORD()
