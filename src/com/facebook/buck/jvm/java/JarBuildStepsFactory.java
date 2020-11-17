@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -55,6 +56,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -431,10 +433,16 @@ public class JarBuildStepsFactory
 
   protected CompilerParameters getCompilerParameters(
       BuildContext context, ProjectFilesystem filesystem, BuildTarget buildTarget) {
+
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
+    ImmutableSortedSet<Path> compileTimeClasspathPaths =
+        sourcePathResolver.getAllAbsolutePaths(dependencyInfos.getCompileTimeClasspathSourcePaths())
+            .stream()
+            .map(PathWrapper::getPath)
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
+
     return CompilerParameters.builder()
-        .setClasspathEntriesSourcePaths(
-            dependencyInfos.getCompileTimeClasspathSourcePaths(), sourcePathResolver)
+        .setClasspathEntries(compileTimeClasspathPaths)
         .setSourceFileSourcePaths(srcs, filesystem, sourcePathResolver)
         .setScratchPaths(buildTarget, filesystem)
         .setShouldTrackClassUsage(trackClassUsage)
