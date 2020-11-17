@@ -21,6 +21,8 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
@@ -320,5 +322,39 @@ public class EdenProjectFilesystemDelegateTest {
     EdenProjectFilesystemDelegate edenDelegate =
         new EdenProjectFilesystemDelegate(mount, delegate, configWithWatchman);
     edenDelegate.computeSha1(path);
+  }
+
+  @Test
+  public void computeSha1ViaWatchmanForSymlink()
+      throws TException, IOException, InterruptedException {
+    ProjectFilesystemDelegate delegate =
+        new DefaultProjectFilesystemDelegate(tmp.getRoot(), Optional.empty());
+    EdenMount mount = createMock(EdenMount.class);
+
+    // Create a symlink within the project root.
+    Path link = tmp.getRoot().resolve("link").getPath();
+    Path target = tmp.newFile("target").getPath();
+    Files.createSymbolicLink(link, target);
+
+    Config configWithFileSystem =
+        ConfigBuilder.createFromText(
+            "[eden]", "use_xattr = true", "[eden]", "use_watchman_content_sha1 = false");
+    EdenProjectFilesystemDelegate edenDelegateWithFileSystem =
+        new EdenProjectFilesystemDelegate(mount, delegate, configWithFileSystem);
+
+    Config configWithWatchman =
+        ConfigBuilder.createFromText(
+            "[eden]", "use_watchman_content_sha1 = true", "[eden]", "use_xattr = false");
+    EdenProjectFilesystemDelegate edenDelegateWithWatchman =
+        new EdenProjectFilesystemDelegate(mount, delegate, configWithWatchman);
+    edenDelegateWithWatchman.initEdenWatchman(watchman, projectFilesystem);
+
+    assertFalse(edenDelegateWithWatchman.globOnPath(link).isPresent());
+    assertTrue(edenDelegateWithWatchman.globOnPath(target).isPresent());
+    assertEquals(
+        edenDelegateWithFileSystem.computeSha1(link), edenDelegateWithWatchman.computeSha1(target));
+
+    assertEquals(
+        edenDelegateWithFileSystem.computeSha1(link), edenDelegateWithWatchman.computeSha1(link));
   }
 }

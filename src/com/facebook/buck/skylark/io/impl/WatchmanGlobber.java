@@ -278,10 +278,11 @@ public class WatchmanGlobber {
     }
     @SuppressWarnings("unchecked")
     List<Map<String, ?>> resultEntries = (List<Map<String, ?>>) result.get().get("files");
-
     ImmutableMap<String, WatchmanFileAttributes> resultMap =
         resultEntries.stream()
-            .filter(entry -> entry.containsKey("name"))
+            .filter(
+                entry ->
+                    entry.containsKey("name") && entry.values().stream().allMatch(v -> v != null))
             .collect(
                 ImmutableMap.toImmutableMap(
                     entry -> (String) entry.get("name"), WatchmanFileAttributes::new));

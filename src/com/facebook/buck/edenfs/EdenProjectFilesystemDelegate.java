@@ -45,8 +45,10 @@ import java.nio.file.Path;
 import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDelegate {
 
@@ -214,6 +216,13 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
     return sha1;
   }
 
+  @VisibleForTesting
+  Optional<Sha1HashCode> globOnPath(Path path) throws IOException, InterruptedException {
+    AbsPath fileToHash = getPathForRelativePath(path);
+    return glob(fileToHash);
+  }
+
+  @SuppressWarnings("unchecked")
   private Optional<Sha1HashCode> glob(AbsPath path) throws IOException, InterruptedException {
     EdenWatchman edenWatchman = edenWatchmanDelayInit.getEdenWatchman();
     Watchman watchman = edenWatchman.getWatchman();
@@ -231,9 +240,23 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
               DEFAULT_WARN_TIMEOUT_NANOS,
               ImmutableList.of("name", WATCHMAN_CONTENT_SHA1_FIELD));
       if (ret.isPresent() && ret.get().containsKey(pathString)) {
-        String sha1 =
-            (String) ret.get().get(pathString).getAttributeMap().get(WATCHMAN_CONTENT_SHA1_FIELD);
-        return Optional.of(Sha1HashCode.of(sha1));
+        @Nullable
+        Object sha1Ret =
+            ret.get().get(pathString).getAttributeMap().get(WATCHMAN_CONTENT_SHA1_FIELD);
+        if (sha1Ret != null && sha1Ret instanceof String) {
+          String sha1 = (String) sha1Ret;
+          return Optional.of(Sha1HashCode.of(sha1));
+        } else {
+          // Watchman could not resolve some cases, i.e. symlink, fallback to xattr
+          if (sha1Ret instanceof Map) {
+            @Nullable Object error = ((Map<String, Object>) sha1Ret).get("error");
+            if (error != null) {
+              LOG.debug("Failed to query watchman SHA1, error message: %s", (String) error);
+            }
+          }
+          LOG.debug("Failed to query watchman SHA1 for path %s, Fallback to XAttr", path);
+          return computeSha1ViaXAttr(path);
+        }
       }
     }
     return Optional.empty();
