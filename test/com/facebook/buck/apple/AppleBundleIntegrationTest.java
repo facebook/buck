@@ -1187,6 +1187,8 @@ public class AppleBundleIntegrationTest {
     Path appClipPath = appPath.resolve("AppClips/Clip.app/");
     assertTrue(Files.exists(appClipPath.resolve("Clip")));
     assertTrue(Files.exists(appClipPath.resolve("Info.plist")));
+
+    assertFalse(Files.exists(appClipPath.resolve("Frameworks")));
   }
 
   @Test

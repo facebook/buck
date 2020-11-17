@@ -222,12 +222,14 @@ public class AppleResourceProcessing {
       Path sdkPath,
       Tool lipo,
       Path bundleBinaryPath,
-      AppleBundleDestinations destinations) {
+      AppleBundleDestinations destinations,
+      boolean isAppClip) {
     // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
     // are copied over).
     boolean shouldCopySwiftStdlib =
         !bundleExtension.equals(AppleBundleExtension.APPEX.toFileExtension())
             && (!bundleExtension.equals(AppleBundleExtension.FRAMEWORK.toFileExtension())
+            && !isAppClip
                 || copySwiftStdlibToFrameworks);
 
     if (swiftStdlibTool.isPresent() && shouldCopySwiftStdlib) {
