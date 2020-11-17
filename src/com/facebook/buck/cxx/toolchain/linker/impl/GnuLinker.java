@@ -18,7 +18,9 @@ package com.facebook.buck.cxx.toolchain.linker.impl;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -42,20 +44,26 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.WriteFileStep;
-import com.google.common.base.Joiner;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Interner;
+import com.google.common.collect.Interners;
+import com.google.common.collect.Streams;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -234,6 +242,10 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
 
   private abstract static class SymbolsScript extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
+    // In many cases, symbols are mostly the same across different top-level targets, so intern them
+    // to save memory.
+    private static final Interner<String> SYMBOL_INTERNER = Interners.newWeakInterner();
+
     @AddToRuleKey private final Iterable<? extends SourcePath> symbolFiles;
     @AddToRuleKey private final ImmutableList<String> extraSymbols;
 
@@ -250,7 +262,13 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
 
     abstract String getScriptType();
 
-    abstract List<String> mapSymbols(Set<String> symbols);
+    @SuppressWarnings("unused")
+    void writePreamble(BufferedWriter writer) throws IOException {}
+
+    @SuppressWarnings("unused")
+    void writePostamble(BufferedWriter writer) throws IOException {}
+
+    abstract void writeSymbol(Writer writer, String symbol) throws IOException;
 
     private RelPath getScript() {
       String format = String.format("%%s/%s_script.txt", getScriptType());
@@ -268,26 +286,60 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
                   context.getBuildCellRootPath(),
                   getProjectFilesystem(),
                   linkerScript.getParent())),
-          WriteFileStep.of(
-              getProjectFilesystem().getRootPath(),
-              () -> {
-                Set<String> symbols = new LinkedHashSet<>();
-                for (SourcePath path : symbolFiles) {
-                  try {
-                    symbols.addAll(
-                        Files.readAllLines(
-                            context.getSourcePathResolver().getAbsolutePath(path).getPath(),
-                            StandardCharsets.UTF_8));
-                  } catch (IOException e) {
-                    throw new RuntimeException(e);
+          new IsolatedStep() {
+
+            private final Path output = getProjectFilesystem().resolve(linkerScript).getPath();
+            private final ImmutableList<Path> inputs =
+                Streams.stream(symbolFiles)
+                    .map(context.getSourcePathResolver()::getAbsolutePath)
+                    .map(PathWrapper::getPath)
+                    .collect(ImmutableList.toImmutableList());
+
+            @Override
+            public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
+                throws IOException {
+              try (BufferedWriter writer =
+                  new BufferedWriter(
+                      new OutputStreamWriter(
+                          Files.newOutputStream(output), StandardCharsets.UTF_8))) {
+                writePreamble(writer);
+
+                Set<String> symbols = new HashSet<>();
+                for (Path input : inputs) {
+                  try (BufferedReader reader = Files.newBufferedReader(input)) {
+                    String symbol;
+                    while ((symbol = reader.readLine()) != null) {
+                      symbol = SYMBOL_INTERNER.intern(symbol);
+                      if (symbols.add(symbol)) {
+                        writeSymbol(writer, symbol);
+                        writer.newLine();
+                      }
+                    }
                   }
                 }
-                symbols.addAll(extraSymbols);
-                List<String> lines = mapSymbols(symbols);
-                return Joiner.on(System.lineSeparator()).join(lines);
-              },
-              linkerScript.getPath(),
-              /* executable */ false));
+
+                for (String symbol : extraSymbols) {
+                  if (symbols.add(symbol)) {
+                    writeSymbol(writer, symbol);
+                    writer.newLine();
+                  }
+                }
+
+                writePostamble(writer);
+              }
+              return StepExecutionResults.SUCCESS;
+            }
+
+            @Override
+            public String getIsolatedStepDescription(IsolatedExecutionContext context) {
+              return String.format("Generate %s script for symbol lists", getScriptType());
+            }
+
+            @Override
+            public String getShortName() {
+              return String.format("write-%s-script", getScriptType());
+            }
+          });
     }
 
     @Override
@@ -314,12 +366,10 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
     }
 
     @Override
-    List<String> mapSymbols(Set<String> symbols) {
-      List<String> mapped = new ArrayList<>();
-      for (String symbol : symbols) {
-        mapped.add(String.format("EXTERN(\"%s\")", symbol));
-      }
-      return mapped;
+    void writeSymbol(Writer writer, String symbol) throws IOException {
+      writer.write("EXTERN(\"");
+      writer.write(symbol);
+      writer.write("\")");
     }
   }
 
@@ -342,16 +392,26 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
     }
 
     @Override
-    List<String> mapSymbols(Set<String> symbols) {
-      List<String> mapped = new ArrayList<>();
-      mapped.add("{");
-      mapped.add("  global:");
-      for (String symbol : symbols) {
-        mapped.add(String.format("  \"%s\";", symbol));
-      }
-      mapped.add("  local: *;");
-      mapped.add("};");
-      return mapped;
+    void writePreamble(BufferedWriter writer) throws IOException {
+      writer.write("{");
+      writer.newLine();
+      writer.write("  global:");
+      writer.newLine();
+    }
+
+    @Override
+    void writePostamble(BufferedWriter writer) throws IOException {
+      writer.write("  local: *;");
+      writer.newLine();
+      writer.write("};");
+      writer.newLine();
+    }
+
+    @Override
+    void writeSymbol(Writer writer, String symbol) throws IOException {
+      writer.write("  \"");
+      writer.write(symbol);
+      writer.write("\";");
     }
   }
 }
