@@ -970,7 +970,6 @@ class BuckTool(object):
                 return json.load(fp).get("project_id", None)
         return os.path.basename(self._buck_project.root)
 
-
     def kill_buckd(self):
         with Tracing("BuckTool.kill_buckd"), exclusive_lock(
             self._buck_project.get_section_lock_path("buckd_kill"), wait=True
