@@ -305,7 +305,7 @@ android_binary(
 android_binary(
     name = "app_modular_manifest_debug_blacklist_query_shared_multiple",
     application_module_blacklist = [
-        "filter(shared_with_no_resource_deps, deps(//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps))",
+        "filter(shared_with_no_resource_deps, deps($declared_deps))",
     ],
     application_module_configs = {
         "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],

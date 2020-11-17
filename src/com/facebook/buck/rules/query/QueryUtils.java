@@ -158,7 +158,7 @@ public final class QueryUtils {
                                 graphBuilder,
                                 cellRoots,
                                 graph,
-                                ImmutableSet.of(),
+                                graph.get(target).getDeclaredDeps(),
                                 typeCoercerFactory)))
                 .collect(ImmutableList.toImmutableList());
 
